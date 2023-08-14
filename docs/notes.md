@@ -36,3 +36,4 @@
 - https://twitter.com/jason_mayes/status/1658249694076862464
 - https://www.descope.com/
 - https://twitter.com/AiBreakfast/status/1673829004900462594
+- https://en.wikipedia.org/wiki/Description_logic
