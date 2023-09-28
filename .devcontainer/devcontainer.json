@@ -12,7 +12,8 @@
 				"SimonSiefke.svg-preview",
 				"DotJoshJohnson.xml",
 				"Vue.vscode-typescript-vue-plugin",
-				"Vue.volar"
+				"Vue.volar",
+				"GitHub.vscode-pull-request-github"
 			]
         }
     },
