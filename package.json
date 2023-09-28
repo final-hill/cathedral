@@ -1,0 +1,29 @@
+{
+  "name": "@final-hill/cathedral",
+  "version": "0.1.0",
+  "description": "Requirements management system",
+  "keywords": [],
+  "private": true,
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/final-hill/cathedral.git"
+  },
+  "bugs": {
+    "url": "https://github.com/final-hill/cathedral/issues"
+  },
+  "homepage": "https://final-hill.com/cathedral",
+  "author": "Michael L Haufe <michael.haufe@final-hill.com> (https://final-hill.com)",
+  "license": "AGPL-3.0-only",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "devDependencies": {
+    "@nuxt/devtools": "latest",
+    "nuxt": "^3.7.4"
+  }
+}
