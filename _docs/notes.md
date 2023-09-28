@@ -1,7 +1,5 @@
 # Notes
 
-## Problem Statement
-
 ## @awbjs
 
 - <http://www.wirfs-brock.com/allen/posts/738>
@@ -11,106 +9,6 @@
 ## Business
 
 - <https://www.kalzumeus.com/2006/08/14/you-can-probably-stand-to-charge-more/>
-
-## Competitors and Comparables
-
-- <https://www.drools.org/>
-- <https://www.modernrequirements.com/blogs/introduction-to-requirements-in-azure-devops/>
-  - <https://learn.microsoft.com/en-us/azure/devops/cross-service/manage-requirements?view=azure-devops&tabs=agile-process>
-- [Gnome Planner](https://wiki.gnome.org/Apps/Planner)
-- [Rational Software Architect](https://www.ibm.com/products/rational-software-architect-designer)
-- [Visual Paradigm](https://www.visual-paradigm.com/)
-  - <https://en.wikipedia.org/wiki/Visual_Paradigm>
-- <https://about.gitea.com/>
-- <https://search.brave.com/search?q=obsidian+notes>
-- <https://requirements.cc/>
-- <https://casecomplete.com/>
-- <https://milanote.com/>
-- <https://en.wikipedia.org/wiki/List_of_requirements_engineering_tools>
-- Adobe XD
-- <https://app.ai2sql.io/?section=8>
-- <https://www.tutorialspoint.com/drools/drools_introduction.htm>
-- <https://www.modernrequirements.com/tutorial-main/>
-- <https://casecomplete.com/>
-- <https://www.guru99.com/requirement-management-tools.html>
-- <https://qracorp.com/the-essential-requirements-documentation-tools-stack-for-2020/>
-
-## Features
-
-### Breadboard
-
-- <https://twitter.com/rjs/status/1493158354985828353>
-
-### Document Management
-
-- Compare with BIM360 Docs
-- Compare with Bricsys 24/7
-- Compare with <https://en.wikipedia.org/wiki/ProjectWise>
-- Compare with Aconex
-
-### Glossary
-
-- <https://www.visual-paradigm.com/tutorials/glossary.jsp>
-
-### Jobs to be done (JTBD)
-
-- <https://search.brave.com/search?q=jobs+to+be+done+statement>
-
-### Kanban
-
-- <https://en.wikipedia.org/wiki/Kanban_(development)>
-
-### Objectives and Key Results (OKR)
-
-- <https://en.wikipedia.org/wiki/Objectives_and_key_results>
-
-### Personas and Actors
-
-- <https://search.brave.com/search?q=Personas+vs+Actors>
-
-### Planning Poker
-
-### Product Roadmap
-
-- <https://search.brave.com/search?q=product+Roadmap&source=web>
-
-### Project Charter
-
-- <https://search.brave.com/search?q=Project+Charter>
-- <https://search.brave.com/search?q=product+vision+statement&source=web>
-
-### Requirements Traceability Matrix (RTM)
-
-- <https://www.guru99.com/traceability-matrix.html>
-
-### Sprint Retrospective
-
-- <https://www.scrum.org/resources/what-is-a-sprint-retrospective>
-
-### Stakeholder Mapping
-
-- <https://www.interaction-design.org/literature/article/map-the-stakeholders>
-- <https://miro.com/blog/stakeholder-mapping/>
-
-### User Journey
-
-- <https://mermaid.js.org/syntax/userJourney.html>
-
-### Use Cases
-
-- <https://www.uml-diagrams.org/use-case.html#business-use-case>
-
-### Work Breakdown Structure (WBS)
-
-- <https://en.wikipedia.org/wiki/Work_breakdown_structure>
-- <https://www.wrike.com/agile-guide/faq/can-wbs-be-used-in-agile/>
-- <https://andrew-40903.medium.com/forget-the-wbs-in-agile-you-need-a-vbs-c2d87fdc1f4e>
-
-## Implementation
-
-- <https://stackoverflow.blog/2022/09/12/the-many-problems-with-implementing-single-sign-on/>
-- <https://www.csoonline.com/article/572907/web3-and-iam-marching-toward-disruption.html>
-- <https://www.inkandswitch.com/local-first/#6-security-and-privacy-by-default>
 
 ## Misc
 
@@ -157,11 +55,6 @@
 
 - <https://writings.stephenwolfram.com/2023/01/wolframalpha-as-the-way-to-bring-computational-knowledge-superpowers-to-chatgpt/>
 - <https://cacm.acm.org/blogs/blog-cacm/268103-what-do-chatgpt-and-ai-based-automatic-program-generation-mean-for-the-future-of-software/fulltext>
-
-### CRDT
-
-- <https://automerge.org/blog/automerge-2/>
-- <https://patrickbrosset.com/articles/2023-01-17-web-storage/>
 
 ### SysML
 
@@ -267,7 +160,6 @@
 - <https://www.anic-gmbh.de/en/from-urs-to-application-a-look-behind-the-scenes-of-your-project-at-anic/>
 - <https://pdfcoffee.com/iso-25065-2019-3-pdf-free.html>
 - <https://www.google.com/search?q=URS+use+case+driven&ei=dklwYv7YH7nNytMPxJq2oAw&start=10&sa=N&ved=2ahUKEwj-69Ln3cH3AhW5pnIEHUSNDcQQ8tMDegQIARA4&biw=2560&bih=1229&dpr=1>
-- <https://search.brave.com/search?q=vision+and+scope+document>
 - <https://beckassets.blob.core.windows.net/product/readingsample/188601/9780854049691_excerpt_003.pdf>
 - <https://www.altexsoft.com/blog/business/functional-and-non-functional-requirements-specification-and-types/>
 - <https://www.ogcio.gov.hk/en/our_work/infrastructure/methodology/system_development/doc/G60c_Best_Practices_for_Business_Analyst_Appendix_C_v1_0.pdf>
@@ -360,10 +252,6 @@
 
 > 'Much of the essence of building a program is in fact the debugging of the specification.'
 -- Fred Brooks
-
----
-
-Goals follow vision
 
 ---
 
