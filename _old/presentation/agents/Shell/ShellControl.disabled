@@ -1,0 +1,39 @@
+/*!
+ * @license
+ * Copyright (C) 2022 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+
+import Control from '../../lib/agency/agent/Control';
+import RouterLinkControl from '../../lib/agency/agents/router-link/RouterLinkControl';
+import ContentPaneControl from '../ContentPane/ContentPaneControl';
+import GlobalNavControl from '../GlobalNav/GlobalNavControl';
+import ShellPresentation from './ShellPresentation.disabled';
+
+export default class ShellControl extends Control {
+    private _globalNav = new GlobalNavControl();
+    private _contentPane = new ContentPaneControl();
+
+    constructor() {
+        super();
+
+        this.addChildren(
+            this._globalNav,
+            this._contentPane
+        );
+
+        this._globalNav.addChildren(
+            new RouterLinkControl({
+                text: 'Home',
+                routePath: '/',
+                onClick: _ => { }
+            }),
+            new RouterLinkControl({ text: 'Projects', routePath: '/projects' })
+        );
+    }
+
+    override initPresentation(): ShellPresentation {
+        return new ShellPresentation();
+    }
+}

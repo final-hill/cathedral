@@ -1,0 +1,22 @@
+/*!
+ * @license
+ * Copyright (C) 2022 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+
+import Control from '../../lib/agency/agent/Control';
+import FeatherIconControl from '../../lib/agency/feather-icon/FeatherIconControl';
+import FeatherIconName from '../../lib/agency/feather-icon/FeatherIconName';
+import NewProjectCardPresentation from './NewProjectCardPresentation.disabled';
+
+export default class NewProjectCardControl extends Control {
+    constructor() {
+        super();
+        this.addChild(new FeatherIconControl({ icon: FeatherIconName.plusSquare }));
+    }
+
+    override initPresentation(): NewProjectCardPresentation {
+        return new NewProjectCardPresentation();
+    }
+}

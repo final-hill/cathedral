@@ -1,0 +1,35 @@
+/*!
+ * @license
+ * Copyright (C) 2022 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+
+import Presentation from '../../lib/agency/agent/Presentation';
+import htmlFactory from '../../lib/agency/htmlFactory';
+
+export default class ShellPresentation extends Presentation<HTMLDivElement> {
+    initDom(): HTMLDivElement {
+        return htmlFactory.div({ classList: ['shell'] }, []);
+    }
+
+    initStyle(): string[] {
+        return [
+            `.shell {
+                background: var(--palette0);
+                color: var(--font-primary);
+                display: flex;
+                flex-direction: row;
+                font-family: var(--font);
+                height: 100%;
+                dis
+            }`,
+            `.shell .global-nav {
+                width: 2in;
+            }`,
+            `.shell .content-pane {
+                width: calc(100vw - 2in);
+            }`
+        ];
+    }
+}
