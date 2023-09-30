@@ -16,8 +16,8 @@
                 </li>
             </ul>
         </nav>
-        <section class="content">
-            <nuxt />
+        <section id="content">
+            <slot />
         </section>
     </section>
 </template>
@@ -83,5 +83,9 @@
         border-right-color: var(--link-color);
         color: var(--link-color);
     }
+}
+
+#content {
+    padding-left: 1em;
 }
 </style>
