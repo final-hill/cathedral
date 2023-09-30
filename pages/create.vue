@@ -1,5 +1,5 @@
 <template>
     <div>
-        <h2>About</h2>
+        <h2>Create</h2>
     </div>
 </template>
