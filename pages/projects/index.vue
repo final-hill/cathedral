@@ -6,11 +6,8 @@ const projectStore = ProjectStore(),
     { projects } = storeToRefs(projectStore)
 
 const deleteProject = (id: string) => {
-    if (confirm(`Are you sure you want to delete this project? id: ${id}`)) {
-        if (projectStore.hasProject(id))
-            throw new Error(`Project ${id} does not exist`)
+    if (confirm(`Are you sure you want to delete this project? id: ${id}`))
         projectStore.removeProject(id)
-    }
 }
 </script>
 

@@ -7,8 +7,6 @@ export default defineNuxtConfig({
     modules: [
         // https://pinia.vuejs.org/introduction.html
         '@pinia/nuxt',
-        // https://prazdevs.github.io/pinia-plugin-persistedstate/
-        '@pinia-plugin-persistedstate/nuxt',
         // https://phosphoricons.com/
         "nuxt-phosphor-icons"
     ],
