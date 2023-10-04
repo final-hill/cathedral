@@ -1,9 +1,12 @@
 :root {
-    --font-color: #ccc;
-    --link-color: #61A5E4;
-    --site-dark-bg: #222931;
-    --content-bg: #2D3742;
-    --shadow-color: rgba(0, 0, 0, 0.4);
+    --btn-okay-color: hsl(209, 71%, 64%);
+    --btn-danger-color: hsl(3, 93%, 63%);
+    --font-color: hsl(0, 0%, 80%);
+    --link-color: hsl(209, 71%, 64%);
+    --site-dark-bg: hsl(212, 18%, 16%);
+    --content-bg: hsl(211, 19%, 22%);
+    --shadow-color: hsla(0, 0%, 0%, 0.4);
+    --border-radius: 5px;
 }
 
 ::-webkit-scrollbar {
@@ -19,7 +22,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, .5);
+    background-color: var(--shadow-color);
     border-radius: 10px;
     border: 2px solid var(--content-bg);
 }
@@ -33,9 +36,14 @@ body {
     background-color: var(--site-dark-bg);
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     color: var(--font-color);
+    line-height: 1.5;
     margin: 0;
     padding: 0;
     overflow: hidden;
+}
+
+h1 {
+    font-size: 2em;
 }
 
 a {
@@ -49,10 +57,32 @@ a {
     }
 }
 
+ul {
+    list-style-type: none;
+}
+
 input {
     background-color: var(--site-dark-bg);
+    border-radius: var(--border-radius);
     font-size: inherit;
     padding: 0.5em;
     border: 1px inset var(--shadow-color);
     color: var(--font-color);
+}
+
+button {
+    background-color: var(--site-dark-bg);
+    border-radius: var(--border-radius);
+    color: var(--font-color);
+    border: 1px solid var(--shadow-color);
+    padding: 0.5em;
+    font-size: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+
+    &:hover,
+    &:active,
+    &:focus {
+        filter: brightness(1.2);
+    }
 }

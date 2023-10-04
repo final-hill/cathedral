@@ -1,5 +1,5 @@
 <template>
     <div>
-        <h2>Create</h2>
+        <h2>Project - #</h2>
     </div>
 </template>

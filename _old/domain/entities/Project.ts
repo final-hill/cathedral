@@ -5,10 +5,8 @@
  * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
  */
 
-import { Uuid } from '../values/Uuid';
 import Artifact from './Artifact';
 import Requirement from './Requirement';
-import field from '../common/field';
 
 /*
 const projectContract = new Contract<ProjectType>({
@@ -26,12 +24,12 @@ const projectContract = new Contract<ProjectType>({
  * Associated with a single system.
  */
 export default class Project {
-    @field artifacts!: Artifact[];
-    @field downTraceable!: boolean;
-    @field id!: Uuid;
-    @field requirements!: Requirement[];
-    @field title!: string;
-    @field upTraceable!: boolean;
+    accessor artifacts!: Artifact[];
+    accessor downTraceable!: boolean;
+    // accessor id!: Uuid;
+    accessor requirements!: Requirement[];
+    accessor title!: string;
+    accessor upTraceable!: boolean;
 
     constructor(params: Project) {
         Object.assign(this, params);

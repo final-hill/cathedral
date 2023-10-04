@@ -4,11 +4,18 @@ import { defineNuxtConfig } from 'nuxt/config'
 export default defineNuxtConfig({
     css: ['~/assets/css/main.css'],
     devtools: { enabled: true },
-    ssr: false,
-    spaLoadingTemplate: 'public/_loading-template.html',
     modules: [
-        // https://nuxt.com/modules/icon
-        // https://icones.js.org/
-        'nuxt-icon'
-    ]
+        // https://pinia.vuejs.org/introduction.html
+        '@pinia/nuxt',
+        // https://prazdevs.github.io/pinia-plugin-persistedstate/
+        '@pinia-plugin-persistedstate/nuxt',
+        // https://phosphoricons.com/
+        "nuxt-phosphor-icons"
+    ],
+    spaLoadingTemplate: 'public/_loading-template.html',
+    ssr: false,
+    typescript: {
+        typeCheck: true,
+        strict: true
+    }
 })
