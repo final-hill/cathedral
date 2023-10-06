@@ -4,14 +4,14 @@
             <ul>
                 <li>
                     <nuxt-link to="/">
-                        <Icon name="ph:house" />
+                        <PhosphorIconHouseLine size="25" />
                         Home
                     </nuxt-link>
                 </li>
                 <li>
-                    <nuxt-link to="/create">
-                        <Icon name="ph:plus-circle" />
-                        Create
+                    <nuxt-link to="/projects">
+                        <PhosphorIconFactory size="25" />
+                        Projects
                     </nuxt-link>
                 </li>
             </ul>
@@ -27,6 +27,8 @@
     display: grid;
     grid-template-columns: 1in 1fr;
     overflow: hidden;
+    height: 100vh;
+    width: 100vw;
 }
 
 #global-nav {
@@ -40,7 +42,6 @@
     & ul {
         display: flex;
         flex-direction: column;
-        list-style: none;
         margin: 0;
         padding: 0;
     }
@@ -48,7 +49,7 @@
     & li {
         align-items: center;
         border-bottom: 1px solid var(--shadow-color);
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: 1px solid hsla(0, 0%, 100%, 0.1);
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
@@ -71,12 +72,8 @@
 
         &:hover,
         &:focus {
-            background-color: rgba(255, 255, 255, 0.03);
+            background-color: hsla(0, 0%, 100%, 0.03);
         }
-    }
-
-    & .icon {
-        font-size: 20pt;
     }
 
     & .router-link-active {
@@ -86,6 +83,8 @@
 }
 
 #content {
-    padding-left: 1em;
+    background-color: var(--content-bg);
+    overflow: auto;
+    padding: 1em 2em;
 }
 </style>

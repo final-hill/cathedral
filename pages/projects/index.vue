@@ -1,5 +1,4 @@
 <template>
-    <h2>Projects</h2>
-
+    <h1>Projects</h1>
     <ProjectCards />
 </template>

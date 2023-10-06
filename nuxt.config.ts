@@ -2,13 +2,23 @@ import { defineNuxtConfig } from 'nuxt/config'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+    app: {
+        head: {
+            title: 'Cathedral'
+        }
+    },
     css: ['~/assets/css/main.css'],
     devtools: { enabled: true },
-    ssr: false,
-    spaLoadingTemplate: 'public/_loading-template.html',
     modules: [
-        // https://nuxt.com/modules/icon
-        // https://icones.js.org/
-        'nuxt-icon'
-    ]
+        // https://pinia.vuejs.org/introduction.html
+        '@pinia/nuxt',
+        // https://phosphoricons.com/
+        "nuxt-phosphor-icons"
+    ],
+    spaLoadingTemplate: 'public/_loading-template.html',
+    ssr: false,
+    typescript: {
+        typeCheck: true,
+        strict: true
+    }
 })

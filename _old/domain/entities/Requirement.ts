@@ -5,15 +5,15 @@
  * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
  */
 
-import { Contract, Contracted, implies, invariant } from '@final-hill/decorator-contracts';
+// import { Contract, Contracted, implies, invariant } from '@final-hill/decorator-contracts';
 import Predicate from './Predicate';
 import Project from './Project';
 
-const requirementContract = new Contract<Requirement>({
-    [invariant]: self => implies(
-        self.project != undefined, Boolean(self.project?.requirements.includes(self))
-    )
-});
+// const requirementContract = new Contract<Requirement>({
+//     [invariant]: self => implies(
+//         self.project != undefined, Boolean(self.project?.requirements.includes(self))
+//     )
+// });
 
 /**
  * A Requirement is a specification of a particular system property.
@@ -26,7 +26,7 @@ const requirementContract = new Contract<Requirement>({
  *
  %% SubRequirements
  */
-@Contracted(requirementContract)
+// @Contracted(requirementContract)
 export default class Requirement {
     private _belongsTo?: Requirement;
     private _characterizes?: Requirement;
