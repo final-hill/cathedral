@@ -1,14 +1,17 @@
 import { defineStore } from 'pinia'
 import { Project } from '~/domain/Project'
+import { stringify, parse } from 'zipson'
 
 function serialize(projects: Project[]): string {
-    return JSON.stringify(
+    return stringify(
         projects.map(({ id, name, description }) => ({ id, name, description }))
     )
 }
 
-function deserialize(value: string): Project[] {
-    return JSON.parse(value)
+function deserialize(value: string | null): Project[] {
+    if (!value)
+        return []
+    return parse(value)
         .map((item: { id: string, name: string, description: string }) =>
             new Project({
                 id: item.id,
@@ -18,7 +21,7 @@ function deserialize(value: string): Project[] {
 }
 
 function loadProjects(): Project[] {
-    const projects = localStorage.getItem('projects') ?? '[]'
+    const projects = localStorage.getItem('projects')
     return deserialize(projects)
 }
 
@@ -27,6 +30,9 @@ export const ProjectStore = defineStore('project', {
         items: loadProjects()
     }),
     getters: {
+        getProjectById(state): (id: string) => Project | undefined {
+            return (id: string) => state.items.find(project => project.id === id) as Project
+        },
         projects(state): Project[] {
             return state.items as Project[]
         }

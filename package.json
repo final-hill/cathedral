@@ -31,7 +31,8 @@
     },
     "dependencies": {
         "@pinia/nuxt": "^0.4.11",
-        "pinia": "^2.1.6"
+        "pinia": "^2.1.6",
+        "zipson": "^0.2.12"
     },
     "overrides": {
         "vue": "latest"
