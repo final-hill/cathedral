@@ -1,5 +1,11 @@
+<script setup lang="ts">
+import { ProjectStore } from '~/stores/ProjectStore'
+
+const route = useRoute(),
+    projectStore = ProjectStore(),
+    project = projectStore.getProjectById(route.path.split('/')[2])!
+</script>
+
 <template>
-    <div>
-        <h2>Project - #</h2>
-    </div>
+    <h2>{{ project.name }}</h2>
 </template>

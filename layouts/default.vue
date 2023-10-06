@@ -85,6 +85,6 @@
 #content {
     background-color: var(--content-bg);
     overflow: auto;
-    padding-left: 1em;
+    padding: 1em 2em;
 }
 </style>
