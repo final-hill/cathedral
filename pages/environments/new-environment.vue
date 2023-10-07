@@ -1,52 +1,52 @@
 <script lang="ts" setup>
-import { Project } from '~/domain/Project';
+import { Environment } from '~/domain/Environment';
 import { slugify } from '~/domain/slugify';
-import { ProjectStore } from '~/stores/ProjectStore'
+import { EnvironmentStore } from '~/stores/EnvironmentStore'
 
-const projectStore = ProjectStore(),
+const environmentStore = EnvironmentStore(),
     router = useRouter();
 
 const name = ref(''),
     slug = computed(() => slugify(name.value)),
     description = ref('')
 
-const createProject = (e: Event) => {
+const createEnvironment = (e: Event) => {
     e.preventDefault()
     const form = e.target as HTMLFormElement,
         formData = new FormData(form),
         name = formData.get('name') as string,
         description = formData.get('description') as string
 
-    const project = new Project({ name, description })
-    projectStore.add(project)
+    const project = new Environment({ name, description })
+    environmentStore.add(project)
 
-    router.push(`/projects/${project.id}`)
+    router.push(`/environments/${project.id}`)
 }
 
 </script>
 
 <template>
-    <h1>New Project</h1>
-    <form class="project-form" autocomplete="off" @submit="createProject">
+    <h1>New Environment</h1>
+    <form class="environment-form" autocomplete="off" @submit="createEnvironment">
         <label for="name">Name</label>
-        <input type="text" id="name" name="name" :maxlength="Project.MAX_NAME_LENGTH" v-model="name"
-            placeholder="Sample Project" required />
+        <input type="text" id="name" name="name" :maxlength="Environment.MAX_NAME_LENGTH" v-model="name"
+            placeholder="Sample Environment" required />
 
         <label>Slug</label>
         <span>{{ slug }}</span>
         <label for="description">Description</label>
-        <input type="text" id="description" name="description" :maxlength="Project.MAX_DESCRIPTION_LENGTH"
-            placeholder="A description of Sample Project" v-model="description" />
+        <input type="text" id="description" name="description" :maxlength="Environment.MAX_DESCRIPTION_LENGTH"
+            placeholder="A description of the environment" v-model="description" />
 
         <span id="actions">
             <button type="submit">Create</button>
-            <button type="button" @click="$router.push('/projects')">Cancel</button>
+            <button type="button" @click="$router.push('/environments')">Cancel</button>
         </span>
     </form>
 </template>
 
 <style scoped>
-.project-form {
+.environment-form {
     display: grid;
     grid-template-columns: 20% 1fr;
     grid-gap: 1rem;

@@ -3,7 +3,7 @@ import { ProjectStore } from '~/stores/ProjectStore'
 
 const route = useRoute(),
     projectStore = ProjectStore(),
-    project = projectStore.getProjectById(route.path.split('/')[2])!
+    project = projectStore.getById(route.path.split('/')[2])!
 </script>
 
 <template>

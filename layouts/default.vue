@@ -14,6 +14,12 @@
                         Projects
                     </nuxt-link>
                 </li>
+                <li>
+                    <nuxt-link to="/environments">
+                        <PhosphorIconCloudFog size="25" />
+                        Environments
+                    </nuxt-link>
+                </li>
             </ul>
         </nav>
         <section id="content">
@@ -25,7 +31,7 @@
 <style>
 #app {
     display: grid;
-    grid-template-columns: 1in 1fr;
+    grid-template-columns: fit-content(1.5in) 1fr;
     overflow: hidden;
     height: 100vh;
     width: 100vw;
@@ -37,7 +43,6 @@
     height: 100vh;
     overflow-x: hidden;
     overflow-y: auto;
-    width: 1in;
 
     & ul {
         display: flex;
