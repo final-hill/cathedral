@@ -12,11 +12,11 @@ export abstract class PEGS extends Entity<string> {
     private _name!: string;
     private _description!: string;
 
-    constructor({ id, name, description }: { id?: string, name: string, description: string }) {
+    constructor({ id, name, description }: { id?: string, name: string, description?: string }) {
         super()
         this._id = id ?? slugify(name);
         this.name = name.trim();
-        this.description = description;
+        this.description = description ?? '';
     }
 
     get id(): string {

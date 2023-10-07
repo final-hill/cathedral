@@ -1,4 +1,4 @@
 import { Project } from '~/domain/Project'
-import { PegsStore } from './PegsStore'
+import { BaseStore } from './BaseStore'
 
-export const ProjectStore = PegsStore('projects', Project)
+export const ProjectStore = BaseStore('projects', Project)

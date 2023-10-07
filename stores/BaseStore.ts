@@ -4,7 +4,7 @@ import { Entity } from '~/domain/Entity'
 
 export type Constructor<T> = new (...args: any[]) => T
 
-export const PegsStore = <E extends Entity<any>>(storeId: string, Entity: Constructor<E>) => {
+export const BaseStore = <E extends Entity<any>>(storeId: string, Entity: Constructor<E>) => {
     const serialize = (items: E[]) => stringify(
         items.map(item => item.toJSON())
     )
