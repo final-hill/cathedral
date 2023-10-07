@@ -2,7 +2,7 @@
 import { storeToRefs } from 'pinia';
 import { ProjectStore } from '~/stores/ProjectStore'
 
-const { projects } = storeToRefs(ProjectStore())
+const { items } = storeToRefs(ProjectStore())
 </script>
 
 <style scoped>
@@ -21,8 +21,7 @@ const { projects } = storeToRefs(ProjectStore())
 <template>
     <section class="project-cards">
         <ProjectCard id="new-project" name="New Project" description="Create a new project" />
-        <p v-if="projects.length === 0">No projects yet.</p>
-        <ProjectCard v-else v-for="project of projects" :key="project.id" :id="project.id" :name="project.name"
+        <ProjectCard v-for="project of items" :key="project.id" :id="project.id" :name="project.name"
             :description="project.description" />
     </section>
 </template>

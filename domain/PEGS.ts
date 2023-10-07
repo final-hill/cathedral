@@ -1,9 +1,10 @@
+import { Entity } from "./Entity";
 import { slugify } from "./slugify";
 
 /**
  * The base class for all PEGS (Project, Environment, Goal, System)
  */
-export abstract class PEGS {
+export abstract class PEGS extends Entity<string> {
     static MAX_NAME_LENGTH = 60;
     static MAX_DESCRIPTION_LENGTH = 200;
 
@@ -12,6 +13,7 @@ export abstract class PEGS {
     private _description!: string;
 
     constructor({ id, name, description }: { id?: string, name: string, description: string }) {
+        super()
         this._id = id ?? slugify(name);
         this.name = name.trim();
         this.description = description;

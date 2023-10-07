@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ProjectStore } from '~/stores/ProjectStore'
+import { EnvironmentStore } from '~/stores/EnvironmentStore'
 
-const projectStore = ProjectStore()
+const environmentStore = EnvironmentStore()
 
-const deleteProject = (id: string) => {
-    if (confirm(`Are you sure you want to delete this project? id: ${id}`))
-        projectStore.remove(id)
+const deleteEnvironment = (id: string) => {
+    if (confirm(`Are you sure you want to delete this environment? id: ${id}`))
+        environmentStore.remove(id)
 }
 
 defineProps({
@@ -25,17 +25,17 @@ defineProps({
 </script>
 
 <template>
-    <article class="project-card">
-        <h2 class="title"><nuxt-link :to="`/projects/${id}`">{{ name }}</nuxt-link></h2>
+    <article class="environment-card">
+        <h2 class="title"><nuxt-link :to="`/environments/${id}`">{{ name }}</nuxt-link></h2>
         <p>{{ description }}</p>
-        <button v-if="id !== 'new-project'" @click="deleteProject(id)" title="Delete project">
+        <button v-if="id !== 'new-environment'" @click="deleteEnvironment(id)" title="Delete environment">
             <PhosphorIconTrashSimple size="25" />
         </button>
     </article>
 </template>
 
 <style scoped>
-.project-card {
+.environment-card {
     background-color: var(--site-dark-bg);
     box-shadow: 4px 5px 5px 0px var(--shadow-color);
     padding: 1em;
