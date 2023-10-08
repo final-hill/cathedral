@@ -12,11 +12,11 @@ export abstract class PEGS extends Entity<string> {
     private _name!: string;
     private _description!: string;
 
-    constructor({ id, name, description }: { id?: string, name: string, description: string }) {
+    constructor({ id, name, description }: { id?: string, name: string, description?: string }) {
         super()
         this._id = id ?? slugify(name);
         this.name = name.trim();
-        this.description = description;
+        this.description = description ?? '';
     }
 
     get id(): string {
@@ -41,5 +41,13 @@ export abstract class PEGS extends Entity<string> {
         if (value.length >= Clazz.MAX_DESCRIPTION_LENGTH)
             throw new Error('Project description cannot be longer than 200 characters')
         this._description = value;
+    }
+
+    toJSON(): Record<string, any> {
+        return {
+            id: this._id,
+            name: this._name,
+            description: this._description
+        }
     }
 }

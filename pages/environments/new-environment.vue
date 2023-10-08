@@ -1,9 +1,12 @@
 <script lang="ts" setup>
 import { Environment } from '~/domain/Environment';
+import { Glossary } from '~/domain/Glossary';
 import { slugify } from '~/domain/slugify';
 import { EnvironmentStore } from '~/stores/EnvironmentStore'
+import { GlossaryStore } from '~/stores/GlossaryStore';
 
 const environmentStore = EnvironmentStore(),
+    glossaryStore = GlossaryStore(),
     router = useRouter();
 
 const name = ref(''),
@@ -15,14 +18,15 @@ const createEnvironment = (e: Event) => {
     const form = e.target as HTMLFormElement,
         formData = new FormData(form),
         name = formData.get('name') as string,
-        description = formData.get('description') as string
+        description = formData.get('description') as string,
+        glossary = new Glossary({})
 
-    const project = new Environment({ name, description })
+    const project = new Environment({ name, description, glossaryId: glossary.id })
     environmentStore.add(project)
+    glossaryStore.add(glossary)
 
     router.push(`/environments/${project.id}`)
 }
-
 </script>
 
 <template>

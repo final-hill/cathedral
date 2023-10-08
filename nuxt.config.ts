@@ -15,6 +15,9 @@ export default defineNuxtConfig({
         // https://phosphoricons.com/
         "nuxt-phosphor-icons"
     ],
+    sourcemap: {
+        client: true
+    },
     spaLoadingTemplate: 'public/_loading-template.html',
     ssr: false,
     typescript: {

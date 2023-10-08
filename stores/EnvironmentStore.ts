@@ -1,4 +1,4 @@
 import { Environment } from '~/domain/Environment'
-import { PegsStore } from './PegsStore'
+import { BaseStore } from './BaseStore'
 
-export const EnvironmentStore = PegsStore('environments', Environment)
+export const EnvironmentStore = BaseStore('environments', Environment)

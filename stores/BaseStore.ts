@@ -4,7 +4,7 @@ import { Entity } from '~/domain/Entity'
 
 export type Constructor<T> = new (...args: any[]) => T
 
-export const PegsStore = <E extends Entity<any>>(storeId: string, Entity: Constructor<E>) => {
+export const BaseStore = <E extends Entity<any>>(storeId: string, Entity: Constructor<E>) => {
     const serialize = (items: E[]) => stringify(
         items.map(item => item.toJSON())
     )
@@ -35,6 +35,14 @@ export const PegsStore = <E extends Entity<any>>(storeId: string, Entity: Constr
             },
             has(id: string): boolean {
                 return this.items.some(item => item.id === id)
+            },
+            update(item: E): void {
+                if (!this.has(item.id))
+                    throw new Error(`An item with the id '${item.id}' does not exist.`)
+                const index = this.items.findIndex(i => i.id === item.id)
+                this.items.splice(index, 1, item as any)
+
+                localStorage.setItem(storeId, serialize(this.items as E[]))
             },
             remove(id: string): void {
                 if (!this.has(id))
