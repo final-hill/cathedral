@@ -1,4 +1,3 @@
-import { Glossary } from "./Glossary";
 import { PEGS } from "./PEGS";
 
 /**
@@ -9,14 +8,21 @@ import { PEGS } from "./PEGS";
  * system operates.
  */
 export class Environment extends PEGS {
-    private _glossary: Glossary;
+    private _glossaryId: string;
 
-    constructor({ id, name, description, glossary }: { id?: string, name: string, description?: string, glossary?: Glossary }) {
+    constructor({ id, name, description, glossaryId }: { id?: string, name: string, description?: string, glossaryId: string }) {
         super({ id, name, description });
-        this._glossary = glossary || new Glossary({});
+        this._glossaryId = glossaryId
     }
 
-    get glossary(): Glossary {
-        return this._glossary;
+    get glossaryId(): string {
+        return this._glossaryId;
+    }
+
+    override toJSON(): Record<string, any> {
+        return {
+            ...super.toJSON(),
+            glossaryId: this._glossaryId
+        }
     }
 }

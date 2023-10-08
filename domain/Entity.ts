@@ -25,15 +25,5 @@ export abstract class Entity<K> {
     /**
      * Returns a JSON representation of the entity.
      */
-    toJSON(): Record<string, any> {
-        const json: Record<string, any> = {};
-        const properties = Object.getOwnPropertyNames(this);
-        const getters = Object.getOwnPropertyNames(Object.getPrototypeOf(this));
-        for (const property of [...properties, ...getters]) {
-            const descriptor = Object.getOwnPropertyDescriptor(this, property) || Object.getOwnPropertyDescriptor(Object.getPrototypeOf(this), property);
-            if (descriptor && descriptor.enumerable)
-                json[property] = Reflect.get(this, property);
-        }
-        return json;
-    }
+    abstract toJSON(): Record<string, any>
 }

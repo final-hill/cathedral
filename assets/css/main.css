@@ -93,3 +93,16 @@ button {
         filter: brightness(1.2);
     }
 }
+
+th {
+    background-color: var(--site-dark-bg);
+    padding: 0.5em;
+}
+
+td {
+    padding: 0.5em;
+}
+
+tbody tr:nth-child(even) {
+    background-color: var(--site-dark-bg);
+}

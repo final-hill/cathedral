@@ -25,4 +25,11 @@ export class Glossary extends Entity<string> {
     get terms(): GlossaryTerm[] {
         return this._terms;
     }
+
+    toJSON(): Record<string, any> {
+        return {
+            id: this._id,
+            terms: this._terms.map(term => term.toJSON())
+        }
+    }
 }

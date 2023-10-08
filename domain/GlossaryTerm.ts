@@ -2,13 +2,13 @@ import { Entity } from "./Entity";
 
 export class GlossaryTerm extends Entity<string> {
     private _term;
-    private _description;
+    private _definition;
 
-    constructor(term: string, description: string) {
+    constructor({ term, definition }: { term: string, definition: string }) {
         super()
 
         this._term = term;
-        this._description = description;
+        this._definition = definition;
     }
 
     get id(): string {
@@ -25,7 +25,14 @@ export class GlossaryTerm extends Entity<string> {
     /**
      * The definition of the term.
      */
-    get description(): string {
-        return this._description;
+    get definition(): string {
+        return this._definition;
+    }
+
+    toJSON(): Record<string, any> {
+        return {
+            term: this._term,
+            definition: this._definition
+        }
     }
 }
