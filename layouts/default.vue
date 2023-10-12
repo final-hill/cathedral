@@ -20,6 +20,12 @@
                         Environments
                     </nuxt-link>
                 </li>
+                <li>
+                    <nuxt-link to="/goals">
+                        <PhosphorIconTarget size="25" />
+                        Goals
+                    </nuxt-link>
+                </li>
             </ul>
         </nav>
         <section id="content">
