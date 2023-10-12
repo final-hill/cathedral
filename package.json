@@ -18,7 +18,7 @@
     "scripts": {
         "build": "nuxi build",
         "dev": "nuxi dev",
-        "generate": "nuxt generate",
+        "generate": "nuxi generate",
         "preview": "nuxi preview",
         "postinstall": "nuxi prepare"
     },
