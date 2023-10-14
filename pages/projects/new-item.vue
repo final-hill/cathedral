@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { Project } from '~/domain/Project';
 import { slugify } from '~/domain/slugify';
-import { ProjectStore } from '~/stores/ProjectStore'
+import { ProjectRepository } from '~/data/ProjectRepository';
 
-const projectStore = ProjectStore(),
+const repo = new ProjectRepository(),
     router = useRouter();
 
 const name = ref(''),
@@ -18,7 +18,7 @@ const createProject = (e: Event) => {
         description = formData.get('description') as string
 
     const project = new Project({ name, description })
-    projectStore.add(project)
+    repo.add(project)
 
     router.push(`/projects/${project.id}`)
 }

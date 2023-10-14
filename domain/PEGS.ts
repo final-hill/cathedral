@@ -42,12 +42,4 @@ export abstract class PEGS extends Entity<string> {
             throw new Error('Project description cannot be longer than 200 characters')
         this._description = value;
     }
-
-    toJSON(): Record<string, any> {
-        return {
-            id: this._id,
-            name: this._name,
-            description: this._description
-        }
-    }
 }

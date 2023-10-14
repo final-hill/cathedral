@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ProjectStore } from '~/stores/ProjectStore'
+import { ProjectRepository } from '~/data/ProjectRepository';
 
-const store = ProjectStore()
+const repo = new ProjectRepository()
 </script>
 
 <template>
     <h1>Projects</h1>
-    <PegsCards :store="store" />
+    <PegsCards :repo="repo" />
 </template>

@@ -1,5 +1,11 @@
 import { Entity } from "./Entity";
-import { GlossaryTerm } from "./GlossaryTerm";
+
+export type GlossaryTerm = { term: string, definition: string }
+
+export type GlossaryOptions = {
+    id?: string,
+    terms?: GlossaryTerm[]
+}
 
 /**
  * A glossary is a collection of terms with their definitions.
@@ -9,10 +15,10 @@ export class Glossary extends Entity<string> {
     private _id: string
     private _terms: GlossaryTerm[] = []
 
-    constructor({ id, terms }: { id?: string, terms?: GlossaryTerm[] }) {
+    constructor({ id, terms }: GlossaryOptions = {}) {
         super();
-        this._id = id || self.crypto.randomUUID();
-        this._terms = terms || [];
+        this._id = id ?? self.crypto.randomUUID();
+        this._terms = terms ?? [];
     }
 
     get id(): string {
@@ -24,12 +30,5 @@ export class Glossary extends Entity<string> {
      */
     get terms(): GlossaryTerm[] {
         return this._terms;
-    }
-
-    toJSON(): Record<string, any> {
-        return {
-            id: this._id,
-            terms: this._terms.map(term => term.toJSON())
-        }
     }
 }

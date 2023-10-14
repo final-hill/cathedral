@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { Goals } from '~/domain/Goals';
 import { slugify } from '~/domain/slugify';
-import { GoalsStore } from '~/stores/GoalsStore'
+import { GoalsRepository } from '~/data/GoalsRepository';
+import { Stakeholders } from '~/domain/Stakeholders';
 
-const goalsStore = GoalsStore(),
+const repo = new GoalsRepository(),
     router = useRouter();
 
 const name = ref(''),
@@ -17,8 +18,9 @@ const createGoals = (e: Event) => {
         name = formData.get('name') as string,
         description = formData.get('description') as string
 
-    const project = new Goals({ name, description })
-    goalsStore.add(project)
+    const stakeholders = new Stakeholders(),
+        project = new Goals({ name, description, stakeholders })
+    repo.add(project)
 
     router.push(`/goals/${project.id}`)
 }

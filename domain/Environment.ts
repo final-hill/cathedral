@@ -1,4 +1,12 @@
+import { Glossary } from "./Glossary";
 import { PEGS } from "./PEGS";
+
+export interface EnvironmentOptions {
+    id?: string;
+    name: string;
+    description?: string;
+    glossary?: Glossary;
+}
 
 /**
  * The set of entities (people, organizations, regulations, devices and other material objects, other systems)
@@ -8,21 +16,14 @@ import { PEGS } from "./PEGS";
  * system operates.
  */
 export class Environment extends PEGS {
-    private _glossaryId: string;
+    private _glossary;
 
-    constructor({ id, name, description, glossaryId }: { id?: string, name: string, description?: string, glossaryId: string }) {
+    constructor({ id, name, description, glossary }: EnvironmentOptions) {
         super({ id, name, description });
-        this._glossaryId = glossaryId
+        this._glossary = glossary ?? new Glossary();
     }
 
-    get glossaryId(): string {
-        return this._glossaryId;
-    }
-
-    override toJSON(): Record<string, any> {
-        return {
-            ...super.toJSON(),
-            glossaryId: this._glossaryId
-        }
+    get glossary(): Glossary {
+        return this._glossary;
     }
 }

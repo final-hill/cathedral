@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { EnvironmentStore } from '~/stores/EnvironmentStore'
+import { EnvironmentRepository } from '~/data/EnvironmentRepository';
 
-const store = EnvironmentStore()
+const repo = new EnvironmentRepository()
 </script>
 
 <template>
     <h1>Environments</h1>
-    <PegsCards :store="store" />
+    <PegsCards :repo="repo" />
 </template>

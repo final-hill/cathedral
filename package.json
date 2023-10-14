@@ -30,8 +30,6 @@
         "vue-tsc": "^1.8.15"
     },
     "dependencies": {
-        "@pinia/nuxt": "^0.4.11",
-        "pinia": "^2.1.6",
         "zipson": "^0.2.12"
     },
     "overrides": {

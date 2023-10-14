@@ -1,0 +1,111 @@
+<script lang="ts" setup>
+import { useRoute } from 'vue-router'
+import { GoalsRepository } from '~/data/GoalsRepository'
+import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from '~/domain/Stakeholder'
+
+const route = useRoute(),
+    goalId = route.path.split('/')[2],
+    repo = new GoalsRepository(),
+    goals = await repo.get(goalId)!,
+    { stakeholders } = goals,
+    items = ref(stakeholders.stakeholders)
+
+const createStakeholder = (e: Event) => {
+    e.preventDefault()
+    const form = e.target as HTMLFormElement,
+        formData = new FormData(form),
+        name = formData.get('name') as string,
+        description = formData.get('description') as string ?? '',
+        category = formData.get('category') as StakeholderCategory,
+        segmentation = formData.get('segmentation') as StakeholderSegmentation,
+        stakeholder = new Stakeholder({
+            name, description, category, segmentation
+        });
+    items.value.push(stakeholder);
+    repo.update(goals);
+    items.value.sort((a, b) => a.name.localeCompare(b.name));
+    form.reset();
+}
+</script>
+
+<template>
+    <h2>Stakeholders</h2>
+
+    <form id="new-stakeholder" @submit="createStakeholder" autocomplete="off"></form>
+    <table>
+        <caption>
+            <span class="required">*</span> Required
+        </caption>
+        <thead>
+            <tr>
+                <th>
+                    Name <span class="required">*</span>
+                </th>
+                <th>Description</th>
+                <th>Segmentation</th>
+                <th>Category</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="new-stakeholder-row">
+                <td>
+                    <input type="text" name="name" required form="new-stakeholder" />
+                </td>
+                <td>
+                    <input type="text" name="description" form="new-stakeholder" />
+                </td>
+                <td>
+                    <select name="segmentation" form="new-stakeholder">
+                        <option v-for="segmentation in StakeholderSegmentation" :key="segmentation" :value="segmentation">
+                            {{ segmentation }}
+                        </option>
+                    </select>
+                </td>
+                <td>
+                    <select name="category" form="new-stakeholder">
+                        <option v-for="category in StakeholderCategory" :key="category" :value="category">
+                            {{ category }}
+                        </option>
+                    </select>
+                </td>
+                <td>
+                    <button form="new-stakeholder" class="add-stakeholder">Add</button>
+                </td>
+            </tr>
+            <tr v-for="stakeholder in items" :key="stakeholder.id">
+                <td>{{ stakeholder.name }}</td>
+                <td>{{ stakeholder.description }}</td>
+                <td>{{ stakeholder.segmentation }}</td>
+                <td>{{ stakeholder.category }}</td>
+                <td>
+                    <button class="delete-button">Delete</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</template>
+
+<style scoped>
+.add-stakeholder {
+    background-color: var(--btn-okay-color);
+}
+
+tr td:last-child {
+    padding: 0;
+}
+
+.new-stakeholder-row {
+    & td {
+        padding: 0;
+    }
+
+    & input,
+    select {
+        background-color: white;
+        box-sizing: border-box;
+        color: black;
+        width: 100%;
+    }
+}
+</style>

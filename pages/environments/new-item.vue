@@ -2,11 +2,9 @@
 import { Environment } from '~/domain/Environment';
 import { Glossary } from '~/domain/Glossary';
 import { slugify } from '~/domain/slugify';
-import { EnvironmentStore } from '~/stores/EnvironmentStore'
-import { GlossaryStore } from '~/stores/GlossaryStore';
+import { EnvironmentRepository } from '~/data/EnvironmentRepository';
 
-const environmentStore = EnvironmentStore(),
-    glossaryStore = GlossaryStore(),
+const environmentRepo = new EnvironmentRepository(),
     router = useRouter();
 
 const name = ref(''),
@@ -19,11 +17,10 @@ const createEnvironment = (e: Event) => {
         formData = new FormData(form),
         name = formData.get('name') as string,
         description = formData.get('description') as string,
-        glossary = new Glossary({})
+        glossary = new Glossary()
 
-    const project = new Environment({ name, description, glossaryId: glossary.id })
-    environmentStore.add(project)
-    glossaryStore.add(glossary)
+    const project = new Environment({ name, description, glossary })
+    environmentRepo.add(project)
 
     router.push(`/environments/${project.id}`)
 }
