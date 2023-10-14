@@ -7,10 +7,4 @@
 
 import Actor from './Actor';
 
-/**
- * The stakeholders of a project are the groups of people
- * recognized by the project as having the potential to
- * affect or being affected by the project, environment,
- * goals or system.
- */
 export default class Stakeholder extends Actor { }

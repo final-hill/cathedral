@@ -10,8 +10,6 @@ export default defineNuxtConfig({
     css: ['~/assets/css/main.css'],
     devtools: { enabled: true },
     modules: [
-        // https://pinia.vuejs.org/introduction.html
-        '@pinia/nuxt',
         // https://phosphoricons.com/
         "nuxt-phosphor-icons"
     ],

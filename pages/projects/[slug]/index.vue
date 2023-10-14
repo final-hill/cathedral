@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ProjectStore } from '~/stores/ProjectStore'
+import { ProjectRepository } from '~/data/ProjectRepository';
 
 const route = useRoute(),
-    projectStore = ProjectStore(),
-    project = projectStore.getById(route.path.split('/')[2])!
+    repo = new ProjectRepository(),
+    project = ref(await repo.get(route.path.split('/')[2])!)
 </script>
 
 <template>

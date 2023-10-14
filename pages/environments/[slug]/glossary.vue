@@ -1,16 +1,13 @@
 <script lang="ts" setup>
 import { useRoute } from 'vue-router'
-import { EnvironmentStore } from '~/stores/EnvironmentStore'
-import { GlossaryStore } from '~/stores/GlossaryStore'
-import { GlossaryTerm } from '~/domain/GlossaryTerm'
+import { EnvironmentRepository } from '~/data/EnvironmentRepository'
 
 const route = useRoute(),
     environmentId = route.path.split('/')[2],
-    environmentStore = EnvironmentStore(),
-    { glossaryId } = environmentStore.getById(environmentId)!,
-    glossaryStore = GlossaryStore(),
-    glossary = glossaryStore.getById(glossaryId)!,
-    terms = glossary.terms
+    repo = new EnvironmentRepository(),
+    environment = await repo.get(environmentId),
+    glossary = environment?.glossary,
+    terms = ref(glossary.terms)
 
 const createTerm = (e: Event) => {
     e.preventDefault()
@@ -18,13 +15,9 @@ const createTerm = (e: Event) => {
         formData = new FormData(form),
         term = formData.get('term') as string,
         definition = formData.get('definition') as string
-    terms.push(new GlossaryTerm({ term, definition }))
-    terms.sort((a, b) => a.term.localeCompare(b.term))
-    glossaryStore.update(glossary)
-    // terms.value = [...terms.value, new GlossaryTerm({ term, definition })].sort((a, b) =>
-    //     a.term.localeCompare(b.term)
-    // )
-    // glossaryStore.update(glossary)
+    terms.value.push({ term, definition })
+    repo.update(environment)
+    terms.value.sort((a, b) => a.term.localeCompare(b.term))
     form.reset()
 }
 </script>
@@ -44,7 +37,7 @@ const createTerm = (e: Event) => {
         <tbody>
             <tr class="new-term-row">
                 <td>
-                    <input type="text" name="term" form="new-term" />
+                    <input type="text" name="term" required form="new-term" />
                 </td>
                 <td>
                     <input type="text" name="definition" form="new-term" />
@@ -53,11 +46,11 @@ const createTerm = (e: Event) => {
                     <button form="new-term" class="add-term">Add</button>
                 </td>
             </tr>
-            <tr v-for="term in terms" :key="term.id">
+            <tr v-for="term in terms" :key="term.term">
                 <td>{{ term.term }}</td>
                 <td>{{ term.definition }}</td>
                 <td>
-                    <button class="del-term">Delete</button>
+                    <button class="delete-button">Delete</button>
                 </td>
             </tr>
         </tbody>
@@ -67,10 +60,6 @@ const createTerm = (e: Event) => {
 <style scoped>
 .add-term {
     background-color: var(--btn-okay-color);
-}
-
-.del-term {
-    background-color: var(--btn-danger-color);
 }
 
 tr td:last-child {

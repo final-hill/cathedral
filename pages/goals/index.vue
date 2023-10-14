@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { GoalsStore } from '~/stores/GoalsStore'
+import { GoalsRepository } from '~/data/GoalsRepository';
 
-const store = GoalsStore()
+const repo = new GoalsRepository()
 </script>
 
 <template>
     <h1>Goals</h1>
-    <PegsCards :store="store" />
+    <PegsCards :repo="repo" />
 </template>

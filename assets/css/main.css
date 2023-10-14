@@ -68,7 +68,8 @@ ul {
     margin: 0;
 }
 
-input {
+input,
+select {
     background-color: var(--site-dark-bg);
     border-radius: var(--border-radius);
     font-size: inherit;
@@ -94,6 +95,11 @@ button {
     }
 }
 
+.delete-button {
+    background-color: var(--btn-danger-color);
+    color: white;
+}
+
 th {
     background-color: var(--site-dark-bg);
     padding: 0.5em;
@@ -105,4 +111,8 @@ td {
 
 tbody tr:nth-child(even) {
     background-color: var(--site-dark-bg);
+}
+
+.required {
+    color: var(--btn-danger-color);
 }

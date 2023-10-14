@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { GoalsStore } from '~/stores/GoalsStore'
+import { GoalsRepository } from '~/data/GoalsRepository';
 
 const route = useRoute(),
-    goalsStore = GoalsStore(),
-    goals = goalsStore.getById(route.path.split('/')[2])!
+    repo = new GoalsRepository(),
+    goals = ref(await repo.get(route.path.split('/')[2])!)
 </script>
 
 <template>
     <h2>{{ goals.name }}</h2>
+    <MiniCards>
+        <MiniCard :url="`/goals/${goals.id}/stakeholders`">
+            <PhosphorIconUsersFour size="25" />
+            <span>Stakeholders</span>
+        </MiniCard>
+    </MiniCards>
 </template>
-
-<style></style>
