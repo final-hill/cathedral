@@ -69,7 +69,8 @@ ul {
 }
 
 input,
-select {
+select,
+textarea {
     background-color: var(--site-dark-bg);
     border-radius: var(--border-radius);
     font-size: inherit;

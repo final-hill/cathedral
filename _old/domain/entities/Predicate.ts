@@ -8,6 +8,4 @@
 /**
  * A true or false expression dependent on a particular context
  */
-type Predicate = (x: any) => boolean;
-
-export default Predicate;
+export type Predicate = (x: any) => boolean;

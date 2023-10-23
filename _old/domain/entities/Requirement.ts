@@ -6,7 +6,7 @@
  */
 
 // import { Contract, Contracted, implies, invariant } from '@final-hill/decorator-contracts';
-import Predicate from './Predicate';
+import { type Predicate } from './Predicate';
 import Project from './Project';
 
 // const requirementContract = new Contract<Requirement>({

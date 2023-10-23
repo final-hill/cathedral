@@ -1,5 +1,5 @@
 import { Project } from "~/domain/Project";
-import { Mapper } from "~/usecases/Mapper";
+import { type Mapper } from "~/usecases/Mapper";
 
 export interface ProjectJson {
     id: string;

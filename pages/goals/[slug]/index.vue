@@ -8,7 +8,12 @@ const route = useRoute(),
 
 <template>
     <h2>{{ goals.name }}</h2>
+
     <MiniCards>
+        <MiniCard :url="`/goals/${goals.id}/rationale`">
+            <PhosphorIconLightbulb size="25" />
+            <span>Rationale</span>
+        </MiniCard>
         <MiniCard :url="`/goals/${goals.id}/stakeholders`">
             <PhosphorIconUsersFour size="25" />
             <span>Stakeholders</span>

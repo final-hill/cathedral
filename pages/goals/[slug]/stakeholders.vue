@@ -31,6 +31,12 @@ const createStakeholder = (e: Event) => {
 <template>
     <h2>Stakeholders</h2>
 
+    <p>
+        Stakeholders are the categories of people who are affected by the
+        problem you are trying to solve. Do not list individuals, but rather
+        groups or roles. Example: instead of "Jane Doe", use "Project Manager".
+    </p>
+
     <form id="new-stakeholder" @submit="createStakeholder" autocomplete="off"></form>
     <table>
         <caption>

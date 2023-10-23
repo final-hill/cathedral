@@ -1,5 +1,5 @@
 import { Entity } from "~/domain/Entity";
-import { Mapper } from "./Mapper";
+import { type Mapper } from "./Mapper";
 import { stringify, parse } from 'zipson'
 
 export abstract class Repository<E extends Entity<any>> {
@@ -8,7 +8,7 @@ export abstract class Repository<E extends Entity<any>> {
     getAll(): Promise<E[]> {
         const data = localStorage.getItem(this._storageKey),
             json = data ? parse(data) : [],
-            result = json.map(this._mapper.mapTo)
+            result = json.map((item: any) => this._mapper.mapTo(item))
 
         return Promise.resolve(result)
     }
