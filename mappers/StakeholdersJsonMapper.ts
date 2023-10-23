@@ -1,6 +1,6 @@
 import { Stakeholders } from "~/domain/Stakeholders";
 import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from "~/domain/Stakeholder";
-import { Mapper } from "~/usecases/Mapper";
+import { type Mapper } from "~/usecases/Mapper";
 
 export interface StakeholdersJson {
     id: string;

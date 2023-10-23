@@ -1,5 +1,5 @@
 import { Glossary } from "~/domain/Glossary";
-import { Mapper } from "~/usecases/Mapper";
+import { type Mapper } from "~/usecases/Mapper";
 
 export interface GlossaryTermJson {
     term: string;

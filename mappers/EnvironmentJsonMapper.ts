@@ -1,6 +1,6 @@
 import { Environment } from "~/domain/Environment";
-import { Mapper } from "~/usecases/Mapper";
-import { GlossaryJson, GlossaryJsonMapper } from "./GlossaryJsonMapper";
+import { type Mapper } from "~/usecases/Mapper";
+import { type GlossaryJson, GlossaryJsonMapper } from "./GlossaryJsonMapper";
 
 export interface EnvironmentJson {
     id: string;
