@@ -4,9 +4,8 @@ import { GoalsRepository } from '~/data/GoalsRepository'
 import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from '~/domain/Stakeholder'
 
 const route = useRoute(),
-    goalId = route.path.split('/')[2],
     repo = new GoalsRepository(),
-    goals = await repo.get(goalId)!,
+    goals = await repo.getBySlug(route.path.split('/')[2])!,
     { stakeholders } = goals,
     items = ref(stakeholders.stakeholders)
 
@@ -14,17 +13,23 @@ const createStakeholder = (e: Event) => {
     e.preventDefault()
     const form = e.target as HTMLFormElement,
         formData = new FormData(form),
-        name = formData.get('name') as string,
-        description = formData.get('description') as string ?? '',
-        category = formData.get('category') as StakeholderCategory,
-        segmentation = formData.get('segmentation') as StakeholderSegmentation,
         stakeholder = new Stakeholder({
-            name, description, category, segmentation
+            id: self.crypto.randomUUID(),
+            name: formData.get('name') as string,
+            description: formData.get('description') as string ?? '',
+            category: formData.get('category') as StakeholderCategory,
+            segmentation: formData.get('segmentation') as StakeholderSegmentation,
         });
     items.value.push(stakeholder);
     repo.update(goals);
     items.value.sort((a, b) => a.name.localeCompare(b.name));
     form.reset();
+}
+
+const deleteStakeholder = (id: Guid) => {
+    const index = items.value.findIndex(b => b.id === id);
+    items.value.splice(index, 1);
+    repo.delete(id)
 }
 </script>
 
@@ -85,7 +90,7 @@ const createStakeholder = (e: Event) => {
                 <td>{{ stakeholder.segmentation }}</td>
                 <td>{{ stakeholder.category }}</td>
                 <td>
-                    <button class="delete-button">Delete</button>
+                    <button class="delete-button" @click="deleteStakeholder(stakeholder.id)">Delete</button>
                 </td>
             </tr>
         </tbody>

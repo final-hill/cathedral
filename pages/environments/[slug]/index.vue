@@ -3,7 +3,7 @@ import { EnvironmentRepository } from '~/data/EnvironmentRepository'
 
 const route = useRoute(),
     repo = new EnvironmentRepository(),
-    environment = ref(await repo.get(route.path.split('/')[2])!)
+    environment = ref(await repo.getBySlug(route.path.split('/')[2])!)
 </script>
 
 <template>

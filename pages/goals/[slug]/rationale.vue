@@ -3,7 +3,7 @@ import { GoalsRepository } from '~/data/GoalsRepository';
 
 const route = useRoute(),
     repo = new GoalsRepository(),
-    goals = await repo.get(route.path.split('/')[2])!,
+    goals = await repo.getBySlug(route.path.split('/')[2])!,
     { objective, situation, outcomes } = goals;
 
 const updateSituation = (e: Event) => {

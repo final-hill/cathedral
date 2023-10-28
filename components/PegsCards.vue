@@ -13,8 +13,9 @@ const repo = props.repo as Repository<PEGS>,
     items = ref(await repo.getAll())
 
 const deleteItem = async (id: string) => {
-    if (confirm(`Are you sure you want to delete this entry? id: ${id}`))
-        repo.delete(id)
+    const item = items.value.find(item => item.id === id)!
+    if (confirm(`Are you sure you want to delete "${item?.name}"?`))
+        repo.delete(item.id)
     items.value = await repo.getAll()
 }
 </script>

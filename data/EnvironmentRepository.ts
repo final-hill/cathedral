@@ -1,9 +1,6 @@
 import { Environment } from "~/domain/Environment";
-import { Repository } from "~/usecases/Repository";
-import { EnvironmentJsonMapper } from "~/mappers/EnvironmentJsonMapper";
+import { PegsRepository } from "./PegsRepository";
 
-export class EnvironmentRepository extends Repository<Environment> {
-    constructor() {
-        super('environments', new EnvironmentJsonMapper())
-    }
+export class EnvironmentRepository extends PegsRepository<Environment> {
+    constructor() { super(Environment) }
 }

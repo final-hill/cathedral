@@ -1,4 +1,5 @@
 import { Entity } from "./Entity";
+import type { Properties } from "./types/Properties";
 
 export enum StakeholderSegmentation {
     Client = "Client",
@@ -13,14 +14,6 @@ export enum StakeholderCategory {
     OBSERVER = 'Observer'
 }
 
-export interface StakeholderOpts {
-    id?: string;
-    name: string;
-    description: string;
-    category: StakeholderCategory;
-    segmentation: StakeholderSegmentation;
-}
-
 /**
  * A Stakeholder is an individual or group that can affect or
  * be affected by a Project, Environment, Goals, or System
@@ -29,16 +22,24 @@ export interface StakeholderOpts {
  * @see Goals
  * @see System
  */
-export class Stakeholder extends Entity<string> {
-    private _id;
+export class Stakeholder extends Entity {
+    static override fromJSON(json: any): Stakeholder {
+        return new Stakeholder({
+            category: json.category,
+            description: json.description,
+            id: json.id,
+            name: json.name,
+            segmentation: json.segmentation
+        })
+    }
+
     private _name;
     private _description;
     private _category;
     private _segmentation;
 
-    constructor(options: StakeholderOpts) {
-        super();
-        this._id = options.id ?? crypto.randomUUID();
+    constructor(options: Properties<Stakeholder>) {
+        super(options);
         this._name = options.name;
         this._description = options.description;
         this._category = options.category;
@@ -53,15 +54,21 @@ export class Stakeholder extends Entity<string> {
         return this._description;
     }
 
-    get id(): string {
-        return this._id;
-    }
-
     get name(): string {
         return this._name;
     }
 
     get segmentation(): StakeholderSegmentation {
         return this._segmentation;
+    }
+
+    toJSON() {
+        return {
+            ...super.toJSON(),
+            category: this._category,
+            description: this._description,
+            name: this._name,
+            segmentation: this._segmentation
+        }
     }
 }

@@ -3,9 +3,8 @@ import { useRoute } from 'vue-router'
 import { EnvironmentRepository } from '~/data/EnvironmentRepository'
 
 const route = useRoute(),
-    environmentId = route.path.split('/')[2],
     repo = new EnvironmentRepository(),
-    environment = await repo.get(environmentId),
+    environment = await repo.getBySlug(route.path.split('/')[2]),
     glossary = environment?.glossary,
     terms = ref(glossary.terms)
 
