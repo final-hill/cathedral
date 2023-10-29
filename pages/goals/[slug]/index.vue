@@ -10,15 +10,15 @@ const route = useRoute(),
     <h2>{{ goals.name }}</h2>
 
     <MiniCards>
-        <MiniCard :url="`/goals/${goals.id}/rationale`">
+        <MiniCard :url="`/goals/${goals.slug()}/rationale`">
             <PhosphorIconLightbulb size="25" />
             <span>Rationale</span>
         </MiniCard>
-        <MiniCard :url="`/goals/${goals.id}/functionality`">
+        <MiniCard :url="`/goals/${goals.slug()}/functionality`">
             <PhosphorIconStairs size="25" />
             <span>Functionality</span>
         </MiniCard>
-        <MiniCard :url="`/goals/${goals.id}/stakeholders`">
+        <MiniCard :url="`/goals/${goals.slug()}/stakeholders`">
             <PhosphorIconUsersFour size="25" />
             <span>Stakeholders</span>
         </MiniCard>

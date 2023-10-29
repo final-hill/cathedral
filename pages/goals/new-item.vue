@@ -26,7 +26,8 @@ const createGoals = (e: Event) => {
         stakeholders: new Stakeholders({
             id: self.crypto.randomUUID(),
             stakeholders: []
-        })
+        }),
+        functionalBehaviors: []
     })
     repo.add(goals)
     router.push(`/goals/${goals.slug()}`)

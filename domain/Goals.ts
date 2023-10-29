@@ -1,7 +1,16 @@
-import { Behavior } from "./Behavior";
-import { PEGS } from "./PEGS";
-import { Stakeholders } from "./Stakeholders";
+import { Behavior, type BehaviorJson } from "./Behavior";
+import { PEGS, type PEGSJson } from "./PEGS";
+import { Stakeholders, type StakeholdersJson } from "./Stakeholders";
 import type { Properties } from "./types/Properties";
+
+export interface GoalsJson extends PEGSJson {
+    functionalBehaviors: BehaviorJson[];
+    objective: string;
+    outcomes: string;
+    situation: string;
+    stakeholders: StakeholdersJson;
+}
+
 
 /**
  * Goals are the needs and wants of an organization.
@@ -10,9 +19,9 @@ import type { Properties } from "./types/Properties";
 export class Goals extends PEGS {
     static override STORAGE_KEY = 'goals';
 
-    static override fromJSON(json: any): Goals {
+    static override fromJSON(json: GoalsJson): Goals {
         return new Goals({
-            functionalBehaviors: json.behaviors.map(Behavior.fromJSON),
+            functionalBehaviors: json.functionalBehaviors.map(Behavior.fromJSON),
             id: json.id,
             description: json.description,
             name: json.name,
@@ -74,10 +83,10 @@ export class Goals extends PEGS {
         return this._stakeholders
     }
 
-    toJSON() {
+    toJSON(): GoalsJson {
         return {
             ...super.toJSON(),
-            behaviors: this._functionalBehaviors,
+            functionalBehaviors: this._functionalBehaviors,
             objective: this._objective,
             outcomes: this._outcomes,
             situation: this._situation,

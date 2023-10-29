@@ -1,6 +1,10 @@
-import { Entity } from "./Entity";
+import { Entity, type EntityJson } from "./Entity";
 import type { Predicate } from "./types/Predicate";
 import type { Properties } from "./types/Properties";
+
+export interface RequirementJson extends EntityJson {
+    statement: string;
+}
 
 /**
  * A Requirement is a statement that specifies a property.
@@ -29,7 +33,7 @@ export abstract class Requirement extends Entity {
         throw new Error("Method not implemented.");
     }
 
-    override toJSON(): any {
+    override toJSON(): RequirementJson {
         return {
             ...super.toJSON(),
             statement: this.statement

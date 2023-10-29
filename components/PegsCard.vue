@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { Repository } from '~/usecases/Repository';
-
-const props = defineProps({
-    id: {
+defineProps({
+    slug: {
         type: String,
         required: true
     },
@@ -15,15 +13,13 @@ const props = defineProps({
         required: true
     }
 })
-
-const route = useRoute()
 </script>
 
 <template>
     <article class="pegs-card">
-        <h2 class="title"><nuxt-link :to="`${$route.path}/${id}`">{{ name }}</nuxt-link></h2>
+        <h2 class="title"><nuxt-link :to="`${$route.path}/${slug}`">{{ name }}</nuxt-link></h2>
         <p>{{ description }}</p>
-        <button v-if="id !== 'new-item'" @click="$emit('delete', id)" title="Delete item">
+        <button v-if="slug !== 'new-item'" @click="$emit('delete', slug)" title="Delete item">
             <PhosphorIconTrashSimple size="25" />
         </button>
     </article>

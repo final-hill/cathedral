@@ -1,8 +1,7 @@
 import { Entity } from "~/domain/Entity";
-import type { Constructor } from "~/domain/types/Constructor";
 
 export abstract class Repository<E extends Entity> {
-    constructor(readonly EntityConstructor: Constructor<E>) { }
+    constructor(readonly EntityConstructor: typeof Entity) { }
 
     abstract getAll(): Promise<E[]>
     abstract get(id: E['id']): Promise<E>

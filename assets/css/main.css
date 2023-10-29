@@ -96,11 +96,6 @@ button {
     }
 }
 
-.delete-button {
-    background-color: var(--btn-danger-color);
-    color: white;
-}
-
 th {
     background-color: var(--site-dark-bg);
     padding: 0.5em;

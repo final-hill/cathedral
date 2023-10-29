@@ -8,7 +8,8 @@ import { Requirement } from "./Requirement";
 export class Goal extends Requirement {
     static override fromJSON(json: any): Goal {
         return new Goal({
-            id: json.id
+            id: json.id,
+            statement: json.statement
         })
     }
     override toJSON(): any {

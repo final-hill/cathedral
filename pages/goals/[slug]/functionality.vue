@@ -1,11 +1,24 @@
 <script setup lang="ts">
 import DataTable from '~/components/DataTable.vue';
 import { GoalsRepository } from '~/data/GoalsRepository';
+import { Behavior } from '~/domain/Behavior';
 
 const route = useRoute(),
     goalsSlug = route.path.split('/')[2],
-    repo = new GoalsRepository(goalsSlug),
-    behaviors = ref(await repo.getAll())
+    repo = new GoalsRepository(),
+    goals = await repo.getBySlug(goalsSlug),
+    functionalBehaviors = ref(goals.functionalBehaviors),
+    columns = [
+        { dataField: 'statement', headerText: 'Statement', required: true }
+    ]
+
+const createItem = ({ statement }: { statement: string }) => {
+    functionalBehaviors.value.push(new Behavior({
+        id: self.crypto.randomUUID(),
+        statement
+    }));
+    repo.update(goals);
+}
 </script>
 
 <template>
@@ -16,7 +29,7 @@ const route = useRoute(),
         <strong>what</strong> the system should do, not <strong>how</strong> it should do it.
     </p>
 
-    <DataTable :repository="repo" :colNames="['name', 'description']" :enableCreate="true" :enableUpdate="true"
-        :enableDelete="true">
+    <DataTable :dataSource="functionalBehaviors" :columns="columns" :enableCreate="true" :enableUpdate="true"
+        :enableDelete="true" @create="createItem">
     </DataTable>
-</template>../../../data/BehaviorsRepository~/data/FunctionalBehaviorsRepository
+</template>

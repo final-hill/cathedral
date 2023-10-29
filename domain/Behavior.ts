@@ -1,8 +1,10 @@
-import { Requirement } from "./Requirement";
+import { Requirement, type RequirementJson } from "./Requirement";
 import type { Properties } from "./types/Properties";
 
+export interface BehaviorJson extends RequirementJson { }
+
 export class Behavior extends Requirement {
-    static override fromJSON(json: any): Behavior {
+    static override fromJSON(json: BehaviorJson): Behavior {
         return new Behavior({
             id: json.id,
             statement: json.statement
@@ -11,11 +13,5 @@ export class Behavior extends Requirement {
 
     constructor(options: Properties<Behavior>) {
         super(options)
-    }
-
-    override toJSON(): any {
-        return {
-            ...super.toJSON()
-        }
     }
 }

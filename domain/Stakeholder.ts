@@ -1,5 +1,12 @@
-import { Entity } from "./Entity";
+import { Entity, type EntityJson } from "./Entity";
 import type { Properties } from "./types/Properties";
+
+export interface StakeholderJson extends EntityJson {
+    category: StakeholderCategory;
+    description: string;
+    name: string;
+    segmentation: StakeholderSegmentation;
+}
 
 export enum StakeholderSegmentation {
     Client = "Client",
@@ -23,7 +30,7 @@ export enum StakeholderCategory {
  * @see System
  */
 export class Stakeholder extends Entity {
-    static override fromJSON(json: any): Stakeholder {
+    static override fromJSON(json: StakeholderJson): Stakeholder {
         return new Stakeholder({
             category: json.category,
             description: json.description,
@@ -62,7 +69,7 @@ export class Stakeholder extends Entity {
         return this._segmentation;
     }
 
-    toJSON() {
+    toJSON(): StakeholderJson {
         return {
             ...super.toJSON(),
             category: this._category,

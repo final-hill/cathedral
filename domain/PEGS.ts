@@ -1,6 +1,11 @@
-import { Entity } from "./Entity";
+import { Entity, type EntityJson } from "./Entity";
 import { slugify } from "./slugify";
 import type { Properties } from "./types/Properties";
+
+export interface PEGSJson extends EntityJson {
+    name: string;
+    description: string;
+}
 
 /**
  * The base class for all PEGS (Project, Environment, Goal, System)
@@ -43,5 +48,13 @@ export abstract class PEGS extends Entity {
 
     slug(): string {
         return slugify(this.name);
+    }
+
+    override toJSON(): PEGSJson {
+        return {
+            ...super.toJSON(),
+            name: this.name,
+            description: this.description
+        }
     }
 }

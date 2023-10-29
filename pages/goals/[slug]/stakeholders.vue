@@ -2,6 +2,7 @@
 import { useRoute } from 'vue-router'
 import { GoalsRepository } from '~/data/GoalsRepository'
 import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from '~/domain/Stakeholder'
+import type { Uuid } from '~/domain/types/Guid';
 
 const route = useRoute(),
     repo = new GoalsRepository(),
@@ -26,7 +27,7 @@ const createStakeholder = (e: Event) => {
     form.reset();
 }
 
-const deleteStakeholder = (id: Guid) => {
+const deleteStakeholder = (id: Uuid) => {
     const index = items.value.findIndex(b => b.id === id);
     items.value.splice(index, 1);
     repo.delete(id)
@@ -106,17 +107,15 @@ tr td:last-child {
     padding: 0;
 }
 
-.new-stakeholder-row {
-    & td {
-        padding: 0;
-    }
+.new-stakeholder-row td {
+    padding: 0;
+}
 
-    & input,
-    select {
-        background-color: white;
-        box-sizing: border-box;
-        color: black;
-        width: 100%;
-    }
+.new-stakeholder-row input,
+.new-stakeholder-row select {
+    background-color: white;
+    box-sizing: border-box;
+    color: black;
+    width: 100%;
 }
 </style>
