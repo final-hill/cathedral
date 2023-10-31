@@ -1,14 +1,14 @@
-import { PEGS } from "./PEGS";
-import { Stakeholders } from "./Stakeholders";
+import { Behavior, type BehaviorJson } from "./Behavior";
+import { PEGS, type PEGSJson } from "./PEGS";
+import { Stakeholders, type StakeholdersJson } from "./Stakeholders";
+import type { Properties } from "./types/Properties";
 
-export interface GoalsOptions {
-    id?: string
-    name: string
-    objective?: string
-    description?: string
-    outcomes?: string
-    situation?: string
-    stakeholders: Stakeholders
+export interface GoalsJson extends PEGSJson {
+    functionalBehaviors: BehaviorJson[];
+    objective: string;
+    outcomes: string;
+    situation: string;
+    stakeholders: StakeholdersJson;
 }
 
 /**
@@ -16,41 +16,48 @@ export interface GoalsOptions {
  * They are the things that the organization wants to achieve.
  */
 export class Goals extends PEGS {
-    private _objective
-    private _stakeholders
-    private _situation
-    private _outcomes
+    static override STORAGE_KEY = 'goals';
 
-    constructor(options: GoalsOptions) {
-        super({ id: options.id, name: options.name, description: options.description })
-        this._objective = options.objective ?? ''
-        this._stakeholders = options.stakeholders
-        this._situation = options.situation ?? ''
-        this._outcomes = options.outcomes ?? ''
-    }
-
-    get objective(): string {
-        return this._objective
-    }
-    set objective(objective: string) {
-        this._objective = objective
+    static override fromJSON(json: GoalsJson): Goals {
+        return new Goals({
+            functionalBehaviors: json.functionalBehaviors.map(Behavior.fromJSON),
+            id: json.id,
+            description: json.description,
+            name: json.name,
+            objective: json.objective,
+            outcomes: json.outcomes,
+            situation: json.situation,
+            stakeholders: Stakeholders.fromJSON(json.stakeholders)
+        })
     }
 
-    get outcomes(): string {
-        return this._outcomes
-    }
-    set outcomes(outcomes: string) {
-        this._outcomes = outcomes
+    /**
+     * Functional behaviors specify what results or effects are expected from the system.
+     * They specify "what" the system should do, not "how" it should do it.
+     */
+    functionalBehaviors: Behavior[]
+    objective: string
+    outcomes: string
+    stakeholders: Stakeholders
+    situation: string
+
+    constructor(options: Properties<Goals>) {
+        super(options)
+        this.functionalBehaviors = options.functionalBehaviors
+        this.objective = options.objective
+        this.outcomes = options.outcomes
+        this.stakeholders = options.stakeholders
+        this.situation = options.situation
     }
 
-    get situation(): string {
-        return this._situation
-    }
-    set situation(situation: string) {
-        this._situation = situation
-    }
-
-    get stakeholders(): Stakeholders {
-        return this._stakeholders
+    toJSON(): GoalsJson {
+        return {
+            ...super.toJSON(),
+            functionalBehaviors: this.functionalBehaviors.map(behavior => behavior.toJSON()),
+            objective: this.objective,
+            outcomes: this.outcomes,
+            situation: this.situation,
+            stakeholders: this.stakeholders.toJSON()
+        }
     }
 }

@@ -1,9 +1,6 @@
 import { Goals } from "~/domain/Goals";
-import { GoalsJsonMapper } from "~/mappers/GoalsJsonMapper";
-import { Repository } from "~/usecases/Repository";
+import { PegsRepository } from "./PegsRepository";
 
-export class GoalsRepository extends Repository<Goals> {
-    constructor() {
-        super('goals', new GoalsJsonMapper())
-    }
+export class GoalsRepository extends PegsRepository<Goals> {
+    constructor() { super(Goals) }
 }

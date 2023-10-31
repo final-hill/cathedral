@@ -1,30 +1,43 @@
 <script lang="ts" setup>
-import { useRoute } from 'vue-router'
+import DataTable, { type Column } from '~/components/DataTable.vue';
 import { GoalsRepository } from '~/data/GoalsRepository'
 import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from '~/domain/Stakeholder'
+import type { Uuid } from '~/domain/types/Guid';
 
 const route = useRoute(),
-    goalId = route.path.split('/')[2],
+    goalsSlug = route.path.split('/')[2],
     repo = new GoalsRepository(),
-    goals = await repo.get(goalId)!,
+    goals = await repo.getBySlug(goalsSlug)!,
     { stakeholders } = goals,
-    items = ref(stakeholders.stakeholders)
+    items = ref(stakeholders.stakeholders),
+    columns: Column[] = [
+        { dataField: 'id', headerText: 'ID', readonly: true, formType: 'hidden' },
+        { dataField: 'name', headerText: 'Name', required: true },
+        { dataField: 'description', headerText: 'Description', required: true },
+        { dataField: 'segmentation', headerText: 'Segmentation', formType: 'select', options: StakeholderSegmentation as any },
+        { dataField: 'category', headerText: 'Category', formType: 'select', options: StakeholderCategory as any }
+    ]
 
-const createStakeholder = (e: Event) => {
-    e.preventDefault()
-    const form = e.target as HTMLFormElement,
-        formData = new FormData(form),
-        name = formData.get('name') as string,
-        description = formData.get('description') as string ?? '',
-        category = formData.get('category') as StakeholderCategory,
-        segmentation = formData.get('segmentation') as StakeholderSegmentation,
-        stakeholder = new Stakeholder({
-            name, description, category, segmentation
-        });
-    items.value.push(stakeholder);
+const createItem = ({ name, description, segmentation, category }: Stakeholder) => {
+    items.value.push(new Stakeholder({
+        id: self.crypto.randomUUID(),
+        name, description, segmentation, category
+    }));
     repo.update(goals);
-    items.value.sort((a, b) => a.name.localeCompare(b.name));
-    form.reset();
+}
+
+const updateItem = ({ id, name, description, segmentation, category }: Stakeholder) => {
+    const index = items.value.findIndex(x => x.id === id);
+    items.value[index] = new Stakeholder({
+        id, name, description, segmentation, category
+    });
+    repo.update(goals);
+}
+
+const deleteItem = (id: Uuid) => {
+    const index = items.value.findIndex(x => x.id === id);
+    items.value.splice(index, 1);
+    repo.update(goals);
 }
 </script>
 
@@ -37,81 +50,7 @@ const createStakeholder = (e: Event) => {
         groups or roles. Example: instead of "Jane Doe", use "Project Manager".
     </p>
 
-    <form id="new-stakeholder" @submit="createStakeholder" autocomplete="off"></form>
-    <table>
-        <caption>
-            <span class="required">*</span> Required
-        </caption>
-        <thead>
-            <tr>
-                <th>
-                    Name <span class="required">*</span>
-                </th>
-                <th>Description</th>
-                <th>Segmentation</th>
-                <th>Category</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr class="new-stakeholder-row">
-                <td>
-                    <input type="text" name="name" required form="new-stakeholder" />
-                </td>
-                <td>
-                    <input type="text" name="description" form="new-stakeholder" />
-                </td>
-                <td>
-                    <select name="segmentation" form="new-stakeholder">
-                        <option v-for="segmentation in StakeholderSegmentation" :key="segmentation" :value="segmentation">
-                            {{ segmentation }}
-                        </option>
-                    </select>
-                </td>
-                <td>
-                    <select name="category" form="new-stakeholder">
-                        <option v-for="category in StakeholderCategory" :key="category" :value="category">
-                            {{ category }}
-                        </option>
-                    </select>
-                </td>
-                <td>
-                    <button form="new-stakeholder" class="add-stakeholder">Add</button>
-                </td>
-            </tr>
-            <tr v-for="stakeholder in items" :key="stakeholder.id">
-                <td>{{ stakeholder.name }}</td>
-                <td>{{ stakeholder.description }}</td>
-                <td>{{ stakeholder.segmentation }}</td>
-                <td>{{ stakeholder.category }}</td>
-                <td>
-                    <button class="delete-button">Delete</button>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <DataTable :dataSource="(items as Stakeholder[])" :columns="columns" :enableCreate="true" :enableUpdate="true"
+        :enableDelete="true" @create="createItem" @update="updateItem" @delete="deleteItem">
+    </DataTable>
 </template>
-
-<style scoped>
-.add-stakeholder {
-    background-color: var(--btn-okay-color);
-}
-
-tr td:last-child {
-    padding: 0;
-}
-
-.new-stakeholder-row {
-    & td {
-        padding: 0;
-    }
-
-    & input,
-    select {
-        background-color: white;
-        box-sizing: border-box;
-        color: black;
-        width: 100%;
-    }
-}
-</style>

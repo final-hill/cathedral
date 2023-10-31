@@ -1,11 +1,9 @@
-import { Glossary } from "./Glossary";
-import { PEGS } from "./PEGS";
+import { Glossary, type GlossaryJson } from "./Glossary";
+import { PEGS, type PEGSJson } from "./PEGS";
+import type { Properties } from "./types/Properties";
 
-export interface EnvironmentOptions {
-    id?: string;
-    name: string;
-    description?: string;
-    glossary?: Glossary;
+export interface EnvironmentJson extends PEGSJson {
+    glossary: GlossaryJson
 }
 
 /**
@@ -16,14 +14,32 @@ export interface EnvironmentOptions {
  * system operates.
  */
 export class Environment extends PEGS {
+    static override STORAGE_KEY = 'environments';
+
+    static override fromJSON(json: EnvironmentJson): Environment {
+        return new Environment({
+            description: json.description,
+            id: json.id,
+            name: json.name,
+            glossary: Glossary.fromJSON(json.glossary)
+        });
+    }
+
     private _glossary;
 
-    constructor({ id, name, description, glossary }: EnvironmentOptions) {
-        super({ id, name, description });
-        this._glossary = glossary ?? new Glossary();
+    constructor(options: Properties<Environment>) {
+        super(options);
+        this._glossary = options.glossary
     }
 
     get glossary(): Glossary {
         return this._glossary;
+    }
+
+    override toJSON(): EnvironmentJson {
+        return {
+            ...super.toJSON(),
+            glossary: this._glossary.toJSON()
+        }
     }
 }

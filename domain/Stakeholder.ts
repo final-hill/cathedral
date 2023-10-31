@@ -1,4 +1,12 @@
-import { Entity } from "./Entity";
+import { Entity, type EntityJson } from "./Entity";
+import type { Properties } from "./types/Properties";
+
+export interface StakeholderJson extends EntityJson {
+    category: StakeholderCategory;
+    description: string;
+    name: string;
+    segmentation: StakeholderSegmentation;
+}
 
 export enum StakeholderSegmentation {
     Client = "Client",
@@ -13,14 +21,6 @@ export enum StakeholderCategory {
     OBSERVER = 'Observer'
 }
 
-export interface StakeholderOpts {
-    id?: string;
-    name: string;
-    description: string;
-    category: StakeholderCategory;
-    segmentation: StakeholderSegmentation;
-}
-
 /**
  * A Stakeholder is an individual or group that can affect or
  * be affected by a Project, Environment, Goals, or System
@@ -29,39 +29,37 @@ export interface StakeholderOpts {
  * @see Goals
  * @see System
  */
-export class Stakeholder extends Entity<string> {
-    private _id;
-    private _name;
-    private _description;
-    private _category;
-    private _segmentation;
-
-    constructor(options: StakeholderOpts) {
-        super();
-        this._id = options.id ?? crypto.randomUUID();
-        this._name = options.name;
-        this._description = options.description;
-        this._category = options.category;
-        this._segmentation = options.segmentation;
+export class Stakeholder extends Entity {
+    static override fromJSON(json: StakeholderJson): Stakeholder {
+        return new Stakeholder({
+            category: json.category,
+            description: json.description,
+            id: json.id,
+            name: json.name,
+            segmentation: json.segmentation
+        })
     }
 
-    get category(): StakeholderCategory {
-        return this._category;
+    constructor(options: Properties<Stakeholder>) {
+        super(options);
+        this.name = options.name;
+        this.description = options.description;
+        this.category = options.category;
+        this.segmentation = options.segmentation;
     }
 
-    get description(): string {
-        return this._description;
-    }
+    category: StakeholderCategory;
+    description: string
+    name: string
+    segmentation: StakeholderSegmentation
 
-    get id(): string {
-        return this._id;
-    }
-
-    get name(): string {
-        return this._name;
-    }
-
-    get segmentation(): StakeholderSegmentation {
-        return this._segmentation;
+    toJSON(): StakeholderJson {
+        return {
+            ...super.toJSON(),
+            category: this.category,
+            description: this.description,
+            name: this.name,
+            segmentation: this.segmentation
+        }
     }
 }

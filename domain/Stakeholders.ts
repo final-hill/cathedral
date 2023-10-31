@@ -1,30 +1,34 @@
-import { Entity } from "./Entity";
-import { Stakeholder } from "./Stakeholder";
+import { Entity, type EntityJson } from "./Entity";
+import { Stakeholder, type StakeholderJson } from "./Stakeholder";
+import type { Properties } from "./types/Properties";
 
-export interface StakeholdersOptions {
-    id?: string
-    stakeholders?: Stakeholder[]
+export interface StakeholdersJson extends EntityJson {
+    stakeholders: StakeholderJson[]
 }
 
 /**
  * A collection of stakeholders.
  * @see Stakeholder
  */
-export class Stakeholders extends Entity<string> {
-    private _id: string
-    private _stakeholders: Stakeholder[] = []
-
-    constructor({ id, stakeholders }: StakeholdersOptions = {}) {
-        super()
-        this._id = id || self.crypto.randomUUID()
-        this._stakeholders = stakeholders ?? []
+export class Stakeholders extends Entity {
+    static override fromJSON(json: StakeholdersJson): Stakeholders {
+        return new Stakeholders({
+            id: json.id,
+            stakeholders: json.stakeholders.map(Stakeholder.fromJSON)
+        })
     }
 
-    get id() {
-        return this._id
+    stakeholders: Stakeholder[]
+
+    constructor(options: Properties<Stakeholders>) {
+        super(options)
+        this.stakeholders = options.stakeholders
     }
 
-    get stakeholders() {
-        return this._stakeholders
+    override toJSON(): StakeholdersJson {
+        return {
+            ...super.toJSON(),
+            stakeholders: this.stakeholders
+        }
     }
 }

@@ -3,7 +3,7 @@ import { ProjectRepository } from '~/data/ProjectRepository';
 
 const route = useRoute(),
     repo = new ProjectRepository(),
-    project = ref(await repo.get(route.path.split('/')[2])!)
+    project = ref(await repo.getBySlug(route.path.split('/')[2])!)
 </script>
 
 <template>

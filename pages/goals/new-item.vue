@@ -14,15 +14,23 @@ const name = ref(''),
 const createGoals = (e: Event) => {
     e.preventDefault()
     const form = e.target as HTMLFormElement,
-        formData = new FormData(form),
-        name = formData.get('name') as string,
-        description = formData.get('description') as string
+        formData = new FormData(form);
 
-    const stakeholders = new Stakeholders(),
-        project = new Goals({ name, description, stakeholders })
-    repo.add(project)
-
-    router.push(`/goals/${project.id}`)
+    const goals = new Goals({
+        id: self.crypto.randomUUID(),
+        name: formData.get('name') as string,
+        description: formData.get('description') as string,
+        objective: '',
+        outcomes: '',
+        situation: '',
+        stakeholders: new Stakeholders({
+            id: self.crypto.randomUUID(),
+            stakeholders: []
+        }),
+        functionalBehaviors: []
+    })
+    repo.add(goals)
+    router.push(`/goals/${goals.slug()}`)
 }
 
 </script>

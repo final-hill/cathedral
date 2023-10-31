@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { PEGS } from '~/domain/PEGS'
+import type { Uuid } from '~/domain/types/Guid';
 import { Repository } from '~/usecases/Repository';
 
 const props = defineProps({
@@ -12,9 +13,10 @@ const props = defineProps({
 const repo = props.repo as Repository<PEGS>,
     items = ref(await repo.getAll())
 
-const deleteItem = async (id: string) => {
-    if (confirm(`Are you sure you want to delete this entry? id: ${id}`))
-        repo.delete(id)
+const deleteItem = async (slug: Uuid) => {
+    const item = items.value.find(item => item.slug() === slug)!
+    if (confirm(`Are you sure you want to delete "${item?.name}"?`))
+        repo.delete(item.id)
     items.value = await repo.getAll()
 }
 </script>
@@ -34,8 +36,8 @@ const deleteItem = async (id: string) => {
 
 <template>
     <section class="pegs-cards">
-        <PegsCard id="new-item" name="New Entry" description="Create a new entry" />
-        <PegsCard v-for="item of items" :key="item.id" :id="item.id" :name="item.name" :description="item.description"
-            @delete="deleteItem" />
+        <PegsCard slug="new-item" name="New Entry" description="Create a new entry" />
+        <PegsCard v-for="item of items" :key="item.slug()" :slug="item.slug()" :name="item.name"
+            :description="item.description" @delete="deleteItem" />
     </section>
 </template>

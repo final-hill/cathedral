@@ -1,9 +1,6 @@
 import { Project } from "~/domain/Project";
-import { ProjectJsonMapper } from "~/mappers/ProjectJsonMapper";
-import { Repository } from "~/usecases/Repository";
+import { PegsRepository } from "./PegsRepository";
 
-export class ProjectRepository extends Repository<Project> {
-    constructor() {
-        super('projects', new ProjectJsonMapper())
-    }
+export class ProjectRepository extends PegsRepository<Project> {
+    constructor() { super(Project) }
 }

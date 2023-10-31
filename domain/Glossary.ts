@@ -1,34 +1,37 @@
-import { Entity } from "./Entity";
+import { Entity, type EntityJson } from "./Entity";
+import { GlossaryTerm, type GlossaryTermJson } from "./GlossaryTerm";
+import type { Properties } from "./types/Properties";
 
-export type GlossaryTerm = { term: string, definition: string }
-
-export type GlossaryOptions = {
-    id?: string,
-    terms?: GlossaryTerm[]
+export interface GlossaryJson extends EntityJson {
+    terms: GlossaryTermJson[];
 }
 
 /**
  * A glossary is a collection of terms with their definitions.
  * It is used to standardize the vocabulary used in the domain.
  */
-export class Glossary extends Entity<string> {
-    private _id: string
-    private _terms: GlossaryTerm[] = []
-
-    constructor({ id, terms }: GlossaryOptions = {}) {
-        super();
-        this._id = id ?? self.crypto.randomUUID();
-        this._terms = terms ?? [];
+export class Glossary extends Entity {
+    static override fromJSON(json: GlossaryJson): Glossary {
+        return new Glossary({
+            id: json.id,
+            terms: json.terms.map(term => GlossaryTerm.fromJSON(term))
+        });
     }
 
-    get id(): string {
-        return this._id;
+    constructor(options: Properties<Glossary>) {
+        super(options);
+        this.terms = options.terms;
     }
 
     /**
      * The terms in the glossary.
-     */
-    get terms(): GlossaryTerm[] {
-        return this._terms;
+    */
+    terms: GlossaryTerm[]
+
+    override toJSON(): GlossaryJson {
+        return {
+            ...super.toJSON(),
+            terms: this.terms.map(term => term.toJSON())
+        }
     }
 }

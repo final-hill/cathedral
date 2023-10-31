@@ -13,14 +13,16 @@ const name = ref(''),
 const createProject = (e: Event) => {
     e.preventDefault()
     const form = e.target as HTMLFormElement,
-        formData = new FormData(form),
-        name = formData.get('name') as string,
-        description = formData.get('description') as string
+        formData = new FormData(form)
 
-    const project = new Project({ name, description })
+    const project = new Project({
+        id: self.crypto.randomUUID(),
+        name: formData.get('name') as string,
+        description: formData.get('description') as string
+    })
     repo.add(project)
 
-    router.push(`/projects/${project.id}`)
+    router.push(`/projects/${project.slug()}`)
 }
 
 </script>
