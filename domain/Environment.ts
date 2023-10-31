@@ -1,6 +1,10 @@
-import { Glossary } from "./Glossary";
-import { PEGS } from "./PEGS";
+import { Glossary, type GlossaryJson } from "./Glossary";
+import { PEGS, type PEGSJson } from "./PEGS";
 import type { Properties } from "./types/Properties";
+
+export interface EnvironmentJson extends PEGSJson {
+    glossary: GlossaryJson
+}
 
 /**
  * The set of entities (people, organizations, regulations, devices and other material objects, other systems)
@@ -12,7 +16,7 @@ import type { Properties } from "./types/Properties";
 export class Environment extends PEGS {
     static override STORAGE_KEY = 'environments';
 
-    static override fromJSON(json: any): Environment {
+    static override fromJSON(json: EnvironmentJson): Environment {
         return new Environment({
             description: json.description,
             id: json.id,
@@ -32,7 +36,7 @@ export class Environment extends PEGS {
         return this._glossary;
     }
 
-    override toJSON() {
+    override toJSON(): EnvironmentJson {
         return {
             ...super.toJSON(),
             glossary: this._glossary.toJSON()

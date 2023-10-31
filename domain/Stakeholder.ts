@@ -40,42 +40,26 @@ export class Stakeholder extends Entity {
         })
     }
 
-    private _name;
-    private _description;
-    private _category;
-    private _segmentation;
-
     constructor(options: Properties<Stakeholder>) {
         super(options);
-        this._name = options.name;
-        this._description = options.description;
-        this._category = options.category;
-        this._segmentation = options.segmentation;
+        this.name = options.name;
+        this.description = options.description;
+        this.category = options.category;
+        this.segmentation = options.segmentation;
     }
 
-    get category(): StakeholderCategory {
-        return this._category;
-    }
-
-    get description(): string {
-        return this._description;
-    }
-
-    get name(): string {
-        return this._name;
-    }
-
-    get segmentation(): StakeholderSegmentation {
-        return this._segmentation;
-    }
+    category: StakeholderCategory;
+    description: string
+    name: string
+    segmentation: StakeholderSegmentation
 
     toJSON(): StakeholderJson {
         return {
             ...super.toJSON(),
-            category: this._category,
-            description: this._description,
-            name: this._name,
-            segmentation: this._segmentation
+            category: this.category,
+            description: this.description,
+            name: this.name,
+            segmentation: this.segmentation
         }
     }
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import DataTable from '~/components/DataTable.vue';
+import DataTable, { type Column } from '~/components/DataTable.vue';
 import { GoalsRepository } from '~/data/GoalsRepository';
 import { Behavior } from '~/domain/Behavior';
 
@@ -8,7 +8,8 @@ const route = useRoute(),
     repo = new GoalsRepository(),
     goals = await repo.getBySlug(goalsSlug),
     functionalBehaviors = ref(goals.functionalBehaviors),
-    columns = [
+    columns: Column[] = [
+        { dataField: 'id', headerText: 'ID', readonly: true, formType: 'hidden' },
         { dataField: 'statement', headerText: 'Statement', required: true }
     ]
 
@@ -17,6 +18,18 @@ const createItem = ({ statement }: { statement: string }) => {
         id: self.crypto.randomUUID(),
         statement
     }));
+    repo.update(goals);
+}
+
+const updateItem = ({ id, statement }: { id: string, statement: string }) => {
+    const index = functionalBehaviors.value.findIndex(x => x.id === id);
+    functionalBehaviors.value[index].statement = statement;
+    repo.update(goals);
+}
+
+const deleteItem = (id: string) => {
+    const index = functionalBehaviors.value.findIndex(x => x.id === id);
+    functionalBehaviors.value.splice(index, 1);
     repo.update(goals);
 }
 </script>
@@ -29,7 +42,7 @@ const createItem = ({ statement }: { statement: string }) => {
         <strong>what</strong> the system should do, not <strong>how</strong> it should do it.
     </p>
 
-    <DataTable :dataSource="functionalBehaviors" :columns="columns" :enableCreate="true" :enableUpdate="true"
-        :enableDelete="true" @create="createItem">
+    <DataTable :dataSource="(functionalBehaviors as Behavior[])" :columns="columns" :enableCreate="true"
+        :enableUpdate="true" :enableDelete="true" @create="createItem" @update="updateItem" @delete="deleteItem">
     </DataTable>
 </template>

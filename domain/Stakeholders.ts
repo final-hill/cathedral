@@ -18,21 +18,17 @@ export class Stakeholders extends Entity {
         })
     }
 
-    private _stakeholders: Stakeholder[] = []
+    stakeholders: Stakeholder[]
 
     constructor(options: Properties<Stakeholders>) {
         super(options)
-        this._stakeholders = options.stakeholders
-    }
-
-    get stakeholders() {
-        return this._stakeholders
+        this.stakeholders = options.stakeholders
     }
 
     override toJSON(): StakeholdersJson {
         return {
             ...super.toJSON(),
-            stakeholders: this._stakeholders
+            stakeholders: this.stakeholders
         }
     }
 }

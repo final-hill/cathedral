@@ -1,78 +1,53 @@
 <script lang="ts" setup>
-import { useRoute } from 'vue-router'
+import DataTable, { type Column } from '~/components/DataTable.vue';
+import { GlossaryTerm } from '~/domain/GlossaryTerm';
 import { EnvironmentRepository } from '~/data/EnvironmentRepository'
+import type { Uuid } from '~/domain/types/Guid';
 
 const route = useRoute(),
+    environmentSlug = route.path.split('/')[2],
     repo = new EnvironmentRepository(),
-    environment = await repo.getBySlug(route.path.split('/')[2]),
+    environment = await repo.getBySlug(environmentSlug),
     glossary = environment?.glossary,
-    terms = ref(glossary.terms)
+    terms = ref(glossary.terms),
+    columns: Column[] = [
+        { dataField: 'id', headerText: 'ID', readonly: true, formType: 'hidden' },
+        { dataField: 'term', headerText: 'Term', required: true },
+        { dataField: 'definition', headerText: 'Definition' }
+    ]
 
-const createTerm = (e: Event) => {
-    e.preventDefault()
-    const form = e.target as HTMLFormElement,
-        formData = new FormData(form),
-        term = formData.get('term') as string,
-        definition = formData.get('definition') as string
-    terms.value.push({ term, definition })
-    repo.update(environment)
-    terms.value.sort((a, b) => a.term.localeCompare(b.term))
-    form.reset()
+const createItem = ({ term, definition }: { term: string, definition: string }) => {
+    terms.value.push(new GlossaryTerm({
+        id: self.crypto.randomUUID(),
+        term, definition
+    }));
+    repo.update(environment);
+}
+
+const updateItem = ({ id, term, definition }: { id: Uuid, term: string, definition: string }) => {
+    const index = terms.value.findIndex(x => x.id === id);
+    terms.value[index] = new GlossaryTerm({
+        id, term, definition
+    });
+    repo.update(environment);
+}
+
+const deleteItem = (id: Uuid) => {
+    const index = terms.value.findIndex(x => x.id === id);
+    terms.value.splice(index, 1);
+    repo.update(environment);
 }
 </script>
 
 <template>
     <h2>Glossary</h2>
 
-    <form id="new-term" @submit="createTerm" autocomplete="off"></form>
-    <table>
-        <thead>
-            <tr>
-                <th>Term</th>
-                <th>Definition</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr class="new-term-row">
-                <td>
-                    <input type="text" name="term" required form="new-term" />
-                </td>
-                <td>
-                    <input type="text" name="definition" form="new-term" />
-                </td>
-                <td>
-                    <button form="new-term" class="add-term">Add</button>
-                </td>
-            </tr>
-            <tr v-for="term in terms" :key="term.term">
-                <td>{{ term.term }}</td>
-                <td>{{ term.definition }}</td>
-                <td>
-                    <button class="delete-button">Delete</button>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <p>
+        This section defines the terms used in the context of this environment.
+        Specify the terms and their definitions.
+    </p>
+
+    <DataTable :dataSource="(terms as GlossaryTerm[])" :columns="columns" :enableCreate="true" :enableUpdate="true"
+        :enableDelete="true" @create="createItem" @update="updateItem" @delete="deleteItem">
+    </DataTable>
 </template>
-
-<style scoped>
-.add-term {
-    background-color: var(--btn-okay-color);
-}
-
-tr td:last-child {
-    padding: 0;
-}
-
-.new-term-row {
-    & td {
-        padding: 0;
-    }
-
-    & input {
-        background-color: white;
-        color: black;
-    }
-}
-</style>

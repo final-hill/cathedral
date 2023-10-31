@@ -11,7 +11,6 @@ export interface GoalsJson extends PEGSJson {
     stakeholders: StakeholdersJson;
 }
 
-
 /**
  * Goals are the needs and wants of an organization.
  * They are the things that the organization wants to achieve.
@@ -32,65 +31,33 @@ export class Goals extends PEGS {
         })
     }
 
-    private _functionalBehaviors
-    private _objective
-    private _outcomes
-    private _stakeholders
-    private _situation
-
-    constructor(options: Properties<Goals>) {
-        super(options)
-        this._functionalBehaviors = options.functionalBehaviors
-        this._objective = options.objective
-        this._outcomes = options.outcomes
-        this._stakeholders = options.stakeholders
-        this._situation = options.situation
-    }
-
     /**
      * Functional behaviors specify what results or effects are expected from the system.
      * They specify "what" the system should do, not "how" it should do it.
      */
-    get functionalBehaviors(): Behavior[] {
-        return this._functionalBehaviors
-    }
-    set functionalBehaviors(behaviors: Behavior[]) {
-        this._functionalBehaviors = behaviors
-    }
+    functionalBehaviors: Behavior[]
+    objective: string
+    outcomes: string
+    stakeholders: Stakeholders
+    situation: string
 
-    get objective(): string {
-        return this._objective
-    }
-    set objective(objective: string) {
-        this._objective = objective
-    }
-
-    get outcomes(): string {
-        return this._outcomes
-    }
-    set outcomes(outcomes: string) {
-        this._outcomes = outcomes
-    }
-
-    get situation(): string {
-        return this._situation
-    }
-    set situation(situation: string) {
-        this._situation = situation
-    }
-
-    get stakeholders(): Stakeholders {
-        return this._stakeholders
+    constructor(options: Properties<Goals>) {
+        super(options)
+        this.functionalBehaviors = options.functionalBehaviors
+        this.objective = options.objective
+        this.outcomes = options.outcomes
+        this.stakeholders = options.stakeholders
+        this.situation = options.situation
     }
 
     toJSON(): GoalsJson {
         return {
             ...super.toJSON(),
-            functionalBehaviors: this._functionalBehaviors,
-            objective: this._objective,
-            outcomes: this._outcomes,
-            situation: this._situation,
-            stakeholders: this._stakeholders.toJSON()
+            functionalBehaviors: this.functionalBehaviors.map(behavior => behavior.toJSON()),
+            objective: this.objective,
+            outcomes: this.outcomes,
+            situation: this.situation,
+            stakeholders: this.stakeholders.toJSON()
         }
     }
 }
