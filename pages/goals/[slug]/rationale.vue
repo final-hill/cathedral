@@ -6,6 +6,8 @@ const route = useRoute(),
     goals = await repo.getBySlug(route.path.split('/')[2])!,
     { objective, situation, outcomes } = goals;
 
+useHead({ title: 'Rationale' })
+
 const updateSituation = (e: Event) => {
     const txtSituation = e.target as HTMLTextAreaElement
     goals.situation = txtSituation.value.trim()
@@ -26,8 +28,6 @@ const updateOutcomes = (e: Event) => {
 </script>
 
 <template>
-    <h2>Rationale</h2>
-
     <form id="frmRationale" autocomplete="off">
         <h3>Situation</h3>
         <p>

@@ -2,7 +2,7 @@
 import DataTable, { type Column } from '~/components/DataTable.vue';
 import { GlossaryTerm } from '~/domain/GlossaryTerm';
 import { EnvironmentRepository } from '~/data/EnvironmentRepository'
-import type { Uuid } from '~/domain/types/Guid';
+import type { Uuid } from '~/domain/types/Uuid';
 
 const route = useRoute(),
     environmentSlug = route.path.split('/')[2],
@@ -15,6 +15,8 @@ const route = useRoute(),
         { dataField: 'term', headerText: 'Term', required: true },
         { dataField: 'definition', headerText: 'Definition' }
     ]
+
+useHead({ title: 'Glossary' })
 
 const createItem = ({ term, definition }: { term: string, definition: string }) => {
     terms.value.push(new GlossaryTerm({
@@ -40,8 +42,6 @@ const deleteItem = (id: Uuid) => {
 </script>
 
 <template>
-    <h2>Glossary</h2>
-
     <p>
         This section defines the terms used in the context of this environment.
         Specify the terms and their definitions.

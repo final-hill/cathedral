@@ -4,11 +4,11 @@ import { GoalsRepository } from '~/data/GoalsRepository';
 const route = useRoute(),
     repo = new GoalsRepository(),
     goals = ref(await repo.getBySlug(route.path.split('/')[2])!)
+
+useHead({ title: goals.value.name })
 </script>
 
 <template>
-    <h2>{{ goals.name }}</h2>
-
     <MiniCards>
         <MiniCard :url="`/goals/${goals.slug()}/rationale`">
             <PhosphorIconLightbulb size="25" />

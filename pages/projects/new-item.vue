@@ -6,6 +6,8 @@ import { ProjectRepository } from '~/data/ProjectRepository';
 const repo = new ProjectRepository(),
     router = useRouter();
 
+useHead({ title: 'New Project' })
+
 const name = ref(''),
     slug = computed(() => slugify(name.value)),
     description = ref('')
@@ -28,7 +30,6 @@ const createProject = (e: Event) => {
 </script>
 
 <template>
-    <h1>New Project</h1>
     <form class="project-form" autocomplete="off" @submit="createProject">
         <label for="name">Name</label>
         <input type="text" id="name" name="name" :maxlength="Project.MAX_NAME_LENGTH" v-model="name"

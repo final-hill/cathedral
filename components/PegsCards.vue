@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { PEGS } from '~/domain/PEGS'
-import type { Uuid } from '~/domain/types/Guid';
+import type { Uuid } from '~/domain/types/Uuid';
 import { Repository } from '~/usecases/Repository';
 
 const props = defineProps({

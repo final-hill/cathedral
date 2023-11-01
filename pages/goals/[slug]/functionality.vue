@@ -13,6 +13,8 @@ const route = useRoute(),
         { dataField: 'statement', headerText: 'Statement', required: true }
     ]
 
+useHead({ title: 'Functionality' })
+
 const createItem = ({ statement }: { statement: string }) => {
     functionalBehaviors.value.push(new Behavior({
         id: self.crypto.randomUUID(),
@@ -35,7 +37,6 @@ const deleteItem = (id: string) => {
 </script>
 
 <template>
-    <h2>Functionality</h2>
     <p>
         This section describes the high-level functional behaviors of a system.
         Specify what results or effects are expected. Describe

@@ -28,6 +28,7 @@
                 </li>
             </ul>
         </nav>
+        <Breadcrumb id="breadcrumb" />
         <section id="content">
             <slot />
         </section>
@@ -38,6 +39,11 @@
 #app {
     display: grid;
     grid-template-columns: fit-content(1.5in) 1fr;
+    grid-template-rows: 0.5in 1fr;
+    grid-template-areas:
+        "global-nav breadcrumb"
+        "global-nav content"
+    ;
     overflow: hidden;
     height: 100vh;
     width: 100vw;
@@ -46,6 +52,7 @@
 #global-nav {
     background-color: var(--site-dark-bg);
     box-shadow: 2px 0 5px 0px var(--shadow-color);
+    grid-area: global-nav;
     height: 100vh;
     overflow-x: hidden;
     overflow-y: auto;
@@ -93,8 +100,13 @@
     }
 }
 
+#breadcrumb {
+    grid-area: breadcrumb;
+}
+
 #content {
     background-color: var(--content-bg);
+    grid-area: content;
     overflow: auto;
     padding: 1em 2em;
 }
