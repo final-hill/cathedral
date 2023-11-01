@@ -2,9 +2,10 @@
 import { ProjectRepository } from '~/data/ProjectRepository';
 
 const repo = new ProjectRepository()
+
+useHead({ title: 'Projects' })
 </script>
 
 <template>
-    <h1>Projects</h1>
     <PegsCards :repo="repo" />
 </template>

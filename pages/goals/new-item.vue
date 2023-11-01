@@ -7,6 +7,8 @@ import { Stakeholders } from '~/domain/Stakeholders';
 const repo = new GoalsRepository(),
     router = useRouter();
 
+useHead({ title: 'New Goals' })
+
 const name = ref(''),
     slug = computed(() => slugify(name.value)),
     description = ref('')
@@ -36,7 +38,6 @@ const createGoals = (e: Event) => {
 </script>
 
 <template>
-    <h1>New Goals</h1>
     <form class="goals-form" autocomplete="off" @submit="createGoals">
         <label for="name">Name</label>
         <input type="text" id="name" name="name" :maxlength="Goals.MAX_NAME_LENGTH" v-model="name" placeholder="My Goals"

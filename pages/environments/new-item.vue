@@ -7,6 +7,8 @@ import { EnvironmentRepository } from '~/data/EnvironmentRepository';
 const environmentRepo = new EnvironmentRepository(),
     router = useRouter();
 
+useHead({ title: 'New Environment' })
+
 const name = ref(''),
     slug = computed(() => slugify(name.value)),
     description = ref('')
@@ -34,7 +36,6 @@ const createEnvironment = (e: Event) => {
 </script>
 
 <template>
-    <h1>New Environment</h1>
     <form class="environment-form" autocomplete="off" @submit="createEnvironment">
         <label for="name">Name</label>
         <input type="text" id="name" name="name" :maxlength="Environment.MAX_NAME_LENGTH" v-model="name"

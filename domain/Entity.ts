@@ -1,4 +1,4 @@
-import type { Uuid } from "./types/Guid";
+import type { Uuid } from "./types/Uuid";
 import { type Properties } from "./types/Properties";
 
 export interface EntityJson {

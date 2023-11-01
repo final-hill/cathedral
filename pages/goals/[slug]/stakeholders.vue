@@ -2,7 +2,7 @@
 import DataTable, { type Column } from '~/components/DataTable.vue';
 import { GoalsRepository } from '~/data/GoalsRepository'
 import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from '~/domain/Stakeholder'
-import type { Uuid } from '~/domain/types/Guid';
+import type { Uuid } from '~/domain/types/Uuid';
 
 const route = useRoute(),
     goalsSlug = route.path.split('/')[2],
@@ -17,6 +17,8 @@ const route = useRoute(),
         { dataField: 'segmentation', headerText: 'Segmentation', formType: 'select', options: StakeholderSegmentation as any },
         { dataField: 'category', headerText: 'Category', formType: 'select', options: StakeholderCategory as any }
     ]
+
+useHead({ title: 'Stakeholders' })
 
 const createItem = ({ name, description, segmentation, category }: Stakeholder) => {
     items.value.push(new Stakeholder({
@@ -42,8 +44,6 @@ const deleteItem = (id: Uuid) => {
 </script>
 
 <template>
-    <h2>Stakeholders</h2>
-
     <p>
         Stakeholders are the categories of people who are affected by the
         problem you are trying to solve. Do not list individuals, but rather
