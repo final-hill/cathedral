@@ -1,4 +1,47 @@
 {
-    // https://nuxt.com/docs/guide/concepts/typescript
-    "extends": "./.nuxt/tsconfig.json"
+    "compilerOptions": {
+        "allowSyntheticDefaultImports": true,
+        "baseUrl": "./src",
+        "declaration": true,
+        "esModuleInterop": true,
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "outDir": "./dist",
+        "rootDir": "./src",
+        "sourceMap": true,
+        "strict": true,
+        "target": "ES2022"
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "paths": {
+        "assets": [
+            "assets"
+        ],
+        "components": [
+            "components"
+        ],
+        "data": [
+            "data"
+        ],
+        "domain": [
+            "domain"
+        ],
+        "layouts": [
+            "layouts"
+        ],
+        "lib": [
+            "lib"
+        ],
+        "pages": [
+            "pages"
+        ],
+        "usecases": [
+            "usecases"
+        ]
+    },
+    "exclude": [
+        "node_modules"
+    ]
 }
