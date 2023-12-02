@@ -20,22 +20,19 @@
         "serve": "webpack serve"
     },
     "devDependencies": {
-        "@types/glob": "^8.1.0",
+        "@types/dom-navigation": "^1.0.3",
         "@types/node": "^20.8.10",
         "copy-webpack-plugin": "^11.0.0",
-        "glob": "^10.3.10",
         "html-webpack-plugin": "^5.5.3",
         "ts-loader": "^9.5.0",
-        "typescript": "^5.2.2",
+        "typescript": "^5.3.2",
         "webpack": "^5.89.0",
         "webpack-cli": "^5.1.4",
         "webpack-dev-server": "^4.15.1"
     },
     "dependencies": {
+        "css-loader": "^6.8.1",
         "feather-icons": "^4.29.1",
-        "zipson": "^0.2.12"
-    },
-    "overrides": {
-        "vue": "latest"
+        "style-loader": "^3.3.3"
     }
 }

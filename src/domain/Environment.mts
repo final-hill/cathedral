@@ -1,9 +1,9 @@
-import { Glossary, type GlossaryJson } from "./Glossary.mjs";
+import type { Uuid } from "~/types/Uuid.mjs";
 import { PEGS, type PEGSJson } from "./PEGS.mjs";
-import type Properties from "./types/Properties.mjs";
+import type { Properties } from "~/types/Properties.mjs";
 
 export interface EnvironmentJson extends PEGSJson {
-    glossary: GlossaryJson
+    glossary: Uuid[];
 }
 
 /**
@@ -13,31 +13,27 @@ export interface EnvironmentJson extends PEGSJson {
  * An environment describes the application domain and external context in which a
  * system operates.
  */
-export class Environment extends PEGS {
-    static override fromJSON(json: EnvironmentJson): Environment {
+class Environment extends PEGS {
+    static override fromJSON({ description, id, name, glossary }: EnvironmentJson): Environment {
         return new Environment({
-            description: json.description,
-            id: json.id as Environment['id'],
-            name: json.name,
-            glossary: Glossary.fromJSON(json.glossary)
+            description, id, name,
+            glossary: glossary
         });
     }
 
-    private _glossary;
+    glossary: Uuid[];
 
     constructor(options: Properties<Environment>) {
         super(options);
-        this._glossary = options.glossary
-    }
-
-    get glossary(): Glossary {
-        return this._glossary;
+        this.glossary = options.glossary;
     }
 
     override toJSON(): EnvironmentJson {
         return {
             ...super.toJSON(),
-            glossary: this._glossary.toJSON()
-        }
+            glossary: this.glossary
+        };
     }
 }
+
+export { Environment };

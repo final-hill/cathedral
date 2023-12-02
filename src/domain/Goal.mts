@@ -1,4 +1,6 @@
-import { Requirement } from "./Requirement.mjs";
+import { Requirement, type RequirementJson } from "./Requirement.mjs";
+
+export interface GoalJson extends RequirementJson { }
 
 /**
  * A result desired by an organization.
@@ -6,15 +8,13 @@ import { Requirement } from "./Requirement.mjs";
  * of their desired effect on the environment
  */
 export class Goal extends Requirement {
-    static override fromJSON(json: any): Goal {
-        return new Goal({
-            id: json.id,
-            statement: json.statement
-        })
+    static override fromJSON({ id, statement }: GoalJson): Goal {
+        return new Goal({ id, statement });
     }
-    override toJSON(): any {
+
+    override toJSON(): GoalJson {
         return {
             ...super.toJSON()
-        }
+        };
     }
 }

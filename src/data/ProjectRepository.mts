@@ -1,13 +1,6 @@
-import { Project } from "domain/Project.mjs";
-import { LocalStorageRepository } from "./LocalStorageRepository.mjs";
+import { Project } from "~/domain/Project.mjs";
+import { PEGSRepository } from "./PEGSRepository.mjs";
 
-export class ProjectRepository extends LocalStorageRepository<Project> {
+export class ProjectRepository extends PEGSRepository<Project> {
     constructor() { super('projects', Project) }
-
-    async getBySlug(slug: string): Promise<Project | undefined> {
-        const all = await this.getAll(),
-            found = all.find(e => e.slug() === slug)
-
-        return found
-    }
 }

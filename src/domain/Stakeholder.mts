@@ -1,16 +1,16 @@
+import type { Properties } from "~/types/Properties.mjs";
 import { Entity, type EntityJson } from "./Entity.mjs";
-import type Properties from "./types/Properties.mjs";
 
 export interface StakeholderJson extends EntityJson {
-    category: StakeholderCategory;
+    category: string;
     description: string;
     name: string;
-    segmentation: StakeholderSegmentation;
-}
+    segmentation: string;
+};
 
 export enum StakeholderSegmentation {
     Client = "Client",
-    Vndor = "Vendor"
+    Vendor = "Vendor"
 }
 
 export enum StakeholderCategory {
@@ -21,45 +21,37 @@ export enum StakeholderCategory {
     OBSERVER = 'Observer'
 }
 
-/**
- * A Stakeholder is an individual or group that can affect or
- * be affected by a Project, Environment, Goals, or System
- * @see Project
- * @see Environment
- * @see Goals
- * @see System
- */
 export class Stakeholder extends Entity {
-    static override fromJSON(json: StakeholderJson): Stakeholder {
-        return new Stakeholder({
-            category: json.category,
-            description: json.description,
-            id: json.id as Stakeholder['id'],
-            name: json.name,
-            segmentation: json.segmentation
-        })
-    }
-
-    constructor(options: Properties<Stakeholder>) {
-        super(options);
-        this.name = options.name;
-        this.description = options.description;
-        this.category = options.category;
-        this.segmentation = options.segmentation;
-    }
-
     category: StakeholderCategory;
-    description: string
-    name: string
-    segmentation: StakeholderSegmentation
+    description: string;
+    name: string;
+    segmentation: StakeholderSegmentation;
 
-    toJSON(): StakeholderJson {
+    constructor({ id, category, description, name, segmentation }: Properties<Stakeholder>) {
+        super({ id });
+        this.category = category;
+        this.description = description;
+        this.name = name;
+        this.segmentation = segmentation;
+    }
+
+    static override fromJSON({ id, category, description, name, segmentation }: StakeholderJson): Stakeholder {
+        return new Stakeholder({
+            category: category as StakeholderCategory,
+            description,
+            id,
+            name,
+            segmentation: segmentation as StakeholderSegmentation
+        });
+    }
+
+    override toJSON(): StakeholderJson {
         return {
             ...super.toJSON(),
             category: this.category,
             description: this.description,
             name: this.name,
             segmentation: this.segmentation
-        }
+        };
     }
 }
