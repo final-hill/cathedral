@@ -1,4 +1,5 @@
 {
     "editor.formatOnSave": true,
-    "git.pruneOnFetch": true
+    "git.pruneOnFetch": true,
+    "typescript.tsdk": "node_modules\\typescript\\lib"
 }

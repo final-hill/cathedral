@@ -1,0 +1,53 @@
+:root {
+    --palette0: hsla(0, 0%, 0%, 0.4);
+    --palette1: hsl(209, 71%, 64%);
+    --palette2: hsl(211, 19%, 22%);
+    --palette3: hsl(212, 18%, 16%);
+    --palette4: hsl(3, 93%, 63%);
+    --palette5: hsl(0, 0%, 100%);
+    --palette6: hsl(0, 0%, 80%);
+    --palette7: hsl(211, 19%, 22%);
+    --palette8: hsl(0, 0%, 0%);
+
+    --btn-okay-color: var(--palette1);
+    --btn-font-color: var(--palette5);
+    --btn-danger-color: var(--palette4);
+    --font-color: var(--palette6);
+    --link-color: var(--palette1);
+    --site-dark-bg: var(--palette3);
+    --content-bg: var(--palette7);
+    --shadow-color: var(--palette0);
+    --border-radius: 5px;
+}
+
+::webkit-scrollbar {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+::-webkit-scrollbar:vertical {
+    width: 0.5em;
+}
+
+::-webkit-scrollbar:horizontal {
+    height: 0.5em;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--shadow-color);
+    border-radius: var(--border-radius);
+    border: 2px solid var(--content-bg);
+}
+
+::-webkit-scrollbar-track {
+    border-radius: var(--border-radius);
+    background-color: var(--site-dark-bg);
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    background-color: var(--site-dark-bg);
+    color: var(--font-color);
+}

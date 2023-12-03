@@ -1,0 +1,8 @@
+# https://neil-clarke.com/block-the-bots-that-feed-ai-models-by-scraping-your-website/
+User-agent: CCBot
+User-agent: ChatGPT-User
+User-agent: GPTBot
+User-agent: Google-Extended
+User-agent: Omgilibot
+User-agent: FacebookBot
+Disallow: /
