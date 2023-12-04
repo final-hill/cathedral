@@ -15,7 +15,7 @@ export interface EntityJson {
  * An entity is an object that is not defined by its attributes,
  * but rather by a thread of continuity represented by its identity (id).
  */
-export abstract class Entity {
+export class Entity {
     static emptyId: Uuid = '00000000-0000-0000-0000-000000000000';
 
     /**
@@ -23,8 +23,8 @@ export abstract class Entity {
      * @param json - The JSON representation of the object.
      * @returns The object.
      */
-    static fromJSON(json: EntityJson): Entity {
-        throw new Error('Method not implemented.');
+    static fromJSON({ id }: EntityJson): Entity {
+        return new Entity({ id });
     }
 
     #id: Uuid;

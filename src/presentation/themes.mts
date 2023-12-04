@@ -6,7 +6,7 @@
  */
 type Theme = Record<string, Partial<CSSStyleDeclaration>>;
 
-export const formTheme: Record<string, Partial<CSSStyleDeclaration>> = {
+export const formTheme: Theme = {
     'button': {
         backgroundColor: 'var(--site-dark-bg)',
         borderRadius: 'var(--border-radius)',

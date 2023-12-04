@@ -103,7 +103,7 @@ export class NewGoals extends Page {
         self.navigation.navigate(`/goals/${goals.slug()}`);
     }
 
-    onReset(e: Event) {
+    onReset() {
         self.navigation.navigate('/goals');
     }
 }

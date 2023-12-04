@@ -28,7 +28,7 @@ export class LocalStorageRepository<E extends Entity> extends Repository<E> {
         );
     }
 
-    getAll(filter: (entity: E) => boolean = entity => true): Promise<E[]> {
+    getAll(filter: (entity: E) => boolean = _ => true): Promise<E[]> {
         const data = localStorage.getItem(this._storageKey),
             json: E[] = data ? JSON.parse(data) : [],
             result = json.filter(filter).map(this._fromJSON);

@@ -100,7 +100,7 @@ export class NewEnvironment extends Page {
         self.navigation.navigate(`/environments/${environment.slug()}`);
     }
 
-    onReset(e: Event) {
+    onReset() {
         self.navigation.navigate('/goals');
     }
 }

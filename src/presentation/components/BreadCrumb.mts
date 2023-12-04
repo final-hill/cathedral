@@ -22,7 +22,7 @@ export class Breadcrumb extends Component {
     }
 
     constructor(properties: Properties<Breadcrumb>) {
-        super({});
+        super(properties);
         self.navigation.addEventListener('navigate', this);
     }
 

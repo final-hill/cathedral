@@ -51,7 +51,7 @@ export class FeatherIcon extends Component {
     get icon(): FeatherIconName { return this.getAttribute('icon') as FeatherIconName; }
     set icon(value: FeatherIconName) { this.setAttribute('icon', value); }
 
-    onIconChanged(oldValue: FeatherIconName, newValue: FeatherIconName) {
+    onIconChanged(_oldValue: FeatherIconName, newValue: FeatherIconName) {
         this.shadowRoot.querySelector('use')!.setAttribute('href', `${svgPath}#${newValue}`);
     }
 }
