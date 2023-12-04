@@ -1,24 +1,30 @@
-import { Environment } from "~/domain/Environment.mjs";
-import { EnvironmentRepository } from "~/data/EnvironmentRepository.mjs";
-import { formTheme } from "~/presentation/themes.mjs";
-import Page from "../Page.mjs";
-import html from "~/presentation/lib/html.mjs";
-import { PEGS } from "~/domain/PEGS.mjs";
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+import { Environment } from '~/domain/Environment.mjs';
+import { EnvironmentRepository } from '~/data/EnvironmentRepository.mjs';
+import { formTheme } from '~/presentation/themes.mjs';
+import Page from '../Page.mjs';
+import html from '~/presentation/lib/html.mjs';
+import { PEGS } from '~/domain/PEGS.mjs';
 
-const { form, label, input, span, button } = html
+const { form, label, input, span, button } = html;
 
 export class NewEnvironment extends Page {
     static {
-        customElements.define('x-new-environment-page', this)
+        customElements.define('x-new-environment-page', this);
     }
 
-    #repository = new EnvironmentRepository()
-    #form!: HTMLFormElement
-    #txtName!: HTMLInputElement
-    #txtSlug!: HTMLInputElement
+    #repository = new EnvironmentRepository();
+    #form!: HTMLFormElement;
+    #txtName!: HTMLInputElement;
+    #txtSlug!: HTMLInputElement;
 
     constructor() {
-        super({ title: 'New Environment' }, [])
+        super({ title: 'New Environment' }, []);
 
         this.shadowRoot.appendChild(
             this.#form = form({
@@ -28,25 +34,25 @@ export class NewEnvironment extends Page {
                 label({ htmlFor: 'name', className: 'required' }, 'Name'),
                 this.#txtName = input({
                     type: 'text', name: 'name', id: 'name', required: true,
-                    placeholder: 'Sample Environment', maxLength: Environment.MAX_NAME_LENGTH
+                    placeholder: 'Sample Environment', maxLength: Environment.maxNameLength
                 }, []),
                 label({ htmlFor: 'slug' }, 'Slug'),
                 this.#txtSlug = input({ type: 'text', name: 'slug', id: 'slug', readOnly: true }, []),
                 label({ htmlFor: 'description' }, 'Description'),
                 input({
                     type: 'text', name: 'description', id: 'description',
-                    placeholder: 'A description of the environment', maxLength: Environment.MAX_DESCRIPTION_LENGTH
+                    placeholder: 'A description of the environment', maxLength: Environment.maxDescriptionLength
                 }, []),
                 span({ id: 'actions' }, [
                     button({ type: 'submit' }, 'Create'),
                     button({ type: 'reset' }, 'Cancel')
                 ])
             ])
-        )
+        );
 
-        this.#form.addEventListener('submit', this)
-        this.#form.addEventListener('reset', this)
-        this.#txtName.addEventListener('input', this)
+        this.#form.addEventListener('submit', this);
+        this.#form.addEventListener('reset', this);
+        this.#txtName.addEventListener('input', this);
     }
 
     protected override _initStyle() {
@@ -69,32 +75,32 @@ export class NewEnvironment extends Page {
                 justifyContent: 'space-between',
                 maxWidth: '4.5in'
             }
-        }
+        };
     }
 
     async onInput(e: Event) {
         const name = (e.target as HTMLInputElement).value,
-            slug = PEGS.slugify(name)
-        this.#txtSlug.value = slug
+            slug = PEGS.slugify(name);
+        this.#txtSlug.value = slug;
     }
 
     async onSubmit(e: Event) {
-        e.preventDefault()
+        e.preventDefault();
         const form = e.target as HTMLFormElement,
-            formData = new FormData(form)
+            formData = new FormData(form),
 
-        const environment = new Environment({
-            id: self.crypto.randomUUID(),
-            name: formData.get('name') as string,
-            description: formData.get('description') as string,
-            glossary: []
-        })
-        this.#repository.add(environment)
+            environment = new Environment({
+                id: self.crypto.randomUUID(),
+                name: formData.get('name') as string,
+                description: formData.get('description') as string,
+                glossary: []
+            });
+        this.#repository.add(environment);
 
-        self.navigation.navigate(`/environments/${environment.slug()}`)
+        self.navigation.navigate(`/environments/${environment.slug()}`);
     }
 
     onReset(e: Event) {
-        self.navigation.navigate('/goals')
+        self.navigation.navigate('/goals');
     }
 }

@@ -1,4 +1,10 @@
-import { Container } from "~components/index.mjs";
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+import { Container } from '~components/index.mjs';
 
 export default class Page extends Container {
     protected override _initStyle() {
@@ -18,14 +24,14 @@ export default class Page extends Container {
             'a:hover, a:active, a:focus': {
                 textDecoration: 'underline'
             }
-        }
+        };
     }
 
     override get title() {
-        return document.title
+        return document.title;
     }
     override set title(value: string) {
-        document.title = value
-        super.title = value
+        document.title = value;
+        super.title = value;
     }
 }

@@ -1,3 +1,9 @@
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
 type SvgAttributes<T extends keyof SVGElementTagNameMap> = Partial<SVGElementTagNameMap[T]>;
 
 const create = <T extends keyof SVGElementTagNameMap>(
@@ -39,8 +45,9 @@ type ElementMethods = {
 const isObjectLiteral = (obj: any) => {
     if (obj === null || typeof obj !== 'object')
         return false;
+
     return Object.getPrototypeOf(obj) === Object.prototype;
-}
+};
 
 export default new Proxy({}, {
     get(_, prop: keyof SVGElementTagNameMap) {
@@ -55,6 +62,6 @@ export default new Proxy({}, {
                 return create(prop, {}, [objAttribs]);
             else
                 return create(prop, objAttribs, []);
-        }
+        };
     },
 }) as ElementMethods;

@@ -1,32 +1,38 @@
-import type Page from "./pages/Page.mjs";
-import Router from "./Router.mjs";
-import html from "./lib/html.mjs"
-import { Breadcrumb, Container, GlobalNav } from "~components/index.mjs";
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+import type Page from './pages/Page.mjs';
+import Router from './Router.mjs';
+import html from './lib/html.mjs';
+import { Breadcrumb, Container, GlobalNav } from '~components/index.mjs';
 
 export default class Application extends Container {
     static {
-        customElements.define('x-application', this)
+        customElements.define('x-application', this);
     }
-    #currentPage: Page | null = null
-    #router!: Router
+    #currentPage: Page | null = null;
+    #router!: Router;
 
     constructor() {
-        super({}, [])
+        super({}, []);
 
         //this._installOrUpdateServiceWorker()
         this._initRouter().then(() => {
             self.navigation.navigate(location.pathname);
-        })
+        });
     }
 
     protected override _initHtml() {
-        const { template, section, slot } = html
+        const { template, section, slot } = html;
 
         return template([
             new GlobalNav({}),
             new Breadcrumb({}),
             section({ id: 'content' }, slot())
-        ])
+        ]);
     }
 
     protected override _initStyle() {
@@ -58,7 +64,7 @@ export default class Application extends Container {
                 overflow: 'auto',
                 padding: '1em 2em',
             }
-        }
+        };
     }
 
     protected async _initRouter() {
@@ -76,48 +82,48 @@ export default class Application extends Container {
             ['/goals/:slug/rationale', (await import('./pages/goals/Rationale.mjs')).Rationale],
             ['/goals/:slug/functionality', (await import('./pages/goals/Functionality.mjs')).Functionality],
             ['/goals/:slug/stakeholders', (await import('./pages/goals/Stakeholders.mjs')).Stakeholders],
-        ])
+        ]);
         this.#router.addEventListener('route', this);
     }
 
     protected async _installServiceWorker() {
         try {
-            const registration = await self.navigator.serviceWorker.register('/sw.mjs', { scope: '/' })
+            const registration = await self.navigator.serviceWorker.register('/sw.mjs', { scope: '/' });
             if (registration.installing)
                 this.dispatchEvent(new CustomEvent('installing', {
                     detail: 'Service worker installing'
-                }))
+                }));
             else if (registration.waiting)
                 this.dispatchEvent(new CustomEvent('waiting', {
                     detail: 'Service worker waiting'
-                }))
+                }));
             else if (registration.active)
                 this.dispatchEvent(new CustomEvent('active', {
                     detail: 'Service worker active'
-                }))
+                }));
         } catch (error) {
             this.dispatchEvent(new CustomEvent('error', {
                 detail: 'Service worker registration failed'
-            }))
+            }));
         }
     }
 
     protected async _installOrUpdateServiceWorker() {
-        if (!('serviceWorker' in navigator)) {
+        if (!('serviceWorker' in navigator))
             this.dispatchEvent(new CustomEvent('error', {
                 detail: 'Service worker not supported'
-            }))
-        } else {
+            }));
+        else
             try {
-                const registration = await navigator.serviceWorker.register('/sw.mjs', { scope: '/' })
+                const registration = await navigator.serviceWorker.register('/sw.mjs', { scope: '/' });
                 if (registration)
-                    await registration.update()
+                    await registration.update();
                 else
-                    await this._installServiceWorker()
+                    await this._installServiceWorker();
             } catch (err) {
-                await this._installServiceWorker()
+                await this._installServiceWorker();
             }
-        }
+
     }
 
     onRoute(event: CustomEvent<typeof Page>) {

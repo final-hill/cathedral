@@ -1,5 +1,11 @@
-import { type Entity } from "~/domain/Entity.mjs";
-import Repository from "~/usecases/Repository.mjs";
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+import { type Entity } from '~/domain/Entity.mjs';
+import Repository from '~/usecases/Repository.mjs';
 
 export class LocalStorageRepository<E extends Entity> extends Repository<E> {
     private _storageKey;
@@ -9,20 +15,20 @@ export class LocalStorageRepository<E extends Entity> extends Repository<E> {
         super(EntityConstructor);
 
         this._storageKey = storageKey;
-        this._fromJSON = EntityConstructor.fromJSON as (json: any) => E
+        this._fromJSON = EntityConstructor.fromJSON as (json: any) => E;
     }
 
     get(id: E['id']): Promise<E | undefined> {
         const data = localStorage.getItem(this._storageKey),
             json: E[] = data ? JSON.parse(data) : [],
-            result = json.find((item) => item.id === id);
+            result = json.find(item => item.id === id);
 
         return Promise.resolve(
             result ? this._fromJSON(result) : undefined
         );
     }
 
-    getAll(filter: (entity: E) => boolean = (entity) => true): Promise<E[]> {
+    getAll(filter: (entity: E) => boolean = entity => true): Promise<E[]> {
         const data = localStorage.getItem(this._storageKey),
             json: E[] = data ? JSON.parse(data) : [],
             result = json.filter(filter).map(this._fromJSON);
@@ -44,7 +50,7 @@ export class LocalStorageRepository<E extends Entity> extends Repository<E> {
     update(item: E): Promise<void> {
         const data = localStorage.getItem(this._storageKey),
             json: E[] = data ? JSON.parse(data) : [],
-            index = json.findIndex((item) => item.id === item.id);
+            index = json.findIndex(e => e.id === item.id);
 
         if (index === -1)
             throw new Error('Not found');
@@ -60,7 +66,7 @@ export class LocalStorageRepository<E extends Entity> extends Repository<E> {
     delete(id: E['id']): Promise<void> {
         const data = localStorage.getItem(this._storageKey),
             json: E[] = data ? JSON.parse(data) : [],
-            index = json.findIndex((item) => item.id === id);
+            index = json.findIndex(item => item.id === id);
 
         if (index === -1)
             throw new Error('Not found');

@@ -1,23 +1,29 @@
-import { Component } from "./index.mjs";
-import type { FeatherIconName } from "~/types/FeatherIconName.mjs";
-import html from "../lib/html.mjs";
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+import { Component } from './index.mjs';
+import type { FeatherIconName } from '~/types/FeatherIconName.mjs';
+import html from '../lib/html.mjs';
 // @ts-ignore
-import svgPath from 'feather-icons/dist/feather-sprite.svg'
-import type { Properties } from "~/types/Properties.mjs";
+import svgPath from 'feather-icons/dist/feather-sprite.svg';
+import type { Properties } from '~/types/Properties.mjs';
 
-const xmlnsSvg = 'http://www.w3.org/2000/svg'
+const xmlnsSvg = 'http://www.w3.org/2000/svg';
 
 export class FeatherIcon extends Component {
     static {
-        customElements.define('x-feather-icon', this)
+        customElements.define('x-feather-icon', this);
     }
 
     static override get observedAttributes() {
-        return ['icon']
+        return ['icon'];
     }
 
     constructor(properties: Properties<FeatherIcon>) {
-        super(properties)
+        super(properties);
     }
 
     protected override _initStyle() {
@@ -29,22 +35,23 @@ export class FeatherIcon extends Component {
                 height: 'var(--size)',
                 width: 'var(--size)',
             }
-        }
+        };
     }
 
     protected override _initHtml() {
         const { template } = html,
             svg = document.createElementNS(xmlnsSvg, 'svg'),
-            use = document.createElementNS(xmlnsSvg, 'use')
-        svg.classList.add('feather-icon')
-        svg.appendChild(use)
-        return template(svg)
+            use = document.createElementNS(xmlnsSvg, 'use');
+        svg.classList.add('feather-icon');
+        svg.appendChild(use);
+
+        return template(svg);
     }
 
-    get icon(): FeatherIconName { return this.getAttribute('icon') as FeatherIconName }
-    set icon(value: FeatherIconName) { this.setAttribute('icon', value) }
+    get icon(): FeatherIconName { return this.getAttribute('icon') as FeatherIconName; }
+    set icon(value: FeatherIconName) { this.setAttribute('icon', value); }
 
     onIconChanged(oldValue: FeatherIconName, newValue: FeatherIconName) {
-        this.shadowRoot.querySelector('use')!.setAttribute('href', `${svgPath}#${newValue}`)
+        this.shadowRoot.querySelector('use')!.setAttribute('href', `${svgPath}#${newValue}`);
     }
 }

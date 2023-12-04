@@ -1,19 +1,25 @@
-import { Component, FeatherIcon } from "./index.mjs";
-import html from "../lib/html.mjs";
-import type { Properties } from "~/types/Properties.mjs";
-import type { FeatherIconName } from "~/types/FeatherIconName.mjs";
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+import { Component, FeatherIcon } from './index.mjs';
+import html from '../lib/html.mjs';
+import type { Properties } from '~/types/Properties.mjs';
+import type { FeatherIconName } from '~/types/FeatherIconName.mjs';
 
 export class MiniCard extends Component {
     static {
-        customElements.define('x-mini-card', this)
+        customElements.define('x-mini-card', this);
     }
 
     static override get observedAttributes() {
-        return ['title', 'href', 'icon']
+        return ['title', 'href', 'icon'];
     }
 
     constructor(properties: Properties<MiniCard>) {
-        super(properties)
+        super(properties);
     }
 
     protected override _initStyle() {
@@ -41,7 +47,7 @@ export class MiniCard extends Component {
             'x-feather-icon': {
                 '--size': '2em',
             }
-        }
+        };
     }
 
     protected override _initHtml() {
@@ -69,7 +75,7 @@ export class MiniCard extends Component {
         this.shadowRoot.querySelector('a')!.setAttribute('href', newValue);
     }
 
-    get icon() { return this.getAttribute('icon')! }
+    get icon() { return this.getAttribute('icon')!; }
     set icon(value) { this.setAttribute('icon', value); }
 
     onIconChanged(oldValue: FeatherIconName, newValue: FeatherIconName) {

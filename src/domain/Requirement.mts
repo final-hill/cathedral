@@ -1,8 +1,14 @@
-import { type Properties } from "~/types/Properties.mjs";
-import { Entity, type EntityJson } from "./Entity.mjs";
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+import { type Properties } from '~/types/Properties.mjs';
+import { Entity, type EntityJson } from './Entity.mjs';
 
 export interface RequirementJson extends EntityJson {
-    statement: string
+    statement: string;
 }
 
 /**
@@ -15,16 +21,18 @@ export abstract class Requirement extends Entity {
     accessor statement: string;
 
     constructor(options: Properties<Requirement>) {
-        super(options)
+        super(options);
 
         this.statement = options.statement;
     }
 
     /**
      * A property is a Predicate formalizing its associated statement.
+     * @param args - The arguments to the property.
+     * @returns True if the property is satisfied, false otherwise.
      */
     property(...args: any[]): boolean {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
 
     override toJSON(): RequirementJson {
