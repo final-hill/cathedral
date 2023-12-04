@@ -191,7 +191,7 @@ export class DataTable<T extends Entity> extends Component {
                 id: 'frmDataTableDelete'
             }),
             table([
-                caption({ className: 'required' }, ' Required'),
+                caption({ className: 'required' }, ['Required', span('*')]),
                 thead({ className: 'data-header' }, [
                     tr()
                 ]),
@@ -247,7 +247,8 @@ export class DataTable<T extends Entity> extends Component {
                     className: col.required ? 'required' : '',
                     hidden: col.formType == 'hidden'
                 }, [
-                    col.headerText
+                    col.headerText,
+                    col.required ? span('*') : ''
                 ]))
         );
 

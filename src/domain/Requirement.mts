@@ -31,7 +31,9 @@ export abstract class Requirement extends Entity {
      * @param args - The arguments to the property.
      * @returns True if the property is satisfied, false otherwise.
      */
-    abstract property(...args: any[]): boolean;
+    property(..._args: any[]): boolean {
+        return false;
+    }
 
     override toJSON(): RequirementJson {
         return {

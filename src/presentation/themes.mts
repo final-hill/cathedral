@@ -40,9 +40,8 @@ export const formTheme: Theme = {
         backgroundColor: 'transparent',
         color: 'var(--font-color)',
     },
-    '.required::after': {
-        content: ' *',
+    '.required > span': {
         color: 'var(--btn-danger-color)',
-        display: 'inline-block'
+        paddingLeft: '0.25em'
     }
 };
