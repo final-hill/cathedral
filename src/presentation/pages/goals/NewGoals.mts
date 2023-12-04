@@ -29,7 +29,7 @@ export class NewGoals extends Page {
                 className: 'goals-form',
                 autocomplete: 'off'
             }, [
-                label({ htmlFor: 'name', className: 'required' }, 'Name'),
+                label({ htmlFor: 'name', className: 'required' }, ['Name', span('*')]),
                 input({
                     type: 'text', name: 'name', id: 'name', required: true,
                     placeholder: 'My Goals', maxLength: Goals.maxNameLength
@@ -103,7 +103,7 @@ export class NewGoals extends Page {
         self.navigation.navigate(`/goals/${goals.slug()}`);
     }
 
-    onReset(e: Event) {
+    onReset() {
         self.navigation.navigate('/goals');
     }
 }

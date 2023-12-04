@@ -64,21 +64,21 @@ export class MiniCard extends Component {
     override get title() { return this.getAttribute('title')!; }
     override set title(value) { this.setAttribute('title', value); }
 
-    onTitleChanged(oldValue: string, newValue: string) {
+    onTitleChanged(_oldValue: string, newValue: string) {
         this.shadowRoot.querySelector('span')!.textContent = newValue;
     }
 
     get href() { return this.getAttribute('href')!; }
     set href(value) { this.setAttribute('href', value); }
 
-    onHrefChanged(oldValue: string, newValue: string) {
+    onHrefChanged(_oldValue: string, newValue: string) {
         this.shadowRoot.querySelector('a')!.setAttribute('href', newValue);
     }
 
     get icon() { return this.getAttribute('icon')!; }
     set icon(value) { this.setAttribute('icon', value); }
 
-    onIconChanged(oldValue: FeatherIconName, newValue: FeatherIconName) {
+    onIconChanged(_oldValue: FeatherIconName, newValue: FeatherIconName) {
         this.shadowRoot.querySelector<FeatherIcon>('x-feather-icon')!.setAttribute('icon', newValue);
     }
 }

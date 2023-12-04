@@ -71,28 +71,28 @@ export class PegsCard extends Component {
     get allowDelete() { return this.getAttribute('allow-delete') === 'true'; }
     set allowDelete(value) { this.setAttribute('allow-delete', value.toString()); }
 
-    onAllowDeleteChanged(oldValue: string, newValue: string) {
+    onAllowDeleteChanged(_oldValue: string, newValue: string) {
         this.shadowRoot.querySelector('button')!.hidden = newValue !== 'true';
     }
 
     get description() { return this.getAttribute('description') ?? ''; }
     set description(value) { this.setAttribute('description', value); }
 
-    onDescriptionChanged(oldValue: string, newValue: string) {
+    onDescriptionChanged(_oldValue: string, newValue: string) {
         this.shadowRoot.querySelector('p')!.textContent = newValue;
     }
 
     get heading() { return this.getAttribute('heading') ?? ''; }
     set heading(value) { this.setAttribute('heading', value); }
 
-    onHeadingChanged(oldValue: string, newValue: string) {
+    onHeadingChanged(_oldValue: string, newValue: string) {
         this.shadowRoot.querySelector('.title a')!.textContent = newValue;
     }
 
     get href() { return this.getAttribute('href') ?? ''; }
     set href(value) { this.setAttribute('href', value); }
 
-    onHrefChanged(oldValue: string, newValue: string) {
+    onHrefChanged(_oldValue: string, newValue: string) {
         this.shadowRoot.querySelector('a')!.href = newValue;
     }
 

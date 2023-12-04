@@ -31,7 +31,7 @@ export class NewEnvironment extends Page {
                 className: 'environment-form',
                 autocomplete: 'off'
             }, [
-                label({ htmlFor: 'name', className: 'required' }, 'Name'),
+                label({ htmlFor: 'name', className: 'required' }, ['Name', span('*')]),
                 this.#txtName = input({
                     type: 'text', name: 'name', id: 'name', required: true,
                     placeholder: 'Sample Environment', maxLength: Environment.maxNameLength
@@ -100,7 +100,7 @@ export class NewEnvironment extends Page {
         self.navigation.navigate(`/environments/${environment.slug()}`);
     }
 
-    onReset(e: Event) {
+    onReset() {
         self.navigation.navigate('/goals');
     }
 }

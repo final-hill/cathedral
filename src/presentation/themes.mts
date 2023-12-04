@@ -6,7 +6,7 @@
  */
 type Theme = Record<string, Partial<CSSStyleDeclaration>>;
 
-export const formTheme: Record<string, Partial<CSSStyleDeclaration>> = {
+export const formTheme: Theme = {
     'button': {
         backgroundColor: 'var(--site-dark-bg)',
         borderRadius: 'var(--border-radius)',
@@ -40,9 +40,8 @@ export const formTheme: Record<string, Partial<CSSStyleDeclaration>> = {
         backgroundColor: 'transparent',
         color: 'var(--font-color)',
     },
-    '.required::after': {
-        content: ' *',
+    '.required > span': {
         color: 'var(--btn-danger-color)',
-        display: 'inline-block'
+        paddingLeft: '0.25em'
     }
 };

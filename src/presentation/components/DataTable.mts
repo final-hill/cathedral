@@ -129,7 +129,7 @@ export class DataTable<T extends Entity> extends Component {
         const form = e.target as HTMLFormElement,
             formData = new FormData(form),
             item = Object.fromEntries(formData.entries()) as Properties<T>;
-        this._cancelEdit(e);
+        this._cancelEdit();
         this.onUpdate?.(item);
     }
 
@@ -191,7 +191,7 @@ export class DataTable<T extends Entity> extends Component {
                 id: 'frmDataTableDelete'
             }),
             table([
-                caption({ className: 'required' }, ' Required'),
+                caption({ className: 'required' }, ['Required', span('*')]),
                 thead({ className: 'data-header' }, [
                     tr()
                 ]),
@@ -211,10 +211,9 @@ export class DataTable<T extends Entity> extends Component {
     /**
      * Hide all edit items in the table and then swap the row
      * from edit mode to view mode.
-     * @param e - The event that triggered the cancel.
      * @returns void
      */
-    protected _cancelEdit(e: Event) {
+    protected _cancelEdit() {
         const root = this.shadowRoot,
             viewData = root.querySelectorAll<HTMLElement>('.view-data'),
             editData = root.querySelectorAll<HTMLInputElement>('.edit-data');
@@ -248,7 +247,8 @@ export class DataTable<T extends Entity> extends Component {
                     className: col.required ? 'required' : '',
                     hidden: col.formType == 'hidden'
                 }, [
-                    col.headerText
+                    col.headerText,
+                    col.required ? span('*') : ''
                 ]))
         );
 
@@ -336,7 +336,7 @@ export class DataTable<T extends Entity> extends Component {
                     }, 'Save'),
                     button({
                         className: 'edit-data cancel-button',
-                        onclick: e => this._cancelEdit(e),
+                        onclick: () => this._cancelEdit(),
                         hidden: true,
                         [renderIf]: Boolean(this.onUpdate)
                     }, 'Cancel')
