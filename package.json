@@ -18,7 +18,8 @@
     "scripts": {
         "build": "webpack",
         "lint": "eslint src/ --ext .mts --fix",
-        "serve": "webpack serve"
+        "serve": "webpack serve",
+        "test": "echo \"Error: no test specified\" && exit 1"
     },
     "devDependencies": {
         "@types/dom-navigation": "^1.0.3",
