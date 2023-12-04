@@ -1,3 +1,10 @@
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+
 /**
  * @see https://feathericons.com/
  */
@@ -47,4 +54,4 @@ export type FeatherIconName =
     | 'user-minus' | 'user-plus' | 'user-x' | 'user' | 'users' | 'video-off' | 'video'
     | 'voicemail' | 'volume-1' | 'volume-2' | 'volume-x' | 'volume' | 'watch' | 'wifi-off'
     | 'wifi' | 'wind' | 'x-circle' | 'x-octagon' | 'x-square' | 'x' | 'youtube' | 'zap-off'
-    | 'zap' | 'zoom-in' | 'zoom-out'
+    | 'zap' | 'zoom-in' | 'zoom-out';

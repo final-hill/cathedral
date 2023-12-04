@@ -1,6 +1,7 @@
 import path from 'path';
 import url from 'url';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+import ESLintWebpackPlugin from 'eslint-webpack-plugin';
 
 const __filename = url.fileURLToPath(import.meta.url),
     __dirname = path.dirname(__filename);
@@ -54,7 +55,13 @@ export default {
         filename: '[name].mjs',
         path: path.resolve(__dirname, 'dist'),
     },
+    target: 'web',
     plugins: [
+        new ESLintWebpackPlugin({
+            extensions: ['.mts', '.mjs', '.js', '.ts', '.json'],
+            fix: true,
+            overrideConfigFile: path.resolve(__dirname, '.eslintrc.json')
+        }),
         new HtmlWebpackPlugin({
             title: 'Cathedral',
             favicon: './src/presentation/assets/icons/favicon.ico',

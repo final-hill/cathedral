@@ -1,24 +1,30 @@
-import type { Properties } from "~/types/Properties.mjs";
-import { Entity, type EntityJson } from "./Entity.mjs";
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+import type { Properties } from '~/types/Properties.mjs';
+import { Entity, type EntityJson } from './Entity.mjs';
 
 export interface StakeholderJson extends EntityJson {
     category: string;
     description: string;
     name: string;
     segmentation: string;
-};
+}
 
 export enum StakeholderSegmentation {
-    Client = "Client",
-    Vendor = "Vendor"
+    Client = 'Client',
+    Vendor = 'Vendor'
 }
 
 export enum StakeholderCategory {
-    UNCATEGORIZED = 'Uncategorized',
-    KEY_STAKEHOLDER = 'Key Stakeholder',
-    SHADOW_INFLUENCER = 'Shadow Influencer',
-    FELLOW_TRAVELER = 'Fellow Traveler',
-    OBSERVER = 'Observer'
+    Uncategorized = 'Uncategorized',
+    KeyStakeholder = 'Key Stakeholder',
+    ShadowInfluencer = 'Shadow Influencer',
+    FellowTraveler = 'Fellow Traveler',
+    Observer = 'Observer'
 }
 
 export class Stakeholder extends Entity {

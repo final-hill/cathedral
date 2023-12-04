@@ -1,52 +1,58 @@
-import { Goals } from "~/domain/Goals.mjs";
-import { GoalsRepository } from "~/data/GoalsRepository.mjs";
-import html from "~/presentation/lib/html.mjs";
-import { formTheme } from "~/presentation/themes.mjs";
-import { SlugPage } from "../SlugPage.mjs";
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+import { Goals } from '~/domain/Goals.mjs';
+import { GoalsRepository } from '~/data/GoalsRepository.mjs';
+import html from '~/presentation/lib/html.mjs';
+import { formTheme } from '~/presentation/themes.mjs';
+import { SlugPage } from '../SlugPage.mjs';
 
-const { form, h3, p, textarea } = html
+const { form, h3, p, textarea } = html;
 
 export class Rationale extends SlugPage {
     static {
-        customElements.define('x-rationale-page', this)
+        customElements.define('x-rationale-page', this);
     }
 
-    #repository = new GoalsRepository()
-    #goals!: Goals
+    #repository = new GoalsRepository();
+    #goals!: Goals;
 
     constructor() {
-        super({ title: 'Rationale' }, [])
+        super({ title: 'Rationale' }, []);
 
         this.#repository.getBySlug(this.slug)!.then(goals => {
-            if (!goals) {
-                this.shadowRoot.querySelector('slot')!.replaceChildren(
+            if (!goals)
+                {this.shadowRoot.querySelector('slot')!.replaceChildren(
                     p(`No goals found for the provided slug: ${this.slug}`)
-                )
-            } else {
-                const { situation, objective, outcomes } = this.#goals = goals!
+                );}
+            else {
+                const { situation, objective, outcomes } = this.#goals = goals!;
 
                 this.shadowRoot.querySelector<HTMLTextAreaElement>('textarea[name="situation"]')!
-                    .value = situation
+                    .value = situation;
                 this.shadowRoot.querySelector<HTMLTextAreaElement>('textarea[name="objective"]')!
-                    .value = objective
+                    .value = objective;
                 this.shadowRoot.querySelector<HTMLTextAreaElement>('textarea[name="outcomes"]')!
-                    .value = outcomes
+                    .value = outcomes;
             }
-        })
+        });
     }
 
     protected override _initStyle() {
         return {
             ...super._initStyle(),
             ...formTheme,
-            'form': {
+            form: {
                 display: 'flex',
                 flexDirection: 'column'
             },
-            'textarea': {
+            textarea: {
                 height: '200px'
             }
-        }
+        };
     }
 
     override init() {
@@ -66,35 +72,35 @@ export class Rationale extends SlugPage {
                 textarea({ name: 'objective', value: '' }, []),
                 h3('Outcomes'),
                 p(
-                    `Outcomes are the results of the project that will be achieved by the system.`
+                    'Outcomes are the results of the project that will be achieved by the system.'
                 ),
                 textarea({ name: 'outcomes', value: '' }, [])
             ])
-        )
+        );
 
         this.shadowRoot.querySelector<HTMLTextAreaElement>('textarea[name="situation"]')!
-            .onchange = (e) => this.updateSituation(e)
+            .onchange = e => this.updateSituation(e);
         this.shadowRoot.querySelector<HTMLTextAreaElement>('textarea[name="objective"]')!
-            .onchange = (e) => this.updateObjective(e)
+            .onchange = e => this.updateObjective(e);
         this.shadowRoot.querySelector<HTMLTextAreaElement>('textarea[name="outcomes"]')!
-            .onchange = (e) => this.updateOutcomes(e)
+            .onchange = e => this.updateOutcomes(e);
     }
 
     updateObjective(e: Event) {
-        const txtObjective = e.target as HTMLTextAreaElement
-        this.#goals.objective = txtObjective.value.trim()
-        this.#repository.update(this.#goals)
+        const txtObjective = e.target as HTMLTextAreaElement;
+        this.#goals.objective = txtObjective.value.trim();
+        this.#repository.update(this.#goals);
     }
 
     updateOutcomes(e: Event) {
-        const txtOutcomes = e.target as HTMLTextAreaElement
-        this.#goals.outcomes = txtOutcomes.value.trim()
-        this.#repository.update(this.#goals)
+        const txtOutcomes = e.target as HTMLTextAreaElement;
+        this.#goals.outcomes = txtOutcomes.value.trim();
+        this.#repository.update(this.#goals);
     }
 
     updateSituation(e: Event) {
-        const txtSituation = e.target as HTMLTextAreaElement
-        this.#goals.situation = txtSituation.value.trim()
-        this.#repository.update(this.#goals)
+        const txtSituation = e.target as HTMLTextAreaElement;
+        this.#goals.situation = txtSituation.value.trim();
+        this.#repository.update(this.#goals);
     }
 }

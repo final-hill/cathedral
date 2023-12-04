@@ -1,16 +1,22 @@
-import type { Properties } from "~/types/Properties.mjs";
-import { Entity, type EntityJson } from "./Entity.mjs";
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+import type { Properties } from '~/types/Properties.mjs';
+import { Entity, type EntityJson } from './Entity.mjs';
 
 export interface PEGSJson extends EntityJson {
     name: string; description: string;
-};
+}
 
 /**
  * The base class for all PEGS (Project, Environment, Goal, System)
  */
 export class PEGS extends Entity {
-    static MAX_NAME_LENGTH: number = 60;
-    static MAX_DESCRIPTION_LENGTH: number = 200;
+    static readonly maxNameLength = 60;
+    static readonly maxDescriptionLength = 200;
 
     static slugify(str: string) {
         return str.toLowerCase().trim()
@@ -19,7 +25,7 @@ export class PEGS extends Entity {
             .replace(/--+/g, '-');
     }
 
-    private _name!: string
+    private _name!: string;
     private _description!: string;
 
     constructor(options: Properties<PEGS>) {
@@ -35,7 +41,7 @@ export class PEGS extends Entity {
     set name(value: string) {
         const trimmed = value.trim(),
             Clazz = this.constructor as typeof PEGS;
-        if (trimmed.length >= Clazz.MAX_NAME_LENGTH)
+        if (trimmed.length >= Clazz.maxNameLength)
             throw new Error('Project name cannot be longer than 60 characters');
         this._name = trimmed;
     }
@@ -47,7 +53,7 @@ export class PEGS extends Entity {
     set description(value: string) {
         const trimmed = value.trim(),
             Clazz = this.constructor as typeof PEGS;
-        if (trimmed.length >= Clazz.MAX_DESCRIPTION_LENGTH)
+        if (trimmed.length >= Clazz.maxDescriptionLength)
             throw new Error('Project description cannot be longer than 200 characters');
         this._description = trimmed;
     }

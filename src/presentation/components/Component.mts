@@ -1,33 +1,39 @@
-import type { Properties } from "~/types/Properties.mjs"
-import { HandleEvent } from "../HandleEvent.mjs"
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+import type { Properties } from '~/types/Properties.mjs';
+import { HandleEvent } from '../HandleEvent.mjs';
 
 export abstract class Component extends HandleEvent(HTMLElement) {
     static get observedAttributes(): string[] {
-        return []
+        return [];
     }
 
     constructor(properties: Properties<Component>) {
-        super()
+        super();
 
         if (!this.shadowRoot) {
             const shadowRoot = this.attachShadow({ mode: 'open' }),
                 sheet = new CSSStyleSheet(),
                 template = this._initHtml(),
                 rules = this._initStyle(),
-                styleElement = document.createElement('style')
+                styleElement = document.createElement('style');
 
             // Convert the rules object into a CSSStyleSheet
             for (const [head, body] of Object.entries(rules)) {
                 const i = sheet.insertRule(`${head} {}`),
                     // @ts-expect-error: TS doesn't know about the style property
-                    { style } = sheet.cssRules[i]
-                for (const [property, value] of Object.entries(body)) {
+                    { style } = sheet.cssRules[i];
+                for (const [property, value] of Object.entries(body))
                     if (property.startsWith('--'))
-                        style.setProperty(property, value)
+                        style.setProperty(property, value);
                     else
-                        style[property] = value
-                }
-                styleElement.textContent += sheet.cssRules[i].cssText + '\n'
+                        style[property] = value;
+
+                styleElement.textContent += `${sheet.cssRules[i].cssText}\n`;
             }
 
             // For some reason this approach doesn't work when nesting components.
@@ -35,47 +41,53 @@ export abstract class Component extends HandleEvent(HTMLElement) {
             shadowRoot.append(
                 styleElement,
                 template.content.cloneNode(true)
-            )
+            );
 
             // Set the component's properties
-            Object.assign(this, properties)
+            Object.assign(this, properties);
         }
     }
 
     // eliminate the need to cast shadowRoot to non-null
     override get shadowRoot() {
-        return super.shadowRoot!
+        return super.shadowRoot!;
     }
 
     /**
      * A document fragment that contains the HTML for the component
+     * @returns The HTML template
      */
     protected _initHtml(): HTMLTemplateElement {
-        return document.createElement('template')
+        return document.createElement('template');
     }
 
     /**
      * An object literal that contains the CSS style declarations for the component
+     * @returns The CSS rules
      */
     protected _initStyle(): Record<string, Partial<CSSStyleDeclaration>> {
         return {
             ':host': {
                 boxSizing: 'border-box'
             }
-        }
+        };
     }
 
     /**
      * Called when attributes are changed, added, removed, or replaced
+     * @param name The name of the attribute that changed
+     * @param oldValue The previous value of the attribute
+     * @param newValue The new value of the attribute
+     * @returns void
      */
     attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {
-        if (oldValue === newValue) return
+        if (oldValue === newValue) return;
 
         const propName = name.replace(/-?\b([a-z])/g, (_, w) => w[0].toUpperCase()),
             handlerName = `on${propName}Changed`,
-            handler = Reflect.get(this, handlerName)
+            handler = Reflect.get(this, handlerName);
 
         if (typeof handler === 'function')
-            handler.call(this, oldValue, newValue)
+            handler.call(this, oldValue, newValue);
     }
 }

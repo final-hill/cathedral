@@ -1,13 +1,19 @@
-import { PegsCards } from "~components/index.mjs";
-import html from "../../lib/html.mjs";
-import Page from "../Page.mjs";
-import { EnvironmentRepository } from "~/data/EnvironmentRepository.mjs";
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+import { PegsCards } from '~components/index.mjs';
+import html from '../../lib/html.mjs';
+import Page from '../Page.mjs';
+import { EnvironmentRepository } from '~/data/EnvironmentRepository.mjs';
 
-const { p } = html
+const { p } = html;
 
 export class Environments extends Page {
     static {
-        customElements.define('x-environments-page', this)
+        customElements.define('x-environments-page', this);
     }
 
     constructor() {
@@ -20,6 +26,6 @@ export class Environments extends Page {
             new PegsCards({
                 repository: new EnvironmentRepository()
             }, [])
-        ])
+        ]);
     }
 }

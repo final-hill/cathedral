@@ -1,3 +1,9 @@
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
 export const renderIf = Symbol('renderIf');
 
 export type HtmlAttributes<T extends keyof HTMLElementTagNameMap> =
@@ -13,14 +19,14 @@ const create = <T extends keyof HTMLElementTagNameMap>(tagName: T, objAttribs: H
         if ((attr as any) === renderIf)
             return;
 
-        if (attr in element) {
+        if (attr in element)
             if (attr === 'form')  // form is readonly
                 element.setAttribute('form', (value as HTMLFormElement).getAttribute('id')!);
             else
                 (element as any)[attr] = value;
-        } else {
+        else
             element.setAttribute(attr, value);
-        }
+
     });
 
     if (tagName === 'template')
@@ -39,38 +45,36 @@ type ElementMethods = {
     & ((objAttribs: HtmlAttributes<K>) => HTMLElementTagNameMap[K])
     & ((children: Children) => HTMLElementTagNameMap[K])
     & ((objAttribs: HtmlAttributes<K>, children: Children) => HTMLElementTagNameMap[K])
-}
+};
 
 const isObjectLiteral = (obj: any): boolean => {
     if (obj === null || typeof obj !== 'object')
         return false;
-    return Object.getPrototypeOf(obj) === Object.prototype;
-}
 
-const html = (new Proxy({}, {
-    get<T extends keyof HTMLElementTagNameMap>(_: any, prop: T) {
-        return (objAttribs: HtmlAttributes<T> | Children, children: Children) => {
-            if (!objAttribs && !children) {
-                return create(prop, {}, []);
-            } else if (objAttribs && !children) {
-                if (Array.isArray(objAttribs))
-                    return create(prop, {}, objAttribs);
-                else if (isObjectLiteral(objAttribs))
-                    return create(prop, (objAttribs as HtmlAttributes<T>), []);
-                else
-                    return create(prop, {}, [(objAttribs as Element | string)]);
-            } else if (objAttribs && children) {
-                if (!isObjectLiteral(objAttribs))
-                    throw new Error('Invalid arguments');
-                if (Array.isArray(children))
-                    return create(prop, (objAttribs as HtmlAttributes<T>), children);
-                else
-                    return create(prop, (objAttribs as HtmlAttributes<T>), [children]);
-            } else {
+    return Object.getPrototypeOf(obj) === Object.prototype;
+},
+
+    html = (new Proxy({}, {
+        get<T extends keyof HTMLElementTagNameMap>(_: any, prop: T) {
+            return (objAttribs: HtmlAttributes<T> | Children, children: Children) => {
+                if (!objAttribs && !children)
+                    return create(prop, {}, []);
+                else if (objAttribs && !children)
+                    if (Array.isArray(objAttribs))
+                        return create(prop, {}, objAttribs);
+                    else if (isObjectLiteral(objAttribs))
+                        return create(prop, (objAttribs as HtmlAttributes<T>), []);
+                    else
+                        return create(prop, {}, [(objAttribs as Element | string)]);
+                else if (objAttribs && children)
+                    if (Array.isArray(children))
+                        return create(prop, (objAttribs as HtmlAttributes<T>), children);
+                    else
+                        return create(prop, (objAttribs as HtmlAttributes<T>), [children]);
+
                 throw new Error('Invalid arguments');
-            }
-        }
-    },
-})) as ElementMethods;
+            };
+        },
+    })) as ElementMethods;
 
 export default html;

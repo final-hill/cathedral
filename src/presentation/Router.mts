@@ -1,3 +1,10 @@
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+
 // Utilizes the Navigation API to intercept navigation events and handle them
 // As of 2023-11-01, the Navigation API is still experimental and supported
 // by only Chromium-based browsers (~71% coverage)
@@ -6,15 +13,15 @@
 // https://caniuse.com/mdn-api_navigation
 // Types are polyfilled via dom-navigation package
 
-import { HandleEvent } from "./HandleEvent.mjs";
-import { NotFound } from "./pages/NotFound.mjs";
-import Page from "./pages/Page.mjs";
+import { HandleEvent } from './HandleEvent.mjs';
+import { NotFound } from './pages/NotFound.mjs';
+import Page from './pages/Page.mjs';
 
 export default class Router extends HandleEvent(EventTarget) {
-    #routeTable: Map<string, typeof Page>
+    #routeTable: Map<string, typeof Page>;
 
     constructor(routes: [string, typeof Page][]) {
-        super()
+        super();
         this.#routeTable = new Map(routes);
         self.navigation.addEventListener('navigate', this);
     }
@@ -43,8 +50,9 @@ export default class Router extends HandleEvent(EventTarget) {
                 return pattern.every((segment, index) => {
                     if (segment.startsWith(':'))
                         return true;
+
                     return segment === pathname[index];
-                })
+                });
             }),
             Page = candidate ? this.#routeTable.get(candidate) : NotFound;
 
@@ -53,7 +61,7 @@ export default class Router extends HandleEvent(EventTarget) {
                 event.preventDefault();
                 this.dispatchEvent(new CustomEvent('route', { detail: Page }));
             }
-        })
+        });
     }
 
     async route(pathname: string): Promise<void> {

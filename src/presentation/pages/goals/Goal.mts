@@ -1,9 +1,15 @@
-import Page from "../Page.mjs";
-import { MiniCards, MiniCard } from "~/presentation/components/index.mjs";
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+import Page from '../Page.mjs';
+import { MiniCards, MiniCard } from '~/presentation/components/index.mjs';
 
 export class Goal extends Page {
     static {
-        customElements.define('x-goal-page', this)
+        customElements.define('x-goal-page', this);
     }
 
     constructor() {
@@ -25,6 +31,6 @@ export class Goal extends Page {
                     href: `${location.pathname}/stakeholders`
                 }),
             ])
-        ])
+        ]);
     }
 }

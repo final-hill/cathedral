@@ -1,6 +1,12 @@
-import type { Properties } from "~/types/Properties.mjs";
-import type { Uuid } from "~/types/Uuid.mjs";
-import { PEGS, type PEGSJson } from "./PEGS.mjs";
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+import type { Properties } from '~/types/Properties.mjs';
+import type { Uuid } from '~/types/Uuid.mjs';
+import { PEGS, type PEGSJson } from './PEGS.mjs';
 
 export interface GoalsJson extends PEGSJson {
     functionalBehaviors: Uuid[];
@@ -8,7 +14,7 @@ export interface GoalsJson extends PEGSJson {
     outcomes: string;
     situation: string;
     stakeholders: Uuid[];
-};
+}
 
 /**
  * Goals are the needs and wants of an organization.

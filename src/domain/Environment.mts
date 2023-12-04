@@ -1,6 +1,12 @@
-import type { Uuid } from "~/types/Uuid.mjs";
-import { PEGS, type PEGSJson } from "./PEGS.mjs";
-import type { Properties } from "~/types/Properties.mjs";
+/*!
+ * @license
+ * Copyright (C) 2023 Final Hill LLC
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
+ */
+import type { Uuid } from '~/types/Uuid.mjs';
+import { PEGS, type PEGSJson } from './PEGS.mjs';
+import type { Properties } from '~/types/Properties.mjs';
 
 export interface EnvironmentJson extends PEGSJson {
     glossary: Uuid[];
@@ -15,10 +21,7 @@ export interface EnvironmentJson extends PEGSJson {
  */
 class Environment extends PEGS {
     static override fromJSON({ description, id, name, glossary }: EnvironmentJson): Environment {
-        return new Environment({
-            description, id, name,
-            glossary: glossary
-        });
+        return new Environment({ description, id, name, glossary });
     }
 
     glossary: Uuid[];
