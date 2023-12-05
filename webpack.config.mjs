@@ -2,6 +2,7 @@ import path from 'path';
 import url from 'url';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import ESLintWebpackPlugin from 'eslint-webpack-plugin';
+import { GenerateSW } from 'workbox-webpack-plugin';
 
 const __filename = url.fileURLToPath(import.meta.url),
     __dirname = path.dirname(__filename);
@@ -9,8 +10,7 @@ const __filename = url.fileURLToPath(import.meta.url),
 export default {
     devtool: 'source-map',
     entry: {
-        main: './src/main.mts',
-        // sw: './src/presentation/ServiceWorker.mts'
+        main: './src/main.mts'
     },
     experiments: {
         outputModule: true
@@ -65,7 +65,14 @@ export default {
         new HtmlWebpackPlugin({
             title: 'Cathedral',
             favicon: './src/presentation/assets/icons/favicon.ico',
-            scriptLoading: 'module'
+            scriptLoading: 'module',
+            publicPath: '/'
+        }),
+        new GenerateSW({
+            navigateFallback: 'index.html',
+            clientsClaim: true,
+            skipWaiting: true,
+            sourcemap: true
         })
     ]
 };

@@ -19,7 +19,7 @@ export default class Application extends Container {
     constructor() {
         super({}, []);
 
-        //this._installOrUpdateServiceWorker()
+        this._installOrUpdateServiceWorker();
         this._initRouter().then(() => {
             self.navigation.navigate(location.pathname);
         });
@@ -115,7 +115,7 @@ export default class Application extends Container {
             }));
         else
             try {
-                const registration = await navigator.serviceWorker.register('/sw.mjs', { scope: '/' });
+                const registration = await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
                 if (registration)
                     await registration.update();
                 else
@@ -123,7 +123,6 @@ export default class Application extends Container {
             } catch (err) {
                 await this._installServiceWorker();
             }
-
     }
 
     onRoute(event: CustomEvent<typeof Page>) {
