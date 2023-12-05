@@ -19,6 +19,7 @@ export default class Application extends Container {
     constructor() {
         super({}, []);
 
+        document.body.innerHTML = '';
         this._installOrUpdateServiceWorker();
         this._initRouter().then(() => {
             self.navigation.navigate(location.pathname);
