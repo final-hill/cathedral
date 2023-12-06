@@ -8,7 +8,8 @@ import type { Properties } from '~/types/Properties.mjs';
 import { Entity, type EntityJson } from './Entity.mjs';
 
 export interface PEGSJson extends EntityJson {
-    name: string; description: string;
+    name: string;
+    description: string;
 }
 
 /**
@@ -23,6 +24,14 @@ export class PEGS extends Entity {
             .replace(/\s/g, '-')
             .replace(/[^\w-]+/g, '')
             .replace(/--+/g, '-');
+    }
+
+    static override fromJSON(json: PEGSJson): PEGS {
+        return new PEGS({
+            id: json.id,
+            description: json.description,
+            name: json.name
+        });
     }
 
     private _name!: string;

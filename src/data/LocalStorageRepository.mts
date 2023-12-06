@@ -18,8 +18,12 @@ export class LocalStorageRepository<E extends Entity> extends Repository<E> {
         this._fromJSON = EntityConstructor.fromJSON as (json: any) => E;
     }
 
+    get storage(): Storage {
+        return localStorage;
+    }
+
     get(id: E['id']): Promise<E | undefined> {
-        const data = localStorage.getItem(this._storageKey),
+        const data = this.storage.getItem(this._storageKey),
             json: E[] = data ? JSON.parse(data) : [],
             result = json.find(item => item.id === id);
 
@@ -29,7 +33,7 @@ export class LocalStorageRepository<E extends Entity> extends Repository<E> {
     }
 
     getAll(filter: (entity: E) => boolean = _ => true): Promise<E[]> {
-        const data = localStorage.getItem(this._storageKey),
+        const data = this.storage.getItem(this._storageKey),
             json: E[] = data ? JSON.parse(data) : [],
             result = json.filter(filter).map(this._fromJSON);
 
@@ -37,18 +41,25 @@ export class LocalStorageRepository<E extends Entity> extends Repository<E> {
     }
 
     add(item: E): Promise<void> {
-        const data = localStorage.getItem(this._storageKey),
+        const data = this.storage.getItem(this._storageKey),
             json: E[] = data ? JSON.parse(data) : [];
         json.push(item.toJSON() as E);
-        localStorage.setItem(this._storageKey, JSON.stringify(json));
+        this.storage.setItem(this._storageKey, JSON.stringify(json));
 
         this.dispatchEvent(new CustomEvent('update'));
 
         return Promise.resolve();
     }
 
+    clear(): Promise<void> {
+        this.storage.removeItem(this._storageKey);
+        this.dispatchEvent(new CustomEvent('update'));
+
+        return Promise.resolve();
+    }
+
     update(item: E): Promise<void> {
-        const data = localStorage.getItem(this._storageKey),
+        const data = this.storage.getItem(this._storageKey),
             json: E[] = data ? JSON.parse(data) : [],
             index = json.findIndex(e => e.id === item.id);
 
@@ -56,7 +67,7 @@ export class LocalStorageRepository<E extends Entity> extends Repository<E> {
             throw new Error('Not found');
 
         json[index] = item.toJSON() as E;
-        localStorage.setItem(this._storageKey, JSON.stringify(json));
+        this.storage.setItem(this._storageKey, JSON.stringify(json));
 
         this.dispatchEvent(new CustomEvent('update'));
 
@@ -64,7 +75,7 @@ export class LocalStorageRepository<E extends Entity> extends Repository<E> {
     }
 
     delete(id: E['id']): Promise<void> {
-        const data = localStorage.getItem(this._storageKey),
+        const data = this.storage.getItem(this._storageKey),
             json: E[] = data ? JSON.parse(data) : [],
             index = json.findIndex(item => item.id === id);
 
@@ -72,7 +83,7 @@ export class LocalStorageRepository<E extends Entity> extends Repository<E> {
             throw new Error('Not found');
 
         json.splice(index, 1);
-        localStorage.setItem(this._storageKey, JSON.stringify(json));
+        this.storage.setItem(this._storageKey, JSON.stringify(json));
 
         this.dispatchEvent(new CustomEvent('update'));
 

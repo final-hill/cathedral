@@ -19,7 +19,7 @@
         "build": "webpack",
         "lint": "eslint src/ --ext .mts --fix",
         "serve": "webpack serve",
-        "test": "echo \"Error: no test specified\" && exit 0"
+        "test": "globstar -- node --experimental-test-coverage --import tsx --test \"src/**/*.test.mts\""
     },
     "devDependencies": {
         "@types/dom-navigation": "^1.0.3",
@@ -27,14 +27,17 @@
         "@typescript-eslint/eslint-plugin": "^6.13.1",
         "@typescript-eslint/parser": "^6.13.1",
         "copy-webpack-plugin": "^11.0.0",
+        "dom-storage": "^2.1.0",
         "eslint": "^8.55.0",
         "eslint-plugin-header": "^3.1.1",
         "eslint-plugin-import": "^2.29.0",
         "eslint-webpack-plugin": "^4.0.1",
         "favicons": "^7.1.4",
         "favicons-webpack-plugin": "^6.0.1",
+        "globstar": "^1.0.0",
         "html-webpack-plugin": "^5.5.3",
         "ts-loader": "^9.5.0",
+        "tsx": "^4.6.2",
         "typescript": "^5.3.2",
         "webpack": "^5.89.0",
         "webpack-cli": "^5.1.4",

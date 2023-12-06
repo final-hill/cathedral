@@ -40,6 +40,10 @@ export class Entity {
         return this.#id;
     }
 
+    set id(value: Uuid) {
+        this.#id = value;
+    }
+
     /**
      * Compares two entities for equality.
      * @param other - The other entity to compare.
