@@ -40,6 +40,9 @@ export class PegsCards extends Container {
                 backgroundColor: 'var(--site-dark-bg)',
                 boxShadow: '4px 5px 5px 0px var(--shadow-color)'
             },
+            'x-pegs-card:hover': {
+                filter: 'brightness(1.2)'
+            },
             'x-pegs-card:first-of-type': {
                 backgroundColor: 'transparent',
                 border: '1px dashed var(--font-color)'

@@ -36,6 +36,9 @@ export class MiniCard extends Component {
                 padding: '1em',
                 width: '10em',
             },
+            '.mini-card:hover': {
+                filter: 'brightness(1.2)'
+            },
             'a': {
                 alignItems: 'center',
                 color: 'var(--site-light-bg)',
