@@ -1,9 +1,3 @@
-/*!
- * @license
- * Copyright (C) 2023 Final Hill LLC
- * SPDX-License-Identifier: AGPL-3.0-only
- * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
- */
 import { type Entity } from '~/domain/Entity.mjs';
 import Repository from '~/usecases/Repository.mjs';
 
