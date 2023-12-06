@@ -1,9 +1,3 @@
-/*!
- * @license
- * Copyright (C) 2023 Final Hill LLC
- * SPDX-License-Identifier: AGPL-3.0-only
- * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
- */
 import { Goals } from '~/domain/Goals.mjs';
 import { GoalsRepository } from '~/data/GoalsRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
@@ -24,10 +18,11 @@ export class Rationale extends SlugPage {
         super({ title: 'Rationale' }, []);
 
         this.#repository.getBySlug(this.slug)!.then(goals => {
-            if (!goals)
-                {this.shadowRoot.querySelector('slot')!.replaceChildren(
+            if (!goals) {
+                this.shadowRoot.querySelector('slot')!.replaceChildren(
                     p(`No goals found for the provided slug: ${this.slug}`)
-                );}
+                );
+            }
             else {
                 const { situation, objective, outcomes } = this.#goals = goals!;
 

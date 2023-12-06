@@ -1,10 +1,3 @@
-/*!
- * @license
- * Copyright (C) 2023 Final Hill LLC
- * SPDX-License-Identifier: AGPL-3.0-only
- * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
- */
-
 // Utilizes the Navigation API to intercept navigation events and handle them
 // As of 2023-11-01, the Navigation API is still experimental and supported
 // by only Chromium-based browsers (~71% coverage)
@@ -12,7 +5,6 @@
 // https://developer.chrome.com/docs/web-platform/navigation-api/
 // https://caniuse.com/mdn-api_navigation
 // Types are polyfilled via dom-navigation package
-
 import { HandleEvent } from './HandleEvent.mjs';
 import { NotFound } from './pages/NotFound.mjs';
 import Page from './pages/Page.mjs';

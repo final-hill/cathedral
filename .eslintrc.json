@@ -10,8 +10,6 @@
     "ignorePatterns": [
         "node_modules",
         "dist",
-        ".cache",
-        "coverage",
         "webpack.config.mjs"
     ],
     "parser": "@typescript-eslint/parser",
@@ -20,8 +18,7 @@
         "sourceType": "module"
     },
     "plugins": [
-        "@typescript-eslint",
-        "header"
+        "@typescript-eslint"
     ],
     "settings": {
         "import/parsers": {
@@ -35,18 +32,6 @@
         }
     },
     "rules": {
-        "header/header": [
-            2,
-            "block",
-            [
-                "!",
-                " * @license",
-                " * Copyright (C) 2023 Final Hill LLC",
-                " * SPDX-License-Identifier: AGPL-3.0-only",
-                " * @see <https://spdx.org/licenses/AGPL-3.0-only.html>",
-                " "
-            ]
-        ],
         "@typescript-eslint/adjacent-overload-signatures": "error",
         "@typescript-eslint/ban-ts-ignore": [
             "off"

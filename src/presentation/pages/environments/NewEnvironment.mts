@@ -1,9 +1,3 @@
-/*!
- * @license
- * Copyright (C) 2023 Final Hill LLC
- * SPDX-License-Identifier: AGPL-3.0-only
- * @see <https://spdx.org/licenses/AGPL-3.0-only.html>
- */
 import { Environment } from '~/domain/Environment.mjs';
 import { EnvironmentRepository } from '~/data/EnvironmentRepository.mjs';
 import { formTheme } from '~/presentation/themes.mjs';
