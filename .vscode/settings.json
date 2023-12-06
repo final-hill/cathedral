@@ -4,5 +4,11 @@
     },
     "editor.formatOnSave": true,
     "git.pruneOnFetch": true,
-    "typescript.tsdk": "node_modules\\typescript\\lib"
+    "typescript.tsdk": "node_modules\\typescript\\lib",
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+        "*.mts": "${capture}.test.mts",
+        "tsconfig.json": "tsconfig.*.json",
+        "package.json": "package-lock.json"
+    }
 }

@@ -23,4 +23,6 @@ export default abstract class Repository<E extends Entity> extends EventTarget {
     abstract update(item: E): Promise<void>;
 
     abstract delete(id: E['id']): Promise<void>;
+
+    abstract clear(): Promise<void>;
 }
