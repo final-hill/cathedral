@@ -20,7 +20,7 @@ export default class Application extends Container {
         });
     }
 
-    protected override _initHtml() {
+    protected override _initShadowHtml() {
         const { template, section, slot } = html;
 
         return template([
@@ -30,9 +30,9 @@ export default class Application extends Container {
         ]);
     }
 
-    protected override _initStyle() {
+    protected override _initShadowStyle() {
         return {
-            ...super._initStyle(),
+            ...super._initShadowStyle(),
             ':host': {
                 backgroundColor: 'var(--site-dark-bg)',
                 color: 'var(--font-color)',
@@ -122,9 +122,7 @@ export default class Application extends Container {
 
     onRoute(event: CustomEvent<typeof Page>) {
         const Cons = event.detail;
-        this.#currentPage?.dispatchEvent(new Event('unload'));
         this.#currentPage = new Cons({}, []);
-        this.shadowRoot.querySelector('slot')!.replaceChildren(this.#currentPage);
-        this.#currentPage.dispatchEvent(new Event('load'));
+        this.replaceChildren(this.#currentPage);
     }
 }

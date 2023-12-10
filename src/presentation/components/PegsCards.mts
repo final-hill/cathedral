@@ -22,37 +22,25 @@ export class PegsCards extends Container {
         this.addEventListener('delete', this);
     }
 
-    protected override _initStyle() {
+    protected override _initShadowStyle() {
         return {
-            ...super._initStyle(),
+            ...super._initShadowStyle(),
             '.pegs-cards': {
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(30%, 1fr))',
                 gap: '0.5in'
-            },
-            'x-pegs-card': {
-                backgroundColor: 'var(--site-dark-bg)',
-                boxShadow: '4px 5px 5px 0px var(--shadow-color)'
-            },
-            'x-pegs-card:hover': {
-                filter: 'brightness(1.2)'
-            },
-            'x-pegs-card:first-of-type': {
-                backgroundColor: 'transparent',
-                border: '1px dashed var(--font-color)'
             }
         };
     }
 
-    protected override _initHtml() {
+    protected override _initShadowHtml() {
         return template(section({ className: 'pegs-cards' },
             slot()
         ));
     }
 
     async _renderCards() {
-        const slot = this.shadowRoot.querySelector('slot')!,
-            curPath = document.location.pathname,
+        const curPath = document.location.pathname,
             elNewCard = new PegsCard({
                 heading: 'New Entry',
                 description: 'Create a new entry',
@@ -62,7 +50,7 @@ export class PegsCards extends Container {
         elNewCard.dataset.id = Entity.emptyId;
 
         if (!this.#repo) {
-            slot.replaceChildren(elNewCard);
+            this.replaceChildren(elNewCard);
         } else {
             const items = await this.#repo.getAll(),
                 newCards = [elNewCard].concat(
@@ -78,7 +66,7 @@ export class PegsCards extends Container {
                         return card;
                     })
                 );
-            slot.replaceChildren(...newCards);
+            this.replaceChildren(...newCards);
         }
     }
 

@@ -20,9 +20,9 @@ export class Breadcrumb extends Component {
         self.navigation.addEventListener('navigate', this);
     }
 
-    protected override _initStyle() {
+    protected override _initShadowStyle() {
         return {
-            ...super._initStyle(),
+            ...super._initShadowStyle(),
             '.bread-crumb': {
                 backgroundColor: 'var(--content-bg)',
                 borderBottom: '1px solid var(--shadow-color)',
@@ -83,7 +83,7 @@ export class Breadcrumb extends Component {
         ];
     }
 
-    protected override _initHtml() {
+    protected override _initShadowHtml() {
         const { nav, ul, template } = html;
 
         return template(nav({ className: 'bread-crumb' }, ul({ className: 'crumbs' },

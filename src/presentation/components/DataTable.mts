@@ -1,8 +1,9 @@
 import type { Properties } from '~/types/Properties.mjs';
 import type { Entity } from '~/domain/Entity.mjs';
-import { formTheme } from '~/presentation/themes.mjs';
 import html, { renderIf } from '../lib/html.mjs';
 import { Component } from './Component.mjs';
+import buttonTheme from '../theme/buttonTheme.mjs';
+import formTheme from '../theme/formTheme.mjs';
 
 export interface DataColumn {
     formType?: 'text' | 'hidden' | 'select';
@@ -17,8 +18,8 @@ export type DataColumns<T extends Entity> =
     & { [K in keyof Properties<T>]: DataColumn };
 
 export interface DataTableOptions<T extends Entity> {
-    columns: DataColumns<T>;
-    select: () => Promise<T[]>;
+    columns?: DataColumns<T>;
+    select?: () => Promise<T[]>;
     onCreate?: (item: Omit<Properties<T>, 'id'>) => Promise<void>;
     onUpdate?: (item: Properties<T>) => Promise<void>;
     onDelete?: (id: T['id']) => Promise<void>;
@@ -48,13 +49,13 @@ export class DataTable<T extends Entity> extends Component {
     constructor({ columns, select, onCreate, onDelete, onUpdate }: DataTableOptions<T>) {
         super({});
 
-        Object.entries(columns).forEach(([key, value]) => {
+        Object.entries(columns ?? {}).forEach(([key, value]) => {
             if (value.formType == 'select' && !value.options)
                 throw new Error(`When formType is "select", options must be specified for column "${key}".`);
         });
 
-        this.#columns = Object.freeze(columns);
-        this.#select = select;
+        this.#columns = Object.freeze(columns ?? {} as DataColumns<T>);
+        this.#select = select ?? (() => Promise.resolve([]));
         this.#onCreate = onCreate;
         this.#onDelete = onDelete;
         this.#onUpdate = onUpdate;
@@ -135,10 +136,17 @@ export class DataTable<T extends Entity> extends Component {
             this.onDelete?.(id);
     }
 
-    protected override _initStyle() {
+    protected override _initShadowStyle() {
         return {
-            ...super._initStyle(),
+            ...super._initShadowStyle(),
+            ...buttonTheme,
             ...formTheme,
+            //The following is duplicated from the theme due to
+            // a browser bug
+            '.required span': {
+                color: 'var(--btn-danger-color)',
+                paddingLeft: '0.25em'
+            },
             'caption': {
                 fontWeight: 'bold',
                 textAlign: 'left',
@@ -171,7 +179,7 @@ export class DataTable<T extends Entity> extends Component {
         };
     }
 
-    protected override _initHtml(): HTMLTemplateElement {
+    protected override _initShadowHtml(): HTMLTemplateElement {
         return template([
             form({
                 id: 'frmDataTableCreate',

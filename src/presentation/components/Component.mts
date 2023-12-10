@@ -1,5 +1,6 @@
 import type { Properties } from '~/types/Properties.mjs';
 import { HandleEvent } from '../HandleEvent.mjs';
+import type { Theme } from '~/types/Theme.mjs';
 
 export abstract class Component extends HandleEvent(HTMLElement) {
     static get observedAttributes(): string[] {
@@ -12,8 +13,8 @@ export abstract class Component extends HandleEvent(HTMLElement) {
         if (!this.shadowRoot) {
             const shadowRoot = this.attachShadow({ mode: 'open' }),
                 sheet = new CSSStyleSheet(),
-                template = this._initHtml(),
-                rules = this._initStyle(),
+                template = this._initShadowHtml(),
+                rules = this._initShadowStyle(),
                 styleElement = document.createElement('style');
 
             // Convert the rules object into a CSSStyleSheet
@@ -51,7 +52,7 @@ export abstract class Component extends HandleEvent(HTMLElement) {
      * A document fragment that contains the HTML for the component
      * @returns The HTML template
      */
-    protected _initHtml(): HTMLTemplateElement {
+    protected _initShadowHtml(): HTMLTemplateElement {
         return document.createElement('template');
     }
 
@@ -59,7 +60,7 @@ export abstract class Component extends HandleEvent(HTMLElement) {
      * An object literal that contains the CSS style declarations for the component
      * @returns The CSS rules
      */
-    protected _initStyle(): Record<string, Partial<CSSStyleDeclaration>> {
+    protected _initShadowStyle(): Theme {
         return {
             ':host': {
                 boxSizing: 'border-box'

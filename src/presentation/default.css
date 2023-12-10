@@ -20,34 +20,27 @@
     --border-radius: 5px;
 }
 
-::webkit-scrollbar {
-    -webkit-appearance: none;
-    appearance: none;
-}
-
-::-webkit-scrollbar:vertical {
-    width: 0.5em;
-}
-
-::-webkit-scrollbar:horizontal {
-    height: 0.5em;
-}
-
-::-webkit-scrollbar-thumb {
-    background-color: var(--shadow-color);
-    border-radius: var(--border-radius);
-    border: 2px solid var(--content-bg);
-}
-
-::-webkit-scrollbar-track {
-    border-radius: var(--border-radius);
-    background-color: var(--site-dark-bg);
-}
-
 body {
     margin: 0;
     padding: 0;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     background-color: var(--site-dark-bg);
     color: var(--font-color);
+}
+
+a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+a:hover,
+a:active,
+a:focus {
+    text-decoration: underline;
+}
+
+.required::after {
+    content: "*";
+    color: var(--btn-danger-color);
+    padding-left: 0.25em;
 }
