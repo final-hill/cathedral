@@ -1,0 +1,1 @@
+export type Theme = Record<string, Partial<CSSStyleDeclaration>>;

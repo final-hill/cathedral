@@ -20,9 +20,9 @@ export class FeatherIcon extends Component {
         super(properties);
     }
 
-    protected override _initStyle() {
+    protected override _initShadowStyle() {
         return {
-            ...super._initStyle(),
+            ...super._initShadowStyle(),
             '.feather-icon': {
                 stroke: 'currentColor',
                 display: 'inline-block',
@@ -32,7 +32,7 @@ export class FeatherIcon extends Component {
         };
     }
 
-    protected override _initHtml() {
+    protected override _initShadowHtml() {
         const { template } = html,
             svg = document.createElementNS(xmlnsSvg, 'svg'),
             use = document.createElementNS(xmlnsSvg, 'use');

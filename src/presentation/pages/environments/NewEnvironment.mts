@@ -1,9 +1,9 @@
 import { Environment } from '~/domain/Environment.mjs';
 import { EnvironmentRepository } from '~/data/EnvironmentRepository.mjs';
-import { formTheme } from '~/presentation/themes.mjs';
 import Page from '../Page.mjs';
 import html from '~/presentation/lib/html.mjs';
 import { PEGS } from '~/domain/PEGS.mjs';
+import requiredTheme from '~/presentation/theme/requiredTheme.mjs';
 
 const { form, label, input, span, button } = html;
 
@@ -20,12 +20,12 @@ export class NewEnvironment extends Page {
     constructor() {
         super({ title: 'New Environment' }, []);
 
-        this.shadowRoot.appendChild(
+        this.appendChild(
             this.#form = form({
                 className: 'environment-form',
                 autocomplete: 'off'
             }, [
-                label({ htmlFor: 'name', className: 'required' }, ['Name', span('*')]),
+                label({ htmlFor: 'name', className: 'required' }, 'Name'),
                 this.#txtName = input({
                     type: 'text', name: 'name', id: 'name', required: true,
                     placeholder: 'Sample Environment', maxLength: Environment.maxNameLength
@@ -49,10 +49,10 @@ export class NewEnvironment extends Page {
         this.#txtName.addEventListener('input', this);
     }
 
-    protected override _initStyle() {
+    protected override _initPageStyle() {
         return {
-            ...super._initStyle(),
-            ...formTheme,
+            ...super._initPageStyle(),
+            ...requiredTheme,
             '.environment-form': {
                 display: 'grid',
                 gridTemplateColumns: '20% 1fr',

@@ -2,6 +2,7 @@ import { Component, FeatherIcon } from './index.mjs';
 import html from '../lib/html.mjs';
 import type { Properties } from '~/types/Properties.mjs';
 import type { FeatherIconName } from '~/types/FeatherIconName.mjs';
+import buttonTheme from '../theme/buttonTheme.mjs';
 
 export class MiniCard extends Component {
     static {
@@ -16,9 +17,10 @@ export class MiniCard extends Component {
         super(properties);
     }
 
-    protected override _initStyle() {
+    protected override _initShadowStyle() {
         return {
-            ...super._initStyle(),
+            ...super._initShadowStyle(),
+            ...buttonTheme,
             '.mini-card': {
                 alignItems: 'center',
                 backgroundColor: 'var(--site-dark-bg)',
@@ -47,7 +49,7 @@ export class MiniCard extends Component {
         };
     }
 
-    protected override _initHtml() {
+    protected override _initShadowHtml() {
         const { li, a, span, template } = html;
 
         return template(li({ className: 'mini-card' }, [

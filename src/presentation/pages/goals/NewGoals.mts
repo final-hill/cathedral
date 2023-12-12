@@ -1,8 +1,8 @@
 import { Goals } from '~/domain/Goals.mjs';
 import { PEGS } from '~/domain/PEGS.mjs';
 import { GoalsRepository } from '~/data/GoalsRepository.mjs';
-import { formTheme } from '~/presentation/themes.mjs';
 import html from '~/presentation/lib/html.mjs';
+import requiredTheme from '~/presentation/theme/requiredTheme.mjs';
 import Page from '../Page.mjs';
 
 const { form, label, input, span, button } = html;
@@ -23,7 +23,7 @@ export class NewGoals extends Page {
                 className: 'goals-form',
                 autocomplete: 'off'
             }, [
-                label({ htmlFor: 'name', className: 'required' }, ['Name', span('*')]),
+                label({ htmlFor: 'name', className: 'required' }, 'Name'),
                 input({
                     type: 'text', name: 'name', id: 'name', required: true,
                     placeholder: 'My Goals', maxLength: Goals.maxNameLength
@@ -41,18 +41,18 @@ export class NewGoals extends Page {
                 ])
             ])
         ]);
-        this.#form = this.shadowRoot!.querySelector('form')!;
+        this.#form = this.querySelector('form')!;
         this.#form.addEventListener('submit', this);
         this.#form.addEventListener('reset', this);
-        this.#txtName = this.shadowRoot!.querySelector('#name')!;
+        this.#txtName = this!.querySelector('#name')!;
         this.#txtName.addEventListener('input', this);
-        this.#txtSlug = this.shadowRoot!.querySelector('#slug')!;
+        this.#txtSlug = this.querySelector('#slug')!;
     }
 
-    override _initStyle() {
+    override _initPageStyle() {
         return {
-            ...super._initStyle(),
-            ...formTheme,
+            ...super._initPageStyle(),
+            ...requiredTheme,
             '.goals-form': {
                 display: 'grid',
                 gridTemplateColumns: '20% 1fr',

@@ -11,15 +11,15 @@ export class MiniCards extends Container {
         super(properties, children);
     }
 
-    protected override _initHtml() {
+    protected override _initShadowHtml() {
         const { template, ul, slot } = html;
 
         return template(ul({ className: 'mini-cards' }, slot()));
     }
 
-    protected override _initStyle() {
+    protected override _initShadowStyle() {
         return {
-            ...super._initStyle(),
+            ...super._initShadowStyle(),
             '.mini-cards': {
                 display: 'flex',
                 flexWrap: 'wrap',

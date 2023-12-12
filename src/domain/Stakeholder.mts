@@ -14,7 +14,6 @@ export enum StakeholderSegmentation {
 }
 
 export enum StakeholderCategory {
-    Uncategorized = 'Uncategorized',
     KeyStakeholder = 'Key Stakeholder',
     ShadowInfluencer = 'Shadow Influencer',
     FellowTraveler = 'Fellow Traveler',

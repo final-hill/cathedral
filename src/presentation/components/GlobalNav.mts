@@ -25,9 +25,9 @@ export class GlobalNav extends Component {
         self.navigation.addEventListener('navigate', this);
     }
 
-    protected override _initStyle() {
+    protected override _initShadowStyle() {
         return {
-            ...super._initStyle(),
+            ...super._initShadowStyle(),
             ':host': {
                 backgroundColor: 'var(--site-dark-bg)',
                 boxShadow: '2px 0 5px 0px var(--shadow-color)',
@@ -77,7 +77,7 @@ export class GlobalNav extends Component {
         };
     }
 
-    protected override _initHtml() {
+    protected override _initShadowHtml() {
         const { nav, ul, template } = html;
 
         return template(nav({ className: 'global-nav' }, ul([

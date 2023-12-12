@@ -1,5 +1,5 @@
 import Page from './Page.mjs';
-import html from '../lib/html.mjs';
+import html, { renderIf } from '../lib/html.mjs';
 import type { Properties } from '~/types/Properties.mjs';
 
 const { p } = html;
@@ -14,21 +14,10 @@ export abstract class SlugPage extends Page {
     constructor(properties: Properties<SlugPage>, children: (string | Element)[]) {
         super(properties, children);
 
-        if (!this.#slug)
-            this.initNoSlugError();
-        else
-            this.init();
-    }
-
-    init() {
-        this.shadowRoot.querySelector('slot')!.replaceChildren(
-            p('No slug identifier provided')
-        );
-    }
-
-    initNoSlugError() {
-        this.shadowRoot.querySelector('slot')!.replaceChildren(
-            p('No slug identifier provided')
+        this.appendChild(
+            p({
+                [renderIf]: !this.#slug
+            }, 'No slug identifier provided')
         );
     }
 

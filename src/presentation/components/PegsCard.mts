@@ -1,9 +1,8 @@
 import { Component, FeatherIcon } from './index.mjs';
 import html from '../lib/html.mjs';
 import type { Properties } from '~/types/Properties.mjs';
-import { formTheme } from '~/presentation/themes.mjs';
 
-const { template, article, h2, a, p, button } = html;
+const { template, h2, a, p, button } = html;
 
 export class PegsCard extends Component {
     static {
@@ -19,32 +18,39 @@ export class PegsCard extends Component {
         this.shadowRoot.querySelector('button')!.addEventListener('click', e => this.onDelete(e));
     }
 
-    protected override _initHtml() {
-        return template(
-            article({ className: 'pegs-card' }, [
-                h2({ className: 'title' },
-                    a({ href: '#' }, '{heading}')
-                ),
-                p('{description}'),
-                button({
-                    className: 'delete-btn',
-                    hidden: true,
-                },
-                    new FeatherIcon({ icon: 'trash-2' })
-                )
-            ])
-        );
+    protected override _initShadowHtml() {
+        return template([
+            h2({ className: 'title' },
+                a({ href: '#' }, '{heading}')
+            ),
+            p('{description}'),
+            button({
+                className: 'delete-btn',
+                hidden: true,
+            },
+                new FeatherIcon({ icon: 'trash-2' })
+            )
+        ]);
     }
 
-    protected override _initStyle() {
+    protected override _initShadowStyle() {
         return {
-            ...super._initStyle(),
-            ...formTheme,
-            '.pegs-card': {
+            ':host': {
+                ...super._initShadowStyle()[':host'],
+                backgroundColor: 'var(--site-dark-bg)',
+                boxShadow: '4px 5px 5px 0px var(--shadow-color)',
                 padding: '1em',
+            },
+            ':host(:hover)': {
+                filter: 'brightness(1.2)'
+            },
+            ':host(:first-of-type)': {
+                backgroundColor: 'transparent',
+                border: '1px dashed var(--font-color)'
             },
             '.delete-btn': {
                 alignSelf: 'center',
+                backgroundColor: 'var(--site-dark-bg)',
                 color: 'var(--btn-danger-color)',
                 height: 'fit-content',
                 width: 'fit-content'
