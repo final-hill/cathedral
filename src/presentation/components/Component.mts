@@ -38,7 +38,6 @@ export abstract class Component extends HandleEvent(HTMLElement) {
                 template.content.cloneNode(true)
             );
 
-            // Set the component's properties
             Object.assign(this, properties);
         }
     }

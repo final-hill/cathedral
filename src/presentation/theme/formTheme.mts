@@ -11,7 +11,7 @@ const formTheme: Theme = {
         padding: '0.5em',
         width: '100%'
     },
-    'input:read-only, select:read-only, textarea:read-only': {
+    'input:read-only, textarea:read-only': {
         backgroundColor: 'var(--content-bg)',
         color: 'var(--font-color)',
     }

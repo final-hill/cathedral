@@ -17,6 +17,7 @@
     --site-dark-bg: var(--palette3);
     --content-bg: var(--palette7);
     --shadow-color: var(--palette0);
+    --border-color: var(--palette6);
     --border-radius: 5px;
 }
 

@@ -12,6 +12,7 @@ export abstract class Container extends Component {
 
     protected override _initShadowStyle(): Theme {
         return {
+            ...super._initShadowStyle(),
             '::-webkit-scrollbar': {
                 appearance: 'none'
             },

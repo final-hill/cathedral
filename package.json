@@ -46,6 +46,7 @@
     "dependencies": {
         "css-loader": "^6.8.1",
         "feather-icons": "^4.29.1",
+        "mermaid": "^10.6.1",
         "style-loader": "^3.3.3"
     }
 }
