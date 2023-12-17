@@ -20,7 +20,7 @@
         "build:prod": "webpack --mode production",
         "lint": "eslint src/ --ext .mts --fix",
         "serve": "webpack serve --mode development",
-        "test": "globstar -- node --experimental-test-coverage --import tsx --test \"src/**/*.test.mts\""
+        "test": "globstar -- node --import tsx --test \"src/**/*.test.mts\""
     },
     "devDependencies": {
         "@types/dom-navigation": "^1.0.3",
