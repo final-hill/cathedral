@@ -101,11 +101,12 @@ export class GlobalNav extends Component {
         if (!event.canIntercept || event.hashChange)
             return;
 
-        const url = new URL(event.destination.url),
+        const origin = document.location.origin,
+            url = new URL(event.destination.url, origin),
             as = this.shadowRoot.querySelectorAll('a');
 
         as.forEach(a => {
-            if (isActive(new URL(a.href).pathname, url.pathname))
+            if (isActive(new URL(a.href, origin).pathname, url.pathname))
                 a.classList.add('link-active');
             else
                 a.classList.remove('link-active');

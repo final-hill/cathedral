@@ -1,8 +1,9 @@
-import { Environment } from '~/domain/Environment.mjs';
+import Environment from '~/domain/Environment.mjs';
 import { EnvironmentRepository } from '~/data/EnvironmentRepository.mjs';
 import Page from '../Page.mjs';
 import html from '~/presentation/lib/html.mjs';
-import { PEGS } from '~/domain/PEGS.mjs';
+import PEGS from '~/domain/PEGS.mjs';
+import formTheme from '~/presentation/theme/formTheme.mjs';
 import requiredTheme from '~/presentation/theme/requiredTheme.mjs';
 
 const { form, label, input, span, button } = html;
@@ -53,6 +54,7 @@ export class NewEnvironment extends Page {
         return {
             ...super._initPageStyle(),
             ...requiredTheme,
+            ...formTheme,
             '.environment-form': {
                 display: 'grid',
                 gridTemplateColumns: '20% 1fr',

@@ -26,7 +26,8 @@ export default class Router extends HandleEvent(EventTarget) {
         if (!event.canIntercept || event.hashChange)
             return;
 
-        const url = new URL(event.destination.url),
+        const origin = document.location.origin,
+            url = new URL(event.destination.url, origin),
             // Page = this.#routeTable.get(url.pathname) ?? NotFound;
 
             // Search for a matching route pattern in the route table. Patterns

@@ -8,6 +8,7 @@
         "plugin:@typescript-eslint/eslint-recommended"
     ],
     "ignorePatterns": [
+        "package.json",
         "node_modules",
         "dist",
         "webpack.config.mjs"

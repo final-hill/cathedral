@@ -1,5 +1,5 @@
 import type { Properties } from '~/types/Properties.mjs';
-import type { Entity } from '~/domain/Entity.mjs';
+import type Entity from '~/domain/Entity.mjs';
 import html, { renderIf } from '../lib/html.mjs';
 import { Component } from './Component.mjs';
 import buttonTheme from '../theme/buttonTheme.mjs';

@@ -1,8 +1,9 @@
-import { Goals } from '~/domain/Goals.mjs';
-import { PEGS } from '~/domain/PEGS.mjs';
+import Goals from '~/domain/Goals.mjs';
+import PEGS from '~/domain/PEGS.mjs';
 import { GoalsRepository } from '~/data/GoalsRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
 import requiredTheme from '~/presentation/theme/requiredTheme.mjs';
+import formTheme from '~/presentation/theme/formTheme.mjs';
 import Page from '../Page.mjs';
 
 const { form, label, input, span, button } = html;
@@ -53,6 +54,7 @@ export class NewGoals extends Page {
         return {
             ...super._initPageStyle(),
             ...requiredTheme,
+            ...formTheme,
             '.goals-form': {
                 display: 'grid',
                 gridTemplateColumns: '20% 1fr',

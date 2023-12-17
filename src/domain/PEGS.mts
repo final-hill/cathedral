@@ -1,15 +1,10 @@
 import type { Properties } from '~/types/Properties.mjs';
-import { Entity, type EntityJson } from './Entity.mjs';
-
-export interface PEGSJson extends EntityJson {
-    name: string;
-    description: string;
-}
+import Entity from './Entity.mjs';
 
 /**
  * The base class for all PEGS (Project, Environment, Goal, System)
  */
-export class PEGS extends Entity {
+export default class PEGS extends Entity {
     static readonly maxNameLength = 60;
     static readonly maxDescriptionLength = 200;
 
@@ -18,14 +13,6 @@ export class PEGS extends Entity {
             .replace(/\s/g, '-')
             .replace(/[^\w-]+/g, '')
             .replace(/--+/g, '-');
-    }
-
-    static override fromJSON(json: PEGSJson): PEGS {
-        return new PEGS({
-            id: json.id,
-            description: json.description,
-            name: json.name
-        });
     }
 
     private _name!: string;
@@ -63,13 +50,5 @@ export class PEGS extends Entity {
 
     slug(): string {
         return PEGS.slugify(this.name);
-    }
-
-    override toJSON(): PEGSJson {
-        return {
-            ...super.toJSON(),
-            name: this.name,
-            description: this.description
-        };
     }
 }

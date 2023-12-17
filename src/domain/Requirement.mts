@@ -1,14 +1,10 @@
 import { type Properties } from '~/types/Properties.mjs';
-import { Entity, type EntityJson } from './Entity.mjs';
-
-export interface RequirementJson extends EntityJson {
-    statement: string;
-}
+import Entity from './Entity.mjs';
 
 /**
  * A Requirement is a statement that specifies a property.
  */
-export abstract class Requirement extends Entity {
+export default class Requirement extends Entity {
     /**
      * A statement is a human-readable description of a requirement.
      */
@@ -27,12 +23,5 @@ export abstract class Requirement extends Entity {
      */
     property(..._args: any[]): boolean {
         return false;
-    }
-
-    override toJSON(): RequirementJson {
-        return {
-            ...super.toJSON(),
-            statement: this.statement
-        };
     }
 }

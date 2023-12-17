@@ -1,4 +1,5 @@
-export interface Mapper<From, To> {
-    mapFrom(from: From): To;
-    mapTo(to: To): From;
+export default abstract class Mapper<Source, Target> {
+    constructor(readonly serializationVersion: string) { }
+    abstract mapTo(source: Source): Target;
+    abstract mapFrom(target: Target): Source;
 }
