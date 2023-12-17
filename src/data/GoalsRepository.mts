@@ -1,6 +1,8 @@
-import { Goals } from '~/domain/Goals.mjs';
+import Goals from '~/domain/Goals.mjs';
 import { PEGSRepository } from './PEGSRepository.mjs';
+import GoalsToJsonMapper from '~/mappers/GoalsToJsonMapper.mjs';
+import pkg from '~/../package.json' with { type: 'json' };
 
 export class GoalsRepository extends PEGSRepository<Goals> {
-    constructor() { super('goals', Goals); }
+    constructor() { super('goals', new GoalsToJsonMapper(pkg.version)); }
 }

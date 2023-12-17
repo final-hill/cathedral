@@ -1,5 +1,5 @@
-import type { Goals } from '~/domain/Goals.mjs';
-import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from '~/domain/Stakeholder.mjs';
+import type Goals from '~/domain/Goals.mjs';
+import Stakeholder, { StakeholderCategory, StakeholderSegmentation } from '~/domain/Stakeholder.mjs';
 import { GoalsRepository } from '~/data/GoalsRepository.mjs';
 import { StakeholderRepository } from '~/data/StakeholderRepository.mjs';
 import html from '~/presentation/lib/html.mjs';

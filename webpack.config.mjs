@@ -10,7 +10,7 @@ const __filename = url.fileURLToPath(import.meta.url),
     __dirname = path.dirname(__filename);
 
 export default {
-    mode: 'production',
+    mode: process.env.NODE_ENV,
     entry: {
         main: './src/main.mts'
     },

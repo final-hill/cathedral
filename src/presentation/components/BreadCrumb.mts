@@ -84,10 +84,11 @@ export class Breadcrumb extends Component {
     }
 
     protected override _initShadowHtml() {
-        const { nav, ul, template } = html;
+        const origin = document.location.origin,
+            { nav, ul, template } = html;
 
         return template(nav({ className: 'bread-crumb' }, ul({ className: 'crumbs' },
-            this._makeCrumbs(new URL(document.location.href))
+            this._makeCrumbs(new URL(document.location.href, origin))
         )));
     }
 
@@ -95,7 +96,8 @@ export class Breadcrumb extends Component {
         if (!event.canIntercept || event.hashChange)
             return;
 
-        const url = new URL(event.destination.url),
+        const origin = document.location.origin,
+            url = new URL(event.destination.url, origin),
             ul = this.shadowRoot.querySelector('.crumbs')!;
         ul.replaceChildren(...this._makeCrumbs(url));
     }

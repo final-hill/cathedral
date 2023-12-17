@@ -9,7 +9,7 @@ const { p } = html;
  */
 export abstract class SlugPage extends Page {
     // /parent/:slug/foo
-    #slug = new URL(location.href).pathname.split('/')[2];
+    #slug = new URL(location.href, document.location.origin).pathname.split('/')[2];
 
     constructor(properties: Properties<SlugPage>, children: (string | Element)[]) {
         super(properties, children);

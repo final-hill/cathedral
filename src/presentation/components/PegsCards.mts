@@ -1,5 +1,5 @@
-import { PEGS } from '~/domain/PEGS.mjs';
-import { Entity } from '~/domain/Entity.mjs';
+import PEGS from '~/domain/PEGS.mjs';
+import Entity from '~/domain/Entity.mjs';
 import Repository from '~/usecases/Repository.mjs';
 import { Container, PegsCard } from './index.mjs';
 import html from '../lib/html.mjs';

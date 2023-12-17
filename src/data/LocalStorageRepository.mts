@@ -1,15 +1,11 @@
-import { type Entity } from '~/domain/Entity.mjs';
+import type Entity from '~/domain/Entity.mjs';
+import type { EntityJson } from '~/mappers/EntityToJsonMapper.mjs';
+import type Mapper from '~/usecases/Mapper.mjs';
 import Repository from '~/usecases/Repository.mjs';
 
 export class LocalStorageRepository<E extends Entity> extends Repository<E> {
-    private _storageKey;
-    private _fromJSON;
-
-    constructor(storageKey: string, EntityConstructor: typeof Entity) {
-        super(EntityConstructor);
-
-        this._storageKey = storageKey;
-        this._fromJSON = EntityConstructor.fromJSON as (json: any) => E;
+    constructor(readonly storageKey: string, mapper: Mapper<E, EntityJson>) {
+        super(mapper);
     }
 
     get storage(): Storage {
@@ -17,28 +13,28 @@ export class LocalStorageRepository<E extends Entity> extends Repository<E> {
     }
 
     get(id: E['id']): Promise<E | undefined> {
-        const data = this.storage.getItem(this._storageKey),
-            json: E[] = data ? JSON.parse(data) : [],
+        const data = this.storage.getItem(this.storageKey),
+            json: EntityJson[] = data ? JSON.parse(data) : [],
             result = json.find(item => item.id === id);
 
         return Promise.resolve(
-            result ? this._fromJSON(result) : undefined
+            result ? this.mapper.mapFrom(result) : undefined
         );
     }
 
     getAll(filter: (entity: E) => boolean = _ => true): Promise<E[]> {
-        const data = this.storage.getItem(this._storageKey),
-            json: E[] = data ? JSON.parse(data) : [],
-            result = json.filter(filter).map(this._fromJSON);
+        const data = this.storage.getItem(this.storageKey),
+            json: EntityJson[] = data ? JSON.parse(data) : [],
+            result = json.map(this.mapper.mapFrom).filter(filter);
 
         return Promise.resolve(result);
     }
 
     add(item: E): Promise<void> {
-        const data = this.storage.getItem(this._storageKey),
+        const data = this.storage.getItem(this.storageKey),
             json: E[] = data ? JSON.parse(data) : [];
-        json.push(item.toJSON() as E);
-        this.storage.setItem(this._storageKey, JSON.stringify(json));
+        json.push(this.mapper.mapTo(item));
+        this.storage.setItem(this.storageKey, JSON.stringify(json));
 
         this.dispatchEvent(new CustomEvent('update'));
 
@@ -46,22 +42,22 @@ export class LocalStorageRepository<E extends Entity> extends Repository<E> {
     }
 
     clear(): Promise<void> {
-        this.storage.removeItem(this._storageKey);
+        this.storage.removeItem(this.storageKey);
         this.dispatchEvent(new CustomEvent('update'));
 
         return Promise.resolve();
     }
 
     update(item: E): Promise<void> {
-        const data = this.storage.getItem(this._storageKey),
-            json: E[] = data ? JSON.parse(data) : [],
+        const data = this.storage.getItem(this.storageKey),
+            json: EntityJson[] = data ? JSON.parse(data) : [],
             index = json.findIndex(e => e.id === item.id);
 
         if (index === -1)
             throw new Error('Not found');
 
-        json[index] = item.toJSON() as E;
-        this.storage.setItem(this._storageKey, JSON.stringify(json));
+        json[index] = this.mapper.mapTo(item);
+        this.storage.setItem(this.storageKey, JSON.stringify(json));
 
         this.dispatchEvent(new CustomEvent('update'));
 
@@ -69,15 +65,15 @@ export class LocalStorageRepository<E extends Entity> extends Repository<E> {
     }
 
     delete(id: E['id']): Promise<void> {
-        const data = this.storage.getItem(this._storageKey),
-            json: E[] = data ? JSON.parse(data) : [],
+        const data = this.storage.getItem(this.storageKey),
+            json: EntityJson[] = data ? JSON.parse(data) : [],
             index = json.findIndex(item => item.id === id);
 
         if (index === -1)
             throw new Error('Not found');
 
         json.splice(index, 1);
-        this.storage.setItem(this._storageKey, JSON.stringify(json));
+        this.storage.setItem(this.storageKey, JSON.stringify(json));
 
         this.dispatchEvent(new CustomEvent('update'));
 
