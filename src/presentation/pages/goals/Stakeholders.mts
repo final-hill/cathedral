@@ -37,10 +37,11 @@ export class Stakeholders extends SlugPage {
         const dataTable = new DataTable<Stakeholder>({
             columns: {
                 id: { headerText: 'ID', readonly: true, formType: 'hidden' },
-                name: { headerText: 'Name', required: true },
-                description: { headerText: 'Description', required: true },
+                name: { headerText: 'Name', required: true, formType: 'text' },
+                description: { headerText: 'Description', required: true, formType: 'text' },
                 segmentation: { headerText: 'Segmentation', formType: 'select', options: Object.values(StakeholderSegmentation) },
-                category: { headerText: 'Category', formType: 'select', options: Object.values(StakeholderCategory) }
+                influence: { headerText: 'Influence', formType: 'range', min: 0, max: 100, step: 1 },
+                availability: { headerText: 'Availability', formType: 'range', min: 0, max: 100, step: 1 },
             },
             select: async () => {
                 if (!this.#goals)
@@ -105,38 +106,23 @@ export class Stakeholders extends SlugPage {
                 await this.#stakeholderRepository.getAll(),
                 ({ segmentation }) => segmentation
             ),
-            clientGroups = groupBy(
-                stakeholders[StakeholderSegmentation.Client] ?? [],
-                ({ category }) => category
-            ),
-            vendorGroups = groupBy(
-                stakeholders[StakeholderSegmentation.Vendor] ?? [],
-                ({ category }) => category
-            ),
-            chartDefinition = (groups: Record<StakeholderCategory, Stakeholder[]>, category: StakeholderSegmentation) => `
+            clientGroup = stakeholders[StakeholderSegmentation.Client] ?? [],
+            vendorGroup = stakeholders[StakeholderSegmentation.Vendor] ?? [],
+            chartDefinition = (stakeholders: Stakeholder[], category: StakeholderSegmentation) => `
                 quadrantChart
                 title ${category}
                 x-axis Low Availability --> High Availability
                 y-axis Low Infuence --> High Influence
-                quadrant-1 "Shadow Influencers (Manage)"
-                quadrant-2 "Key Stakeholders (Satisfy)"
-                quadrant-3 "Fellow Travelers (Monitor)"
-                quadrant-4 "Observers (Inform)"
-                ${(groups[StakeholderCategory.ShadowInfluencer] ?? [])
-                    .map(({ name }) => `"${name}": [0.75, 0.75]`)?.join('\n')
-                }
-                ${(groups[StakeholderCategory.KeyStakeholder] ?? [])
-                    .map(({ name }) => `"${name}": [0.25, 0.75]`)?.join('\n')
-                }
-                ${(groups[StakeholderCategory.FellowTraveler] ?? [])
-                    .map(({ name }) => `"${name}": [0.25, 0.25]`)?.join('\n')
-                }
-                ${(groups[StakeholderCategory.Observer] ?? [])
-                    .map(({ name }) => `"${name}": [0.75, 0.25]`)?.join('\n')
+                quadrant-1 "${StakeholderCategory.KeyStakeholder} (Satisfy)"
+                quadrant-2 "${StakeholderCategory.ShadowInfluencer} (Manage)"
+                quadrant-3 "${StakeholderCategory.Observer} (Inform)"
+                quadrant-4 "${StakeholderCategory.FellowTraveler} (Monitor)"
+                ${stakeholders.map(({ name, availability, influence }) =>
+                `"${name}": [${availability / 100}, ${influence / 100}]`)?.join('\n')
                 }
             `,
-            { svg: svgClient } = await mermaid.render('clientMap', chartDefinition(clientGroups, StakeholderSegmentation.Client)),
-            { svg: svgVendor } = await mermaid.render('vendorMap', chartDefinition(vendorGroups, StakeholderSegmentation.Vendor));
+            { svg: svgClient } = await mermaid.render('clientMap', chartDefinition(clientGroup, StakeholderSegmentation.Client)),
+            { svg: svgVendor } = await mermaid.render('vendorMap', chartDefinition(vendorGroup, StakeholderSegmentation.Vendor));
         mermaidContainer.innerHTML = `${svgClient}<br>${svgVendor}`;
     }
 }

@@ -29,7 +29,7 @@ export class Functionality extends SlugPage {
         const dataTable = new DataTable({
             columns: {
                 id: { headerText: 'ID', readonly: true, formType: 'hidden' },
-                statement: { headerText: 'Statement', required: true }
+                statement: { headerText: 'Statement', required: true, formType: 'text' }
             },
             select: async () => {
                 if (!this.#goals)
