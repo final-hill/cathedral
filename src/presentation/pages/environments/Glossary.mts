@@ -23,8 +23,8 @@ export class Glossary extends SlugPage {
         const dataTable = new DataTable<GlossaryTerm>({
             columns: {
                 id: { headerText: 'ID', readonly: true, formType: 'hidden' },
-                term: { headerText: 'Term', required: true },
-                definition: { headerText: 'Definition' }
+                term: { headerText: 'Term', required: true, formType: 'text' },
+                definition: { headerText: 'Definition', formType: 'text' }
             },
             select: async () => {
                 if (!this.#environment)

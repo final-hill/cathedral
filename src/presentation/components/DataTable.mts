@@ -5,17 +5,25 @@ import { Component } from './Component.mjs';
 import buttonTheme from '../theme/buttonTheme.mjs';
 import formTheme from '../theme/formTheme.mjs';
 
-export interface DataColumn {
-    formType?: 'text' | 'hidden' | 'select';
+export type DataColumn = {
     readonly?: boolean;
     headerText: string;
     required?: boolean;
-    options?: string[];
-}
+} & ({
+    formType: 'text' | 'hidden';
+} | {
+    formType: 'number' | 'range';
+    min: number;
+    max: number;
+    step: number;
+} | {
+    formType: 'select';
+    options: string[];
+});
 
 export type DataColumns<T extends Entity> =
     { id: DataColumn }
-    & { [K in keyof Properties<T>]: DataColumn };
+    & { [K in keyof Partial<Properties<T>>]: DataColumn };
 
 export interface DataTableOptions<T extends Entity> {
     columns?: DataColumns<T>;
@@ -48,11 +56,6 @@ export class DataTable<T extends Entity> extends Component {
 
     constructor({ columns, select, onCreate, onDelete, onUpdate }: DataTableOptions<T>) {
         super({});
-
-        Object.entries(columns ?? {}).forEach(([key, value]) => {
-            if (value.formType == 'select' && !value.options)
-                throw new Error(`When formType is "select", options must be specified for column "${key}".`);
-        });
 
         this.#columns = Object.freeze(columns ?? {} as DataColumns<T>);
         this.#select = select ?? (() => Promise.resolve([]));
@@ -258,20 +261,33 @@ export class DataTable<T extends Entity> extends Component {
             ...Object.entries(this.#columns).map(([id, col]) =>
                 td({ hidden: col.formType == 'hidden' }, [
                     input({
-                        type: 'text',
+                        type: col.formType,
                         name: id,
                         required: col.required,
                         form: this.#frmDataTableCreate,
-                        [renderIf]: col.formType != 'select'
+                        [renderIf]: col.formType == 'text' || col.formType == 'hidden'
                     }),
                     select({
-                        hidden: col.formType != 'select',
                         name: id,
                         form: this.#frmDataTableCreate,
                         [renderIf]: col.formType == 'select'
-                    }, [
-                        ...(col.options?.map(opt => option({ value: opt }, opt)) ?? [])
-                    ])
+                    },
+                        col.formType == 'select' ?
+                            col.options.map(opt => option({ value: opt }, opt))
+                            : []
+                    ),
+                    input({
+                        type: col.formType,
+                        name: id,
+                        min: col.formType == 'number' || col.formType == 'range' ?
+                            `${col.min}` : '0',
+                        max: col.formType == 'number' || col.formType == 'range' ?
+                            `${col.max}` : '0',
+                        step: col.formType == 'number' || col.formType == 'range' ?
+                            `${col.step}` : '1',
+                        form: this.#frmDataTableCreate,
+                        [renderIf]: col.formType == 'number' || col.formType == 'range'
+                    })
                 ]))
         );
         this.#newItemRow.append(td(button({
@@ -287,34 +303,55 @@ export class DataTable<T extends Entity> extends Component {
                         span({
                             'className': 'view-data',
                             // @ts-expect-error: data-* attributes are valid
-                            'data-name': id
+                            'data-name': id,
+                            [renderIf]: col.formType != 'range'
                         }, (item as any)[id]),
-                        col.formType != 'select' ?
-                            input({
-                                form: this.#frmDataTableUpdate,
-                                type: 'text',
-                                className: 'edit-data',
-                                name: id,
-                                value: (item as any)[id],
-                                required: col.required,
-                                disabled: true,
-                                hidden: true
-                            })
-                            : '',
-                        col.formType == 'select' ?
-                            select({
-                                form: this.#frmDataTableUpdate,
-                                className: 'edit-data',
-                                name: id,
-                                disabled: true,
-                                hidden: true
-                            }, [
-                                ...col.options!.map(opt => option({
-                                    value: opt,
-                                    selected: opt == (item as any)[id]
-                                }, opt))
-                            ])
-                            : ''
+                        input({
+                            form: this.#frmDataTableUpdate,
+                            type: col.formType,
+                            className: 'view-data',
+                            name: id,
+                            disabled: true,
+                            [renderIf]: col.formType == 'range',
+                            value: (item as any)[id]
+                        }),
+                        input({
+                            form: this.#frmDataTableUpdate,
+                            type: col.formType,
+                            className: 'edit-data',
+                            name: id,
+                            value: (item as any)[id],
+                            required: col.required,
+                            disabled: true,
+                            hidden: true,
+                            [renderIf]: col.formType == 'text' || col.formType == 'hidden'
+                        }),
+                        input({
+                            form: this.#frmDataTableUpdate,
+                            type: col.formType,
+                            className: 'edit-data',
+                            name: id,
+                            min: `${(col as any).min ?? 0}`,
+                            max: `${(col as any).max ?? 0}`,
+                            step: `${(col as any).step ?? 1}`,
+                            disabled: true,
+                            hidden: true,
+                            [renderIf]: col.formType == 'number' || col.formType == 'range',
+                            value: (item as any)[id]
+                        }),
+                        select({
+                            form: this.#frmDataTableUpdate,
+                            className: 'edit-data',
+                            name: id,
+                            disabled: true,
+                            hidden: true,
+                            [renderIf]: col.formType == 'select'
+                        },
+                            ((col as any).options ?? []).map((opt: string) => option({
+                                value: opt,
+                                selected: opt == (item as any)[id]
+                            }, opt))
+                        )
                     ])),
                 td([
                     button({
