@@ -1,6 +1,6 @@
 import Behavior from '~/domain/Behavior.mjs';
 import type Goals from '~/domain/Goals.mjs';
-import { GoalsRepository } from '~/data/GoalsRepository.mjs';
+import GoalsRepository from '~/data/GoalsRepository.mjs';
 import { BehaviorRepository } from '~/data/BehaviorRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';

@@ -11,6 +11,7 @@ const __filename = url.fileURLToPath(import.meta.url),
 
 export default {
     mode: process.env.NODE_ENV,
+    devtool: process.env.NODE_ENV === 'development' ? 'eval-source-map' : 'source-map',
     entry: {
         main: './src/main.mts'
     },

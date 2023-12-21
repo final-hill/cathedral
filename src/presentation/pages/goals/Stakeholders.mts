@@ -1,30 +1,23 @@
 import type Goals from '~/domain/Goals.mjs';
 import Stakeholder, { StakeholderCategory, StakeholderSegmentation } from '~/domain/Stakeholder.mjs';
-import { GoalsRepository } from '~/data/GoalsRepository.mjs';
-import { StakeholderRepository } from '~/data/StakeholderRepository.mjs';
+import GoalsRepository from '~/data/GoalsRepository.mjs';
+import StakeholderRepository from '~/data/StakeholderRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';
 import { SlugPage } from '../SlugPage.mjs';
 import { Tabs } from '~components/Tabs.mjs';
 import mermaid from 'mermaid';
+import groupBy from '~/lib/groupBy.mjs';
 
-const { h2, p, div } = html,
-    groupBy = <T, K extends keyof any>(arr: T[], key: (i: T) => K) =>
-        arr.reduce((groups, item) => {
-            (groups[key(item)] ||= []).push(item);
-
-            return groups;
-        }, {} as Record<K, T[]>);
-
-
-mermaid.initialize({
-    startOnLoad: true,
-    theme: 'dark'
-});
+const { h2, p, div } = html;
 
 export class Stakeholders extends SlugPage {
     static {
         customElements.define('x-stakeholders-page', this);
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark'
+        });
     }
 
     #goalsRepository = new GoalsRepository();
@@ -39,7 +32,10 @@ export class Stakeholders extends SlugPage {
                 id: { headerText: 'ID', readonly: true, formType: 'hidden' },
                 name: { headerText: 'Name', required: true, formType: 'text' },
                 description: { headerText: 'Description', required: true, formType: 'text' },
-                segmentation: { headerText: 'Segmentation', formType: 'select', options: Object.values(StakeholderSegmentation) },
+                segmentation: {
+                    headerText: 'Segmentation', formType: 'select',
+                    options: Object.values(StakeholderSegmentation).map(x => ({ value: x, text: x }))
+                },
                 influence: { headerText: 'Influence', formType: 'range', min: 0, max: 100, step: 1 },
                 availability: { headerText: 'Availability', formType: 'range', min: 0, max: 100, step: 1 },
             },

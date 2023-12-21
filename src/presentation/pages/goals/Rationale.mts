@@ -1,5 +1,5 @@
 import Goals from '~/domain/Goals.mjs';
-import { GoalsRepository } from '~/data/GoalsRepository.mjs';
+import GoalsRepository from '~/data/GoalsRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
 import { SlugPage } from '../SlugPage.mjs';
 
