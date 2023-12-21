@@ -1,6 +1,6 @@
 import Goals from '~/domain/Goals.mjs';
 import PEGS from '~/domain/PEGS.mjs';
-import { GoalsRepository } from '~/data/GoalsRepository.mjs';
+import GoalsRepository from '~/data/GoalsRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
 import requiredTheme from '~/presentation/theme/requiredTheme.mjs';
 import formTheme from '~/presentation/theme/formTheme.mjs';
@@ -92,7 +92,8 @@ export class NewGoals extends Page {
                 outcomes: '',
                 situation: '',
                 stakeholders: [],
-                functionalBehaviors: []
+                functionalBehaviors: [],
+                useCases: []
             });
 
         await this.#repository.add(goals);

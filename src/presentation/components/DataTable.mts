@@ -5,21 +5,30 @@ import { Component } from './Component.mjs';
 import buttonTheme from '../theme/buttonTheme.mjs';
 import formTheme from '../theme/formTheme.mjs';
 
-export type DataColumn = {
+interface BaseDataColumn {
     readonly?: boolean;
     headerText: string;
     required?: boolean;
-} & ({
+}
+
+interface TextHiddenDataColumn {
     formType: 'text' | 'hidden';
-} | {
+}
+
+interface NumberRangeDataColumn {
     formType: 'number' | 'range';
     min: number;
     max: number;
     step: number;
-} | {
+}
+
+interface OptDataColumn {
     formType: 'select';
-    options: string[];
-});
+    options: { value: string; text: string }[];
+}
+
+export type DataColumn = BaseDataColumn &
+    (TextHiddenDataColumn | NumberRangeDataColumn | OptDataColumn);
 
 export type DataColumns<T extends Entity> =
     { id: DataColumn }
@@ -35,8 +44,8 @@ export interface DataTableOptions<T extends Entity> {
 
 const show = ((item: HTMLElement) => item.hidden = false),
     hide = ((item: HTMLElement) => item.hidden = true),
-    disable = ((item: HTMLInputElement) => item.disabled = true),
-    enable = ((item: HTMLInputElement) => item.disabled = false),
+    disable = ((item: HTMLInputElement | HTMLSelectElement) => item.disabled = true),
+    enable = ((item: HTMLInputElement | HTMLSelectElement) => item.disabled = false),
     { button, caption, form, input, option, select, span, table, tbody, td, template, th, thead, tr } = html;
 
 export class DataTable<T extends Entity> extends Component {
@@ -127,7 +136,7 @@ export class DataTable<T extends Entity> extends Component {
         const form = e.target as HTMLFormElement,
             formData = new FormData(form),
             item = Object.fromEntries(formData.entries()) as Properties<T>;
-        this._cancelEdit();
+        // this._cancelEdit(e.submitter as HTMLButtonElement);
         this.onUpdate?.(item);
     }
 
@@ -216,15 +225,27 @@ export class DataTable<T extends Entity> extends Component {
     /**
      * Hide all edit items in the table and then swap the row
      * from edit mode to view mode.
+     * @param btn - The button that triggered the cancel.
      * @returns void
      */
-    protected _cancelEdit() {
-        const root = this.shadowRoot,
-            viewData = root.querySelectorAll<HTMLElement>('.view-data'),
-            editData = root.querySelectorAll<HTMLInputElement>('.edit-data');
-        viewData.forEach(show);
-        editData.forEach(hide);
-        editData.forEach(disable);
+    protected _cancelEdit(btn: HTMLButtonElement) {
+        if (btn.hidden)
+            return;
+
+        const tr = btn.closest('tr')!,
+            fields = tr.querySelectorAll<HTMLInputElement | HTMLSelectElement>('.data-cell > *'),
+            editButtons = tr.querySelectorAll<HTMLButtonElement>('.button-cell > .edit-data'),
+            viewButtons = tr.querySelectorAll<HTMLButtonElement>('.button-cell > .view-data');
+
+        fields.forEach(disable);
+        fields.forEach(field => {
+            if (field instanceof HTMLSelectElement)
+                field.selectedIndex = [...field.options].findIndex(opt => opt.defaultSelected);
+            else
+                field.value = field.defaultValue;
+        });
+        viewButtons.forEach(show);
+        editButtons.forEach(hide);
     }
 
     /**
@@ -235,12 +256,18 @@ export class DataTable<T extends Entity> extends Component {
      */
     protected _editRow(e: Event) {
         const tr = (e.target as Element).closest('tr')!,
-            tbody = tr.closest('tbody')!;
-        tbody.querySelectorAll<HTMLElement>('.view-data').forEach(show);
-        tbody.querySelectorAll<HTMLElement>('.edit-data').forEach(hide);
-        tr.querySelectorAll<HTMLElement>('.view-data').forEach(hide);
-        tr.querySelectorAll<HTMLElement>('.edit-data').forEach(show);
-        tr.querySelectorAll<HTMLInputElement>('.edit-data').forEach(enable);
+            cancelButtons = tr.closest('tbody')!.querySelectorAll<HTMLButtonElement>('.cancel-button'),
+            fields = tr.querySelectorAll<HTMLInputElement>('.data-cell > *'),
+            editButtons = tr.querySelectorAll<HTMLButtonElement>('.button-cell > .edit-data'),
+            viewButtons = tr.querySelectorAll<HTMLButtonElement>('.button-cell > .view-data');
+
+        // before editing, cancel any other edits
+        cancelButtons.forEach(btn => this._cancelEdit(btn));
+
+        // toggle the edit buttons and fields
+        fields.forEach(enable);
+        viewButtons.forEach(hide);
+        editButtons.forEach(show);
     }
 
     async renderData() {
@@ -273,7 +300,7 @@ export class DataTable<T extends Entity> extends Component {
                         [renderIf]: col.formType == 'select'
                     },
                         col.formType == 'select' ?
-                            col.options.map(opt => option({ value: opt }, opt))
+                            col.options.map(opt => option({ value: opt.value }, opt.text))
                             : []
                     ),
                     input({
@@ -298,62 +325,49 @@ export class DataTable<T extends Entity> extends Component {
 
         const dataItems = await this.select(),
             tRows = dataItems.map(item => tr([
-                ...Object.entries(this.#columns).map(([id, col]) =>
-                    td({ hidden: col.formType == 'hidden' }, [
-                        span({
-                            'className': 'view-data',
-                            // @ts-expect-error: data-* attributes are valid
-                            'data-name': id,
-                            [renderIf]: col.formType != 'range'
-                        }, (item as any)[id]),
+                ...Object.entries(this.#columns).map(([id, col]) => {
+                    const colOptions = ((col as OptDataColumn).options ?? []).map(opt => option({
+                        value: opt.value,
+                        defaultSelected: opt.value == (item as any)[id]
+                    }, opt.text));
+
+                    return td({
+                        className: 'data-cell',
+                        hidden: col.formType == 'hidden'
+                    }, [
                         input({
+                            [renderIf]: col.formType == 'text' || col.formType == 'hidden',
                             form: this.#frmDataTableUpdate,
-                            type: col.formType,
-                            className: 'view-data',
-                            name: id,
+                            type: 'text',
                             disabled: true,
-                            [renderIf]: col.formType == 'range',
-                            value: (item as any)[id]
-                        }),
-                        input({
-                            form: this.#frmDataTableUpdate,
-                            type: col.formType,
-                            className: 'edit-data',
-                            name: id,
-                            value: (item as any)[id],
                             required: col.required,
-                            disabled: true,
-                            hidden: true,
-                            [renderIf]: col.formType == 'text' || col.formType == 'hidden'
-                        }),
+                            name: id,
+                            defaultValue: (item as any)[id]
+                        }, []),
                         input({
                             form: this.#frmDataTableUpdate,
                             type: col.formType,
-                            className: 'edit-data',
                             name: id,
-                            min: `${(col as any).min ?? 0}`,
-                            max: `${(col as any).max ?? 0}`,
-                            step: `${(col as any).step ?? 1}`,
+                            min: `${(col as NumberRangeDataColumn).min ?? 0}`,
+                            max: `${(col as NumberRangeDataColumn).max ?? 0}`,
+                            step: `${(col as NumberRangeDataColumn).step ?? 1}`,
                             disabled: true,
-                            hidden: true,
                             [renderIf]: col.formType == 'number' || col.formType == 'range',
-                            value: (item as any)[id]
+                            defaultValue: (item as any)[id]
                         }),
                         select({
                             form: this.#frmDataTableUpdate,
-                            className: 'edit-data',
                             name: id,
                             disabled: true,
-                            hidden: true,
                             [renderIf]: col.formType == 'select'
                         },
-                            ((col as any).options ?? []).map((opt: string) => option({
-                                value: opt,
-                                selected: opt == (item as any)[id]
-                            }, opt))
+                            colOptions
                         )
-                    ])),
-                td([
+                    ]);
+                }),
+                td({
+                    className: 'button-cell',
+                }, [
                     button({
                         className: 'view-data edit-button',
                         onclick: e => this._editRow(e),
@@ -375,7 +389,7 @@ export class DataTable<T extends Entity> extends Component {
                     }, 'Save'),
                     button({
                         className: 'edit-data cancel-button',
-                        onclick: () => this._cancelEdit(),
+                        onclick: e => this._cancelEdit(e.target as HTMLButtonElement),
                         hidden: true,
                         [renderIf]: Boolean(this.onUpdate)
                     }, 'Cancel')

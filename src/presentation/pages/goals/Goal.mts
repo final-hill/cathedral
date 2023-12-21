@@ -24,6 +24,11 @@ export class Goal extends Page {
                     icon: 'users',
                     href: `${location.pathname}/stakeholders`
                 }),
+                new MiniCard({
+                    title: 'Use Cases',
+                    icon: 'briefcase',
+                    href: `${location.pathname}/use-cases`
+                })
             ])
         ]);
     }

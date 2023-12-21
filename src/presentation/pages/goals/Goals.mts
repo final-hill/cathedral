@@ -1,7 +1,7 @@
 import { PegsCards } from '~components/index.mjs';
 import html from '../../lib/html.mjs';
 import Page from '../Page.mjs';
-import { GoalsRepository } from '~/data/GoalsRepository.mjs';
+import GoalsRepository from '~/data/GoalsRepository.mjs';
 
 const { p } = html;
 

@@ -8,6 +8,7 @@ export interface GoalsJson extends PEGSJson {
     outcomes: string;
     situation: string;
     stakeholders: Uuid[];
+    useCases: Uuid[];
 }
 
 export default class GoalsToJsonMapper extends PEGSToJsonMapper {
@@ -15,7 +16,10 @@ export default class GoalsToJsonMapper extends PEGSToJsonMapper {
         const version = target.serializationVersion ?? '{undefined}';
 
         if (version.startsWith('0.3.'))
-            return new Goals(target);
+            return new Goals({
+                ...target,
+                useCases: target.useCases ?? []
+            });
 
         throw new Error(`Unsupported serialization version: ${version}`);
     }
@@ -26,7 +30,8 @@ export default class GoalsToJsonMapper extends PEGSToJsonMapper {
             objective: source.objective,
             outcomes: source.outcomes,
             situation: source.situation,
-            stakeholders: source.stakeholders
+            stakeholders: source.stakeholders,
+            useCases: source.useCases
         };
     }
 }

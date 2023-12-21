@@ -10,10 +10,10 @@ export default class Requirement extends Entity {
      */
     accessor statement: string;
 
-    constructor(options: Properties<Requirement>) {
-        super(options);
+    constructor(properties: Properties<Requirement>) {
+        super(properties);
 
-        this.statement = options.statement;
+        this.statement = properties.statement;
     }
 
     /**
