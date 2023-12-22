@@ -28,6 +28,11 @@ export class Goal extends Page {
                     title: 'Use Cases',
                     icon: 'briefcase',
                     href: `${location.pathname}/use-cases`
+                }),
+                new MiniCard({
+                    title: 'Limitations',
+                    icon: 'x-circle',
+                    href: `${location.pathname}/limitations`
                 })
             ])
         ]);
