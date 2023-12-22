@@ -93,7 +93,8 @@ export class NewGoals extends Page {
                 situation: '',
                 stakeholders: [],
                 functionalBehaviors: [],
-                useCases: []
+                useCases: [],
+                limits: []
             });
 
         await this.#repository.add(goals);

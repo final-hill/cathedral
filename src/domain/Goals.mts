@@ -17,6 +17,7 @@ export default class Goals extends PEGS {
     stakeholders: Uuid[];
     situation: string;
     useCases: Uuid[];
+    limits: Uuid[];
 
     constructor(options: Properties<Goals>) {
         super(options);
@@ -26,5 +27,6 @@ export default class Goals extends PEGS {
         this.stakeholders = options.stakeholders;
         this.situation = options.situation;
         this.useCases = options.useCases;
+        this.limits = options.limits;
     }
 }
