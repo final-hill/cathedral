@@ -9,6 +9,7 @@ export default class RequirementToJsonMapper extends EntityToJsonMapper {
     override mapFrom(target: RequirementJson): Requirement {
         return new Requirement(target);
     }
+
     override mapTo(source: Requirement): RequirementJson {
         return {
             ...super.mapTo(source),

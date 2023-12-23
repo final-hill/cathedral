@@ -1,13 +1,14 @@
 import Project from '~/domain/Project.mjs';
 import PEGSToJsonMapper, { type PEGSJson } from './PEGSToJsonMapper.mjs';
+import SemVer from '~/lib/SemVer.mjs';
 
 export interface ProjectJson extends PEGSJson { }
 
 export default class ProjectToJsonMapper extends PEGSToJsonMapper {
     override mapFrom(target: ProjectJson): Project {
-        const version = target.serializationVersion ?? '{undefined}';
+        const version = new SemVer(target.serializationVersion);
 
-        if (version.startsWith('0.3.'))
+        if (version.gte('0.3.0'))
             return new Project(target);
 
         throw new Error(`Unsupported serialization version: ${version}`);
