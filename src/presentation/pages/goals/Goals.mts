@@ -15,7 +15,7 @@ export class Goals extends Page {
             p(`Goals are the desired outcomes and needs of an
             organization for which a system must satisfy.`),
             new PegsCards({
-                repository: new GoalsRepository()
+                repository: new GoalsRepository(localStorage)
             }, [])
         ]);
     }

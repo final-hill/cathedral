@@ -4,7 +4,7 @@ import GoalsRepository from '~/data/GoalsRepository.mjs';
 import LimitRepository from '~/data/LimitRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';
-import { SlugPage } from '../SlugPage.mjs';
+import SlugPage from '../SlugPage.mjs';
 
 const { p } = html;
 
@@ -13,8 +13,8 @@ export class Limitations extends SlugPage {
         customElements.define('x-limitations-page', this);
     }
 
-    #goalsRepository = new GoalsRepository();
-    #limitRepository = new LimitRepository();
+    #goalsRepository = new GoalsRepository(localStorage);
+    #limitRepository = new LimitRepository(localStorage);
     #goals?: Goals;
 
     constructor() {

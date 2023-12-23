@@ -1,7 +1,7 @@
 import Goals from '~/domain/Goals.mjs';
 import GoalsRepository from '~/data/GoalsRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
-import { SlugPage } from '../SlugPage.mjs';
+import SlugPage from '../SlugPage.mjs';
 
 const { form, h3, p, textarea } = html;
 
@@ -10,7 +10,7 @@ export class Rationale extends SlugPage {
         customElements.define('x-rationale-page', this);
     }
 
-    #repository = new GoalsRepository();
+    #repository = new GoalsRepository(localStorage);
     #goals!: Goals;
 
     constructor() {

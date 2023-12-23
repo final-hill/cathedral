@@ -1,9 +1,9 @@
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';
-import { SlugPage } from '../SlugPage.mjs';
+import SlugPage from '../SlugPage.mjs';
 import GlossaryTerm from '~/domain/GlossaryTerm.mjs';
-import { EnvironmentRepository } from '~/data/EnvironmentRepository.mjs';
-import { GlossaryRepository } from '~/data/GlossaryRepository.mjs';
+import EnvironmentRepository from '~/data/EnvironmentRepository.mjs';
+import GlossaryRepository from '~/data/GlossaryRepository.mjs';
 import type Environment from '~/domain/Environment.mjs';
 
 const { p } = html;
@@ -13,8 +13,8 @@ export class Glossary extends SlugPage {
         customElements.define('x-glossary-page', this);
     }
 
-    #environmentRepository = new EnvironmentRepository();
-    #glossaryRepository = new GlossaryRepository();
+    #environmentRepository = new EnvironmentRepository(localStorage);
+    #glossaryRepository = new GlossaryRepository(localStorage);
     #environment?: Environment;
 
     constructor() {

@@ -1,8 +1,10 @@
 import UseCase from '~/domain/UseCase.mjs';
-import { LocalStorageRepository } from './LocalStorageRepository.mjs';
+import StorageRepository from './StorageRepository.mjs';
 import UseCaseToJsonMapper from '~/mappers/UseCaseToJsonMapper.mjs';
 import pkg from '~/../package.json' with { type: 'json' };
 
-export default class UseCaseRepository extends LocalStorageRepository<UseCase> {
-    constructor() { super('use-case', new UseCaseToJsonMapper(pkg.version)); }
+export default class UseCaseRepository extends StorageRepository<UseCase> {
+    constructor(storage: Storage) {
+        super('use-case', storage, new UseCaseToJsonMapper(pkg.version));
+    }
 }

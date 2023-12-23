@@ -1,10 +1,10 @@
 import Behavior from '~/domain/Behavior.mjs';
 import type Goals from '~/domain/Goals.mjs';
 import GoalsRepository from '~/data/GoalsRepository.mjs';
-import { BehaviorRepository } from '~/data/BehaviorRepository.mjs';
+import BehaviorRepository from '~/data/BehaviorRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';
-import { SlugPage } from '../SlugPage.mjs';
+import SlugPage from '../SlugPage.mjs';
 
 const { p, strong } = html;
 
@@ -13,8 +13,8 @@ export class Functionality extends SlugPage {
         customElements.define('x-functionality-page', this);
     }
 
-    #goalsRepository = new GoalsRepository();
-    #behaviorRepository = new BehaviorRepository();
+    #goalsRepository = new GoalsRepository(localStorage);
+    #behaviorRepository = new BehaviorRepository(localStorage);
     #goals?: Goals;
 
     constructor() {

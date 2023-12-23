@@ -1,6 +1,6 @@
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';
-import { SlugPage } from '../SlugPage.mjs';
+import SlugPage from '../SlugPage.mjs';
 import { Tabs } from '~components/Tabs.mjs';
 import mermaid from 'mermaid';
 import UseCase from '~/domain/UseCase.mjs';
@@ -21,11 +21,11 @@ export class UseCases extends SlugPage {
         });
     }
 
+    #goalsRepository = new GoalsRepository(localStorage);
+    #stakeholderRepository = new StakeholderRepository(localStorage);
+    #useCaseRepository = new UseCaseRepository(localStorage);
     #goals?: Goals;
-    #goalsRepository = new GoalsRepository();
-    #stakeholderRepository = new StakeholderRepository();
     #stakeholders: Stakeholder[] = [];
-    #useCaseRepository = new UseCaseRepository();
 
     constructor() {
         super({ title: 'Use Cases' }, []);

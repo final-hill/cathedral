@@ -1,5 +1,5 @@
 import Environment from '~/domain/Environment.mjs';
-import { EnvironmentRepository } from '~/data/EnvironmentRepository.mjs';
+import EnvironmentRepository from '~/data/EnvironmentRepository.mjs';
 import Page from '../Page.mjs';
 import html from '~/presentation/lib/html.mjs';
 import PEGS from '~/domain/PEGS.mjs';
@@ -13,7 +13,7 @@ export class NewEnvironment extends Page {
         customElements.define('x-new-environment-page', this);
     }
 
-    #repository = new EnvironmentRepository();
+    #repository = new EnvironmentRepository(localStorage);
     #form!: HTMLFormElement;
     #txtName!: HTMLInputElement;
     #txtSlug!: HTMLInputElement;
