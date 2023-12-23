@@ -1,8 +1,11 @@
 import Stakeholder from '~/domain/Stakeholder.mjs';
-import { LocalStorageRepository } from './LocalStorageRepository.mjs';
+import StorageRepository from './StorageRepository.mjs';
 import StakeholderToJsonMapper from '~/mappers/StakeholderToJsonMapper.mjs';
 import pkg from '~/../package.json' with { type: 'json' };
+import type { SemVerString } from '~/lib/SemVer.mjs';
 
-export default class StakeholderRepository extends LocalStorageRepository<Stakeholder> {
-    constructor() { super('stakeholder', new StakeholderToJsonMapper(pkg.version)); }
+export default class StakeholderRepository extends StorageRepository<Stakeholder> {
+    constructor(storage: Storage) {
+        super('stakeholder', storage, new StakeholderToJsonMapper(pkg.version as SemVerString));
+    }
 }

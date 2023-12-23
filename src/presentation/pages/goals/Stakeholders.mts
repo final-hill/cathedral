@@ -4,7 +4,7 @@ import GoalsRepository from '~/data/GoalsRepository.mjs';
 import StakeholderRepository from '~/data/StakeholderRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';
-import { SlugPage } from '../SlugPage.mjs';
+import SlugPage from '../SlugPage.mjs';
 import { Tabs } from '~components/Tabs.mjs';
 import mermaid from 'mermaid';
 import groupBy from '~/lib/groupBy.mjs';
@@ -20,8 +20,8 @@ export class Stakeholders extends SlugPage {
         });
     }
 
-    #goalsRepository = new GoalsRepository();
-    #stakeholderRepository = new StakeholderRepository();
+    #goalsRepository = new GoalsRepository(localStorage);
+    #stakeholderRepository = new StakeholderRepository(localStorage);
     #goals?: Goals;
 
     constructor() {

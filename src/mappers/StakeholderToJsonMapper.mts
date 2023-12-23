@@ -1,5 +1,6 @@
 import Stakeholder, { StakeholderSegmentation } from '~/domain/Stakeholder.mjs';
 import EntityToJsonMapper, { type EntityJson } from './EntityToJsonMapper.mjs';
+import SemVer from '~/lib/SemVer.mjs';
 
 export interface StakeholderJson extends EntityJson {
     description: string;
@@ -11,9 +12,9 @@ export interface StakeholderJson extends EntityJson {
 
 export default class StakeholderToJsonMapper extends EntityToJsonMapper {
     override mapFrom(target: StakeholderJson): Stakeholder {
-        const version = target.serializationVersion ?? '{undefined}';
+        const version = new SemVer(target.serializationVersion);
 
-        if (version.startsWith('0.3.'))
+        if (version.gte('0.3.0'))
             return new Stakeholder({
                 description: target.description,
                 id: target.id,

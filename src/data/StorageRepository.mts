@@ -3,14 +3,12 @@ import type { EntityJson } from '~/mappers/EntityToJsonMapper.mjs';
 import type Mapper from '~/usecases/Mapper.mjs';
 import Repository from '~/usecases/Repository.mjs';
 
-export class LocalStorageRepository<E extends Entity> extends Repository<E> {
-    constructor(readonly storageKey: string, mapper: Mapper<E, EntityJson>) {
-        super(mapper);
-    }
-
-    get storage(): Storage {
-        return localStorage;
-    }
+export default class StorageRepository<E extends Entity> extends Repository<E> {
+    constructor(
+        readonly storageKey: string,
+        readonly storage: Storage,
+        mapper: Mapper<E, EntityJson>
+    ) { super(mapper); }
 
     get(id: E['id']): Promise<E | undefined> {
         const data = this.storage.getItem(this.storageKey),

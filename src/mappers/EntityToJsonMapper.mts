@@ -1,10 +1,12 @@
 import Entity from '~/domain/Entity.mjs';
+import type { SemVerString } from '~/lib/SemVer.mjs';
+import SemVer from '~/lib/SemVer.mjs';
 import type { Uuid } from '~/types/Uuid.mjs';
 import Mapper from '~/usecases/Mapper.mjs';
 
 export interface EntityJson {
     id: Uuid;
-    serializationVersion: string;
+    serializationVersion: SemVerString;
 }
 
 export default class EntityToJsonMapper extends Mapper<Entity, EntityJson> {
@@ -14,9 +16,9 @@ export default class EntityToJsonMapper extends Mapper<Entity, EntityJson> {
      * @returns The entity.
      */
     mapFrom(target: EntityJson): Entity {
-        const version = target.serializationVersion ?? '{undefined}';
+        const version = new SemVer(target.serializationVersion);
 
-        if (version.startsWith('0.3.'))
+        if (version.gte('0.3.0'))
             return new Entity(target);
 
         throw new Error(`Unsupported serialization version: ${version}`);

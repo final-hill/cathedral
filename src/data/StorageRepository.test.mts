@@ -1,22 +1,16 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LocalStorageRepository } from './LocalStorageRepository.mjs';
+import StorageRepository from './StorageRepository.mjs';
 import Behavior from '~/domain/Behavior.mjs';
 // @ts-expect-error: No typings available
 import DomStorage from 'dom-storage';
 import BehaviorToJsonMapper from '~/mappers/BehaviorToJsonMapper.mjs';
 
-const fakeStorage: Storage = new DomStorage(null, { strict: true });
-
-class TestLocalStorageRepository<B extends Behavior> extends LocalStorageRepository<B> {
-    override get storage() {
-        return fakeStorage;
-    }
-}
-
 describe('LocalStorageRepository', () => {
-    const repository = new TestLocalStorageRepository<Behavior>(
-        'localstorage-test', new BehaviorToJsonMapper('0.3.0')
+    const repository = new StorageRepository<Behavior>(
+        'localstorage-test',
+        new DomStorage(null, { strict: true }),
+        new BehaviorToJsonMapper('0.3.0')
     );
 
     test('storage property', () => {

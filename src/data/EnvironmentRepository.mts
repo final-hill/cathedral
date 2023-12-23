@@ -1,8 +1,11 @@
 import Environment from '~/domain/Environment.mjs';
-import { PEGSRepository } from './PEGSRepository.mjs';
+import PEGSRepository from './PEGSRepository.mjs';
 import EnvironmentToJsonMapper from '~/mappers/EnvironmentToJsonMapper.mjs';
 import pkg from '~/../package.json' with { type: 'json' };
+import type { SemVerString } from '~/lib/SemVer.mjs';
 
-export class EnvironmentRepository extends PEGSRepository<Environment> {
-    constructor() { super('environments', new EnvironmentToJsonMapper(pkg.version)); }
+export default class EnvironmentRepository extends PEGSRepository<Environment> {
+    constructor(storage: Storage) {
+        super('environments', storage, new EnvironmentToJsonMapper(pkg.version as SemVerString));
+    }
 }

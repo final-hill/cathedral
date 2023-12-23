@@ -1,6 +1,7 @@
 import type { Uuid } from '~/types/Uuid.mjs';
 import PEGSToJsonMapper, { type PEGSJson } from './PEGSToJsonMapper.mjs';
 import Goals from '~/domain/Goals.mjs';
+import SemVer from '~/lib/SemVer.mjs';
 
 export interface GoalsJson extends PEGSJson {
     functionalBehaviors: Uuid[];
@@ -14,9 +15,9 @@ export interface GoalsJson extends PEGSJson {
 
 export default class GoalsToJsonMapper extends PEGSToJsonMapper {
     override mapFrom(target: GoalsJson): Goals {
-        const version = target.serializationVersion ?? '{undefined}';
+        const version = new SemVer(target.serializationVersion);
 
-        if (version.startsWith('0.3.'))
+        if (version.gte('0.3.0'))
             return new Goals({
                 ...target,
                 useCases: target.useCases ?? [],
@@ -25,6 +26,7 @@ export default class GoalsToJsonMapper extends PEGSToJsonMapper {
 
         throw new Error(`Unsupported serialization version: ${version}`);
     }
+
     override mapTo(source: Goals): GoalsJson {
         return {
             ...super.mapTo(source),

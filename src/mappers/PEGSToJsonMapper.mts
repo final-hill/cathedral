@@ -1,5 +1,6 @@
 import PEGS from '~/domain/PEGS.mjs';
 import EntityToJsonMapper, { type EntityJson } from './EntityToJsonMapper.mjs';
+import SemVer from '~/lib/SemVer.mjs';
 
 export interface PEGSJson extends EntityJson {
     name: string;
@@ -8,13 +9,14 @@ export interface PEGSJson extends EntityJson {
 
 export default class PEGSToJsonMapper extends EntityToJsonMapper {
     override mapFrom(target: PEGSJson): PEGS {
-        const version = target.serializationVersion ?? '{undefined}';
+        const version = new SemVer(target.serializationVersion);
 
-        if (version.startsWith('0.3.'))
+        if (version.gte('0.3.0'))
             return new PEGS(target);
 
         throw new Error(`Unsupported serialization version: ${version}`);
     }
+
     override mapTo(source: PEGS): PEGSJson {
         return {
             ...super.mapTo(source),

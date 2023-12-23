@@ -13,7 +13,7 @@ export class NewGoals extends Page {
         customElements.define('x-new-goals-page', this);
     }
 
-    #repository = new GoalsRepository();
+    #repository = new GoalsRepository(localStorage);
     #form!: HTMLFormElement;
     #txtName!: HTMLInputElement;
     #txtSlug!: HTMLInputElement;

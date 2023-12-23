@@ -1,8 +1,11 @@
 import Behavior from '~/domain/Behavior.mjs';
-import { LocalStorageRepository } from './LocalStorageRepository.mjs';
+import StorageRepository from './StorageRepository.mjs';
 import BehaviorToJsonMapper from '~/mappers/BehaviorToJsonMapper.mjs';
 import pkg from '~/../package.json' with { type: 'json' };
+import type { SemVerString } from '~/lib/SemVer.mjs';
 
-export class BehaviorRepository extends LocalStorageRepository<Behavior> {
-    constructor() { super('behavior', new BehaviorToJsonMapper(pkg.version)); }
+export default class BehaviorRepository extends StorageRepository<Behavior> {
+    constructor(storage: Storage) {
+        super('behavior', storage, new BehaviorToJsonMapper(pkg.version as SemVerString));
+    }
 }

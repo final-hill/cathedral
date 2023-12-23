@@ -7,7 +7,7 @@ const { p } = html;
 /**
  * A page that utilizes a slug identifier.
  */
-export abstract class SlugPage extends Page {
+export default abstract class SlugPage extends Page {
     // /parent/:slug/foo
     #slug = new URL(location.href, document.location.origin).pathname.split('/')[2];
 

@@ -1,3 +1,4 @@
+import SemVer from '~/lib/SemVer.mjs';
 import EntityToJsonMapper, { type EntityJson } from './EntityToJsonMapper.mjs';
 import GlossaryTerm from '~/domain/GlossaryTerm.mjs';
 
@@ -8,9 +9,9 @@ export interface GlossaryTermJson extends EntityJson {
 
 export default class GlossaryTermToJsonMapper extends EntityToJsonMapper {
     override mapFrom(target: GlossaryTermJson): GlossaryTerm {
-        const version = target.serializationVersion ?? '{undefined}';
+        const version = new SemVer(target.serializationVersion);
 
-        if (version.startsWith('0.3.'))
+        if (version.gte('0.3.0'))
             return new GlossaryTerm(target);
 
         throw new Error(`Unsupported serialization version: ${version}`);
