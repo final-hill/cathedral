@@ -79,6 +79,9 @@ export default class Application extends Container {
             ['/goals/:slug/stakeholders', (await import('./pages/goals/Stakeholders.mjs')).Stakeholders],
             ['/goals/:slug/use-cases', (await import('./pages/goals/UseCases.mjs')).UseCases],
             ['/goals/:slug/limitations', (await import('./pages/goals/Limitations.mjs')).Limitations],
+            ['/solutions', (await import('./pages/solutions/Solutions.mjs')).Solutions],
+            ['/solutions/new-entry', (await import('./pages/solutions/NewSolution.mjs')).NewSolution],
+            ['/solutions/:slug', (await import('./pages/solutions/Solutions.mjs')).Solution],
         ]);
         this.#router.addEventListener('route', this);
     }
