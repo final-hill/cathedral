@@ -4,11 +4,12 @@ import GoalsRepository from '~/data/GoalsRepository.mjs';
 import BehaviorRepository from '~/data/BehaviorRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';
-import SlugPage from '../SlugPage.mjs';
+import Page from '../Page.mjs';
 
 const { p, strong } = html;
 
-export class Functionality extends SlugPage {
+export default class FunctionalityPage extends Page {
+    static override route = '/goals/:slug/functionality';
     static {
         customElements.define('x-functionality-page', this);
     }
@@ -58,7 +59,7 @@ export class Functionality extends SlugPage {
 
         this.#goalsRepository.addEventListener('update', () => dataTable.renderData());
         this.#behaviorRepository.addEventListener('update', () => dataTable.renderData());
-        this.#goalsRepository.getBySlug(this.slug).then(goals => {
+        this.#goalsRepository.getBySlug(this.urlParams['slug']).then(goals => {
             this.#goals = goals;
             dataTable.renderData();
         });

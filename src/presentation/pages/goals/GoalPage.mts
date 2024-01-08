@@ -1,7 +1,8 @@
 import Page from '../Page.mjs';
 import { MiniCards, MiniCard } from '~/presentation/components/index.mjs';
 
-export class Goal extends Page {
+export default class GoalPage extends Page {
+    static override route = '/goals/:slug';
     static {
         customElements.define('x-goal-page', this);
     }

@@ -4,11 +4,12 @@ import GoalsRepository from '~/data/GoalsRepository.mjs';
 import LimitRepository from '~/data/LimitRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';
-import SlugPage from '../SlugPage.mjs';
+import Page from '../Page.mjs';
 
 const { p } = html;
 
-export class Limitations extends SlugPage {
+export default class LimitationsPage extends Page {
+    static override route = '/goals/:slug/limitations';
     static {
         customElements.define('x-limitations-page', this);
     }
@@ -60,7 +61,7 @@ export class Limitations extends SlugPage {
 
         this.#goalsRepository.addEventListener('update', () => dataTable.renderData());
         this.#limitRepository.addEventListener('update', () => dataTable.renderData());
-        this.#goalsRepository.getBySlug(this.slug).then(goals => {
+        this.#goalsRepository.getBySlug(this.urlParams['slug']).then(goals => {
             this.#goals = goals;
             dataTable.renderData();
         });

@@ -1,7 +1,8 @@
 import { MiniCards, MiniCard } from '~/presentation/components/index.mjs';
 import Page from '../Page.mjs';
 
-export class Environment extends Page {
+export default class EnvironmentPage extends Page {
+    static override route = '/environments/:slug';
     static {
         customElements.define('x-environment-page', this);
     }

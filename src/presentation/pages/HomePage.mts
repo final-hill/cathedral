@@ -3,7 +3,8 @@ import Page from './Page.mjs';
 
 const { p } = html;
 
-export class Home extends Page {
+export default class HomePage extends Page {
+    static override route = '/';
     static {
         customElements.define('x-page-home', this);
     }

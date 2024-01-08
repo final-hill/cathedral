@@ -4,14 +4,15 @@ import GoalsRepository from '~/data/GoalsRepository.mjs';
 import StakeholderRepository from '~/data/StakeholderRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';
-import SlugPage from '../SlugPage.mjs';
+import Page from '../Page.mjs';
 import { Tabs } from '~components/Tabs.mjs';
 import mermaid from 'mermaid';
 import groupBy from '~/lib/groupBy.mjs';
 
 const { h2, p, div } = html;
 
-export class Stakeholders extends SlugPage {
+export default class StakeholdersPage extends Page {
+    static override route = '/goals/:slug/stakeholders';
     static {
         customElements.define('x-stakeholders-page', this);
         mermaid.initialize({
@@ -87,7 +88,7 @@ export class Stakeholders extends SlugPage {
             dataTable.renderData();
             this.#renderStakeholderMap();
         });
-        this.#goalsRepository.getBySlug(this.slug).then(async goals => {
+        this.#goalsRepository.getBySlug(this.urlParams['slug']).then(async goals => {
             this.#goals = goals;
             dataTable.renderData();
             this.#renderStakeholderMap();

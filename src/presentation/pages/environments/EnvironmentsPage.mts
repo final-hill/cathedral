@@ -5,7 +5,8 @@ import EnvironmentRepository from '~/data/EnvironmentRepository.mjs';
 
 const { p } = html;
 
-export class Environments extends Page {
+export default class EnvironmentsPage extends Page {
+    static override route = '/environments';
     static {
         customElements.define('x-environments-page', this);
     }

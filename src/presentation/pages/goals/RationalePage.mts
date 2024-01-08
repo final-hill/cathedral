@@ -1,11 +1,12 @@
 import Goals from '~/domain/Goals.mjs';
 import GoalsRepository from '~/data/GoalsRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
-import SlugPage from '../SlugPage.mjs';
+import Page from '../Page.mjs';
 
 const { form, h3, p, textarea } = html;
 
-export class Rationale extends SlugPage {
+export default class RationalePage extends Page {
+    static override route = '/goals/:slug/rationale';
     static {
         customElements.define('x-rationale-page', this);
     }
@@ -16,10 +17,10 @@ export class Rationale extends SlugPage {
     constructor() {
         super({ title: 'Rationale' }, []);
 
-        this.#repository.getBySlug(this.slug)!.then(goals => {
+        this.#repository.getBySlug(this.urlParams['slug'])!.then(goals => {
             if (!goals) {
                 this.replaceChildren(
-                    p(`No goals found for the provided slug: ${this.slug}`)
+                    p(`No goals found for the provided slug: ${this.urlParams['slug']}`)
                 );
             }
             else {
