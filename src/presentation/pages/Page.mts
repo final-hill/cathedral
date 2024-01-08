@@ -1,17 +1,26 @@
+import zipWith from '~/lib/zipWith.mjs';
 import type { Properties } from '~/types/Properties.mjs';
 import buttonTheme from '~/presentation/theme/buttonTheme.mjs';
 import { Container } from '~components/index.mjs';
 import type { Theme } from '~/types/Theme.mjs';
 
 export default class Page extends Container {
-    protected override _initShadowStyle() {
-        return {
-            ...super._initShadowStyle()
-        };
-    }
+    static route = '{undefined}';
 
-    constructor(properties: Properties<Page>, children: (Element | string)[]) {
+    urlParams;
+
+    constructor(properties: Exclude<Properties<Page>, 'urlParams'>, children: (Element | string)[]) {
         super(properties, children);
+
+        const url = new URL(location.href, document.location.origin),
+            pattern = (this.constructor as typeof Page).route.split('/'),
+            pathname = url.pathname.split('/');
+        this.urlParams = Object.fromEntries(url.searchParams.entries());
+
+        zipWith(pattern, pathname, (p, n) => {
+            if (p.startsWith(':'))
+                this.urlParams[p.slice(1)] = n;
+        });
 
         const sheet = new CSSStyleSheet(),
             pageStyle = this._initPageStyle(),

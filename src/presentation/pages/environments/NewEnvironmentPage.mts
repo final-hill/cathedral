@@ -8,7 +8,8 @@ import requiredTheme from '~/presentation/theme/requiredTheme.mjs';
 
 const { form, label, input, span, button } = html;
 
-export class NewEnvironment extends Page {
+export default class NewEnvironmentPage extends Page {
+    static override route = '/environments/new-entry';
     static {
         customElements.define('x-new-environment-page', this);
     }

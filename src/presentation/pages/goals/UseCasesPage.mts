@@ -1,6 +1,6 @@
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';
-import SlugPage from '../SlugPage.mjs';
+import Page from '../Page.mjs';
 import { Tabs } from '~components/Tabs.mjs';
 import mermaid from 'mermaid';
 import UseCase from '~/domain/UseCase.mjs';
@@ -12,7 +12,8 @@ import UseCaseRepository from '~/data/UseCaseRepository.mjs';
 
 const { h2, p, div, br } = html;
 
-export class UseCases extends SlugPage {
+export default class UseCasesPage extends Page {
+    static override route = '/goals/:slug/use-cases';
     static {
         customElements.define('x-use-cases-page', this);
         mermaid.initialize({
@@ -76,7 +77,7 @@ export class UseCases extends SlugPage {
 
         this.#goalsRepository.addEventListener('update', update);
         this.#stakeholderRepository.addEventListener('update', update);
-        this.#goalsRepository.getBySlug(this.slug)
+        this.#goalsRepository.getBySlug(this.urlParams['slug'])
             .then(goals => { this.#goals = goals; })
             .then(update);
         this.#useCaseRepository.addEventListener('update', update);

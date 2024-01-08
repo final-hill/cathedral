@@ -8,7 +8,8 @@ import Page from '../Page.mjs';
 
 const { form, label, input, span, button } = html;
 
-export class NewGoals extends Page {
+export default class NewGoalsPage extends Page {
+    static override route = '/goals/new-entry';
     static {
         customElements.define('x-new-goals-page', this);
     }

@@ -5,7 +5,8 @@ import GoalsRepository from '~/data/GoalsRepository.mjs';
 
 const { p } = html;
 
-export class Goals extends Page {
+export default class GoalsPage extends Page {
+    static override route = '/goals';
     static {
         customElements.define('x-goals-page', this);
     }

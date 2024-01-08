@@ -1,14 +1,15 @@
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';
-import SlugPage from '../SlugPage.mjs';
 import GlossaryTerm from '~/domain/GlossaryTerm.mjs';
 import EnvironmentRepository from '~/data/EnvironmentRepository.mjs';
 import GlossaryRepository from '~/data/GlossaryRepository.mjs';
 import type Environment from '~/domain/Environment.mjs';
+import Page from '../Page.mjs';
 
 const { p } = html;
 
-export class Glossary extends SlugPage {
+export default class GlossaryPage extends Page {
+    static override route = '/environments/:slug/glossary';
     static {
         customElements.define('x-glossary-page', this);
     }
@@ -59,7 +60,7 @@ export class Glossary extends SlugPage {
 
         this.#environmentRepository.addEventListener('update', () => dataTable.renderData());
         this.#glossaryRepository.addEventListener('update', () => dataTable.renderData());
-        this.#environmentRepository.getBySlug(this.slug).then(environment => {
+        this.#environmentRepository.getBySlug(this.urlParams['slug']).then(environment => {
             this.#environment = environment;
             dataTable.renderData();
         });
