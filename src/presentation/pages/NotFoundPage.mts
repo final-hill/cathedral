@@ -3,7 +3,8 @@ import html from '../lib/html.mjs';
 
 const { h1, p, a } = html;
 
-export class NotFound extends Page {
+export default class NotFoundPage extends Page {
+    static override route = '/-not-found-';
     static {
         customElements.define('x-page-not-found', this);
     }

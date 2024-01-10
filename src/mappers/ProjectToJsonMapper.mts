@@ -1,10 +1,10 @@
 import Project from '~/domain/Project.mjs';
-import PEGSToJsonMapper, { type PEGSJson } from './PEGSToJsonMapper.mjs';
+import EntityToJsonMapper, { type EntityJson } from './EntityToJsonMapper.mjs';
 import SemVer from '~/lib/SemVer.mjs';
 
-export interface ProjectJson extends PEGSJson { }
+export interface ProjectJson extends EntityJson { }
 
-export default class ProjectToJsonMapper extends PEGSToJsonMapper {
+export default class ProjectToJsonMapper extends EntityToJsonMapper {
     override mapFrom(target: ProjectJson): Project {
         const version = new SemVer(target.serializationVersion);
 

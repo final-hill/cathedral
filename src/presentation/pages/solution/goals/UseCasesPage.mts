@@ -1,6 +1,6 @@
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';
-import SlugPage from '../SlugPage.mjs';
+import Page from '~/presentation/pages/Page.mjs';
 import { Tabs } from '~components/Tabs.mjs';
 import mermaid from 'mermaid';
 import UseCase from '~/domain/UseCase.mjs';
@@ -9,18 +9,22 @@ import StakeholderRepository from '~/data/StakeholderRepository.mjs';
 import type Goals from '~/domain/Goals.mjs';
 import Stakeholder from '~/domain/Stakeholder.mjs';
 import UseCaseRepository from '~/data/UseCaseRepository.mjs';
+import SolutionRepository from '~/data/SolutionRepository.mjs';
+import type { Uuid } from '~/types/Uuid.mjs';
 
 const { h2, p, div, br } = html;
 
-export class UseCases extends SlugPage {
+export default class UseCasesPage extends Page {
+    static override route = '/:solution/goals/use-cases';
     static {
-        customElements.define('x-use-cases-page', this);
+        customElements.define('x-page-use-cases', this);
         mermaid.initialize({
             startOnLoad: true,
             theme: 'dark'
         });
     }
 
+    #solutionRepository = new SolutionRepository(localStorage);
     #goalsRepository = new GoalsRepository(localStorage);
     #stakeholderRepository = new StakeholderRepository(localStorage);
     #useCaseRepository = new UseCaseRepository(localStorage);
@@ -47,12 +51,12 @@ export class UseCases extends SlugPage {
                 if (!this.#goals)
                     return [];
 
-                return this.#useCaseRepository.getAll(u => this.#goals!.useCases.includes(u.id));
+                return this.#useCaseRepository.getAll(u => this.#goals!.useCaseIds.includes(u.id));
             },
             onCreate: async item => {
                 const useCase = new UseCase({ ...item, id: self.crypto.randomUUID() });
                 await this.#useCaseRepository.add(useCase);
-                this.#goals!.useCases.push(useCase.id);
+                this.#goals!.useCaseIds.push(useCase.id);
                 await this.#goalsRepository.update(this.#goals!);
             },
             onUpdate: async item => {
@@ -62,7 +66,7 @@ export class UseCases extends SlugPage {
             },
             onDelete: async id => {
                 await this.#useCaseRepository.delete(id);
-                this.#goals!.useCases = this.#goals!.useCases.filter(x => x !== id);
+                this.#goals!.useCaseIds = this.#goals!.useCaseIds.filter(x => x !== id);
                 await this.#goalsRepository.update(this.#goals!);
             }
         });
@@ -76,9 +80,13 @@ export class UseCases extends SlugPage {
 
         this.#goalsRepository.addEventListener('update', update);
         this.#stakeholderRepository.addEventListener('update', update);
-        this.#goalsRepository.getBySlug(this.slug)
+
+        const solutionId = this.urlParams['solution'] as Uuid;
+        this.#solutionRepository.getBySlug(solutionId)
+            .then(solution => this.#goalsRepository.get(solution!.goalsId))
             .then(goals => { this.#goals = goals; })
             .then(update);
+
         this.#useCaseRepository.addEventListener('update', update);
 
         this.replaceChildren(
@@ -103,7 +111,7 @@ export class UseCases extends SlugPage {
 
     async #renderUseCaseDiagram() {
         const mermaidContainer = this.querySelector('#mermaid-container')!,
-            useCases = await this.#useCaseRepository.getAll(u => this.#goals!.useCases.includes(u.id)),
+            useCases = await this.#useCaseRepository.getAll(u => this.#goals!.useCaseIds.includes(u.id)),
             chartDefinition = `
             flowchart LR
             ${useCases.map(u => {

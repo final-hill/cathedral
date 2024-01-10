@@ -1,5 +1,5 @@
 import type Page from './pages/Page.mjs';
-import Router from './Router.mjs';
+import NotFoundPage from './pages/NotFoundPage.mjs';
 import html from './lib/html.mjs';
 import { Breadcrumb, Container, GlobalNav } from '~components/index.mjs';
 
@@ -8,16 +8,14 @@ export default class Application extends Container {
         customElements.define('x-application', this);
     }
     #currentPage: Page | null = null;
-    #router!: Router;
+    #pages!: typeof Page[];
 
     constructor() {
         super({}, []);
 
         document.body.innerHTML = '';
         this._installOrUpdateServiceWorker();
-        this._initRouter().then(() => {
-            self.navigation.navigate(location.pathname);
-        });
+        this._initPages().then(() => self.navigation.navigate(location.href));
     }
 
     protected override _initShadowHtml() {
@@ -62,28 +60,26 @@ export default class Application extends Container {
         };
     }
 
-    protected async _initRouter() {
-        this.#router = new Router([
-            ['/', (await import('./pages/Home.mjs')).Home],
-            ['/not-found', (await import('./pages/NotFound.mjs')).NotFound],
-            ['/projects', (await import('./pages/projects/Projects.mjs')).Projects],
-            ['/environments', (await import('./pages/environments/Environments.mjs')).Environments],
-            ['/environments/new-entry', (await import('./pages/environments/NewEnvironment.mjs')).NewEnvironment],
-            ['/environments/:slug', (await import('./pages/environments/Environment.mjs')).Environment],
-            ['/environments/:slug/glossary', (await import('./pages/environments/Glossary.mjs')).Glossary],
-            ['/goals', (await import('./pages/goals/Goals.mjs')).Goals],
-            ['/goals/new-entry', (await import('./pages/goals/NewGoals.mjs')).NewGoals],
-            ['/goals/:slug', (await import('./pages/goals/Goal.mjs')).Goal],
-            ['/goals/:slug/rationale', (await import('./pages/goals/Rationale.mjs')).Rationale],
-            ['/goals/:slug/functionality', (await import('./pages/goals/Functionality.mjs')).Functionality],
-            ['/goals/:slug/stakeholders', (await import('./pages/goals/Stakeholders.mjs')).Stakeholders],
-            ['/goals/:slug/use-cases', (await import('./pages/goals/UseCases.mjs')).UseCases],
-            ['/goals/:slug/limitations', (await import('./pages/goals/Limitations.mjs')).Limitations],
-            ['/solutions', (await import('./pages/solutions/Solutions.mjs')).Solutions],
-            ['/solutions/new-entry', (await import('./pages/solutions/NewSolution.mjs')).NewSolution],
-            ['/solutions/:slug', (await import('./pages/solutions/Solutions.mjs')).Solution],
-        ]);
-        this.#router.addEventListener('route', this);
+    protected async _initPages() {
+        this.#pages = [
+            (await import('./pages/HomePage.mjs')).default,
+            NotFoundPage,
+            (await import('./pages/solution/project/ProjectsIndexPage.mjs')).default,
+            (await import('./pages/solution/environment/EnvironmentsIndexPage.mjs')).default,
+            (await import('./pages/solution/environment/GlossaryPage.mjs')).default,
+            (await import('./pages/solution/goals/GoalsIndexPage.mjs')).default,
+            (await import('./pages/solution/goals/RationalePage.mjs')).default,
+            (await import('./pages/solution/goals/FunctionalityPage.mjs')).default,
+            (await import('./pages/solution/goals/StakeholdersPage.mjs')).default,
+            (await import('./pages/solution/goals/UseCasesPage.mjs')).default,
+            (await import('./pages/solution/goals/LimitationsPage.mjs')).default,
+            (await import('./pages/solution/NewSolutionPage.mjs')).default,
+            (await import('./pages/solution/SolutionIndexPage.mjs')).default,
+            (await import('./pages/solution/SolutionPage.mjs')).default
+        ];
+
+        self.navigation.addEventListener('navigate', this);
+        this.addEventListener('route', this);
     }
 
     protected async _installServiceWorker() {
@@ -123,6 +119,35 @@ export default class Application extends Container {
             } catch (err) {
                 await this._installServiceWorker();
             }
+    }
+
+    onNavigate(event: NavigateEvent): void {
+        if (!event.canIntercept || event.hashChange)
+            return;
+
+        const origin = document.location.origin,
+            url = new URL(event.destination.url, origin),
+            Page = this.#pages.find(Page => {
+                const route = Page.route,
+                    pattern = route.split('/'),
+                    pathname = url.pathname.split('/');
+
+                if (pattern.length !== pathname.length)
+                    return false;
+
+                return pattern.every((segment, index) => {
+                    if (segment.startsWith(':'))
+                        return true;
+
+                    return segment === pathname[index];
+                });
+            }) ?? NotFoundPage;
+        event.intercept({
+            handler: async () => {
+                event.preventDefault();
+                this.dispatchEvent(new CustomEvent('route', { detail: Page }));
+            }
+        });
     }
 
     onRoute(event: CustomEvent<typeof Page>) {

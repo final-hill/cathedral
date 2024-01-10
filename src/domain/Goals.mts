@@ -1,32 +1,32 @@
 import type { Properties } from '~/types/Properties.mjs';
 import type { Uuid } from '~/types/Uuid.mjs';
-import PEGS from './PEGS.mjs';
+import Entity from './Entity.mjs';
 
 /**
  * Goals are the needs and wants of an organization.
  * They are the things that the organization wants to achieve.
  */
-export default class Goals extends PEGS {
+export default class Goals extends Entity {
     /**
      * Functional behaviors specify what results or effects are expected from the system.
      * They specify "what" the system should do, not "how" it should do it.
      */
-    functionalBehaviors: Uuid[];
+    functionalBehaviorIds: Uuid[];
     objective: string;
     outcomes: string;
-    stakeholders: Uuid[];
+    stakeholderIds: Uuid[];
     situation: string;
-    useCases: Uuid[];
-    limits: Uuid[];
+    useCaseIds: Uuid[];
+    limitIds: Uuid[];
 
     constructor(options: Properties<Goals>) {
         super(options);
-        this.functionalBehaviors = options.functionalBehaviors;
+        this.functionalBehaviorIds = options.functionalBehaviorIds;
         this.objective = options.objective;
         this.outcomes = options.outcomes;
-        this.stakeholders = options.stakeholders;
+        this.stakeholderIds = options.stakeholderIds;
         this.situation = options.situation;
-        this.useCases = options.useCases;
-        this.limits = options.limits;
+        this.useCaseIds = options.useCaseIds;
+        this.limitIds = options.limitIds;
     }
 }

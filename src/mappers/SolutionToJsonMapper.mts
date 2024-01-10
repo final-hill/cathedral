@@ -7,10 +7,10 @@ import SemVer from '~/lib/SemVer.mjs';
 export interface SolutionJson extends EntityJson {
     name: string;
     description: string;
-    project: Uuid;
-    environment: Uuid;
-    goals: Uuid;
-    system: Uuid;
+    projectId: Uuid;
+    environmentId: Uuid;
+    goalsId: Uuid;
+    systemId: Uuid;
 }
 
 export default class SolutionToJsonMapper extends EntityToJsonMapper {
@@ -28,10 +28,10 @@ export default class SolutionToJsonMapper extends EntityToJsonMapper {
             ...super.mapTo(source),
             name: source.name,
             description: source.description,
-            project: source.project,
-            environment: source.environment,
-            goals: source.goals,
-            system: source.system
+            projectId: source.projectId,
+            environmentId: source.environmentId,
+            goalsId: source.goalsId,
+            systemId: source.systemId
         };
     }
 }

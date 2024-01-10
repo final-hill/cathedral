@@ -1,9 +1,9 @@
-import type PEGS from '~/domain/PEGS.mjs';
+import type SlugEntity from '~/domain/SlugEntity.mjs';
 import StorageRepository from './StorageRepository.mjs';
 import type Mapper from '~/usecases/Mapper.mjs';
 import type { EntityJson } from '~/mappers/EntityToJsonMapper.mjs';
 
-export default abstract class PEGSRepository<E extends PEGS> extends StorageRepository<E> {
+export default abstract class SlugRepository<E extends SlugEntity> extends StorageRepository<E> {
     constructor(storageKey: string, storage: Storage, mapper: Mapper<E, EntityJson>) {
         super(storageKey, storage, mapper);
     }

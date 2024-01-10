@@ -1,14 +1,12 @@
 import type { Properties } from '~/types/Properties.mjs';
 import type { Uuid } from '~/types/Uuid.mjs';
-import Entity from './Entity.mjs';
+import SlugEntity from './SlugEntity.mjs';
 
-export default class Solution extends Entity {
-    name!: string;
-    description!: string;
-    project!: Uuid;
-    environment!: Uuid;
-    goals!: Uuid;
-    system!: Uuid;
+export default class Solution extends SlugEntity {
+    projectId!: Uuid;
+    environmentId!: Uuid;
+    goalsId!: Uuid;
+    systemId!: Uuid;
 
     constructor(options: Properties<Solution>) {
         super(options);

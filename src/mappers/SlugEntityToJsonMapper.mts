@@ -1,23 +1,23 @@
-import PEGS from '~/domain/PEGS.mjs';
+import SlugEntity from '~/domain/SlugEntity.mjs';
 import EntityToJsonMapper, { type EntityJson } from './EntityToJsonMapper.mjs';
 import SemVer from '~/lib/SemVer.mjs';
 
-export interface PEGSJson extends EntityJson {
+export interface SlugEntityJson extends EntityJson {
     name: string;
     description: string;
 }
 
-export default class PEGSToJsonMapper extends EntityToJsonMapper {
-    override mapFrom(target: PEGSJson): PEGS {
+export default class SlugEntityToJsonMapper extends EntityToJsonMapper {
+    override mapFrom(target: SlugEntityJson): SlugEntity {
         const version = new SemVer(target.serializationVersion);
 
         if (version.gte('0.3.0'))
-            return new PEGS(target);
+            return new SlugEntity(target);
 
         throw new Error(`Unsupported serialization version: ${version}`);
     }
 
-    override mapTo(source: PEGS): PEGSJson {
+    override mapTo(source: SlugEntity): SlugEntityJson {
         return {
             ...super.mapTo(source),
             name: source.name,
