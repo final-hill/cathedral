@@ -26,8 +26,8 @@ export default class GlossaryPage extends Page {
 
         const dataTable = new DataTable<GlossaryTerm>({
             columns: {
-                id: { headerText: 'ID', readonly: true, formType: 'hidden' },
-                term: { headerText: 'Term', required: true, formType: 'text' },
+                id: { headerText: 'ID', readonly: true, formType: 'hidden', unique: true },
+                term: { headerText: 'Term', required: true, formType: 'text', unique: true },
                 definition: { headerText: 'Definition', formType: 'text' }
             },
             select: async () => {

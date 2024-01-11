@@ -9,6 +9,7 @@ interface BaseDataColumn {
     readonly?: boolean;
     headerText: string;
     required?: boolean;
+    unique?: boolean;
 }
 
 interface TextHiddenDataColumn {
@@ -120,15 +121,29 @@ export class DataTable<T extends Entity> extends Component {
         this.renderData();
     }
 
-    protected async _onCreate(e: SubmitEvent) {
+    protected _isUnique(columns: Readonly<DataColumns<T>>, item: Omit<Properties<T>, 'id'>): boolean {
+        return Object.entries(columns).every(([id, col]) => {
+            if (!col.unique || id == 'id')
+                return true;
+            const namedInputs = Array.from(this.#dataRows.querySelectorAll<HTMLInputElement>(`[name="${id}"]`));
+
+            return namedInputs.filter(input => input.value == (item as any)[id]).length == 0;
+        });
+    }
+
+    protected async _onCreate(e: SubmitEvent): Promise<void> {
         e.preventDefault();
         const form = e.target as HTMLFormElement,
             formData = new FormData(form),
             item = Object.fromEntries(formData.entries()) as Omit<Properties<T>, 'id'>;
-        form.reset();
-        await this.onCreate?.(item);
-        // focus on the first non-hidden input in the new item row
-        this.#newItemRow.querySelector<HTMLInputElement>('td:not([hidden]) input')?.focus();
+        if (!this._isUnique(this.#columns, item)) {
+            alert('The entry must be unique.');
+        } else {
+            form.reset();
+            await this.onCreate?.(item);
+            // focus on the first non-hidden input in the new item row
+            this.#newItemRow.querySelector<HTMLInputElement>('td:not([hidden]) input')?.focus();
+        }
     }
 
     protected _onUpdate(e: SubmitEvent) {
@@ -136,8 +151,11 @@ export class DataTable<T extends Entity> extends Component {
         const form = e.target as HTMLFormElement,
             formData = new FormData(form),
             item = Object.fromEntries(formData.entries()) as Properties<T>;
-        // this._cancelEdit(e.submitter as HTMLButtonElement);
-        this.onUpdate?.(item);
+        if (!this._isUnique(this.#columns, item))
+            alert('The entry must be unique.');
+        else
+            // this._cancelEdit(e.submitter as HTMLButtonElement);
+            this.onUpdate?.(item);
     }
 
     protected _onDelete(e: SubmitEvent) {
