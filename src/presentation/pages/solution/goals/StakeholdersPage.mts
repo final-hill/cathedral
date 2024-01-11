@@ -4,23 +4,26 @@ import GoalsRepository from '~/data/GoalsRepository.mjs';
 import StakeholderRepository from '~/data/StakeholderRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';
-import Page from '../Page.mjs';
+import Page from '~/presentation/pages/Page.mjs';
 import { Tabs } from '~components/Tabs.mjs';
 import mermaid from 'mermaid';
 import groupBy from '~/lib/groupBy.mjs';
+import SolutionRepository from '~/data/SolutionRepository.mjs';
+import type { Uuid } from '~/types/Uuid.mjs';
 
 const { h2, p, div } = html;
 
 export default class StakeholdersPage extends Page {
-    static override route = '/goals/:slug/stakeholders';
+    static override route = '/:solution/goals/stakeholders';
     static {
-        customElements.define('x-stakeholders-page', this);
+        customElements.define('x-page-stakeholders', this);
         mermaid.initialize({
             startOnLoad: true,
             theme: 'dark'
         });
     }
 
+    #solutionRepository = new SolutionRepository(localStorage);
     #goalsRepository = new GoalsRepository(localStorage);
     #stakeholderRepository = new StakeholderRepository(localStorage);
     #goals?: Goals;
@@ -44,12 +47,12 @@ export default class StakeholdersPage extends Page {
                 if (!this.#goals)
                     return [];
 
-                return await this.#stakeholderRepository.getAll(s => this.#goals!.stakeholders.includes(s.id));
+                return await this.#stakeholderRepository.getAll(s => this.#goals!.stakeholderIds.includes(s.id));
             },
             onCreate: async item => {
                 const stakeholder = new Stakeholder({ ...item, id: self.crypto.randomUUID() });
                 await this.#stakeholderRepository.add(stakeholder);
-                this.#goals!.stakeholders.push(stakeholder.id);
+                this.#goals!.stakeholderIds.push(stakeholder.id);
                 await this.#goalsRepository.update(this.#goals!);
             },
             onUpdate: async item => {
@@ -59,7 +62,7 @@ export default class StakeholdersPage extends Page {
             },
             onDelete: async id => {
                 await this.#stakeholderRepository.delete(id);
-                this.#goals!.stakeholders = this.#goals!.stakeholders.filter(x => x !== id);
+                this.#goals!.stakeholderIds = this.#goals!.stakeholderIds.filter(x => x !== id);
                 await this.#goalsRepository.update(this.#goals!);
             }
         });
@@ -88,10 +91,13 @@ export default class StakeholdersPage extends Page {
             dataTable.renderData();
             this.#renderStakeholderMap();
         });
-        this.#goalsRepository.getBySlug(this.urlParams['slug']).then(async goals => {
-            this.#goals = goals;
-            dataTable.renderData();
-            this.#renderStakeholderMap();
+        const solutionId = this.urlParams['solution'] as Uuid;
+        this.#solutionRepository.getBySlug(solutionId).then(solution => {
+            this.#goalsRepository.get(solution!.goalsId).then(goals => {
+                this.#goals = goals;
+                dataTable.renderData();
+                this.#renderStakeholderMap();
+            });
         });
     }
 

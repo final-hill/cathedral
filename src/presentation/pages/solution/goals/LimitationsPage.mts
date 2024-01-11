@@ -4,16 +4,19 @@ import GoalsRepository from '~/data/GoalsRepository.mjs';
 import LimitRepository from '~/data/LimitRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';
-import Page from '../Page.mjs';
+import Page from '~/presentation/pages/Page.mjs';
+import SolutionRepository from '~/data/SolutionRepository.mjs';
+import type { Uuid } from '~/types/Uuid.mjs';
 
 const { p } = html;
 
 export default class LimitationsPage extends Page {
-    static override route = '/goals/:slug/limitations';
+    static override route = '/:solution/goals/limitations';
     static {
-        customElements.define('x-limitations-page', this);
+        customElements.define('x-page-limitations', this);
     }
 
+    #solutionRepository = new SolutionRepository(localStorage);
     #goalsRepository = new GoalsRepository(localStorage);
     #limitRepository = new LimitRepository(localStorage);
     #goals?: Goals;
@@ -38,12 +41,12 @@ export default class LimitationsPage extends Page {
                 if (!this.#goals)
                     return [];
 
-                return await this.#limitRepository.getAll(l => this.#goals!.limits.includes(l.id));
+                return await this.#limitRepository.getAll(l => this.#goals!.limitIds.includes(l.id));
             },
             onCreate: async item => {
                 const limit = new Limit({ ...item, id: self.crypto.randomUUID() });
                 await this.#limitRepository.add(limit);
-                this.#goals!.limits.push(limit.id);
+                this.#goals!.limitIds.push(limit.id);
                 await this.#goalsRepository.update(this.#goals!);
             },
             onUpdate: async item => {
@@ -53,7 +56,7 @@ export default class LimitationsPage extends Page {
             },
             onDelete: async id => {
                 await this.#limitRepository.delete(id);
-                this.#goals!.limits = this.#goals!.limits.filter(x => x !== id);
+                this.#goals!.limitIds = this.#goals!.limitIds.filter(x => x !== id);
                 await this.#goalsRepository.update(this.#goals!);
             }
         });
@@ -61,9 +64,13 @@ export default class LimitationsPage extends Page {
 
         this.#goalsRepository.addEventListener('update', () => dataTable.renderData());
         this.#limitRepository.addEventListener('update', () => dataTable.renderData());
-        this.#goalsRepository.getBySlug(this.urlParams['slug']).then(goals => {
-            this.#goals = goals;
-            dataTable.renderData();
+        const solutionId = this.urlParams['solution'] as Uuid;
+
+        this.#solutionRepository.getBySlug(solutionId).then(solution => {
+            this.#goalsRepository.get(solution!.goalsId).then(goals => {
+                this.#goals = goals;
+                dataTable.renderData();
+            });
         });
     }
 }

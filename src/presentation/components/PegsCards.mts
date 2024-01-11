@@ -1,4 +1,4 @@
-import PEGS from '~/domain/PEGS.mjs';
+import SlugEntity from '~/domain/SlugEntity.mjs';
 import Entity from '~/domain/Entity.mjs';
 import Repository from '~/usecases/Repository.mjs';
 import { Container, PegsCard } from './index.mjs';
@@ -12,7 +12,7 @@ export class PegsCards extends Container {
         customElements.define('x-pegs-cards', this);
     }
 
-    #repo?: Repository<PEGS>;
+    #repo?: Repository<SlugEntity>;
 
     constructor({ repository }: Properties<PegsCards>, children: (Element | string)[]) {
         super({}, children);
@@ -44,7 +44,7 @@ export class PegsCards extends Container {
             elNewCard = new PegsCard({
                 heading: 'New Entry',
                 description: 'Create a new entry',
-                href: `${curPath}/new-entry`,
+                href: `${curPath === '/' ? '' : curPath}/new-entry`,
                 allowDelete: false
             });
         elNewCard.dataset.id = Entity.emptyId;
@@ -59,7 +59,7 @@ export class PegsCards extends Container {
                             allowDelete: true,
                             heading: item.name,
                             description: item.description,
-                            href: `${curPath}/${item.slug()}`
+                            href: `${curPath === '/' ? '' : curPath}/${item.slug()}`
                         });
                         card.dataset.id = item.id;
 
@@ -70,11 +70,11 @@ export class PegsCards extends Container {
         }
     }
 
-    get repository(): Repository<PEGS> | undefined {
+    get repository(): Repository<SlugEntity> | undefined {
         return this.#repo;
     }
 
-    set repository(value: Repository<PEGS> | undefined) {
+    set repository(value: Repository<SlugEntity> | undefined) {
         this.#repo = value;
         this._renderCards();
     }
@@ -82,7 +82,7 @@ export class PegsCards extends Container {
     async onDelete(e: CustomEvent<PegsCard>) {
         const card = e.detail;
         if (confirm(`Are you sure you want to delete "${card.heading}"?`)) {
-            await this.#repo!.delete(card.dataset.id as PEGS['id']);
+            await this.#repo!.delete(card.dataset.id as SlugEntity['id']);
             this._renderCards();
         }
     }

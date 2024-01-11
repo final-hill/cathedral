@@ -1,29 +1,26 @@
 import Goals from '~/domain/Goals.mjs';
 import GoalsRepository from '~/data/GoalsRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
-import Page from '../Page.mjs';
+import Page from '~/presentation/pages/Page.mjs';
+import SolutionRepository from '~/data/SolutionRepository.mjs';
 
 const { form, h3, p, textarea } = html;
 
 export default class RationalePage extends Page {
-    static override route = '/goals/:slug/rationale';
+    static override route = '/:solution/goals/rationale';
     static {
-        customElements.define('x-rationale-page', this);
+        customElements.define('x-page-rationale', this);
     }
 
-    #repository = new GoalsRepository(localStorage);
+    #solutionRepository = new SolutionRepository(localStorage);
+    #goalsRepository = new GoalsRepository(localStorage);
     #goals!: Goals;
 
     constructor() {
         super({ title: 'Rationale' }, []);
 
-        this.#repository.getBySlug(this.urlParams['slug'])!.then(goals => {
-            if (!goals) {
-                this.replaceChildren(
-                    p(`No goals found for the provided slug: ${this.urlParams['slug']}`)
-                );
-            }
-            else {
+        this.#solutionRepository.getBySlug(this.urlParams['solution'])!.then(solution => {
+            this.#goalsRepository.get(solution!.goalsId)!.then(goals => {
                 const { situation, objective, outcomes } = this.#goals = goals!;
 
                 this.replaceChildren(
@@ -31,7 +28,7 @@ export default class RationalePage extends Page {
                         h3('Situation'),
                         p(
                             `The situation is the current state of affairs that need to be
-                            addressed by a system created by a project.`
+                                addressed by a system created by a project.`
                         ),
                         textarea({
                             name: 'situation',
@@ -39,13 +36,13 @@ export default class RationalePage extends Page {
                             onchange: e => {
                                 const txtSituation = e.target as HTMLTextAreaElement;
                                 this.#goals.situation = txtSituation.value.trim();
-                                this.#repository.update(this.#goals);
+                                this.#goalsRepository.update(this.#goals);
                             }
                         }, []),
                         h3('Objective'),
                         p(
                             `The objective is the reason for building a system and the organization
-                             context in which it will be used.`
+                                 context in which it will be used.`
                         ),
                         textarea({
                             name: 'objective',
@@ -53,7 +50,7 @@ export default class RationalePage extends Page {
                             onchange: e => {
                                 const txtObjective = e.target as HTMLTextAreaElement;
                                 this.#goals.objective = txtObjective.value.trim();
-                                this.#repository.update(this.#goals);
+                                this.#goalsRepository.update(this.#goals);
                             }
                         }, []),
                         h3('Outcomes'),
@@ -66,12 +63,12 @@ export default class RationalePage extends Page {
                             onchange: e => {
                                 const txtOutcomes = e.target as HTMLTextAreaElement;
                                 this.#goals.outcomes = txtOutcomes.value.trim();
-                                this.#repository.update(this.#goals);
+                                this.#goalsRepository.update(this.#goals);
                             }
                         }, [])
                     ])
                 );
-            }
+            });
         });
     }
 

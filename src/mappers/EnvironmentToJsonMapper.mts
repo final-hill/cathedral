@@ -1,13 +1,13 @@
 import type { Uuid } from '~/types/Uuid.mjs';
-import PEGSToJsonMapper, { type PEGSJson } from './PEGSToJsonMapper.mjs';
+import EntityToJsonMapper, { type EntityJson } from './EntityToJsonMapper.mjs';
 import Environment from '~/domain/Environment.mjs';
 import SemVer from '~/lib/SemVer.mjs';
 
-export interface EnvironmentJson extends PEGSJson {
-    glossary: Uuid[];
+export interface EnvironmentJson extends EntityJson {
+    glossaryIds: Uuid[];
 }
 
-export default class EnvironmentToJsonMapper extends PEGSToJsonMapper {
+export default class EnvironmentToJsonMapper extends EntityToJsonMapper {
     override mapFrom(target: EnvironmentJson): Environment {
         const version = new SemVer(target.serializationVersion);
 
@@ -20,7 +20,7 @@ export default class EnvironmentToJsonMapper extends PEGSToJsonMapper {
     override mapTo(source: Environment): EnvironmentJson {
         return {
             ...super.mapTo(source),
-            glossary: source.glossary
+            glossaryIds: source.glossaryIds
         };
     }
 }

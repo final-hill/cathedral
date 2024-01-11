@@ -10,9 +10,7 @@ import type { Properties } from '~/types/Properties.mjs';
  * @returns True if the path is the current path, false otherwise.
  */
 const isActive = (path: string, target: string): boolean =>
-    path === '/' ?
-        target === '/' :
-        target.includes(path);
+    target.includes(path);
 
 export class GlobalNav extends Component {
     static {
@@ -49,6 +47,7 @@ export class GlobalNav extends Component {
                 fontSize: 'large',
                 height: '0.7in',
                 textShadow: '0 -1px 0px var(--shadow-color)',
+                width: '0.8in'
             },
             'x-feather-icon': {
                 '--size': '1.5em',
@@ -81,10 +80,7 @@ export class GlobalNav extends Component {
         const { nav, ul, template } = html;
 
         return template(nav({ className: 'global-nav' }, ul([
-            this._routerLink('/', 'home', 'Home'),
-            this._routerLink('/projects', 'package', 'Projects'),
-            this._routerLink('/environments', 'cloud', 'Environments'),
-            this._routerLink('/goals', 'target', 'Goals'),
+            this._routerLink('/', 'home', 'Home')
         ])));
     }
 

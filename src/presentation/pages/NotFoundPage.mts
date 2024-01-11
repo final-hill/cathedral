@@ -4,7 +4,7 @@ import html from '../lib/html.mjs';
 const { h1, p, a } = html;
 
 export default class NotFoundPage extends Page {
-    static override route = '/not-found';
+    static override route = '/-not-found-';
     static {
         customElements.define('x-page-not-found', this);
     }

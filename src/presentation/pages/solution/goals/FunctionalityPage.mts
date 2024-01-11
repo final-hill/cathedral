@@ -4,16 +4,18 @@ import GoalsRepository from '~/data/GoalsRepository.mjs';
 import BehaviorRepository from '~/data/BehaviorRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';
-import Page from '../Page.mjs';
+import Page from '~/presentation/pages/Page.mjs';
+import SolutionRepository from '~/data/SolutionRepository.mjs';
 
 const { p, strong } = html;
 
 export default class FunctionalityPage extends Page {
-    static override route = '/goals/:slug/functionality';
+    static override route = '/:solution/goals/functionality';
     static {
-        customElements.define('x-functionality-page', this);
+        customElements.define('x-page-functionality', this);
     }
 
+    #solutionRepository = new SolutionRepository(localStorage);
     #goalsRepository = new GoalsRepository(localStorage);
     #behaviorRepository = new BehaviorRepository(localStorage);
     #goals?: Goals;
@@ -36,12 +38,12 @@ export default class FunctionalityPage extends Page {
                 if (!this.#goals)
                     return [];
 
-                return await this.#behaviorRepository.getAll(b => this.#goals!.functionalBehaviors.includes(b.id));
+                return await this.#behaviorRepository.getAll(b => this.#goals!.functionalBehaviorIds.includes(b.id));
             },
             onCreate: async item => {
                 const behavior = new Behavior({ ...item, id: self.crypto.randomUUID() });
                 await this.#behaviorRepository.add(behavior);
-                this.#goals!.functionalBehaviors.push(behavior.id);
+                this.#goals!.functionalBehaviorIds.push(behavior.id);
                 await this.#goalsRepository.update(this.#goals!);
             },
             onUpdate: async item => {
@@ -51,7 +53,7 @@ export default class FunctionalityPage extends Page {
             },
             onDelete: async id => {
                 await this.#behaviorRepository.delete(id);
-                this.#goals!.functionalBehaviors = this.#goals!.functionalBehaviors.filter(x => x !== id);
+                this.#goals!.functionalBehaviorIds = this.#goals!.functionalBehaviorIds.filter(x => x !== id);
                 await this.#goalsRepository.update(this.#goals!);
             }
         });
@@ -59,9 +61,12 @@ export default class FunctionalityPage extends Page {
 
         this.#goalsRepository.addEventListener('update', () => dataTable.renderData());
         this.#behaviorRepository.addEventListener('update', () => dataTable.renderData());
-        this.#goalsRepository.getBySlug(this.urlParams['slug']).then(goals => {
-            this.#goals = goals;
-            dataTable.renderData();
+        const solutionSlug = this.urlParams['solution'];
+        this.#solutionRepository.getBySlug(solutionSlug).then(solution => {
+            this.#goalsRepository.get(solution!.goalsId).then(goals => {
+                this.#goals = goals;
+                dataTable.renderData();
+            });
         });
     }
 }

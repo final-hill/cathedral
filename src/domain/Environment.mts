@@ -1,5 +1,5 @@
 import type { Uuid } from '~/types/Uuid.mjs';
-import PEGS from './PEGS.mjs';
+import Entity from './Entity.mjs';
 import type { Properties } from '~/types/Properties.mjs';
 
 /**
@@ -9,11 +9,11 @@ import type { Properties } from '~/types/Properties.mjs';
  * An environment describes the application domain and external context in which a
  * system operates.
  */
-export default class Environment extends PEGS {
-    glossary: Uuid[];
+export default class Environment extends Entity {
+    glossaryIds: Uuid[];
 
     constructor(options: Properties<Environment>) {
         super(options);
-        this.glossary = options.glossary;
+        this.glossaryIds = options.glossaryIds;
     }
 }

@@ -64,19 +64,18 @@ export default class Application extends Container {
         this.#pages = [
             (await import('./pages/HomePage.mjs')).default,
             NotFoundPage,
-            (await import('./pages/projects/ProjectsPage.mjs')).default,
-            (await import('./pages/environments/NewEnvironmentPage.mjs')).default,
-            (await import('./pages/environments/EnvironmentPage.mjs')).default,
-            (await import('./pages/environments/EnvironmentsPage.mjs')).default,
-            (await import('./pages/environments/GlossaryPage.mjs')).default,
-            (await import('./pages/goals/NewGoalsPage.mjs')).default,
-            (await import('./pages/goals/GoalPage.mjs')).default,
-            (await import('./pages/goals/GoalsPage.mjs')).default,
-            (await import('./pages/goals/RationalePage.mjs')).default,
-            (await import('./pages/goals/FunctionalityPage.mjs')).default,
-            (await import('./pages/goals/StakeholdersPage.mjs')).default,
-            (await import('./pages/goals/UseCasesPage.mjs')).default,
-            (await import('./pages/goals/LimitationsPage.mjs')).default,
+            (await import('./pages/solution/project/ProjectsIndexPage.mjs')).default,
+            (await import('./pages/solution/environment/EnvironmentsIndexPage.mjs')).default,
+            (await import('./pages/solution/environment/GlossaryPage.mjs')).default,
+            (await import('./pages/solution/goals/GoalsIndexPage.mjs')).default,
+            (await import('./pages/solution/goals/RationalePage.mjs')).default,
+            (await import('./pages/solution/goals/FunctionalityPage.mjs')).default,
+            (await import('./pages/solution/goals/StakeholdersPage.mjs')).default,
+            (await import('./pages/solution/goals/UseCasesPage.mjs')).default,
+            (await import('./pages/solution/goals/LimitationsPage.mjs')).default,
+            (await import('./pages/solution/NewSolutionPage.mjs')).default,
+            (await import('./pages/solution/SolutionIndexPage.mjs')).default,
+            (await import('./pages/solution/SolutionPage.mjs')).default
         ];
 
         self.navigation.addEventListener('navigate', this);
