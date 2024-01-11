@@ -31,8 +31,8 @@ export default class FunctionalityPage extends Page {
 
         const dataTable = new DataTable({
             columns: {
-                id: { headerText: 'ID', readonly: true, formType: 'hidden' },
-                statement: { headerText: 'Statement', required: true, formType: 'text' }
+                id: { headerText: 'ID', readonly: true, formType: 'hidden', unique: true },
+                statement: { headerText: 'Statement', required: true, formType: 'text', unique: true }
             },
             select: async () => {
                 if (!this.#goals)
