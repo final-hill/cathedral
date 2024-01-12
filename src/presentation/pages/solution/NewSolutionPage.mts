@@ -109,7 +109,8 @@ export default class NewSolutionPage extends Page {
             environment = new Environment({
                 id: solution.environmentId,
                 glossaryIds: [],
-                constraintIds: []
+                constraintIds: [],
+                invariantIds: [],
             }),
             goals = new Goals({
                 id: solution.goalsId,

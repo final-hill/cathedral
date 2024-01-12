@@ -30,6 +30,11 @@ export default class EnvironmentsIndexPage extends Page {
                     title: 'Constraints',
                     icon: 'anchor',
                     href: `${location.pathname}/constraints`
+                }),
+                new MiniCard({
+                    title: 'Invariants',
+                    icon: 'lock',
+                    href: `${location.pathname}/invariants`
                 })
             ])
         );
