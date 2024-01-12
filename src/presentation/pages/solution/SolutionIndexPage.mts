@@ -7,6 +7,7 @@ export default class SolutionIndexPage extends Page {
     static {
         customElements.define('x-page-solution-index', this);
     }
+
     constructor() {
         super({ title: 'Solutions' }, [
             new PegsCards({

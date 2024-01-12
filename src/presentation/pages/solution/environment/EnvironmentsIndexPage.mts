@@ -26,6 +26,11 @@ export default class EnvironmentsIndexPage extends Page {
                     icon: 'list',
                     href: `${location.pathname}/glossary`
                 }),
+                new MiniCard({
+                    title: 'Constraints',
+                    icon: 'anchor',
+                    href: `${location.pathname}/constraints`
+                })
             ])
         );
     }
