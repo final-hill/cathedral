@@ -11,9 +11,11 @@ import type { Properties } from '~/types/Properties.mjs';
  */
 export default class Environment extends Entity {
     glossaryIds: Uuid[];
+    constraintIds: Uuid[];
 
     constructor(options: Properties<Environment>) {
         super(options);
         this.glossaryIds = options.glossaryIds;
+        this.constraintIds = options.constraintIds;
     }
 }
