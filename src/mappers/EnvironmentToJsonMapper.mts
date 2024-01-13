@@ -8,6 +8,7 @@ export interface EnvironmentJson extends EntityJson {
     constraintIds: Uuid[];
     invariantIds: Uuid[];
     assumptionIds: Uuid[];
+    effectIds: Uuid[];
 }
 
 export default class EnvironmentToJsonMapper extends EntityToJsonMapper {
@@ -19,7 +20,8 @@ export default class EnvironmentToJsonMapper extends EntityToJsonMapper {
                 ...target,
                 constraintIds: target.constraintIds ?? [],
                 invariantIds: target.invariantIds ?? [],
-                assumptionIds: target.assumptionIds ?? []
+                assumptionIds: target.assumptionIds ?? [],
+                effectIds: target.effectIds ?? []
             });
 
         throw new Error(`Unsupported serialization version: ${version}`);
@@ -31,7 +33,8 @@ export default class EnvironmentToJsonMapper extends EntityToJsonMapper {
             glossaryIds: source.glossaryIds,
             constraintIds: source.constraintIds,
             invariantIds: source.invariantIds,
-            assumptionIds: source.assumptionIds
+            assumptionIds: source.assumptionIds,
+            effectIds: source.effectIds
         };
     }
 }

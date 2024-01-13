@@ -14,6 +14,7 @@ export default class Environment extends Entity {
     constraintIds: Uuid[];
     invariantIds: Uuid[];
     assumptionIds: Uuid[];
+    effectIds: Uuid[];
 
     constructor(options: Properties<Environment>) {
         super(options);
@@ -21,5 +22,6 @@ export default class Environment extends Entity {
         this.constraintIds = options.constraintIds;
         this.invariantIds = options.invariantIds;
         this.assumptionIds = options.assumptionIds;
+        this.effectIds = options.effectIds;
     }
 }

@@ -44,6 +44,11 @@ export default class EnvironmentsIndexPage extends Page {
                     icon: 'sunrise',
                     href: `${location.pathname}/assumptions`
                 }),
+                new MiniCard({
+                    title: 'Effects',
+                    icon: 'cloud-lightning',
+                    href: `${location.pathname}/effects`
+                })
             ])
         );
     }

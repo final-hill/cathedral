@@ -1,30 +1,30 @@
 import type { Uuid } from '~/types/Uuid.mjs';
 import type Environment from '~/domain/Environment.mjs';
-import Assumption from '~/domain/Assumption.mjs';
+import Effect from '~/domain/Effect.mjs';
 import SolutionRepository from '~/data/SolutionRepository.mjs';
 import EnvironmentRepository from '~/data/EnvironmentRepository.mjs';
-import AssumptionRepository from '~/data/AssumptionRepository.mjs';
+import EffectRepository from '~/data/EffectRepository.mjs';
 import Page from '~/presentation/pages/Page.mjs';
 import { DataTable } from '~/presentation/components/DataTable.mjs';
 import html from '~/presentation/lib/html.mjs';
 
 const { p } = html;
 
-export default class AssumptionPage extends Page {
-    static override route = '/:solution/environment/assumptions';
+export default class EffectsPage extends Page {
+    static override route = '/:solution/environment/effects';
     static {
-        customElements.define('x-page-assumptions', this);
+        customElements.define('x-page-effects', this);
     }
 
     #solutionRepository = new SolutionRepository(localStorage);
     #environmentRepository = new EnvironmentRepository(localStorage);
-    #assumptionRepository = new AssumptionRepository(localStorage);
+    #effectRepository = new EffectRepository(localStorage);
     #environment?: Environment;
 
     constructor() {
-        super({ title: 'Assumptions' }, []);
+        super({ title: 'Effects' }, []);
 
-        const dataTable = new DataTable<Assumption>({
+        const dataTable = new DataTable<Effect>({
             columns: {
                 id: { headerText: 'ID', readonly: true, formType: 'hidden', unique: true },
                 statement: { headerText: 'Statement', required: true, formType: 'text', unique: true }
@@ -33,25 +33,25 @@ export default class AssumptionPage extends Page {
                 if (!this.#environment)
                     return [];
 
-                return await this.#assumptionRepository.getAll(t => this.#environment!.assumptionIds.includes(t.id));
+                return await this.#effectRepository.getAll(t => this.#environment!.effectIds.includes(t.id));
             },
             onCreate: async item => {
-                const assumption = new Assumption({ ...item, id: self.crypto.randomUUID() });
-                this.#environment!.assumptionIds.push(assumption.id);
+                const effect = new Effect({ ...item, id: self.crypto.randomUUID() });
+                this.#environment!.effectIds.push(effect.id);
                 await Promise.all([
-                    this.#assumptionRepository.add(assumption),
+                    this.#effectRepository.add(effect),
                     this.#environmentRepository.update(this.#environment!)
                 ]);
             },
             onUpdate: async item => {
-                await this.#assumptionRepository.update(new Assumption({
+                await this.#effectRepository.update(new Effect({
                     ...item
                 }));
             },
             onDelete: async id => {
-                this.#environment!.assumptionIds = this.#environment!.assumptionIds.filter(x => x !== id);
+                this.#environment!.effectIds = this.#environment!.effectIds.filter(x => x !== id);
                 await Promise.all([
-                    this.#assumptionRepository.delete(id),
+                    this.#effectRepository.delete(id),
                     this.#environmentRepository.update(this.#environment!)
                 ]);
             }
@@ -59,15 +59,14 @@ export default class AssumptionPage extends Page {
 
         this.append(
             p(`
-                An assumption is a property of the environment that is assumed to be true.
-                Assumptions are used to simplify the problem and to make it more tractable.
-                An example of an assumption would be: "Screen resolution will not change during the execution of the program".
+                An Effect is an environment property affected by a System.
+                Example: "The running system will cause the temperature of the room to increase."
             `),
             dataTable
         );
 
         this.#environmentRepository.addEventListener('update', () => dataTable.renderData());
-        this.#assumptionRepository.addEventListener('update', () => dataTable.renderData());
+        this.#effectRepository.addEventListener('update', () => dataTable.renderData());
         const solutionId = this.urlParams['solution'] as Uuid;
         this.#solutionRepository.getBySlug(solutionId).then(solution => {
             this.#environmentRepository.get(solution!.environmentId).then(environment => {
