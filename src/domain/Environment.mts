@@ -13,11 +13,13 @@ export default class Environment extends Entity {
     glossaryIds: Uuid[];
     constraintIds: Uuid[];
     invariantIds: Uuid[];
+    assumptionIds: Uuid[];
 
     constructor(options: Properties<Environment>) {
         super(options);
         this.glossaryIds = options.glossaryIds;
         this.constraintIds = options.constraintIds;
         this.invariantIds = options.invariantIds;
+        this.assumptionIds = options.assumptionIds;
     }
 }
