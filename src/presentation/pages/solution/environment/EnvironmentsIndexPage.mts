@@ -35,7 +35,15 @@ export default class EnvironmentsIndexPage extends Page {
                     title: 'Invariants',
                     icon: 'lock',
                     href: `${location.pathname}/invariants`
-                })
+                }),
+                new MiniCard({
+                    title: 'Assumptions',
+                    // There is no icon for assumptions, so might as well use this one.
+                    // "As sure as the sun rises in the east"
+                    // https://en.wikipedia.org/wiki/Sunrise_problem
+                    icon: 'sunrise',
+                    href: `${location.pathname}/assumptions`
+                }),
             ])
         );
     }
