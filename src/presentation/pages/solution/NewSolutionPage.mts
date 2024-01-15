@@ -112,7 +112,8 @@ export default class NewSolutionPage extends Page {
                 constraintIds: [],
                 invariantIds: [],
                 assumptionIds: [],
-                effectIds: []
+                effectIds: [],
+                componentIds: []
             }),
             goals = new Goals({
                 id: solution.goalsId,

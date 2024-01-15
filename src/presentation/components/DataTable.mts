@@ -13,7 +13,7 @@ interface BaseDataColumn {
 }
 
 interface TextHiddenDataColumn {
-    formType: 'text' | 'hidden';
+    formType: 'text' | 'hidden' | 'textarea';
 }
 
 interface NumberRangeDataColumn {
@@ -47,7 +47,7 @@ const show = ((item: HTMLElement) => item.hidden = false),
     hide = ((item: HTMLElement) => item.hidden = true),
     disable = ((item: HTMLInputElement | HTMLSelectElement) => item.disabled = true),
     enable = ((item: HTMLInputElement | HTMLSelectElement) => item.disabled = false),
-    { button, caption, form, input, option, select, span, table, tbody, td, template, th, thead, tr } = html;
+    { button, caption, form, input, option, select, span, table, textarea, tbody, td, template, th, thead, tr } = html;
 
 export class DataTable<T extends Entity> extends Component {
     static {
@@ -332,6 +332,12 @@ export class DataTable<T extends Entity> extends Component {
                             `${col.step}` : '1',
                         form: this.#frmDataTableCreate,
                         [renderIf]: col.formType == 'number' || col.formType == 'range'
+                    }),
+                    textarea({
+                        name: id,
+                        form: this.#frmDataTableCreate,
+                        required: col.required,
+                        [renderIf]: col.formType == 'textarea'
                     })
                 ]))
         );
@@ -360,6 +366,14 @@ export class DataTable<T extends Entity> extends Component {
                             disabled: true,
                             required: col.required,
                             name: id,
+                            defaultValue: (item as any)[id]
+                        }, []),
+                        textarea({
+                            [renderIf]: col.formType == 'textarea',
+                            form: this.#frmDataTableUpdate,
+                            name: id,
+                            disabled: true,
+                            required: col.required,
                             defaultValue: (item as any)[id]
                         }, []),
                         input({

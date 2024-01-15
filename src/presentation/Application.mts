@@ -71,6 +71,7 @@ export default class Application extends Container {
             (await import('./pages/solution/environment/InvariantsPage.mjs')).default,
             (await import('./pages/solution/environment/AssumptionsPage.mjs')).default,
             (await import('./pages/solution/environment/EffectsPage.mjs')).default,
+            (await import('./pages/solution/environment/ComponentsPage.mjs')).default,
             (await import('./pages/solution/goals/GoalsIndexPage.mjs')).default,
             (await import('./pages/solution/goals/RationalePage.mjs')).default,
             (await import('./pages/solution/goals/FunctionalityPage.mjs')).default,

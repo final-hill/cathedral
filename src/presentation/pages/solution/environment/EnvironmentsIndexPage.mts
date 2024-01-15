@@ -32,6 +32,11 @@ export default class EnvironmentsIndexPage extends Page {
                     href: `${location.pathname}/constraints`
                 }),
                 new MiniCard({
+                    title: 'Components',
+                    icon: 'grid',
+                    href: `${location.pathname}/components`
+                }),
+                new MiniCard({
                     title: 'Invariants',
                     icon: 'lock',
                     href: `${location.pathname}/invariants`
