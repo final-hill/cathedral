@@ -1,6 +1,5 @@
 // import { Contract, Contracted, implies, invariant } from '@final-hill/decorator-contracts';
 import { type Predicate } from './Predicate.mjs';
-import Project from './Project.mjs';
 
 // const requirementContract = new Contract<Requirement>({
 //     [invariant]: self => implies(
