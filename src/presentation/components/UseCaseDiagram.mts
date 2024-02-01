@@ -2,6 +2,7 @@ import mermaid from 'mermaid';
 import UseCase from '~/domain/UseCase.mjs';
 import { Component } from '~components/index.mjs';
 import type Presenter from '~/application/Presenter.mjs';
+import slugify from '~/lib/slugify.mjs';
 
 export class UseCaseDiagram extends Component implements Presenter<UseCase> {
     static {
@@ -21,7 +22,7 @@ export class UseCaseDiagram extends Component implements Presenter<UseCase> {
             ${useCases.map(u => {
             const { actor } = u;
 
-            return `${actor.id}("#128100;<br>${actor.name}") --> ${u.id}["${u.statement}"]`;
+            return `${actor.id}("#128100;<br>${actor.name}") --> ${slugify(u.statement)}["${u.statement}"]`;
         }).join('\n')}
             `, { svg } = await mermaid.render('diagram', chartDefinition);
 
