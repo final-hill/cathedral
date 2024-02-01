@@ -1,8 +1,8 @@
 import Entity from '~/domain/Entity.mjs';
 import type { SemVerString } from '~/lib/SemVer.mjs';
 import SemVer from '~/lib/SemVer.mjs';
-import type { Uuid } from '~/types/Uuid.mjs';
-import Mapper from '~/usecases/Mapper.mjs';
+import type { Uuid } from '~/domain/Uuid.mjs';
+import Mapper from '~/application/Mapper.mjs';
 
 export interface EntityJson {
     id: Uuid;

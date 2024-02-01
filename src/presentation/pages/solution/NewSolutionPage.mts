@@ -1,38 +1,25 @@
 import Solution from '~/domain/Solution.mjs';
-import SolutionRepository from '~/data/SolutionRepository.mjs';
-import Page from '../Page.mjs';
 import html from '~/presentation/lib/html.mjs';
 import requiredTheme from '~/presentation/theme/requiredTheme.mjs';
 import formTheme from '~/presentation/theme/formTheme.mjs';
 import slugify from '~/lib/slugify.mjs';
-import EnvironmentRepository from '~/data/EnvironmentRepository.mjs';
-import GoalsRepository from '~/data/GoalsRepository.mjs';
-import ProjectRepository from '~/data/ProjectRepository.mjs';
-import SystemRepository from '~/data/SystemRepository.mjs';
-import Environment from '~/domain/Environment.mjs';
-import Goals from '~/domain/Goals.mjs';
-import Project from '~/domain/Project.mjs';
-import System from '~/domain/System.mjs';
+import _SolutionPage from './_SolutionPage.mjs';
+import { emptyUuid } from '~/domain/Uuid.mjs';
 
 const { form, label, input, span, button } = html;
 
-export default class NewSolutionPage extends Page {
+export default class NewSolutionPage extends _SolutionPage {
     static override route = '/new-entry';
     static {
         customElements.define('x-page-new-solution', this);
     }
 
-    #solutionRepository = new SolutionRepository(localStorage);
-    #environmentRepository = new EnvironmentRepository(localStorage);
-    #goalsRepository = new GoalsRepository(localStorage);
-    #projectRepository = new ProjectRepository(localStorage);
-    #systemRepository = new SystemRepository(localStorage);
     #form!: HTMLFormElement;
     #txtName!: HTMLInputElement;
     #txtSlug!: HTMLInputElement;
 
     constructor() {
-        super({ title: 'New Solution' }, []);
+        super({ title: 'New Solution' });
 
         this.appendChild(
             this.#form = form({
@@ -45,7 +32,7 @@ export default class NewSolutionPage extends Page {
                     placeholder: 'Sample Solution', maxLength: Solution.maxNameLength
                 }, []),
                 label({ htmlFor: 'slug' }, 'Slug'),
-                this.#txtSlug = input({ type: 'text', name: 'slug', id: 'slug', readOnly: true }, []),
+                this.#txtSlug = input({ type: 'text', name: 'slug', id: 'slug', readOnly: true, tabIndex: -1 }, []),
                 label({ htmlFor: 'description' }, 'Description'),
                 input({
                     type: 'text', name: 'description', id: 'description',
@@ -97,48 +84,14 @@ export default class NewSolutionPage extends Page {
         e.preventDefault();
         const form = e.target as HTMLFormElement,
             formData = new FormData(form),
-            solution = new Solution({
-                id: self.crypto.randomUUID(),
+            solution = await this.interactor.create({
                 name: formData.get('name') as string,
                 description: formData.get('description') as string,
-                environmentId: self.crypto.randomUUID(),
-                goalsId: self.crypto.randomUUID(),
-                projectId: self.crypto.randomUUID(),
-                systemId: self.crypto.randomUUID()
-            }),
-            environment = new Environment({
-                id: solution.environmentId,
-                glossaryIds: [],
-                constraintIds: [],
-                invariantIds: [],
-                assumptionIds: [],
-                effectIds: [],
-                componentIds: []
-            }),
-            goals = new Goals({
-                id: solution.goalsId,
-                stakeholderIds: [],
-                functionalBehaviorIds: [],
-                limitIds: [],
-                objective: '',
-                outcomes: '',
-                situation: '',
-                useCaseIds: []
-            }),
-            project = new Project({
-                id: solution.projectId
-            }),
-            system = new System({
-                id: solution.systemId,
+                environmentId: emptyUuid,
+                goalsId: emptyUuid,
+                projectId: emptyUuid,
+                systemId: emptyUuid
             });
-
-        await Promise.all([
-            this.#solutionRepository.add(solution),
-            this.#environmentRepository.add(environment),
-            this.#goalsRepository.add(goals),
-            this.#projectRepository.add(project),
-            this.#systemRepository.add(system)
-        ]);
 
         self.navigation.navigate(`/${solution.slug()}`);
     }
@@ -146,4 +99,8 @@ export default class NewSolutionPage extends Page {
     onReset() {
         self.navigation.navigate('/');
     }
+
+    override presentItem(_entity: Solution): void { }
+
+    override presentList(_entities: Solution[]): void { }
 }

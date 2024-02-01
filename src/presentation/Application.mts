@@ -2,6 +2,7 @@ import type Page from './pages/Page.mjs';
 import NotFoundPage from './pages/NotFoundPage.mjs';
 import html from './lib/html.mjs';
 import { Breadcrumb, Container, GlobalNav } from '~components/index.mjs';
+import type { Constructor } from '~/types/Constructor.mjs';
 
 export default class Application extends Container {
     static {
@@ -22,8 +23,8 @@ export default class Application extends Container {
         const { template, section, slot } = html;
 
         return template([
-            new GlobalNav({}),
-            new Breadcrumb({}),
+            new GlobalNav(),
+            new Breadcrumb(),
             section({ id: 'content' }, slot())
         ]);
     }
@@ -77,7 +78,7 @@ export default class Application extends Container {
             (await import('./pages/solution/goals/FunctionalityPage.mjs')).default,
             (await import('./pages/solution/goals/StakeholdersPage.mjs')).default,
             (await import('./pages/solution/goals/UseCasesPage.mjs')).default,
-            (await import('./pages/solution/goals/LimitationsPage.mjs')).default,
+            (await import('./pages/solution/goals/LimitsPage.mjs')).default,
             (await import('./pages/solution/NewSolutionPage.mjs')).default,
             (await import('./pages/solution/SolutionIndexPage.mjs')).default,
             (await import('./pages/solution/SolutionPage.mjs')).default
@@ -155,7 +156,7 @@ export default class Application extends Container {
         });
     }
 
-    onRoute(event: CustomEvent<typeof Page>) {
+    onRoute(event: CustomEvent<Constructor<Page>>) {
         const Cons = event.detail;
         this.#currentPage = new Cons({}, []);
         this.replaceChildren(this.#currentPage);

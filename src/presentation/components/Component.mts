@@ -1,13 +1,12 @@
 import type { Properties } from '~/types/Properties.mjs';
-import { HandleEvent } from '../HandleEvent.mjs';
 import type { Theme } from '~/types/Theme.mjs';
 
-export abstract class Component extends HandleEvent(HTMLElement) {
+export abstract class Component extends HTMLElement {
     static get observedAttributes(): string[] {
         return [];
     }
 
-    constructor(properties: Properties<Component>) {
+    constructor(properties: Partial<Properties<Component>>) {
         super();
 
         if (!this.shadowRoot) {
@@ -45,6 +44,18 @@ export abstract class Component extends HandleEvent(HTMLElement) {
     // eliminate the need to cast shadowRoot to non-null
     override get shadowRoot() {
         return super.shadowRoot!;
+    }
+
+    /**
+     * A callback that is invoked when an event is dispatched to the component.
+     * @param event The event that was dispatched.
+     * @returns void
+     */
+    handleEvent(event: Event): void {
+        const eventName = event.type.charAt(0).toUpperCase() + event.type.slice(1),
+            handler = Reflect.get(this, `on${eventName}`);
+        if (typeof handler === 'function')
+            handler.call(this, event);
     }
 
     /**

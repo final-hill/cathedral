@@ -13,7 +13,7 @@ export class PegsCard extends Component {
         return ['heading', 'description', 'href', 'allow-delete'];
     }
 
-    constructor(properties: Properties<PegsCard>) {
+    constructor(properties: Partial<Properties<PegsCard>> & Pick<Properties<PegsCard>, 'heading' | 'description' | 'href' | 'allowDelete'>) {
         super(properties);
         this.shadowRoot.querySelector('button')!.addEventListener('click', e => this.onDelete(e));
     }
@@ -98,10 +98,11 @@ export class PegsCard extends Component {
 
     onDelete(e: Event) {
         e.preventDefault();
-        this.dispatchEvent(new CustomEvent<this>('delete', {
-            bubbles: true,
-            composed: true,
-            detail: this
-        }));
+        if (confirm(`Are you sure you want to delete "${this.heading}"?`))
+            this.dispatchEvent(new CustomEvent<this>('delete', {
+                bubbles: true,
+                composed: true,
+                detail: this
+            }));
     }
 }

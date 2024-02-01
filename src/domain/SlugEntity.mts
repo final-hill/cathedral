@@ -9,10 +9,10 @@ export default class SlugEntity extends Entity {
     #name!: string;
     #description!: string;
 
-    constructor(options: Properties<SlugEntity>) {
-        super(options);
-        this.name = options.name;
-        this.description = options.description;
+    constructor({ id, name, description }: Properties<SlugEntity>) {
+        super({ id });
+        this.name = name;
+        this.description = description;
     }
 
     get name(): string {

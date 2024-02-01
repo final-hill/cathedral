@@ -15,7 +15,7 @@ export class Breadcrumb extends Component {
         customElements.define('x-bread-crumb', this);
     }
 
-    constructor(properties: Properties<Breadcrumb>) {
+    constructor(properties: Partial<Properties<Breadcrumb>> = {}) {
         super(properties);
         self.navigation.addEventListener('navigate', this);
     }

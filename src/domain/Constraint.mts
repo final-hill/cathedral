@@ -8,11 +8,11 @@ export enum ConstraintCategory {
 }
 
 export default class Constraint extends Requirement {
-    constructor(options: Properties<Constraint>) {
-        super(options);
-
-        this.category = options.category;
-    }
-
     category: ConstraintCategory;
+
+    constructor({ category, ...rest }: Properties<Constraint>) {
+        super(rest);
+
+        this.category = category;
+    }
 }

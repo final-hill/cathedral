@@ -1,25 +1,22 @@
 import SlugEntity from '~/domain/SlugEntity.mjs';
-import Entity from '~/domain/Entity.mjs';
-import Repository from '~/usecases/Repository.mjs';
+import type Presenter from '~/application/Presenter.mjs';
 import { Container, PegsCard } from './index.mjs';
 import html from '../lib/html.mjs';
-import type { Properties } from '~/types/Properties.mjs';
+import { emptyUuid, type Uuid } from '~/domain/Uuid.mjs';
 
 const { section, template, slot } = html;
 
-export class PegsCards extends Container {
+export type PegsCardsDeleteEvent = CustomEvent<{ id: Uuid; heading: string }>;
+
+export class PegsCards extends Container implements Presenter<SlugEntity> {
     static {
         customElements.define('x-pegs-cards', this);
     }
 
-    #repo?: Repository<SlugEntity>;
+    constructor({ onDelete }: { onDelete: (e: PegsCardsDeleteEvent) => void }) {
+        super({}, []);
 
-    constructor({ repository }: Properties<PegsCards>, children: (Element | string)[]) {
-        super({}, children);
-
-        this.repository = repository;
-
-        this.addEventListener('delete', this);
+        this.addEventListener('delete', e => onDelete(e as PegsCardsDeleteEvent));
     }
 
     protected override _initShadowStyle() {
@@ -39,7 +36,11 @@ export class PegsCards extends Container {
         ));
     }
 
-    async _renderCards() {
+    presentItem(_entity: SlugEntity): void {
+        throw new Error('Method not implemented.');
+    }
+
+    presentList(entities: SlugEntity[]): void {
         const curPath = document.location.pathname,
             elNewCard = new PegsCard({
                 heading: 'New Entry',
@@ -47,43 +48,21 @@ export class PegsCards extends Container {
                 href: `${curPath === '/' ? '' : curPath}/new-entry`,
                 allowDelete: false
             });
-        elNewCard.dataset.id = Entity.emptyId;
+        elNewCard.dataset.id = emptyUuid;
 
-        if (!this.#repo) {
-            this.replaceChildren(elNewCard);
-        } else {
-            const items = await this.#repo.getAll(),
-                newCards = [elNewCard].concat(
-                    items.map(item => {
-                        const card = new PegsCard({
-                            allowDelete: true,
-                            heading: item.name,
-                            description: item.description,
-                            href: `${curPath === '/' ? '' : curPath}/${item.slug()}`
-                        });
-                        card.dataset.id = item.id;
+        const newCards = [elNewCard].concat(
+            entities.map(entity => {
+                const card = new PegsCard({
+                    allowDelete: true,
+                    heading: entity.name,
+                    description: entity.description,
+                    href: `${curPath === '/' ? '' : curPath}/${entity.slug()}`
+                });
+                card.dataset.id = entity.id;
 
-                        return card;
-                    })
-                );
-            this.replaceChildren(...newCards);
-        }
-    }
-
-    get repository(): Repository<SlugEntity> | undefined {
-        return this.#repo;
-    }
-
-    set repository(value: Repository<SlugEntity> | undefined) {
-        this.#repo = value;
-        this._renderCards();
-    }
-
-    async onDelete(e: CustomEvent<PegsCard>) {
-        const card = e.detail;
-        if (confirm(`Are you sure you want to delete "${card.heading}"?`)) {
-            await this.#repo!.delete(card.dataset.id as SlugEntity['id']);
-            this._renderCards();
-        }
+                return card;
+            })
+        );
+        this.replaceChildren(...newCards);
     }
 }

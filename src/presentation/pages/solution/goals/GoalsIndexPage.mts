@@ -1,22 +1,22 @@
 import { MiniCard, MiniCards } from '~components/index.mjs';
 import html from '~/presentation/lib/html.mjs';
-import Page from '~/presentation/pages/Page.mjs';
+import _GoalsPage from './_GoalsPage.mjs';
+import type Goals from '~/domain/Goals.mjs';
 
 const { p } = html;
 
-export default class GoalsIndexPage extends Page {
+export default class GoalsIndexPage extends _GoalsPage {
     static override route = '/:solution/goals';
     static {
         customElements.define('x-page-goals-index', this);
     }
 
     constructor() {
-        super({ title: 'Goals' }, [
-            p(`Goals are the desired outcomes and needs of an
-            organization for which a system must satisfy.`)
-        ]);
+        super({ title: 'Goals' });
 
         this.append(
+            p(`Goals are the desired outcomes and needs of an
+            organization for which a system must satisfy.`),
             new MiniCards({}, [
                 new MiniCard({
                     title: 'Rationale',
@@ -46,4 +46,8 @@ export default class GoalsIndexPage extends Page {
             ])
         );
     }
+
+    override presentItem(_entity: Goals): void { }
+
+    override presentList(_entities: Goals[]): void { }
 }

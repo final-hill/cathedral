@@ -13,9 +13,9 @@ export class MiniCard extends Component {
         return ['title', 'href', 'icon'];
     }
 
-    constructor(properties: Properties<MiniCard>) {
-        super(properties);
-    }
+    constructor(properties: Pick<Properties<MiniCard>, 'title' | 'href' | 'icon'>
+        & Partial<Properties<MiniCard>>
+    ) { super(properties); }
 
     protected override _initShadowStyle() {
         return {

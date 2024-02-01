@@ -17,7 +17,7 @@ export class GlobalNav extends Component {
         customElements.define('x-global-nav', this);
     }
 
-    constructor(properties: Properties<GlobalNav>) {
+    constructor(properties: Partial<Properties<GlobalNav>> = {}) {
         super(properties);
 
         self.navigation.addEventListener('navigate', this);

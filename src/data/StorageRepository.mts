@@ -1,7 +1,7 @@
 import type Entity from '~/domain/Entity.mjs';
 import type { EntityJson } from '~/mappers/EntityToJsonMapper.mjs';
-import type Mapper from '~/usecases/Mapper.mjs';
-import Repository from '~/usecases/Repository.mjs';
+import type Mapper from '~/application/Mapper.mjs';
+import Repository from '~/application/Repository.mjs';
 
 export default class StorageRepository<E extends Entity> extends Repository<E> {
     constructor(

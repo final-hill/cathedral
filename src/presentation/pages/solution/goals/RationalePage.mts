@@ -1,75 +1,42 @@
-import Goals from '~/domain/Goals.mjs';
-import GoalsRepository from '~/data/GoalsRepository.mjs';
 import html from '~/presentation/lib/html.mjs';
-import Page from '~/presentation/pages/Page.mjs';
-import SolutionRepository from '~/data/SolutionRepository.mjs';
+import _GoalsPage from './_GoalsPage.mjs';
+import type Goals from '~/domain/Goals.mjs';
 
 const { form, h3, p, textarea } = html;
 
-export default class RationalePage extends Page {
+export default class RationalePage extends _GoalsPage {
     static override route = '/:solution/goals/rationale';
     static {
         customElements.define('x-page-rationale', this);
     }
 
-    #solutionRepository = new SolutionRepository(localStorage);
-    #goalsRepository = new GoalsRepository(localStorage);
-    #goals!: Goals;
+    #goals!: Goals; // Assigned via super.connectedCallback() -> this.presentItem()
+    #txtSituation; #txtObjective; #txtOutcomes;
 
     constructor() {
-        super({ title: 'Rationale' }, []);
+        super({ title: 'Rationale' });
 
-        this.#solutionRepository.getBySlug(this.urlParams['solution'])!.then(solution => {
-            this.#goalsRepository.get(solution!.goalsId)!.then(goals => {
-                const { situation, objective, outcomes } = this.#goals = goals!;
-
-                this.replaceChildren(
-                    form({ class: 'form-rationale', autocomplete: 'off' }, [
-                        h3('Situation'),
-                        p(
-                            `The situation is the current state of affairs that need to be
-                                addressed by a system created by a project.`
-                        ),
-                        textarea({
-                            name: 'situation',
-                            value: situation,
-                            onchange: e => {
-                                const txtSituation = e.target as HTMLTextAreaElement;
-                                this.#goals.situation = txtSituation.value.trim();
-                                this.#goalsRepository.update(this.#goals);
-                            }
-                        }, []),
-                        h3('Objective'),
-                        p(
-                            `The objective is the reason for building a system and the organization
-                                 context in which it will be used.`
-                        ),
-                        textarea({
-                            name: 'objective',
-                            value: objective,
-                            onchange: e => {
-                                const txtObjective = e.target as HTMLTextAreaElement;
-                                this.#goals.objective = txtObjective.value.trim();
-                                this.#goalsRepository.update(this.#goals);
-                            }
-                        }, []),
-                        h3('Outcomes'),
-                        p(
-                            'Outcomes are the results of the project that will be achieved by the system.'
-                        ),
-                        textarea({
-                            name: 'outcomes',
-                            value: outcomes,
-                            onchange: e => {
-                                const txtOutcomes = e.target as HTMLTextAreaElement;
-                                this.#goals.outcomes = txtOutcomes.value.trim();
-                                this.#goalsRepository.update(this.#goals);
-                            }
-                        }, [])
-                    ])
-                );
-            });
-        });
+        this.append(
+            form({ class: 'form-rationale', autocomplete: 'off' }, [
+                h3('Situation'),
+                p(
+                    `The situation is the current state of affairs that need to be
+                    addressed by a system created by a project.`
+                ),
+                this.#txtSituation = textarea({ name: 'situation' }),
+                h3('Objective'),
+                p(
+                    `The objective is the reason for building a system and the organization
+                    context in which it will be used.`
+                ),
+                this.#txtObjective = textarea({ name: 'objective' }),
+                h3('Outcomes'),
+                p(
+                    'Outcomes are the results of the project that will be achieved by the system.'
+                ),
+                this.#txtOutcomes = textarea({ name: 'outcomes' })
+            ])
+        );
     }
 
     protected override _initPageStyle() {
@@ -83,5 +50,36 @@ export default class RationalePage extends Page {
                 height: '200px'
             }
         };
+    }
+
+    override async connectedCallback(): Promise<undefined> {
+        await super.connectedCallback();
+
+        this.#txtSituation.onchange = () => {
+            this.interactor.update({
+                ...this.#goals,
+                situation: this.#txtSituation.value.trim()
+            });
+        };
+        this.#txtObjective.onchange = () => {
+            this.interactor.update({
+                ...this.#goals,
+                objective: this.#txtObjective.value.trim()
+            });
+        };
+        this.#txtOutcomes.onchange = () => {
+            this.interactor.update({
+                ...this.#goals,
+                outcomes: this.#txtOutcomes.value.trim()
+            });
+        };
+    }
+
+    override presentItem(goals: Goals): void {
+        const { situation, objective, outcomes } = this.#goals = goals;
+
+        this.#txtSituation.value = situation;
+        this.#txtObjective.value = objective;
+        this.#txtOutcomes.value = outcomes;
     }
 }

@@ -1,13 +1,11 @@
 import type { Properties } from '~/types/Properties.mjs';
-import type { Uuid } from '~/types/Uuid.mjs';
+import type { Uuid } from '~/domain/Uuid.mjs';
 
 /**
  * An entity is an object that is not defined by its attributes,
  * but rather by a thread of continuity represented by its identity (id).
  */
 export default class Entity {
-    static emptyId: Uuid = '00000000-0000-0000-0000-000000000000';
-
     /**
      * The unique identifier of the entity.
      */
