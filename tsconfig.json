@@ -4,6 +4,7 @@
         "declaration": true,
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
+        "incremental": true,
         "lib": [
             "ES2022",
             "DOM",

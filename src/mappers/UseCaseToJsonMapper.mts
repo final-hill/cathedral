@@ -1,26 +1,34 @@
 import UseCase from '~/domain/UseCase.mjs';
 import BehaviorToJsonMapper, { type BehaviorJson } from './BehaviorToJsonMapper.mjs';
-import type { Uuid } from '~/types/Uuid.mjs';
+import StakeholderToJsonMapper, { type StakeholderJson } from './StakeholderToJsonMapper.mjs';
 import SemVer from '~/lib/SemVer.mjs';
 
 export interface UseCaseJson extends BehaviorJson {
-    actor: Uuid;
+    actor: StakeholderJson;
 }
 
 export default class UseCaseToJsonMapper extends BehaviorToJsonMapper {
     override mapFrom(target: UseCaseJson): UseCase {
-        const version = new SemVer(target.serializationVersion);
+        const sVer = target.serializationVersion,
+            version = new SemVer(sVer),
+            stakeholderToJsonMapper = new StakeholderToJsonMapper(sVer);
 
-        if (version.gte('0.3.0'))
-            return new UseCase(target);
+        if (version.gte('0.5.0'))
+            return new UseCase({
+                ...target,
+                actor: stakeholderToJsonMapper.mapFrom(target.actor)
+            });
 
         throw new Error(`Unsupported serialization version: ${version}`);
     }
 
     override mapTo(source: UseCase): UseCaseJson {
+        const sVer = this.serializationVersion,
+            stakeholderToJsonMapper = new StakeholderToJsonMapper(sVer);
+
         return {
             ...super.mapTo(source),
-            actor: source.actor
+            actor: stakeholderToJsonMapper.mapTo(source.actor)
         };
     }
 }

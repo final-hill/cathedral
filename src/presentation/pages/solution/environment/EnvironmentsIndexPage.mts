@@ -1,25 +1,25 @@
 import html from '~/presentation/lib/html.mjs';
-import Page from '~/presentation/pages/Page.mjs';
 import { MiniCards, MiniCard } from '~components/index.mjs';
+import _EnvironmentPage from './_EnvironmentPage.mjs';
+import type Entity from '~/domain/Entity.mjs';
 
 const { p } = html;
 
-export default class EnvironmentsIndexPage extends Page {
+export default class EnvironmentsIndexPage extends _EnvironmentPage {
     static override route = '/:solution/environment';
     static {
         customElements.define('x-page-environments-index', this);
     }
 
     constructor() {
-        super({ title: 'Environments' }, [
+        super({ title: 'Environments' });
+
+        this.append(
             p(`
                 An environment is the set of entities (people, organizations, regulations,
                 devices and other material objects, other systems) external to the project
                 or system but with the potential to affect it or be affected by it.
-            `)
-        ]);
-
-        this.append(
+            `),
             new MiniCards({}, [
                 new MiniCard({
                     title: 'Glossary',
@@ -57,4 +57,8 @@ export default class EnvironmentsIndexPage extends Page {
             ])
         );
     }
+
+    override presentItem(_entity: Entity) { }
+
+    override presentList(_entities: Entity[]) { }
 }

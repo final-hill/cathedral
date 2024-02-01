@@ -1,95 +1,24 @@
 import html from '~/presentation/lib/html.mjs';
-import { DataTable } from '~/presentation/components/DataTable.mjs';
-import Page from '~/presentation/pages/Page.mjs';
-import { Tabs } from '~components/Tabs.mjs';
-import mermaid from 'mermaid';
+import { DataTable, type OptDataColumn, Tabs, UseCaseDiagram } from '~components/index.mjs';
 import UseCase from '~/domain/UseCase.mjs';
-import GoalsRepository from '~/data/GoalsRepository.mjs';
-import StakeholderRepository from '~/data/StakeholderRepository.mjs';
 import type Goals from '~/domain/Goals.mjs';
-import Stakeholder from '~/domain/Stakeholder.mjs';
-import UseCaseRepository from '~/data/UseCaseRepository.mjs';
-import SolutionRepository from '~/data/SolutionRepository.mjs';
-import type { Uuid } from '~/types/Uuid.mjs';
+import _GoalsPage from './_GoalsPage.mjs';
+import type { Uuid } from '~/domain/Uuid.mjs';
 
-const { h2, p, div, br } = html;
+const { h2, p, br } = html;
 
-export default class UseCasesPage extends Page {
+export default class UseCasesPage extends _GoalsPage {
     static override route = '/:solution/goals/use-cases';
     static {
         customElements.define('x-page-use-cases', this);
-        mermaid.initialize({
-            startOnLoad: true,
-            theme: 'dark'
-        });
     }
 
-    #solutionRepository = new SolutionRepository(localStorage);
-    #goalsRepository = new GoalsRepository(localStorage);
-    #stakeholderRepository = new StakeholderRepository(localStorage);
-    #useCaseRepository = new UseCaseRepository(localStorage);
-    #goals?: Goals;
-    #stakeholders: Stakeholder[] = [];
+    #dataTable; #useCaseDiagram;
 
     constructor() {
-        super({ title: 'Use Cases' }, []);
-    }
+        super({ title: 'Use Cases' });
 
-    async connectedCallback() {
-        this.#stakeholders = await this.#stakeholderRepository.getAll();
-
-        const dataTable = new DataTable<UseCase>({
-            columns: {
-                id: { headerText: 'ID', readonly: true, formType: 'hidden' },
-                actor: {
-                    headerText: 'Actor', required: true, formType: 'select',
-                    options: this.#stakeholders.map(x => ({ value: x.id, text: x.name }))
-                },
-                statement: { headerText: 'Use Case', required: true, formType: 'text' }
-            },
-            select: async () => {
-                if (!this.#goals)
-                    return [];
-
-                return this.#useCaseRepository.getAll(u => this.#goals!.useCaseIds.includes(u.id));
-            },
-            onCreate: async item => {
-                const useCase = new UseCase({ ...item, id: self.crypto.randomUUID() });
-                await this.#useCaseRepository.add(useCase);
-                this.#goals!.useCaseIds.push(useCase.id);
-                await this.#goalsRepository.update(this.#goals!);
-            },
-            onUpdate: async item => {
-                await this.#useCaseRepository.update(new UseCase({
-                    ...item
-                }));
-            },
-            onDelete: async id => {
-                await this.#useCaseRepository.delete(id);
-                this.#goals!.useCaseIds = this.#goals!.useCaseIds.filter(x => x !== id);
-                await this.#goalsRepository.update(this.#goals!);
-            }
-        });
-
-        dataTable.slot = 'content';
-
-        const update = async () => {
-            dataTable.renderData();
-            this.#renderUseCaseDiagram();
-        };
-
-        this.#goalsRepository.addEventListener('update', update);
-        this.#stakeholderRepository.addEventListener('update', update);
-
-        const solutionId = this.urlParams['solution'] as Uuid;
-        this.#solutionRepository.getBySlug(solutionId)
-            .then(solution => this.#goalsRepository.get(solution!.goalsId))
-            .then(goals => { this.#goals = goals; })
-            .then(update);
-
-        this.#useCaseRepository.addEventListener('update', update);
-
-        this.replaceChildren(
+        this.append(
             p([`
                 A use case is a list of related steps that actors perform to achieve a goal
                 or to complete a scenario. On this page, you can define the use cases that
@@ -102,26 +31,59 @@ export default class UseCasesPage extends Page {
             ]),
             new Tabs({ selectedIndex: 0 }, [
                 h2({ slot: 'tab' }, 'Use Cases'),
-                dataTable,
+                this.#dataTable = new DataTable<Omit<UseCase, 'actor'> & { actorId: Uuid }>({
+                    slot: 'content',
+                    columns: {
+                        id: { headerText: 'ID', readonly: true, formType: 'hidden' },
+                        actorId: {
+                            headerText: 'Actor', required: true, formType: 'select',
+                            options: [] // computed in presentItem method
+                        },
+                        statement: { headerText: 'Use Case', required: true, formType: 'text' }
+                    },
+                    onCreate: async ({ actorId, statement }) => {
+                        await this.interactor.createUseCase({
+                            goalsId: this.goalsId,
+                            actorId,
+                            statement
+                        });
+                        await this.interactor.presentItem(this.goalsId);
+                    },
+                    onUpdate: async ({ id, actorId, statement }) => {
+                        await this.interactor.updateUseCase({
+                            goalsId: this.goalsId,
+                            id,
+                            actorId,
+                            statement
+                        });
+                        await this.interactor.presentItem(this.goalsId);
+                    },
+                    onDelete: async id => {
+                        await this.interactor.deleteUseCase({
+                            goalsId: this.goalsId,
+                            id
+                        });
+                        await this.interactor.presentItem(this.goalsId);
+                    }
+                }),
                 h2({ slot: 'tab' }, 'Diagram'),
-                div({ id: 'mermaid-container', slot: 'content' }, []),
+                this.#useCaseDiagram = new UseCaseDiagram({
+                    slot: 'content'
+                })
             ])
         );
     }
 
-    async #renderUseCaseDiagram() {
-        const mermaidContainer = this.querySelector('#mermaid-container')!,
-            useCases = await this.#useCaseRepository.getAll(u => this.#goals!.useCaseIds.includes(u.id)),
-            chartDefinition = `
-            flowchart LR
-            ${useCases.map(u => {
-                const actor = this.#stakeholders.find(s => s.id === u.actor)!;
+    override async presentItem(goals: Goals) {
+        const actorColumn = this.#dataTable.columns.actorId! as OptDataColumn;
+        actorColumn.options = goals.stakeholders.map(a => ({ value: a.id, text: a.name }));
 
-                return `${actor.id}("#128100;<br>${actor.name}") --> ${u.id}["${u.statement}"]`;
-            }).join('\n')}
-            `,
-            { svg } = await mermaid.render('diagram', chartDefinition);
+        await this.#dataTable.presentList(goals.useCases.map(useCase => {
+            // @ts-expect-error : hack to convert actor to actorId
+            useCase.actorId = useCase.actor.id;
 
-        mermaidContainer.innerHTML = svg;
+            return useCase as unknown as Omit<UseCase, 'actor'> & { actorId: Uuid };
+        }));
+        await this.#useCaseDiagram.presentList(goals.useCases);
     }
 }

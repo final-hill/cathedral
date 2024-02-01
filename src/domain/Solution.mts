@@ -1,5 +1,5 @@
 import type { Properties } from '~/types/Properties.mjs';
-import type { Uuid } from '~/types/Uuid.mjs';
+import type { Uuid } from '~/domain/Uuid.mjs';
 import SlugEntity from './SlugEntity.mjs';
 
 export default class Solution extends SlugEntity {
@@ -8,8 +8,8 @@ export default class Solution extends SlugEntity {
     goalsId!: Uuid;
     systemId!: Uuid;
 
-    constructor(options: Properties<Solution>) {
-        super(options);
-        Object.assign(this, options);
+    constructor({ id, name, description, ...rest }: Properties<Solution>) {
+        super({ id, name, description });
+        Object.assign(this, rest);
     }
 }

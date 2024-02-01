@@ -4,7 +4,7 @@ import { Component } from './index.mjs';
 import type { Theme } from '~/types/Theme.mjs';
 
 export abstract class Container extends Component {
-    constructor(properties: Properties<Container>, children: (Element | string)[] = []) {
+    constructor(properties: Partial<Properties<Container>>, children: (Element | string)[] = []) {
         super(properties);
 
         this.append(...children);

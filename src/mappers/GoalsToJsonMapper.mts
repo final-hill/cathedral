@@ -1,42 +1,58 @@
-import type { Uuid } from '~/types/Uuid.mjs';
 import EntityToJsonMapper, { type EntityJson } from './EntityToJsonMapper.mjs';
 import Goals from '~/domain/Goals.mjs';
 import SemVer from '~/lib/SemVer.mjs';
+import BehaviorToJsonMapper, { type BehaviorJson } from './BehaviorToJsonMapper.mjs';
+import UseCaseToJsonMapper, { type UseCaseJson } from './UseCaseToJsonMapper.mjs';
+import StakeholderToJsonMapper, { type StakeholderJson } from './StakeholderToJsonMapper.mjs';
+import LimitToJsonMapper, { type LimitJson } from './LimitToJsonMapper.mjs';
 
 export interface GoalsJson extends EntityJson {
-    functionalBehaviorIds: Uuid[];
+    functionalBehaviors: BehaviorJson[];
     objective: string;
     outcomes: string;
     situation: string;
-    stakeholderIds: Uuid[];
-    useCaseIds: Uuid[];
-    limitIds: Uuid[];
+    stakeholders: StakeholderJson[];
+    useCases: UseCaseJson[];
+    limits: LimitJson[];
 }
 
 export default class GoalsToJsonMapper extends EntityToJsonMapper {
     override mapFrom(target: GoalsJson): Goals {
-        const version = new SemVer(target.serializationVersion);
+        const sVer = target.serializationVersion,
+            version = new SemVer(sVer),
+            useCaseToJsonMapper = new UseCaseToJsonMapper(sVer),
+            limitToJsonMapper = new LimitToJsonMapper(sVer),
+            stakeholderToJsonMapper = new StakeholderToJsonMapper(sVer),
+            behaviorToJsonMapper = new BehaviorToJsonMapper(sVer);
 
         if (version.gte('0.3.0'))
             return new Goals({
                 ...target,
-                useCaseIds: target.useCaseIds ?? [],
-                limitIds: target.limitIds ?? []
+                functionalBehaviors: (target.functionalBehaviors ?? []).map(behaviorToJsonMapper.mapFrom),
+                stakeholders: (target.stakeholders ?? []).map(stakeholderToJsonMapper.mapFrom),
+                useCases: (target.useCases ?? []).map(useCaseToJsonMapper.mapFrom),
+                limits: (target.limits ?? []).map(limitToJsonMapper.mapFrom)
             });
 
         throw new Error(`Unsupported serialization version: ${version}`);
     }
 
     override mapTo(source: Goals): GoalsJson {
+        const sVer = this.serializationVersion,
+            useCaseToJsonMapper = new UseCaseToJsonMapper(sVer),
+            limitToJsonMapper = new LimitToJsonMapper(sVer),
+            stakeholderToJsonMapper = new StakeholderToJsonMapper(sVer),
+            behaviorToJsonMapper = new BehaviorToJsonMapper(sVer);
+
         return {
             ...super.mapTo(source),
-            functionalBehaviorIds: source.functionalBehaviorIds,
+            functionalBehaviors: source.functionalBehaviors.map(item => behaviorToJsonMapper.mapTo(item)),
             objective: source.objective,
             outcomes: source.outcomes,
             situation: source.situation,
-            stakeholderIds: source.stakeholderIds,
-            useCaseIds: source.useCaseIds,
-            limitIds: source.limitIds
+            stakeholders: source.stakeholders.map(item => stakeholderToJsonMapper.mapTo(item)),
+            useCases: source.useCases.map(item => useCaseToJsonMapper.mapTo(item)),
+            limits: source.limits.map(item => limitToJsonMapper.mapTo(item))
         };
     }
 }

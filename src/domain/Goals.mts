@@ -1,6 +1,9 @@
 import type { Properties } from '~/types/Properties.mjs';
-import type { Uuid } from '~/types/Uuid.mjs';
 import Entity from './Entity.mjs';
+import type Behavior from './Behavior.mjs';
+import type Stakeholder from './Stakeholder.mjs';
+import type UseCase from './UseCase.mjs';
+import type Limit from './Limit.mjs';
 
 /**
  * Goals are the needs and wants of an organization.
@@ -11,22 +14,16 @@ export default class Goals extends Entity {
      * Functional behaviors specify what results or effects are expected from the system.
      * They specify "what" the system should do, not "how" it should do it.
      */
-    functionalBehaviorIds: Uuid[];
-    objective: string;
-    outcomes: string;
-    stakeholderIds: Uuid[];
-    situation: string;
-    useCaseIds: Uuid[];
-    limitIds: Uuid[];
+    functionalBehaviors!: Behavior[];
+    objective!: string;
+    outcomes!: string;
+    stakeholders!: Stakeholder[];
+    situation!: string;
+    useCases!: UseCase[];
+    limits!: Limit[];
 
-    constructor(options: Properties<Goals>) {
-        super(options);
-        this.functionalBehaviorIds = options.functionalBehaviorIds;
-        this.objective = options.objective;
-        this.outcomes = options.outcomes;
-        this.stakeholderIds = options.stakeholderIds;
-        this.situation = options.situation;
-        this.useCaseIds = options.useCaseIds;
-        this.limitIds = options.limitIds;
+    constructor({ id, ...rest }: Properties<Goals>) {
+        super({ id });
+        Object.assign(this, rest);
     }
 }

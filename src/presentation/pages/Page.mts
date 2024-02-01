@@ -4,13 +4,13 @@ import buttonTheme from '~/presentation/theme/buttonTheme.mjs';
 import { Container } from '~components/index.mjs';
 import type { Theme } from '~/types/Theme.mjs';
 
-export default class Page extends Container {
+export default abstract class Page extends Container {
     static route = '{undefined}';
 
     urlParams;
 
-    constructor(properties: Exclude<Properties<Page>, 'urlParams'>, children: (Element | string)[]) {
-        super(properties, children);
+    constructor(properties: Exclude<Partial<Properties<Page>>, 'urlParams'>) {
+        super(properties);
 
         const url = new URL(location.href, document.location.origin),
             pattern = (this.constructor as typeof Page).route.split('/'),
@@ -51,6 +51,8 @@ export default class Page extends Container {
         document.title = value;
         super.title = value;
     }
+
+    connectedCallback() { }
 
     disconnectedCallback() {
         const styleElement = document.querySelector(`#${this.tagName}-style`);

@@ -4,10 +4,10 @@ import type { Properties } from '~/types/Properties.mjs';
 
 export class MiniCards extends Container {
     static {
-        customElements.define('mini-cards', this);
+        customElements.define('x-mini-cards', this);
     }
 
-    constructor(properties: Properties<MiniCards>, children: (Element | string)[]) {
+    constructor(properties: Partial<Properties<MiniCards>>, children: (Element | string)[]) {
         super(properties, children);
     }
 

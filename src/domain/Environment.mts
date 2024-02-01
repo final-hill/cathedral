@@ -1,6 +1,11 @@
-import type { Uuid } from '~/types/Uuid.mjs';
 import Entity from './Entity.mjs';
 import type { Properties } from '~/types/Properties.mjs';
+import type Component from './Component.mjs';
+import type Effect from './Effect.mjs';
+import type Assumption from './Assumption.mjs';
+import type Invariant from './Invariant.mjs';
+import type Constraint from './Constraint.mjs';
+import type GlossaryTerm from './GlossaryTerm.mjs';
 
 /**
  * The set of entities (people, organizations, regulations, devices and other material objects, other systems)
@@ -10,20 +15,15 @@ import type { Properties } from '~/types/Properties.mjs';
  * system operates.
  */
 export default class Environment extends Entity {
-    glossaryIds: Uuid[];
-    constraintIds: Uuid[];
-    invariantIds: Uuid[];
-    assumptionIds: Uuid[];
-    effectIds: Uuid[];
-    componentIds: Uuid[];
+    glossaryTerms!: GlossaryTerm[];
+    constraints!: Constraint[];
+    invariants!: Invariant[];
+    assumptions!: Assumption[];
+    effects!: Effect[];
+    components!: Component[];
 
-    constructor(options: Properties<Environment>) {
-        super(options);
-        this.glossaryIds = options.glossaryIds;
-        this.constraintIds = options.constraintIds;
-        this.invariantIds = options.invariantIds;
-        this.assumptionIds = options.assumptionIds;
-        this.effectIds = options.effectIds;
-        this.componentIds = options.componentIds;
+    constructor({ id, ...rest }: Properties<Environment>) {
+        super({ id });
+        Object.assign(this, rest);
     }
 }

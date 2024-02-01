@@ -1,6 +1,6 @@
 import type { Properties } from '~/types/Properties.mjs';
-import type { Uuid } from '~/types/Uuid.mjs';
 import Behavior from './Behavior.mjs';
+import type Stakeholder from './Stakeholder.mjs';
 
 /**
  * A Use Case specifies a scenario of a complete interaction of an actor with a system.
@@ -9,11 +9,11 @@ export default class UseCase extends Behavior {
     /**
      * The actor that is involved in the use case.
      */
-    actor: Uuid;
+    actor: Stakeholder;
 
-    constructor(properties: Properties<UseCase>) {
-        super(properties);
+    constructor({ actor, ...rest }: Properties<UseCase>) {
+        super(rest);
 
-        this.actor = properties.actor;
+        this.actor = actor;
     }
 }

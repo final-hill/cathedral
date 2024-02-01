@@ -6,14 +6,12 @@ import Requirement from './Requirement.mjs';
  * which can be used by a System to interact with.
  */
 export default class Component extends Requirement {
-    name: string;
-    description: string;
+    name!: string;
+    description!: string;
 
-    constructor(properties: Omit<Properties<Component>, 'interfaceDefinition'>) {
-        super(properties);
-
-        this.name = properties.name;
-        this.description = properties.description;
+    constructor({ name, description, ...rest }: Omit<Properties<Component>, 'interfaceDefinition'>) {
+        super(rest);
+        Object.assign(this, { name, description });
     }
 
     get interfaceDefinition(): string {

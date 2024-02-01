@@ -4,26 +4,27 @@ import html, { renderIf } from '../lib/html.mjs';
 import { Component } from './Component.mjs';
 import buttonTheme from '../theme/buttonTheme.mjs';
 import formTheme from '../theme/formTheme.mjs';
+import type Presenter from '~/application/Presenter.mjs';
 
-interface BaseDataColumn {
+export interface BaseDataColumn {
     readonly?: boolean;
     headerText: string;
     required?: boolean;
     unique?: boolean;
 }
 
-interface TextHiddenDataColumn {
+export interface TextHiddenDataColumn {
     formType: 'text' | 'hidden' | 'textarea';
 }
 
-interface NumberRangeDataColumn {
+export interface NumberRangeDataColumn {
     formType: 'number' | 'range';
     min: number;
     max: number;
     step: number;
 }
 
-interface OptDataColumn {
+export interface OptDataColumn {
     formType: 'select';
     options: { value: string; text: string }[];
 }
@@ -35,26 +36,21 @@ export type DataColumns<T extends Entity> =
     { id: DataColumn }
     & { [K in keyof Partial<Properties<T>>]: DataColumn };
 
-export interface DataTableOptions<T extends Entity> {
-    columns?: DataColumns<T>;
-    select?: () => Promise<T[]>;
-    onCreate?: (item: Omit<Properties<T>, 'id'>) => Promise<void>;
-    onUpdate?: (item: Properties<T>) => Promise<void>;
-    onDelete?: (id: T['id']) => Promise<void>;
-}
-
 const show = ((item: HTMLElement) => item.hidden = false),
     hide = ((item: HTMLElement) => item.hidden = true),
     disable = ((item: HTMLInputElement | HTMLSelectElement) => item.disabled = true),
     enable = ((item: HTMLInputElement | HTMLSelectElement) => item.disabled = false),
     { button, caption, form, input, option, select, span, table, textarea, tbody, td, template, th, thead, tr } = html;
 
-export class DataTable<T extends Entity> extends Component {
+export class DataTable<T extends Entity> extends Component implements Presenter<T> {
     static {
         customElements.define('x-data-table', this);
     }
 
-    #columns; #select; #onCreate; #onUpdate; #onDelete;
+    #columns: DataColumns<T>;
+    #onCreate: (item: Omit<Properties<T>, 'id'>) => Promise<void>;
+    #onUpdate: (item: Properties<T>) => Promise<void>;
+    #onDelete: (id: T['id']) => Promise<void>;
     #frmDataTableCreate = this.shadowRoot!.querySelector<HTMLFormElement>('#frmDataTableCreate')!;
     #frmDataTableUpdate = this.shadowRoot!.querySelector<HTMLFormElement>('#frmDataTableUpdate')!;
     #frmDataTableDelete = this.shadowRoot!.querySelector<HTMLFormElement>('#frmDataTableDelete')!;
@@ -64,18 +60,16 @@ export class DataTable<T extends Entity> extends Component {
     #dataEmptyTd = this.shadowRoot!.querySelector<HTMLTableCellElement>('.data-empty td')!;
     #newItemRow = this.shadowRoot!.querySelector<HTMLTableRowElement>('.new-item-row')!;
 
-    constructor({ columns, select, onCreate, onDelete, onUpdate }: DataTableOptions<T>) {
-        super({});
+    constructor(
+        { columns, onCreate, onUpdate, onDelete, ...rest }: Partial<Properties<DataTable<T>>>
+            & Pick<DataTable<T>, 'columns' | 'onCreate' | 'onUpdate' | 'onDelete'>
+    ) {
+        super(rest);
 
         this.#columns = Object.freeze(columns ?? {} as DataColumns<T>);
-        this.#select = select ?? (() => Promise.resolve([]));
         this.#onCreate = onCreate;
         this.#onDelete = onDelete;
         this.#onUpdate = onUpdate;
-
-        this.#frmDataTableCreate.addEventListener('submit', e => this._onCreate(e));
-        this.#frmDataTableUpdate.addEventListener('submit', e => this._onUpdate(e));
-        this.#frmDataTableDelete.addEventListener('submit', e => this._onDelete(e));
     }
 
     get columns() {
@@ -83,46 +77,19 @@ export class DataTable<T extends Entity> extends Component {
     }
     set columns(value) {
         this.#columns = Object.freeze(value);
-        this.renderData();
     }
 
-    get select() {
-        return this.#select;
-    }
-    set select(value) {
-        this.#select = value;
-        this.renderData();
-    }
+    get onCreate() { return this.#onCreate; }
+    set onCreate(value) { this.#onCreate = value; }
 
-    get onCreate() {
-        return this.#onCreate;
-    }
-    set onCreate(value) {
-        this.#onCreate = value;
-        this.#frmDataTableCreate.hidden = !value;
-        this.#newItemRow.parentElement!.hidden = !value;
-        this.renderData();
-    }
+    get onDelete() { return this.#onDelete; }
+    set onDelete(value) { this.#onDelete = value; }
 
-    get onUpdate() {
-        return this.#onUpdate;
-    }
-    set onUpdate(value) {
-        this.#onUpdate = value;
-        this.#frmDataTableUpdate.hidden = !value;
-        this.renderData();
-    }
+    get onUpdate() { return this.#onUpdate; }
+    set onUpdate(value) { this.#onUpdate = value; }
 
-    get onDelete() {
-        return this.#onDelete;
-    }
-    set onDelete(value) {
-        this.#onDelete = value;
-        this.renderData();
-    }
-
-    protected _isUnique(columns: Readonly<DataColumns<T>>, item: Omit<Properties<T>, 'id'>): boolean {
-        return Object.entries(columns).every(([id, col]) => {
+    protected _isUnique(item: Omit<Properties<T>, 'id'>): boolean {
+        return Object.entries(this.#columns).every(([id, col]) => {
             if (!col.unique || id == 'id')
                 return true;
             const namedInputs = Array.from(this.#dataRows.querySelectorAll<HTMLInputElement>(`[name="${id}"]`));
@@ -136,34 +103,33 @@ export class DataTable<T extends Entity> extends Component {
         const form = e.target as HTMLFormElement,
             formData = new FormData(form),
             item = Object.fromEntries(formData.entries()) as Omit<Properties<T>, 'id'>;
-        if (!this._isUnique(this.#columns, item)) {
+        if (!this._isUnique(item)) {
             alert('The entry must be unique.');
         } else {
             form.reset();
-            await this.onCreate?.(item);
+            await this.#onCreate?.(item);
             // focus on the first non-hidden input in the new item row
             this.#newItemRow.querySelector<HTMLInputElement>('td:not([hidden]) input')?.focus();
         }
     }
 
-    protected _onUpdate(e: SubmitEvent) {
+    protected async _onUpdate(e: SubmitEvent) {
         e.preventDefault();
         const form = e.target as HTMLFormElement,
             formData = new FormData(form),
             item = Object.fromEntries(formData.entries()) as Properties<T>;
-        if (!this._isUnique(this.#columns, item))
+        if (!this._isUnique(item))
             alert('The entry must be unique.');
         else
-            // this._cancelEdit(e.submitter as HTMLButtonElement);
-            this.onUpdate?.(item);
+            await this.#onUpdate?.(item);
     }
 
-    protected _onDelete(e: SubmitEvent) {
+    protected async _onDelete(e: SubmitEvent) {
         e.preventDefault();
         const id = (e.submitter as HTMLButtonElement).value as T['id'];
 
         if (confirm(`Are you sure you want to delete item ${id}?`))
-            this.onDelete?.(id);
+            await this.#onDelete?.(id);
     }
 
     protected override _initShadowStyle() {
@@ -288,7 +254,23 @@ export class DataTable<T extends Entity> extends Component {
         editButtons.forEach(show);
     }
 
-    async renderData() {
+    connectedCallback() {
+        this.#frmDataTableCreate.onsubmit = e => this._onCreate(e);
+        this.#frmDataTableUpdate.onsubmit = e => this._onUpdate(e);
+        this.#frmDataTableDelete.onsubmit = e => this._onDelete(e);
+    }
+
+    disconnectedCallback() {
+        this.#frmDataTableCreate.onsubmit = null;
+        this.#frmDataTableUpdate.onsubmit = null;
+        this.#frmDataTableDelete.onsubmit = null;
+    }
+
+    async presentItem(data: T): Promise<void> {
+        this.presentList([data]);
+    }
+
+    async presentList(data: T[]): Promise<void> {
         this.#dataEmptyTd.colSpan = Object.keys(this.#columns).length;
 
         this.#dataHeaderTr.replaceChildren(
@@ -347,89 +329,88 @@ export class DataTable<T extends Entity> extends Component {
             form: this.#frmDataTableCreate
         }, 'Add')));
 
-        const dataItems = await this.select(),
-            tRows = dataItems.map(item => tr([
-                ...Object.entries(this.#columns).map(([id, col]) => {
-                    const colOptions = ((col as OptDataColumn).options ?? []).map(opt => option({
-                        value: opt.value,
-                        defaultSelected: opt.value == (item as any)[id]
-                    }, opt.text));
+        const dataRows = data.map(item => tr([
+            ...Object.entries(this.#columns).map(([id, col]) => {
+                const colOptions = ((col as OptDataColumn).options ?? []).map(opt => option({
+                    value: opt.value,
+                    defaultSelected: opt.value == (item as any)[id]
+                }, opt.text));
 
-                    return td({
-                        className: 'data-cell',
-                        hidden: col.formType == 'hidden'
-                    }, [
-                        input({
-                            [renderIf]: col.formType == 'text' || col.formType == 'hidden',
-                            form: this.#frmDataTableUpdate,
-                            type: 'text',
-                            disabled: true,
-                            required: col.required,
-                            name: id,
-                            defaultValue: (item as any)[id]
-                        }, []),
-                        textarea({
-                            [renderIf]: col.formType == 'textarea',
-                            form: this.#frmDataTableUpdate,
-                            name: id,
-                            disabled: true,
-                            required: col.required,
-                            defaultValue: (item as any)[id]
-                        }, []),
-                        input({
-                            form: this.#frmDataTableUpdate,
-                            type: col.formType,
-                            name: id,
-                            min: `${(col as NumberRangeDataColumn).min ?? 0}`,
-                            max: `${(col as NumberRangeDataColumn).max ?? 0}`,
-                            step: `${(col as NumberRangeDataColumn).step ?? 1}`,
-                            disabled: true,
-                            [renderIf]: col.formType == 'number' || col.formType == 'range',
-                            defaultValue: (item as any)[id]
-                        }),
-                        select({
-                            form: this.#frmDataTableUpdate,
-                            name: id,
-                            disabled: true,
-                            [renderIf]: col.formType == 'select'
-                        },
-                            colOptions
-                        )
-                    ]);
-                }),
-                td({
-                    className: 'button-cell',
+                return td({
+                    className: 'data-cell',
+                    hidden: col.formType == 'hidden'
                 }, [
-                    button({
-                        className: 'view-data edit-button',
-                        onclick: e => this._editRow(e),
-                        [renderIf]: Boolean(this.onUpdate)
-                    }, 'Edit'),
-                    button({
-                        form: this.#frmDataTableDelete,
-                        className: 'view-data delete-button',
-                        name: 'item-id',
-                        [renderIf]: Boolean(this.onDelete),
-                        value: item.id
-                    }, 'Delete'),
-                    button({
+                    input({
+                        [renderIf]: col.formType == 'text' || col.formType == 'hidden',
                         form: this.#frmDataTableUpdate,
-                        className: 'edit-data save-button',
-                        type: 'submit',
-                        hidden: true,
-                        [renderIf]: Boolean(this.onUpdate)
-                    }, 'Save'),
-                    button({
-                        className: 'edit-data cancel-button',
-                        onclick: e => this._cancelEdit(e.target as HTMLButtonElement),
-                        hidden: true,
-                        [renderIf]: Boolean(this.onUpdate)
-                    }, 'Cancel')
-                ]),
-            ].filter(Boolean)));
+                        type: 'text',
+                        disabled: id !== 'id', // if disabled, it won't be submitted
+                        required: col.required,
+                        name: id,
+                        defaultValue: (item as any)[id]
+                    }, []),
+                    textarea({
+                        [renderIf]: col.formType == 'textarea',
+                        form: this.#frmDataTableUpdate,
+                        name: id,
+                        disabled: true,
+                        required: col.required,
+                        defaultValue: (item as any)[id]
+                    }, []),
+                    input({
+                        form: this.#frmDataTableUpdate,
+                        type: col.formType,
+                        name: id,
+                        min: `${(col as NumberRangeDataColumn).min ?? 0}`,
+                        max: `${(col as NumberRangeDataColumn).max ?? 0}`,
+                        step: `${(col as NumberRangeDataColumn).step ?? 1}`,
+                        disabled: true,
+                        [renderIf]: col.formType == 'number' || col.formType == 'range',
+                        defaultValue: (item as any)[id]
+                    }),
+                    select({
+                        form: this.#frmDataTableUpdate,
+                        name: id,
+                        disabled: true,
+                        [renderIf]: col.formType == 'select'
+                    },
+                        colOptions
+                    )
+                ]);
+            }),
+            td({
+                className: 'button-cell',
+            }, [
+                button({
+                    className: 'view-data edit-button',
+                    onclick: e => this._editRow(e),
+                    [renderIf]: Boolean(this.#onUpdate)
+                }, 'Edit'),
+                button({
+                    form: this.#frmDataTableDelete,
+                    className: 'view-data delete-button',
+                    name: 'item-id',
+                    [renderIf]: Boolean(this.#onDelete),
+                    value: item.id
+                }, 'Delete'),
+                button({
+                    form: this.#frmDataTableUpdate,
+                    className: 'edit-data save-button',
+                    type: 'submit',
+                    hidden: true,
+                    [renderIf]: Boolean(this.#onUpdate)
+                }, 'Save'),
+                button({
+                    className: 'edit-data cancel-button',
+                    onclick: e => this._cancelEdit(e.target as HTMLButtonElement),
+                    hidden: true,
+                    [renderIf]: Boolean(this.#onUpdate)
+                }, 'Cancel')
+            ]),
+        ].filter(Boolean)));
 
-        this.#dataRows.replaceChildren(...tRows);
-        this.#dataRows.hidden = dataItems.length == 0;
-        this.#dataEmpty.hidden = dataItems.length > 0;
+        this.#dataRows.replaceChildren(...dataRows);
+        this.#dataRows.hidden = data.length == 0;
+        this.#dataEmpty.hidden = data.length > 0;
     }
 }

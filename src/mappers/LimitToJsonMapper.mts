@@ -4,7 +4,7 @@ import SemVer from '~/lib/SemVer.mjs';
 
 export interface LimitJson extends RequirementJson { }
 
-export default class BehaviorToJsonMapper extends RequirementToJsonMapper {
+export default class LimitToJsonMapper extends RequirementToJsonMapper {
     override mapFrom(target: LimitJson): Limit {
         const version = new SemVer(target.serializationVersion);
 

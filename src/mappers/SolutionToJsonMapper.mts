@@ -1,4 +1,4 @@
-import type { Uuid } from '~/types/Uuid.mjs';
+import type { Uuid } from '~/domain/Uuid.mjs';
 import type { EntityJson } from './EntityToJsonMapper.mjs';
 import EntityToJsonMapper from './EntityToJsonMapper.mjs';
 import Solution from '~/domain/Solution.mjs';

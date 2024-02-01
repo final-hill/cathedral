@@ -19,20 +19,20 @@ export class Tabs extends Container {
         ];
     }
 
-    #direction!: TabDirection;
-    #selectedIndex!: number;
     #tabSlot: HTMLSlotElement = this.shadowRoot.querySelector('#tab-slot')!;
     #contentSlot: HTMLSlotElement = this.shadowRoot.querySelector('#content-slot')!;
     #tabs = this.#tabSlot.assignedElements();
     #contents = this.#contentSlot.assignedElements();
 
-    constructor({ direction, selectedIndex, ...properties }: Properties<Tabs>, children: (string | Element)[]) {
+    constructor(
+        properties: Partial<Properties<Tabs>>,
+        children: (string | Element)[]
+    ) {
         super(properties, children);
 
-        this.direction = direction ?? 'vertical';
-        this.selectedIndex = selectedIndex ?? 0;
+        this.direction = properties.direction ?? 'vertical';
 
-        [this.#tabs, this.#contents].forEach(e => e[selectedIndex].classList.add('selected'));
+        [this.#tabs, this.#contents].forEach(e => e[this.selectedIndex].classList.add('selected'));
 
         Object.assign(this.#tabSlot, {
             onclick: (e: Event) => this.onTabClick(e),
@@ -43,20 +43,18 @@ export class Tabs extends Container {
     }
 
     get direction(): TabDirection {
-        return this.#direction;
+        return this.getAttribute('direction') as TabDirection ?? 'vertical';
     }
 
     set direction(value: TabDirection) {
-        this.#direction = value;
         this.setAttribute('direction', value);
     }
 
     get selectedIndex() {
-        return this.#selectedIndex;
+        return Number(this.getAttribute('selected-index')) ?? 0;
     }
 
     set selectedIndex(value: number) {
-        this.#selectedIndex = value;
         this.setAttribute('selected-index', value.toString());
     }
 

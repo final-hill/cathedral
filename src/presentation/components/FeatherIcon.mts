@@ -1,7 +1,7 @@
 import { Component } from './index.mjs';
 import type { FeatherIconName } from '~/types/FeatherIconName.mjs';
 import html from '../lib/html.mjs';
-// @ts-ignore
+// @ts-ignore : no type definition for the svg file
 import svgPath from 'feather-icons/dist/feather-sprite.svg';
 import type { Properties } from '~/types/Properties.mjs';
 
@@ -16,9 +16,9 @@ export class FeatherIcon extends Component {
         return ['icon'];
     }
 
-    constructor(properties: Properties<FeatherIcon>) {
-        super(properties);
-    }
+    constructor(properties: Partial<Properties<FeatherIcon>>
+        & Pick<Properties<FeatherIcon>, 'icon'>
+    ) { super(properties); }
 
     protected override _initShadowStyle() {
         return {

@@ -10,8 +10,10 @@ export default class ProjectsIndexPage extends Page {
     }
 
     constructor() {
-        super({ title: 'Projects' }, [
+        super({ title: 'Projects' });
+
+        this.append(
             p('{Projects}')
-        ]);
+        );
     }
 }

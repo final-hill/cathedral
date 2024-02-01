@@ -1,6 +1,6 @@
 import type SlugEntity from '~/domain/SlugEntity.mjs';
 import StorageRepository from './StorageRepository.mjs';
-import type Mapper from '~/usecases/Mapper.mjs';
+import type Mapper from '~/application/Mapper.mjs';
 import type { EntityJson } from '~/mappers/EntityToJsonMapper.mjs';
 
 export default abstract class SlugRepository<E extends SlugEntity> extends StorageRepository<E> {

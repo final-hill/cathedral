@@ -14,19 +14,16 @@ export enum StakeholderCategory {
 }
 
 export default class Stakeholder extends Entity {
-    description: string;
-    name: string;
-    segmentation: StakeholderSegmentation;
+    description!: string;
+    name!: string;
+    segmentation!: StakeholderSegmentation;
+
     #influence!: number;
     #availability!: number;
 
-    constructor(properties: Omit<Properties<Stakeholder>, 'category'>) {
-        super({ id: properties.id });
-        this.description = properties.description;
-        this.name = properties.name;
-        this.segmentation = properties.segmentation;
-        this.influence = properties.influence;
-        this.availability = properties.availability;
+    constructor({ id, ...rest }: Omit<Properties<Stakeholder>, 'category'>) {
+        super({ id });
+        Object.assign(this, rest);
     }
 
     get influence() {
@@ -51,13 +48,12 @@ export default class Stakeholder extends Entity {
     }
 
     get category(): StakeholderCategory {
-        if (this.influence >= 75 && this.availability >= 75)
-            return StakeholderCategory.KeyStakeholder;
-        if (this.influence >= 75 && this.availability < 75)
-            return StakeholderCategory.ShadowInfluencer;
-        if (this.influence < 75 && this.availability >= 75)
-            return StakeholderCategory.FellowTraveler;
+        const { KeyStakeholder, ShadowInfluencer, FellowTraveler, Observer } = StakeholderCategory,
+            { influence, availability } = this;
 
-        return StakeholderCategory.Observer;
+        return influence >= 75 && availability >= 75 ? KeyStakeholder
+            : influence >= 75 && availability < 75 ? ShadowInfluencer
+                : influence < 75 && availability >= 75 ? FellowTraveler
+                    : Observer;
     }
 }

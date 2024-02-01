@@ -6,7 +6,7 @@ export default abstract class Repository<E extends Entity> extends EventTarget {
         readonly mapper: Mapper<E, any>
     ) { super(); }
 
-    abstract getAll(): Promise<E[]>;
+    abstract getAll(filter?: (entity: E) => boolean): Promise<E[]>;
 
     abstract get(id: E['id']): Promise<E | undefined>;
 
