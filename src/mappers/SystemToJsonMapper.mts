@@ -10,9 +10,7 @@ export default class SystemToJsonMapper extends EntityToJsonMapper {
         const version = new SemVer(target.serializationVersion);
 
         if (version.gte('0.4.0'))
-            return new System({
-                ...target
-            });
+            return new System(target);
 
         throw new Error(`Unsupported serialization version: ${version}`);
     }
