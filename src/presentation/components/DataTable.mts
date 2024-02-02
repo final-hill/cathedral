@@ -88,7 +88,7 @@ export class DataTable<T extends Entity> extends Component implements Presenter<
     get onUpdate() { return this.#onUpdate; }
     set onUpdate(value) { this.#onUpdate = value; }
 
-    protected _isUnique(item: Omit<Properties<T>, 'id'>): boolean {
+    protected _isUnique(item: Partial<Properties<T>>): boolean {
         return Object.entries(this.#columns).every(([id, col]) => {
             if (!col.unique || id == 'id')
                 return true;
@@ -103,7 +103,7 @@ export class DataTable<T extends Entity> extends Component implements Presenter<
         const form = e.target as HTMLFormElement,
             formData = new FormData(form),
             item = Object.fromEntries(formData.entries()) as Omit<Properties<T>, 'id'>;
-        if (!this._isUnique(item)) {
+        if (!this._isUnique(item as Partial<Properties<T>>)) {
             alert('The entry must be unique.');
         } else {
             form.reset();
@@ -118,10 +118,7 @@ export class DataTable<T extends Entity> extends Component implements Presenter<
         const form = e.target as HTMLFormElement,
             formData = new FormData(form),
             item = Object.fromEntries(formData.entries()) as Properties<T>;
-        if (!this._isUnique(item))
-            alert('The entry must be unique.');
-        else
-            await this.#onUpdate?.(item);
+        await this.#onUpdate?.(item);
     }
 
     protected async _onDelete(e: SubmitEvent) {
