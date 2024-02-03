@@ -4,7 +4,6 @@ export { Breadcrumb } from './BreadCrumb.mjs';
 export { DataTable, type OptDataColumn } from './DataTable.mjs';
 export { FeatherIcon } from './FeatherIcon.mjs';
 export { GlobalNav } from './GlobalNav.mjs';
-export { MiniCard } from './MiniCard.mjs';
 export { MiniCards } from './MiniCards.mjs';
 export { PegsCard } from './PegsCard.mjs';
 export { PegsCards, type PegsCardsDeleteEvent } from './PegsCards.mjs';

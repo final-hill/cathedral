@@ -1,5 +1,5 @@
 import html from '~/presentation/lib/html.mjs';
-import { MiniCards, MiniCard } from '~components/index.mjs';
+import { MiniCards } from '~components/index.mjs';
 import _EnvironmentPage from './_EnvironmentPage.mjs';
 import type Entity from '~/domain/Entity.mjs';
 
@@ -21,39 +21,39 @@ export default class EnvironmentsIndexPage extends _EnvironmentPage {
                 or system but with the potential to affect it or be affected by it.
             `),
             new MiniCards({}, [
-                new MiniCard({
-                    title: 'Glossary',
+                {
+                    label: 'Glossary',
                     icon: 'list',
                     href: `${location.pathname}/glossary`
-                }),
-                new MiniCard({
-                    title: 'Constraints',
+                },
+                {
+                    label: 'Constraints',
                     icon: 'anchor',
                     href: `${location.pathname}/constraints`
-                }),
-                new MiniCard({
-                    title: 'Components',
+                },
+                {
+                    label: 'Components',
                     icon: 'grid',
                     href: `${location.pathname}/components`
-                }),
-                new MiniCard({
-                    title: 'Invariants',
+                },
+                {
+                    label: 'Invariants',
                     icon: 'lock',
                     href: `${location.pathname}/invariants`
-                }),
-                new MiniCard({
-                    title: 'Assumptions',
+                },
+                {
+                    label: 'Assumptions',
                     // There is no icon for assumptions, so might as well use this one.
                     // "As sure as the sun rises in the east"
                     // https://en.wikipedia.org/wiki/Sunrise_problem
                     icon: 'sunrise',
                     href: `${location.pathname}/assumptions`
-                }),
-                new MiniCard({
-                    title: 'Effects',
+                },
+                {
+                    label: 'Effects',
                     icon: 'cloud-lightning',
                     href: `${location.pathname}/effects`
-                })
+                }
             ])
         );
     }

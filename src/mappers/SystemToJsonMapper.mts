@@ -2,20 +2,34 @@ import System from '~/domain/System.mjs';
 import type { EntityJson } from './EntityToJsonMapper.mjs';
 import EntityToJsonMapper from './EntityToJsonMapper.mjs';
 import SemVer from '~/lib/SemVer.mjs';
+import ComponentToJsonMapper, { type ComponentJson } from './ComponentToJsonMapper.mjs';
 
-export interface SystemJson extends EntityJson { }
+export interface SystemJson extends EntityJson {
+    components: ComponentJson[];
+}
 
 export default class SystemToJsonMapper extends EntityToJsonMapper {
     override mapFrom(target: SystemJson): System {
-        const version = new SemVer(target.serializationVersion);
+        const sVer = target.serializationVersion,
+            version = new SemVer(sVer),
+            componentToJsonMapper = new ComponentToJsonMapper(sVer);
 
-        if (version.gte('0.4.0'))
-            return new System(target);
+        if (version.gte('0.5.0'))
+            return new System({
+                ...super.mapFrom(target),
+                components: (target.components ?? []).map(componentToJsonMapper.mapFrom)
+            });
 
         throw new Error(`Unsupported serialization version: ${version}`);
     }
 
     override mapTo(source: System): SystemJson {
-        return super.mapTo(source);
+        const sVer = this.serializationVersion,
+            componentToJsonMapper = new ComponentToJsonMapper(sVer);
+
+        return {
+            ...super.mapTo(source),
+            components: source.components.map(item => componentToJsonMapper.mapTo(item))
+        };
     }
 }

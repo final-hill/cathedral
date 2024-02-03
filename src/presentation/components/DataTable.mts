@@ -14,7 +14,7 @@ export interface BaseDataColumn {
 }
 
 export interface TextHiddenDataColumn {
-    formType: 'text' | 'hidden' | 'textarea';
+    formType: 'text' | 'hidden' | 'textarea' | 'url';
 }
 
 export interface NumberRangeDataColumn {
@@ -289,7 +289,7 @@ export class DataTable<T extends Entity> extends Component implements Presenter<
                         name: id,
                         required: col.required,
                         form: this.#frmDataTableCreate,
-                        [renderIf]: col.formType == 'text' || col.formType == 'hidden'
+                        [renderIf]: ['text', 'hidden', 'url'].includes(col.formType)
                     }),
                     select({
                         name: id,
@@ -338,7 +338,7 @@ export class DataTable<T extends Entity> extends Component implements Presenter<
                     hidden: col.formType == 'hidden'
                 }, [
                     input({
-                        [renderIf]: col.formType == 'text' || col.formType == 'hidden',
+                        [renderIf]: ['text', 'hidden', 'url'].includes(col.formType),
                         form: this.#frmDataTableUpdate,
                         type: 'text',
                         disabled: id !== 'id', // if disabled, it won't be submitted
