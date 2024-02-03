@@ -8,7 +8,7 @@ export interface ComponentJson extends RequirementJson {
     description: string;
 }
 
-export class ComponentToJsonMapper extends RequirementToJsonMapper {
+export default class ComponentToJsonMapper extends RequirementToJsonMapper {
     override mapFrom(target: ComponentJson): Component {
         const version = new SemVer(target.serializationVersion);
 

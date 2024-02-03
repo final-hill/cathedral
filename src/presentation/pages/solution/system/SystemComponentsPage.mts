@@ -1,15 +1,15 @@
-import Component from '~/domain/Component.mjs';
-import { DataTable } from '~components/index.mjs';
+import type Component from '~/domain/Component.mjs';
+import _SystemPage from './_SystemPage.mjs';
+import { DataTable } from '~/presentation/components/DataTable.mjs';
+import type System from '~/domain/System.mjs';
 import html from '~/presentation/lib/html.mjs';
-import _EnvironmentPage from './_EnvironmentPage.mjs';
-import type Environment from '~/domain/Environment.mjs';
 
 const { p } = html;
 
-export default class ComponentsPage extends _EnvironmentPage {
-    static override route = '/:solution/environment/components';
+export default class SystemComponentsPage extends _SystemPage {
+    static override route = '/:solution/system/components';
     static {
-        customElements.define('x-page-components', this);
+        customElements.define('x-page-system-components', this);
     }
 
     #dataTable = new DataTable<Component>({
@@ -21,26 +21,26 @@ export default class ComponentsPage extends _EnvironmentPage {
         },
         onCreate: async ({ name, description, interfaceDefinition }) => {
             await this.interactor.createComponent({
-                environmentId: this.environmentId,
+                systemId: this.systemId,
                 name,
                 description,
                 interfaceDefinition
             });
-            await this.interactor.presentItem(this.environmentId);
+            await this.interactor.presentItem(this.systemId);
         },
         onUpdate: async component => {
             await this.interactor.updateComponent({
-                environmentId: this.environmentId,
+                systemId: this.systemId,
                 component
             });
-            await this.interactor.presentItem(this.environmentId);
+            await this.interactor.presentItem(this.systemId);
         },
         onDelete: async id => {
             await this.interactor.deleteComponent({
-                environmentId: this.environmentId,
+                systemId: this.systemId,
                 id
             });
-            await this.interactor.presentItem(this.environmentId);
+            await this.interactor.presentItem(this.systemId);
         }
     });
 
@@ -56,7 +56,7 @@ export default class ComponentsPage extends _EnvironmentPage {
         );
     }
 
-    override presentItem(environment: Environment) {
-        this.#dataTable.presentList(environment.components);
+    override presentItem(system: System) {
+        this.#dataTable.presentList(system.components);
     }
 }

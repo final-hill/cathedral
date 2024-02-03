@@ -2,8 +2,8 @@ import type { Properties } from '~/types/Properties.mjs';
 import Requirement from './Requirement.mjs';
 
 /**
- * A Component is a self-contained element in the Environment that provides an interface
- * which can be used by a System to interact with.
+ * A Component is a self-contained element that provides an interface
+ * which can be utilized by the Project, Environment, Goals, or System.
  */
 export default class Component extends Requirement {
     name!: string;

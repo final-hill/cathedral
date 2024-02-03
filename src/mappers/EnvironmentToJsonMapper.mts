@@ -1,7 +1,7 @@
 import EntityToJsonMapper, { type EntityJson } from './EntityToJsonMapper.mjs';
 import Environment from '~/domain/Environment.mjs';
 import SemVer from '~/lib/SemVer.mjs';
-import { ComponentToJsonMapper, type ComponentJson } from './ComponentToJsonMapper.mjs';
+import ComponentToJsonMapper, { type ComponentJson } from './ComponentToJsonMapper.mjs';
 import ConstraintToJsonMapper, { type ConstraintJson } from './ConstraintToJsonMapper.mjs';
 import InvariantToJsonMapper, { type InvariantJson } from './InvariantToJsonMapper.mjs';
 import AssumptionToJsonMapper, { type AssumptionJson } from './AssumptionToJsonMapper.mjs';

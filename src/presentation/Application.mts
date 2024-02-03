@@ -76,7 +76,7 @@ export default class Application extends Container {
             (await import('./pages/solution/environment/InvariantsPage.mjs')).default,
             (await import('./pages/solution/environment/AssumptionsPage.mjs')).default,
             (await import('./pages/solution/environment/EffectsPage.mjs')).default,
-            (await import('./pages/solution/environment/ComponentsPage.mjs')).default,
+            (await import('./pages/solution/environment/EnvironmentComponentsPage.mjs')).default,
             (await import('./pages/solution/goals/GoalsIndexPage.mjs')).default,
             (await import('./pages/solution/goals/RationalePage.mjs')).default,
             (await import('./pages/solution/goals/FunctionalityPage.mjs')).default,
@@ -85,7 +85,9 @@ export default class Application extends Container {
             (await import('./pages/solution/goals/LimitsPage.mjs')).default,
             (await import('./pages/solution/NewSolutionPage.mjs')).default,
             (await import('./pages/solution/SolutionIndexPage.mjs')).default,
-            (await import('./pages/solution/SolutionPage.mjs')).default
+            (await import('./pages/solution/SolutionPage.mjs')).default,
+            (await import('./pages/solution/system/SystemIndexPage.mjs')).default,
+            (await import('./pages/solution/system/SystemComponentsPage.mjs')).default,
         ];
 
         self.navigation.addEventListener('navigate', this);
