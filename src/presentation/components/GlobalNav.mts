@@ -1,7 +1,13 @@
 import { Component, FeatherIcon } from './index.mjs';
 import type { FeatherIconName } from '~/types/FeatherIconName.mjs';
 import html from '../lib/html.mjs';
-import type { Properties } from '~/types/Properties.mjs';
+
+export interface GlobalNavLink {
+    href: string;
+    label: string;
+    icon: FeatherIconName;
+    active?: boolean;
+}
 
 /**
  * Determines if the path is the current path
@@ -10,17 +16,24 @@ import type { Properties } from '~/types/Properties.mjs';
  * @returns True if the path is the current path, false otherwise.
  */
 const isActive = (path: string, target: string): boolean =>
-    target.includes(path);
+    path === '/' ? target === '/' :
+        target.includes(path);
 
 export class GlobalNav extends Component {
     static {
         customElements.define('x-global-nav', this);
     }
 
-    constructor(properties: Partial<Properties<GlobalNav>> = {}) {
-        super(properties);
+    constructor(routes: GlobalNavLink[]) {
+        super({});
 
         self.navigation.addEventListener('navigate', this);
+
+        this.shadowRoot.querySelector('ul')!.append(
+            ...routes.map(({ href, icon, label, active }) =>
+                this._routerLink(href, icon, label, Boolean(active))
+            )
+        );
     }
 
     protected override _initShadowStyle() {
@@ -79,15 +92,13 @@ export class GlobalNav extends Component {
     protected override _initShadowHtml() {
         const { nav, ul, template } = html;
 
-        return template(nav({ className: 'global-nav' }, ul([
-            this._routerLink('/', 'home', 'Home')
-        ])));
+        return template(nav({ className: 'global-nav' }, ul()));
     }
 
-    protected _routerLink(path: string, iconName: FeatherIconName, text: string): HTMLLIElement {
+    protected _routerLink(path: string, iconName: FeatherIconName, text: string, active: boolean): HTMLLIElement {
         const { a, li } = html;
 
-        return li(a({ href: path }, [
+        return li(a({ href: path, className: active ? 'link-active' : '' }, [
             new FeatherIcon({ icon: iconName }),
             text
         ]));

@@ -23,7 +23,10 @@ export default class Application extends Container {
         const { template, section, slot } = html;
 
         return template([
-            new GlobalNav(),
+            new GlobalNav([
+                { href: '/', label: 'Home', icon: 'home', active: true },
+                { href: '/-settings-', label: 'Settings', icon: 'settings' }
+            ]),
             new Breadcrumb(),
             section({ id: 'content' }, slot())
         ]);
@@ -65,6 +68,7 @@ export default class Application extends Container {
         this.#pages = [
             (await import('./pages/HomePage.mjs')).default,
             NotFoundPage,
+            (await import('./pages/SettingsPage.mjs')).default,
             (await import('./pages/solution/project/ProjectsIndexPage.mjs')).default,
             (await import('./pages/solution/environment/EnvironmentsIndexPage.mjs')).default,
             (await import('./pages/solution/environment/GlossaryPage.mjs')).default,
