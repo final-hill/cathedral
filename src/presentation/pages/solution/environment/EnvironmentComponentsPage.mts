@@ -17,7 +17,7 @@ export default class EnvironmentComponentsPage extends _EnvironmentPage {
             id: { headerText: 'ID', readonly: true, formType: 'hidden', unique: true },
             name: { headerText: 'Name', required: true, formType: 'text', unique: true },
             description: { headerText: 'Description', formType: 'text' },
-            interfaceDefinition: { headerText: 'Interface Definition', formType: 'textarea' }
+            interfaceDefinition: { headerText: 'Interface Definition', formType: 'url' }
         },
         onCreate: async ({ name, description, interfaceDefinition }) => {
             await this.interactor.createComponent({
