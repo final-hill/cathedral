@@ -24,6 +24,7 @@ export class FeatherIcon extends Component {
         return {
             ...super._initShadowStyle(),
             '.feather-icon': {
+                fill: 'none',
                 stroke: 'currentColor',
                 display: 'inline-block',
                 height: 'var(--size)',
