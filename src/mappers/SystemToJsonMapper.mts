@@ -3,7 +3,6 @@ import type { EntityJson } from './EntityToJsonMapper.mjs';
 import EntityToJsonMapper from './EntityToJsonMapper.mjs';
 import SemVer from '~/lib/SemVer.mjs';
 import ComponentToJsonMapper, { type ComponentJson } from './ComponentToJsonMapper.mjs';
-import ComponentToJsonMapper, { type ComponentJson } from './ComponentToJsonMapper.mjs';
 
 export interface SystemJson extends EntityJson {
     components: ComponentJson[];
@@ -15,9 +14,6 @@ export interface SystemJson extends EntityJson {
 export default class SystemToJsonMapper extends EntityToJsonMapper {
     override mapFrom(target: SystemJson): System {
         const sVer = target.serializationVersion,
-            version = new SemVer(sVer),
-            componentToJsonMapper = new ComponentToJsonMapper(sVer),
-            sVer = target.serializationVersion,
             version = new SemVer(sVer),
             componentToJsonMapper = new ComponentToJsonMapper(sVer);
 
@@ -31,13 +27,6 @@ export default class SystemToJsonMapper extends EntityToJsonMapper {
     }
 
     override mapTo(source: System): SystemJson {
-        const sVer = this.serializationVersion,
-            componentToJsonMapper = new ComponentToJsonMapper(sVer);
-
-        return {
-            ...super.mapTo(source),
-            components: source.components.map(item => componentToJsonMapper.mapTo(item))
-        };
         const sVer = this.serializationVersion,
             componentToJsonMapper = new ComponentToJsonMapper(sVer);
 
