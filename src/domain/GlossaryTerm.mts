@@ -1,7 +1,7 @@
 import type { Properties } from '~/types/Properties.mjs';
-import Entity from './Entity.mjs';
+import { Entity } from './index.mjs';
 
-export default class GlossaryTerm extends Entity {
+export class GlossaryTerm extends Entity {
     definition!: string;
     term!: string;
 

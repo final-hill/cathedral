@@ -1,5 +1,4 @@
-import type Environment from '~/domain/Environment.mjs';
-import Invariant from '~/domain/Invariant.mjs';
+import { type Environment, Invariant } from '~/domain/index.mjs';
 import { DataTable } from '~components/DataTable.mjs';
 import html from '~/presentation/lib/html.mjs';
 import _EnvironmentPage from './_EnvironmentPage.mjs';

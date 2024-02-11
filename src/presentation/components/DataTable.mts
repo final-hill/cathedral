@@ -1,5 +1,5 @@
 import type { Properties } from '~/types/Properties.mjs';
-import type Entity from '~/domain/Entity.mjs';
+import { type Entity } from '~/domain/index.mjs';
 import html, { renderIf } from '../lib/html.mjs';
 import { Component } from './Component.mjs';
 import buttonTheme from '../theme/buttonTheme.mjs';
@@ -48,17 +48,17 @@ export class DataTable<T extends Entity> extends Component implements Presenter<
     }
 
     #columns: DataColumns<T>;
-    #onCreate: (item: Omit<Properties<T>, 'id'>) => Promise<void>;
-    #onUpdate: (item: Properties<T>) => Promise<void>;
-    #onDelete: (id: T['id']) => Promise<void>;
-    #frmDataTableCreate = this.shadowRoot!.querySelector<HTMLFormElement>('#frmDataTableCreate')!;
-    #frmDataTableUpdate = this.shadowRoot!.querySelector<HTMLFormElement>('#frmDataTableUpdate')!;
-    #frmDataTableDelete = this.shadowRoot!.querySelector<HTMLFormElement>('#frmDataTableDelete')!;
-    #dataEmpty = this.shadowRoot!.querySelector<HTMLTableSectionElement>('.data-empty')!;
-    #dataRows = this.shadowRoot!.querySelector<HTMLTableSectionElement>('.data-rows')!;
-    #dataHeaderTr = this.shadowRoot!.querySelector<HTMLTableRowElement>('.data-header tr')!;
-    #dataEmptyTd = this.shadowRoot!.querySelector<HTMLTableCellElement>('.data-empty td')!;
-    #newItemRow = this.shadowRoot!.querySelector<HTMLTableRowElement>('.new-item-row')!;
+    accessor onCreate: (item: Omit<Properties<T>, 'id'>) => Promise<void>;
+    accessor onUpdate: (item: Properties<T>) => Promise<void>;
+    accessor onDelete: (id: T['id']) => Promise<void>;
+    #frmDataTableCreate = this.shadowRoot.querySelector<HTMLFormElement>('#frmDataTableCreate')!;
+    #frmDataTableUpdate = this.shadowRoot.querySelector<HTMLFormElement>('#frmDataTableUpdate')!;
+    #frmDataTableDelete = this.shadowRoot.querySelector<HTMLFormElement>('#frmDataTableDelete')!;
+    #dataEmpty = this.shadowRoot.querySelector<HTMLTableSectionElement>('.data-empty')!;
+    #dataRows = this.shadowRoot.querySelector<HTMLTableSectionElement>('.data-rows')!;
+    #dataHeaderTr = this.shadowRoot.querySelector<HTMLTableRowElement>('.data-header tr')!;
+    #dataEmptyTd = this.shadowRoot.querySelector<HTMLTableCellElement>('.data-empty td')!;
+    #newItemRow = this.shadowRoot.querySelector<HTMLTableRowElement>('.new-item-row')!;
 
     constructor(
         { columns, onCreate, onUpdate, onDelete, ...rest }: Partial<Properties<DataTable<T>>>
@@ -67,9 +67,9 @@ export class DataTable<T extends Entity> extends Component implements Presenter<
         super(rest);
 
         this.#columns = Object.freeze(columns ?? {} as DataColumns<T>);
-        this.#onCreate = onCreate;
-        this.#onDelete = onDelete;
-        this.#onUpdate = onUpdate;
+        this.onCreate = onCreate;
+        this.onDelete = onDelete;
+        this.onUpdate = onUpdate;
     }
 
     get columns() {
@@ -78,15 +78,6 @@ export class DataTable<T extends Entity> extends Component implements Presenter<
     set columns(value) {
         this.#columns = Object.freeze(value);
     }
-
-    get onCreate() { return this.#onCreate; }
-    set onCreate(value) { this.#onCreate = value; }
-
-    get onDelete() { return this.#onDelete; }
-    set onDelete(value) { this.#onDelete = value; }
-
-    get onUpdate() { return this.#onUpdate; }
-    set onUpdate(value) { this.#onUpdate = value; }
 
     protected _isUnique(item: Partial<Properties<T>>): boolean {
         return Object.entries(this.#columns).every(([id, col]) => {
@@ -107,7 +98,7 @@ export class DataTable<T extends Entity> extends Component implements Presenter<
             alert('The entry must be unique.');
         } else {
             form.reset();
-            await this.#onCreate?.(item);
+            await this.onCreate?.(item);
             // focus on the first non-hidden input in the new item row
             this.#newItemRow.querySelector<HTMLInputElement>('td:not([hidden]) input')?.focus();
         }
@@ -118,7 +109,7 @@ export class DataTable<T extends Entity> extends Component implements Presenter<
         const form = e.target as HTMLFormElement,
             formData = new FormData(form),
             item = Object.fromEntries(formData.entries()) as Properties<T>;
-        await this.#onUpdate?.(item);
+        await this.onUpdate?.(item);
     }
 
     protected async _onDelete(e: SubmitEvent) {
@@ -126,7 +117,7 @@ export class DataTable<T extends Entity> extends Component implements Presenter<
         const id = (e.submitter as HTMLButtonElement).value as T['id'];
 
         if (confirm(`Are you sure you want to delete item ${id}?`))
-            await this.#onDelete?.(id);
+            await this.onDelete?.(id);
     }
 
     protected override _initShadowStyle() {
@@ -160,14 +151,6 @@ export class DataTable<T extends Entity> extends Component implements Presenter<
             },
             'table button': {
                 width: '1in'
-            },
-            '.edit-button': {
-                backgroundColor: 'var(--btn-okay-color)',
-                color: 'var(--btn-font-color)'
-            },
-            '.delete-button': {
-                backgroundColor: 'var(--btn-danger-color)',
-                color: 'var(--btn-font-color)'
             }
         };
     }
@@ -381,13 +364,13 @@ export class DataTable<T extends Entity> extends Component implements Presenter<
                 button({
                     className: 'view-data edit-button',
                     onclick: e => this._editRow(e),
-                    [renderIf]: Boolean(this.#onUpdate)
+                    [renderIf]: Boolean(this.onUpdate)
                 }, 'Edit'),
                 button({
                     form: this.#frmDataTableDelete,
                     className: 'view-data delete-button',
                     name: 'item-id',
-                    [renderIf]: Boolean(this.#onDelete),
+                    [renderIf]: Boolean(this.onDelete),
                     value: item.id
                 }, 'Delete'),
                 button({
@@ -395,13 +378,13 @@ export class DataTable<T extends Entity> extends Component implements Presenter<
                     className: 'edit-data save-button',
                     type: 'submit',
                     hidden: true,
-                    [renderIf]: Boolean(this.#onUpdate)
+                    [renderIf]: Boolean(this.onUpdate)
                 }, 'Save'),
                 button({
                     className: 'edit-data cancel-button',
                     onclick: e => this._cancelEdit(e.target as HTMLButtonElement),
                     hidden: true,
-                    [renderIf]: Boolean(this.#onUpdate)
+                    [renderIf]: Boolean(this.onUpdate)
                 }, 'Cancel')
             ]),
         ].filter(Boolean)));

@@ -2,7 +2,7 @@ import mermaid from 'mermaid';
 import groupBy from '~/lib/groupBy.mjs';
 import type Presenter from '~/application/Presenter.mjs';
 import { Component } from './Component.mjs';
-import Stakeholder, { StakeholderCategory, StakeholderSegmentation } from '~/domain/Stakeholder.mjs';
+import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from '~/domain/index.mjs';
 
 export class StakeholdersMap extends Component implements Presenter<Stakeholder> {
     static {

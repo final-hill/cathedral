@@ -12,12 +12,24 @@ const buttonTheme: Theme = {
         transition: 'all 0.2s ease-in-out',
         width: '2in'
     },
+    'button x-feather-icon': {
+        // @ts-ignore: FIXME
+        '--size': '1em'
+    },
     'button:hover, button:active, button:focus': {
         filter: 'brightness(1.2)'
     },
     'button[type="submit"]': {
-        backgroundColor: 'var(--btn-okay-color)',
+        color: 'var(--link-color)',
+    },
+    '.edit-button': {
         color: 'var(--btn-font-color)'
+    },
+    '.delete-button, .delete-button[type="submit"]': {
+        color: 'var(--btn-danger-color)'
+    },
+    'button:has(x-feather-icon)': {
+        width: 'fit-content'
     }
 };
 

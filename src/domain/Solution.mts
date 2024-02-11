@@ -1,8 +1,7 @@
 import type { Properties } from '~/types/Properties.mjs';
-import type { Uuid } from '~/domain/Uuid.mjs';
-import SlugEntity from './SlugEntity.mjs';
+import { SlugEntity, type Uuid } from './index.mjs';
 
-export default class Solution extends SlugEntity {
+export class Solution extends SlugEntity {
     projectId!: Uuid;
     environmentId!: Uuid;
     goalsId!: Uuid;

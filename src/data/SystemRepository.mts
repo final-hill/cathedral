@@ -1,4 +1,4 @@
-import type System from '~/domain/System.mjs';
+import { type System } from '~/domain/index.mjs';
 import type { SemVerString } from '~/lib/SemVer.mjs';
 import StorageRepository from './StorageRepository.mjs';
 import pkg from '~/../package.json' with { type: 'json' };

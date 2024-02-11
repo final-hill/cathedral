@@ -2,8 +2,7 @@ import EnvironmentInteractor from '~/application/EnvironmentInteractor.mjs';
 import EnvironmentRepository from '~/data/EnvironmentRepository.mjs';
 import SolutionRepository from '~/data/SolutionRepository.mjs';
 import Page from '../../Page.mjs';
-import type Environment from '~/domain/Environment.mjs';
-import { emptyUuid, type Uuid } from '~/domain/Uuid.mjs';
+import { type Environment, emptyUuid, type Uuid } from '~/domain/index.mjs';
 import type Presenter from '~/application/Presenter.mjs';
 
 export default abstract class _EnvironmentPage extends Page implements Presenter<Environment> {

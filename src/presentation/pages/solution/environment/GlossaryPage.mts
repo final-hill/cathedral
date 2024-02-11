@@ -1,7 +1,6 @@
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~components/index.mjs';
-import GlossaryTerm from '~/domain/GlossaryTerm.mjs';
-import type Environment from '~/domain/Environment.mjs';
+import { GlossaryTerm, type Environment } from '~/domain/index.mjs';
 import _EnvironmentPage from './_EnvironmentPage.mjs';
 
 const { p } = html;

@@ -1,6 +1,6 @@
-import Requirement from './Requirement.mjs';
+import { Requirement } from './index.mjs';
 
 /**
  * An invariant is an environment property that must be maintained
  */
-export default class Invariant extends Requirement { }
+export class Invariant extends Requirement { }

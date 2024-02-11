@@ -1,13 +1,8 @@
-import Goals from '~/domain/Goals.mjs';
+import { Behavior, Goals, Limit, Stakeholder, UseCase, type Uuid } from '~/domain/index.mjs';
 import Interactor from './Interactor.mjs';
 import type Presenter from './Presenter.mjs';
 import type Repository from './Repository.mjs';
-import type { Uuid } from '~/domain/Uuid.mjs';
-import Behavior from '~/domain/Behavior.mjs';
 import type { Properties } from '~/types/Properties.mjs';
-import Limit from '~/domain/Limit.mjs';
-import Stakeholder from '~/domain/Stakeholder.mjs';
-import UseCase from '~/domain/UseCase.mjs';
 
 export default class GoalsInteractor extends Interactor<Goals> {
     constructor({ presenter, repository }: {

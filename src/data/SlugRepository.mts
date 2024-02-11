@@ -1,4 +1,4 @@
-import type SlugEntity from '~/domain/SlugEntity.mjs';
+import { type SlugEntity } from '~/domain/index.mjs';
 import StorageRepository from './StorageRepository.mjs';
 import type Mapper from '~/application/Mapper.mjs';
 import type { EntityJson } from '~/mappers/EntityToJsonMapper.mjs';

@@ -1,5 +1,5 @@
 import type { Properties } from '~/types/Properties.mjs';
-import Requirement from './Requirement.mjs';
+import { Requirement } from './index.mjs';
 
 export enum ConstraintCategory {
     BusinessRule = 'Business Rule',
@@ -7,7 +7,7 @@ export enum ConstraintCategory {
     EngineeringDecision = 'Engineering Decision'
 }
 
-export default class Constraint extends Requirement {
+export class Constraint extends Requirement {
     category: ConstraintCategory;
 
     constructor({ category, ...rest }: Properties<Constraint>) {

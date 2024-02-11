@@ -1,10 +1,9 @@
 import type Presenter from '~/application/Presenter.mjs';
 import Page from '../../Page.mjs';
-import type System from '~/domain/System.mjs';
+import { type System, emptyUuid, type Uuid } from '~/domain/index.mjs';
 import SolutionRepository from '~/data/SolutionRepository.mjs';
 import SystemInteractor from '~/application/SystemInteractor.mjs';
 import SystemRepository from '~/data/SystemRepository.mjs';
-import { emptyUuid, type Uuid } from '~/domain/Uuid.mjs';
 
 export default abstract class _SystemPage extends Page implements Presenter<System> {
     #solutionRepository = new SolutionRepository(localStorage);

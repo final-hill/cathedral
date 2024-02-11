@@ -1,7 +1,7 @@
+import { Behavior } from '~/domain/index.mjs';
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import StorageRepository from './StorageRepository.mjs';
-import Behavior from '~/domain/Behavior.mjs';
 // @ts-expect-error: No typings available
 import DomStorage from 'dom-storage';
 import BehaviorToJsonMapper from '~/mappers/BehaviorToJsonMapper.mjs';

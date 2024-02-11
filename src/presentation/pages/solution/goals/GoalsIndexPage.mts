@@ -1,7 +1,7 @@
 import { MiniCards } from '~components/index.mjs';
 import html from '~/presentation/lib/html.mjs';
 import _GoalsPage from './_GoalsPage.mjs';
-import type Goals from '~/domain/Goals.mjs';
+import { type Goals } from '~/domain/index.mjs';
 
 const { p } = html;
 

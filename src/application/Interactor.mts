@@ -1,8 +1,7 @@
-import type Entity from '~/domain/Entity.mjs';
+import { type Entity, type Uuid } from '~/domain/index.mjs';
 import type Repository from './Repository.mjs';
 import type Presenter from './Presenter.mjs';
 import type { Properties } from '~/types/Properties.mjs';
-import type { Uuid } from '~/domain/Uuid.mjs';
 
 export default abstract class Interactor<E extends Entity> {
     #presenter; #repository; #Entity;

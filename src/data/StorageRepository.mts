@@ -1,4 +1,4 @@
-import type Entity from '~/domain/Entity.mjs';
+import { type Entity } from '~/domain/index.mjs';
 import type { EntityJson } from '~/mappers/EntityToJsonMapper.mjs';
 import type Mapper from '~/application/Mapper.mjs';
 import Repository from '~/application/Repository.mjs';

@@ -1,7 +1,7 @@
 import html from '~/presentation/lib/html.mjs';
 import _SystemPage from './_SystemPage.mjs';
-import { MiniCards } from '~/presentation/components/MiniCards.mjs';
-import type System from '~/domain/System.mjs';
+import { MiniCards } from '~components/MiniCards.mjs';
+import { type System } from '~/domain/index.mjs';
 
 const { p } = html;
 

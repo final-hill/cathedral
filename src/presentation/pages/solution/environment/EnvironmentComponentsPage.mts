@@ -1,8 +1,7 @@
-import Component from '~/domain/Component.mjs';
-import { DataTable } from '~components/index.mjs';
+import { Component, type Environment } from '~/domain/index.mjs';
 import html from '~/presentation/lib/html.mjs';
 import _EnvironmentPage from './_EnvironmentPage.mjs';
-import type Environment from '~/domain/Environment.mjs';
+import { TreeView } from '~/presentation/components/TreeView.mjs';
 
 const { p } = html;
 
@@ -12,36 +11,27 @@ export default class EnvironmentComponentsPage extends _EnvironmentPage {
         customElements.define('x-page-environment-components', this);
     }
 
-    #dataTable = new DataTable<Component>({
-        columns: {
-            id: { headerText: 'ID', readonly: true, formType: 'hidden', unique: true },
-            name: { headerText: 'Name', required: true, formType: 'text', unique: true },
-            description: { headerText: 'Description', formType: 'text' },
-            interfaceDefinition: { headerText: 'Interface Definition', formType: 'url' }
-        },
-        onCreate: async ({ name, description, interfaceDefinition }) => {
+    #treeView = new TreeView<Component>({
+        labelField: 'name',
+        onCreate: async ({ label, parentId }) =>
             await this.interactor.createComponent({
                 environmentId: this.environmentId,
-                name,
-                description,
-                interfaceDefinition
-            });
-            await this.interactor.presentItem(this.environmentId);
-        },
-        onUpdate: async component => {
+                parentId,
+                label
+            }),
+        onUpdate: async ({ id, label, parentId }) =>
             await this.interactor.updateComponent({
                 environmentId: this.environmentId,
-                component
-            });
-            await this.interactor.presentItem(this.environmentId);
-        },
-        onDelete: async id => {
+                id,
+                parentId,
+                label
+            }),
+        onDelete: async ({ id, parentId }) =>
             await this.interactor.deleteComponent({
                 environmentId: this.environmentId,
-                id
-            });
-            await this.interactor.presentItem(this.environmentId);
-        }
+                id,
+                parentId
+            })
     });
 
     constructor() {
@@ -50,13 +40,14 @@ export default class EnvironmentComponentsPage extends _EnvironmentPage {
         this.append(
             p(`
                 Components are self-contained elements in the Environment that provide
-                an interface which can be used by a System to interact with.
+                an interface which can be used by a System to interact with. A component
+                can be composed of other components, forming a tree structure.
             `),
-            this.#dataTable
+            this.#treeView
         );
     }
 
     override presentItem(environment: Environment) {
-        this.#dataTable.presentList(environment.components);
+        this.#treeView.presentList(environment.components);
     }
 }

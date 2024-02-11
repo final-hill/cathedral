@@ -1,5 +1,5 @@
 import type { Properties } from '~/types/Properties.mjs';
-import Entity from './Entity.mjs';
+import { Entity } from './index.mjs';
 
 export enum StakeholderSegmentation {
     Client = 'Client',
@@ -13,7 +13,7 @@ export enum StakeholderCategory {
     Observer = 'Observer'
 }
 
-export default class Stakeholder extends Entity {
+export class Stakeholder extends Entity {
     description!: string;
     name!: string;
     segmentation!: StakeholderSegmentation;

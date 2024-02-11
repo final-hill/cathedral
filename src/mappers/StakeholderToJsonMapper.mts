@@ -1,4 +1,4 @@
-import Stakeholder, { StakeholderSegmentation } from '~/domain/Stakeholder.mjs';
+import { Stakeholder, StakeholderSegmentation } from '~/domain/index.mjs';
 import EntityToJsonMapper, { type EntityJson } from './EntityToJsonMapper.mjs';
 import SemVer from '~/lib/SemVer.mjs';
 

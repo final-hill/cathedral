@@ -1,4 +1,4 @@
-import Limit from '~/domain/Limit.mjs';
+import { Limit } from '~/domain/index.mjs';
 import RequirementToJsonMapper, { type RequirementJson } from './RequirementToJsonMapper.mjs';
 import SemVer from '~/lib/SemVer.mjs';
 

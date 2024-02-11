@@ -1,8 +1,7 @@
-import Behavior from '~/domain/Behavior.mjs';
+import { Behavior, type Goals } from '~/domain/index.mjs';
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~components/index.mjs';
 import _GoalsPage from './_GoalsPage.mjs';
-import type Goals from '~/domain/Goals.mjs';
 
 const { p, strong } = html;
 

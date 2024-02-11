@@ -1,9 +1,7 @@
 import html from '~/presentation/lib/html.mjs';
 import { DataTable, type OptDataColumn, Tabs, UseCaseDiagram } from '~components/index.mjs';
-import UseCase from '~/domain/UseCase.mjs';
-import type Goals from '~/domain/Goals.mjs';
+import { UseCase, type Goals, type Uuid } from '~/domain/index.mjs';
 import _GoalsPage from './_GoalsPage.mjs';
-import type { Uuid } from '~/domain/Uuid.mjs';
 
 const { h2, p, br } = html;
 

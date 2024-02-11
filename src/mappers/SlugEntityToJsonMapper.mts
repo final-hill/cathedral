@@ -1,4 +1,4 @@
-import SlugEntity from '~/domain/SlugEntity.mjs';
+import { SlugEntity } from '~/domain/index.mjs';
 import EntityToJsonMapper, { type EntityJson } from './EntityToJsonMapper.mjs';
 import SemVer from '~/lib/SemVer.mjs';
 

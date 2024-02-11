@@ -1,10 +1,10 @@
 import { type Properties } from '~/types/Properties.mjs';
-import Entity from './Entity.mjs';
+import { Entity } from './index.mjs';
 
 /**
  * A Requirement is a statement that specifies a property.
  */
-export default class Requirement extends Entity {
+export class Requirement extends Entity {
     /**
      * A statement is a human-readable description of a requirement.
      */

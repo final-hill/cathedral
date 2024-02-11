@@ -1,6 +1,8 @@
 import { Component, FeatherIcon } from './index.mjs';
 import html from '../lib/html.mjs';
 import type { Properties } from '~/types/Properties.mjs';
+import buttonTheme from '../theme/buttonTheme.mjs';
+import type { Uuid } from '~/domain/Uuid.mjs';
 
 const { template, h2, a, p, button } = html;
 
@@ -25,7 +27,7 @@ export class PegsCard extends Component {
             ),
             p('{description}'),
             button({
-                className: 'delete-btn',
+                className: 'delete-button',
                 hidden: true,
             },
                 new FeatherIcon({ icon: 'trash-2' })
@@ -35,6 +37,8 @@ export class PegsCard extends Component {
 
     protected override _initShadowStyle() {
         return {
+            ...super._initShadowStyle(),
+            ...buttonTheme,
             ':host': {
                 ...super._initShadowStyle()[':host'],
                 backgroundColor: 'var(--site-dark-bg)',
@@ -47,16 +51,6 @@ export class PegsCard extends Component {
             ':host(:first-of-type)': {
                 backgroundColor: 'transparent',
                 border: '1px dashed var(--font-color)'
-            },
-            '.delete-btn': {
-                alignSelf: 'center',
-                backgroundColor: 'var(--site-dark-bg)',
-                color: 'var(--btn-danger-color)',
-                height: 'fit-content',
-                width: 'fit-content'
-            },
-            '.delete-btn x-feather-icon': {
-                '--size': '1.5em'
             },
             '.title': {
                 marginTop: '0'
@@ -99,10 +93,10 @@ export class PegsCard extends Component {
     onDelete(e: Event) {
         e.preventDefault();
         if (confirm(`Are you sure you want to delete "${this.heading}"?`))
-            this.dispatchEvent(new CustomEvent<this>('delete', {
+            this.dispatchEvent(new CustomEvent<{ id: Uuid }>('delete', {
                 bubbles: true,
                 composed: true,
-                detail: this
+                detail: { id: this.id as unknown as Uuid }
             }));
     }
 }

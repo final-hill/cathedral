@@ -1,4 +1,4 @@
-import UseCase from '~/domain/UseCase.mjs';
+import { UseCase } from '~/domain/index.mjs';
 import BehaviorToJsonMapper, { type BehaviorJson } from './BehaviorToJsonMapper.mjs';
 import StakeholderToJsonMapper, { type StakeholderJson } from './StakeholderToJsonMapper.mjs';
 import SemVer from '~/lib/SemVer.mjs';

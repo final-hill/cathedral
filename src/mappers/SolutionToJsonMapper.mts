@@ -1,7 +1,6 @@
-import type { Uuid } from '~/domain/Uuid.mjs';
 import type { EntityJson } from './EntityToJsonMapper.mjs';
 import EntityToJsonMapper from './EntityToJsonMapper.mjs';
-import Solution from '~/domain/Solution.mjs';
+import { Solution, type Uuid } from '~/domain/index.mjs';
 import SemVer from '~/lib/SemVer.mjs';
 
 export interface SolutionJson extends EntityJson {

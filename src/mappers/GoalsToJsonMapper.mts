@@ -1,5 +1,5 @@
 import EntityToJsonMapper, { type EntityJson } from './EntityToJsonMapper.mjs';
-import Goals from '~/domain/Goals.mjs';
+import { Goals } from '~/domain/index.mjs';
 import SemVer from '~/lib/SemVer.mjs';
 import BehaviorToJsonMapper, { type BehaviorJson } from './BehaviorToJsonMapper.mjs';
 import UseCaseToJsonMapper, { type UseCaseJson } from './UseCaseToJsonMapper.mjs';
@@ -28,10 +28,10 @@ export default class GoalsToJsonMapper extends EntityToJsonMapper {
         if (version.gte('0.3.0'))
             return new Goals({
                 ...target,
-                functionalBehaviors: (target.functionalBehaviors ?? []).map(behaviorToJsonMapper.mapFrom),
-                stakeholders: (target.stakeholders ?? []).map(stakeholderToJsonMapper.mapFrom),
-                useCases: (target.useCases ?? []).map(useCaseToJsonMapper.mapFrom),
-                limits: (target.limits ?? []).map(limitToJsonMapper.mapFrom)
+                functionalBehaviors: (target.functionalBehaviors ?? []).map(item => behaviorToJsonMapper.mapFrom(item)),
+                stakeholders: (target.stakeholders ?? []).map(item => stakeholderToJsonMapper.mapFrom(item)),
+                useCases: (target.useCases ?? []).map(item => useCaseToJsonMapper.mapFrom(item)),
+                limits: (target.limits ?? []).map(item => limitToJsonMapper.mapFrom(item))
             });
 
         throw new Error(`Unsupported serialization version: ${version}`);

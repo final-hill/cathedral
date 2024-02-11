@@ -1,4 +1,4 @@
-import Requirement from '~/domain/Requirement.mjs';
+import { Requirement } from '~/domain/index.mjs';
 import EntityToJsonMapper, { type EntityJson } from './EntityToJsonMapper.mjs';
 
 export interface RequirementJson extends EntityJson {

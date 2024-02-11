@@ -3,8 +3,7 @@ import Page from '../../Page.mjs';
 import SolutionRepository from '~/data/SolutionRepository.mjs';
 import GoalsRepository from '~/data/GoalsRepository.mjs';
 import GoalsInteractor from '~/application/GoalsInteractor.mjs';
-import { emptyUuid, type Uuid } from '~/domain/Uuid.mjs';
-import type Goals from '~/domain/Goals.mjs';
+import { emptyUuid, type Uuid, type Goals } from '~/domain/index.mjs';
 
 export default abstract class _GoalsPage extends Page implements Presenter<Goals> {
     #solutionRepository = new SolutionRepository(localStorage);

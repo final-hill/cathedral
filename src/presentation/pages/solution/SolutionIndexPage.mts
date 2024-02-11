@@ -1,7 +1,6 @@
 import { PegsCards, type PegsCardsDeleteEvent } from '~components/PegsCards.mjs';
 import _SolutionPage from './_SolutionPage.mjs';
-import type { Uuid } from '~/domain/Uuid.mjs';
-import type Solution from '~/domain/Solution.mjs';
+import { type Uuid, type Solution } from '~/domain/index.mjs';
 
 export default class SolutionIndexPage extends _SolutionPage {
     static override route = '/-solutions-';

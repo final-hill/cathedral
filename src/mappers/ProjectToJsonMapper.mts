@@ -1,4 +1,4 @@
-import Project from '~/domain/Project.mjs';
+import { Project } from '~/domain/index.mjs';
 import EntityToJsonMapper, { type EntityJson } from './EntityToJsonMapper.mjs';
 import SemVer from '~/lib/SemVer.mjs';
 
