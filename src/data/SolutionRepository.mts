@@ -1,4 +1,4 @@
-import type Solution from '~/domain/Solution.mjs';
+import { type Solution } from '~/domain/index.mjs';
 import SolutionToJsonMapper from '~/mappers/SolutionToJsonMapper.mjs';
 import pkg from '~/../package.json' with { type: 'json' };
 import type { SemVerString } from '~/lib/SemVer.mjs';

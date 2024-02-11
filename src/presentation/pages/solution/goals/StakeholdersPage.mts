@@ -1,8 +1,7 @@
-import Stakeholder, { StakeholderSegmentation } from '~/domain/Stakeholder.mjs';
+import { Stakeholder, StakeholderSegmentation, Goals } from '~/domain/index.mjs';
 import html from '~/presentation/lib/html.mjs';
 import { DataTable, Tabs, StakeholdersMap } from '~components/index.mjs';
 import _GoalsPage from './_GoalsPage.mjs';
-import type Goals from '~/domain/Goals.mjs';
 
 const { h2, p } = html;
 

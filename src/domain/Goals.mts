@@ -1,15 +1,11 @@
 import type { Properties } from '~/types/Properties.mjs';
-import Entity from './Entity.mjs';
-import type Behavior from './Behavior.mjs';
-import type Stakeholder from './Stakeholder.mjs';
-import type UseCase from './UseCase.mjs';
-import type Limit from './Limit.mjs';
+import { type Behavior, Entity, type Limit, type Stakeholder, type UseCase } from './index.mjs';
 
 /**
  * Goals are the needs and wants of an organization.
  * They are the things that the organization wants to achieve.
  */
-export default class Goals extends Entity {
+export class Goals extends Entity {
     /**
      * Functional behaviors specify what results or effects are expected from the system.
      * They specify "what" the system should do, not "how" it should do it.

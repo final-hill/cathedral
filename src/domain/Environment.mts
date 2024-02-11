@@ -1,11 +1,5 @@
-import Entity from './Entity.mjs';
 import type { Properties } from '~/types/Properties.mjs';
-import type Component from './Component.mjs';
-import type Effect from './Effect.mjs';
-import type Assumption from './Assumption.mjs';
-import type Invariant from './Invariant.mjs';
-import type Constraint from './Constraint.mjs';
-import type GlossaryTerm from './GlossaryTerm.mjs';
+import { type Assumption, Component, type Constraint, type Effect, Entity, type GlossaryTerm, type Invariant } from './index.mjs';
 
 /**
  * The set of entities (people, organizations, regulations, devices and other material objects, other systems)
@@ -14,7 +8,7 @@ import type GlossaryTerm from './GlossaryTerm.mjs';
  * An environment describes the application domain and external context in which a
  * system operates.
  */
-export default class Environment extends Entity {
+export class Environment extends Entity {
     glossaryTerms!: GlossaryTerm[];
     constraints!: Constraint[];
     invariants!: Invariant[];

@@ -1,4 +1,4 @@
-import Requirement from './Requirement.mjs';
+import { Requirement } from './index.mjs';
 
 /**
  * A result desired by an organization.

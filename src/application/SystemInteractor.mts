@@ -1,10 +1,8 @@
-import System from '~/domain/System.mjs';
+import { Component, System, type Uuid } from '~/domain/index.mjs';
 import Interactor from './Interactor.mjs';
 import type Presenter from './Presenter.mjs';
 import type Repository from './Repository.mjs';
-import type { Uuid } from '~/domain/Uuid.mjs';
-import Component from '~/domain/Component.mjs';
-import type { Properties } from '~/types/Properties.mjs';
+import treeFind from '~/lib/treeFind.mjs';
 
 export default class SystemInteractor extends Interactor<System> {
     constructor({ presenter, repository }: {
@@ -15,52 +13,88 @@ export default class SystemInteractor extends Interactor<System> {
     }
 
     async createComponent(
-        { systemId, name, description, interfaceDefinition }: {
+        { systemId, parentId, label }: {
             systemId: Uuid;
-            name: string;
-            description: string;
-            interfaceDefinition: string;
+            parentId?: Uuid;
+            label: string;
         }
-    ) {
+    ): Promise<Component> {
         const system = await this.repository.get(systemId);
 
         if (!system)
             throw new Error(`System ${systemId} not found`);
 
-        system.components.push(new Component({
-            id: crypto.randomUUID(),
-            name,
-            description,
-            statement: interfaceDefinition
-        }));
+        const parent = !parentId ? system :
+            system.components.map(c => treeFind(parentId, c))
+                .find(x => x) ?? system,
+            component = new Component({
+                id: crypto.randomUUID(),
+                name: label,
+                statement: '',
+                children: []
+            });
+
+        if (parent instanceof System)
+            system.components.push(component);
+        else
+            parent.children.push(component);
 
         await this.repository.update(system);
+
+        return component;
     }
 
     async deleteComponent(
-        { systemId, id }: { systemId: Uuid; id: Uuid }
+        { systemId, id, parentId }: { systemId: Uuid; id: Uuid; parentId?: Uuid }
     ) {
         const system = await this.repository.get(systemId);
 
         if (!system)
             throw new Error(`System ${systemId} not found`);
 
-        system.components = system.components.filter(x => x.id !== id);
+        const parent = !parentId ? system :
+            system.components.map(c => treeFind(parentId, c))
+                .find(x => x) ?? system;
+
+        if (parent instanceof System)
+            system.components = system.components.filter(x => x.id !== id);
+        else
+            parent.children = parent.children.filter(x => x.id !== id);
+
         await this.repository.update(system);
     }
 
     async updateComponent(
-        { systemId, component }: { systemId: Uuid; component: Properties<Component> }
+        { systemId, id, parentId, label }:
+            { systemId: Uuid; id: Uuid; parentId?: Uuid; label: string }
     ) {
-        const system = await this.repository.get(systemId),
-            newComponent = new Component(component);
+        const system = await this.repository.get(systemId);
 
         if (!system)
             throw new Error(`System ${systemId} not found`);
 
-        system.components = system.components.map(x =>
-            x.id === component.id ? newComponent : x
-        );
+        const parent = !parentId ? system :
+            system.components.map(c => treeFind(parentId, c))
+                .find(x => x) ?? system;
+
+        if (parent instanceof System)
+            parent.components = system.components.map(c =>
+                c.id === id ? new Component({
+                    id,
+                    name: label,
+                    statement: '',
+                    children: c.children
+                }) : c
+            );
+        else
+            parent.children = parent.children.map(c =>
+                c.id === id ? new Component({
+                    id,
+                    name: label,
+                    statement: '',
+                    children: c.children
+                }) : c
+            );
 
         await this.repository.update(system);
     }

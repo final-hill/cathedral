@@ -1,6 +1,6 @@
 import SemVer from '~/lib/SemVer.mjs';
 import EntityToJsonMapper, { type EntityJson } from './EntityToJsonMapper.mjs';
-import GlossaryTerm from '~/domain/GlossaryTerm.mjs';
+import { GlossaryTerm } from '~/domain/index.mjs';
 
 export interface GlossaryTermJson extends EntityJson {
     term: string;

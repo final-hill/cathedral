@@ -1,8 +1,8 @@
 import type { Properties } from '~/types/Properties.mjs';
 import slugify from '~/lib/slugify.mjs';
-import Entity from './Entity.mjs';
+import { Entity } from './index.mjs';
 
-export default class SlugEntity extends Entity {
+export class SlugEntity extends Entity {
     static readonly maxNameLength = 60;
     static readonly maxDescriptionLength = 200;
 

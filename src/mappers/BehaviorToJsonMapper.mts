@@ -1,4 +1,4 @@
-import Behavior from '~/domain/Behavior.mjs';
+import { Behavior } from '~/domain/index.mjs';
 import RequirementToJsonMapper, { type RequirementJson } from './RequirementToJsonMapper.mjs';
 import SemVer from '~/lib/SemVer.mjs';
 

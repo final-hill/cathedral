@@ -1,4 +1,4 @@
-import Project from '~/domain/Project.mjs';
+import { Project } from '~/domain/index.mjs';
 import StorageRepository from './StorageRepository.mjs';
 import ProjectToJsonMapper from '~/mappers/ProjectToJsonMapper.mjs';
 import pkg from '~/../package.json' with { type: 'json' };

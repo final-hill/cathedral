@@ -1,4 +1,4 @@
-import type Entity from '~/domain/Entity.mjs';
+import { type Entity } from '~/domain/index.mjs';
 
 export default interface Presenter<E extends Entity> {
     presentItem(entity: E): void;

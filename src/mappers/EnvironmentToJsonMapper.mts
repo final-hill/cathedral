@@ -1,5 +1,5 @@
 import EntityToJsonMapper, { type EntityJson } from './EntityToJsonMapper.mjs';
-import Environment from '~/domain/Environment.mjs';
+import { Environment } from '~/domain/index.mjs';
 import SemVer from '~/lib/SemVer.mjs';
 import ComponentToJsonMapper, { type ComponentJson } from './ComponentToJsonMapper.mjs';
 import ConstraintToJsonMapper, { type ConstraintJson } from './ConstraintToJsonMapper.mjs';
@@ -31,12 +31,12 @@ export default class EnvironmentToJsonMapper extends EntityToJsonMapper {
         if (version.gte('0.3.0'))
             return new Environment({
                 ...target,
-                glossaryTerms: (target.glossaryTerms ?? []).map(glossaryTermToJsonMapper.mapFrom),
-                constraints: (target.constraints ?? []).map(constraintToJsonMapper.mapFrom),
-                invariants: (target.invariants ?? []).map(invariantToJsonMapper.mapFrom),
-                assumptions: (target.assumptions ?? []).map(assumptionToJsonMapper.mapFrom),
-                effects: (target.effects ?? []).map(effectToJsonMapper.mapFrom),
-                components: (target.components ?? []).map(componentToJsonMapper.mapFrom)
+                glossaryTerms: (target.glossaryTerms ?? []).map(item => glossaryTermToJsonMapper.mapFrom(item)),
+                constraints: (target.constraints ?? []).map(item => constraintToJsonMapper.mapFrom(item)),
+                invariants: (target.invariants ?? []).map(item => invariantToJsonMapper.mapFrom(item)),
+                assumptions: (target.assumptions ?? []).map(item => assumptionToJsonMapper.mapFrom(item)),
+                effects: (target.effects ?? []).map(item => effectToJsonMapper.mapFrom(item)),
+                components: (target.components ?? []).map(item => componentToJsonMapper.mapFrom(item))
             });
 
         throw new Error(`Unsupported serialization version: ${version}`);

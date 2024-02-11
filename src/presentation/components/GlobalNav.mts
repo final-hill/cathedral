@@ -24,7 +24,7 @@ export class GlobalNav extends Component {
         customElements.define('x-global-nav', this);
     }
 
-    constructor(routes: GlobalNavLink[]) {
+    constructor(routes: GlobalNavLink[] = []) {
         super({});
 
         self.navigation.addEventListener('navigate', this);

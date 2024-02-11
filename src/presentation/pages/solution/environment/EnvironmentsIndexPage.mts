@@ -1,7 +1,7 @@
 import html from '~/presentation/lib/html.mjs';
 import { MiniCards } from '~components/index.mjs';
 import _EnvironmentPage from './_EnvironmentPage.mjs';
-import type Entity from '~/domain/Entity.mjs';
+import { type Entity } from '~/domain/index.mjs';
 
 const { p } = html;
 

@@ -1,5 +1,4 @@
-import Limit from '~/domain/Limit.mjs';
-import type Goals from '~/domain/Goals.mjs';
+import { Limit, type Goals } from '~/domain/index.mjs';
 import html from '~/presentation/lib/html.mjs';
 import { DataTable } from '~components/index.mjs';
 import _GoalsPage from './_GoalsPage.mjs';

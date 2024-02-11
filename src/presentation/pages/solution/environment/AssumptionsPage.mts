@@ -1,8 +1,7 @@
-import Assumption from '~/domain/Assumption.mjs';
+import { Assumption, type Environment } from '~/domain/index.mjs';
 import { DataTable } from '~components/index.mjs';
 import html from '~/presentation/lib/html.mjs';
 import _EnvironmentPage from './_EnvironmentPage.mjs';
-import type Environment from '~/domain/Environment.mjs';
 
 const { p } = html;
 

@@ -1,10 +1,9 @@
-import Solution from '~/domain/Solution.mjs';
+import { Solution, emptyUuid } from '~/domain/index.mjs';
 import html from '~/presentation/lib/html.mjs';
 import requiredTheme from '~/presentation/theme/requiredTheme.mjs';
 import formTheme from '~/presentation/theme/formTheme.mjs';
 import slugify from '~/lib/slugify.mjs';
 import _SolutionPage from './_SolutionPage.mjs';
-import { emptyUuid } from '~/domain/Uuid.mjs';
 
 const { form, label, input, span, button } = html;
 

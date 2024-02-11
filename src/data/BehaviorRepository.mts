@@ -1,4 +1,4 @@
-import Behavior from '~/domain/Behavior.mjs';
+import { Behavior } from '~/domain/index.mjs';
 import StorageRepository from './StorageRepository.mjs';
 import BehaviorToJsonMapper from '~/mappers/BehaviorToJsonMapper.mjs';
 import pkg from '~/../package.json' with { type: 'json' };

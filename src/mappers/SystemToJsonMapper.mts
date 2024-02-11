@@ -1,4 +1,4 @@
-import System from '~/domain/System.mjs';
+import { System } from '~/domain/index.mjs';
 import type { EntityJson } from './EntityToJsonMapper.mjs';
 import EntityToJsonMapper from './EntityToJsonMapper.mjs';
 import SemVer from '~/lib/SemVer.mjs';
@@ -17,7 +17,7 @@ export default class SystemToJsonMapper extends EntityToJsonMapper {
         if (version.gte('0.5.0'))
             return new System({
                 ...super.mapFrom(target),
-                components: (target.components ?? []).map(componentToJsonMapper.mapFrom)
+                components: (target.components ?? []).map(item => componentToJsonMapper.mapFrom(item))
             });
 
         throw new Error(`Unsupported serialization version: ${version}`);

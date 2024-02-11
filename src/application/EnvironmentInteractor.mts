@@ -1,15 +1,9 @@
-import Environment from '~/domain/Environment.mjs';
+import type { Properties } from '~/types/Properties.mjs';
+import { Assumption, Component, Constraint, ConstraintCategory, Effect, Environment, GlossaryTerm, Invariant, type Uuid } from '~/domain/index.mjs';
 import Interactor from './Interactor.mjs';
 import type Presenter from './Presenter.mjs';
 import type Repository from './Repository.mjs';
-import type { Uuid } from '~/domain/Uuid.mjs';
-import Assumption from '~/domain/Assumption.mjs';
-import type { Properties } from '~/types/Properties.mjs';
-import Component from '~/domain/Component.mjs';
-import Constraint, { ConstraintCategory } from '~/domain/Constraint.mjs';
-import Effect from '~/domain/Effect.mjs';
-import GlossaryTerm from '~/domain/GlossaryTerm.mjs';
-import Invariant from '~/domain/Invariant.mjs';
+import treeFind from '~/lib/treeFind.mjs';
 
 export default class EnvironmentInteractor extends Interactor<Environment> {
     constructor({ presenter, repository }: {
@@ -38,26 +32,35 @@ export default class EnvironmentInteractor extends Interactor<Environment> {
     }
 
     async createComponent(
-        { environmentId, name, description, interfaceDefinition }: {
+        { environmentId, parentId, label }: {
             environmentId: Uuid;
-            name: string;
-            description: string;
-            interfaceDefinition: string;
+            parentId?: Uuid;
+            label: string;
         }
-    ) {
+    ): Promise<Component> {
         const environment = await this.repository.get(environmentId);
 
         if (!environment)
             throw new Error(`Environment ${environmentId} not found`);
 
-        environment.components.push(new Component({
-            id: crypto.randomUUID(),
-            name,
-            description,
-            statement: interfaceDefinition
-        }));
+        const parent = !parentId ? environment :
+            environment.components.map(c => treeFind(parentId, c))
+                .find(x => x) ?? environment,
+            component = new Component({
+                id: crypto.randomUUID(),
+                name: label,
+                statement: '',
+                children: []
+            });
+
+        if (parent instanceof Environment)
+            environment.components.push(component);
+        else
+            parent.children.push(component);
 
         await this.repository.update(environment);
+
+        return component;
     }
 
     async createConstraint(
@@ -147,14 +150,22 @@ export default class EnvironmentInteractor extends Interactor<Environment> {
     }
 
     async deleteComponent(
-        { environmentId, id }: { environmentId: Uuid; id: Uuid }
+        { environmentId, id, parentId }: { environmentId: Uuid; id: Uuid; parentId?: Uuid }
     ) {
         const environment = await this.repository.get(environmentId);
 
         if (!environment)
             throw new Error(`Environment ${environmentId} not found`);
 
-        environment.components = environment.components.filter(x => x.id !== id);
+        const parent = !parentId ? environment :
+            environment.components.map(c => treeFind(parentId, c))
+                .find(x => x) ?? environment;
+
+        if (parent instanceof Environment)
+            environment.components = environment.components.filter(x => x.id !== id);
+        else
+            parent.children = parent.children.filter(x => x.id !== id);
+
         await this.repository.update(environment);
     }
 
@@ -223,17 +234,36 @@ export default class EnvironmentInteractor extends Interactor<Environment> {
     }
 
     async updateComponent(
-        { environmentId, component }: { environmentId: Uuid; component: Properties<Component> }
+        { environmentId, id, parentId, label }:
+            { environmentId: Uuid; id: Uuid; parentId?: Uuid; label: string }
     ) {
-        const environment = await this.repository.get(environmentId),
-            newComponent = new Component(component);
+        const environment = await this.repository.get(environmentId);
 
         if (!environment)
             throw new Error(`Environment ${environmentId} not found`);
 
-        environment.components = environment.components.map(x =>
-            x.id === component.id ? newComponent : x
-        );
+        const parent = !parentId ? environment :
+            environment.components.map(c => treeFind(parentId, c))
+                .find(x => x) ?? environment;
+
+        if (parent instanceof Environment)
+            parent.components = environment.components.map(c =>
+                c.id === id ? new Component({
+                    id,
+                    name: label,
+                    statement: '',
+                    children: c.children
+                }) : c
+            );
+        else
+            parent.children = parent.children.map(c =>
+                c.id === id ? new Component({
+                    id,
+                    name: label,
+                    statement: '',
+                    children: c.children
+                }) : c
+            );
 
         await this.repository.update(environment);
     }

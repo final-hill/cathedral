@@ -1,4 +1,4 @@
-import Invariant from '~/domain/Invariant.mjs';
+import { Invariant } from '~/domain/index.mjs';
 import RequirementToJsonMapper, { type RequirementJson } from './RequirementToJsonMapper.mjs';
 import SemVer from '~/lib/SemVer.mjs';
 

@@ -1,6 +1,6 @@
 import RequirementToJsonMapper, { type RequirementJson } from './RequirementToJsonMapper.mjs';
 import SemVer from '~/lib/SemVer.mjs';
-import Assumption from '~/domain/Assumption.mjs';
+import { Assumption } from '~/domain/index.mjs';
 
 export interface AssumptionJson extends RequirementJson { }
 

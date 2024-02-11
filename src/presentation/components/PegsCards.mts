@@ -1,8 +1,7 @@
-import SlugEntity from '~/domain/SlugEntity.mjs';
+import { SlugEntity, emptyUuid, type Uuid } from '~/domain/index.mjs';
 import type Presenter from '~/application/Presenter.mjs';
 import { Container, PegsCard } from './index.mjs';
 import html from '../lib/html.mjs';
-import { emptyUuid, type Uuid } from '~/domain/Uuid.mjs';
 
 const { section, template, slot } = html;
 
@@ -43,26 +42,25 @@ export class PegsCards extends Container implements Presenter<SlugEntity> {
     presentList(entities: SlugEntity[]): void {
         const curPath = document.location.pathname,
             elNewCard = new PegsCard({
+                id: emptyUuid,
                 heading: 'New Entry',
                 description: 'Create a new entry',
                 href: `${curPath === '/' ? '' : curPath}/new-entry`,
                 allowDelete: false
-            });
-        elNewCard.dataset.id = emptyUuid;
+            }),
+            newCards = [elNewCard].concat(
+                entities.map(entity => {
+                    const card = new PegsCard({
+                        id: entity.id,
+                        allowDelete: true,
+                        heading: entity.name,
+                        description: entity.description,
+                        href: `${curPath === '/' ? '' : curPath}/${entity.slug()}`
+                    });
 
-        const newCards = [elNewCard].concat(
-            entities.map(entity => {
-                const card = new PegsCard({
-                    allowDelete: true,
-                    heading: entity.name,
-                    description: entity.description,
-                    href: `${curPath === '/' ? '' : curPath}/${entity.slug()}`
-                });
-                card.dataset.id = entity.id;
-
-                return card;
-            })
-        );
+                    return card;
+                })
+            );
         this.replaceChildren(...newCards);
     }
 }

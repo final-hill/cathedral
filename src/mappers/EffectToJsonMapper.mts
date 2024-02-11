@@ -1,6 +1,6 @@
 import SemVer from '~/lib/SemVer.mjs';
 import RequirementToJsonMapper, { type RequirementJson } from './RequirementToJsonMapper.mjs';
-import Effect from '~/domain/Effect.mjs';
+import { Effect } from '~/domain/index.mjs';
 
 export interface EffectJson extends RequirementJson { }
 

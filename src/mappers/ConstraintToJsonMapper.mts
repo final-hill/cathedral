@@ -1,4 +1,4 @@
-import Constraint, { ConstraintCategory } from '~/domain/Constraint.mjs';
+import { Constraint, ConstraintCategory } from '~/domain/index.mjs';
 import RequirementToJsonMapper, { type RequirementJson } from './RequirementToJsonMapper.mjs';
 import SemVer from '~/lib/SemVer.mjs';
 

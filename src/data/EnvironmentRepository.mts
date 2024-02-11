@@ -1,4 +1,4 @@
-import Environment from '~/domain/Environment.mjs';
+import { Environment } from '~/domain/index.mjs';
 import StorageRepository from './StorageRepository.mjs';
 import EnvironmentToJsonMapper from '~/mappers/EnvironmentToJsonMapper.mjs';
 import pkg from '~/../package.json' with { type: 'json' };

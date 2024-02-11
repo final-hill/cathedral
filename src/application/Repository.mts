@@ -1,4 +1,4 @@
-import type Entity from '~/domain/Entity.mjs';
+import { type Entity } from '~/domain/index.mjs';
 import type Mapper from './Mapper.mjs';
 
 export default abstract class Repository<E extends Entity> extends EventTarget {

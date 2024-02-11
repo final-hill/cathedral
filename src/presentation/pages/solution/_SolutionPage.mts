@@ -2,7 +2,7 @@ import type Presenter from '~/application/Presenter.mjs';
 import Page from '../Page.mjs';
 import SolutionInteractor from '~/application/SolutionInteractor.mjs';
 import SolutionRepository from '~/data/SolutionRepository.mjs';
-import type Solution from '~/domain/Solution.mjs';
+import { type Solution } from '~/domain/index.mjs';
 
 export default abstract class _SolutionPage extends Page implements Presenter<Solution> {
     #interactor: SolutionInteractor = new SolutionInteractor({

@@ -1,11 +1,11 @@
 import SemVer from '~/lib/SemVer.mjs';
 import type { RequirementJson } from './RequirementToJsonMapper.mjs';
 import RequirementToJsonMapper from './RequirementToJsonMapper.mjs';
-import Component from '~/domain/Component.mjs';
+import { Component } from '~/domain/index.mjs';
 
 export interface ComponentJson extends RequirementJson {
     name: string;
-    description: string;
+    children: ComponentJson[];
 }
 
 export default class ComponentToJsonMapper extends RequirementToJsonMapper {
@@ -13,7 +13,12 @@ export default class ComponentToJsonMapper extends RequirementToJsonMapper {
         const version = new SemVer(target.serializationVersion);
 
         if (version.gte('0.4.0'))
-            return new Component(target);
+            return new Component({
+                ...super.mapFrom(target),
+                name: target.name,
+                children: (target.children ?? []).map(item => this.mapFrom(item)),
+                statement: target.statement
+            });
 
         throw new Error(`Unsupported serialization version: ${version}`);
     }
@@ -22,7 +27,7 @@ export default class ComponentToJsonMapper extends RequirementToJsonMapper {
         return {
             ...super.mapTo(source),
             name: source.name,
-            description: source.description,
+            children: source.children.map(item => this.mapTo(item))
         };
     }
 }

@@ -1,24 +1,26 @@
 import type { Properties } from '~/types/Properties.mjs';
-import Requirement from './Requirement.mjs';
+import { Requirement, type Tree } from './index.mjs';
 
 /**
  * A Component is a self-contained element that provides an interface
  * which can be utilized by the Project, Environment, Goals, or System.
+ * A component can be composed of other components, forming a tree structure.
  */
-export default class Component extends Requirement {
-    name!: string;
-    description!: string;
+export class Component extends Requirement implements Tree {
+    static maxNameLength = 120;
 
-    constructor({ name, description, ...rest }: Omit<Properties<Component>, 'interfaceDefinition'>) {
+    #name!: string;
+    children!: this[];
+
+    constructor({ name, children, ...rest }: Properties<Component>) {
         super(rest);
-        Object.assign(this, { name, description });
+        Object.assign(this, { name, children });
     }
 
-    get interfaceDefinition(): string {
-        return this.statement;
-    }
-
-    set interfaceDefinition(value: string) {
-        this.statement = value;
+    get name() { return this.#name; }
+    set name(value) {
+        if (value.length > Component.maxNameLength)
+            throw new Error(`Name exceeds maximum length of ${Component.maxNameLength} characters.`);
+        this.#name = value.trim();
     }
 }

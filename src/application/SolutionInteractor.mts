@@ -1,4 +1,4 @@
-import Solution from '~/domain/Solution.mjs';
+import { Solution } from '~/domain/index.mjs';
 import Interactor from './Interactor.mjs';
 import type Presenter from './Presenter.mjs';
 import type Repository from './Repository.mjs';

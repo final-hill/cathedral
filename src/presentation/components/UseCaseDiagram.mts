@@ -1,5 +1,5 @@
 import mermaid from 'mermaid';
-import UseCase from '~/domain/UseCase.mjs';
+import { UseCase } from '~/domain/index.mjs';
 import { Component } from '~components/index.mjs';
 import type Presenter from '~/application/Presenter.mjs';
 import slugify from '~/lib/slugify.mjs';

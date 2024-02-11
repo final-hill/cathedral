@@ -1,4 +1,4 @@
-import Goals from '~/domain/Goals.mjs';
+import { Goals } from '~/domain/index.mjs';
 import StorageRepository from './StorageRepository.mjs';
 import GoalsToJsonMapper from '~/mappers/GoalsToJsonMapper.mjs';
 import pkg from '~/../package.json' with { type: 'json' };
