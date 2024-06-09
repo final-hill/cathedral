@@ -1,23 +1,21 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "type": "npm",
-            "script": "lint",
-            "group": "build",
-            "problemMatcher": "$eslint-stylish",
-            "label": "ESLint",
-            "detail": "npm run lint"
-        },
-        {
-            "type": "npm",
-            "script": "build",
-            "group": "build",
-            "problemMatcher": [
-                "$tsc"
-            ],
-            "label": "npm: build",
-            "detail": "npm run build"
-        },
-    ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "typecheck",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: typecheck",
+			"detail": "nuxi typecheck"
+		},
+		{
+			"type": "npm",
+			"script": "dev",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: dev",
+			"detail": "nuxt dev"
+		}
+	]
 }
