@@ -1,43 +1,4 @@
 {
-    "compilerOptions": {
-        "allowSyntheticDefaultImports": true,
-        "declaration": true,
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "incremental": true,
-        "lib": [
-            "ES2022",
-            "DOM",
-            "DOM.Iterable"
-        ],
-        "module": "NodeNext",
-        "moduleResolution": "NodeNext",
-        "outDir": "dist",
-        "noImplicitOverride": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "paths": {
-            "~/*": [
-                "./src/*"
-            ],
-            "~components/*": [
-                "./src/presentation/components/*"
-            ],
-            "~pages/*": [
-                "./src/presentation/pages/*"
-            ]
-        },
-        "resolveJsonModule": true,
-        "sourceMap": true,
-        "strict": true,
-        "target": "ES2022",
-        "verbatimModuleSyntax": true
-    },
-    "exclude": [
-        "node_modules",
-        "dist"
-    ],
-    "include": [
-        "src/**/*"
-    ]
+  // https://nuxt.com/docs/guide/concepts/typescript
+  "extends": "./.nuxt/tsconfig.json"
 }

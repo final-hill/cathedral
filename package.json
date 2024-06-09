@@ -1,53 +1,42 @@
 {
-    "name": "@final-hill/cathedral",
-    "version": "0.5.0",
-    "description": "Requirements management system",
-    "keywords": [],
-    "private": true,
-    "type": "module",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/final-hill/cathedral.git"
-    },
-    "bugs": {
-        "url": "https://github.com/final-hill/cathedral/issues"
-    },
-    "homepage": "https://final-hill.com/cathedral",
-    "author": "Michael L Haufe <michael.haufe@final-hill.com> (https://final-hill.com)",
-    "license": "AGPL-3.0-only",
-    "scripts": {
-        "build:dev": "webpack --mode development",
-        "build:prod": "webpack --mode production",
-        "lint": "eslint src/ --ext .mts --fix",
-        "serve": "webpack serve --mode development",
-        "test": "globstar -- node --import tsx --test \"src/**/*.test.mts\""
-    },
-    "devDependencies": {
-        "@types/dom-navigation": "^1.0.3",
-        "@types/node": "^20.8.10",
-        "@typescript-eslint/eslint-plugin": "^6.13.1",
-        "@typescript-eslint/parser": "^6.13.1",
-        "copy-webpack-plugin": "^12.0.0",
-        "dom-storage": "^2.1.0",
-        "eslint": "^8.55.0",
-        "eslint-plugin-import": "^2.29.0",
-        "eslint-webpack-plugin": "^4.0.1",
-        "favicons": "^7.1.4",
-        "favicons-webpack-plugin": "^6.0.1",
-        "globstar": "^1.0.0",
-        "html-webpack-plugin": "^5.5.3",
-        "ts-loader": "^9.5.0",
-        "tsx": "^4.6.2",
-        "typescript": "^5.3.2",
-        "webpack": "^5.89.0",
-        "webpack-cli": "^5.1.4",
-        "webpack-dev-server": "^4.15.1",
-        "workbox-webpack-plugin": "^7.0.0"
-    },
-    "dependencies": {
-        "css-loader": "^6.8.1",
-        "feather-icons": "^4.29.1",
-        "mermaid": "^10.6.1",
-        "style-loader": "^3.3.3"
-    }
+  "name": "@final-hill/cathedral",
+  "version": "0.5.0",
+  "description": "Requirements management system",
+  "keywords": [],
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/final-hill/cathedral.git"
+  },
+  "bugs": {
+    "url": "https://github.com/final-hill/cathedral/issues"
+  },
+  "homepage": "https://final-hill.com/cathedral",
+  "author": "Michael L Haufe <michael.haufe@final-hill.com> (https://final-hill.com)",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "generate-pwa-assets": "pwa-assets-generator",
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "typecheck": "nuxi typecheck"
+  },
+  "dependencies": {
+    "@vite-pwa/nuxt": "^0.8.0",
+    "mermaid": "^10.9.1",
+    "nuxt": "^3.11.2",
+    "nuxt-primevue": "^3.0.0",
+    "primeflex": "^3.3.1",
+    "primeicons": "^7.0.0",
+    "vue": "^3.4.27",
+    "vue-router": "^4.3.2"
+  },
+  "devDependencies": {
+    "@vite-pwa/assets-generator": "^0.2.4",
+    "typescript": "^5.4.5",
+    "vue-tsc": "^1.8.27"
+  }
 }

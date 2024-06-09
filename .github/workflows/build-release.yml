@@ -40,14 +40,16 @@ jobs:
             ${{ runner.os }}-node-
       - name: Install dependencies
         run: npm install
-      - name: Build
-        run: npm run build:prod
-      - name: Test
-        run: npm run test
+      - name: Build Application
+        run: npm run generate
+      - name: Generate PWA Assets
+        run: npm run generate-pwa-assets
+      # - name: Run Unit Tests
+      #   run: npm run test
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: dist
+          path: .output/public
 
   deploy:
     environment:
