@@ -1,4 +1,9 @@
 <script lang="ts" setup>
+useHead({
+  titleTemplate: (titleChunk) =>
+    titleChunk ? `${titleChunk} - Cathedral` : 'Cathedral'
+})
+
 const preAlphaDialogVisible = ref(
   JSON.parse(localStorage.getItem('preAlphaDialogVisible') || 'true')
 );

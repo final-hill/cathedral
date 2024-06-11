@@ -5,6 +5,10 @@ import Solution from '../../../domain/Solution';
 import CreateSolutionUseCase from '../../../application/CreateSolutionUseCase';
 import GetSolutionByIdUseCase from '../../../application/GetSolutionByIdUseCase';
 
+useHead({
+    title: 'New Solution'
+})
+
 const router = useRouter(),
     repo = new SolutionRepository(),
     createSolutionUseCase = new CreateSolutionUseCase(repo),

@@ -14,6 +14,10 @@ import mermaid from 'mermaid';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
 import GetStakeHolderByIdUseCase from '../../application/GetStakeHolderByIdUseCase';
 
+useHead({
+    title: 'Stakeholders'
+})
+
 const router = useRouter(),
     route = useRoute(),
     config = useAppConfig(),

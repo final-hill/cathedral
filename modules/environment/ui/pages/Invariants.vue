@@ -12,6 +12,10 @@ import UpdateInvariantUseCase from '../../application/UpdateInvariantUseCase';
 import DeleteInvariantUseCase from '../../application/DeleteInvariantUseCase';
 import type Invariant from '../../domain/Invariant';
 
+useHead({
+    title: 'Invariants'
+})
+
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,

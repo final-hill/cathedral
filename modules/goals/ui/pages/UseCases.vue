@@ -15,6 +15,10 @@ import GetStakeHoldersUseCase from '../../application/GetStakeHoldersUseCase';
 import UpdateUseCaseUseCase from '../../application/UpdateUseCaseUseCase';
 import Stakeholder from '../../domain/Stakeholder';
 
+useHead({
+    title: 'Use Cases'
+})
+
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,

@@ -12,6 +12,10 @@ import UpdateObstacleUseCase from '../../application/UpdateObstacleUseCase';
 import DeleteObstacleUseCase from '../../application/DeleteObstacleUseCase';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
 
+useHead({
+    title: 'Obstacles'
+})
+
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
@@ -73,7 +77,6 @@ const onDelete = async (id: Uuid) => {
 
     obstacles.value = await getObstaclesUseCase.execute(goals!.id) ?? []
 }
-
 </script>
 
 <template>

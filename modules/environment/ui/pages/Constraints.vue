@@ -13,6 +13,10 @@ import DeleteConstraintUseCase from '../../application/DeleteConstraintUseCase';
 import type Constraint from '../../domain/Constraint';
 import { ConstraintCategory } from '../../domain/Constraint';
 
+useHead({
+    title: 'Constraints'
+})
+
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,

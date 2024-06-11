@@ -5,6 +5,10 @@ import EnvironmentRepository from '../../data/EnvironmentRepository';
 import GetEnvironmentBySolutionIdUseCase from '../../application/GetEnvironmentBySolutionIdUseCase';
 import CreateEnvironmentUseCase from '../../application/CreateEnvironmentUseCase';
 
+useHead({
+    title: 'Environment'
+})
+
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,

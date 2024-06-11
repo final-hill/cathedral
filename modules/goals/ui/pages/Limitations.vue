@@ -11,7 +11,10 @@ import CreateLimitUseCase from '../../application/CreateLimitUseCase';
 import UpdateLimitUseCase from '../../application/UpdateLimitUseCase';
 import DeleteLimitUseCase from '../../application/DeleteLimitUseCase';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
-import type Button from 'primevue/button';
+
+useHead({
+    title: 'Limitations'
+})
 
 const router = useRouter(),
     route = useRoute(),

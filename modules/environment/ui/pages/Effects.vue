@@ -13,6 +13,10 @@ import UpdateEffectUseCase from '../../application/UpdateEffectUseCase';
 import DeleteEffectUseCase from '../../application/DeleteEffectUseCase';
 import type Effect from '../../domain/Effect';
 
+useHead({
+    title: 'Effects'
+})
+
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,

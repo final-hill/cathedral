@@ -12,6 +12,10 @@ import type GlossaryTerm from '../../domain/GlossaryTerm';
 import { FilterMatchMode } from 'primevue/api';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
 
+useHead({
+    title: 'Glossary'
+})
+
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,

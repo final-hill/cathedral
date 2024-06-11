@@ -12,6 +12,10 @@ import type Assumption from '../../domain/Assumption';
 import { FilterMatchMode } from 'primevue/api';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
 
+useHead({
+    title: 'Assumptions'
+})
+
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,

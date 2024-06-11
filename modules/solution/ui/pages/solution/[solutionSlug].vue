@@ -2,6 +2,10 @@
 import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
 
+useHead({
+    title: 'Solution'
+})
+
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,

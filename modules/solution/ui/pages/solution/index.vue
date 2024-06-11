@@ -4,6 +4,10 @@ import SolutionRepository from '../../../data/SolutionRepository';
 import type Solution from '../../../domain/Solution';
 import DeleteSolutionUseCase from '~/modules/solution/application/DeleteSolutionUseCase';
 
+useHead({
+    title: 'Solutions'
+})
+
 const router = useRouter(),
     solutionRepo = new SolutionRepository(),
     getAllSolutionsUseCase = new GetAllSolutionsUseCase(solutionRepo),

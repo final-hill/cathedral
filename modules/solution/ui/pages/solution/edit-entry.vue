@@ -5,6 +5,10 @@ import UpdateSolutionUseCase from '~/modules/solution/application/UpdateSolution
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
 import Solution from '../solution.vue';
 
+useHead({
+    title: 'Edit Solution'
+})
+
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
