@@ -12,6 +12,10 @@ import UpdateOutcomeUseCase from '../../application/UpdateOutcomeUseCase';
 import DeleteOutcomeUseCase from '../../application/DeleteOutcomeUseCase';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
 
+useHead({
+    title: 'Outcomes'
+})
+
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,

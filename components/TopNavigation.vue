@@ -1,20 +1,21 @@
 <script lang="ts" setup>
+import deSlugify from '~/lib/deSlugify';
+
 const router = useRouter()
 
 let getCrumbs = () => {
     const route = router.currentRoute.value,
         crumbs = route.path.split('/').filter((crumb) => crumb !== '');
 
-    return [{ label: 'Home', route: '/' }].concat(
-        crumbs.map((crumb, index) => {
-            const crumbRoute = router.resolve({ path: '/' + crumbs.slice(0, index + 1).join('/') });
-
+    return [
+        { label: 'Home', route: '/' },
+        ...crumbs.map((crumb, index) => {
             return {
-                label: (crumbRoute.name ?? '{Untitled}').toString(),
+                label: deSlugify(crumb),
                 route: '/' + crumbs.slice(0, index + 1).join('/')
             };
         })
-    )
+    ];
 };
 
 const crumbs = ref(getCrumbs());

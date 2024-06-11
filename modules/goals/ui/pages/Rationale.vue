@@ -7,6 +7,10 @@ import GetGoalsBySolutionIdUseCase from '../../application/GetGoalsBySolutionIdU
 import GetRationaleUseCase from '../../application/GetRationaleUseCase';
 import UpdateRationaleUseCase from '../../application/UpdateRationaleUseCase';
 
+useHead({
+    title: 'Rationale'
+})
+
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,

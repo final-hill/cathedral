@@ -5,6 +5,10 @@ import GetGoalsBySolutionIdUseCase from '../../application/GetGoalsBySolutionIdU
 import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
 import CreateGoalsUseCase from '../../application/CreateGoalsUseCase';
 
+useHead({
+    title: 'Goals'
+})
+
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,

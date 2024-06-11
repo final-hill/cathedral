@@ -12,6 +12,10 @@ import UpdateComponentUseCase from '../../application/UpdateComponentUseCase';
 import DeleteComponentUseCase from '../../application/DeleteComponentUseCase';
 import type Component from '~/domain/Component';
 
+useHead({
+    title: 'Components'
+})
+
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
