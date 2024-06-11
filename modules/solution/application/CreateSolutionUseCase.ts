@@ -3,10 +3,12 @@ import UseCase from "~/application/UseCase";
 import { type Uuid, emptyUuid } from "~/domain/Uuid";
 import Solution from "../domain/Solution";
 
-export default class CreateSolutionUseCase extends UseCase<{ name: string, description: string }, Uuid> {
+type In = { name: string, description: string }
+
+export default class CreateSolutionUseCase extends UseCase<In, Uuid> {
     constructor(readonly repository: Repository<Solution>) { super() }
 
-    async execute({ name, description }: { name: string; description: string; }): Promise<Uuid> {
+    async execute({ name, description }: In): Promise<Uuid> {
         const solution = new Solution({
             id: crypto.randomUUID(),
             name,
