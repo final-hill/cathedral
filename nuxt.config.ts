@@ -4,8 +4,6 @@ export default defineNuxtConfig({
   ssr: false,
   css: [
     '~/assets/css/main.css',
-    'primevue/resources/themes/aura-dark-noir/theme.css',
-    'primevue/resources/themes/aura-light-blue/theme.css',
     'primeflex/primeflex.css',
     'primeicons/primeicons.css'
   ],
@@ -15,7 +13,14 @@ export default defineNuxtConfig({
         {
           id: 'theme-link',
           rel: 'stylesheet',
-          href: '/themes/aura-light-blue/theme.css'
+          href: '/themes/aura-light-blue/theme.css',
+          media: 'screen and (prefers-color-scheme: light)'
+        },
+        {
+          id: 'theme-link',
+          rel: 'stylesheet',
+          href: '/themes/aura-dark-blue/theme.css',
+          media: 'screen and (prefers-color-scheme: dark)'
         }
       ]
     }

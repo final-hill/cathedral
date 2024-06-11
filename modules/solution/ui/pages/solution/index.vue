@@ -37,49 +37,31 @@ const handleEdit = (solution: Solution) => {
 
 <template>
     <ConfirmDialog></ConfirmDialog>
-    <DataView :value="solutions" layout="grid" dataKey="id">
-        <template #grid="{ items }">
-            <div class="grid gap-3">
-                <Card class="col shadow-4">
-                    <template #title>
-                        <NuxtLink :to="{ name: 'New Solution' }">
-                            New Solution
-                        </NuxtLink>
-                    </template>
-                    <template #subtitle>
-                        Create a new Solution
-                    </template>
-                </Card>
-                <Card class="col shadow-4" v-for="(item, index) in items" :key="index">
-                    <template #title>
-                        <NuxtLink :to="{ name: 'Solution', params: { solutionSlug: item.slug } }">
-                            {{ item.name }}
-                        </NuxtLink>
-                    </template>
-                    <template #subtitle>
-                        {{ item.description }}
-                    </template>
-                    <template #footer>
-                        <Button icon="pi pi-pencil" class="edit-button mr-2" @click="handleEdit(item)" />
-                        <Button icon="pi pi-trash" class="delete-button" @click="handleDelete(item)"
-                            severity="danger" />
-                    </template>
-                </Card>
-            </div>
-        </template>
-        <template #empty>
-            <div class="grid">
-                <Card class="col">
-                    <template #title>
-                        <NuxtLink :to="{ name: 'New Solution' }">
-                            New Solution
-                        </NuxtLink>
-                    </template>
-                    <template #subtitle>
-                        Create a new Solution
-                    </template>
-                </Card>
-            </div>
-        </template>
-    </DataView>
+    <div class="grid gap-3">
+        <Card class="col shadow-4">
+            <template #title>
+                <NuxtLink :to="{ name: 'New Solution' }">
+                    New Solution
+                </NuxtLink>
+            </template>
+            <template #subtitle>
+                Create a new Solution
+            </template>
+        </Card>
+        <Card class="col shadow-4" v-for="solution in solutions">
+            <template #title>
+                <NuxtLink :to="{ name: 'Solution', params: { solutionSlug: solution.slug } }">
+                    {{ solution.name }}
+                </NuxtLink>
+            </template>
+            <template #subtitle>
+                {{ solution.description }}
+            </template>
+            <template #footer>
+                <Button icon="pi pi-pencil" class="edit-button mr-2" @click="handleEdit(solution as Solution)" />
+                <Button icon="pi pi-trash" class="delete-button" @click="handleDelete(solution as Solution)"
+                    severity="danger" />
+            </template>
+        </Card>
+    </div>
 </template>
