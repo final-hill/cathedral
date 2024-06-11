@@ -17,6 +17,10 @@ export default defineNuxtModule({
                 path: '/solution/new-entry',
                 file: resolve('./ui/pages/solution/new-entry.vue')
             }, {
+                name: 'Edit Solution',
+                path: '/solution/:solutionSlug/edit-entry',
+                file: resolve('./ui/pages/solution/edit-entry.vue')
+            }, {
                 name: 'Solution',
                 path: '/solution/:solutionSlug',
                 file: resolve('./ui/pages/solution/[solutionSlug].vue')
