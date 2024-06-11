@@ -1,14 +1,29 @@
 <script lang="ts" setup>
+import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
+import SolutionRepository from '~/modules/solution/data/SolutionRepository';
+
 const router = useRouter(),
-    route = useRoute()
+    route = useRoute(),
+    slug = route.params.solutionSlug as string,
+    solutionRepository = new SolutionRepository(),
+    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
+    solution = await getSolutionBySlugUseCase.execute(slug)
+
+if (!solution)
+    router.push({ name: 'Solutions' });
+
+const links = [
+    { name: 'Functionality', icon: 'pi-bolt', label: 'Functionality' },
+]
 </script>
 
 <template>
     <h1>System</h1>
 
     <div class="grid">
-        <NuxtLink class="col-fixed w-2 mr-4" :to="`${route.path}/functionality`">
-            <Button label="Functionality" class="w-full h-5rem text-1xl" icon="pi pi-bolt text-3xl" iconPos="top"
+        <NuxtLink v-for="link in links" :key="link.name" :to="{ name: link.name, params: { solutionSlug: slug } }"
+            class="col-fixed w-2 mr-4">
+            <Button :label="link.label" class="w-full h-5rem text-1xl" :icon="`pi ${link.icon} text-3xl`" iconPos="top"
                 severity="secondary" />
         </NuxtLink>
     </div>

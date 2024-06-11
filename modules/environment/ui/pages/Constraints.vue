@@ -4,7 +4,7 @@ import EnvironmentRepository from '../../data/EnvironmentRepository';
 import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
 import GetEnvironmentBySolutionIdUseCase from '../../application/GetEnvironmentBySolutionIdUseCase';
 import { FilterMatchMode } from 'primevue/api';
-import { emptyUuid } from '~/domain/Uuid';
+import { emptyUuid, type Uuid } from '~/domain/Uuid';
 import ConstraintRepository from '../../data/ConstraintRepository';
 import GetConstraintsUseCase from '../../application/GetConstraintsUseCase';
 import CreateConstraintUseCase from '../../application/CreateConstraintUseCase';
@@ -38,9 +38,8 @@ if (!solution) {
 type ConstraintViewModel = Pick<Constraint, 'id' | 'name' | 'statement' | 'category'>;
 
 const constraints = ref<ConstraintViewModel[]>([]),
-    categories = ref<ConstraintCategory[]>(Object.values(ConstraintCategory)),
-    editingRows = ref<ConstraintViewModel[]>([]),
-    dataTable = ref();
+    emptyConstraint = { id: emptyUuid, name: '', statement: '', category: ConstraintCategory.BusinessRule },
+    categories = ref<ConstraintCategory[]>(Object.values(ConstraintCategory))
 
 onMounted(async () => {
     constraints.value = await getConstraintsUseCase.execute(environment!.id) ?? []
@@ -52,68 +51,25 @@ const filters = ref({
     'category': { value: null, matchMode: FilterMatchMode.EQUALS }
 });
 
-const createDisabled = ref(false)
+const onCreate = async (data: ConstraintViewModel) => {
+    const newId = await createConstraintUseCase.execute({
+        parentId: environment!.id,
+        name: data.name,
+        statement: data.statement,
+        category: data.category
+    })
 
-const addNewRow = () => {
-    constraints.value.unshift({ id: emptyUuid, name: '', statement: '', category: ConstraintCategory.BusinessRule })
-    editingRows.value = [constraints.value[0]]
-    createDisabled.value = true
-    // remove the sortfield to avoid the new row from being sorted
-    dataTable.value!.d_sortField = null
+    constraints.value = await getConstraintsUseCase.execute(environment!.id) ?? []
 }
 
-const onRowEditSave = async (event: { newData: ConstraintViewModel, index: number, originalEvent: Event }) => {
-    const { newData, index, originalEvent } = event
-
-    const inputs = (originalEvent.target! as HTMLElement).closest('tr')!.querySelectorAll('input')
-
-    if (![...inputs].every(o => o.reportValidity())) {
-        editingRows.value = [newData]
-        return
-    }
-
-    if (newData.id === emptyUuid) {
-        const newId = await createConstraintUseCase.execute({
-            parentId: environment!.id,
-            name: newData.name,
-            statement: newData.statement,
-            category: newData.category
-        })
-
-        constraints.value[index] = {
-            id: newId,
-            name: newData.name,
-            statement: newData.statement,
-            category: newData.category
-        }
-        createDisabled.value = false
-    } else {
-        constraints.value[index] = newData
-        await updateConstraintUseCase.execute(newData)
-    }
+const onDelete = async (id: Uuid) => {
+    constraints.value = constraints.value.filter(o => o.id !== id)
+    await deleteConstraintUseCase.execute(id)
 }
 
-const onRowEditCancel = ({ data, index }: { data: ConstraintViewModel, index: number }) => {
-    if (data.id !== emptyUuid)
-        return
-
-    constraints.value.splice(index, 1)
-    createDisabled.value = false
-    dataTable.value!.d_sortField = 'name'
-}
-
-const onRowDelete = async (constraint: ConstraintViewModel) => {
-    if (!confirm(`Are you sure you want to delete ${constraint.name}?`))
-        return
-    constraints.value = constraints.value.filter(o => o.id !== constraint.id)
-    await deleteConstraintUseCase.execute(constraint.id)
-}
-
-const onSort = (event: any) => {
-    if (editingRows.value.length > 0) {
-        editingRows.value = []
-        createDisabled.value = false
-    }
+const onUpdate = async (data: ConstraintViewModel) => {
+    await updateConstraintUseCase.execute(data)
+    constraints.value = await getConstraintsUseCase.execute(environment!.id) ?? []
 }
 </script>
 
@@ -122,15 +78,8 @@ const onSort = (event: any) => {
         Environmental constraints are the limitations and obligations that
         the environment imposes on the project and system.
     </p>
-    <Toolbar>
-        <template #start>
-            <Button label="Create" type="submit" severity="info" @click="addNewRow" :disabled="createDisabled" />
-        </template>
-    </Toolbar>
-    <DataTable ref="dataTable" :value="constraints" dataKey="id" filterDisplay="row" v-model:filters="filters"
-        :globalFilterFields="['name', 'statement', 'category']" editMode="row" v-model:editingRows="editingRows"
-        @row-edit-save="onRowEditSave" @row-edit-cancel="onRowEditCancel" @sort="onSort" sortField="name"
-        :sortOrder="1">
+    <XDataTable :datasource="constraints" :empty-record="emptyConstraint" :filters="filters" :on-create="onCreate"
+        :on-delete="onDelete" :on-update="onUpdate">
         <Column field="name" header="Name" sortable>
             <template #filter="{ filterModel, filterCallback }">
                 <InputText v-model.trim="filterModel.value" @input="filterCallback()" placeholder="Search by name" />
@@ -165,22 +114,5 @@ const onSort = (event: any) => {
                 <InputText v-model.trim="data[field]" required="true" />
             </template>
         </Column>
-        <Column frozen align-frozen="right">
-            <template #body="{ data, editorInitCallback }">
-                <Button icon="pi pi-pencil" text rounded @click="editorInitCallback" />
-                <Button icon="pi pi-trash" text rounded severity="danger" @click="onRowDelete(data)" />
-            </template>
-            <template #editor="{ editorSaveCallback, editorCancelCallback }">
-                <Button icon="pi pi-check" text rounded @click="editorSaveCallback" />
-                <Button icon="pi pi-times" text rounded severity="danger" @click="editorCancelCallback" />
-            </template>
-        </Column>
-        <template #empty>No constraints found</template>
-        <template #loading>Loading constraints...</template>
-    </DataTable>
+    </XDataTable>
 </template>
-<style scoped>
-:deep(.p-cell-editing) {
-    background-color: var(--highlight-bg);
-}
-</style>

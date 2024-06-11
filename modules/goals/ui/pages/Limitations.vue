@@ -10,7 +10,7 @@ import GetLimitsUseCase from '../../application/GetLimitsUseCase';
 import CreateLimitUseCase from '../../application/CreateLimitUseCase';
 import UpdateLimitUseCase from '../../application/UpdateLimitUseCase';
 import DeleteLimitUseCase from '../../application/DeleteLimitUseCase';
-import { emptyUuid } from '~/domain/Uuid';
+import { emptyUuid, type Uuid } from '~/domain/Uuid';
 import type Button from 'primevue/button';
 
 const router = useRouter(),
@@ -38,8 +38,7 @@ if (!solution) {
 type LimitViewModel = Pick<Limit, 'id' | 'name' | 'statement'>;
 
 const limits = ref<LimitViewModel[]>([]),
-    editingRows = ref<LimitViewModel[]>([]),
-    dataTable = ref();
+    emptyLimit: LimitViewModel = { id: emptyUuid, name: '', statement: '' };
 
 onMounted(async () => {
     limits.value = await getLimitsUseCase.execute(goals!.id) ?? []
@@ -50,64 +49,30 @@ const filters = ref({
     'statement': { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 
-const createDisabled = ref(false)
+const onCreate = async (data: LimitViewModel) => {
+    const newId = await createLimitUseCase.execute({
+        parentId: goals!.id,
+        name: data.name,
+        statement: data.statement
+    })
 
-const addNewRow = () => {
-    limits.value.unshift({ id: emptyUuid, name: '', statement: '' })
-    editingRows.value = [limits.value[0]]
-    createDisabled.value = true
-    // remove the sortfield to avoid the new row from being sorted
-    dataTable.value!.d_sortField = null
+    limits.value = await getLimitsUseCase.execute(goals!.id) ?? []
 }
 
-const onRowEditSave = async (event: { newData: LimitViewModel, index: number, originalEvent: Event }) => {
-    const { newData, index, originalEvent } = event
+const onUpdate = async (data: LimitViewModel) => {
+    await updateLimitUseCase.execute({
+        id: data.id,
+        name: data.name,
+        statement: data.statement
+    })
 
-    const inputs = (originalEvent.target! as HTMLElement).closest('tr')!.querySelectorAll('input')
-
-    if (![...inputs].every(o => o.reportValidity())) {
-        editingRows.value = [newData]
-        return
-    }
-
-    if (newData.id === emptyUuid) {
-        const newId = await createLimitUseCase.execute({
-            parentId: goals!.id,
-            name: newData.name,
-            statement: newData.statement
-        })
-        limits.value[index] = {
-            id: newId,
-            name: newData.name,
-            statement: newData.statement
-        }
-        createDisabled.value = false
-    } else {
-        limits.value[index] = newData
-        await updateLimitUseCase.execute(newData)
-    }
+    limits.value = await getLimitsUseCase.execute(goals!.id) ?? []
 }
 
-const onRowEditCancel = ({ data, index }: { data: LimitViewModel, index: number }) => {
-    if (data.id !== emptyUuid)
-        return
+const onDelete = async (id: Uuid) => {
+    await deleteLimitUseCase.execute({ parentId: goals!.id, id })
 
-    limits.value.splice(index, 1)
-    createDisabled.value = false
-}
-
-const onRowDelete = async (limit: LimitViewModel) => {
-    if (!confirm(`Are you sure you want to delete ${limit.name}?`))
-        return
-    limits.value = limits.value.filter(o => o.id !== limit.id)
-    await deleteLimitUseCase.execute({ parentId: goals!.id, id: limit.id })
-}
-
-const onSort = (event: any) => {
-    if (editingRows.value.length > 0) {
-        editingRows.value = []
-        createDisabled.value = false
-    }
+    limits.value = await getLimitsUseCase.execute(goals!.id) ?? []
 }
 </script>
 <template>
@@ -116,14 +81,8 @@ const onSort = (event: any) => {
         Example: "Providing an interface to the user to change the color of the background is out-of-scope."
     </p>
 
-    <Toolbar>
-        <template #start>
-            <Button label="Create" type="submit" severity="info" @click="addNewRow" :disabled="createDisabled" />
-        </template>
-    </Toolbar>
-    <DataTable ref="dataTable" :value="limits" dataKey="id" filterDisplay="row" v-model:filters="filters"
-        :globalFilterFields="['name', 'statement']" editMode="row" v-model:editingRows="editingRows"
-        @row-edit-save="onRowEditSave" @row-edit-cancel="onRowEditCancel" @sort="onSort">
+    <XDataTable :datasource="limits" :empty-record="emptyLimit" :filters="filters" :on-create="onCreate"
+        :on-update="onUpdate" :on-delete="onDelete">
         <Column field="name" header="Name" sortable>
             <template #filter="{ filterModel, filterCallback }">
                 <InputText v-model.trim="filterModel.value" @input="filterCallback()" placeholder="Search by name" />
@@ -147,22 +106,5 @@ const onSort = (event: any) => {
                 <InputText v-model.trim="data[field]" required="true" />
             </template>
         </Column>
-        <Column frozen align-frozen="right">
-            <template #body="{ data, editorInitCallback }">
-                <Button icon="pi pi-pencil" text rounded @click="editorInitCallback" />
-                <Button icon="pi pi-trash" text rounded severity="danger" @click="onRowDelete(data)" />
-            </template>
-            <template #editor="{ editorSaveCallback, editorCancelCallback }">
-                <Button icon="pi pi-check" text rounded @click="editorSaveCallback" />
-                <Button icon="pi pi-times" text rounded severity="danger" @click="editorCancelCallback" />
-            </template>
-        </Column>
-        <template #empty>No Limitations found</template>
-        <template #loading>Loading Limitations...</template>
-    </DataTable>
+    </XDataTable>
 </template>
-<style scoped>
-:deep(.p-cell-editing) {
-    background-color: var(--highlight-bg);
-}
-</style>

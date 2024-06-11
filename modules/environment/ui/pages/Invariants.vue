@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import { emptyUuid } from '~/domain/Uuid';
+import { emptyUuid, type Uuid } from '~/domain/Uuid';
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
 import EnvironmentRepository from '../../data/EnvironmentRepository';
 import InvariantRepository from '../../data/InvariantRepository';
@@ -37,8 +37,7 @@ if (!solution) {
 type InvariantViewModel = Pick<Invariant, 'id' | 'name' | 'statement'>;
 
 const invariants = ref<InvariantViewModel[]>([]),
-    editingRows = ref<InvariantViewModel[]>([]),
-    dataTable = ref();
+    emptyInvariant: InvariantViewModel = { id: emptyUuid, name: '', statement: '' };
 
 onMounted(async () => {
     invariants.value = await getInvariantsUseCase.execute(environment!.id) ?? []
@@ -49,66 +48,30 @@ const filters = ref({
     'statement': { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 
-const createDisabled = ref(false)
+const onCreate = async (data: InvariantViewModel) => {
+    const newId = await createInvariantUseCase.execute({
+        parentId: environment!.id,
+        name: data.name,
+        statement: data.statement
+    })
 
-const addNewRow = () => {
-    invariants.value.unshift({ id: emptyUuid, name: '', statement: '' })
-    editingRows.value = [invariants.value[0]]
-    createDisabled.value = true
-    // remove the sortfield to avoid the new row from being sorted
-    dataTable.value!.d_sortField = null
+    invariants.value = await getInvariantsUseCase.execute(environment!.id) ?? []
 }
 
-const onRowEditSave = async (event: { newData: InvariantViewModel, index: number, originalEvent: Event }) => {
-    const { newData, index, originalEvent } = event
+const onUpdate = async (data: InvariantViewModel) => {
+    await updateInvariantUseCase.execute({
+        id: data.id,
+        name: data.name,
+        statement: data.statement
+    })
 
-    const inputs = (originalEvent.target! as HTMLElement).closest('tr')!.querySelectorAll('input')
-
-    if (![...inputs].every(o => o.reportValidity())) {
-        editingRows.value = [newData]
-        return
-    }
-
-    if (newData.id === emptyUuid) {
-        const newId = await createInvariantUseCase.execute({
-            parentId: environment!.id,
-            name: newData.name,
-            statement: newData.statement
-        })
-
-        invariants.value[index] = {
-            id: newId,
-            name: newData.name,
-            statement: newData.statement
-        }
-        createDisabled.value = false
-    } else {
-        invariants.value[index] = newData
-        await updateInvariantUseCase.execute(newData)
-    }
+    invariants.value = await getInvariantsUseCase.execute(environment!.id) ?? []
 }
 
-const onRowEditCancel = ({ data, index }: { data: InvariantViewModel, index: number }) => {
-    if (data.id !== emptyUuid)
-        return
+const onDelete = async (id: Uuid) => {
+    await deleteInvariantUseCase.execute(id)
 
-    invariants.value.splice(index, 1)
-    createDisabled.value = false
-    dataTable.value!.d_sortField = 'name'
-}
-
-const onRowDelete = async (assumption: InvariantViewModel) => {
-    if (!confirm(`Are you sure you want to delete ${assumption.name}?`))
-        return
-    invariants.value = invariants.value.filter(o => o.id !== assumption.id)
-    await deleteInvariantUseCase.execute(assumption.id)
-}
-
-const onSort = (event: any) => {
-    if (editingRows.value.length > 0) {
-        editingRows.value = []
-        createDisabled.value = false
-    }
+    invariants.value = await getInvariantsUseCase.execute(environment!.id) ?? []
 }
 </script>
 
@@ -117,15 +80,9 @@ const onSort = (event: any) => {
         Invariants are properties that must always be true. They are used to
         constrain the possible states of a system.
     </p>
-    <Toolbar>
-        <template #start>
-            <Button label="Create" type="submit" severity="info" @click="addNewRow" :disabled="createDisabled" />
-        </template>
-    </Toolbar>
-    <DataTable ref="dataTable" :value="invariants" dataKey="id" filterDisplay="row" v-model:filters="filters"
-        :globalFilterFields="['name', 'statement']" editMode="row" v-model:editingRows="editingRows"
-        @row-edit-save="onRowEditSave" @row-edit-cancel="onRowEditCancel" @sort="onSort" sortField="name"
-        :sortOrder="1">
+
+    <XDataTable :datasource="invariants" :empty-record="emptyInvariant" :filters="filters" :on-create="onCreate"
+        :on-update="onUpdate" :on-delete="onDelete">
         <Column field="name" header="Name" sortable>
             <template #filter="{ filterModel, filterCallback }">
                 <InputText v-model.trim="filterModel.value" @input="filterCallback()" placeholder="Search by name" />
@@ -149,22 +106,5 @@ const onSort = (event: any) => {
                 <InputText v-model.trim="data[field]" required="true" />
             </template>
         </Column>
-        <Column frozen align-frozen="right">
-            <template #body="{ data, editorInitCallback }">
-                <Button icon="pi pi-pencil" text rounded @click="editorInitCallback" />
-                <Button icon="pi pi-trash" text rounded severity="danger" @click="onRowDelete(data)" />
-            </template>
-            <template #editor="{ editorSaveCallback, editorCancelCallback }">
-                <Button icon="pi pi-check" text rounded @click="editorSaveCallback" />
-                <Button icon="pi pi-times" text rounded severity="danger" @click="editorCancelCallback" />
-            </template>
-        </Column>
-        <template #empty>No invariants found</template>
-        <template #loading>Loading invariants...</template>
-    </DataTable>
+    </XDataTable>
 </template>
-<style scoped>
-:deep(.p-cell-editing) {
-    background-color: var(--highlight-bg);
-}
-</style>

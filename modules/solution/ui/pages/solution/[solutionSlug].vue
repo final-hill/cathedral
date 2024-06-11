@@ -11,24 +11,20 @@ const router = useRouter(),
 
 if (!solution)
     router.push({ name: 'Solutions' });
+
+const links = [
+    { name: 'Project', icon: 'pi-box', label: 'Project' },
+    { name: 'Environment', icon: 'pi-cloud', label: 'Environment' },
+    { name: 'Goals', icon: 'pi-bullseye', label: 'Goals' },
+    { name: 'System', icon: 'pi-sitemap', label: 'System' }
+]
 </script>
 
 <template>
     <div class="grid">
-        <NuxtLink class="col-fixed w-2 mr-4" :to="{ name: 'Project', params: { solutionSlug: slug } }">
-            <Button label="Project" class="w-full h-5rem text-1xl" icon="pi pi-box text-3xl" iconPos="top"
-                severity="secondary" />
-        </NuxtLink>
-        <NuxtLink class="col-fixed w-2 mr-4" :to="{ name: 'Environment', params: { solutionSlug: slug } }">
-            <Button label="Environment" class="w-full h-5rem text-1xl" icon="pi pi-cloud text-3xl" iconPos="top"
-                severity="secondary" />
-        </NuxtLink>
-        <NuxtLink class="col-fixed w-2 mr-4" :to="{ name: 'Goals', params: { solutionSlug: slug } }">
-            <Button label="Goals" class="w-full h-5rem text-1xl" icon="pi pi-bullseye text-3xl" iconPos="top"
-                severity="secondary" />
-        </NuxtLink>
-        <NuxtLink class="col-fixed w-2 mr-4" :to="{ name: 'System', params: { solutionSlug: slug } }">
-            <Button label="System" class="w-full h-5rem text-1xl" icon="pi pi-sitemap text-3xl" iconPos="top"
+        <NuxtLink v-for="link in links" :key="link.name" :to="{ name: link.name, params: { solutionSlug: slug } }"
+            class="col-fixed w-2 mr-4">
+            <Button :label="link.label" class="w-full h-5rem text-1xl" :icon="`pi ${link.icon} text-3xl`" iconPos="top"
                 severity="secondary" />
         </NuxtLink>
     </div>
