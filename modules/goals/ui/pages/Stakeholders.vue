@@ -11,7 +11,7 @@ import CreateStakeholderUseCase from '../../application/CreateStakeholderUseCase
 import UpdateStakeHolderUseCase from '../../application/UpdateStakeHolderUseCase';
 import DeleteStakeholderUseCase from '../../application/DeleteStakeholderUseCase';
 import mermaid from 'mermaid';
-import { emptyUuid } from '~/domain/Uuid';
+import { emptyUuid, type Uuid } from '~/domain/Uuid';
 import GetStakeHolderByIdUseCase from '../../application/GetStakeHolderByIdUseCase';
 
 const router = useRouter(),
@@ -43,20 +43,18 @@ type StakeHolderViewModel = Pick<Stakeholder, 'id' | 'name' | 'statement' | 'ava
 const stakeholders = ref<StakeHolderViewModel[]>([]),
     category = ref(Object.values(StakeholderCategory)),
     segmentation = ref(Object.values(StakeholderSegmentation)),
-    editingRows = ref<StakeHolderViewModel[]>([]),
-    dataTable = ref();
+    emptyStakeholder: StakeHolderViewModel = {
+        id: emptyUuid,
+        name: '',
+        statement: '',
+        availability: Stakeholder.AVAILABILITY_MIN,
+        influence: Stakeholder.INFLUENCE_MIN,
+        category: StakeholderCategory.KeyStakeholder,
+        segmentation: StakeholderSegmentation.Client
+    };
 
 onMounted(async () => {
-    stakeholders.value = (await getStakeHoldersUseCase.execute(goals!.id) ?? [])
-        .map(o => ({
-            id: o.id,
-            name: o.name,
-            statement: o.statement,
-            availability: o.availability,
-            influence: o.influence,
-            category: o.category,
-            segmentation: o.segmentation
-        }))
+    stakeholders.value = await getStakeHoldersUseCase.execute(goals!.id) ?? []
 })
 
 const filters = ref({
@@ -109,114 +107,31 @@ watch(stakeholders, async () => {
     })
 });
 
-const createDisabled = ref(false)
+const onCreate = async (data: StakeHolderViewModel) => {
+    const stakeholder = await createStakeHolderUseCase.execute({
+        ...data,
+        parentId: goals!.id
+    });
 
-const addNewRow = () => {
-    stakeholders.value.unshift(new Stakeholder({
-        id: emptyUuid,
+    stakeholders.value = await getStakeHoldersUseCase.execute(goals!.id) ?? []
+}
+
+const onUpdate = async (data: StakeHolderViewModel) => {
+    await updateStakeHolderUseCase.execute({
+        ...data,
+        parentId: goals!.id
+    })
+
+    stakeholders.value = await getStakeHoldersUseCase.execute(goals!.id) ?? []
+}
+
+const onDelete = async (id: Uuid) => {
+    await deleteStakeholderUseCase.execute({
         parentId: goals!.id,
-        property: '',
-        name: '',
-        statement: '',
-        availability: Stakeholder.AVAILABILITY_MIN,
-        influence: Stakeholder.INFLUENCE_MIN,
-        segmentation: StakeholderSegmentation.Client
-    }))
-    createDisabled.value = true
-    // remove the sortfield to avoid the new row from being sorted
-    dataTable.value!.d_sortField = null
-    editingRows.value = [stakeholders.value[0]]
+        id
+    })
 
-    // focus on the first input
-    setTimeout(() => {
-        const input = document.querySelector('.p-datatable-tbody tr input')! as HTMLInputElement
-        input.focus()
-    }, 100)
-}
-
-const onRowEditSave = async (event: { newData: StakeHolderViewModel, index: number, originalEvent: Event }) => {
-    const { newData, index, originalEvent } = event
-
-    const row = (originalEvent.target! as HTMLElement).closest('tr')!,
-        inputs = row.querySelectorAll('input'),
-        dropDowns = row.querySelectorAll('.p-dropdown[required="true"]')
-
-    if (![...inputs].every(o => o.reportValidity())) {
-        editingRows.value = [newData]
-        return
-    }
-
-    if (![...dropDowns].every(dd => {
-        const value = dd.querySelector('.p-inputtext')!.textContent?.trim(),
-            result = value !== '' && !value?.startsWith('Select')
-
-        dd.classList.toggle('p-invalid', !result)
-
-        return result
-    })) {
-        editingRows.value = [newData]
-        return
-    }
-
-    if (newData.id === emptyUuid) {
-        const newId = await createStakeHolderUseCase.execute({
-            parentId: goals!.id,
-            name: newData.name,
-            statement: newData.statement,
-            availability: newData.availability,
-            influence: newData.influence,
-            segmentation: newData.segmentation
-        })
-
-        const newStakeholder = (await getStakeHolderByIdUseCase.execute(newId))!
-        stakeholders.value[index] = newStakeholder
-        createDisabled.value = false
-    } else {
-        await updateStakeHolderUseCase.execute({
-            parentId: goals!.id,
-            id: newData.id,
-            name: newData.name,
-            statement: newData.statement,
-            availability: newData.availability,
-            influence: newData.influence,
-            segmentation: newData.segmentation
-        })
-
-        const newStakeholder = (await getStakeHolderByIdUseCase.execute(newData.id))!
-        stakeholders.value[index] = newStakeholder
-    }
-}
-
-const onRowEditInit = ({ originalEvent }: any) => {
-    // focus on the first input when editing
-    const row = originalEvent.target.closest('tr')
-    setTimeout(() => {
-        const input = row.querySelector('input')
-        input.focus()
-    }, 100)
-}
-
-const onRowEditCancel = ({ data, index }: { data: StakeHolderViewModel, index: number }) => {
-    if (data.id !== emptyUuid)
-        return
-
-    stakeholders.value.splice(index, 1)
-    createDisabled.value = false
-}
-
-const onRowDelete = async (stakeHolder: StakeHolderViewModel) => {
-    if (!confirm(`Are you sure you want to delete ${stakeHolder.name}?`))
-        return
-    stakeholders.value = stakeholders.value.filter(o => o.id !== stakeHolder.id)
-
-    await deleteStakeholderUseCase.execute({ parentId: goals!.id, id: stakeHolder.id })
-}
-
-const onSort = (event: any) => {
-    if (editingRows.value.length > 0) {
-        editingRows.value = []
-        createDisabled.value = false
-    }
+    stakeholders.value = await getStakeHoldersUseCase.execute(goals!.id) ?? []
 }
 </script>
 
@@ -229,17 +144,8 @@ const onSort = (event: any) => {
 
     <TabView>
         <TabPanel header="Stakeholders">
-            <Toolbar>
-                <template #start>
-                    <Button label="Create" type="submit" severity="info" @click="addNewRow"
-                        :disabled="createDisabled" />
-                </template>
-            </Toolbar>
-
-            <DataTable ref="dataTable" :value="stakeholders" dataKey="id" filterDisplay="row" v-model:filters="filters"
-                :globalFilterFields="['name', 'statement', 'availability', 'influence', 'category', 'segmentation']"
-                editMode="row" v-model:editingRows="editingRows" @row-edit-save="onRowEditSave"
-                @row-edit-cancel="onRowEditCancel" @row-edit-init="onRowEditInit" @sort="onSort">
+            <XDataTable :datasource="stakeholders" :filters="filters" :empty-record="emptyStakeholder"
+                :on-create="onCreate" :on-update="onUpdate" :on-delete="onDelete">
                 <Column field="name" header="Name" sortable>
                     <template #filter="{ filterModel, filterCallback }">
                         <InputText v-model.trim="filterModel.value" @input="filterCallback()"
@@ -310,19 +216,7 @@ const onSort = (event: any) => {
                         <Dropdown v-model="data[field]" :options="segmentation" required="true" />
                     </template>
                 </Column>
-                <Column frozen align-frozen="right">
-                    <template #body="{ data, editorInitCallback }">
-                        <Button icon="pi pi-pencil" text rounded @click="editorInitCallback" />
-                        <Button icon="pi pi-trash" text rounded severity="danger" @click="onRowDelete(data)" />
-                    </template>
-                    <template #editor="{ editorSaveCallback, editorCancelCallback }">
-                        <Button icon="pi pi-check" text rounded @click="editorSaveCallback" />
-                        <Button icon="pi pi-times" text rounded severity="danger" @click="editorCancelCallback" />
-                    </template>
-                </Column>
-                <template #empty>No Stakeholders found. </template>
-                <template #loading>Loading Stakeholders...</template>
-            </DataTable>
+            </XDataTable>
         </TabPanel>
         <TabPanel header="Stakeholder Map">
             <section ref="clientMap"></section>
@@ -330,8 +224,3 @@ const onSort = (event: any) => {
         </TabPanel>
     </TabView>
 </template>
-<style scoped>
-:deep(.p-cell-editing) {
-    background-color: var(--highlight-bg);
-}
-</style>

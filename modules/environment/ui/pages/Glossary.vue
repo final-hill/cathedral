@@ -10,7 +10,7 @@ import UpdateGlossaryTermUseCase from '../../application/UpdateGlossaryTermUseCa
 import DeleteGlossaryTermUseCase from '../../application/DeleteGlossaryTermUseCase';
 import type GlossaryTerm from '../../domain/GlossaryTerm';
 import { FilterMatchMode } from 'primevue/api';
-import { emptyUuid } from '~/domain/Uuid';
+import { emptyUuid, type Uuid } from '~/domain/Uuid';
 
 const router = useRouter(),
     route = useRoute(),
@@ -37,8 +37,7 @@ if (!solution) {
 type GlossaryTermViewModel = Pick<GlossaryTerm, 'id' | 'name' | 'statement'>;
 
 const glossaryTerms = ref<GlossaryTermViewModel[]>([]),
-    editingRows = ref<GlossaryTermViewModel[]>([]),
-    dataTable = ref();
+    emptyGlossaryTerm = { id: emptyUuid, name: '', statement: '' }
 
 onMounted(async () => {
     glossaryTerms.value = await getGlossaryTermsUseCase.execute(environment!.id) ?? []
@@ -49,66 +48,30 @@ const filters = ref({
     'statement': { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 
-const createDisabled = ref(false)
+const onCreate = async (data: GlossaryTermViewModel) => {
+    const newId = await createGlossaryTermUseCase.execute({
+        parentId: environment!.id,
+        name: data.name,
+        statement: data.statement
+    })
 
-const addNewRow = () => {
-    glossaryTerms.value.unshift({ id: emptyUuid, name: '', statement: '' })
-    editingRows.value = [glossaryTerms.value[0]]
-    createDisabled.value = true
-    // remove the sortfield to avoid the new row from being sorted
-    dataTable.value!.d_sortField = null
+    glossaryTerms.value = await getGlossaryTermsUseCase.execute(environment!.id) ?? []
 }
 
-const onRowEditSave = async (event: { newData: GlossaryTermViewModel, index: number, originalEvent: Event }) => {
-    const { newData, index, originalEvent } = event
+const onUpdate = async (data: GlossaryTermViewModel) => {
+    await updateGlossaryTermUseCase.execute({
+        id: data.id,
+        name: data.name,
+        statement: data.statement
+    })
 
-    const inputs = (originalEvent.target! as HTMLElement).closest('tr')!.querySelectorAll('input')
-
-    if (![...inputs].every(o => o.reportValidity())) {
-        editingRows.value = [newData]
-        return
-    }
-
-    if (newData.id === emptyUuid) {
-        const newId = await createGlossaryTermUseCase.execute({
-            parentId: environment!.id,
-            name: newData.name,
-            statement: newData.statement
-        })
-
-        glossaryTerms.value[index] = {
-            id: newId,
-            name: newData.name,
-            statement: newData.statement
-        }
-        createDisabled.value = false
-    } else {
-        glossaryTerms.value[index] = newData
-        await updateGlossaryTermUseCase.execute(newData)
-    }
+    glossaryTerms.value = await getGlossaryTermsUseCase.execute(environment!.id) ?? []
 }
 
-const onRowEditCancel = ({ data, index }: { data: GlossaryTermViewModel, index: number }) => {
-    if (data.id !== emptyUuid)
-        return
+const onDelete = async (id: Uuid) => {
+    await deleteGlossaryTermUseCase.execute(id)
 
-    glossaryTerms.value.splice(index, 1)
-    createDisabled.value = false
-    dataTable.value!.d_sortField = 'name'
-}
-
-const onRowDelete = async (glossaryTerm: GlossaryTermViewModel) => {
-    if (!confirm(`Are you sure you want to delete ${glossaryTerm.name}?`))
-        return
-    glossaryTerms.value = glossaryTerms.value.filter(o => o.id !== glossaryTerm.id)
-    await deleteGlossaryTermUseCase.execute(glossaryTerm.id)
-}
-
-const onSort = (event: any) => {
-    if (editingRows.value.length > 0) {
-        editingRows.value = []
-        createDisabled.value = false
-    }
+    glossaryTerms.value = await getGlossaryTermsUseCase.execute(environment!.id) ?? []
 }
 </script>
 
@@ -116,15 +79,8 @@ const onSort = (event: any) => {
     <p>
         A Glossary is a list of terms in a particular domain of knowledge with the definitions for those terms.
     </p>
-    <Toolbar>
-        <template #start>
-            <Button label="Create" type="submit" severity="info" @click="addNewRow" :disabled="createDisabled" />
-        </template>
-    </Toolbar>
-    <DataTable ref="dataTable" :value="glossaryTerms" dataKey="id" filterDisplay="row" v-model:filters="filters"
-        :globalFilterFields="['name', 'statement']" editMode="row" v-model:editingRows="editingRows"
-        @row-edit-save="onRowEditSave" @row-edit-cancel="onRowEditCancel" @sort="onSort" sortField="name"
-        :sortOrder="1">
+    <XDataTable :datasource="glossaryTerms" :empty-record="emptyGlossaryTerm" :filters="filters" :on-create="onCreate"
+        :on-delete="onDelete" :on-update="onUpdate">
         <Column field="name" header="Term" sortable>
             <template #filter="{ filterModel, filterCallback }">
                 <InputText v-model.trim="filterModel.value" @input="filterCallback()" placeholder="Search by term" />
@@ -148,22 +104,5 @@ const onSort = (event: any) => {
                 <InputText v-model.trim="data[field]" required="true" />
             </template>
         </Column>
-        <Column frozen align-frozen="right">
-            <template #body="{ data, editorInitCallback }">
-                <Button icon="pi pi-pencil" text rounded @click="editorInitCallback" />
-                <Button icon="pi pi-trash" text rounded severity="danger" @click="onRowDelete(data)" />
-            </template>
-            <template #editor="{ editorSaveCallback, editorCancelCallback }">
-                <Button icon="pi pi-check" text rounded @click="editorSaveCallback" />
-                <Button icon="pi pi-times" text rounded severity="danger" @click="editorCancelCallback" />
-            </template>
-        </Column>
-        <template #empty>No Glossary terms found</template>
-        <template #loading>Loading Glossary...</template>
-    </DataTable>
+    </XDataTable>
 </template>
-<style scoped>
-:deep(.p-cell-editing) {
-    background-color: var(--highlight-bg);
-}
-</style>

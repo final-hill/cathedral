@@ -23,6 +23,15 @@ if (!solution) {
     if (!environment)
         await createEnvironmentUseCase.execute(solution.id);
 }
+
+const links = [
+    { name: 'Assumptions', icon: 'pi-sun', label: 'Assumptions' },
+    { name: 'Components', icon: 'pi-th-large', label: 'Components' },
+    { name: 'Constraints', icon: 'pi-link', label: 'Constraints' },
+    { name: 'Effects', icon: 'pi-bolt', label: 'Effects' },
+    { name: 'Glossary', icon: 'pi-book', label: 'Glossary' },
+    { name: 'Invariants', icon: 'pi-lock', label: 'Invariants' }
+]
 </script>
 
 <template>
@@ -32,28 +41,9 @@ if (!solution) {
     </p>
 
     <div class="grid">
-        <NuxtLink class="col-fixed w-2 mr-4" :to="{ name: 'Assumptions', params: { solutionSlug: slug } }">
-            <Button label="Assumptions" class="w-full h-5rem text-1xl" icon="pi pi-sun text-3xl" iconPos="top"
-                severity="secondary" />
-        </NuxtLink>
-        <NuxtLink class="col-fixed w-2 mr-4" :to="{ name: 'Components', params: { solutionSlug: slug } }">
-            <Button label="Components" class="w-full h-5rem text-1xl" icon="pi pi-th-large text-3xl" iconPos="top"
-                severity="secondary" />
-        </NuxtLink>
-        <NuxtLink class="col-fixed w-2 mr-4" :to="{ name: 'Constraints', params: { solutionSlug: slug } }">
-            <Button label="Constraints" class="w-full h-5rem text-1xl" icon="pi pi-link text-3xl" iconPos="top"
-                severity="secondary" />
-        </NuxtLink>
-        <NuxtLink class="col-fixed w-2 mr-4" :to="{ name: 'Effects', params: { solutionSlug: slug } }">
-            <Button label="Effects" class="w-full h-5rem text-1xl" icon="pi pi-bolt text-3xl" iconPos="top"
-                severity="secondary" />
-        </NuxtLink>
-        <NuxtLink class="col-fixed w-2 mr-4" :to="{ name: 'Glossary', params: { solutionSlug: slug } }">
-            <Button label="Glossary" class="w-full h-5rem text-1xl" icon="pi pi-book text-3xl" iconPos="top"
-                severity="secondary" />
-        </NuxtLink>
-        <NuxtLink class="col-fixed w-2 mr-4" :to="{ name: 'Invariants', params: { solutionSlug: slug } }">
-            <Button label="Invariants" class="w-full h-5rem text-1xl" icon="pi pi-lock text-3xl" iconPos="top"
+        <NuxtLink v-for="link in links" :key="link.name" :to="{ name: link.name, params: { solutionSlug: slug } }"
+            class="col-fixed w-2 mr-4">
+            <Button :label="link.label" class="w-full h-5rem text-1xl" :icon="`pi ${link.icon} text-3xl`" iconPos="top"
                 severity="secondary" />
         </NuxtLink>
     </div>
