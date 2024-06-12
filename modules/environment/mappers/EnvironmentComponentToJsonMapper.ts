@@ -1,16 +1,16 @@
 import Component from "~/domain/Component";
 import RequirementToJsonMapper, { type RequirementJson } from "~/mappers/RequirementToJsonMapper";
 
-export interface ComponentJson extends RequirementJson { }
+export interface EnvironmentComponentJson extends RequirementJson { }
 
-export default class ComponentToJsonMapper extends RequirementToJsonMapper {
-    override mapTo(source: Component): ComponentJson {
+export default class EnvironmentComponentToJsonMapper extends RequirementToJsonMapper {
+    override mapTo(source: Component): EnvironmentComponentJson {
         return {
             ...super.mapTo(source)
         };
     }
 
-    override mapFrom(target: ComponentJson): Component {
+    override mapFrom(target: EnvironmentComponentJson): Component {
         return new Component({
             ...super.mapFrom(target)
         });

@@ -4,6 +4,7 @@ import SolutionRepository from '~/modules/solution/data/SolutionRepository';
 import EnvironmentRepository from '../../data/EnvironmentRepository';
 import GetEnvironmentBySolutionIdUseCase from '../../application/GetEnvironmentBySolutionIdUseCase';
 import CreateEnvironmentUseCase from '../../application/CreateEnvironmentUseCase';
+import UpdateSolutionUseCase from '~/modules/solution/application/UpdateSolutionUseCase';
 
 useHead({
     title: 'Environment'
@@ -17,6 +18,7 @@ const router = useRouter(),
     getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
     getEnvironmentBySolutionIdUseCase = new GetEnvironmentBySolutionIdUseCase(environmentRepository),
     createEnvironmentUseCase = new CreateEnvironmentUseCase(environmentRepository),
+    updateSolutionUseCase = new UpdateSolutionUseCase(solutionRepository),
     solution = await getSolutionBySlugUseCase.execute(slug)
 
 if (!solution) {
@@ -24,8 +26,18 @@ if (!solution) {
 } else {
     const environment = await getEnvironmentBySolutionIdUseCase.execute(solution.id);
 
-    if (!environment)
-        await createEnvironmentUseCase.execute(solution.id);
+    if (!environment) {
+        const newId = await createEnvironmentUseCase.execute(solution.id);
+        await updateSolutionUseCase.execute({
+            id: solution.id,
+            name: solution.name,
+            description: solution.description,
+            environmentId: newId,
+            goalsId: solution.goalsId,
+            projectId: solution.projectId,
+            systemId: solution.systemId
+        });
+    }
 }
 
 const links = [

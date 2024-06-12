@@ -93,7 +93,7 @@ const onDelete = async (id: Uuid) => {
                 {{ data.name }}
             </template>
             <template #editor="{ data, field }">
-                <InputText v-model.trim="data[field]" required="true" autofocus />
+                <InputText v-model.trim="data[field]" required="true" />
             </template>
         </Column>
         <Column field="statement" header="Definition">
