@@ -13,6 +13,10 @@ export default defineNuxtModule({
                 path: '/solution/:solutionSlug/system',
                 file: resolve('./ui/pages/Index.vue')
             }, {
+                name: 'System Components',
+                path: '/solution/:solutionSlug/system/components',
+                file: resolve('./ui/pages/Components.vue')
+            }, {
                 name: 'Functionality',
                 path: '/solution/:solutionSlug/system/functionality',
                 file: resolve('./ui/pages/Functionality.vue')

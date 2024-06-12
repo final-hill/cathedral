@@ -3,13 +3,13 @@ import { FilterMatchMode } from 'primevue/api';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
 import EnvironmentRepository from '../../data/EnvironmentRepository';
+import EnvironmentComponentRepository from '../../data/EnvironmentComponentRepository';
 import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
-import ComponentRepository from '~/data/ComponentRepository';
 import GetEnvironmentBySolutionIdUseCase from '../../application/GetEnvironmentBySolutionIdUseCase';
-import GetComponentsUseCase from '../../application/GetComponentsUseCase';
-import CreateComponentUseCase from '../../application/CreateComponentUseCase';
-import UpdateComponentUseCase from '../../application/UpdateComponentUseCase';
-import DeleteComponentUseCase from '../../application/DeleteComponentUseCase';
+import GetEnvironmentComponentsUseCase from '../../application/GetEnvironmentComponentsUseCase';
+import CreateEnvironmentComponentUseCase from '../../application/CreateEnvironmentComponentUseCase';
+import UpdateEnvironmentComponentUseCase from '../../application/UpdateEnvironmentComponentUseCase';
+import DeleteEnvironmentComponentUseCase from '../../application/DeleteEnvironmentComponentUseCase';
 import type Component from '~/domain/Component';
 
 useHead({
@@ -21,15 +21,15 @@ const router = useRouter(),
     slug = route.params.solutionSlug as string,
     solutionRepository = new SolutionRepository(),
     environmentRepository = new EnvironmentRepository(),
-    componentRepository = new ComponentRepository(),
+    componentRepository = new EnvironmentComponentRepository(),
     getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
     solution = await getSolutionBySlugUseCase.execute(slug),
     getEnvironmentBySolutionIdUseCase = new GetEnvironmentBySolutionIdUseCase(environmentRepository),
     environment = solution?.id && await getEnvironmentBySolutionIdUseCase.execute(solution.id),
-    getComponentsUseCase = new GetComponentsUseCase(componentRepository),
-    createComponentUseCase = new CreateComponentUseCase(environmentRepository, componentRepository),
-    updateComponentUseCase = new UpdateComponentUseCase(componentRepository),
-    deleteComponentUseCase = new DeleteComponentUseCase(environmentRepository, componentRepository);
+    getComponentsUseCase = new GetEnvironmentComponentsUseCase(componentRepository),
+    createComponentUseCase = new CreateEnvironmentComponentUseCase(environmentRepository, componentRepository),
+    updateComponentUseCase = new UpdateEnvironmentComponentUseCase(componentRepository),
+    deleteComponentUseCase = new DeleteEnvironmentComponentUseCase(environmentRepository, componentRepository);
 
 if (!solution) {
     router.push({ name: 'Solutions' });
@@ -88,7 +88,7 @@ const onUpdate = async (data: ComponentViewModel) => {
                 {{ data.name }}
             </template>
             <template #editor="{ data, field }">
-                <InputText v-model.trim="data[field]" required="true" autofocus />
+                <InputText v-model.trim="data[field]" required="true" />
             </template>
         </Column>
         <Column field="statement" header="Description">

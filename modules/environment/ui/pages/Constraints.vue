@@ -92,7 +92,7 @@ const onUpdate = async (data: ConstraintViewModel) => {
                 {{ data.name }}
             </template>
             <template #editor="{ data, field }">
-                <InputText v-model.trim="data[field]" required="true" autofocus />
+                <InputText v-model.trim="data[field]" required="true" />
             </template>
         </Column>
         <Column field="category" header="Category" sortable>

@@ -4,6 +4,7 @@ import GoalsRepository from '../../data/GoalsRepository';
 import GetGoalsBySolutionIdUseCase from '../../application/GetGoalsBySolutionIdUseCase';
 import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
 import CreateGoalsUseCase from '../../application/CreateGoalsUseCase';
+import UpdateSolutionUseCase from '~/modules/solution/application/UpdateSolutionUseCase';
 
 useHead({
     title: 'Goals'
@@ -17,6 +18,7 @@ const router = useRouter(),
     getGoalsBySolutionIdUseCase = new GetGoalsBySolutionIdUseCase(goalsRepository),
     getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
     createGoalsUseCase = new CreateGoalsUseCase(goalsRepository),
+    updateSolutionUseCase = new UpdateSolutionUseCase(solutionRepository),
     solution = await getSolutionBySlugUseCase.execute(slug)
 
 if (!solution) {
@@ -24,8 +26,19 @@ if (!solution) {
 } else {
     const goals = await getGoalsBySolutionIdUseCase.execute(solution.id);
 
-    if (!goals)
-        await createGoalsUseCase.execute(solution.id);
+    if (!goals) {
+        const newId = await createGoalsUseCase.execute(solution.id);
+
+        await updateSolutionUseCase.execute({
+            id: solution.id,
+            name: solution.name,
+            description: solution.description,
+            environmentId: solution.environmentId,
+            goalsId: newId,
+            projectId: solution.projectId,
+            systemId: solution.systemId
+        });
+    }
 }
 
 const links = [

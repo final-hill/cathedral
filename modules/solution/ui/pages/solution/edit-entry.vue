@@ -27,7 +27,11 @@ const updateSolution = async () => {
     await updateSolutionUseCase.execute({
         id: solution!.id,
         name: name.value,
-        description: description.value
+        description: description.value,
+        environmentId: solution!.environmentId,
+        goalsId: solution!.goalsId,
+        projectId: solution!.projectId,
+        systemId: solution!.systemId
     });
 
     router.push({ name: 'Solution', params: { solutionSlug: newSlug.value } });
@@ -48,7 +52,7 @@ watch(() => name.value, (newName) => {
             <label for="name" class="required col-fixed w-7rem">Name</label>
             <div class="col">
                 <InputText v-model.trim="name" id="name" name="name" class="w-23rem" placeholder="Sample Solution"
-                    :maxlength="Solution.maxNameLength" autofocus required />
+                    :maxlength="Solution.maxNameLength" />
             </div>
         </div>
 

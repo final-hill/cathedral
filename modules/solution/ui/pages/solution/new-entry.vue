@@ -42,7 +42,7 @@ watch(() => name.value, (newName) => {
             <label for="name" class="required col-fixed w-7rem">Name</label>
             <div class="col">
                 <InputText v-model.trim="name" id="name" name="name" class="w-23rem" placeholder="Sample Solution"
-                    :maxlength="Solution.maxNameLength" autofocus required />
+                    :maxlength="Solution.maxNameLength" required />
             </div>
         </div>
 

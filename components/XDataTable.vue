@@ -114,7 +114,7 @@ const onSort = (event: any) => {
     <ConfirmDialog></ConfirmDialog>
     <Toolbar>
         <template #start>
-            <Button label="Create" type="submit" severity="info" @click="onCreateEmpty" :disabled="createDisabled" />
+            <Button label="Create" severity="info" @click="onCreateEmpty" :disabled="createDisabled" />
         </template>
     </Toolbar>
     <DataTable ref="dataTable" :value="props.datasource as unknown as any[]" dataKey="id" filterDisplay="row"

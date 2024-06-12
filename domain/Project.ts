@@ -1,5 +1,5 @@
 import PEGS from "./PEGS";
-import type System from "./System";
+import type System from "../modules/system/domain/System";
 import type Task from "./Task";
 import type { Properties } from "./Properties";
 
