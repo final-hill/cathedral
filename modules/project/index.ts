@@ -11,7 +11,11 @@ export default defineNuxtModule({
             pages.push({
                 name: 'Project',
                 path: '/solution/:solutionSlug/project',
-                file: resolve('./ui/pages/ProjectIndex.vue')
+                file: resolve('./ui/pages/Index.vue')
+            }, {
+                name: 'Roles & Personnel',
+                path: '/solution/:solutionSlug/project/roles-personnel',
+                file: resolve('./ui/pages/RolesPersonnel.vue')
             })
         })
     }
