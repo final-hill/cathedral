@@ -45,7 +45,7 @@ const links = [
     { name: 'Rationale', icon: 'pi-book', label: 'Rationale' },
     { name: 'Outcomes', icon: 'pi-check-circle', label: 'Outcomes' },
     { name: 'Stakeholders', icon: 'pi-users', label: 'Stakeholders' },
-    { name: 'Use Cases', icon: 'pi-briefcase', label: 'Use Cases' },
+    { name: 'Epics', icon: 'pi-briefcase', label: 'Epics' },
     { name: 'Obstacles', icon: ' pi-exclamation-triangle', label: 'Obstacles' },
     { name: 'Limitations', icon: 'pi-exclamation-circle', label: 'Limitations' }
 ]

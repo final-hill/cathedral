@@ -40,6 +40,7 @@ if (!solution) {
 
 const links = [
     { name: 'Functionality', icon: 'pi-bolt', label: 'Functionality' },
+    { name: 'Scenarios', icon: 'pi-list', label: 'Scenarios' },
     { name: 'System Components', icon: 'pi-th-large', label: 'Components' }
 ]
 </script>

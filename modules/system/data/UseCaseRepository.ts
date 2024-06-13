@@ -1,7 +1,7 @@
 import type { Properties } from "~/domain/Properties";
 import StorageRepository from "~/data/StorageRepository";
-import type UseCase from "~/domain/UseCase";
-import UseCaseToJsonMapper from "~/mappers/UseCaseToJsonMapper";
+import type UseCase from "~/modules/system/domain/UseCase";
+import UseCaseToJsonMapper from "../mappers/UseCaseToJsonMapper";
 
 const { serializationVersion } = useAppConfig()
 

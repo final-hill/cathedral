@@ -7,19 +7,17 @@ import type { Uuid } from "~/domain/Uuid";
  * They are the things that the organization wants to achieve.
  */
 export default class Goals extends PEGS {
-    constructor({ goals, obstacles, outcomes, stakeholders, useCases, ...rest }: Properties<Goals>) {
+    constructor({ goals, obstacles, outcomes, stakeholders, ...rest }: Properties<Goals>) {
         super(rest);
 
         this.goals = goals;
         this.obstacles = obstacles;
         this.outcomes = outcomes;
         this.stakeholders = stakeholders;
-        this.useCases = useCases;
     }
 
     goals: Uuid[];
     obstacles: Uuid[];
     outcomes: Uuid[];
     stakeholders: Uuid[];
-    useCases: Uuid[];
 }
