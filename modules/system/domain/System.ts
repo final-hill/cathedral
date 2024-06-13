@@ -1,5 +1,5 @@
 import type { Uuid } from "~/domain/Uuid";
-import PEGS from "../../../domain/PEGS";
+import PEGS from "~/domain/PEGS";
 
 /**
  * A set of related artifacts
