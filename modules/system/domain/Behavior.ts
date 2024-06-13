@@ -1,4 +1,4 @@
-import Requirement from "./Requirement";
+import Requirement from "~/domain/Requirement";
 
 /**
  * Property of the operation of the system

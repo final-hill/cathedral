@@ -39,9 +39,9 @@ if (!solution) {
 }
 
 const links = [
-    { name: 'Functionality', icon: 'pi-bolt', label: 'Functionality' },
+    { name: 'System Components', icon: 'pi-th-large', label: 'Components' },
     { name: 'Scenarios', icon: 'pi-list', label: 'Scenarios' },
-    { name: 'System Components', icon: 'pi-th-large', label: 'Components' }
+    { name: 'Functionality', icon: 'pi-bolt', label: 'Functionality' }
 ]
 </script>
 
