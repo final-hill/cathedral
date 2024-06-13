@@ -1,4 +1,4 @@
-import Example from "./Example";
+import Example from "../modules/system/domain/Example";
 
 /**
  * A User Storyspecifies the handling of a specific user need.

@@ -111,30 +111,32 @@ const onSort = (event: any) => {
 </script>
 
 <template>
-    <ConfirmDialog></ConfirmDialog>
-    <Toolbar>
-        <template #start>
-            <Button label="Create" severity="info" @click="onCreateEmpty" :disabled="createDisabled" />
-        </template>
-    </Toolbar>
-    <DataTable ref="dataTable" :value="props.datasource as unknown as any[]" dataKey="id" filterDisplay="row"
-        v-model:filters="filters as any" :globalFilterFields="Object.keys(filters)" editMode="row"
-        @row-edit-init="onRowEditInit" v-model:editingRows="editingRows" @row-edit-save="onRowEditSave"
-        @row-edit-cancel="onCancel" @sort="onSort" :sortField="sortField" :sortOrder="1">
-        <slot></slot>
-        <Column frozen align-frozen="right">
-            <template #body="{ data, editorInitCallback }">
-                <Button icon="pi pi-pencil" text rounded @click="editorInitCallback" />
-                <Button icon="pi pi-trash" text rounded severity="danger" @click="onDelete(data)" />
+    <section>
+        <ConfirmDialog></ConfirmDialog>
+        <Toolbar>
+            <template #start>
+                <Button label="Create" severity="info" @click="onCreateEmpty" :disabled="createDisabled" />
             </template>
-            <template #editor="{ editorSaveCallback, editorCancelCallback }">
-                <Button icon="pi pi-check" text rounded @click="editorSaveCallback" />
-                <Button icon="pi pi-times" text rounded severity="danger" @click="editorCancelCallback" />
-            </template>
-        </Column>
-        <template #empty>No data found</template>
-        <template #loading>Loading data...</template>
-    </DataTable>
+        </Toolbar>
+        <DataTable ref="dataTable" :value="props.datasource as unknown as any[]" dataKey="id" filterDisplay="row"
+            v-model:filters="filters as any" :globalFilterFields="Object.keys(filters)" editMode="row"
+            @row-edit-init="onRowEditInit" v-model:editingRows="editingRows" @row-edit-save="onRowEditSave"
+            @row-edit-cancel="onCancel" @sort="onSort" :sortField="sortField" :sortOrder="1">
+            <slot></slot>
+            <Column frozen align-frozen="right">
+                <template #body="{ data, editorInitCallback }">
+                    <Button icon="pi pi-pencil" text rounded @click="editorInitCallback" />
+                    <Button icon="pi pi-trash" text rounded severity="danger" @click="onDelete(data)" />
+                </template>
+                <template #editor="{ editorSaveCallback, editorCancelCallback }">
+                    <Button icon="pi pi-check" text rounded @click="editorSaveCallback" />
+                    <Button icon="pi pi-times" text rounded severity="danger" @click="editorCancelCallback" />
+                </template>
+            </Column>
+            <template #empty>No data found</template>
+            <template #loading>Loading data...</template>
+        </DataTable>
+    </section>
 </template>
 
 <style scoped>
