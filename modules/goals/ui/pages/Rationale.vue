@@ -43,6 +43,7 @@ if (!solution) {
 watch([vision, mission, situation, objective], async (newValues, _oldValues) => {
     await updateRationaleUseCase.execute({
         goalsId: goals!.id,
+        solutionId: solution!.id,
         visionStatement: newValues[0]!,
         missionStatement: newValues[1]!,
         situationStatement: newValues[2]!,

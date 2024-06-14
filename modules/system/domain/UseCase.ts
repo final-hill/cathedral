@@ -1,4 +1,4 @@
-import Scenario from "../../../domain/Scenario";
+import Scenario from "./Scenario";
 
 /**
  * A Use Case specifies the scenario of a complete 

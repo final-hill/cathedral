@@ -5,14 +5,10 @@ export interface EffectJson extends RequirementJson { }
 
 export default class EffectToJsonMapper extends RequirementToJsonMapper {
     override mapTo(source: Effect): EffectJson {
-        return {
-            ...super.mapTo(source)
-        };
+        return { ...super.mapTo(source) };
     }
 
     override mapFrom(target: EffectJson): Effect {
-        return new Effect({
-            ...super.mapFrom(target),
-        });
+        return new Effect({ ...target });
     }
 }

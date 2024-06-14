@@ -7,13 +7,24 @@ export interface FunctionalRequirementJson extends RequirementJson { }
 export default class FunctionalRequirementToJsonMapper extends RequirementToJsonMapper {
     override mapTo(source: FunctionalRequirement): FunctionalRequirementJson {
         return {
-            ...super.mapTo(source)
+            id: source.id,
+            name: source.name,
+            parentId: source.parentId,
+            property: source.property,
+            serializationVersion: this.serializationVersion,
+            statement: source.statement,
+            solutionId: source.solutionId
         };
     }
 
     override mapFrom(target: FunctionalRequirementJson): FunctionalRequirement {
         return new FunctionalRequirement({
-            ...super.mapFrom(target)
+            id: target.id,
+            name: target.name,
+            parentId: target.parentId,
+            property: target.property,
+            statement: target.statement,
+            solutionId: target.solutionId
         });
     }
 }

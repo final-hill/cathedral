@@ -9,12 +9,11 @@ export interface RequirementJson extends EntityJson {
     statement: string
     property: string
     parentId: Uuid
+    solutionId: Uuid
 }
 
 export default class RequirementToJsonMapper extends EntityToJsonMapper {
     override mapFrom(target: RequirementJson): Requirement {
-        const version = new SemVer(target.serializationVersion);
-
         return new Requirement(target);
     }
 
@@ -24,7 +23,8 @@ export default class RequirementToJsonMapper extends EntityToJsonMapper {
             parentId: source.parentId,
             name: source.name,
             statement: source.statement,
-            property: source.property
+            property: source.property,
+            solutionId: source.solutionId
         };
     }
 }

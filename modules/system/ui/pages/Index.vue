@@ -3,7 +3,6 @@ import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolution
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
 import GetSystemBySolutionIdUseCase from '../../application/GetSystemBySolutionIdUseCase';
 import SystemRepository from '../../data/SystemRepository';
-import CreateSystemComponentUseCase from '../../application/CreateSystemComponentUseCase';
 import UpdateSolutionUseCase from '~/modules/solution/application/UpdateSolutionUseCase';
 import CreateSystemUseCase from '../../application/CreateSystemUseCase';
 
@@ -39,7 +38,7 @@ if (!solution) {
 }
 
 const links = [
-    { name: 'System Components', icon: 'pi-th-large', label: 'Components' },
+    { name: 'System Components', icon: 'pi-sitemap', label: 'Components' },
     { name: 'Scenarios', icon: 'pi-list', label: 'Scenarios' },
     { name: 'Functionality', icon: 'pi-bolt', label: 'Functionality' }
 ]

@@ -1,6 +1,6 @@
 import type { Uuid } from "~/domain/Uuid";
-import RequirementToJsonMapper, { type RequirementJson } from "./RequirementToJsonMapper";
-import Scenario from "~/domain/Scenario";
+import Scenario from "../domain/Scenario";
+import RequirementToJsonMapper, { type RequirementJson } from "~/mappers/RequirementToJsonMapper";
 
 export interface ScenarioJson extends RequirementJson {
     primaryActorId: Uuid

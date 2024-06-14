@@ -55,6 +55,7 @@ const filters = ref({
 const onCreate = async (data: ObstacleViewModel) => {
     const newId = await createObstacleUseCase.execute({
         parentId: goals!.id,
+        solutionId: solution!.id,
         name: data.name,
         statement: data.statement
     })

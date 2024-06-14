@@ -55,6 +55,7 @@ const filters = ref({
 const onCreate = async (data: ComponentViewModel) => {
     const newId = await createComponentUseCase.execute({
         parentId: environment!.id,
+        solutionId: solution!.id,
         name: data.name,
         statement: data.statement
     })

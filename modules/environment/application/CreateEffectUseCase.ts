@@ -4,7 +4,7 @@ import type Repository from "~/application/Repository";
 import type Environment from "../domain/Environment";
 import Effect from "../domain/Effect";
 
-type In = Pick<Effect, 'parentId' | 'name' | 'statement'>
+type In = Pick<Effect, 'parentId' | 'solutionId' | 'name' | 'statement'>
 
 export default class CreateEffectUseCase extends UseCase<In, Uuid> {
     constructor(
@@ -12,7 +12,7 @@ export default class CreateEffectUseCase extends UseCase<In, Uuid> {
         readonly effectRepository: Repository<Effect>
     ) { super() }
 
-    async execute({ parentId, name, statement }: In): Promise<Uuid> {
+    async execute({ parentId, solutionId, name, statement }: In): Promise<Uuid> {
         const environment = await this.environmentRepository.get(parentId)
 
         if (!environment)
@@ -22,6 +22,7 @@ export default class CreateEffectUseCase extends UseCase<In, Uuid> {
             id: crypto.randomUUID(),
             property: '',
             parentId,
+            solutionId,
             name,
             statement
         }))

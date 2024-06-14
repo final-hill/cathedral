@@ -55,6 +55,7 @@ const filters = ref<Record<string, { value: any, matchMode: string }>>({
 const onCreate = async (data: AssumptionViewModel) => {
     const newId = await createAssumptionUseCase.execute({
         parentId: environment!.id,
+        solutionId: solution!.id,
         name: data.name,
         statement: data.statement
     })

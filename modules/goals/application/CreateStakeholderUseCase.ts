@@ -4,7 +4,7 @@ import Stakeholder from "../domain/Stakeholder";
 import type Repository from "~/application/Repository";
 import type Goals from "../domain/Goals";
 
-type In = Pick<Stakeholder, 'parentId' | 'name' | 'statement' | 'availability' | 'influence' | 'segmentation'>
+type In = Pick<Stakeholder, 'parentId' | 'solutionId' | 'name' | 'statement' | 'availability' | 'influence' | 'segmentation'>
 
 export default class CreateStakeholderUseCase extends UseCase<In, Uuid> {
     constructor(
@@ -12,7 +12,7 @@ export default class CreateStakeholderUseCase extends UseCase<In, Uuid> {
         readonly stakeholderRepository: Repository<Stakeholder>
     ) { super() }
 
-    async execute({ parentId, ...props }: In): Promise<Uuid> {
+    async execute({ parentId, solutionId, ...props }: In): Promise<Uuid> {
         let goals = await this.goalsRepository.get(parentId)
 
         if (!goals)
@@ -22,6 +22,7 @@ export default class CreateStakeholderUseCase extends UseCase<In, Uuid> {
             new Stakeholder({
                 id: crypto.randomUUID(),
                 parentId,
+                solutionId,
                 name: props.name,
                 statement: props.statement,
                 availability: props.availability,

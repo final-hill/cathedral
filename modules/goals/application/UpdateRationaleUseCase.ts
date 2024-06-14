@@ -4,6 +4,7 @@ import type { Uuid } from "~/domain/Uuid";
 import Goal from "../domain/Goal";
 
 type In = {
+    solutionId: Uuid,
     goalsId: Uuid,
     visionStatement: string,
     missionStatement: string,
@@ -17,7 +18,7 @@ export default class UpdateRationaleUseCase extends UseCase<In, void> {
     }
 
     async execute(
-        { goalsId, missionStatement, objectiveStatement, situationStatement, visionStatement }: In
+        { solutionId, goalsId, missionStatement, objectiveStatement, situationStatement, visionStatement }: In
     ): Promise<void> {
         const gr = this.goalRepository
 
@@ -33,6 +34,7 @@ export default class UpdateRationaleUseCase extends UseCase<In, void> {
             await gr.add(new Goal({
                 id: crypto.randomUUID(),
                 parentId: goalsId,
+                solutionId,
                 name: 'Vision',
                 statement: visionStatement,
                 property: ''
@@ -46,6 +48,7 @@ export default class UpdateRationaleUseCase extends UseCase<In, void> {
             await gr.add(new Goal({
                 id: crypto.randomUUID(),
                 parentId: goalsId,
+                solutionId,
                 name: 'Mission',
                 statement: missionStatement,
                 property: ''
@@ -59,6 +62,7 @@ export default class UpdateRationaleUseCase extends UseCase<In, void> {
             await gr.add(new Goal({
                 id: crypto.randomUUID(),
                 parentId: goalsId,
+                solutionId,
                 name: 'Situation',
                 statement: situationStatement,
                 property: ''
@@ -72,6 +76,7 @@ export default class UpdateRationaleUseCase extends UseCase<In, void> {
             await gr.add(new Goal({
                 id: crypto.randomUUID(),
                 parentId: goalsId,
+                solutionId,
                 name: 'Objective',
                 statement: objectiveStatement,
                 property: ''
@@ -85,6 +90,7 @@ export default class UpdateRationaleUseCase extends UseCase<In, void> {
             await gr.add(new Goal({
                 id: crypto.randomUUID(),
                 parentId: goalsId,
+                solutionId,
                 name: 'Outcomes',
                 statement: '',
                 property: ''

@@ -55,6 +55,7 @@ const filters = ref({
 const onCreate = async (data: InvariantViewModel) => {
     const newId = await createInvariantUseCase.execute({
         parentId: environment!.id,
+        solutionId: solution!.id,
         name: data.name,
         statement: data.statement
     })

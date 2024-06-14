@@ -7,13 +7,10 @@ import { emptyUuid, type Uuid } from '~/domain/Uuid';
 import StakeholderRepository from '../../data/StakeholderRepository';
 import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
 import GetGoalsBySolutionIdUseCase from '../../application/GetGoalsBySolutionIdUseCase';
-import GetEpicsUseCase from '../../application/GetEpicsUseCase';
-import CreateEpicUseCase from '../../application/CreateEpicUseCase';
-import DeleteEpicUseCase from '../../application/DeleteEpicUseCase';
 import GetStakeHoldersUseCase from '../../application/GetStakeHoldersUseCase';
-import UpdateEpicUseCase from '../../application/UpdateEpicUseCase';
 import Stakeholder from '../../domain/Stakeholder';
 import type Epic from '../../domain/Epic';
+import EpicInteractor from '../../application/EpicInteractor';
 
 useHead({
     title: 'Use Cases'
@@ -31,10 +28,7 @@ const router = useRouter(),
     getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
     getGoalsBySolutionIdUseCase = new GetGoalsBySolutionIdUseCase(goalsRepository),
 
-    getEpicsUseCase = new GetEpicsUseCase(epicRepository),
-    createEpicUseCase = new CreateEpicUseCase(epicRepository),
-    updateEpicUseCase = new UpdateEpicUseCase(epicRepository),
-    deleteEpicUseCase = new DeleteEpicUseCase(epicRepository),
+    epicInteractor = new EpicInteractor(epicRepository),
     getStakeholdersUseCase = new GetStakeHoldersUseCase(stakeholderRepository),
 
     solution = await getSolutionBySlugUseCase.execute(slug),
@@ -47,44 +41,50 @@ if (!solution) {
         router.push({ name: 'Goals', params: { solutionSlug: slug } });
 }
 
-type EpicViewModel = Pick<Epic, 'id' | 'name' | 'statement' | 'actorId'>;
+type EpicViewModel = Pick<Epic, 'id' | 'name' | 'statement' | 'primaryActorId'>;
 
 const epics = ref<EpicViewModel[]>([]),
     emptyEpic: EpicViewModel = { id: emptyUuid, name: '', statement: '', primaryActorId: emptyUuid },
     stakeHolders = ref<Stakeholder[]>(await getStakeholdersUseCase.execute(goals!.id) ?? [])
 
 onMounted(async () => {
-    epics.value = await getEpicsUseCase.execute(goals!.id) ?? []
+    epics.value = await epicInteractor.getAll(solution!.id) ?? []
 })
 
 const filters = ref({
-    'actorId': { value: null, matchMode: FilterMatchMode.EQUALS },
+    'primaryActorId': { value: null, matchMode: FilterMatchMode.EQUALS },
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
     'statement': { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 
 const onCreate = async (data: EpicViewModel) => {
-    const newId = await createEpicUseCase.execute({
+    const newId = await epicInteractor.create({
         parentId: goals!.id,
+        solutionId: solution!.id,
         primaryActorId: data.primaryActorId,
         name: data.name,
         statement: data.statement
     });
 
-    epics.value = await getEpicsUseCase.execute(goals!.id) ?? []
+    epics.value = await epicInteractor.getAll(solution!.id) ?? []
 }
 
 const onDelete = async (id: Uuid) => {
-    await deleteEpicUseCase.execute(id);
-    epics.value = await getEpicsUseCase.execute(goals!.id) ?? []
+    await epicInteractor.delete(id);
+    epics.value = await epicInteractor.getAll(solution!.id) ?? []
 }
 
 const onUpdate = async (data: EpicViewModel) => {
-    await updateEpicUseCase.execute({
-        ...data
+    await epicInteractor.update({
+        id: data.id,
+        parentId: goals!.id,
+        solutionId: solution!.id,
+        primaryActorId: data.primaryActorId,
+        name: data.name,
+        statement: data.statement
     });
 
-    epics.value = await getEpicsUseCase.execute(goals!.id) ?? []
+    epics.value = await epicInteractor.getAll(solution!.id) ?? []
 }
 </script>
 
@@ -113,7 +113,7 @@ const onUpdate = async (data: EpicViewModel) => {
                         <InputText v-model.trim="data[field]" required="true" placeholder="Enter a name" />
                     </template>
                 </Column>
-                <Column field="actorId" header="Actor" sortable>
+                <Column field="primaryActorId" header="Actor" sortable>
                     <template #filter="{ filterModel, filterCallback }">
                         <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
                             optionValue="id" :options="stakeHolders" placeholder="Search by Actor" />

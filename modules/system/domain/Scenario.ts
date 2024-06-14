@@ -1,6 +1,6 @@
 import Example from "./Example";
-import type { Properties } from "./Properties";
-import type { Uuid } from "./Uuid";
+import type { Properties } from "~/domain/Properties";
+import type { Uuid } from "~/domain/Uuid";
 
 /**
  * A Scenario specifies system behavior by describing paths

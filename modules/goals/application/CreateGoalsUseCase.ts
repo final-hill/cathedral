@@ -17,8 +17,7 @@ export default class CreateGoalsUseCase extends UseCase<Uuid, Uuid> {
             limitationIds: [],
             obstacles: [],
             outcomes: [],
-            stakeholders: [],
-            useCases: [],
+            stakeholders: []
         }))
     }
 }

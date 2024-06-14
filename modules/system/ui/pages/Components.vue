@@ -61,7 +61,7 @@ const filters = ref({
 
 const onCreate = async ({ name, statement, parentId, systemId }: SystemComponentViewModel) => {
     await createComponentUseCase.execute({
-        name, statement, parentId: parentId ?? emptyUuid, systemId
+        name, statement, parentId: parentId ?? emptyUuid, systemId, solutionId: solution!.id
     });
 
     components.value = await getComponentsUseCase.execute(system!.id);

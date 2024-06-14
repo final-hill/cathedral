@@ -10,14 +10,8 @@ export interface StakeholderJson extends RequirementJson {
 export default class StakeholderToJsonMapper extends RequirementToJsonMapper {
     override mapFrom(target: StakeholderJson): Stakeholder {
         return new Stakeholder({
-            id: target.id,
-            parentId: target.parentId,
-            availability: target.availability,
-            influence: target.influence,
+            ...target,
             segmentation: target.segmentation as StakeholderSegmentation,
-            name: target.name,
-            property: target.property,
-            statement: target.statement
         })
     }
 

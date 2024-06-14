@@ -4,7 +4,7 @@ import type Repository from "~/application/Repository";
 import type Environment from "../domain/Environment";
 import Assumption from "../domain/Assumption";
 
-type In = Pick<Assumption, 'parentId' | 'name' | 'statement'>
+type In = Pick<Assumption, 'parentId' | 'solutionId' | 'name' | 'statement'>
 
 export default class CreateAssumptionUseCase extends UseCase<In, Uuid> {
     constructor(
@@ -12,7 +12,7 @@ export default class CreateAssumptionUseCase extends UseCase<In, Uuid> {
         readonly assumptionRepository: Repository<Assumption>
     ) { super() }
 
-    async execute({ parentId, name, statement }: In): Promise<Uuid> {
+    async execute({ parentId, name, statement, solutionId }: In): Promise<Uuid> {
         const environment = await this.environmentRepository.get(parentId)
 
         if (!environment)
@@ -22,6 +22,7 @@ export default class CreateAssumptionUseCase extends UseCase<In, Uuid> {
             id: crypto.randomUUID(),
             property: '',
             parentId,
+            solutionId,
             name,
             statement
         }))

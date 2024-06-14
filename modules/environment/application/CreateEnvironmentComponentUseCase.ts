@@ -4,7 +4,7 @@ import type Repository from "~/application/Repository";
 import type PEGS from "~/domain/PEGS";
 import EnvironmentComponent from "../domain/EnvironmentComponent";
 
-type In = Pick<EnvironmentComponent, 'parentId' | 'name' | 'statement'>
+type In = Pick<EnvironmentComponent, 'parentId' | 'solutionId' | 'name' | 'statement'>
 
 export default class CreateEnvironmentComponentUseCase extends UseCase<In, Uuid> {
     constructor(
@@ -12,7 +12,7 @@ export default class CreateEnvironmentComponentUseCase extends UseCase<In, Uuid>
         readonly componentRepository: Repository<EnvironmentComponent>
     ) { super() }
 
-    async execute({ parentId, name, statement }: In): Promise<Uuid> {
+    async execute({ parentId, solutionId, name, statement }: In): Promise<Uuid> {
         const pegs = await this.pegsRepository.get(parentId)
 
         if (!pegs)
@@ -22,6 +22,7 @@ export default class CreateEnvironmentComponentUseCase extends UseCase<In, Uuid>
             id: crypto.randomUUID(),
             property: '',
             parentId,
+            solutionId,
             name,
             statement
         }))

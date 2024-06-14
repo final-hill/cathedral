@@ -1,17 +1,16 @@
-import type Repository from "~/application/Repository";
 import NonFunctionalRequirement from "../domain/NonFunctionalRequirement";
 import type { Uuid } from "~/domain/Uuid";
+import Interactor from "~/application/Interactor";
 
-export default class NonFunctionalRequirementInteractor {
-    constructor(
-        readonly repository: Repository<NonFunctionalRequirement>
-    ) { }
+type In = Pick<NonFunctionalRequirement, 'id' | 'parentId' | 'solutionId' | 'name' | 'statement'>
 
-    async create({ parentId, name, statement }: Pick<NonFunctionalRequirement, 'parentId' | 'name' | 'statement'>): Promise<Uuid> {
+export default class NonFunctionalRequirementInteractor extends Interactor<NonFunctionalRequirement> {
+    async create({ parentId, name, statement, solutionId }: Omit<In, 'id'>): Promise<Uuid> {
         return await this.repository.add(new NonFunctionalRequirement({
             id: crypto.randomUUID(),
             property: '',
             parentId,
+            solutionId,
             name,
             statement
         }))
@@ -21,19 +20,26 @@ export default class NonFunctionalRequirementInteractor {
         await this.repository.delete(id)
     }
 
-    async getAll(parentId: Uuid): Promise<NonFunctionalRequirement[]> {
+    async getAll(solutionId: Uuid): Promise<NonFunctionalRequirement[]> {
+        return await this.repository.getAll(
+            behavior => behavior.solutionId === solutionId
+        )
+    }
+
+    async getByParentId(parentId: Uuid): Promise<NonFunctionalRequirement[]> {
         return await this.repository.getAll(
             behavior => behavior.parentId === parentId
         )
     }
 
-    async update({ id, parentId, name, statement }: Pick<NonFunctionalRequirement, 'id' | 'parentId' | 'name' | 'statement'>): Promise<void> {
+    async update({ id, parentId, name, statement, solutionId }: In): Promise<void> {
         await this.repository.update(new NonFunctionalRequirement({
             id,
             property: '',
             parentId,
             name,
-            statement
+            statement,
+            solutionId
         }))
     }
 }

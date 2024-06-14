@@ -60,9 +60,9 @@ const components = ref<SystemComponentViewModel[]>([]),
 const refreshComponents = async () => {
     return Promise.all((await getComponentsUseCase.execute(system!.id))
         .map(async c => {
-            const functionalReqs: BehaviorViewModel[] = (await functionalRequirementInteractor.getAll(c.id))
+            const functionalReqs: BehaviorViewModel[] = (await functionalRequirementInteractor.getByParentId(c.id))
                 .map(fr => ({ ...fr, category: 'Functional' }));
-            const nonFunctionalReqs: BehaviorViewModel[] = (await nonFunctionalRequirementInteractor.getAll(c.id))
+            const nonFunctionalReqs: BehaviorViewModel[] = (await nonFunctionalRequirementInteractor.getByParentId(c.id))
                 .map(nfr => ({ ...nfr, category: 'Non-functional' }));
 
             return {
@@ -92,12 +92,18 @@ const behaviorFilters = ref({
 })
 
 const onCreate = async (newData: BehaviorViewModel) => {
-    await functionalRequirementInteractor.create(newData)
+    await functionalRequirementInteractor.create({
+        ...newData,
+        solutionId: solution!.id
+    })
     components.value = await refreshComponents()
 }
 
 const onUpdate = async (newData: BehaviorViewModel) => {
-    await functionalRequirementInteractor.update(newData)
+    await functionalRequirementInteractor.update({
+        ...newData,
+        solutionId: solution!.id
+    })
     components.value = await refreshComponents()
 }
 
@@ -176,5 +182,7 @@ const onDelete = async (id: Uuid) => {
                 </Column>
             </XDataTable>
         </template>
+        <template #empty>Components must exist before functionality can be defined.</template>
+        <template #loading>Loading components...</template>
     </DataTable>
 </template>
