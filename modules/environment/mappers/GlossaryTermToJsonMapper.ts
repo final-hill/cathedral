@@ -7,14 +7,10 @@ export interface GlossaryTermJson extends RequirementJson {
 
 export default class GlossaryTermToJsonMapper extends RequirementToJsonMapper {
     override mapTo(source: GlossaryTerm): GlossaryTermJson {
-        return {
-            ...super.mapTo(source)
-        };
+        return { ...super.mapTo(source) };
     }
 
     override mapFrom(target: GlossaryTermJson): GlossaryTerm {
-        return new GlossaryTerm({
-            ...super.mapFrom(target),
-        });
+        return new GlossaryTerm({ ...target });
     }
 }

@@ -4,7 +4,7 @@ import type Repository from "~/application/Repository";
 import type Environment from "../domain/Environment";
 import Constraint from "../domain/Constraint";
 
-type In = Pick<Constraint, 'parentId' | 'name' | 'statement' | 'category'>
+type In = Pick<Constraint, 'parentId' | 'solutionId' | 'name' | 'statement' | 'category'>
 
 export default class CreateConstraintUseCase extends UseCase<In, Uuid> {
     constructor(
@@ -12,7 +12,7 @@ export default class CreateConstraintUseCase extends UseCase<In, Uuid> {
         readonly constraintRepository: Repository<Constraint>
     ) { super() }
 
-    async execute({ parentId, name, statement, category }: In): Promise<Uuid> {
+    async execute({ parentId, solutionId, name, statement, category }: In): Promise<Uuid> {
         const environment = await this.environmentRepository.get(parentId)
 
         if (!environment)
@@ -22,6 +22,7 @@ export default class CreateConstraintUseCase extends UseCase<In, Uuid> {
             id: crypto.randomUUID(),
             property: '',
             parentId,
+            solutionId,
             name,
             statement,
             category

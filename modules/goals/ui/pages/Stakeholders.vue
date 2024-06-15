@@ -114,7 +114,8 @@ watch(stakeholders, async () => {
 const onCreate = async (data: StakeHolderViewModel) => {
     const stakeholder = await createStakeHolderUseCase.execute({
         ...data,
-        parentId: goals!.id
+        parentId: goals!.id,
+        solutionId: solution!.id
     });
 
     stakeholders.value = await getStakeHoldersUseCase.execute(goals!.id) ?? []
@@ -123,7 +124,8 @@ const onCreate = async (data: StakeHolderViewModel) => {
 const onUpdate = async (data: StakeHolderViewModel) => {
     await updateStakeHolderUseCase.execute({
         ...data,
-        parentId: goals!.id
+        parentId: goals!.id,
+        solutionId: solution!.id
     })
 
     stakeholders.value = await getStakeHoldersUseCase.execute(goals!.id) ?? []

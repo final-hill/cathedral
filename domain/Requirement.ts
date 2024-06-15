@@ -33,4 +33,9 @@ export default class Requirement extends Entity {
      * A human-readable description of a property
      */
     statement!: string
+
+    /**
+     * The solution that owns this requirement
+     */
+    solutionId!: Uuid
 }

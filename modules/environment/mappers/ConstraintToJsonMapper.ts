@@ -7,14 +7,7 @@ export interface ConstraintJson extends RequirementJson {
 
 export default class ConstraintToJsonMapper extends RequirementToJsonMapper {
     override mapFrom(target: ConstraintJson): Constraint {
-        return new Constraint({
-            category: target.category,
-            id: target.id,
-            name: target.name,
-            parentId: target.parentId,
-            property: target.property,
-            statement: target.statement,
-        });
+        return new Constraint({ ...target });
     }
 
     override mapTo(source: Constraint): ConstraintJson {

@@ -21,9 +21,9 @@ export default defineNuxtModule({
                 path: '/solution/:solutionSlug/goals/stakeholders',
                 file: resolve('./ui/pages/Stakeholders.vue')
             }, {
-                name: 'Use Cases',
-                path: '/solution/:solutionSlug/goals/use-cases',
-                file: resolve('./ui/pages/UseCases.vue')
+                name: 'Epics',
+                path: '/solution/:solutionSlug/goals/epics',
+                file: resolve('./ui/pages/Epics.vue')
             }, {
                 name: 'Obstacles',
                 path: '/solution/:solutionSlug/goals/obstacles',

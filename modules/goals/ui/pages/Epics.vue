@@ -1,19 +1,16 @@
 <script lang="ts" setup>
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
 import GoalsRepository from '../../data/GoalsRepository';
-import UseCaseRepository from '~/data/UseCaseRepository';
+import EpicRepository from '../../data/EpicRepository';
 import { FilterMatchMode } from 'primevue/api';
-import UseCase from '~/domain/UseCase';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
 import StakeholderRepository from '../../data/StakeholderRepository';
 import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
 import GetGoalsBySolutionIdUseCase from '../../application/GetGoalsBySolutionIdUseCase';
-import GetUseCaseUseCase from '../../application/GetUseCaseUseCase';
-import CreateUseCaseUseCase from '../../application/CreateUseCaseUseCase';
-import DeleteUseCaseUseCase from '../../application/DeleteUseCaseUseCase';
 import GetStakeHoldersUseCase from '../../application/GetStakeHoldersUseCase';
-import UpdateUseCaseUseCase from '../../application/UpdateUseCaseUseCase';
 import Stakeholder from '../../domain/Stakeholder';
+import type Epic from '../../domain/Epic';
+import EpicInteractor from '../../application/EpicInteractor';
 
 useHead({
     title: 'Use Cases'
@@ -25,16 +22,13 @@ const router = useRouter(),
 
     goalsRepository = new GoalsRepository(),
     solutionRepository = new SolutionRepository(),
-    useCaseRepository = new UseCaseRepository(),
+    epicRepository = new EpicRepository(),
     stakeholderRepository = new StakeholderRepository(),
 
     getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
     getGoalsBySolutionIdUseCase = new GetGoalsBySolutionIdUseCase(goalsRepository),
 
-    getUseCaseUseCase = new GetUseCaseUseCase(useCaseRepository),
-    createUseCaseUseCase = new CreateUseCaseUseCase(goalsRepository, useCaseRepository),
-    updateUseCaseUseCase = new UpdateUseCaseUseCase(useCaseRepository),
-    deleteUseCaseUseCase = new DeleteUseCaseUseCase(goalsRepository, useCaseRepository),
+    epicInteractor = new EpicInteractor(epicRepository),
     getStakeholdersUseCase = new GetStakeHoldersUseCase(stakeholderRepository),
 
     solution = await getSolutionBySlugUseCase.execute(slug),
@@ -47,14 +41,14 @@ if (!solution) {
         router.push({ name: 'Goals', params: { solutionSlug: slug } });
 }
 
-type UseCaseViewModel = Pick<UseCase, 'id' | 'name' | 'statement' | 'primaryActorId'>;
+type EpicViewModel = Pick<Epic, 'id' | 'name' | 'statement' | 'primaryActorId'>;
 
-const useCases = ref<UseCaseViewModel[]>([]),
-    emptyUseCase: UseCaseViewModel = { id: emptyUuid, name: '', statement: '', primaryActorId: emptyUuid },
+const epics = ref<EpicViewModel[]>([]),
+    emptyEpic: EpicViewModel = { id: emptyUuid, name: '', statement: '', primaryActorId: emptyUuid },
     stakeHolders = ref<Stakeholder[]>(await getStakeholdersUseCase.execute(goals!.id) ?? [])
 
 onMounted(async () => {
-    useCases.value = await getUseCaseUseCase.execute(goals!.id) ?? []
+    epics.value = await epicInteractor.getAll(solution!.id) ?? []
 })
 
 const filters = ref({
@@ -63,42 +57,49 @@ const filters = ref({
     'statement': { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 
-const onCreate = async (data: UseCaseViewModel) => {
-    const newId = await createUseCaseUseCase.execute({
-        ...data,
-        parentId: goals!.id
+const onCreate = async (data: EpicViewModel) => {
+    const newId = await epicInteractor.create({
+        parentId: goals!.id,
+        solutionId: solution!.id,
+        primaryActorId: data.primaryActorId,
+        name: data.name,
+        statement: data.statement
     });
 
-    useCases.value = await getUseCaseUseCase.execute(goals!.id) ?? []
+    epics.value = await epicInteractor.getAll(solution!.id) ?? []
 }
 
 const onDelete = async (id: Uuid) => {
-    await deleteUseCaseUseCase.execute({ id, parentId: goals!.id });
-    useCases.value = await getUseCaseUseCase.execute(goals!.id) ?? []
+    await epicInteractor.delete(id);
+    epics.value = await epicInteractor.getAll(solution!.id) ?? []
 }
 
-const onUpdate = async (data: UseCaseViewModel) => {
-    await updateUseCaseUseCase.execute({
-        ...data,
+const onUpdate = async (data: EpicViewModel) => {
+    await epicInteractor.update({
+        id: data.id,
+        parentId: goals!.id,
+        solutionId: solution!.id,
+        primaryActorId: data.primaryActorId,
+        name: data.name,
+        statement: data.statement
     });
 
-    useCases.value = await getUseCaseUseCase.execute(goals!.id) ?? []
+    epics.value = await epicInteractor.getAll(solution!.id) ?? []
 }
 </script>
 
 <template>
     <p>
-        A Use Case describes the interaction between a system and an actor to achieve a specific goal.
-        These can be thought of as analogous Epics.
+        This section defines the main scenarios that the system must support to achieve the goals of the solution.
     </p>
     <p>
-        Before you can define a Use Case, you must define one or more
+        Before you can define an Epic, you must define one or more
         <NuxtLink class="underline" :to="{ name: 'Stakeholders', params: { solutionSlug: slug } }">Actors</NuxtLink>.
     </p>
 
     <TabView>
-        <TabPanel header="Use Cases">
-            <XDataTable :datasource="useCases" :filters="filters" :emptyRecord="emptyUseCase" :on-create="onCreate"
+        <TabPanel header="Epics">
+            <XDataTable :datasource="epics" :filters="filters" :emptyRecord="emptyEpic" :on-create="onCreate"
                 :on-delete="onDelete" :on-update="onUpdate">
                 <Column field="name" header="Name" sortable>
                     <template #filter="{ filterModel, filterCallback }">
@@ -140,7 +141,7 @@ const onUpdate = async (data: UseCaseViewModel) => {
             </XDataTable>
         </TabPanel>
         <TabPanel header="Diagram">
-            <p>Diagram</p>
+            <p>TODO: Use Case Diagram</p>
         </TabPanel>
     </TabView>
 </template>

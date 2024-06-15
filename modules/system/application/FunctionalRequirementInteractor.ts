@@ -1,17 +1,16 @@
-import type Repository from "~/application/Repository";
 import FunctionalRequirement from "../domain/FunctionalRequirement";
 import type { Uuid } from "~/domain/Uuid";
+import Interactor from "~/application/Interactor";
 
-export default class FunctionalRequirementInteractor {
-    constructor(
-        readonly repository: Repository<FunctionalRequirement>
-    ) { }
+type In = Pick<FunctionalRequirement, 'id' | 'parentId' | 'solutionId' | 'name' | 'statement'>
 
-    async create({ parentId, name, statement }: Pick<FunctionalRequirement, 'parentId' | 'name' | 'statement'>): Promise<Uuid> {
+export default class FunctionalRequirementInteractor extends Interactor<FunctionalRequirement> {
+    async create({ parentId, name, statement, solutionId }: Omit<In, 'id'>): Promise<Uuid> {
         return await this.repository.add(new FunctionalRequirement({
             id: crypto.randomUUID(),
             property: '',
             parentId,
+            solutionId,
             name,
             statement
         }))
@@ -21,15 +20,22 @@ export default class FunctionalRequirementInteractor {
         await this.repository.delete(id)
     }
 
-    async getAll(parentId: Uuid): Promise<FunctionalRequirement[]> {
+    async getAll(solutionId: Uuid): Promise<FunctionalRequirement[]> {
+        return await this.repository.getAll(
+            behavior => behavior.solutionId === solutionId
+        )
+    }
+
+    async getByParentId(parentId: Uuid): Promise<FunctionalRequirement[]> {
         return await this.repository.getAll(
             behavior => behavior.parentId === parentId
         )
     }
 
-    async update({ id, parentId, name, statement }: Pick<FunctionalRequirement, 'id' | 'parentId' | 'name' | 'statement'>): Promise<void> {
+    async update({ id, parentId, solutionId, name, statement }: In): Promise<void> {
         await this.repository.update(new FunctionalRequirement({
             id,
+            solutionId,
             property: '',
             parentId,
             name,

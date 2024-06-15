@@ -6,8 +6,6 @@ export interface OutcomeJson extends GoalJson { }
 
 export default class OutcomeToJsonMapper extends GoalToJsonMapper {
     override mapFrom(target: OutcomeJson): Outcome {
-        const version = new SemVer(target.serializationVersion);
-
         return new Outcome(target);
     }
 

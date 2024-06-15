@@ -7,7 +7,6 @@ export interface GoalsJson extends PEGSJson {
     obstacles: Uuid[]
     outcomes: Uuid[]
     stakeholders: Uuid[]
-    useCases: Uuid[]
 }
 
 export default class GoalsToJsonMapper extends PEGSToJsonMapper {
@@ -22,8 +21,7 @@ export default class GoalsToJsonMapper extends PEGSToJsonMapper {
             componentIds: pegs.componentIds,
             goals: target.goals,
             obstacles: target.obstacles,
-            stakeholders: target.stakeholders,
-            useCases: target.useCases
+            stakeholders: target.stakeholders
         });
     }
 
@@ -33,8 +31,7 @@ export default class GoalsToJsonMapper extends PEGSToJsonMapper {
             goals: source.goals,
             obstacles: source.obstacles,
             outcomes: source.outcomes,
-            stakeholders: source.stakeholders,
-            useCases: source.useCases
+            stakeholders: source.stakeholders
         };
     }
 }

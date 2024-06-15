@@ -5,14 +5,10 @@ export interface EnvironmentComponentJson extends RequirementJson { }
 
 export default class EnvironmentComponentToJsonMapper extends RequirementToJsonMapper {
     override mapTo(source: Component): EnvironmentComponentJson {
-        return {
-            ...super.mapTo(source)
-        };
+        return { ...super.mapTo(source) };
     }
 
     override mapFrom(target: EnvironmentComponentJson): Component {
-        return new Component({
-            ...super.mapFrom(target)
-        });
+        return new Component({ ...target });
     }
 }

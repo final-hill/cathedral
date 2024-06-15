@@ -6,20 +6,10 @@ export interface LimitJson extends RequirementJson { }
 
 export default class LimitToJsonMapper extends RequirementToJsonMapper {
     mapFrom(target: LimitJson): Limit {
-        const version = new SemVer(target.serializationVersion);
-
-        return new Limit({
-            id: target.id,
-            parentId: target.parentId,
-            name: target.name,
-            property: target.property,
-            statement: target.statement
-        })
+        return new Limit(target)
     }
 
     mapTo(source: Limit): LimitJson {
-        return {
-            ...super.mapTo(source as any)
-        }
+        return { ...super.mapTo(source as any) }
     }
 }

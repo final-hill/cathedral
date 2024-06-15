@@ -55,6 +55,7 @@ const filters = ref({
 const onCreate = async (data: OutcomeViewModel) => {
     const newId = await createOutcomeUseCase.execute({
         parentId: goals!.id,
+        solutionId: solution!.id,
         name: data.name,
         statement: data.statement
     })

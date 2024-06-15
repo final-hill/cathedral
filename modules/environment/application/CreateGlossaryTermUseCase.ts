@@ -4,7 +4,7 @@ import GlossaryTerm from "../domain/GlossaryTerm";
 import type Repository from "~/application/Repository";
 import type Environment from "../domain/Environment";
 
-type In = Pick<GlossaryTerm, 'parentId' | 'name' | 'statement'>
+type In = Pick<GlossaryTerm, 'parentId' | 'solutionId' | 'name' | 'statement'>
 
 export default class CreateGlossaryTermUseCase extends UseCase<In, Uuid> {
     constructor(
@@ -12,7 +12,7 @@ export default class CreateGlossaryTermUseCase extends UseCase<In, Uuid> {
         readonly glossaryTermRepository: Repository<GlossaryTerm>
     ) { super() }
 
-    async execute({ parentId, name, statement }: In): Promise<Uuid> {
+    async execute({ parentId, solutionId, name, statement }: In): Promise<Uuid> {
         const environment = await this.environmentRepository.get(parentId)
 
         if (!environment)
@@ -22,6 +22,7 @@ export default class CreateGlossaryTermUseCase extends UseCase<In, Uuid> {
             id: crypto.randomUUID(),
             property: '',
             parentId,
+            solutionId,
             name,
             statement
         }))

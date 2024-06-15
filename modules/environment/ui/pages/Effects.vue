@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-
 import { FilterMatchMode } from 'primevue/api';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
@@ -56,6 +55,7 @@ const filters = ref({
 const onCreate = async (data: EffectViewModel) => {
     const newId = await createEffectUseCase.execute({
         parentId: environment!.id,
+        solutionId: solution!.id,
         name: data.name,
         statement: data.statement
     })

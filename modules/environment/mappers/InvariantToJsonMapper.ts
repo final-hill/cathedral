@@ -5,14 +5,10 @@ export interface InvariantJson extends RequirementJson { }
 
 export default class InvariantToJsonMapper extends RequirementToJsonMapper {
     override mapTo(source: Invariant): InvariantJson {
-        return {
-            ...super.mapTo(source)
-        };
+        return { ...super.mapTo(source) };
     }
 
     override mapFrom(target: InvariantJson): Invariant {
-        return new Invariant({
-            ...super.mapFrom(target),
-        });
+        return new Invariant({ ...target });
     }
 }

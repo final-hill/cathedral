@@ -71,6 +71,7 @@ const filters = ref({
 const onCreate = async (data: PersonnelViewModel) => {
     const newId = await createPersonUseCase.execute({
         projectId: project!.id,
+        solutionId: solution!.id,
         name: data.name,
         email: data.email,
         roleId: data.roleId
@@ -83,6 +84,7 @@ const onUpdate = async (data: PersonnelViewModel) => {
     await updatePersonUseCase.execute({
         id: data.id,
         projectId: project!.id,
+        solutionId: solution!.id,
         name: data.name,
         email: data.email,
         roleId: data.roleId
@@ -120,8 +122,8 @@ const onDelete = async (id: Uuid) => {
             <template #filter="{ filterModel, filterCallback }">
                 <InputText v-model.trim="filterModel.value" @input="filterCallback()" placeholder="Search by name" />
             </template>
-            <template #body="{ data }">
-                {{ data.name }}
+            <template #body="{ data, field }">
+                {{ data[field] }}
             </template>
             <template #editor="{ data, field }">
                 <InputText v-model.trim="data[field]" required />

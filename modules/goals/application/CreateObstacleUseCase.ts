@@ -4,7 +4,7 @@ import type { Uuid } from "~/domain/Uuid";
 import type Goals from "../domain/Goals";
 import Obstacle from "../domain/Obstacle";
 
-type In = Pick<Obstacle, 'parentId' | 'name' | 'statement'>
+type In = Pick<Obstacle, 'parentId' | 'solutionId' | 'name' | 'statement'>
 
 export default class CreateObstacleUseCase extends UseCase<In, Uuid> {
     constructor(
@@ -13,7 +13,7 @@ export default class CreateObstacleUseCase extends UseCase<In, Uuid> {
     ) { super() }
 
     async execute(
-        { parentId, name, statement }: In
+        { parentId, solutionId, name, statement }: In
     ): Promise<Uuid> {
         const goals = await this.goalsRepository.get(parentId)
 
@@ -23,6 +23,7 @@ export default class CreateObstacleUseCase extends UseCase<In, Uuid> {
         const obstacleId = await this.obstacleRepository.add(new Obstacle({
             id: crypto.randomUUID(),
             parentId,
+            solutionId,
             name,
             statement,
             property: ''

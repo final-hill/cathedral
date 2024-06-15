@@ -58,6 +58,7 @@ const filters = ref({
 const onCreate = async (data: ConstraintViewModel) => {
     const newId = await createConstraintUseCase.execute({
         parentId: environment!.id,
+        solutionId: solution!.id,
         name: data.name,
         statement: data.statement,
         category: data.category
