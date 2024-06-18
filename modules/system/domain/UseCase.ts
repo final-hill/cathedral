@@ -3,7 +3,7 @@ import type { Uuid } from "~/domain/Uuid";
 import type { Properties } from "~/domain/Properties";
 
 /**
- * A Use Case specifies the scenario of a complete 
+ * A Use Case specifies the scenario of a complete
  * interaction of a user through a system.
  */
 export default class UseCase extends Scenario {
@@ -48,13 +48,13 @@ export default class UseCase extends Scenario {
     successGuarantee: Uuid
 
     /**
-     * 
+     *
      */
     // extensions: [FunctionalRequirement | Constraint | Role | Responsibility][]
     extensions: string
 
     /**
-     * 
+     *
      */
     stakeHoldersAndInterests: Uuid[] // Actor[]
 
