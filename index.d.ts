@@ -6,6 +6,7 @@ declare module 'nuxt/schema' {
     interface AppConfigInput {
         serializationVersion: SemVerString
         darkMode: DarkModeOptions
+        connString: string
     }
 }
 
