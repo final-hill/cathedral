@@ -1,76 +1,64 @@
 <script lang="ts" setup>
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
-import SystemRepository from '../../data/SystemRepository';
-import SystemComponentRepository from '../../data/SystemComponentRepository';
-import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
-import GetSystemBySolutionIdUseCase from '../../application/GetSystemBySolutionIdUseCase';
-import GetSystemComponentsUseCase from '../../application/GetSystemComponentsUseCase';
-import type SystemComponent from '../../domain/SystemComponent';
 import type Behavior from '../../domain/Behavior';
 import { FilterMatchMode } from 'primevue/api';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
-import FunctionalRequirementRepository from '../../data/FunctionalRequirementRepository';
-import NonFunctionalRequirementRepository from '../../data/NonFunctionalRequirementRepository';
-import FunctionalRequirementInteractor from '../../application/FunctionalRequirementInteractor';
-import NonFunctionalRequirementInteractor from '../../application/NonFunctionalRequirementInteractor';
+import FunctionalRequirementRepository from '../../data/FunctionalBehaviorRepository';
+import NonFunctionalRequirementRepository from '../../data/NonFunctionalBehaviorRepository';
+import FunctionalRequirementInteractor from '../../application/FunctionalBehaviorInteractor';
+import NonFunctionalRequirementInteractor from '../../application/NonFunctionalBehaviorInteractor';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
+import ComponentRepository from '~/data/ComponentRepository';
+import ComponentInteractor from '~/application/ComponentInteractor';
+import type Component from '~/domain/Component';
 
-useHead({
-    title: 'Functionality'
-})
+useHead({ title: 'Functionality' })
 
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
-    solutionRepository = new SolutionRepository(),
-    systemRepository = new SystemRepository(),
-    componentRepository = new SystemComponentRepository(),
-    functionalRequirementsRepository = new FunctionalRequirementRepository(),
-    nonFunctionalRequirementsRepository = new NonFunctionalRequirementRepository(),
-    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
-    solution = await getSolutionBySlugUseCase.execute(slug),
-    getSystemBySolutionIdUseCase = new GetSystemBySolutionIdUseCase(systemRepository),
-    system = solution?.id && await getSystemBySolutionIdUseCase.execute(solution.id),
-    getComponentsUseCase = new GetSystemComponentsUseCase(componentRepository),
-    functionalRequirementInteractor = new FunctionalRequirementInteractor(functionalRequirementsRepository),
-    nonFunctionalRequirementInteractor = new NonFunctionalRequirementInteractor(nonFunctionalRequirementsRepository);
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
+    solution = (await solutionInteractor.getAll({ slug }))[0],
+    componentInteractor = new ComponentInteractor(new ComponentRepository()),
+    functionalRequirementInteractor = new FunctionalRequirementInteractor(new FunctionalRequirementRepository()),
+    nonFunctionalRequirementInteractor = new NonFunctionalRequirementInteractor(new NonFunctionalRequirementRepository());
 
-if (!solution) {
+if (!solution)
     router.push({ name: 'Solutions' })
-} else {
-    if (!system)
-        router.push({ name: 'System', params: { solutionSlug: slug } });
-}
 
-type SystemComponentViewModel = Pick<SystemComponent, 'id' | 'name' | 'statement' | 'parentId' | 'systemId'>
+type ComponentViewModel = Pick<Component, 'id' | 'name' | 'statement' | 'solutionId'>
     & { behaviors: BehaviorViewModel[] };
 
-type BehaviorViewModel = Pick<Behavior, 'id' | 'name' | 'statement' | 'parentId'>
+type BehaviorViewModel = Pick<Behavior, 'id' | 'name' | 'statement' | 'solutionId' | 'componentId'>
     & { category: 'Functional' | 'Non-functional' };
 
-const components = ref<SystemComponentViewModel[]>([]),
+const components = ref<ComponentViewModel[]>([]),
     expandedRows = ref(),
-    emptyBehavior = (parentId: Uuid): BehaviorViewModel => ({
+    emptyBehavior = (componentId: Uuid): BehaviorViewModel => ({
         id: emptyUuid,
         name: '',
         statement: '',
-        parentId,
-        category: 'Functional'
+        solutionId: solution!.id,
+        category: 'Functional',
+        componentId
     });
 
-const refreshComponents = async () => {
-    return Promise.all((await getComponentsUseCase.execute(system!.id))
-        .map(async c => {
-            const functionalReqs: BehaviorViewModel[] = (await functionalRequirementInteractor.getByParentId(c.id))
-                .map(fr => ({ ...fr, category: 'Functional' }));
-            const nonFunctionalReqs: BehaviorViewModel[] = (await nonFunctionalRequirementInteractor.getByParentId(c.id))
-                .map(nfr => ({ ...nfr, category: 'Non-functional' }));
+const refreshComponents = async (): Promise<ComponentViewModel[]> => {
+    return Promise.all((await componentInteractor.getAll({ solutionId: solution!.id }))
+        .map(async component => {
+            const functionalReqs = (await functionalRequirementInteractor.getAll({ componentId: component.id }))
+                .map<BehaviorViewModel>(fr => ({ ...fr, category: 'Functional' }));
+            const nonFunctionalReqs = (await nonFunctionalRequirementInteractor.getAll({ componentId: component.id }))
+                .map<BehaviorViewModel>(nfr => ({ ...nfr, category: 'Non-functional' }));
 
             return {
-                ...c,
+                id: component.id,
+                name: component.name,
+                statement: component.statement,
+                solutionId: component.solutionId,
                 behaviors: [...functionalReqs, ...nonFunctionalReqs]
             }
-        })
-    );
+        }))
 }
 
 onMounted(async () => {
@@ -92,23 +80,47 @@ const behaviorFilters = ref({
 })
 
 const onCreate = async (newData: BehaviorViewModel) => {
-    await functionalRequirementInteractor.create({
-        ...newData,
-        solutionId: solution!.id
-    })
+    const b = {
+        name: newData.name,
+        statement: newData.statement,
+        solutionId: solution!.id,
+        componentId: newData.componentId,
+        property: ''
+    }
+
+    if (newData.category === 'Functional')
+        await functionalRequirementInteractor.create(b)
+    else
+        await nonFunctionalRequirementInteractor.create(b)
+
     components.value = await refreshComponents()
 }
 
 const onUpdate = async (newData: BehaviorViewModel) => {
-    await functionalRequirementInteractor.update({
-        ...newData,
-        solutionId: solution!.id
-    })
+    const b = {
+        id: newData.id,
+        name: newData.name,
+        statement: newData.statement,
+        solutionId: solution!.id,
+        componentId: newData.componentId,
+        property: ''
+    }
+
+    if (newData.category === 'Functional')
+        await functionalRequirementInteractor.update(b)
+    else
+        await nonFunctionalRequirementInteractor.update(b)
+
+
     components.value = await refreshComponents()
 }
 
 const onDelete = async (id: Uuid) => {
-    await functionalRequirementInteractor.delete(id)
+    await Promise.all([
+        functionalRequirementInteractor.delete(id),
+        nonFunctionalRequirementInteractor.delete(id)
+    ])
+
     components.value = await refreshComponents()
 }
 </script>

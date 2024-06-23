@@ -2,41 +2,22 @@
 import { FilterMatchMode } from 'primevue/api';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
-import EnvironmentRepository from '../../data/EnvironmentRepository';
 import InvariantRepository from '../../data/InvariantRepository';
-import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
-import GetEnvironmentBySolutionIdUseCase from '../../application/GetEnvironmentBySolutionIdUseCase';
-import CreateInvariantUseCase from '../../application/CreateInvariantUseCase';
-import GetInvariantsUseCase from '../../application/GetInvariantsUseCase';
-import UpdateInvariantUseCase from '../../application/UpdateInvariantUseCase';
-import DeleteInvariantUseCase from '../../application/DeleteInvariantUseCase';
 import type Invariant from '../../domain/Invariant';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
+import InvariantInteractor from '../../application/InvariantInteractor';
 
-useHead({
-    title: 'Invariants'
-})
+useHead({ title: 'Invariants' })
 
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
-    solutionRepository = new SolutionRepository(),
-    environmentRepository = new EnvironmentRepository(),
-    invariantRepository = new InvariantRepository(),
-    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
-    solution = await getSolutionBySlugUseCase.execute(slug),
-    getEnvironmentBySolutionIdUseCase = new GetEnvironmentBySolutionIdUseCase(environmentRepository),
-    environment = solution?.id && await getEnvironmentBySolutionIdUseCase.execute(solution.id),
-    getInvariantsUseCase = new GetInvariantsUseCase(invariantRepository),
-    createInvariantUseCase = new CreateInvariantUseCase(environmentRepository, invariantRepository),
-    updateInvariantUseCase = new UpdateInvariantUseCase(invariantRepository),
-    deleteInvariantUseCase = new DeleteInvariantUseCase(environmentRepository, invariantRepository);
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
+    solution = (await solutionInteractor.getAll({ slug }))[0],
+    invariantInteractor = new InvariantInteractor(new InvariantRepository())
 
-if (!solution) {
+if (!solution)
     router.push({ name: 'Solutions' });
-} else {
-    if (!environment)
-        router.push({ name: 'Environment', params: { solutionSlug: slug } });
-}
 
 type InvariantViewModel = Pick<Invariant, 'id' | 'name' | 'statement'>;
 
@@ -44,7 +25,7 @@ const invariants = ref<InvariantViewModel[]>([]),
     emptyInvariant: InvariantViewModel = { id: emptyUuid, name: '', statement: '' };
 
 onMounted(async () => {
-    invariants.value = await getInvariantsUseCase.execute(environment!.id) ?? []
+    invariants.value = await invariantInteractor.getAll({ solutionId: solution!.id })
 })
 
 const filters = ref({
@@ -53,30 +34,32 @@ const filters = ref({
 });
 
 const onCreate = async (data: InvariantViewModel) => {
-    const newId = await createInvariantUseCase.execute({
-        parentId: environment!.id,
-        solutionId: solution!.id,
+    const newId = await invariantInteractor.create({
         name: data.name,
-        statement: data.statement
+        statement: data.statement,
+        solutionId: solution!.id,
+        property: ''
     })
 
-    invariants.value = await getInvariantsUseCase.execute(environment!.id) ?? []
+    invariants.value = await invariantInteractor.getAll({ solutionId: solution!.id })
 }
 
 const onUpdate = async (data: InvariantViewModel) => {
-    await updateInvariantUseCase.execute({
+    await invariantInteractor.update({
         id: data.id,
         name: data.name,
-        statement: data.statement
+        statement: data.statement,
+        solutionId: solution!.id,
+        property: ''
     })
 
-    invariants.value = await getInvariantsUseCase.execute(environment!.id) ?? []
+    invariants.value = await invariantInteractor.getAll({ solutionId: solution!.id })
 }
 
 const onDelete = async (id: Uuid) => {
-    await deleteInvariantUseCase.execute(id)
+    await invariantInteractor.delete(id)
 
-    invariants.value = await getInvariantsUseCase.execute(environment!.id) ?? []
+    invariants.value = await invariantInteractor.getAll({ solutionId: solution!.id })
 }
 </script>
 

@@ -2,41 +2,22 @@
 import { FilterMatchMode } from 'primevue/api';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
-import EnvironmentRepository from '../../data/EnvironmentRepository';
 import EffectRepository from '../../data/EffectRepository';
-import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
-import GetEnvironmentBySolutionIdUseCase from '../../application/GetEnvironmentBySolutionIdUseCase';
-import GetEffectsUseCase from '../../application/GetEffectsUseCase';
-import CreateEffectUseCase from '../../application/CreateEffectUseCase';
-import UpdateEffectUseCase from '../../application/UpdateEffectUseCase';
-import DeleteEffectUseCase from '../../application/DeleteEffectUseCase';
 import type Effect from '../../domain/Effect';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
+import EffectInteractor from '../../application/EffectInteractor';
 
-useHead({
-    title: 'Effects'
-})
+useHead({ title: 'Effects' })
 
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
-    solutionRepository = new SolutionRepository(),
-    environmentRepository = new EnvironmentRepository(),
-    effectRepository = new EffectRepository(),
-    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
-    solution = await getSolutionBySlugUseCase.execute(slug),
-    getEnvironmentBySolutionIdUseCase = new GetEnvironmentBySolutionIdUseCase(environmentRepository),
-    environment = solution?.id && await getEnvironmentBySolutionIdUseCase.execute(solution.id),
-    getEffectsUseCase = new GetEffectsUseCase(effectRepository),
-    createEffectUseCase = new CreateEffectUseCase(environmentRepository, effectRepository),
-    updateEffectUseCase = new UpdateEffectUseCase(effectRepository),
-    deleteEffectUseCase = new DeleteEffectUseCase(environmentRepository, effectRepository);
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
+    solution = (await solutionInteractor.getAll({ slug }))[0],
+    effectInteractor = new EffectInteractor(new EffectRepository())
 
-if (!solution) {
+if (!solution)
     router.push({ name: 'Solutions' });
-} else {
-    if (!environment)
-        router.push({ name: 'Environment', params: { solutionSlug: slug } });
-}
 
 type EffectViewModel = Pick<Effect, 'id' | 'name' | 'statement'>;
 
@@ -44,7 +25,7 @@ const effects = ref<EffectViewModel[]>([]),
     emptyEffect = { id: emptyUuid, name: '', statement: '' }
 
 onMounted(async () => {
-    effects.value = await getEffectsUseCase.execute(environment!.id) ?? []
+    effects.value = await effectInteractor.getAll({ solutionId: solution!.id })
 })
 
 const filters = ref({
@@ -53,29 +34,31 @@ const filters = ref({
 });
 
 const onCreate = async (data: EffectViewModel) => {
-    const newId = await createEffectUseCase.execute({
-        parentId: environment!.id,
-        solutionId: solution!.id,
+    const newId = await effectInteractor.create({
         name: data.name,
-        statement: data.statement
+        statement: data.statement,
+        solutionId: solution!.id,
+        property: ''
     })
 
-    effects.value = await getEffectsUseCase.execute(environment!.id) ?? []
+    effects.value = await effectInteractor.getAll({ solutionId: solution!.id })
 }
 
 const onUpdate = async (data: EffectViewModel) => {
-    await updateEffectUseCase.execute({
+    await effectInteractor.update({
         id: data.id,
         name: data.name,
-        statement: data.statement
+        statement: data.statement,
+        solutionId: solution!.id,
+        property: ''
     })
 
-    effects.value = await getEffectsUseCase.execute(environment!.id) ?? []
+    effects.value = await effectInteractor.getAll({ solutionId: solution!.id })
 }
 
 const onDelete = async (id: Uuid) => {
-    effects.value = effects.value.filter(o => o.id !== id)
-    await deleteEffectUseCase.execute(id)
+    await effectInteractor.delete(id)
+    effects.value = await effectInteractor.getAll({ solutionId: solution!.id })
 }
 </script>
 

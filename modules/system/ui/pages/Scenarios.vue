@@ -1,66 +1,52 @@
 <script lang="ts" setup>
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
-import SystemRepository from '../../data/SystemRepository';
-import UserStoryRepository from '../../data/UserStoryRepository';
-import UserStoryInteractor from '../../application/UserStoryInteractor';
-import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
-import GetSystemBySolutionIdUseCase from '../../application/GetSystemBySolutionIdUseCase';
-import type UserStory from '../../domain/UserStory';
+import UserStoryRepository from '../../../../data/UserStoryRepository';
+import UserStoryInteractor from '../../../../application/UserStoryInteractor';
+import type UserStory from '../../../../domain/UserStory';
 import type UseCase from '../../domain/UseCase';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
 import { FilterMatchMode } from 'primevue/api';
-import EpicRepository from '~/modules/goals/data/EpicRepository';
-import GetGoalsBySolutionIdUseCase from '~/modules/goals/application/GetGoalsBySolutionIdUseCase';
-import GoalsRepository from '~/modules/goals/data/GoalsRepository';
-import Epic from '~/modules/goals/domain/Epic';
-import FunctionalRequirement from '../../domain/FunctionalRequirement';
-import FunctionalRequirementInteractor from '../../application/FunctionalRequirementInteractor';
-import FunctionalRequirementRepository from '../../data/FunctionalRequirementRepository';
+import FunctionalBehavior from '../../domain/FunctionalBehavior';
+import FunctionalRequirementInteractor from '../../application/FunctionalBehaviorInteractor';
+import FunctionalRequirementRepository from '../../data/FunctionalBehaviorRepository';
 import StakeholderRepository from '~/modules/goals/data/StakeholderRepository';
-import GetStakeHoldersUseCase from '~/modules/goals/application/GetStakeHoldersUseCase';
 import Stakeholder from '~/modules/goals/domain/Stakeholder';
-import EpicInteractor from '~/modules/goals/application/EpicInteractor';
-import type { Properties } from '~/domain/Properties';
 import UseCaseInteractor from '../../application/UseCaseInteractor';
 import UseCaseRepository from '../../data/UseCaseRepository';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
+import StakeholderInteractor from '~/modules/goals/application/StakeholderInteractor';
+import type Outcome from '~/modules/goals/domain/Outcome';
+import OutcomeInteractor from '~/modules/goals/application/OutcomeInteractor';
+import OutcomeRepository from '~/modules/goals/data/OutcomeRepository';
+import AssumptionInteractor from '~/modules/environment/application/AssumptionInteractor';
+import AssumptionRepository from '~/modules/environment/data/AssumptionRepository';
+import EffectInteractor from '~/modules/environment/application/EffectInteractor';
+import EffectRepository from '~/modules/environment/data/EffectRepository';
+import type Assumption from '~/modules/environment/domain/Assumption';
+import Effect from '~/modules/environment/domain/Effect';
 
-useHead({
-    title: 'Scenarios'
-})
+useHead({ title: 'Scenarios' })
 
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
-    solutionRepository = new SolutionRepository(),
-    systemRepository = new SystemRepository(),
-    userStoryRepository = new UserStoryRepository(),
-    goalsRepository = new GoalsRepository(),
-    epicRepository = new EpicRepository(),
     useCaseRepository = new UseCaseRepository(),
-    stakeholderRepository = new StakeholderRepository(),
-    functionalRequirementsRepository = new FunctionalRequirementRepository(),
-    userStoryInteractor = new UserStoryInteractor(userStoryRepository),
-    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
-    solution = await getSolutionBySlugUseCase.execute(slug),
-    getSystemBySolutionIdUseCase = new GetSystemBySolutionIdUseCase(systemRepository),
-    getGoalsBySolutionIdUseCase = new GetGoalsBySolutionIdUseCase(goalsRepository),
-    functionalRequirementInteractor = new FunctionalRequirementInteractor(functionalRequirementsRepository),
-    epicInteractor = new EpicInteractor(epicRepository),
+    userStoryInteractor = new UserStoryInteractor(new UserStoryRepository()),
+    stakeholderInteractor = new StakeholderInteractor(new StakeholderRepository()),
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
+    solution = (await solutionInteractor.getAll({ slug }))[0],
+    functionalRequirementInteractor = new FunctionalRequirementInteractor(new FunctionalRequirementRepository()),
     useCaseInteractor = new UseCaseInteractor(useCaseRepository),
-    getStakeholdersUseCase = new GetStakeHoldersUseCase(stakeholderRepository),
-    system = solution?.id && await getSystemBySolutionIdUseCase.execute(solution.id),
-    goals = solution?.id && await getGoalsBySolutionIdUseCase.execute(solution.id)
+    outcomeInteractor = new OutcomeInteractor(new OutcomeRepository()),
+    assumptionInteractor = new AssumptionInteractor(new AssumptionRepository()),
+    effectInteractor = new EffectInteractor(new EffectRepository());
 
-if (!solution) {
+if (!solution)
     router.push({ name: 'Solutions' })
-} else {
-    if (!system)
-        router.push({ name: 'System', params: { solutionSlug: slug } });
-}
 
-type UserStoryViewModel = Pick<UserStory, 'id' | 'name' | 'primaryActorId' | 'behaviorId' | 'epicId'>
+type UserStoryViewModel = Pick<UserStory, 'id' | 'name' | 'primaryActorId' | 'functionalBehaviorId' | 'outcomeId'>
 
-type UseCaseViewModel = Pick<UseCase, 'id' | 'name' | 'primaryActorId' | 'extensions' | 'goalInContext' | 'level' | 'mainSuccessScenario' | 'preCondition' | 'scope' | 'stakeHoldersAndInterests' | 'successGuarantee' | 'trigger'>
+type UseCaseViewModel = Pick<UseCase, 'id' | 'name' | 'primaryActorId' | 'extensions' | 'goalInContext' | 'level' | 'mainSuccessScenario' | 'preConditionId' | 'scope' | 'successGuarantee' | 'trigger'>
 
 const userStories = ref<UserStoryViewModel[]>([]),
     useCases = ref<UseCaseViewModel[]>([]),
@@ -68,8 +54,8 @@ const userStories = ref<UserStoryViewModel[]>([]),
         id: emptyUuid,
         name: '',
         primaryActorId: emptyUuid,
-        behaviorId: emptyUuid,
-        epicId: emptyUuid
+        functionalBehaviorId: emptyUuid,
+        outcomeId: emptyUuid
     },
     emptyUseCase: UseCaseViewModel = {
         id: emptyUuid,
@@ -79,29 +65,32 @@ const userStories = ref<UserStoryViewModel[]>([]),
         goalInContext: '',
         level: '',
         mainSuccessScenario: '',
-        preCondition: emptyUuid,
+        preConditionId: emptyUuid,
         scope: '',
-        stakeHoldersAndInterests: [],
         successGuarantee: emptyUuid,
         trigger: emptyUuid
     },
     roles = ref<Stakeholder[]>([]),
-    behaviors = ref<FunctionalRequirement[]>([]),
-    epics = ref<Epic[]>([]);
+    functionalBehaviors = ref<FunctionalBehavior[]>([]),
+    outcomes = ref<Outcome[]>([]),
+    assumptions = ref<Assumption[]>([]),
+    effects = ref<Effect[]>([]);
 
 onMounted(async () => {
-    userStories.value = await userStoryInteractor.getAll(system!.id);
-    roles.value = await getStakeholdersUseCase.execute(goals!.id);
-    behaviors.value = await functionalRequirementInteractor.getAll(solution!.id);
-    epics.value = await epicInteractor.getAll(solution!.id);
-    useCases.value = await useCaseInteractor.getAll(solution!.id);
+    userStories.value = await userStoryInteractor.getAll({ solutionId: solution!.id });
+    roles.value = await stakeholderInteractor.getAll({ solutionId: solution!.id });
+    functionalBehaviors.value = await functionalRequirementInteractor.getAll({ solutionId: solution!.id });
+    outcomes.value = await outcomeInteractor.getAll({ solutionId: solution!.id });
+    useCases.value = await useCaseInteractor.getAll({ solutionId: solution!.id });
+    assumptions.value = await assumptionInteractor.getAll({ solutionId: solution!.id });
+    effects.value = await effectInteractor.getAll({ solutionId: solution!.id });
 })
 
 const userStoryfilters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
     'primaryActorId': { value: null, matchMode: FilterMatchMode.EQUALS },
     'behaviorId': { value: null, matchMode: FilterMatchMode.EQUALS },
-    'epicId': { value: null, matchMode: FilterMatchMode.EQUALS }
+    'outcomeId': { value: null, matchMode: FilterMatchMode.EQUALS }
 })
 
 const useCasefilters = ref({
@@ -111,9 +100,8 @@ const useCasefilters = ref({
     'goalInContext': { value: null, matchMode: FilterMatchMode.CONTAINS },
     'level': { value: null, matchMode: FilterMatchMode.CONTAINS },
     'mainSuccessScenario': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'preCondition': { value: null, matchMode: FilterMatchMode.EQUALS },
+    'preConditionId': { value: null, matchMode: FilterMatchMode.EQUALS },
     'scope': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'stakeHoldersAndInterests': { value: null, matchMode: FilterMatchMode.CONTAINS },
     'successGuarantee': { value: null, matchMode: FilterMatchMode.EQUALS },
     'trigger': { value: null, matchMode: FilterMatchMode.EQUALS }
 })
@@ -122,52 +110,60 @@ const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
     const newId = await userStoryInteractor.create({
         ...userStory,
         solutionId: solution!.id,
-        parentId: system!.id
+        property: '',
+        componentId: emptyUuid,
+        statement: ''
     });
 
-    userStories.value = await userStoryInteractor.getAll(system!.id);
+    userStories.value = await userStoryInteractor.getAll({ solutionId: solution!.id });
 }
 
 const onUseCaseCreate = async (useCase: UseCaseViewModel) => {
     const newId = await useCaseInteractor.create({
         ...useCase,
         solutionId: solution!.id,
-        parentId: system!.id
+        property: '',
+        componentId: emptyUuid,
+        statement: ''
     });
 
-    useCases.value = await useCaseInteractor.getAll(system!.id);
+    useCases.value = await useCaseInteractor.getAll({ solutionId: solution!.id });
 }
 
 const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
     await userStoryInteractor.update({
         ...userStory,
-        parentId: system!.id,
+        property: '',
+        componentId: emptyUuid,
+        statement: '',
         solutionId: solution!.id
     });
 
-    userStories.value = await userStoryInteractor.getAll(system!.id);
+    userStories.value = await userStoryInteractor.getAll({ solutionId: solution!.id });
 }
 
 const onUseCaseUpdate = async (useCase: UseCaseViewModel) => {
     await useCaseInteractor.update({
         ...useCase,
-        parentId: system!.id,
-        solutionId: solution!.id
+        solutionId: solution!.id,
+        property: '',
+        componentId: emptyUuid,
+        statement: ''
     });
 
-    useCases.value = await useCaseInteractor.getAll(system!.id);
+    useCases.value = await useCaseInteractor.getAll({ solutionId: solution!.id });
 }
 
 const onUserStoryDelete = async (id: Uuid) => {
     await userStoryInteractor.delete(id);
 
-    userStories.value = await userStoryInteractor.getAll(system!.id);
+    userStories.value = await userStoryInteractor.getAll({ solutionId: solution!.id });
 }
 
 const onUseCaseDelete = async (id: Uuid) => {
     await useCaseInteractor.delete(id);
 
-    useCases.value = await useCaseInteractor.getAll(system!.id);
+    useCases.value = await useCaseInteractor.getAll({ solutionId: solution!.id });
 }
 </script>
 
@@ -213,26 +209,26 @@ const onUseCaseDelete = async (id: Uuid) => {
                 <Column field="behaviorId" header="Behavior">
                     <template #filter="{ filterModel, filterCallback }">
                         <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
-                            optionValue="id" :options="behaviors" placeholder="Search by Behavior" />
+                            optionValue="id" :options="functionalBehaviors" placeholder="Search by Behavior" />
                     </template>
                     <template #body="{ data, field }">
-                        {{ behaviors.find(b => b.id === data[field])?.name }}
+                        {{ functionalBehaviors.find(b => b.id === data[field])?.name }}
                     </template>
                     <template #editor="{ data, field }">
-                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="behaviors"
-                            placeholder="Select a Behavior" />
+                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id"
+                            :options="functionalBehaviors" placeholder="Select a Behavior" />
                     </template>
                 </Column>
-                <Column field="epicId" header="Goal">
+                <Column field="outcomeId" header="Goal">
                     <template #filter="{ filterModel, filterCallback }">
                         <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
-                            optionValue="id" :options="epics" placeholder="Search by Goal" />
+                            optionValue="id" :options="outcomes" placeholder="Search by Goal" />
                     </template>
                     <template #body="{ data, field }">
-                        {{ epics.find(e => e.id === data[field])?.name }}
+                        {{ outcomes.find(o => o.id === data[field])?.name }}
                     </template>
                     <template #editor="{ data, field }">
-                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="epics"
+                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="outcomes"
                             placeholder="Select a Goal" />
                     </template>
                 </Column>
@@ -306,30 +302,17 @@ const onUseCaseDelete = async (id: Uuid) => {
                         <InputText v-model.trim="data[field]" required="true" placeholder="Enter a goal in context" />
                     </template>
                 </Column>
-                <Column field="preCondition" header="Pre-Condition">
+                <Column field="preConditionId" header="Pre-Condition">
                     <template #filter="{ filterModel, filterCallback }">
                         <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
-                            optionValue="id" :options="behaviors" placeholder="Search by pre-condition" />
+                            optionValue="id" :options="assumptions" placeholder="Search by pre-condition" />
                     </template>
                     <template #body="{ data, field }">
-                        {{ behaviors.find(b => b.id === data[field])?.name }}
+                        {{ assumptions.find(a => a.id === data[field])?.name }}
                     </template>
                     <template #editor="{ data, field }">
-                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="behaviors"
+                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="assumptions"
                             placeholder="Select a pre-condition" />
-                    </template>
-                </Column>
-                <Column field="trigger" header="Trigger">
-                    <template #filter="{ filterModel, filterCallback }">
-                        <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
-                            optionValue="id" :options="behaviors" placeholder="Search by trigger" />
-                    </template>
-                    <template #body="{ data, field }">
-                        {{ behaviors.find(b => b.id === data[field])?.name }}
-                    </template>
-                    <template #editor="{ data, field }">
-                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="behaviors"
-                            placeholder="Select a trigger" />
                     </template>
                 </Column>
                 <Column field="mainSuccessScenario" header="Main Success Scenario">
@@ -344,13 +327,13 @@ const onUseCaseDelete = async (id: Uuid) => {
                 <Column field="successGuarantee" header="Success Guarantee">
                     <template #filter="{ filterModel, filterCallback }">
                         <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
-                            optionValue="id" :options="behaviors" placeholder="Search by success guarantee" />
+                            optionValue="id" :options="effects" placeholder="Search by success guarantee" />
                     </template>
                     <template #body="{ data, field }">
-                        {{ behaviors.find(b => b.id === data[field])?.name }}
+                        {{ effects.find(e => e.id === data[field])?.name }}
                     </template>
                     <template #editor="{ data, field }">
-                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="behaviors"
+                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="effects"
                             placeholder="Select a success guarantee" />
                     </template>
                 </Column>
@@ -363,7 +346,7 @@ const onUseCaseDelete = async (id: Uuid) => {
                             cols="30" />
                     </template>
                 </Column>
-                <Column field="stakeHoldersAndInterests" header="Stakeholders and Interests">
+                <!-- <Column field="stakeHoldersAndInterests" header="Stakeholders and Interests">
                     <template #body="{ data, field }">
                         {{
                             data[field].map((id: Uuid) => roles.find((r: any) => r.id === id)?.name).join(', ')
@@ -373,7 +356,7 @@ const onUseCaseDelete = async (id: Uuid) => {
                         <Listbox v-model.trim="data[field]" :options="roles" optionLabel="name" filter multiple
                             checkmark />
                     </template>
-                </Column>
+                </Column> -->
             </XDataTable>
         </TabPanel>
     </TabView>

@@ -1,16 +1,6 @@
-import type { Properties } from "~/domain/Properties";
-import StorageRepository from "~/data/StorageRepository";
-import type Invariant from "../domain/Invariant";
-import InvariantToJsonMapper from "../mappers/InvariantToJsonMapper";
+import PGLiteRepository from "~/data/PGLiteRepository";
+import Invariant from "../domain/Invariant";
 
-const { serializationVersion } = useAppConfig()
-
-export default class InvariantRepository extends StorageRepository<Invariant> {
-    constructor(properties: Properties<Omit<InvariantRepository, 'storageKey' | 'mapper'>> = {}) {
-        super({
-            ...properties,
-            storageKey: 'invariant',
-            mapper: new InvariantToJsonMapper(serializationVersion)
-        })
-    }
+export default class InvariantRepository extends PGLiteRepository<Invariant> {
+    constructor() { super('cathedral.invariant', Invariant) }
 }

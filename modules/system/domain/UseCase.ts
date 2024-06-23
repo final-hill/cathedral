@@ -1,4 +1,4 @@
-import Scenario from "./Scenario";
+import Scenario from "../../../domain/Scenario";
 import type { Uuid } from "~/domain/Uuid";
 import type { Properties } from "~/domain/Properties";
 
@@ -25,10 +25,9 @@ export default class UseCase extends Scenario {
     /**
      * The preCondition is an Assumption that must be true before the use case can start.
      */
-    preCondition: Uuid
+    preConditionId: Uuid
 
     // the action upon the system that starts the use case
-    // A Responsibility? Functional Requirement?
     trigger: Uuid
 
     /**
@@ -56,18 +55,18 @@ export default class UseCase extends Scenario {
     /**
      *
      */
-    stakeHoldersAndInterests: Uuid[] // Actor[]
+    // stakeHoldersAndInterests: Uuid[] // Actor[]
 
     constructor(props: Properties<UseCase>) {
         super(props)
         this.scope = props.scope
         this.level = props.level
         this.goalInContext = props.goalInContext
-        this.preCondition = props.preCondition
+        this.preConditionId = props.preConditionId
         this.trigger = props.trigger
         this.mainSuccessScenario = props.mainSuccessScenario
         this.successGuarantee = props.successGuarantee
         this.extensions = props.extensions
-        this.stakeHoldersAndInterests = props.stakeHoldersAndInterests
+        // this.stakeHoldersAndInterests = props.stakeHoldersAndInterests
     }
 }

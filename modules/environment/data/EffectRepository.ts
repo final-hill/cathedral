@@ -1,16 +1,6 @@
-import type { Properties } from "~/domain/Properties";
-import StorageRepository from "~/data/StorageRepository";
-import type Effect from "../domain/Effect";
-import EffectToJsonMapper from "../mappers/EffectToJsonMapper";
+import PGLiteRepository from "~/data/PGLiteRepository";
+import Effect from "../domain/Effect";
 
-const { serializationVersion } = useAppConfig()
-
-export default class EffectRepository extends StorageRepository<Effect> {
-    constructor(properties: Properties<Omit<EffectRepository, 'storageKey' | 'mapper'>> = {}) {
-        super({
-            ...properties,
-            storageKey: 'effect',
-            mapper: new EffectToJsonMapper(serializationVersion)
-        })
-    }
+export default class EffectRepository extends PGLiteRepository<Effect> {
+    constructor() { super('cathedral.effect', Effect) }
 }

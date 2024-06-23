@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import MigrationManager from '~/data/MigrationManager'
+
 useHead({
   titleTemplate: (titleChunk) =>
     titleChunk ? `${titleChunk} - Cathedral` : 'Cathedral'
@@ -14,6 +16,10 @@ const onAlphaDialogClose = () => {
   // save the setting to local storage
   localStorage.setItem('preAlphaDialogVisible', 'false');
 };
+
+const migrationManager = new MigrationManager(useAppConfig().connString);
+
+await migrationManager.migrateToLatest();
 </script>
 
 <template>

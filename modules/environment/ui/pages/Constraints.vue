@@ -1,80 +1,68 @@
 <script lang="ts" setup>
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
-import EnvironmentRepository from '../../data/EnvironmentRepository';
-import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
-import GetEnvironmentBySolutionIdUseCase from '../../application/GetEnvironmentBySolutionIdUseCase';
 import { FilterMatchMode } from 'primevue/api';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
 import ConstraintRepository from '../../data/ConstraintRepository';
-import GetConstraintsUseCase from '../../application/GetConstraintsUseCase';
-import CreateConstraintUseCase from '../../application/CreateConstraintUseCase';
-import UpdateConstraintUseCase from '../../application/UpdateConstraintUseCase';
-import DeleteConstraintUseCase from '../../application/DeleteConstraintUseCase';
 import type Constraint from '../../domain/Constraint';
-import { ConstraintCategory } from '../../domain/Constraint';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
+import ConstraintCategoryRepository from '../../data/ConstraintCategoryRepository';
+import ConstraintInteractor from '../../application/ConstraintInteractor';
+import type ConstraintCategory from '../../domain/ConstraintCategory';
+import ConstraintCategoryInteractor from '../../application/ConstraintCategoryInteractor';
 
-useHead({
-    title: 'Constraints'
-})
+useHead({ title: 'Constraints' })
 
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
-    solutionRepository = new SolutionRepository(),
-    environmentRepository = new EnvironmentRepository(),
-    constraintRepository = new ConstraintRepository(),
-    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
-    solution = await getSolutionBySlugUseCase.execute(slug),
-    getEnvironmentBySolutionIdUseCase = new GetEnvironmentBySolutionIdUseCase(environmentRepository),
-    environment = solution?.id && await getEnvironmentBySolutionIdUseCase.execute(solution.id),
-    getConstraintsUseCase = new GetConstraintsUseCase(constraintRepository),
-    createConstraintUseCase = new CreateConstraintUseCase(environmentRepository, constraintRepository),
-    updateConstraintUseCase = new UpdateConstraintUseCase(constraintRepository),
-    deleteConstraintUseCase = new DeleteConstraintUseCase(environmentRepository, constraintRepository);
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
+    solution = (await solutionInteractor.getAll({ slug }))[0],
+    constraintInteractor = new ConstraintInteractor(new ConstraintRepository()),
+    constraintCategoryInteractor = new ConstraintCategoryInteractor(new ConstraintCategoryRepository())
 
-if (!solution) {
+if (!solution)
     router.push({ name: 'Solutions' });
-} else {
-    if (!environment)
-        router.push({ name: 'Environment', params: { solutionSlug: slug } });
-}
 
-type ConstraintViewModel = Pick<Constraint, 'id' | 'name' | 'statement' | 'category'>;
+type ConstraintViewModel = Pick<Constraint, 'id' | 'name' | 'statement' | 'categoryId'>;
+type ConstraintCategoryModel = Pick<ConstraintCategory, 'id' | 'name'>;
 
 const constraints = ref<ConstraintViewModel[]>([]),
-    emptyConstraint = { id: emptyUuid, name: '', statement: '', category: ConstraintCategory.BusinessRule },
-    categories = ref<ConstraintCategory[]>(Object.values(ConstraintCategory))
+    constraintCategories = ref<ConstraintCategoryModel[]>([]),
+    emptyConstraint: ConstraintViewModel = { id: emptyUuid, name: '', statement: '', categoryId: emptyUuid }
 
 onMounted(async () => {
-    constraints.value = await getConstraintsUseCase.execute(environment!.id) ?? []
+    constraints.value = await constraintInteractor.getAll({ solutionId: solution!.id })
+    constraintCategories.value = await constraintCategoryInteractor.getAll()
 })
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
     'statement': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'category': { value: null, matchMode: FilterMatchMode.EQUALS }
+    'categoryId': { value: null, matchMode: FilterMatchMode.EQUALS }
 });
 
 const onCreate = async (data: ConstraintViewModel) => {
-    const newId = await createConstraintUseCase.execute({
-        parentId: environment!.id,
+    const newId = await constraintInteractor.create({
+        ...data,
         solutionId: solution!.id,
-        name: data.name,
-        statement: data.statement,
-        category: data.category
+        property: ''
     })
 
-    constraints.value = await getConstraintsUseCase.execute(environment!.id) ?? []
+    constraints.value = await constraintInteractor.getAll({ solutionId: solution!.id })
 }
 
 const onDelete = async (id: Uuid) => {
+    await constraintInteractor.delete(id)
     constraints.value = constraints.value.filter(o => o.id !== id)
-    await deleteConstraintUseCase.execute(id)
 }
 
 const onUpdate = async (data: ConstraintViewModel) => {
-    await updateConstraintUseCase.execute(data)
-    constraints.value = await getConstraintsUseCase.execute(environment!.id) ?? []
+    await constraintInteractor.update({
+        ...data,
+        solutionId: solution!.id,
+        property: ''
+    })
+    constraints.value = await constraintInteractor.getAll({ solutionId: solution!.id })
 }
 </script>
 
@@ -96,15 +84,17 @@ const onUpdate = async (data: ConstraintViewModel) => {
                 <InputText v-model.trim="data[field]" required="true" />
             </template>
         </Column>
-        <Column field="category" header="Category" sortable>
+        <Column field="categoryId" header="Category" sortable>
             <template #filter="{ filterModel, filterCallback }">
-                <Dropdown v-model="filterModel.value" :options="categories" @input="filterCallback()" />
+                <Dropdown v-model="filterModel.value" :options="constraintCategories" optionLabel="name"
+                    optionValue="id" @change="filterCallback()" />
             </template>
             <template #body="{ data, field }">
-                {{ data[field] }}
+                {{ constraintCategories.find(o => o.id === data[field])?.name }}
             </template>
             <template #editor="{ data, field }">
-                <Dropdown v-model="data[field]" :options="categories" required="true" />
+                <Dropdown v-model="data[field]" :options="constraintCategories" optionLabel="name" optionValue="id"
+                    required="true" />
             </template>
         </Column>
         <Column field="statement" header="Description">

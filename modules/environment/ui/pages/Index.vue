@@ -1,44 +1,17 @@
 <script lang="ts" setup>
-import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
-import EnvironmentRepository from '../../data/EnvironmentRepository';
-import GetEnvironmentBySolutionIdUseCase from '../../application/GetEnvironmentBySolutionIdUseCase';
-import CreateEnvironmentUseCase from '../../application/CreateEnvironmentUseCase';
-import UpdateSolutionUseCase from '~/modules/solution/application/UpdateSolutionUseCase';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
 
-useHead({
-    title: 'Environment'
-})
+useHead({ title: 'Environment' })
 
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
-    solutionRepository = new SolutionRepository(),
-    environmentRepository = new EnvironmentRepository(),
-    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
-    getEnvironmentBySolutionIdUseCase = new GetEnvironmentBySolutionIdUseCase(environmentRepository),
-    createEnvironmentUseCase = new CreateEnvironmentUseCase(environmentRepository),
-    updateSolutionUseCase = new UpdateSolutionUseCase(solutionRepository),
-    solution = await getSolutionBySlugUseCase.execute(slug)
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
+    solution = (await solutionInteractor.getAll({ slug }))[0];
 
-if (!solution) {
+if (!solution)
     router.push({ name: 'Solutions' });
-} else {
-    const environment = await getEnvironmentBySolutionIdUseCase.execute(solution.id);
-
-    if (!environment) {
-        const newId = await createEnvironmentUseCase.execute(solution.id);
-        await updateSolutionUseCase.execute({
-            id: solution.id,
-            name: solution.name,
-            description: solution.description,
-            environmentId: newId,
-            goalsId: solution.goalsId,
-            projectId: solution.projectId,
-            systemId: solution.systemId
-        });
-    }
-}
 
 const links = [
     { name: 'Assumptions', icon: 'pi-sun', label: 'Assumptions' },

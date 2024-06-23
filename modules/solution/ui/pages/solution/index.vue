@@ -1,22 +1,18 @@
 <script lang="ts" setup>
-import GetAllSolutionsUseCase from '~/modules/solution/application/GetAllSolutionsUseCase';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
 import SolutionRepository from '../../../data/SolutionRepository';
 import type Solution from '../../../domain/Solution';
-import DeleteSolutionUseCase from '~/modules/solution/application/DeleteSolutionUseCase';
 
-useHead({
-    title: 'Solutions'
-})
+useHead({ title: 'Solutions' })
 
 const router = useRouter(),
-    solutionRepo = new SolutionRepository(),
-    getAllSolutionsUseCase = new GetAllSolutionsUseCase(solutionRepo),
-    deleteSolutionUseCase = new DeleteSolutionUseCase(solutionRepo),
+    solutionRepository = new SolutionRepository(),
+    solutionInteractor = new SolutionInteractor(solutionRepository),
     solutions = ref<Solution[]>([]),
     confirm = useConfirm()
 
 onMounted(async () => {
-    solutions.value = await getAllSolutionsUseCase.execute();
+    solutions.value = await solutionInteractor.getAll();
 });
 
 const handleDelete = async (solution: Solution) => {
@@ -27,7 +23,7 @@ const handleDelete = async (solution: Solution) => {
         rejectLabel: 'Cancel',
         acceptLabel: 'Delete',
         accept: async () => {
-            await deleteSolutionUseCase.execute(solution.id);
+            await solutionInteractor.delete(solution.id);
             solutions.value = solutions.value.filter((s) => s.id !== solution.id);
         },
         reject: () => { }
@@ -42,7 +38,7 @@ const handleEdit = (solution: Solution) => {
 <template>
     <ConfirmDialog></ConfirmDialog>
     <div class="grid gap-3">
-        <Card class="col shadow-4">
+        <Card class="col shadow-4 border-dashed">
             <template #title>
                 <NuxtLink :to="{ name: 'New Solution' }">
                     New Solution

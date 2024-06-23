@@ -1,16 +1,7 @@
-import type { Properties } from "~/domain/Properties";
-import StorageRepository from "~/data/StorageRepository";
-import type Goal from "../domain/Goal";
-import LimitToJsonMapper from "../mappers/LimitToJsonMapper";
+import PGLiteRepository from "~/data/PGLiteRepository";
+import Limit from "../domain/Limit";
 
-const { serializationVersion } = useAppConfig()
-
-export default class LimitRepository extends StorageRepository<Goal> {
-    constructor(properties: Properties<Omit<LimitRepository, 'storageKey' | 'mapper'>> = {}) {
-        super({
-            ...properties,
-            storageKey: 'limit',
-            mapper: new LimitToJsonMapper(serializationVersion)
-        })
-    }
+export default class LimitRepository extends PGLiteRepository<Limit> {
+    // "limit" is a reserved word in SQL, so we need to use quotes to escape it
+    constructor() { super(`cathedral."limit"`, Limit) }
 }

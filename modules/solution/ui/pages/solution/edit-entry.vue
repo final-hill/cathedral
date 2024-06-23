@@ -1,21 +1,17 @@
 <script lang="ts" setup>
 import slugify from '~/lib/slugify';
-import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
-import UpdateSolutionUseCase from '~/modules/solution/application/UpdateSolutionUseCase';
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
 import Solution from '../solution.vue';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
 
-useHead({
-    title: 'Edit Solution'
-})
+useHead({ title: 'Edit Solution' })
 
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
     solutionRepository = new SolutionRepository(),
-    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
-    updateSolutionUseCase = new UpdateSolutionUseCase(solutionRepository),
-    solution = await getSolutionBySlugUseCase.execute(slug),
+    solutionInteractor = new SolutionInteractor(solutionRepository),
+    solution = (await solutionInteractor.getAll({ slug }))[0],
     name = ref(solution?.name || ''),
     newSlug = ref(solution?.slug || ''),
     description = ref(solution?.description || '')
@@ -24,14 +20,11 @@ if (!solution)
     router.push({ name: 'Solutions' });
 
 const updateSolution = async () => {
-    await updateSolutionUseCase.execute({
+    await solutionInteractor.update({
         id: solution!.id,
         name: name.value,
         description: description.value,
-        environmentId: solution!.environmentId,
-        goalsId: solution!.goalsId,
-        projectId: solution!.projectId,
-        systemId: solution!.systemId
+        slug: newSlug.value
     });
 
     router.push({ name: 'Solution', params: { solutionSlug: newSlug.value } });

@@ -1,45 +1,17 @@
 <script lang="ts" setup>
-import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
-import UpdateSolutionUseCase from '~/modules/solution/application/UpdateSolutionUseCase';
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
-import ProjectRepository from '../../data/ProjectRepository';
-import GetProjectBySolutionIdUseCase from '../../application/GetProjectBySolutionIdUseCase';
-import CreateProjectUseCase from '../../application/CreateProjectUseCase';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
 
-useHead({
-    title: 'Project'
-})
+useHead({ title: 'Project' })
 
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
-    solutionRepository = new SolutionRepository(),
-    projectRepository = new ProjectRepository(),
-    getProjectBySolutionIdUseCase = new GetProjectBySolutionIdUseCase(projectRepository),
-    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
-    createProjectUseCase = new CreateProjectUseCase(projectRepository),
-    updateSolutionUseCase = new UpdateSolutionUseCase(solutionRepository),
-    solution = await getSolutionBySlugUseCase.execute(slug)
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
+    solution = (await solutionInteractor.getAll({ slug }))[0];
 
-if (!solution) {
+if (!solution)
     router.push({ name: 'Solutions' });
-} else {
-    const project = await getProjectBySolutionIdUseCase.execute(solution.id);
-
-    if (!project) {
-        const newId = await createProjectUseCase.execute(solution.id);
-
-        await updateSolutionUseCase.execute({
-            id: solution.id,
-            name: solution.name,
-            description: solution.description,
-            environmentId: solution.environmentId,
-            goalsId: solution.goalsId,
-            projectId: newId,
-            systemId: solution.systemId
-        });
-    }
-}
 
 const links = [
     { name: 'Roles & Personnel', icon: 'pi-users', label: 'Roles & Personnel' }

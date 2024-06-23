@@ -2,41 +2,22 @@
 import { FilterMatchMode } from 'primevue/api';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
-import EnvironmentRepository from '../../data/EnvironmentRepository';
-import EnvironmentComponentRepository from '../../data/EnvironmentComponentRepository';
-import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
-import GetEnvironmentBySolutionIdUseCase from '../../application/GetEnvironmentBySolutionIdUseCase';
-import GetEnvironmentComponentsUseCase from '../../application/GetEnvironmentComponentsUseCase';
-import CreateEnvironmentComponentUseCase from '../../application/CreateEnvironmentComponentUseCase';
-import UpdateEnvironmentComponentUseCase from '../../application/UpdateEnvironmentComponentUseCase';
-import DeleteEnvironmentComponentUseCase from '../../application/DeleteEnvironmentComponentUseCase';
 import type Component from '~/domain/Component';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
+import ComponentRepository from '~/data/ComponentRepository';
+import ComponentInteractor from '~/application/ComponentInteractor';
 
-useHead({
-    title: 'Components'
-})
+useHead({ title: 'Components' })
 
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
-    solutionRepository = new SolutionRepository(),
-    environmentRepository = new EnvironmentRepository(),
-    componentRepository = new EnvironmentComponentRepository(),
-    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
-    solution = await getSolutionBySlugUseCase.execute(slug),
-    getEnvironmentBySolutionIdUseCase = new GetEnvironmentBySolutionIdUseCase(environmentRepository),
-    environment = solution?.id && await getEnvironmentBySolutionIdUseCase.execute(solution.id),
-    getComponentsUseCase = new GetEnvironmentComponentsUseCase(componentRepository),
-    createComponentUseCase = new CreateEnvironmentComponentUseCase(environmentRepository, componentRepository),
-    updateComponentUseCase = new UpdateEnvironmentComponentUseCase(componentRepository),
-    deleteComponentUseCase = new DeleteEnvironmentComponentUseCase(environmentRepository, componentRepository);
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
+    componentInteractor = new ComponentInteractor(new ComponentRepository()),
+    solution = (await solutionInteractor.getAll({ slug }))[0]
 
-if (!solution) {
+if (!solution)
     router.push({ name: 'Solutions' });
-} else {
-    if (!environment)
-        router.push({ name: 'Environment', params: { solutionSlug: slug } });
-}
 
 type ComponentViewModel = Pick<Component, 'id' | 'name' | 'statement'>;
 
@@ -44,7 +25,7 @@ const components = ref<ComponentViewModel[]>([]),
     emptyComponent = { id: emptyUuid, name: '', statement: '' };
 
 onMounted(async () => {
-    components.value = await getComponentsUseCase.execute(environment!.id) ?? []
+    components.value = await componentInteractor.getAll({ solutionId: solution.id })
 })
 
 const filters = ref({
@@ -53,24 +34,29 @@ const filters = ref({
 });
 
 const onCreate = async (data: ComponentViewModel) => {
-    const newId = await createComponentUseCase.execute({
-        parentId: environment!.id,
-        solutionId: solution!.id,
-        name: data.name,
-        statement: data.statement
+    const newId = await componentInteractor.create({
+        ...data,
+        solutionId: solution.id,
+        parentComponentId: emptyUuid,
+        property: ''
     })
 
-    components.value = await getComponentsUseCase.execute(environment!.id) ?? []
+    components.value = await componentInteractor.getAll({ solutionId: solution.id })
 }
 
 const onDelete = async (id: Uuid) => {
-    await deleteComponentUseCase.execute(id)
-    components.value = await getComponentsUseCase.execute(environment!.id) ?? []
+    await componentInteractor.delete(id)
+    components.value = await componentInteractor.getAll({ solutionId: solution.id })
 }
 
 const onUpdate = async (data: ComponentViewModel) => {
-    await updateComponentUseCase.execute(data)
-    components.value = await getComponentsUseCase.execute(environment!.id) ?? []
+    await componentInteractor.update({
+        ...data,
+        solutionId: solution.id,
+        parentComponentId: emptyUuid,
+        property: ''
+    })
+    components.value = await componentInteractor.getAll({ solutionId: solution.id })
 }
 </script>
 

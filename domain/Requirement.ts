@@ -6,7 +6,6 @@ import type { Uuid } from "./Uuid";
  * A Requirement is a statement that specifies a property.
  */
 export default class Requirement extends Entity {
-
     constructor({ id, ...rest }: Properties<Requirement>) {
         super({ id })
 
@@ -14,13 +13,8 @@ export default class Requirement extends Entity {
     }
 
     /**
-     * The parent of a requirement is an aggregate of requirements.
-     */
-    parentId!: Uuid
-
-    /**
      * A property is a Predicate formalizing its associated statement.
-     * Currently, this is represented as a datalog string.
+     * TODO: represented as a datalog string?
      */
     property!: string
 
