@@ -1,51 +1,23 @@
 <script lang="ts" setup>
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
-import GoalsRepository from '../../data/GoalsRepository';
-import GetGoalsBySolutionIdUseCase from '../../application/GetGoalsBySolutionIdUseCase';
-import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
-import CreateGoalsUseCase from '../../application/CreateGoalsUseCase';
-import UpdateSolutionUseCase from '~/modules/solution/application/UpdateSolutionUseCase';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
 
-useHead({
-    title: 'Goals'
-})
+useHead({ title: 'Goals' })
 
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
-    solutionRepository = new SolutionRepository(),
-    goalsRepository = new GoalsRepository(),
-    getGoalsBySolutionIdUseCase = new GetGoalsBySolutionIdUseCase(goalsRepository),
-    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
-    createGoalsUseCase = new CreateGoalsUseCase(goalsRepository),
-    updateSolutionUseCase = new UpdateSolutionUseCase(solutionRepository),
-    solution = await getSolutionBySlugUseCase.execute(slug)
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
+    solution = (await solutionInteractor.getAll({ slug }))[0];
 
-if (!solution) {
+if (!solution)
     router.push({ name: 'Solutions' });
-} else {
-    const goals = await getGoalsBySolutionIdUseCase.execute(solution.id);
-
-    if (!goals) {
-        const newId = await createGoalsUseCase.execute(solution.id);
-
-        await updateSolutionUseCase.execute({
-            id: solution.id,
-            name: solution.name,
-            description: solution.description,
-            environmentId: solution.environmentId,
-            goalsId: newId,
-            projectId: solution.projectId,
-            systemId: solution.systemId
-        });
-    }
-}
 
 const links = [
     { name: 'Rationale', icon: 'pi-book', label: 'Rationale' },
     { name: 'Outcomes', icon: 'pi-check-circle', label: 'Outcomes' },
     { name: 'Stakeholders', icon: 'pi-users', label: 'Stakeholders' },
-    { name: 'Epics', icon: 'pi-briefcase', label: 'Epics' },
+    { name: 'Goal Scenarios', icon: 'pi-briefcase', label: 'Scenarios' },
     { name: 'Obstacles', icon: ' pi-exclamation-triangle', label: 'Obstacles' },
     { name: 'Limitations', icon: 'pi-exclamation-circle', label: 'Limitations' }
 ]

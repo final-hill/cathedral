@@ -1,42 +1,24 @@
 <script lang="ts" setup>
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
-import EnvironmentRepository from '../../data/EnvironmentRepository';
 import GlossaryTermRepository from '../../data/GlossaryTermRepository';
-import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
-import GetEnvironmentBySolutionIdUseCase from '../../application/GetEnvironmentBySolutionIdUseCase';
-import GetGlossaryTermsUseCase from '../../application/GetGlossaryTermsUseCase';
-import CreateGlossaryTermUseCase from '../../application/CreateGlossaryTermUseCase';
-import UpdateGlossaryTermUseCase from '../../application/UpdateGlossaryTermUseCase';
-import DeleteGlossaryTermUseCase from '../../application/DeleteGlossaryTermUseCase';
 import type GlossaryTerm from '../../domain/GlossaryTerm';
 import { FilterMatchMode } from 'primevue/api';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
+import GlossaryTermInteractor from '../../application/GlossaryTermInteractor';
 
-useHead({
-    title: 'Glossary'
-})
+useHead({ title: 'Glossary' })
 
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
-    solutionRepository = new SolutionRepository(),
-    environmentRepository = new EnvironmentRepository(),
     glossaryTermRepository = new GlossaryTermRepository(),
-    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
-    solution = await getSolutionBySlugUseCase.execute(slug),
-    getEnvironmentBySolutionIdUseCase = new GetEnvironmentBySolutionIdUseCase(environmentRepository),
-    environment = solution?.id && await getEnvironmentBySolutionIdUseCase.execute(solution.id),
-    getGlossaryTermsUseCase = new GetGlossaryTermsUseCase(glossaryTermRepository),
-    createGlossaryTermUseCase = new CreateGlossaryTermUseCase(environmentRepository, glossaryTermRepository),
-    updateGlossaryTermUseCase = new UpdateGlossaryTermUseCase(glossaryTermRepository),
-    deleteGlossaryTermUseCase = new DeleteGlossaryTermUseCase(environmentRepository, glossaryTermRepository);
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
+    glossaryTermInteractor = new GlossaryTermInteractor(glossaryTermRepository),
+    solution = (await solutionInteractor.getAll({ slug }))[0]
 
-if (!solution) {
+if (!solution)
     router.push({ name: 'Solutions' });
-} else {
-    if (!environment)
-        router.push({ name: 'Environment', params: { solutionSlug: slug } });
-}
 
 type GlossaryTermViewModel = Pick<GlossaryTerm, 'id' | 'name' | 'statement'>;
 
@@ -44,7 +26,7 @@ const glossaryTerms = ref<GlossaryTermViewModel[]>([]),
     emptyGlossaryTerm = { id: emptyUuid, name: '', statement: '' }
 
 onMounted(async () => {
-    glossaryTerms.value = await getGlossaryTermsUseCase.execute(environment!.id) ?? []
+    glossaryTerms.value = await glossaryTermInteractor.getAll({ solutionId: solution!.id })
 })
 
 const filters = ref({
@@ -53,30 +35,34 @@ const filters = ref({
 });
 
 const onCreate = async (data: GlossaryTermViewModel) => {
-    const newId = await createGlossaryTermUseCase.execute({
-        parentId: environment!.id,
-        solutionId: solution!.id,
+    const newId = await glossaryTermInteractor.create({
         name: data.name,
-        statement: data.statement
+        statement: data.statement,
+        property: '',
+        solutionId: solution!.id,
+        parentComponentId: emptyUuid
     })
 
-    glossaryTerms.value = await getGlossaryTermsUseCase.execute(environment!.id) ?? []
+    glossaryTerms.value = await glossaryTermInteractor.getAll({ solutionId: solution!.id })
 }
 
 const onUpdate = async (data: GlossaryTermViewModel) => {
-    await updateGlossaryTermUseCase.execute({
+    await glossaryTermInteractor.update({
         id: data.id,
         name: data.name,
-        statement: data.statement
+        statement: data.statement,
+        property: '',
+        solutionId: solution!.id,
+        parentComponentId: emptyUuid
     })
 
-    glossaryTerms.value = await getGlossaryTermsUseCase.execute(environment!.id) ?? []
+    glossaryTerms.value = await glossaryTermInteractor.getAll({ solutionId: solution!.id })
 }
 
 const onDelete = async (id: Uuid) => {
-    await deleteGlossaryTermUseCase.execute(id)
+    await glossaryTermInteractor.delete(id)
 
-    glossaryTerms.value = await getGlossaryTermsUseCase.execute(environment!.id) ?? []
+    glossaryTerms.value = await glossaryTermInteractor.getAll({ solutionId: solution!.id })
 }
 </script>
 

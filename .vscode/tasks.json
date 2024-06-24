@@ -1,21 +1,21 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"type": "npm",
-			"script": "typecheck",
-			"group": "build",
-			"problemMatcher": [],
-			"label": "npm: typecheck",
-			"detail": "nuxi typecheck"
-		},
-		{
-			"type": "npm",
-			"script": "dev",
-			"group": "build",
-			"problemMatcher": [],
-			"label": "npm: dev",
-			"detail": "nuxt dev"
-		}
-	]
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "npm",
+            "script": "typecheck",
+            "group": "build",
+            "problemMatcher": [],
+            "label": "npm: typecheck",
+            "detail": "nuxi typecheck"
+        },
+        {
+            "type": "npm",
+            "script": "dev",
+            "group": "build",
+            "problemMatcher": [],
+            "label": "npm: dev",
+            "detail": "nuxt dev"
+        }
+    ]
 }

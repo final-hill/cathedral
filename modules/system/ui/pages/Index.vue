@@ -1,41 +1,15 @@
 <script lang="ts" setup>
-import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
-import GetSystemBySolutionIdUseCase from '../../application/GetSystemBySolutionIdUseCase';
-import SystemRepository from '../../data/SystemRepository';
-import UpdateSolutionUseCase from '~/modules/solution/application/UpdateSolutionUseCase';
-import CreateSystemUseCase from '../../application/CreateSystemUseCase';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
 
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
-    solutionRepository = new SolutionRepository(),
-    systemRepository = new SystemRepository(),
-    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
-    getSystemBySolutionIdUseCase = new GetSystemBySolutionIdUseCase(systemRepository),
-    createSystemUseCase = new CreateSystemUseCase(systemRepository),
-    updateSolutionUseCase = new UpdateSolutionUseCase(solutionRepository),
-    solution = await getSolutionBySlugUseCase.execute(slug)
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
+    solution = (await solutionInteractor.getAll({ slug }))[0];
 
-if (!solution) {
+if (!solution)
     router.push({ name: 'Solutions' });
-} else {
-    const system = await getSystemBySolutionIdUseCase.execute(solution.id);
-
-    if (!system) {
-        const newId = await createSystemUseCase.execute(solution.id);
-
-        await updateSolutionUseCase.execute({
-            id: solution.id,
-            name: solution.name,
-            description: solution.description,
-            environmentId: solution.environmentId,
-            goalsId: solution.goalsId,
-            projectId: solution.projectId,
-            systemId: newId
-        });
-    }
-}
 
 const links = [
     { name: 'System Components', icon: 'pi-sitemap', label: 'Components' },

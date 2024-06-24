@@ -1,7 +1,7 @@
 import Example from "./Example";
 
 /**
- * A TestCase is a specification of the inputs, execution conditions, 
+ * A TestCase is a specification of the inputs, execution conditions,
  * testing procedure, and expected results that define a single test to
  * be executed to achieve a particular goal.,
  */

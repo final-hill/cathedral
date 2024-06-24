@@ -1,16 +1,6 @@
-import type { Properties } from "~/domain/Properties";
-import StorageRepository from "~/data/StorageRepository.js";
-import type Outcome from "../domain/Outcome";
-import OutcomeToJsonMapper from "../mappers/OutcomeToJsonMapper";
+import Outcome from "../domain/Outcome";
+import PGLiteRepository from "~/data/PGLiteRepository";
 
-const { serializationVersion } = useAppConfig()
-
-export default class OutcomeRepository extends StorageRepository<Outcome> {
-    constructor(properties: Properties<Omit<OutcomeRepository, 'storageKey' | 'mapper'>> = {}) {
-        super({
-            ...properties,
-            storageKey: 'outcome',
-            mapper: new OutcomeToJsonMapper(serializationVersion)
-        })
-    }
+export default class OutcomeRepository extends PGLiteRepository<Outcome> {
+    constructor() { super('cathedral.outcome', Outcome) }
 }

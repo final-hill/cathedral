@@ -12,13 +12,9 @@ export default class Solution extends Entity {
 
     private _description!: string;
     private _name!: string;
+    private _slug!: string;
 
-    projectId!: Uuid;
-    environmentId!: Uuid;
-    goalsId!: Uuid;
-    systemId!: Uuid;
-
-    constructor({ id, ...rest }: Properties<Omit<Solution, 'slug' | 'url'>>) {
+    constructor({ id, ...rest }: Properties<Solution>) {
         super({ id });
         Object.assign(this, rest);
     }
@@ -32,7 +28,9 @@ export default class Solution extends Entity {
     set description(value: string) {
         const trimmed = value.trim();
         if (trimmed.length >= Solution.maxDescriptionLength)
-            throw new Error('Project description cannot be longer than 200 characters');
+            throw new Error(
+                `Project description cannot be longer than ${Solution.maxDescriptionLength} characters`
+            );
         this._description = trimmed;
     }
 
@@ -45,11 +43,15 @@ export default class Solution extends Entity {
     set name(value: string) {
         const trimmed = value.trim();
         if (trimmed.length >= Solution.maxNameLength)
-            throw new Error('Entity name cannot be longer than 60 characters');
+            throw new Error(`Entity name cannot be longer than ${Solution.maxNameLength} characters`);
         this._name = trimmed;
     }
 
     get slug(): string {
-        return slugify(this.name);
+        return this._slug
+    }
+
+    set slug(value: string) {
+        this._slug = value
     }
 }

@@ -1,26 +1,48 @@
 import type Entity from '~/domain/Entity';
-import type Mapper from './Mapper.js';
 import type { Properties } from '~/domain/Properties.js';
 import type { Uuid } from '~/domain/Uuid.js';
+import { useAppConfig } from '#app'
+import { PGlite } from "@electric-sql/pglite";
 
+/**
+ * A repository for entities.
+ */
 export default abstract class Repository<E extends Entity> {
-    private _mapper: Mapper<E, any>;
+    /**
+     * The connection to the database.
+     */
+    static conn = new PGlite(useAppConfig().connString)
 
-    constructor({ mapper }: Properties<Repository<E>>) {
-        this._mapper = mapper;
-    }
+    /**
+     * Creates an item to the repository.
+     * @param item The properties of the item to create.
+     * @returns The id of the added item.
+     */
+    abstract create(item: Omit<Properties<E>, 'id'>): Promise<Uuid>
 
-    get mapper(): Mapper<E, any> { return this._mapper; }
-
-    abstract getAll(filter?: (entity: E) => boolean): Promise<E[]>;
-
-    abstract get(id: E['id']): Promise<E | undefined>;
-
-    abstract add(item: E): Promise<Uuid>
-
-    abstract update(item: E): Promise<void>;
-
+    /**
+     * Deletes an item from the repository.
+     * @param id The id of the item to delete.
+     */
     abstract delete(id: E['id']): Promise<void>;
 
-    abstract clear(): Promise<void>;
+    /**
+     * Gets an item from the repository.
+     * @param id The id of the item to get.
+     * @returns The item with the given id, or undefined if it does not exist.
+     */
+    abstract get(id: E['id']): Promise<E | undefined>;
+
+    /**
+     * Gets all items in the repository.
+     * @param criteria The criteria to filter the items by.
+     * @returns All items in the repository.
+     */
+    abstract getAll(criteria?: Partial<Properties<E>>): Promise<E[]>;
+
+    /**
+     * Updates an item in the repository.
+     * @param item The item to update.
+     */
+    abstract update(item: Properties<E>): Promise<void>;
 }

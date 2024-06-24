@@ -1,42 +1,23 @@
 <script lang="ts" setup>
-import GoalsRepository from '../../data/GoalsRepository';
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
 import OutcomeRepository from '../../data/OutcomeRepository';
 import { FilterMatchMode } from 'primevue/api';
 import type Outcome from '../../domain/Outcome';
-import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
-import GetGoalsBySolutionIdUseCase from '../../application/GetGoalsBySolutionIdUseCase';
-import GetOutcomesUseCase from '../../application/GetOutcomesUseCase';
-import CreateOutcomeUseCase from '../../application/CreateOutcomeUseCase';
-import UpdateOutcomeUseCase from '../../application/UpdateOutcomeUseCase';
-import DeleteOutcomeUseCase from '../../application/DeleteOutcomeUseCase';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
+import OutcomeInteractor from '../../application/OutcomeInteractor';
 
-useHead({
-    title: 'Outcomes'
-})
+useHead({ title: 'Outcomes' })
 
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
-    solutionRepository = new SolutionRepository(),
-    goalsRepository = new GoalsRepository(),
-    outcomeRepository = new OutcomeRepository(),
-    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
-    solution = await getSolutionBySlugUseCase.execute(slug),
-    getGoalsBySolutionIdUseCase = new GetGoalsBySolutionIdUseCase(goalsRepository),
-    goals = solution?.id && await getGoalsBySolutionIdUseCase.execute(solution.id),
-    getOutcomesUseCase = new GetOutcomesUseCase(outcomeRepository),
-    createOutcomeUseCase = new CreateOutcomeUseCase(goalsRepository, outcomeRepository),
-    updateOutcomeUseCase = new UpdateOutcomeUseCase(outcomeRepository),
-    deleteOutcomeUseCase = new DeleteOutcomeUseCase(goalsRepository, outcomeRepository);
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
+    solution = (await solutionInteractor.getAll({ slug }))[0],
+    outcomeInteractor = new OutcomeInteractor(new OutcomeRepository())
 
-if (!solution) {
+if (!solution)
     router.push({ name: 'Solutions' });
-} else {
-    if (!goals)
-        router.push({ name: 'Goals', params: { solutionSlug: slug } });
-}
 
 type OutcomeViewModel = Pick<Outcome, 'id' | 'name' | 'statement'>;
 
@@ -44,7 +25,7 @@ const outcomes = ref<OutcomeViewModel[]>([]),
     emptyOutcome: OutcomeViewModel = { id: emptyUuid, name: '', statement: '' };
 
 onMounted(async () => {
-    outcomes.value = await getOutcomesUseCase.execute(goals!.id) ?? []
+    outcomes.value = await outcomeInteractor.getAll({ solutionId: solution!.id })
 })
 
 const filters = ref({
@@ -53,30 +34,32 @@ const filters = ref({
 });
 
 const onCreate = async (data: OutcomeViewModel) => {
-    const newId = await createOutcomeUseCase.execute({
-        parentId: goals!.id,
+    const newId = await outcomeInteractor.create({
         solutionId: solution!.id,
         name: data.name,
-        statement: data.statement
+        statement: data.statement,
+        property: ''
     })
 
-    outcomes.value = await getOutcomesUseCase.execute(goals!.id) ?? []
+    outcomes.value = await outcomeInteractor.getAll({ solutionId: solution!.id })
 }
 
 const onUpdate = async (data: OutcomeViewModel) => {
-    await updateOutcomeUseCase.execute({
+    await outcomeInteractor.update({
         id: data.id,
         name: data.name,
-        statement: data.statement
+        statement: data.statement,
+        property: '',
+        solutionId: solution!.id
     })
 
-    outcomes.value = await getOutcomesUseCase.execute(goals!.id) ?? []
+    outcomes.value = await outcomeInteractor.getAll({ solutionId: solution!.id })
 }
 
 const onDelete = async (id: Uuid) => {
-    await deleteOutcomeUseCase.execute({ parentId: goals!.id, id })
+    await outcomeInteractor.delete(id)
 
-    outcomes.value = await getOutcomesUseCase.execute(goals!.id) ?? []
+    outcomes.value = await outcomeInteractor.getAll({ solutionId: solution!.id })
 }
 </script>
 

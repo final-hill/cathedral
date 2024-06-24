@@ -1,5 +1,5 @@
 /**
- * Slugify a string by converting it to lowercase, removing whitespace, 
+ * Slugify a string by converting it to lowercase, removing whitespace,
  * and replacing non-word characters with hyphens.
  */
 export default (str: string) =>

@@ -2,27 +2,24 @@
 import slugify from '~/lib/slugify';
 import SolutionRepository from '../../../data/SolutionRepository';
 import Solution from '../../../domain/Solution';
-import CreateSolutionUseCase from '../../../application/CreateSolutionUseCase';
-import GetSolutionByIdUseCase from '../../../application/GetSolutionByIdUseCase';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
 
-useHead({
-    title: 'New Solution'
-})
+useHead({ title: 'New Solution' })
 
 const router = useRouter(),
-    repo = new SolutionRepository(),
-    createSolutionUseCase = new CreateSolutionUseCase(repo),
-    getSolutionByIdUseCase = new GetSolutionByIdUseCase(repo),
+    solutionRepository = new SolutionRepository(),
+    solutionInteractor = new SolutionInteractor(solutionRepository),
     name = ref(''),
     slug = ref(''),
     description = ref('')
 
 const createSolution = async () => {
-    const solutionId = await createSolutionUseCase.execute({
+    const solutionId = await solutionInteractor.create({
         name: name.value,
-        description: description.value
+        description: description.value,
+        slug: slug.value
     }),
-        solution = (await getSolutionByIdUseCase.execute(solutionId))!;
+        solution = (await solutionInteractor.get(solutionId))!;
 
     router.push({ name: 'Solution', params: { solutionSlug: solution.slug } });
 }

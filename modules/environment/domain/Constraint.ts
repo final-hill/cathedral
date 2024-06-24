@@ -1,21 +1,13 @@
 import type { Properties } from "~/domain/Properties";
 import Requirement from "~/domain/Requirement";
-
-/**
- * Property imposed by the environment
- */
-export enum ConstraintCategory {
-    BusinessRule = 'Business Rule',
-    PhysicalLaw = 'Physical Law',
-    EngineeringDecision = 'Engineering Decision'
-}
+import type { Uuid } from "~/domain/Uuid";
 
 export default class Constraint extends Requirement {
-    category: ConstraintCategory;
+    categoryId: Uuid;
 
-    constructor({ category, ...rest }: Properties<Constraint>) {
+    constructor({ categoryId, ...rest }: Properties<Constraint>) {
         super(rest);
 
-        this.category = category;
+        this.categoryId = categoryId;
     }
 }

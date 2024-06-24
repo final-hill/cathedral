@@ -1,41 +1,23 @@
 <script lang="ts" setup>
-import GoalsRepository from '../../data/GoalsRepository';
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
 import { FilterMatchMode } from 'primevue/api';
 import LimitRepository from '../../data/LimitRepository';
-import type Limit from '~/domain/Limit';
-import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
-import GetGoalsBySolutionIdUseCase from '../../application/GetGoalsBySolutionIdUseCase';
-import GetLimitsUseCase from '../../application/GetLimitsUseCase';
-import CreateLimitUseCase from '../../application/CreateLimitUseCase';
-import UpdateLimitUseCase from '../../application/UpdateLimitUseCase';
-import DeleteLimitUseCase from '../../application/DeleteLimitUseCase';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
+import LimitInteractor from '../../application/LimitInteractor';
+import type Limit from '../../domain/Limit';
 
-useHead({
-    title: 'Limitations'
-})
+useHead({ title: 'Limitations' })
 
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
-    solutionRepository = new SolutionRepository(),
-    goalsRepository = new GoalsRepository(),
-    limitRepository = new LimitRepository(),
-    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
-    solution = await getSolutionBySlugUseCase.execute(slug),
-    getGoalsBySolutionIdUseCase = new GetGoalsBySolutionIdUseCase(goalsRepository),
-    goals = solution?.id && await getGoalsBySolutionIdUseCase.execute(solution.id),
-    getLimitsUseCase = new GetLimitsUseCase(limitRepository),
-    createLimitUseCase = new CreateLimitUseCase(goalsRepository, limitRepository),
-    updateLimitUseCase = new UpdateLimitUseCase(limitRepository),
-    deleteLimitUseCase = new DeleteLimitUseCase(goalsRepository, limitRepository);
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
+    solution = (await solutionInteractor.getAll({ slug }))[0],
+    limitInteractor = new LimitInteractor(new LimitRepository())
 
 if (!solution) {
     router.push({ name: 'Solutions' })
-} else {
-    if (!goals)
-        router.push({ name: 'Goals', params: { solutionSlug: slug } });
 }
 
 type LimitViewModel = Pick<Limit, 'id' | 'name' | 'statement'>;
@@ -44,7 +26,7 @@ const limits = ref<LimitViewModel[]>([]),
     emptyLimit: LimitViewModel = { id: emptyUuid, name: '', statement: '' };
 
 onMounted(async () => {
-    limits.value = await getLimitsUseCase.execute(goals!.id) ?? []
+    limits.value = await limitInteractor.getAll({ solutionId: solution!.id })
 })
 
 const filters = ref({
@@ -53,30 +35,32 @@ const filters = ref({
 });
 
 const onCreate = async (data: LimitViewModel) => {
-    const newId = await createLimitUseCase.execute({
-        parentId: goals!.id,
+    const newId = await limitInteractor.create({
         solutionId: solution!.id,
         name: data.name,
-        statement: data.statement
+        statement: data.statement,
+        property: ''
     })
 
-    limits.value = await getLimitsUseCase.execute(goals!.id) ?? []
+    limits.value = await limitInteractor.getAll({ solutionId: solution!.id })
 }
 
 const onUpdate = async (data: LimitViewModel) => {
-    await updateLimitUseCase.execute({
+    await limitInteractor.update({
         id: data.id,
         name: data.name,
-        statement: data.statement
+        statement: data.statement,
+        property: '',
+        solutionId: solution!.id
     })
 
-    limits.value = await getLimitsUseCase.execute(goals!.id) ?? []
+    limits.value = await limitInteractor.getAll({ solutionId: solution!.id })
 }
 
 const onDelete = async (id: Uuid) => {
-    await deleteLimitUseCase.execute({ parentId: goals!.id, id })
+    await limitInteractor.delete(id)
 
-    limits.value = await getLimitsUseCase.execute(goals!.id) ?? []
+    limits.value = await limitInteractor.getAll({ solutionId: solution!.id })
 }
 </script>
 <template>

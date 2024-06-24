@@ -1,17 +1,15 @@
 <script lang="ts" setup>
-import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
 
-useHead({
-    title: 'Solution'
-})
+useHead({ title: 'Solution' })
 
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
     solutionRepository = new SolutionRepository(),
-    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
-    solution = await getSolutionBySlugUseCase.execute(slug)
+    solutionInteractor = new SolutionInteractor(solutionRepository),
+    solution = (await solutionInteractor.getAll({ slug }))[0];
 
 if (!solution)
     router.push({ name: 'Solutions' });

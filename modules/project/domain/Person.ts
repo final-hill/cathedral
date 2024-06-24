@@ -3,13 +3,12 @@ import type { Properties } from "~/domain/Properties";
 import type { Uuid } from "~/domain/Uuid";
 
 export default class Person extends Actor {
-    constructor({ email, roleId, projectId, ...rest }: Properties<Person>) {
+    constructor({ email, roleId, ...rest }: Properties<Person>) {
         super(rest);
 
-        Object.assign(this, { email, roleId, projectId });
+        Object.assign(this, { email, roleId });
     }
 
     email!: string;
     roleId!: Uuid;
-    projectId!: Uuid;
 }

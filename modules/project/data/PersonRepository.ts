@@ -1,16 +1,6 @@
-import type { Properties } from "~/domain/Properties";
-import StorageRepository from "~/data/StorageRepository.js";
-import type Person from "../domain/Person";
-import PersonToJsonMapper from "../mappers/PersonToJsonMapper";
+import PGLiteRepository from "~/data/PGLiteRepository";
+import Person from "../domain/Person";
 
-const { serializationVersion } = useAppConfig()
-
-export default class PersonRepository extends StorageRepository<Person> {
-    constructor(properties: Properties<Omit<PersonRepository, 'storageKey' | 'mapper'>> = {}) {
-        super({
-            ...properties,
-            storageKey: 'person',
-            mapper: new PersonToJsonMapper(serializationVersion)
-        })
-    }
+export default class PersonRepository extends PGLiteRepository<Person> {
+    constructor() { super('cathedral.person', Person) }
 }

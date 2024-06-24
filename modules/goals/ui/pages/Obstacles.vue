@@ -1,42 +1,23 @@
 <script lang="ts" setup>
-import GoalsRepository from '../../data/GoalsRepository';
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
 import { FilterMatchMode } from 'primevue/api';
 import ObstacleRepository from '../../data/ObstacleRepository';
 import type Obstacle from '../../domain/Obstacle';
-import GetSolutionBySlugUseCase from '~/modules/solution/application/GetSolutionBySlugUseCase';
-import GetGoalsBySolutionIdUseCase from '../../application/GetGoalsBySolutionIdUseCase';
-import GetObstaclesUseCase from '../../application/GetObstaclesUseCase';
-import CreateObstacleUseCase from '../../application/CreateObstacleUseCase';
-import UpdateObstacleUseCase from '../../application/UpdateObstacleUseCase';
-import DeleteObstacleUseCase from '../../application/DeleteObstacleUseCase';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
+import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
+import ObstacleInteractor from '../../application/ObstacleInteractor';
 
-useHead({
-    title: 'Obstacles'
-})
+useHead({ title: 'Obstacles' })
 
 const router = useRouter(),
     route = useRoute(),
     slug = route.params.solutionSlug as string,
-    solutionRepository = new SolutionRepository(),
-    goalsRepository = new GoalsRepository(),
-    obstacleRepository = new ObstacleRepository(),
-    getSolutionBySlugUseCase = new GetSolutionBySlugUseCase(solutionRepository),
-    solution = await getSolutionBySlugUseCase.execute(slug),
-    getGoalsBySolutionIdUseCase = new GetGoalsBySolutionIdUseCase(goalsRepository),
-    goals = solution?.id && await getGoalsBySolutionIdUseCase.execute(solution.id),
-    getObstaclesUseCase = new GetObstaclesUseCase(obstacleRepository),
-    createObstacleUseCase = new CreateObstacleUseCase(goalsRepository, obstacleRepository),
-    updateObstacleUseCase = new UpdateObstacleUseCase(obstacleRepository),
-    deleteObstacleUseCase = new DeleteObstacleUseCase(goalsRepository, obstacleRepository);
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
+    obstacleInteractor = new ObstacleInteractor(new ObstacleRepository()),
+    solution = (await solutionInteractor.getAll({ slug: slug }))[0]
 
-if (!solution) {
+if (!solution)
     router.push({ name: 'Solutions' });
-} else {
-    if (!goals)
-        router.push({ name: 'Goals', params: { solutionSlug: slug } });
-}
 
 type ObstacleViewModel = Pick<Obstacle, 'id' | 'name' | 'statement'>;
 
@@ -44,7 +25,7 @@ const obstacles = ref<ObstacleViewModel[]>([]),
     emptyObstacle: ObstacleViewModel = { id: emptyUuid, name: '', statement: '' };
 
 onMounted(async () => {
-    obstacles.value = await getObstaclesUseCase.execute(goals!.id) ?? []
+    obstacles.value = await obstacleInteractor.getAll({ solutionId: solution!.id }) ?? []
 })
 
 const filters = ref({
@@ -53,30 +34,32 @@ const filters = ref({
 });
 
 const onCreate = async (data: ObstacleViewModel) => {
-    const newId = await createObstacleUseCase.execute({
-        parentId: goals!.id,
+    const newId = await obstacleInteractor.create({
         solutionId: solution!.id,
         name: data.name,
-        statement: data.statement
+        statement: data.statement,
+        property: ''
     })
 
-    obstacles.value = await getObstaclesUseCase.execute(goals!.id) ?? []
+    obstacles.value = await obstacleInteractor.getAll({ solutionId: solution!.id })
 }
 
 const onUpdate = async (data: ObstacleViewModel) => {
-    await updateObstacleUseCase.execute({
+    await obstacleInteractor.update({
         id: data.id,
         name: data.name,
-        statement: data.statement
+        statement: data.statement,
+        property: '',
+        solutionId: solution!.id
     })
 
-    obstacles.value = await getObstaclesUseCase.execute(goals!.id) ?? []
+    obstacles.value = await obstacleInteractor.getAll({ solutionId: solution!.id })
 }
 
 const onDelete = async (id: Uuid) => {
-    await deleteObstacleUseCase.execute({ parentId: goals!.id, id })
+    await obstacleInteractor.delete(id)
 
-    obstacles.value = await getObstaclesUseCase.execute(goals!.id) ?? []
+    obstacles.value = await obstacleInteractor.getAll({ solutionId: solution!.id })
 }
 </script>
 
