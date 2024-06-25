@@ -4,18 +4,12 @@ import SolutionInteractor from '~/modules/solution/application/SolutionInteracto
 
 useHead({ title: 'Project' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
+const slug = useRoute().params.solutionSlug as string,
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
-    solution = (await solutionInteractor.getAll({ slug }))[0];
-
-if (!solution)
-    router.push({ name: 'Solutions' });
-
-const links = [
-    { name: 'Roles & Personnel', icon: 'pi-users', label: 'Roles & Personnel' }
-]
+    solution = (await solutionInteractor.getAll({ slug }))[0],
+    links = [
+        { name: 'Roles & Personnel', icon: 'pi-users', label: 'Roles & Personnel' }
+    ]
 </script>
 <template>
     <p>

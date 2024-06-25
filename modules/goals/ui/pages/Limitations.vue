@@ -9,25 +9,16 @@ import type Limit from '../../domain/Limit';
 
 useHead({ title: 'Limitations' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
+const slug = useRoute().params.solutionSlug as string,
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     solution = (await solutionInteractor.getAll({ slug }))[0],
+    solutionId = solution.id,
     limitInteractor = new LimitInteractor(new LimitRepository())
-
-if (!solution) {
-    router.push({ name: 'Solutions' })
-}
 
 type LimitViewModel = Pick<Limit, 'id' | 'name' | 'statement'>;
 
-const limits = ref<LimitViewModel[]>([]),
+const limits = ref<LimitViewModel[]>(await limitInteractor.getAll({ solutionId })),
     emptyLimit: LimitViewModel = { id: emptyUuid, name: '', statement: '' };
-
-onMounted(async () => {
-    limits.value = await limitInteractor.getAll({ solutionId: solution!.id })
-})
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -36,13 +27,13 @@ const filters = ref({
 
 const onCreate = async (data: LimitViewModel) => {
     const newId = await limitInteractor.create({
-        solutionId: solution!.id,
+        solutionId,
         name: data.name,
         statement: data.statement,
         property: ''
     })
 
-    limits.value = await limitInteractor.getAll({ solutionId: solution!.id })
+    limits.value = await limitInteractor.getAll({ solutionId })
 }
 
 const onUpdate = async (data: LimitViewModel) => {
@@ -51,16 +42,16 @@ const onUpdate = async (data: LimitViewModel) => {
         name: data.name,
         statement: data.statement,
         property: '',
-        solutionId: solution!.id
+        solutionId
     })
 
-    limits.value = await limitInteractor.getAll({ solutionId: solution!.id })
+    limits.value = await limitInteractor.getAll({ solutionId })
 }
 
 const onDelete = async (id: Uuid) => {
     await limitInteractor.delete(id)
 
-    limits.value = await limitInteractor.getAll({ solutionId: solution!.id })
+    limits.value = await limitInteractor.getAll({ solutionId })
 }
 </script>
 <template>

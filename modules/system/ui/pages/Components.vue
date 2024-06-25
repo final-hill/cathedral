@@ -9,15 +9,11 @@ import type Component from '~/domain/Component';
 
 useHead({ title: 'Components' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
+const slug = useRoute().params.solutionSlug as string,
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     componentInteractor = new ComponentInteractor(new ComponentRepository()),
-    solution = (await solutionInteractor.getAll({ slug }))[0]
-
-if (!solution)
-    router.push({ name: 'Solutions' })
+    solution = (await solutionInteractor.getAll({ slug }))[0],
+    solutionId = solution.id;
 
 type ComponentViewModel = Pick<Component, 'id' | 'name' | 'statement' | 'parentComponentId'>;
 
@@ -30,7 +26,7 @@ const components = ref<Component[]>([]),
     };
 
 onMounted(async () => {
-    components.value = await componentInteractor.getAll({ solutionId: solution!.id })
+    components.value = await componentInteractor.getAll({ solutionId })
 })
 
 const filters = ref({
@@ -42,27 +38,27 @@ const filters = ref({
 const onCreate = async (data: ComponentViewModel) => {
     await componentInteractor.create({
         ...data,
-        solutionId: solution!.id,
+        solutionId,
         property: ''
     });
 
-    components.value = await componentInteractor.getAll({ solutionId: solution!.id })
+    components.value = await componentInteractor.getAll({ solutionId })
 }
 
 const onUpdate = async (data: ComponentViewModel) => {
     await componentInteractor.update({
         ...data,
-        solutionId: solution!.id,
+        solutionId,
         property: ''
     });
 
-    components.value = await componentInteractor.getAll({ solutionId: solution!.id })
+    components.value = await componentInteractor.getAll({ solutionId })
 }
 
 const onDelete = async (id: Uuid) => {
     await componentInteractor.delete(id)
 
-    components.value = await componentInteractor.getAll({ solutionId: solution!.id })
+    components.value = await componentInteractor.getAll({ solutionId })
 }
 </script>
 <template>

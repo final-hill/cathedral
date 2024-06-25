@@ -6,22 +6,16 @@ import SolutionInteractor from '~/modules/solution/application/SolutionInteracto
 
 useHead({ title: 'Edit Solution' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
-    solutionRepository = new SolutionRepository(),
-    solutionInteractor = new SolutionInteractor(solutionRepository),
+const slug = useRoute().params.solutionSlug as string,
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     solution = (await solutionInteractor.getAll({ slug }))[0],
-    name = ref(solution?.name || ''),
-    newSlug = ref(solution?.slug || ''),
-    description = ref(solution?.description || '')
-
-if (!solution)
-    router.push({ name: 'Solutions' });
+    name = ref(solution.name),
+    newSlug = ref(solution.slug),
+    description = ref(solution.description)
 
 const updateSolution = async () => {
     await solutionInteractor.update({
-        id: solution!.id,
+        id: solution.id,
         name: name.value,
         description: description.value,
         slug: newSlug.value

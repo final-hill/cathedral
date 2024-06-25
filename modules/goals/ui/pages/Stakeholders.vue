@@ -16,26 +16,22 @@ import type StakeholderCategory from '../../domain/StakeholderCategory';
 
 useHead({ title: 'Stakeholders' })
 
-const router = useRouter(),
-    route = useRoute(),
-    config = useAppConfig(),
-    slug = route.params.solutionSlug as string,
+const config = useAppConfig(),
+    slug = useRoute().params.solutionSlug as string,
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     stakeholderInteractor = new StakeholderInteractor(new StakeholderRepository()),
     stakeholderCategoryInteractor = new StakeholderCategoryInteractor(new StakeholderCategoryRepository()),
     stakeholderSegmentationInteractor = new StakeholderSegmentationInteractor(new StakeholderSegmentationRepository()),
-    solution = (await solutionInteractor.getAll({ slug }))[0]
-
-if (!solution)
-    router.push({ name: 'Solutions' });
+    solution = (await solutionInteractor.getAll({ slug }))[0],
+    solutionId = solution.id;
 
 type StakeHolderViewModel = Pick<Stakeholder, 'id' | 'name' | 'statement' | 'availability' | 'influence' | 'categoryId' | 'segmentationId'>;
 type StakeholderSegmentationModel = Pick<StakeholderSegmentation, 'id' | 'name'>;
 type StakeholderCategoryModel = Pick<StakeholderCategory, 'id' | 'name'>;
 
-const stakeholders = ref<StakeHolderViewModel[]>([]),
-    categories = ref<StakeholderCategoryModel[]>([]),
-    segmentations = ref<StakeholderSegmentationModel[]>([]),
+const stakeholders = ref<StakeHolderViewModel[]>(await stakeholderInteractor.getAll({ solutionIdsolution })),
+    categories = ref<StakeholderCategoryModel[]>(await stakeholderCategoryInteractor.getAll()),
+    segmentations = ref<StakeholderSegmentationModel[]>(await stakeholderSegmentationInteractor.getAll()),
     emptyStakeholder: StakeHolderViewModel = {
         id: emptyUuid,
         name: '',
@@ -46,25 +42,19 @@ const stakeholders = ref<StakeHolderViewModel[]>([]),
         segmentationId: emptyUuid
     };
 
-onMounted(async () => {
-    stakeholders.value = await stakeholderInteractor.getAll({ solutionId: solution.id })
-    categories.value = await stakeholderCategoryInteractor.getAll()
-    segmentations.value = await stakeholderSegmentationInteractor.getAll()
+// watch the stakeholders and re-render the chart
+watch(stakeholders, async () => {
+    const groupStakeholders = Object.groupBy(stakeholders.value, ({ segmentationId }) => segmentationId),
+        clientGroup = groupStakeholders[segmentations.value[0].id] ?? [],
+        vendorGroup = groupStakeholders[segmentations.value[1].id] ?? [];
 
-    // watch the stakeholders and re-render the chart
-    watch(stakeholders, async () => {
-        const groupStakeholders = Object.groupBy(stakeholders.value, ({ segmentationId }) => segmentationId),
-            clientGroup = groupStakeholders[segmentations.value[0].id] ?? [],
-            vendorGroup = groupStakeholders[segmentations.value[1].id] ?? [];
+    clientMap.value!.textContent = chartDefinition(clientGroup, segmentations.value[0])
+    vendorMap.value!.textContent = chartDefinition(vendorGroup, segmentations.value[1])
 
-        clientMap.value!.textContent = chartDefinition(clientGroup, segmentations.value[0])
-        vendorMap.value!.textContent = chartDefinition(vendorGroup, segmentations.value[1])
-
-        await mermaid.run({
-            nodes: [clientMap.value!, vendorMap.value!]
-        })
-    });
-})
+    await mermaid.run({
+        nodes: [clientMap.value!, vendorMap.value!]
+    })
+});
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -105,29 +95,29 @@ const clientMap = ref<HTMLElement>(),
 const onCreate = async (data: StakeHolderViewModel) => {
     const stakeholder = await stakeholderInteractor.create({
         ...data,
-        solutionId: solution!.id,
+        solutionIdsolution,
         property: '',
         parentComponentId: emptyUuid
     })
 
-    stakeholders.value = await stakeholderInteractor.getAll({ solutionId: solution!.id })
+    stakeholders.value = await stakeholderInteractor.getAll({ solutionIdsolution })
 }
 
 const onUpdate = async (data: StakeHolderViewModel) => {
     await stakeholderInteractor.update({
         ...data,
-        solutionId: solution!.id,
+        solutionIdsolution,
         property: '',
         parentComponentId: emptyUuid
     })
 
-    stakeholders.value = await stakeholderInteractor.getAll({ solutionId: solution!.id })
+    stakeholders.value = await stakeholderInteractor.getAll({ solutionIdsolution })
 }
 
 const onDelete = async (id: Uuid) => {
     await stakeholderInteractor.delete(id)
 
-    stakeholders.value = await stakeholderInteractor.getAll({ solutionId: solution!.id })
+    stakeholders.value = await stakeholderInteractor.getAll({ solutionIdsolution })
 }
 </script>
 

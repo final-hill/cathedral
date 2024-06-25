@@ -9,24 +9,16 @@ import ObstacleInteractor from '../../application/ObstacleInteractor';
 
 useHead({ title: 'Obstacles' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
+const slug = useRoute().params.solutionSlug as string,
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     obstacleInteractor = new ObstacleInteractor(new ObstacleRepository()),
-    solution = (await solutionInteractor.getAll({ slug: slug }))[0]
-
-if (!solution)
-    router.push({ name: 'Solutions' });
+    solution = (await solutionInteractor.getAll({ slug: slug }))[0],
+    solutionId = solution.id;
 
 type ObstacleViewModel = Pick<Obstacle, 'id' | 'name' | 'statement'>;
 
-const obstacles = ref<ObstacleViewModel[]>([]),
+const obstacles = ref<ObstacleViewModel[]>(await obstacleInteractor.getAll({ solutionId })),
     emptyObstacle: ObstacleViewModel = { id: emptyUuid, name: '', statement: '' };
-
-onMounted(async () => {
-    obstacles.value = await obstacleInteractor.getAll({ solutionId: solution!.id }) ?? []
-})
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -35,13 +27,13 @@ const filters = ref({
 
 const onCreate = async (data: ObstacleViewModel) => {
     const newId = await obstacleInteractor.create({
-        solutionId: solution!.id,
+        solutionId,
         name: data.name,
         statement: data.statement,
         property: ''
     })
 
-    obstacles.value = await obstacleInteractor.getAll({ solutionId: solution!.id })
+    obstacles.value = await obstacleInteractor.getAll({ solutionId })
 }
 
 const onUpdate = async (data: ObstacleViewModel) => {
@@ -50,16 +42,16 @@ const onUpdate = async (data: ObstacleViewModel) => {
         name: data.name,
         statement: data.statement,
         property: '',
-        solutionId: solution!.id
+        solutionId
     })
 
-    obstacles.value = await obstacleInteractor.getAll({ solutionId: solution!.id })
+    obstacles.value = await obstacleInteractor.getAll({ solutionId })
 }
 
 const onDelete = async (id: Uuid) => {
     await obstacleInteractor.delete(id)
 
-    obstacles.value = await obstacleInteractor.getAll({ solutionId: solution!.id })
+    obstacles.value = await obstacleInteractor.getAll({ solutionId })
 }
 </script>
 

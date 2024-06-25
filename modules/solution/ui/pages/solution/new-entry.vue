@@ -7,8 +7,7 @@ import SolutionInteractor from '~/modules/solution/application/SolutionInteracto
 useHead({ title: 'New Solution' })
 
 const router = useRouter(),
-    solutionRepository = new SolutionRepository(),
-    solutionInteractor = new SolutionInteractor(solutionRepository),
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     name = ref(''),
     slug = ref(''),
     description = ref('')

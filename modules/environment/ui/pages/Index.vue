@@ -4,14 +4,7 @@ import SolutionInteractor from '~/modules/solution/application/SolutionInteracto
 
 useHead({ title: 'Environment' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
-    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
-    solution = (await solutionInteractor.getAll({ slug }))[0];
-
-if (!solution)
-    router.push({ name: 'Solutions' });
+const slug = useRoute().params.solutionSlug as string
 
 const links = [
     { name: 'Assumptions', icon: 'pi-sun', label: 'Assumptions' },

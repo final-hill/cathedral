@@ -9,24 +9,16 @@ import ComponentInteractor from '~/application/ComponentInteractor';
 
 useHead({ title: 'Components' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
+const slug = useRoute().params.solutionSlug as string,
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     componentInteractor = new ComponentInteractor(new ComponentRepository()),
-    solution = (await solutionInteractor.getAll({ slug }))[0]
-
-if (!solution)
-    router.push({ name: 'Solutions' });
+    solution = (await solutionInteractor.getAll({ slug }))[0],
+    solutionId = solution.id;
 
 type ComponentViewModel = Pick<Component, 'id' | 'name' | 'statement'>;
 
-const components = ref<ComponentViewModel[]>([]),
+const components = ref<ComponentViewModel[]>(await componentInteractor.getAll({ solutionId })),
     emptyComponent = { id: emptyUuid, name: '', statement: '' };
-
-onMounted(async () => {
-    components.value = await componentInteractor.getAll({ solutionId: solution.id })
-})
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -36,27 +28,27 @@ const filters = ref({
 const onCreate = async (data: ComponentViewModel) => {
     const newId = await componentInteractor.create({
         ...data,
-        solutionId: solution.id,
+        solutionId,
         parentComponentId: emptyUuid,
         property: ''
     })
 
-    components.value = await componentInteractor.getAll({ solutionId: solution.id })
+    components.value = await componentInteractor.getAll({ solutionId })
 }
 
 const onDelete = async (id: Uuid) => {
     await componentInteractor.delete(id)
-    components.value = await componentInteractor.getAll({ solutionId: solution.id })
+    components.value = await componentInteractor.getAll({ solutionId })
 }
 
 const onUpdate = async (data: ComponentViewModel) => {
     await componentInteractor.update({
         ...data,
-        solutionId: solution.id,
+        solutionId,
         parentComponentId: emptyUuid,
         property: ''
     })
-    components.value = await componentInteractor.getAll({ solutionId: solution.id })
+    components.value = await componentInteractor.getAll({ solutionId })
 }
 </script>
 

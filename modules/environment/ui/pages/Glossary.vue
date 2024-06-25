@@ -9,25 +9,17 @@ import GlossaryTermInteractor from '../../application/GlossaryTermInteractor';
 
 useHead({ title: 'Glossary' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
+const slug = useRoute().params.solutionSlug as string,
     glossaryTermRepository = new GlossaryTermRepository(),
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     glossaryTermInteractor = new GlossaryTermInteractor(glossaryTermRepository),
-    solution = (await solutionInteractor.getAll({ slug }))[0]
-
-if (!solution)
-    router.push({ name: 'Solutions' });
+    solution = (await solutionInteractor.getAll({ slug }))[0],
+    solutionId = solution.id;
 
 type GlossaryTermViewModel = Pick<GlossaryTerm, 'id' | 'name' | 'statement'>;
 
-const glossaryTerms = ref<GlossaryTermViewModel[]>([]),
+const glossaryTerms = ref<GlossaryTermViewModel[]>(await glossaryTermInteractor.getAll({ solutionId })),
     emptyGlossaryTerm = { id: emptyUuid, name: '', statement: '' }
-
-onMounted(async () => {
-    glossaryTerms.value = await glossaryTermInteractor.getAll({ solutionId: solution!.id })
-})
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -39,11 +31,11 @@ const onCreate = async (data: GlossaryTermViewModel) => {
         name: data.name,
         statement: data.statement,
         property: '',
-        solutionId: solution!.id,
+        solutionId,
         parentComponentId: emptyUuid
     })
 
-    glossaryTerms.value = await glossaryTermInteractor.getAll({ solutionId: solution!.id })
+    glossaryTerms.value = await glossaryTermInteractor.getAll({ solutionId })
 }
 
 const onUpdate = async (data: GlossaryTermViewModel) => {
@@ -52,17 +44,17 @@ const onUpdate = async (data: GlossaryTermViewModel) => {
         name: data.name,
         statement: data.statement,
         property: '',
-        solutionId: solution!.id,
+        solutionId,
         parentComponentId: emptyUuid
     })
 
-    glossaryTerms.value = await glossaryTermInteractor.getAll({ solutionId: solution!.id })
+    glossaryTerms.value = await glossaryTermInteractor.getAll({ solutionId })
 }
 
 const onDelete = async (id: Uuid) => {
     await glossaryTermInteractor.delete(id)
 
-    glossaryTerms.value = await glossaryTermInteractor.getAll({ solutionId: solution!.id })
+    glossaryTerms.value = await glossaryTermInteractor.getAll({ solutionId })
 }
 </script>
 
