@@ -9,24 +9,16 @@ import OutcomeInteractor from '../../application/OutcomeInteractor';
 
 useHead({ title: 'Outcomes' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
+const slug = useRoute().params.solutionSlug as string,
+    outcomeInteractor = new OutcomeInteractor(new OutcomeRepository()),
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     solution = (await solutionInteractor.getAll({ slug }))[0],
-    outcomeInteractor = new OutcomeInteractor(new OutcomeRepository())
-
-if (!solution)
-    router.push({ name: 'Solutions' });
+    solutionId = solution.id;
 
 type OutcomeViewModel = Pick<Outcome, 'id' | 'name' | 'statement'>;
 
-const outcomes = ref<OutcomeViewModel[]>([]),
+const outcomes = ref<OutcomeViewModel[]>(await outcomeInteractor.getAll({ solutionId })),
     emptyOutcome: OutcomeViewModel = { id: emptyUuid, name: '', statement: '' };
-
-onMounted(async () => {
-    outcomes.value = await outcomeInteractor.getAll({ solutionId: solution!.id })
-})
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -35,13 +27,13 @@ const filters = ref({
 
 const onCreate = async (data: OutcomeViewModel) => {
     const newId = await outcomeInteractor.create({
-        solutionId: solution!.id,
+        solutionId,
         name: data.name,
         statement: data.statement,
         property: ''
     })
 
-    outcomes.value = await outcomeInteractor.getAll({ solutionId: solution!.id })
+    outcomes.value = await outcomeInteractor.getAll({ solutionId })
 }
 
 const onUpdate = async (data: OutcomeViewModel) => {
@@ -50,16 +42,16 @@ const onUpdate = async (data: OutcomeViewModel) => {
         name: data.name,
         statement: data.statement,
         property: '',
-        solutionId: solution!.id
+        solutionId
     })
 
-    outcomes.value = await outcomeInteractor.getAll({ solutionId: solution!.id })
+    outcomes.value = await outcomeInteractor.getAll({ solutionId })
 }
 
 const onDelete = async (id: Uuid) => {
     await outcomeInteractor.delete(id)
 
-    outcomes.value = await outcomeInteractor.getAll({ solutionId: solution!.id })
+    outcomes.value = await outcomeInteractor.getAll({ solutionId })
 }
 </script>
 

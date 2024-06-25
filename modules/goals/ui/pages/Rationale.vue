@@ -7,16 +7,11 @@ import type Goal from '../../domain/Goal';
 
 useHead({ title: 'Rationale' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
+const slug = useRoute().params.solutionSlug as string,
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     goalInteractor = new GoalInteractor(new GoalRepository()),
     solution = (await solutionInteractor.getAll({ slug }))[0],
-    solutionId = solution?.id;
-
-if (!solution)
-    router.push({ name: 'Solutions' });
+    solutionId = solution.id;
 
 let visionGoal = (await goalInteractor.getAll({ solutionId, name: 'Vision' }))[0],
     missionGoal = (await goalInteractor.getAll({ solutionId, name: 'Mission' }))[0],

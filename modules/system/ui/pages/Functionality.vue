@@ -14,17 +14,13 @@ import type Component from '~/domain/Component';
 
 useHead({ title: 'Functionality' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
+const slug = useRoute().params.solutionSlug as string,
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     solution = (await solutionInteractor.getAll({ slug }))[0],
+    solutionId = solution.id,
     componentInteractor = new ComponentInteractor(new ComponentRepository()),
     functionalRequirementInteractor = new FunctionalRequirementInteractor(new FunctionalRequirementRepository()),
     nonFunctionalRequirementInteractor = new NonFunctionalRequirementInteractor(new NonFunctionalRequirementRepository());
-
-if (!solution)
-    router.push({ name: 'Solutions' })
 
 type ComponentViewModel = Pick<Component, 'id' | 'name' | 'statement' | 'solutionId'>
     & { behaviors: BehaviorViewModel[] };
@@ -32,19 +28,19 @@ type ComponentViewModel = Pick<Component, 'id' | 'name' | 'statement' | 'solutio
 type BehaviorViewModel = Pick<Behavior, 'id' | 'name' | 'statement' | 'solutionId' | 'componentId'>
     & { category: 'Functional' | 'Non-functional' };
 
-const components = ref<ComponentViewModel[]>([]),
+const components = ref<ComponentViewModel[]>(await refreshComponents()),
     expandedRows = ref(),
     emptyBehavior = (componentId: Uuid): BehaviorViewModel => ({
         id: emptyUuid,
         name: '',
         statement: '',
-        solutionId: solution!.id,
+        solutionId,
         category: 'Functional',
         componentId
     });
 
 const refreshComponents = async (): Promise<ComponentViewModel[]> => {
-    return Promise.all((await componentInteractor.getAll({ solutionId: solution!.id }))
+    return Promise.all((await componentInteractor.getAll({ solutionId }))
         .map(async component => {
             const functionalReqs = (await functionalRequirementInteractor.getAll({ componentId: component.id }))
                 .map<BehaviorViewModel>(fr => ({ ...fr, category: 'Functional' }));
@@ -60,10 +56,6 @@ const refreshComponents = async (): Promise<ComponentViewModel[]> => {
             }
         }))
 }
-
-onMounted(async () => {
-    components.value = await refreshComponents()
-})
 
 const componentSortField = ref<string | undefined>('name')
 
@@ -83,7 +75,7 @@ const onCreate = async (newData: BehaviorViewModel) => {
     const b = {
         name: newData.name,
         statement: newData.statement,
-        solutionId: solution!.id,
+        solutionId,
         componentId: newData.componentId,
         property: ''
     }
@@ -101,7 +93,7 @@ const onUpdate = async (newData: BehaviorViewModel) => {
         id: newData.id,
         name: newData.name,
         statement: newData.statement,
-        solutionId: solution!.id,
+        solutionId,
         componentId: newData.componentId,
         property: ''
     }

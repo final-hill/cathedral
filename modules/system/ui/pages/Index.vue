@@ -2,14 +2,7 @@
 import SolutionRepository from '~/modules/solution/data/SolutionRepository';
 import SolutionInteractor from '~/modules/solution/application/SolutionInteractor';
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
-    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
-    solution = (await solutionInteractor.getAll({ slug }))[0];
-
-if (!solution)
-    router.push({ name: 'Solutions' });
+const slug = useRoute().params.solutionSlug as string
 
 const links = [
     { name: 'System Components', icon: 'pi-sitemap', label: 'Components' },

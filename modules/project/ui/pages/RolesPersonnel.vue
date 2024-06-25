@@ -12,28 +12,19 @@ import StakeholderInteractor from '~/modules/goals/application/StakeholderIntera
 
 useHead({ title: 'Roles & Personnel' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
+const slug = useRoute().params.solutionSlug as string,
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     personInteractor = new PersonInteractor(new PersonRepository()),
     stakeholderInteractor = new StakeholderInteractor(new StakeholderRepository()),
-    solution = (await solutionInteractor.getAll({ slug }))[0]
-
-if (!solution)
-    router.push({ name: 'Solutions' })
+    solution = (await solutionInteractor.getAll({ slug }))[0],
+    solutionId = solution.id;
 
 type StakeholderViewModel = Pick<Stakeholder, 'id' | 'name'>
 type PersonnelViewModel = Pick<Person, 'id' | 'name' | 'email' | 'roleId'>;
 
-const personnel = ref<PersonnelViewModel[]>([]),
-    stakeholders = ref<StakeholderViewModel[]>([]),
+const personnel = ref<PersonnelViewModel[]>(await personInteractor.getAll({ solutionId })),
+    stakeholders = ref<StakeholderViewModel[]>(await stakeholderInteractor.getAll({ solutionId })),
     emptyPersonnel: PersonnelViewModel = { id: emptyUuid, name: '', email: '', roleId: emptyUuid };
-
-onMounted(async () => {
-    stakeholders.value = await stakeholderInteractor.getAll({ solutionId: solution!.id })
-    personnel.value = await personInteractor.getAll({ solutionId: solution.id })
-})
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -45,28 +36,28 @@ const onCreate = async (data: PersonnelViewModel) => {
     const newId = await personInteractor.create({
         ...data,
         property: '',
-        solutionId: solution!.id,
+        solutionId,
         statement: ''
     })
 
-    personnel.value = await personInteractor.getAll({ solutionId: solution.id })
+    personnel.value = await personInteractor.getAll({ solutionId })
 }
 
 const onUpdate = async (data: PersonnelViewModel) => {
     await personInteractor.update({
         ...data,
         property: '',
-        solutionId: solution!.id,
+        solutionId,
         statement: ''
     })
 
-    personnel.value = await personInteractor.getAll({ solutionId: solution.id })
+    personnel.value = await personInteractor.getAll({ solutionId })
 }
 
 const onDelete = async (id: Uuid) => {
     await personInteractor.delete(id)
 
-    personnel.value = await personInteractor.getAll({ solutionId: solution.id })
+    personnel.value = await personInteractor.getAll({ solutionId })
 }
 </script>
 <template>

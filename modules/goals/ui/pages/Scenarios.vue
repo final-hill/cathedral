@@ -18,22 +18,18 @@ import OutcomeRepository from '../../data/OutcomeRepository';
 
 useHead({ title: 'Scenarios' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
+const slug = useRoute().params.solutionSlug as string,
     userStoryInteractor = new UserStoryInteractor(new UserStoryRepository()),
     functionalBehaviorInteractor = new FunctionalBehaviorInteractor(new FunctionalBehaviorRepository()),
     stakeholderInteractor = new StakeholderInteractor(new StakeholderRepository()),
     outcomeInteractor = new OutcomeInteractor(new OutcomeRepository()),
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
-    solution = (await solutionInteractor.getAll({ slug }))[0]
-
-if (!solution)
-    router.push({ name: 'Solutions' })
+    solution = (await solutionInteractor.getAll({ slug }))[0],
+    solutionId = solution.id;
 
 type UserStoryViewModel = Pick<UserStory, 'id' | 'name' | 'primaryActorId' | 'functionalBehaviorId' | 'outcomeId'>
 
-const userStories = ref<UserStoryViewModel[]>([]),
+const userStories = ref<UserStoryViewModel[]>(await userStoryInteractor.getAll({ solutionId })),
     emptyUserStory: UserStoryViewModel = {
         id: emptyUuid,
         name: '',
@@ -41,16 +37,9 @@ const userStories = ref<UserStoryViewModel[]>([]),
         functionalBehaviorId: emptyUuid,
         outcomeId: emptyUuid
     },
-    roles = ref<Stakeholder[]>([]),
-    behaviors = ref<FunctionalBehavior[]>([]),
-    outcomes = ref<Outcome[]>([]);
-
-onMounted(async () => {
-    userStories.value = await userStoryInteractor.getAll({ solutionId: solution!.id });
-    roles.value = await stakeholderInteractor.getAll({ solutionId: solution!.id });
-    behaviors.value = await functionalBehaviorInteractor.getAll({ solutionId: solution!.id });
-    outcomes.value = await outcomeInteractor.getAll({ solutionId: solution!.id });
-})
+    roles = ref<Stakeholder[]>(await stakeholderInteractor.getAll({ solutionId })),
+    behaviors = ref<FunctionalBehavior[]>(await functionalBehaviorInteractor.getAll({ solutionId })),
+    outcomes = ref<Outcome[]>(await outcomeInteractor.getAll({ solutionId }));
 
 const userStoryfilters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -62,31 +51,31 @@ const userStoryfilters = ref({
 const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
     const newId = await userStoryInteractor.create({
         ...userStory,
-        solutionId: solution!.id,
+        solutionId,
         componentId: emptyUuid,
         property: '',
         statement: ''
     });
 
-    userStories.value = await userStoryInteractor.getAll({ solutionId: solution!.id });
+    userStories.value = await userStoryInteractor.getAll({ solutionId });
 }
 
 const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
     await userStoryInteractor.update({
         ...userStory,
-        solutionId: solution!.id,
+        solutionId,
         componentId: emptyUuid,
         property: '',
         statement: ''
     });
 
-    userStories.value = await userStoryInteractor.getAll({ solutionId: solution!.id });
+    userStories.value = await userStoryInteractor.getAll({ solutionId });
 }
 
 const onUserStoryDelete = async (id: Uuid) => {
     await userStoryInteractor.delete(id);
 
-    userStories.value = await userStoryInteractor.getAll({ solutionId: solution!.id });
+    userStories.value = await userStoryInteractor.getAll({ solutionId });
 }
 </script>
 

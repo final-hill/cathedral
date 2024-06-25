@@ -4,15 +4,10 @@ import SolutionRepository from '~/modules/solution/data/SolutionRepository';
 
 useHead({ title: 'Solution' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
+const slug = useRoute().params.solutionSlug as string,
     solutionRepository = new SolutionRepository(),
     solutionInteractor = new SolutionInteractor(solutionRepository),
     solution = (await solutionInteractor.getAll({ slug }))[0];
-
-if (!solution)
-    router.push({ name: 'Solutions' });
 
 const links = [
     { name: 'Project', icon: 'pi-box', label: 'Project' },

@@ -6,8 +6,7 @@ import type Solution from '../../../domain/Solution';
 useHead({ title: 'Solutions' })
 
 const router = useRouter(),
-    solutionRepository = new SolutionRepository(),
-    solutionInteractor = new SolutionInteractor(solutionRepository),
+    solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     solutions = ref<Solution[]>([]),
     confirm = useConfirm()
 

@@ -9,24 +9,16 @@ import EffectInteractor from '../../application/EffectInteractor';
 
 useHead({ title: 'Effects' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
+const slug = useRoute().params.solutionSlug as string,
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     solution = (await solutionInteractor.getAll({ slug }))[0],
+    solutionId = solution.id,
     effectInteractor = new EffectInteractor(new EffectRepository())
-
-if (!solution)
-    router.push({ name: 'Solutions' });
 
 type EffectViewModel = Pick<Effect, 'id' | 'name' | 'statement'>;
 
-const effects = ref<EffectViewModel[]>([]),
+const effects = ref<EffectViewModel[]>(await effectInteractor.getAll({ solutionId })),
     emptyEffect = { id: emptyUuid, name: '', statement: '' }
-
-onMounted(async () => {
-    effects.value = await effectInteractor.getAll({ solutionId: solution!.id })
-})
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -37,11 +29,11 @@ const onCreate = async (data: EffectViewModel) => {
     const newId = await effectInteractor.create({
         name: data.name,
         statement: data.statement,
-        solutionId: solution!.id,
+        solutionId,
         property: ''
     })
 
-    effects.value = await effectInteractor.getAll({ solutionId: solution!.id })
+    effects.value = await effectInteractor.getAll({ solutionId })
 }
 
 const onUpdate = async (data: EffectViewModel) => {
@@ -49,16 +41,16 @@ const onUpdate = async (data: EffectViewModel) => {
         id: data.id,
         name: data.name,
         statement: data.statement,
-        solutionId: solution!.id,
+        solutionId,
         property: ''
     })
 
-    effects.value = await effectInteractor.getAll({ solutionId: solution!.id })
+    effects.value = await effectInteractor.getAll({ solutionId })
 }
 
 const onDelete = async (id: Uuid) => {
     await effectInteractor.delete(id)
-    effects.value = await effectInteractor.getAll({ solutionId: solution!.id })
+    effects.value = await effectInteractor.getAll({ solutionId })
 }
 </script>
 

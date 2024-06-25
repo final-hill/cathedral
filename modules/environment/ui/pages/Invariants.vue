@@ -9,24 +9,16 @@ import InvariantInteractor from '../../application/InvariantInteractor';
 
 useHead({ title: 'Invariants' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
+const slug = useRoute().params.solutionSlug as string,
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     solution = (await solutionInteractor.getAll({ slug }))[0],
+    solutionId = solution.id,
     invariantInteractor = new InvariantInteractor(new InvariantRepository())
-
-if (!solution)
-    router.push({ name: 'Solutions' });
 
 type InvariantViewModel = Pick<Invariant, 'id' | 'name' | 'statement'>;
 
-const invariants = ref<InvariantViewModel[]>([]),
+const invariants = ref<InvariantViewModel[]>(await invariantInteractor.getAll({ solutionId })),
     emptyInvariant: InvariantViewModel = { id: emptyUuid, name: '', statement: '' };
-
-onMounted(async () => {
-    invariants.value = await invariantInteractor.getAll({ solutionId: solution!.id })
-})
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -37,11 +29,11 @@ const onCreate = async (data: InvariantViewModel) => {
     const newId = await invariantInteractor.create({
         name: data.name,
         statement: data.statement,
-        solutionId: solution!.id,
+        solutionId,
         property: ''
     })
 
-    invariants.value = await invariantInteractor.getAll({ solutionId: solution!.id })
+    invariants.value = await invariantInteractor.getAll({ solutionId })
 }
 
 const onUpdate = async (data: InvariantViewModel) => {
@@ -49,17 +41,17 @@ const onUpdate = async (data: InvariantViewModel) => {
         id: data.id,
         name: data.name,
         statement: data.statement,
-        solutionId: solution!.id,
+        solutionId,
         property: ''
     })
 
-    invariants.value = await invariantInteractor.getAll({ solutionId: solution!.id })
+    invariants.value = await invariantInteractor.getAll({ solutionId })
 }
 
 const onDelete = async (id: Uuid) => {
     await invariantInteractor.delete(id)
 
-    invariants.value = await invariantInteractor.getAll({ solutionId: solution!.id })
+    invariants.value = await invariantInteractor.getAll({ solutionId })
 }
 </script>
 

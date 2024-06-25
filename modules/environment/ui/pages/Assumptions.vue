@@ -9,24 +9,16 @@ import AssumptionInteractor from '../../application/AssumptionInteractor';
 
 useHead({ title: 'Assumptions' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
+const slug = useRoute().params.solutionSlug as string,
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     solution = (await solutionInteractor.getAll({ slug }))[0],
+    solutionId = solution.id,
     assumptionInteractor = new AssumptionInteractor(new AssumptionRepository())
-
-if (!solution)
-    router.push({ name: 'Solutions' });
 
 type AssumptionViewModel = Pick<Assumption, 'id' | 'name' | 'statement'>;
 
-const assumptions = ref<AssumptionViewModel[]>([]),
+const assumptions = ref<AssumptionViewModel[]>(await assumptionInteractor.getAll({ solutionId })),
     emptyAssumption = { id: emptyUuid, name: '', statement: '' };
-
-onMounted(async () => {
-    assumptions.value = await assumptionInteractor.getAll({ solutionId: solution!.id })
-})
 
 const filters = ref<Record<string, { value: any, matchMode: string }>>({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -38,15 +30,15 @@ const onCreate = async (data: AssumptionViewModel) => {
         name: data.name,
         statement: data.statement,
         property: '',
-        solutionId: solution!.id
+        solutionId
     })
 
-    assumptions.value = await assumptionInteractor.getAll({ solutionId: solution!.id })
+    assumptions.value = await assumptionInteractor.getAll({ solutionId })
 }
 
 const onDelete = async (id: Uuid) => {
     await assumptionInteractor.delete(id)
-    assumptions.value = await assumptionInteractor.getAll({ solutionId: solution!.id })
+    assumptions.value = await assumptionInteractor.getAll({ solutionId })
 }
 
 const onUpdate = async (data: AssumptionViewModel) => {
@@ -55,9 +47,9 @@ const onUpdate = async (data: AssumptionViewModel) => {
         name: data.name,
         statement: data.statement,
         property: '',
-        solutionId: solution!.id
+        solutionId
     })
-    assumptions.value = await assumptionInteractor.getAll({ solutionId: solution!.id })
+    assumptions.value = await assumptionInteractor.getAll({ solutionId })
 }
 </script>
 

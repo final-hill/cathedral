@@ -12,28 +12,19 @@ import ConstraintCategoryInteractor from '../../application/ConstraintCategoryIn
 
 useHead({ title: 'Constraints' })
 
-const router = useRouter(),
-    route = useRoute(),
-    slug = route.params.solutionSlug as string,
+const slug = useRoute().params.solutionSlug as string,
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     solution = (await solutionInteractor.getAll({ slug }))[0],
+    solutionId = solution.id,
     constraintInteractor = new ConstraintInteractor(new ConstraintRepository()),
     constraintCategoryInteractor = new ConstraintCategoryInteractor(new ConstraintCategoryRepository())
-
-if (!solution)
-    router.push({ name: 'Solutions' });
 
 type ConstraintViewModel = Pick<Constraint, 'id' | 'name' | 'statement' | 'categoryId'>;
 type ConstraintCategoryModel = Pick<ConstraintCategory, 'id' | 'name'>;
 
-const constraints = ref<ConstraintViewModel[]>([]),
-    constraintCategories = ref<ConstraintCategoryModel[]>([]),
+const constraints = ref<ConstraintViewModel[]>(await constraintInteractor.getAll({ solutionId })),
+    constraintCategories = ref<ConstraintCategoryModel[]>(await constraintCategoryInteractor.getAll()),
     emptyConstraint: ConstraintViewModel = { id: emptyUuid, name: '', statement: '', categoryId: emptyUuid }
-
-onMounted(async () => {
-    constraints.value = await constraintInteractor.getAll({ solutionId: solution!.id })
-    constraintCategories.value = await constraintCategoryInteractor.getAll()
-})
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -44,11 +35,11 @@ const filters = ref({
 const onCreate = async (data: ConstraintViewModel) => {
     const newId = await constraintInteractor.create({
         ...data,
-        solutionId: solution!.id,
+        solutionId,
         property: ''
     })
 
-    constraints.value = await constraintInteractor.getAll({ solutionId: solution!.id })
+    constraints.value = await constraintInteractor.getAll({ solutionId })
 }
 
 const onDelete = async (id: Uuid) => {
@@ -59,10 +50,10 @@ const onDelete = async (id: Uuid) => {
 const onUpdate = async (data: ConstraintViewModel) => {
     await constraintInteractor.update({
         ...data,
-        solutionId: solution!.id,
+        solutionId,
         property: ''
     })
-    constraints.value = await constraintInteractor.getAll({ solutionId: solution!.id })
+    constraints.value = await constraintInteractor.getAll({ solutionId })
 }
 </script>
 
