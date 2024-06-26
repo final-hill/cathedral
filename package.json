@@ -17,17 +17,17 @@
     "type": "module",
     "scripts": {
         "//build": "nuxt build",
-        "//dev": "nuxt dev --no-fork",
+        "dev": "nuxt dev --https --no-fork",
         "//preview": "nuxt preview",
         "generate-pwa-assets": "pwa-assets-generator",
         "generate": "nuxt generate",
-        "serve": "npx serve .output/public",
         "postinstall": "nuxt prepare",
         "typecheck": "nuxi typecheck"
     },
     "dependencies": {
         "@electric-sql/pglite": "^0.1.5",
         "@vite-pwa/nuxt": "^0.8.1",
+        "cbor-web": "^9.0.2",
         "mermaid": "^10.9.1",
         "nuxt": "^3.11.2",
         "nuxt-primevue": "^3.0.0",
@@ -39,7 +39,6 @@
     "devDependencies": {
         "@types/node": "^20.14.8",
         "@vite-pwa/assets-generator": "^0.2.4",
-        "serve": "^14.2.3",
         "typescript": "^5.5.2",
         "vue-tsc": "^2.0.22"
     }

@@ -196,7 +196,7 @@ export default class InitDatabase_00001 extends Migration {
                 extensions VARCHAR(200) NOT NULL
             )
             INHERITS (scenario);
-`
+        `
 
         await db.exec(sql)
     }

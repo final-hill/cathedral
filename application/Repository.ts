@@ -1,6 +1,5 @@
 import type Entity from '~/domain/Entity';
 import type { Properties } from '~/domain/Properties.js';
-import type { Uuid } from '~/domain/Uuid.js';
 import { useAppConfig } from '#app'
 import { PGlite } from "@electric-sql/pglite";
 
@@ -14,11 +13,17 @@ export default abstract class Repository<E extends Entity> {
     static conn = new PGlite(useAppConfig().connString)
 
     /**
-     * Creates an item to the repository.
+     * Creates an item in the repository.
      * @param item The properties of the item to create.
      * @returns The id of the added item.
      */
-    abstract create(item: Omit<Properties<E>, 'id'>): Promise<Uuid>
+    abstract create(item: Omit<Properties<E>, 'id'>): Promise<E['id']>
+
+    /**
+     * Creates an item in the repository with a specific id.
+     * @param item The properties of the item to create.
+     */
+    abstract createWithId(item: Properties<E>): Promise<void>
 
     /**
      * Deletes an item from the repository.

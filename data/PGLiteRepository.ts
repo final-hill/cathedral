@@ -31,6 +31,17 @@ export default abstract class PGLiteRepository<E extends Entity> extends Reposit
         return result.id
     }
 
+    async createWithId(item: Properties<E>): Promise<void> {
+        const conn = PGLiteRepository.conn
+
+        const sql = `
+            INSERT INTO ${this._tableName} (${Object.keys(item).map(reCamelCaseToSnakeCase).join(', ')})
+            VALUES (${Object.keys(item).map((_, index) => `$${index + 1}`).join(', ')})
+        `
+
+        await conn.query(sql, Object.values(item))
+    }
+
     async get(id: Uuid): Promise<E | undefined> {
         return (await this.getAll({ id } as Record<keyof E, any>))[0]
     }
