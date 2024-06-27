@@ -1,0 +1,16 @@
+import SolutionInteractor from "~/application/SolutionInteractor"
+import SolutionRepository from "~/data/SolutionRepository"
+
+export default defineNuxtRouteMiddleware(async (to, from) => {
+    const slug = to.params.slug
+
+    if (slug) {
+        const solutionInteractor = new SolutionInteractor(new SolutionRepository()),
+            solution = (await solutionInteractor.getAll({
+                slug: typeof slug === 'string' ? slug : slug[0]
+            }))[0]
+
+        if (!solution)
+            return navigateTo({ name: 'Solutions' })
+    }
+})
