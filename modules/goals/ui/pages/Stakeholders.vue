@@ -29,7 +29,7 @@ type StakeHolderViewModel = Pick<Stakeholder, 'id' | 'name' | 'statement' | 'ava
 type StakeholderSegmentationModel = Pick<StakeholderSegmentation, 'id' | 'name'>;
 type StakeholderCategoryModel = Pick<StakeholderCategory, 'id' | 'name'>;
 
-const stakeholders = ref<StakeHolderViewModel[]>(await stakeholderInteractor.getAll({ solutionIdsolution })),
+const stakeholders = ref<StakeHolderViewModel[]>(await stakeholderInteractor.getAll({ solutionId })),
     categories = ref<StakeholderCategoryModel[]>(await stakeholderCategoryInteractor.getAll()),
     segmentations = ref<StakeholderSegmentationModel[]>(await stakeholderSegmentationInteractor.getAll()),
     emptyStakeholder: StakeHolderViewModel = {
@@ -100,7 +100,7 @@ const onCreate = async (data: StakeHolderViewModel) => {
         parentComponentId: emptyUuid
     })
 
-    stakeholders.value = await stakeholderInteractor.getAll({ solutionIdsolution })
+    stakeholders.value = await stakeholderInteractor.getAll({ solutionId })
 }
 
 const onUpdate = async (data: StakeHolderViewModel) => {
@@ -111,13 +111,13 @@ const onUpdate = async (data: StakeHolderViewModel) => {
         parentComponentId: emptyUuid
     })
 
-    stakeholders.value = await stakeholderInteractor.getAll({ solutionIdsolution })
+    stakeholders.value = await stakeholderInteractor.getAll({ solutionId })
 }
 
 const onDelete = async (id: Uuid) => {
     await stakeholderInteractor.delete(id)
 
-    stakeholders.value = await stakeholderInteractor.getAll({ solutionIdsolution })
+    stakeholders.value = await stakeholderInteractor.getAll({ solutionId })
 }
 </script>
 

@@ -1,6 +1,6 @@
 {
     "name": "@final-hill/cathedral",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "description": "Requirements management system",
     "keywords": [],
     "private": true,
@@ -17,10 +17,10 @@
     "type": "module",
     "scripts": {
         "//build": "nuxt build",
-        "//dev": "nuxt dev --no-fork",
         "//preview": "nuxt preview",
         "generate-pwa-assets": "pwa-assets-generator",
         "generate": "nuxt generate",
+        "dev": "nuxt dev --no-fork --https",
         "serve": "npx serve .output/public",
         "postinstall": "nuxt prepare",
         "typecheck": "nuxi typecheck"
