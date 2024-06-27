@@ -1,4 +1,4 @@
-import Example from "../modules/system/domain/Example";
+import Example from "./Example";
 import type { Properties } from "~/domain/Properties";
 import type { Uuid } from "~/domain/Uuid";
 

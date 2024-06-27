@@ -20,7 +20,7 @@
         "//preview": "nuxt preview",
         "generate-pwa-assets": "pwa-assets-generator",
         "generate": "nuxt generate",
-        "dev": "nuxt dev --no-fork --https",
+        "dev": "nuxt dev --no-fork",
         "serve": "npx serve .output/public",
         "postinstall": "nuxt prepare",
         "typecheck": "nuxi typecheck"
