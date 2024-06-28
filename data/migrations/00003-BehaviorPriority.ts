@@ -4,8 +4,8 @@ import Migration from "../Migration";
 export default class BehaviorPriority_00003 extends Migration {
     override async up(db: PGliteInterface): Promise<void> {
         const sql = `
-            ALTER TABLE behavior
-            ADD COLUMN priority_id CHAR(1);
+            ALTER TABLE cathedral.behavior
+            ADD COLUMN priority_id VARCHAR(6);
         `
 
         await db.exec(sql)
@@ -13,7 +13,7 @@ export default class BehaviorPriority_00003 extends Migration {
 
     override async down(db: PGliteInterface): Promise<void> {
         const sql = `
-            ALTER TABLE behavior
+            ALTER TABLE cathedral.behavior
             DROP COLUMN priority_id;
         `
 

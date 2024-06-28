@@ -28,7 +28,7 @@ const slug = useRoute().params.slug as string,
     solution = (await solutionInteractor.getAll({ slug }))[0],
     solutionId = solution.id;
 
-type UserStoryViewModel = Pick<UserStory, 'id' | 'name' | 'primaryActorId' | 'functionalBehaviorId' | 'outcomeId'>
+type UserStoryViewModel = Pick<UserStory, 'id' | 'name' | 'primaryActorId' | 'functionalBehaviorId' | 'outcomeId' | 'priorityId'>
 
 const userStories = ref<UserStoryViewModel[]>(await userStoryInteractor.getAll({ solutionId })),
     emptyUserStory: UserStoryViewModel = {
@@ -36,7 +36,8 @@ const userStories = ref<UserStoryViewModel[]>(await userStoryInteractor.getAll({
         name: '',
         primaryActorId: emptyUuid,
         functionalBehaviorId: emptyUuid,
-        outcomeId: emptyUuid
+        outcomeId: emptyUuid,
+        priorityId: 'MUST'
     },
     roles = ref<Stakeholder[]>(await stakeholderInteractor.getAll({ solutionId })),
     behaviors = ref<FunctionalBehavior[]>(await functionalBehaviorInteractor.getAll({ solutionId })),
@@ -55,7 +56,8 @@ const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
         solutionId,
         componentId: emptyUuid,
         property: '',
-        statement: ''
+        statement: '',
+        priorityId: 'MUST'
     });
 
     userStories.value = await userStoryInteractor.getAll({ solutionId });
@@ -67,7 +69,8 @@ const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
         solutionId,
         componentId: emptyUuid,
         property: '',
-        statement: ''
+        statement: '',
+        priorityId: userStory.priorityId
     });
 
     userStories.value = await userStoryInteractor.getAll({ solutionId });

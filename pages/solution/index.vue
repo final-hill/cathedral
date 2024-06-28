@@ -8,12 +8,8 @@ definePageMeta({ name: 'Solutions' })
 
 const router = useRouter(),
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
-    solutions = ref<Solution[]>([]),
+    solutions = ref<Solution[]>(await solutionInteractor.getAll()),
     confirm = useConfirm()
-
-onMounted(async () => {
-    solutions.value = await solutionInteractor.getAll();
-});
 
 const handleDelete = async (solution: Solution) => {
     confirm.require({
