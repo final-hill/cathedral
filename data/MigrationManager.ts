@@ -2,6 +2,7 @@ import { PGlite } from "@electric-sql/pglite";
 import Migration from "./Migration";
 import InitDatabase_00001 from "./migrations/00001-InitDatabase";
 import Functionality_00002 from "./migrations/00002-Functionality";
+import BehaviorPriority_00003 from "./migrations/00003-BehaviorPriority";
 
 type MigrationName = `${number}-${string}`
 
@@ -11,7 +12,8 @@ type MigrationName = `${number}-${string}`
 export default class MigrationManager {
     private _migrations = new Map<MigrationName, typeof Migration>([
         ["00001-InitDatabase", InitDatabase_00001],
-        ["00002-Functionality", Functionality_00002]
+        ["00002-Functionality", Functionality_00002],
+        ["00003-BehaviorPriority", BehaviorPriority_00003]
     ])
 
     constructor(
