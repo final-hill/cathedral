@@ -40,9 +40,9 @@ const slug = useRoute().params.slug as string,
     assumptionInteractor = new AssumptionInteractor(new AssumptionRepository()),
     effectInteractor = new EffectInteractor(new EffectRepository());
 
-type UserStoryViewModel = Pick<UserStory, 'id' | 'name' | 'primaryActorId' | 'functionalBehaviorId' | 'outcomeId'>
+type UserStoryViewModel = Pick<UserStory, 'id' | 'name' | 'primaryActorId' | 'functionalBehaviorId' | 'outcomeId' | 'priorityId'>
 
-type UseCaseViewModel = Pick<UseCase, 'id' | 'name' | 'primaryActorId' | 'extensions' | 'goalInContext' | 'level' | 'mainSuccessScenario' | 'preConditionId' | 'scope' | 'successGuarantee' | 'trigger'>
+type UseCaseViewModel = Pick<UseCase, 'id' | 'name' | 'primaryActorId' | 'extensions' | 'goalInContext' | 'level' | 'mainSuccessScenario' | 'preConditionId' | 'scope' | 'successGuarantee' | 'trigger' | 'priorityId'>
 
 const userStories = ref<UserStoryViewModel[]>(await userStoryInteractor.getAll({ solutionId })),
     useCases = ref<UseCaseViewModel[]>(await useCaseInteractor.getAll({ solutionId })),
@@ -51,7 +51,8 @@ const userStories = ref<UserStoryViewModel[]>(await userStoryInteractor.getAll({
         name: '',
         primaryActorId: emptyUuid,
         functionalBehaviorId: emptyUuid,
-        outcomeId: emptyUuid
+        outcomeId: emptyUuid,
+        priorityId: 'MUST'
     },
     emptyUseCase: UseCaseViewModel = {
         id: emptyUuid,
@@ -64,7 +65,8 @@ const userStories = ref<UserStoryViewModel[]>(await userStoryInteractor.getAll({
         preConditionId: emptyUuid,
         scope: '',
         successGuarantee: emptyUuid,
-        trigger: emptyUuid
+        trigger: emptyUuid,
+        priorityId: 'MUST'
     },
     roles = ref<Stakeholder[]>(await stakeholderInteractor.getAll({ solutionId })),
     functionalBehaviors = ref<FunctionalBehavior[]>(await functionalRequirementInteractor.getAll({ solutionId })),
@@ -98,7 +100,8 @@ const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
         solutionId,
         property: '',
         componentId: emptyUuid,
-        statement: ''
+        statement: '',
+        priorityId: 'MUST'
     });
 
     userStories.value = await userStoryInteractor.getAll({ solutionId });
@@ -110,7 +113,8 @@ const onUseCaseCreate = async (useCase: UseCaseViewModel) => {
         solutionId,
         property: '',
         componentId: emptyUuid,
-        statement: ''
+        statement: '',
+        priorityId: 'MUST'
     });
 
     useCases.value = await useCaseInteractor.getAll({ solutionId });
@@ -122,7 +126,8 @@ const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
         property: '',
         componentId: emptyUuid,
         statement: '',
-        solutionId
+        solutionId,
+        priorityId: userStory.priorityId
     });
 
     userStories.value = await userStoryInteractor.getAll({ solutionId });

@@ -11,6 +11,7 @@ import SolutionInteractor from '~/application/SolutionInteractor';
 import ComponentRepository from '~/data/ComponentRepository';
 import ComponentInteractor from '~/application/ComponentInteractor';
 import type Component from '~/domain/Component';
+import type Functionality from '~/domain/Functionality';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Functionality' })
@@ -26,7 +27,7 @@ const slug = useRoute().params.slug as string,
 type ComponentViewModel = Pick<Component, 'id' | 'name' | 'statement' | 'solutionId'>
     & { behaviors: BehaviorViewModel[] };
 
-type BehaviorViewModel = Pick<Behavior, 'id' | 'name' | 'statement' | 'solutionId' | 'componentId'>
+type BehaviorViewModel = Pick<Behavior, 'id' | 'name' | 'statement' | 'solutionId' | 'componentId' | 'priorityId'>
     & { category: 'Functional' | 'Non-functional' };
 
 const refreshComponents = async (): Promise<ComponentViewModel[]> => {
@@ -55,7 +56,8 @@ const components = ref<ComponentViewModel[]>(await refreshComponents()),
         statement: '',
         solutionId,
         category: 'Functional',
-        componentId
+        componentId,
+        priorityId: 'MUST'
     });
 
 const componentSortField = ref<string | undefined>('name')
@@ -73,12 +75,13 @@ const behaviorFilters = ref({
 })
 
 const onCreate = async (newData: BehaviorViewModel) => {
-    const b = {
+    const b: Omit<Functionality, 'id' | 'equals'> = {
         name: newData.name,
         statement: newData.statement,
         solutionId,
         componentId: newData.componentId,
-        property: ''
+        property: '',
+        priorityId: 'MUST'
     }
 
     if (newData.category === 'Functional')
@@ -90,13 +93,14 @@ const onCreate = async (newData: BehaviorViewModel) => {
 }
 
 const onUpdate = async (newData: BehaviorViewModel) => {
-    const b = {
+    const b: Omit<Functionality, 'equals'> = {
         id: newData.id,
         name: newData.name,
         statement: newData.statement,
         solutionId,
         componentId: newData.componentId,
-        property: ''
+        property: '',
+        priorityId: newData.priorityId
     }
 
     if (newData.category === 'Functional')

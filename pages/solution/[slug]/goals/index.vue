@@ -9,6 +9,7 @@ const links = [
     { name: 'Outcomes', icon: 'pi-check-circle', label: 'Outcomes' },
     { name: 'Stakeholders', icon: 'pi-users', label: 'Stakeholders' },
     { name: 'Goal Scenarios', icon: 'pi-briefcase', label: 'Scenarios' },
+    { name: 'Goals Functionality', icon: 'pi-cog', label: 'Functionality' },
     { name: 'Obstacles', icon: ' pi-exclamation-triangle', label: 'Obstacles' },
     { name: 'Limitations', icon: 'pi-exclamation-circle', label: 'Limitations' }
 ]

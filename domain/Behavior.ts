@@ -1,6 +1,7 @@
 import type { Properties } from "~/domain/Properties";
 import Requirement from "~/domain/Requirement";
 import type { Uuid } from "~/domain/Uuid";
+import type MoscowPriority from "./MoscowPriority";
 
 /**
  * Property of the operation of the system
@@ -11,7 +12,7 @@ export default class Behavior extends Requirement {
     /**
      * The priority of the behavior.
      */
-    priorityId: string
+    priorityId: keyof Omit<typeof MoscowPriority, 'prototype'>
 
     constructor({ componentId, priorityId, ...rest }: Properties<Behavior>) {
         super(rest)
