@@ -17,7 +17,8 @@
                 "Nuxtr.nuxtr-vscode",
                 "Vue.volar",
                 "EditorConfig.EditorConfig",
-                "github.vscode-github-actions"
+                "github.vscode-github-actions",
+                "AlexShen.classdiagram-ts"
             ]
         }
     }
