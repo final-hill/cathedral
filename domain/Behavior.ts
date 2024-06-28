@@ -8,8 +8,14 @@ import type { Uuid } from "~/domain/Uuid";
 export default class Behavior extends Requirement {
     componentId: Uuid
 
-    constructor({ componentId, ...rest }: Properties<Behavior>) {
+    /**
+     * The priority of the behavior.
+     */
+    priorityId: string
+
+    constructor({ componentId, priorityId, ...rest }: Properties<Behavior>) {
         super(rest)
         this.componentId = componentId
+        this.priorityId = priorityId
     }
 }
