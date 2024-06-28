@@ -1,6 +1,4 @@
-import type { E } from "@vite-pwa/assets-generator/dist/shared/assets-generator.5e51fd40.mjs";
 import type Equatable from "./Equatable";
-import type { Properties } from "./Properties";
 import type { Uuid } from "./Uuid";
 
 /**
