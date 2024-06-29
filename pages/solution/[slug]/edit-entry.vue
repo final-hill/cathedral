@@ -48,7 +48,7 @@ watch(() => name.value, (newName) => {
         <div class="field grid">
             <label for="slug" class="col-fixed w-7rem">Slug</label>
             <div class="col">
-                <InputText id="slug" name="slug" disabled tabindex="-1" v-model="slug" variant="filled"
+                <InputText id="slug" name="slug" disabled tabindex="-1" v-model="newSlug" variant="filled"
                     class="w-23rem" />
             </div>
         </div>
