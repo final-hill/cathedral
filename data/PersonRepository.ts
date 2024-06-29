@@ -1,6 +1,6 @@
-import PGLiteRepository from "~/data/PGLiteRepository";
+import PGLiteEntityRepository from "~/data/PGLiteEntityRepository";
 import Person from "../domain/Person";
 
-export default class PersonRepository extends PGLiteRepository<Person> {
+export default class PersonRepository extends PGLiteEntityRepository<Person> {
     constructor() { super('cathedral.person', Person) }
 }

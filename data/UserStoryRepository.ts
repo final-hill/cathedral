@@ -1,8 +1,6 @@
 import UserStory from "~/domain/UserStory";
-import PGLiteRepository from "./PGLiteRepository";
+import PGLiteEntityRepository from "./PGLiteEntityRepository";
 
-export default class UserStoryRepository extends PGLiteRepository<UserStory> {
-    constructor() {
-        super('cathedral.user_story', UserStory)
-    }
+export default class UserStoryRepository extends PGLiteEntityRepository<UserStory> {
+    constructor() { super('cathedral.user_story', UserStory) }
 }

@@ -32,7 +32,6 @@ const onCreate = async (data: FunctionalBehaviorViewModel) => {
         name: data.name,
         statement: data.statement,
         property: '',
-        componentId: emptyUuid,
         priorityId: 'MUST'
     })
 
@@ -46,7 +45,6 @@ const onUpdate = async (data: FunctionalBehaviorViewModel) => {
         statement: data.statement,
         property: '',
         solutionId,
-        componentId: emptyUuid,
         priorityId: data.priorityId
     })
 

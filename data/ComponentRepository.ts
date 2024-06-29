@@ -1,6 +1,6 @@
 import Component from "~/domain/Component";
-import PGLiteRepository from "./PGLiteRepository";
+import PGLiteEntityRepository from "./PGLiteEntityRepository";
 
-export default class ComponentRepository extends PGLiteRepository<Component> {
+export default class ComponentRepository extends PGLiteEntityRepository<Component> {
     constructor() { super('cathedral.component', Component) }
 }

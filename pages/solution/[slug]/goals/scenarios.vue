@@ -54,7 +54,6 @@ const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
     const newId = await userStoryInteractor.create({
         ...userStory,
         solutionId,
-        componentId: emptyUuid,
         property: '',
         statement: '',
         priorityId: 'MUST'
@@ -67,7 +66,6 @@ const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
     await userStoryInteractor.update({
         ...userStory,
         solutionId,
-        componentId: emptyUuid,
         property: '',
         statement: '',
         priorityId: userStory.priorityId

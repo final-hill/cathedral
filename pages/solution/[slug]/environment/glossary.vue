@@ -33,7 +33,8 @@ const onCreate = async (data: GlossaryTermViewModel) => {
         statement: data.statement,
         property: '',
         solutionId,
-        parentComponentId: emptyUuid
+        parentComponentId: emptyUuid,
+        functionalityId: emptyUuid
     })
 
     glossaryTerms.value = await glossaryTermInteractor.getAll({ solutionId })
@@ -46,7 +47,8 @@ const onUpdate = async (data: GlossaryTermViewModel) => {
         statement: data.statement,
         property: '',
         solutionId,
-        parentComponentId: emptyUuid
+        parentComponentId: emptyUuid,
+        functionalityId: emptyUuid
     })
 
     glossaryTerms.value = await glossaryTermInteractor.getAll({ solutionId })

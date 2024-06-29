@@ -99,7 +99,6 @@ const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
         ...userStory,
         solutionId,
         property: '',
-        componentId: emptyUuid,
         statement: '',
         priorityId: 'MUST'
     });
@@ -112,7 +111,6 @@ const onUseCaseCreate = async (useCase: UseCaseViewModel) => {
         ...useCase,
         solutionId,
         property: '',
-        componentId: emptyUuid,
         statement: '',
         priorityId: 'MUST'
     });
@@ -124,7 +122,6 @@ const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
     await userStoryInteractor.update({
         ...userStory,
         property: '',
-        componentId: emptyUuid,
         statement: '',
         solutionId,
         priorityId: userStory.priorityId
@@ -138,7 +135,6 @@ const onUseCaseUpdate = async (useCase: UseCaseViewModel) => {
         ...useCase,
         solutionId,
         property: '',
-        componentId: emptyUuid,
         statement: ''
     });
 

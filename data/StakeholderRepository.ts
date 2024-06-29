@@ -1,6 +1,6 @@
-import PGLiteRepository from "~/data/PGLiteRepository";
+import PGLiteEntityRepository from "~/data/PGLiteEntityRepository";
 import Stakeholder from "../domain/Stakeholder";
 
-export default class StakeholderRepository extends PGLiteRepository<Stakeholder> {
+export default class StakeholderRepository extends PGLiteEntityRepository<Stakeholder> {
     constructor() { super('cathedral.stakeholder', Stakeholder) }
 }

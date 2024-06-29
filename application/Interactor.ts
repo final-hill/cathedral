@@ -1,15 +1,15 @@
 import type Entity from "~/domain/Entity";
-import type Repository from "./Repository";
+import type EntityRepository from "../data/EntityRepository";
 import type { Uuid } from "~/domain/Uuid";
 import type { Properties } from "~/domain/Properties";
 
 export default abstract class Interactor<E extends Entity> {
     constructor(
-        readonly repository: Repository<E>
+        readonly repository: EntityRepository<E>
     ) { }
 
     create(item: Omit<Properties<E>, 'id'>): Promise<Uuid> {
-        return this.repository.create(item)
+        return this.repository.add(item)
     }
 
     delete(id: Uuid): Promise<void> {

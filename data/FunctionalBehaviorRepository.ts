@@ -1,8 +1,6 @@
-import PGLiteRepository from "~/data/PGLiteRepository";
+import PGLiteEntityRepository from "~/data/PGLiteEntityRepository";
 import FunctionalBehavior from "../domain/FunctionalBehavior";
 
-export default class FunctionalBehaviorRepository extends PGLiteRepository<FunctionalBehavior> {
-    constructor() {
-        super('cathedral.functional_behavior', FunctionalBehavior);
-    }
+export default class FunctionalBehaviorRepository extends PGLiteEntityRepository<FunctionalBehavior> {
+    constructor() { super('cathedral.functional_behavior', FunctionalBehavior); }
 }

@@ -8,10 +8,11 @@ import NonFunctionalRequirementRepository from '~/data/NonFunctionalBehaviorRepo
 import FunctionalRequirementInteractor from '~/application/FunctionalBehaviorInteractor';
 import NonFunctionalRequirementInteractor from '~/application/NonFunctionalBehaviorInteractor';
 import SolutionInteractor from '~/application/SolutionInteractor';
-import ComponentRepository from '~/data/ComponentRepository';
-import ComponentInteractor from '~/application/ComponentInteractor';
-import type Component from '~/domain/Component';
+import SystemComponentRepository from '~/data/SystemComponentRepository';
+import SystemComponentInteractor from '~/application/SystemComponentInteractor';
 import type Functionality from '~/domain/Functionality';
+import type SystemComponent from '~/domain/SystemComponent';
+import ComponentFunctionalityRepository from '~/data/ComponentFunctionalityRepository';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Functionality' })
@@ -20,23 +21,33 @@ const slug = useRoute().params.slug as string,
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
     solution = (await solutionInteractor.getAll({ slug }))[0],
     solutionId = solution.id,
-    componentInteractor = new ComponentInteractor(new ComponentRepository()),
+    systemComponentInteractor = new SystemComponentInteractor(new SystemComponentRepository()),
+    componentFunctionalityRepository = new ComponentFunctionalityRepository(),
     functionalRequirementInteractor = new FunctionalRequirementInteractor(new FunctionalRequirementRepository()),
     nonFunctionalRequirementInteractor = new NonFunctionalRequirementInteractor(new NonFunctionalRequirementRepository());
 
-type ComponentViewModel = Pick<Component, 'id' | 'name' | 'statement' | 'solutionId'>
+type SystemComponentViewModel = Pick<SystemComponent, 'id' | 'name' | 'statement' | 'solutionId'>
     & { behaviors: BehaviorViewModel[] };
 
-type BehaviorViewModel = Pick<Behavior, 'id' | 'name' | 'statement' | 'solutionId' | 'componentId' | 'priorityId'>
-    & { category: 'Functional' | 'Non-functional' };
+type BehaviorViewModel = Pick<Behavior, 'id' | 'name' | 'statement' | 'solutionId' | 'priorityId'>
+    & { componentId: Uuid, category: 'Functional' | 'Non-functional' };
 
-const refreshComponents = async (): Promise<ComponentViewModel[]> => {
-    return Promise.all((await componentInteractor.getAll({ solutionId }))
+const refreshComponents = async (): Promise<SystemComponentViewModel[]> => {
+    return Promise.all((await systemComponentInteractor.getAll({ solutionId }))
         .map(async component => {
-            const functionalReqs = (await functionalRequirementInteractor.getAll({ componentId: component.id }))
-                .map<BehaviorViewModel>(fr => ({ ...fr, category: 'Functional' }));
-            const nonFunctionalReqs = (await nonFunctionalRequirementInteractor.getAll({ componentId: component.id }))
-                .map<BehaviorViewModel>(nfr => ({ ...nfr, category: 'Non-functional' }));
+            const functionalities = (await componentFunctionalityRepository.getAll({ componentId: component.id }))
+
+            const functionalReqs = (await Promise.all(
+                functionalities.map(f => functionalRequirementInteractor.get(f.functionalityId))
+            ))
+                .filter(f => f !== null)
+                .map<BehaviorViewModel>(fr => ({ ...fr!, componentId: component.id, category: 'Functional' }));
+
+            const nonFunctionalReqs = (await Promise.all(
+                functionalities.map(f => nonFunctionalRequirementInteractor.get(f.functionalityId))
+            ))
+                .filter(f => f !== null)
+                .map<BehaviorViewModel>(nfr => ({ ...nfr!, componentId: component.id, category: 'Non-functional' }));
 
             return {
                 id: component.id,
@@ -48,7 +59,7 @@ const refreshComponents = async (): Promise<ComponentViewModel[]> => {
         }))
 }
 
-const components = ref<ComponentViewModel[]>(await refreshComponents()),
+const components = ref<SystemComponentViewModel[]>(await refreshComponents()),
     expandedRows = ref(),
     emptyBehavior = (componentId: Uuid): BehaviorViewModel => ({
         id: emptyUuid,
@@ -56,8 +67,8 @@ const components = ref<ComponentViewModel[]>(await refreshComponents()),
         statement: '',
         solutionId,
         category: 'Functional',
-        componentId,
-        priorityId: 'MUST'
+        priorityId: 'MUST',
+        componentId
     });
 
 const componentSortField = ref<string | undefined>('name')
@@ -79,15 +90,19 @@ const onCreate = async (newData: BehaviorViewModel) => {
         name: newData.name,
         statement: newData.statement,
         solutionId,
-        componentId: newData.componentId,
         property: '',
         priorityId: 'MUST'
     }
 
-    if (newData.category === 'Functional')
-        await functionalRequirementInteractor.create(b)
-    else
+    const functionalityId = newData.category === 'Functional' ?
+        await functionalRequirementInteractor.create(b) :
         await nonFunctionalRequirementInteractor.create(b)
+
+    componentFunctionalityRepository.add({
+        solutionId,
+        componentId: newData.componentId,
+        functionalityId
+    })
 
     components.value = await refreshComponents()
 }
@@ -98,7 +113,6 @@ const onUpdate = async (newData: BehaviorViewModel) => {
         name: newData.name,
         statement: newData.statement,
         solutionId,
-        componentId: newData.componentId,
         property: '',
         priorityId: newData.priorityId
     }
@@ -108,15 +122,16 @@ const onUpdate = async (newData: BehaviorViewModel) => {
     else
         await nonFunctionalRequirementInteractor.update(b)
 
-
     components.value = await refreshComponents()
 }
 
-const onDelete = async (id: Uuid) => {
+const onDelete = (componentId: Uuid) => async (id: Uuid) => {
     await Promise.all([
         functionalRequirementInteractor.delete(id),
         nonFunctionalRequirementInteractor.delete(id)
     ])
+
+    componentFunctionalityRepository.delete({ solutionId, componentId, functionalityId: id })
 
     components.value = await refreshComponents()
 }
@@ -163,7 +178,7 @@ const onDelete = async (id: Uuid) => {
             <h5>Behaviors for {{ data.name }}</h5>
 
             <XDataTable class="w-10 ml-8" :datasource="data.behaviors" :emptyRecord="emptyBehavior(data.id)"
-                :filters="behaviorFilters" :onCreate="onCreate" :onDelete="onDelete" :onUpdate="onUpdate">
+                :filters="behaviorFilters" :onCreate="onCreate" :onDelete="onDelete(data.id)" :onUpdate="onUpdate">
                 <Column field="name" header="Name" sortable>
                     <template #body="{ data, field }">
                         {{ data[field] }}

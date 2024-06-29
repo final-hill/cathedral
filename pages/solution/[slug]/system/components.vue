@@ -3,32 +3,30 @@ import SolutionRepository from '~/data/SolutionRepository';
 import { FilterMatchMode } from 'primevue/api';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
 import SolutionInteractor from '~/application/SolutionInteractor';
-import ComponentRepository from '~/data/ComponentRepository';
-import ComponentInteractor from '~/application/ComponentInteractor';
-import type Component from '~/domain/Component';
+import SystemComponentRepository from '~/data/SystemComponentRepository';
+import SystemComponentInteractor from '~/application/SystemComponentInteractor';
+import type SystemComponent from '~/domain/SystemComponent';
 
 useHead({ title: 'Components' })
-definePageMeta({ name: 'Components' })
+definePageMeta({ name: 'System Components' })
 
 const slug = useRoute().params.slug as string,
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
-    componentInteractor = new ComponentInteractor(new ComponentRepository()),
+    systemComponentInteractor = new SystemComponentInteractor(new SystemComponentRepository()),
     solution = (await solutionInteractor.getAll({ slug }))[0],
     solutionId = solution.id;
 
-type ComponentViewModel = Pick<Component, 'id' | 'name' | 'statement' | 'parentComponentId'>;
+type SystemComponentViewModel = Pick<SystemComponent, 'id' | 'name' | 'statement' | 'parentComponentId' | 'functionalityId'>;
 
-const components = ref<Component[]>([]),
-    emptyComponent: ComponentViewModel = {
+debugger;
+const systemComponents = ref<SystemComponent[]>(await systemComponentInteractor.getAll({ solutionId })),
+    emptyComponent: SystemComponentViewModel = {
         id: emptyUuid,
         name: '',
         statement: '',
-        parentComponentId: emptyUuid
+        parentComponentId: emptyUuid,
+        functionalityId: emptyUuid
     };
-
-onMounted(async () => {
-    components.value = await componentInteractor.getAll({ solutionId })
-})
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -36,37 +34,38 @@ const filters = ref({
     'parentId': { value: null, matchMode: FilterMatchMode.EQUALS }
 })
 
-const onCreate = async (data: ComponentViewModel) => {
-    await componentInteractor.create({
+const onCreate = async (data: SystemComponentViewModel) => {
+    await systemComponentInteractor.create({
         ...data,
         solutionId,
-        property: ''
+        property: '',
+        functionalityId: data.functionalityId
     });
 
-    components.value = await componentInteractor.getAll({ solutionId })
+    systemComponents.value = await systemComponentInteractor.getAll({ solutionId })
 }
 
-const onUpdate = async (data: ComponentViewModel) => {
-    await componentInteractor.update({
+const onUpdate = async (data: SystemComponentViewModel) => {
+    await systemComponentInteractor.update({
         ...data,
         solutionId,
         property: ''
     });
 
-    components.value = await componentInteractor.getAll({ solutionId })
+    systemComponents.value = await systemComponentInteractor.getAll({ solutionId })
 }
 
 const onDelete = async (id: Uuid) => {
-    await componentInteractor.delete(id)
+    await systemComponentInteractor.delete(id)
 
-    components.value = await componentInteractor.getAll({ solutionId })
+    systemComponents.value = await systemComponentInteractor.getAll({ solutionId })
 }
 </script>
 <template>
     <p>
         Components describe the structure of the system as a list or hierarchy.
     </p>
-    <XDataTable :datasource="components" :filters="filters" :emptyRecord="emptyComponent" :onCreate="onCreate"
+    <XDataTable :datasource="systemComponents" :filters="filters" :emptyRecord="emptyComponent" :onCreate="onCreate"
         :onUpdate="onUpdate" :onDelete="onDelete">
         <Column field="name" header="Name" sortable>
             <template #filter="{ filterModel, filterCallback }">
@@ -94,16 +93,17 @@ const onDelete = async (id: Uuid) => {
         <Column field="parentId" header="Parent">
             <template #filter="{ filterModel, filterCallback }">
                 <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name" optionValue="id"
-                    :options="components" placeholder="Search by Component" />
+                    :options="systemComponents" placeholder="Search by Component" />
             </template>
             <template #body="{ data, field }">
-                {{ components
+                {{ systemComponents
                     .filter(c => c.id !== emptyUuid)
                     .find(c => c.id === data[field])?.name }}
             </template>
             <template #editor="{ data, field }">
                 <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id"
-                    :options="components.filter(c => c.id !== data.id)" placeholder="Select a Component" showClear />
+                    :options="systemComponents.filter(c => c.id !== data.id)" placeholder="Select a Component"
+                    showClear />
             </template>
         </Column>
     </XDataTable>

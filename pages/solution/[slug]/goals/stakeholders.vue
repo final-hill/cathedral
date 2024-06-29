@@ -98,7 +98,8 @@ const onCreate = async (data: StakeHolderViewModel) => {
         ...data,
         solutionId,
         property: '',
-        parentComponentId: emptyUuid
+        parentComponentId: emptyUuid,
+        functionalityId: emptyUuid
     })
 
     stakeholders.value = await stakeholderInteractor.getAll({ solutionId })
@@ -109,7 +110,8 @@ const onUpdate = async (data: StakeHolderViewModel) => {
         ...data,
         solutionId,
         property: '',
-        parentComponentId: emptyUuid
+        parentComponentId: emptyUuid,
+        functionalityId: emptyUuid
     })
 
     stakeholders.value = await stakeholderInteractor.getAll({ solutionId })

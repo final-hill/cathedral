@@ -1,6 +1,6 @@
 import Obstacle from "../domain/Obstacle";
-import PGLiteRepository from "~/data/PGLiteRepository";
+import PGLiteEntityRepository from "~/data/PGLiteEntityRepository";
 
-export default class ObstacleRepository extends PGLiteRepository<Obstacle> {
+export default class ObstacleRepository extends PGLiteEntityRepository<Obstacle> {
     constructor() { super('cathedral.obstacle', Obstacle) }
 }

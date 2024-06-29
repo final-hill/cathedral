@@ -2,23 +2,23 @@
 import { FilterMatchMode } from 'primevue/api';
 import { emptyUuid, type Uuid } from '~/domain/Uuid';
 import SolutionRepository from '~/data/SolutionRepository';
-import type Component from '~/domain/Component';
 import SolutionInteractor from '~/application/SolutionInteractor';
-import ComponentRepository from '~/data/ComponentRepository';
-import ComponentInteractor from '~/application/ComponentInteractor';
+import EnvironmentComponentRepository from '~/data/EnvironmentComponentRepository';
+import EnvironmentComponentInteractor from '~/application/EnvironmentComponentInteractor';
+import type EnvironmentComponent from '~/domain/EnvironmentComponent';
 
 useHead({ title: 'Components' })
 definePageMeta({ name: 'Components' })
 
 const slug = useRoute().params.slug as string,
     solutionInteractor = new SolutionInteractor(new SolutionRepository()),
-    componentInteractor = new ComponentInteractor(new ComponentRepository()),
+    environmentComponentInteractor = new EnvironmentComponentInteractor(new EnvironmentComponentRepository()),
     solution = (await solutionInteractor.getAll({ slug }))[0],
     solutionId = solution.id;
 
-type ComponentViewModel = Pick<Component, 'id' | 'name' | 'statement'>;
+type EnvironmentComponentViewModel = Pick<EnvironmentComponent, 'id' | 'name' | 'statement' | 'functionalityId'>;
 
-const components = ref<ComponentViewModel[]>(await componentInteractor.getAll({ solutionId })),
+const environmentComponents = ref<EnvironmentComponentViewModel[]>(await environmentComponentInteractor.getAll({ solutionId })),
     emptyComponent = { id: emptyUuid, name: '', statement: '' };
 
 const filters = ref({
@@ -26,30 +26,32 @@ const filters = ref({
     'statement': { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 
-const onCreate = async (data: ComponentViewModel) => {
-    const newId = await componentInteractor.create({
+const onCreate = async (data: EnvironmentComponentViewModel) => {
+    const newId = await environmentComponentInteractor.create({
         ...data,
         solutionId,
         parentComponentId: emptyUuid,
-        property: ''
+        property: '',
+        functionalityId: emptyUuid
     })
 
-    components.value = await componentInteractor.getAll({ solutionId })
+    environmentComponents.value = await environmentComponentInteractor.getAll({ solutionId })
 }
 
 const onDelete = async (id: Uuid) => {
-    await componentInteractor.delete(id)
-    components.value = await componentInteractor.getAll({ solutionId })
+    await environmentComponentInteractor.delete(id)
+    environmentComponents.value = await environmentComponentInteractor.getAll({ solutionId })
 }
 
-const onUpdate = async (data: ComponentViewModel) => {
-    await componentInteractor.update({
+const onUpdate = async (data: EnvironmentComponentViewModel) => {
+    await environmentComponentInteractor.update({
         ...data,
         solutionId,
         parentComponentId: emptyUuid,
-        property: ''
+        property: '',
+        functionalityId: data.functionalityId
     })
-    components.value = await componentInteractor.getAll({ solutionId })
+    environmentComponents.value = await environmentComponentInteractor.getAll({ solutionId })
 }
 </script>
 
@@ -58,8 +60,8 @@ const onUpdate = async (data: ComponentViewModel) => {
         Environment components are the EXTERNAL elements that the system interacts with.
         These external components expose interfaces that the system uses to communicate with.
     </p>
-    <XDataTable :datasource="components" :empty-record="emptyComponent" :filters="filters" :on-create="onCreate"
-        :on-delete="onDelete" :on-update="onUpdate">
+    <XDataTable :datasource="environmentComponents" :empty-record="emptyComponent" :filters="filters"
+        :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate">
         <Column field="name" header="Name" sortable>
             <template #filter="{ filterModel, filterCallback }">
                 <InputText v-model.trim="filterModel.value" @input="filterCallback()" placeholder="Search by name" />

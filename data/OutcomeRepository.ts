@@ -1,6 +1,6 @@
 import Outcome from "../domain/Outcome";
-import PGLiteRepository from "~/data/PGLiteRepository";
+import PGLiteEntityRepository from "~/data/PGLiteEntityRepository";
 
-export default class OutcomeRepository extends PGLiteRepository<Outcome> {
+export default class OutcomeRepository extends PGLiteEntityRepository<Outcome> {
     constructor() { super('cathedral.outcome', Outcome) }
 }
