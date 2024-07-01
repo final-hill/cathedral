@@ -1,7 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     devtools: { enabled: true },
-    ssr: false,
     css: [
         '~/assets/css/main.css',
         'primeflex/primeflex.css',
@@ -33,6 +32,19 @@ export default defineNuxtConfig({
     // https://vite-pwa-org.netlify.app/frameworks/nuxt
     // https://primeflex.org/
     modules: ["nuxt-primevue", "@vite-pwa/nuxt"],
+    nitro: {
+        // ref: https://github.com/nuxt/nuxt/issues/21756
+        esbuild: {
+            options: {
+                tsconfigRaw: {
+                    compilerOptions: {
+                        experimentalDecorators: true,
+                        // emitDecoratorMetadata: true
+                    }
+                }
+            }
+        }
+    },
     primevue: {
 
     },
