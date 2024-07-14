@@ -1,25 +1,25 @@
 <script lang="ts" setup>
-import MigrationManager from '~/data/MigrationManager'
+// import MigrationManager from '~/data/MigrationManager'
 
 useHead({
   titleTemplate: (titleChunk) =>
     titleChunk ? `${titleChunk} - Cathedral` : 'Cathedral'
 })
 
-const preAlphaDialogVisible = ref(
-  JSON.parse(localStorage.getItem('preAlphaDialogVisible') || 'true')
-);
+// const preAlphaDialogVisible = ref(
+//   JSON.parse(localStorage.getItem('preAlphaDialogVisible') || 'true')
+// );
 
-const onAlphaDialogClose = () => {
-  preAlphaDialogVisible.value = false;
+// const onAlphaDialogClose = () => {
+//   preAlphaDialogVisible.value = false;
 
-  // save the setting to local storage
-  localStorage.setItem('preAlphaDialogVisible', 'false');
-};
+//   // save the setting to local storage
+//   localStorage.setItem('preAlphaDialogVisible', 'false');
+// };
 
-const migrationManager = new MigrationManager(useAppConfig().connString);
+// const migrationManager = new MigrationManager(useAppConfig().connString);
 
-await migrationManager.migrateToLatest();
+// await migrationManager.migrateToLatest();
 </script>
 
 <template>
@@ -28,6 +28,7 @@ await migrationManager.migrateToLatest();
     <NuxtPage />
   </NuxtLayout>
 
+  <!--
   <Dialog v-model:visible="preAlphaDialogVisible" modal header="Warning" class="w-30rem" :show-close="false">
     <p>
       This is a pre-alpha version of the application. It is not yet ready for production use.
@@ -37,4 +38,5 @@ await migrationManager.migrateToLatest();
 
     <Button type="button" label="Okay" @click="onAlphaDialogClose"></Button>
   </Dialog>
+-->
 </template>
