@@ -28,6 +28,3 @@ public/apple-touch-icon-*.png
 public/favicon.ico
 public/maskable-icon-*.png
 public/pwa-*.png
-
-# database
-server/data/db/cathedral.sqlite

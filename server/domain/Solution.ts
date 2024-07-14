@@ -1,41 +1,27 @@
-import { v7 as uuid7 } from 'uuid';
-import { Entity, PrimaryKey, Property, types } from "@mikro-orm/core"
+import Entity from "~/server/domain/Entity";
+import type { Properties } from "./Properties";
 
 /**
  * A Solution is the aggregation of a Project, Environment, Goals, and a System
  */
-@Entity()
-export default class Solution {
+export default class Solution extends Entity {
     static readonly maxNameLength = 60;
     static readonly maxDescriptionLength = 200;
 
-    #description!: string;
-    #name!: string;
-    #slug!: string;
+    private _description!: string;
+    private _name!: string;
+    private _slug!: string;
 
-    @PrimaryKey({ type: types.uuid })
-    id: string = uuid7();
-
-    /**
-     * The name of the Solution
-     * @throws {Error} if the name is longer than 60 characters
-     */
-    @Property({ type: types.string, length: Solution.maxNameLength })
-    get name(): string { return this.#name; }
-
-    set name(value: string) {
-        const trimmed = value.trim();
-        if (trimmed.length >= Solution.maxNameLength)
-            throw new Error(`Entity name cannot be longer than ${Solution.maxNameLength} characters`);
-        this.#name = trimmed;
+    constructor({ id, ...rest }: Properties<Solution>) {
+        super({ id });
+        Object.assign(this, rest);
     }
 
     /**
      * The description of the Solution
      * @throws {Error} if the description is longer than 200 characters
      */
-    @Property({ type: types.string, length: Solution.maxDescriptionLength })
-    get description(): string { return this.#description; }
+    get description(): string { return this._description; }
 
     set description(value: string) {
         const trimmed = value.trim();
@@ -43,6 +29,35 @@ export default class Solution {
             throw new Error(
                 `Project description cannot be longer than ${Solution.maxDescriptionLength} characters`
             );
-        this.#description = trimmed;
+        this._description = trimmed;
+    }
+
+    /**
+     * The name of the Solution
+     * @throws {Error} if the name is longer than 60 characters
+     */
+    get name(): string { return this._name; }
+
+    set name(value: string) {
+        const trimmed = value.trim();
+        if (trimmed.length >= Solution.maxNameLength)
+            throw new Error(`Entity name cannot be longer than ${Solution.maxNameLength} characters`);
+        this._name = trimmed;
+    }
+
+    get slug(): string {
+        return this._slug
+    }
+    set slug(value: string) {
+        this._slug = value
+    }
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            description: this.description,
+            name: this.name,
+            slug: this.slug
+        }
     }
 }

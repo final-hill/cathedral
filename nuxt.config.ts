@@ -1,6 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-    devtools: { enabled: true },
+    devtools: {
+        enabled: process.env.NODE_ENV === 'development'
+    },
+    sourcemap: process.env.NODE_ENV === 'development',
     css: [
         '~/assets/css/main.css',
         'primeflex/primeflex.css',
@@ -33,17 +36,26 @@ export default defineNuxtConfig({
     // https://primeflex.org/
     modules: ["nuxt-primevue", "@vite-pwa/nuxt"],
     nitro: {
-        // ref: https://github.com/nuxt/nuxt/issues/21756
-        esbuild: {
-            options: {
-                tsconfigRaw: {
-                    compilerOptions: {
-                        experimentalDecorators: true,
-                        // emitDecoratorMetadata: true
-                    }
+        preset: 'node-server',
+        experimental: {
+            // https://nitro.unjs.io/config#openapi
+            openAPI: true
+            // This is very much premature as of July 2024
+            // It doesn't support transactions for example
+            // https://nitro.unjs.io/guide/database
+            // database: true
+        },
+        /*
+        database: {
+            // stored at .data/cathedral.sqlite3
+            default: {
+                connector: 'sqlite',
+                options: {
+                    name: 'cathedral'
                 }
             }
         }
+        */
     },
     primevue: {
 
@@ -55,8 +67,6 @@ export default defineNuxtConfig({
         typeCheck: false
     },
     vite: {
-        optimizeDeps: {
-            exclude: ['@electric-sql/pglite']
-        }
+
     }
 })

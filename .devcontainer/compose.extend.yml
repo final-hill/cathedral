@@ -1,0 +1,13 @@
+services:
+  web:
+    image: node:22-bookworm
+    depends_on:
+      - db
+    restart: unless-stopped
+    # mounts the workspace folder from the local source tree into the Dev Container.
+    volumes:
+      - .:/workspace/cathedral:cached
+    # Overrides default command so things don't shut down after the process ends.
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    # puts the Dev Container on the same network as the database, so that it can access it on localhost
+    network_mode: service:db

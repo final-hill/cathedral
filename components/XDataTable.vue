@@ -1,16 +1,18 @@
 <script lang="ts" setup>
-import { type Uuid, emptyUuid } from '~/domain/Uuid'
+import { type Uuid, emptyUuid } from '~/server/domain/Uuid'
 
 // export type RowType = { id: Uuid, name: string }
 export type RowType = any
 
 const props = defineProps<{
-    datasource: RowType[],
+    datasource: RowType[] | null,
     filters: Record<string, { value: any, matchMode: string }>,
     emptyRecord: { id: Uuid, name: string },
     onCreate: (data: RowType) => Promise<void>,
     onDelete: (id: Uuid) => Promise<void>,
-    onUpdate: (data: RowType) => Promise<void>
+    onUpdate: (data: RowType) => Promise<void>,
+    onRowExpand?: (event: { data: RowType }) => void,
+    onRowCollapse?: (event: { data: RowType }) => void
 }>()
 
 const dataTable = ref<any>(),
@@ -20,8 +22,8 @@ const dataTable = ref<any>(),
     confirm = useConfirm()
 
 const onCreateEmpty = async () => {
-    props.datasource.unshift(Object.assign({}, props.emptyRecord))
-    editingRows.value = [props.datasource[0]]
+    (props.datasource ?? []).unshift(Object.assign({}, props.emptyRecord))
+    editingRows.value = [(props.datasource ?? [])[0]]
     createDisabled.value = true
     // remove the sortfield to avoid the new row from being sorted
     sortField.value = undefined
@@ -52,9 +54,19 @@ const onCancel = ({ data, index }: { data: RowType, index: number }) => {
     if (data.id !== emptyUuid)
         return
 
-    props.datasource.splice(index, 1)
+    (props.datasource ?? []).splice(index, 1)
     createDisabled.value = false
     sortField.value = 'name'
+}
+
+const onRowExpand = (event: { data: RowType }) => {
+    if (props.onRowExpand)
+        props.onRowExpand(event)
+}
+
+const onRowCollapse = (event: { data: RowType }) => {
+    if (props.onRowCollapse)
+        props.onRowCollapse(event)
 }
 
 const onRowEditSave = async (event: { newData: RowType, originalEvent: Event }) => {
@@ -121,7 +133,8 @@ const onSort = (event: any) => {
         <DataTable ref="dataTable" :value="props.datasource as unknown as any[]" dataKey="id" filterDisplay="row"
             v-model:filters="filters as any" :globalFilterFields="Object.keys(filters)" editMode="row"
             @row-edit-init="onRowEditInit" v-model:editingRows="editingRows" @row-edit-save="onRowEditSave"
-            @row-edit-cancel="onCancel" @sort="onSort" :sortField="sortField" :sortOrder="1">
+            @row-edit-cancel="onCancel" @row-expand="onRowExpand" @row-collapse="onRowCollapse" @sort="onSort"
+            :sortField="sortField" :sortOrder="1">
             <slot></slot>
             <Column frozen align-frozen="right">
                 <template #body="{ data, editorInitCallback }">

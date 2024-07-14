@@ -1,14 +1,12 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
-    const slug = to.params.slug,
-        // An error is thrown if these are imported at the top of the file
-        SolutionInteractor = (await import('../application/SolutionInteractor')).default,
-        SolutionRepository = (await import('../data/SolutionRepository')).default
+    let slug = to.params.slug
 
     if (slug) {
-        const solutionInteractor = new SolutionInteractor(new SolutionRepository()),
-            solution = (await solutionInteractor.getAll({
-                slug: typeof slug === 'string' ? slug : slug[0]
-            }))[0]
+        slug = typeof slug === 'string' ? slug : slug[0]
+
+        const solution = await $fetch(`/api/solutions`, {
+            query: { slug }
+        })
 
         if (!solution)
             return navigateTo({ name: 'Solutions' })
