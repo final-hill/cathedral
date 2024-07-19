@@ -1,63 +1,47 @@
-import Entity from "~/server/domain/Entity";
-import type { Properties } from "./Properties";
+// import Entity from "~/server/domain/Entity";
+import { Entity, PrimaryKey, Property, BeforeUpsert } from '@mikro-orm/core';
+import { v7 as uuidv7 } from 'uuid';
+import slugify from '../../lib/slugify.js';
+import { type Properties } from './Properties.js';
 
 /**
  * A Solution is the aggregation of a Project, Environment, Goals, and a System
  */
-export default class Solution extends Entity {
+@Entity()
+export default class Solution {
     static readonly maxNameLength = 60;
-    static readonly maxDescriptionLength = 200;
 
-    private _description!: string;
-    private _name!: string;
-    private _slug!: string;
-
-    constructor({ id, ...rest }: Properties<Solution>) {
-        super({ id });
-        Object.assign(this, rest);
+    constructor(properties: Omit<Properties<Solution>, 'slug'>) {
+        Object.assign(this, properties);
+        this.slug = slugify(this.name);
     }
+
+    /**
+     * The unique identifier of the Solution
+     */
+    @PrimaryKey({ type: 'uuid' })
+    id = uuidv7()
 
     /**
      * The description of the Solution
-     * @throws {Error} if the description is longer than 200 characters
      */
-    get description(): string { return this._description; }
-
-    set description(value: string) {
-        const trimmed = value.trim();
-        if (trimmed.length >= Solution.maxDescriptionLength)
-            throw new Error(
-                `Project description cannot be longer than ${Solution.maxDescriptionLength} characters`
-            );
-        this._description = trimmed;
-    }
+    @Property()
+    description!: string
 
     /**
      * The name of the Solution
-     * @throws {Error} if the name is longer than 60 characters
      */
-    get name(): string { return this._name; }
+    @Property({ length: Solution.maxNameLength })
+    name!: string
 
-    set name(value: string) {
-        const trimmed = value.trim();
-        if (trimmed.length >= Solution.maxNameLength)
-            throw new Error(`Entity name cannot be longer than ${Solution.maxNameLength} characters`);
-        this._name = trimmed;
-    }
+    /**
+     * A slugified version of the name
+     */
+    @Property({ unique: true })
+    slug!: string
 
-    get slug(): string {
-        return this._slug
-    }
-    set slug(value: string) {
-        this._slug = value
-    }
-
-    override toJSON() {
-        return {
-            ...super.toJSON(),
-            description: this.description,
-            name: this.name,
-            slug: this.slug
-        }
+    @BeforeUpsert()
+    private _beforeUpsert() {
+        this.slug = slugify(this.name);
     }
 }

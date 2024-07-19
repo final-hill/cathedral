@@ -1,3 +1,9 @@
+import { MikroORM } from '@mikro-orm/postgresql'
+import config from '../../mikro-orm.config.js'
+
+const orm = await MikroORM.init(config);
+
+/*
 import pg, { type PoolClient, type QueryResultRow } from 'pg'
 const { Pool } = pg
 
@@ -30,3 +36,4 @@ export const transaction = async (
         client.release()
     }
 }
+    */
