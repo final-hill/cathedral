@@ -1,5 +1,5 @@
 import PostgresRepository from "./PostgresRepository";
-import EnvironmentComponent from "~/server/domain/EnvironmentComponent";
+import EnvironmentComponent from "~/server/domain/requirements/EnvironmentComponent";
 import { type Uuid } from "~/server/domain/Uuid";
 
 export default class EnvironmentComponentRepository extends PostgresRepository<EnvironmentComponent> {

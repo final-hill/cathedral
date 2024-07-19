@@ -29,15 +29,78 @@ return encode(
 end
 $$ LANGUAGE PLPGSQL VOLATILE;
 
+CREATE EXTENSION citext;
+-- ref: https://dba.stackexchange.com/a/165923
+CREATE DOMAIN email AS citext
+  CHECK ( value ~ '^[a-zA-Z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$' );
+
 CREATE TABLE __migration_history (
 	name TEXT PRIMARY KEY
               NOT NULL,
 	execution_date TEXT NOT NULL
 );
 
+CREATE TABLE organization (
+	id UUID PRIMARY KEY
+            DEFAULT xuuid7(),
+	name TEXT NOT NULL
+              CHECK (LENGTH(NAME) <= 60),
+	description TEXT NOT NULL
+                     CHECK (LENGTH(DESCRIPTION) <= 200),
+	slug TEXT NOT NULL
+              GENERATED ALWAYS AS (
+                  LOWER(REPLACE(REPLACE(TRIM(NAME), ' ', '-'), '--', '-'))
+              ) STORED
+              UNIQUE
+);
+
+CREATE TABLE appuser (
+    id email PRIMARY KEY,
+    default_organization_id UUID REFERENCES organization (id)
+        ON DELETE SET NULL,
+    creation_date TIMESTAMP DEFAULT current_timestamp
+);
+
+CREATE TABLE organization_role (
+    id TEXT PRIMARY KEY,
+    description TEXT NOT NULL
+);
+
+INSERT INTO organization_role (id, description)
+VALUES ('ORG_ADMIN', 'Organization Administrator'),
+       ('ORG_CONTRIBUTOR', 'Organization Contributor'),
+       ('ORG_READER', 'Organization Reader');
+
+CREATE TABLE appuser_organization_role (
+    appuser_id email REFERENCES appuser (id) ON DELETE CASCADE,
+    organization_id UUID REFERENCES organization (id) ON DELETE CASCADE,
+    role_id TEST REFERENCES organization_role (id) ON DELETE CASCADE,
+    PRIMARY KEY (appuser_id, organization_id, role_id)
+);
+
+CREATE TABLE solution_role (
+    id TEXT PRIMARY KEY,
+    description TEXT NOT NULL
+);
+
+INSERT INTO solution_role (id, description)
+VALUES ('SOL_ADMIN', 'Solution Administrator'),
+       ('SOL_CONTRIBUTOR', 'Solution Contributor'),
+       ('SOL_READER', 'Solution Reader');
+
+CREATE TABLE appuser_solution_role (
+    appuser_id email REFERENCES appuser (id) ON DELETE CASCADE,
+    solution_id UUID REFERENCES solution (id) ON DELETE CASCADE,
+    role_id TEXT REFERENCES solution_role (id) ON DELETE CASCADE,
+    PRIMARY KEY (appuser_id, solution_id, role_id)
+);
+
 CREATE TABLE solution (
 	id UUID PRIMARY KEY
             DEFAULT xuuid7(),
+    organization_id UUID REFERENCES organization (id)
+                    ON DELETE CASCADE
+                    NOT NULL,
 	name TEXT NOT NULL
               CHECK (LENGTH(NAME) <= 60),
 	description TEXT NOT NULL

@@ -1,4 +1,4 @@
-import Goal from "~/server/domain/Goal";
+import Goal from "~/server/domain/requirements/Goal";
 import PostgresRepository from "./PostgresRepository";
 import { type Uuid } from "~/server/domain/Uuid";
 

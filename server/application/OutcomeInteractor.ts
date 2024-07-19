@@ -1,5 +1,5 @@
 import Interactor from "~/server/application/Interactor";
-import Outcome from "~/server/domain/Outcome";
+import Outcome from "~/server/domain/requirements/Outcome";
 import Repository from "./Repository";
 
 export default class OutcomeInteractor extends Interactor<Outcome> {

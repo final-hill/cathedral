@@ -1,5 +1,5 @@
 import PostgresRepository from "./PostgresRepository";
-import Invariant from "~/server/domain/Invariant";
+import Invariant from "~/server/domain/requirements/Invariant";
 import { type Uuid } from "~/server/domain/Uuid";
 
 export default class InvariantRepository extends PostgresRepository<Invariant> {

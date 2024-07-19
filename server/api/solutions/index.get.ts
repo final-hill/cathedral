@@ -1,11 +1,12 @@
 import SolutionInteractor from "~/server/application/SolutionInteractor"
 import SolutionRepository from "~/server/data/repositories/SolutionRepository"
 import { z } from "zod"
-import Solution from "~/server/domain/Solution"
+import Solution from "~/server/domain/application/Solution"
 
 const querySchema = z.object({
     name: z.string().max(Solution.maxNameLength).optional(),
     description: z.string().max(Solution.maxDescriptionLength).optional(),
+    organizationId: z.string().uuid().optional(),
     slug: z.string().max(Solution.maxNameLength).optional()
 })
 

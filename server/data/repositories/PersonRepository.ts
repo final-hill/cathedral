@@ -1,5 +1,5 @@
 import PostgresRepository from "./PostgresRepository";
-import Person from "~/server/domain/Person";
+import Person from "~/server/domain/requirements/Person";
 import { type Uuid } from "~/server/domain/Uuid";
 
 export default class PersonRepository extends PostgresRepository<Person> {

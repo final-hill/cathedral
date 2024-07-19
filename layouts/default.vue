@@ -1,5 +1,4 @@
 <template>
-    <GlobalNavigation />
     <TopNavigation />
     <section id="content" class="surface-ground">
         <slot />
@@ -13,21 +12,16 @@
     color: var(--font-color);
     display: grid;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
-    grid-template-columns: fit-content(1.5in) 1fr;
-    grid-template-rows: 0.5in 1fr;
-    grid-template-areas: "global-nav breadcrumb" "global-nav content";
+    grid-template-columns: 1fr;
+    grid-template-rows: 0.6in 1fr;
+    grid-template-areas: "top-nav" "content";
     height: 100vh;
     line-height: 1.5;
     overflow: hidden;
     width: 100vw;
 
-    &>.p-menu {
-        grid-area: global-nav;
-        height: 100vh;
-    }
-
-    &>.p-breadcrumb {
-        grid-area: breadcrumb;
+    &>.top-nav {
+        grid-area: top-nav;
     }
 
     &>#content {

@@ -1,4 +1,4 @@
-import UserStory from "~/server/domain/UserStory";
+import UserStory from "~/server/domain/requirements/UserStory";
 import PostgresRepository from "./PostgresRepository";
 import { type Uuid } from "~/server/domain/Uuid";
 

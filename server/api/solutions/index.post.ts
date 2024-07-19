@@ -1,11 +1,13 @@
 import { z } from "zod"
 import SolutionInteractor from "~/server/application/SolutionInteractor"
 import SolutionRepository from "~/server/data/repositories/SolutionRepository"
-import Solution from "~/server/domain/Solution"
+import Solution from "~/server/domain/application/Solution"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string().min(1).max(Solution.maxNameLength),
-    description: z.string().max(Solution.maxDescriptionLength)
+    description: z.string().max(Solution.maxDescriptionLength),
+    organizationId: z.string().uuid()
 })
 
 /**
@@ -26,6 +28,7 @@ export default defineEventHandler(async (event) => {
     // @ts-ignore: missing slug property
     return solutionInteractor.create({
         name: body.data.name,
-        description: body.data.description
+        description: body.data.description,
+        organizationId: body.data.organizationId as Uuid
     })
 })

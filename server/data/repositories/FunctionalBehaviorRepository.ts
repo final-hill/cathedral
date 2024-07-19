@@ -1,5 +1,5 @@
 import PostgresRepository from "./PostgresRepository";
-import FunctionalBehavior from "~/server/domain/FunctionalBehavior";
+import FunctionalBehavior from "~/server/domain/requirements/FunctionalBehavior";
 import { type Uuid } from "~/server/domain/Uuid";
 
 export default class FunctionalBehaviorRepository extends PostgresRepository<FunctionalBehavior> {

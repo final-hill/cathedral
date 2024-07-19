@@ -1,4 +1,4 @@
-import Solution from "~/server/domain/Solution";
+import Solution from "~/server/domain/application/Solution";
 import Interactor from "~/server/application/Interactor";
 import Repository from "./Repository";
 

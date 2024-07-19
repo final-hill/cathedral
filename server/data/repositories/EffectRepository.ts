@@ -1,5 +1,5 @@
 import PostgresRepository from "./PostgresRepository";
-import Effect from "~/server/domain/Effect";
+import Effect from "~/server/domain/requirements/Effect";
 import { type Uuid } from "~/server/domain/Uuid";
 
 export default class EffectRepository extends PostgresRepository<Effect> {

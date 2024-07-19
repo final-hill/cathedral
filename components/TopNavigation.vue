@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import deSlugify from '~/lib/deSlugify';
 
+const { data, signOut, signIn } = useAuth()
+
 const router = useRouter()
 
 let getCrumbs = () => {
@@ -21,16 +23,43 @@ let getCrumbs = () => {
 const crumbs = ref(getCrumbs());
 
 router.afterEach(() => { crumbs.value = getCrumbs(); });
+
+const op = ref();
+
+const toggle = (event: Event) => op.value.toggle(event)
 </script>
 
 <template>
-    <Breadcrumb :model="crumbs">
-        <template #item="{ item, props }">
-            <NuxtLink v-slot="{ href, navigate }" :to="item.route">
-                {{ item.label }}
-            </NuxtLink>
+    <Menubar class="top-nav">
+        <template #start>
+            <div class="inline-flex flex-row align-items-center">
+                <NuxtLink to="/" class="h-2rem">
+                    <img src="/logo.png" alt="Cathedral Logo" title="Cathedral" class="h-full" />
+                </NuxtLink>
+                <Breadcrumb :model="crumbs" class="h-full py-0">
+                    <template #item="{ item, props }">
+                        <NuxtLink v-slot="{ href, navigate }" :to="item.route">
+                            {{ item.label }}
+                        </NuxtLink>
+                    </template>
+                </Breadcrumb>
+            </div>
         </template>
-    </Breadcrumb>
+        <template #end>
+            <Button type="button" @click="toggle" link>
+                <Avatar v-if="data?.user?.image" :image="data.user?.image ?? undefined" shape="circle" />
+                <Avatar v-else icon="pi pi-user" shape="circle" />
+            </Button>
+        </template>
+    </Menubar>
+
+    <OverlayPanel ref="op">
+        <p> {{ data?.user?.name ?? 'Guest' }} </p>
+        <small> {{ data?.user?.email }} </small>
+        <hr>
+        <Button v-if="!data?.user" type="button" @click="signIn(undefined)" label="Sign In" icon="pi pi-sign-in" />
+        <Button v-else type="button" @click="signOut()" label="Sign Out" icon="pi pi-sign-out" />
+    </OverlayPanel>
 </template>
 
 <style scoped>

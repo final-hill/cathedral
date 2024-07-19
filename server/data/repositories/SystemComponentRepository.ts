@@ -1,4 +1,4 @@
-import SystemComponent from "~/server/domain/SystemComponent";
+import SystemComponent from "~/server/domain/requirements/SystemComponent";
 import PostgresRepository from "./PostgresRepository";
 import { type Uuid } from "~/server/domain/Uuid";
 

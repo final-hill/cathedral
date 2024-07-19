@@ -1,18 +1,16 @@
 import Repository from '~/server/application/Repository';
 import type Entity from '~/server/domain/Entity';
-import type { Uuid } from '~/server/domain/Uuid';
 import { query, transaction } from '../db'
-
 import reCamelCaseToSnakeCase from '~/lib/reCamelCaseToSnakeCase';
 
-export default abstract class PostgresRepository<E extends Entity> extends Repository<E> {
+export default abstract class PostgresRepository<E extends Entity<any>> extends Repository<E> {
     protected _db = { query, transaction }
 
-    async get(id: Uuid): Promise<E | undefined> {
+    async get(id: E['id']): Promise<E | undefined> {
         return (await (this.getAll({ id } as Record<keyof E, any>)))[0]
     }
 
-    async delete(id: Uuid): Promise<void> {
+    async delete(id: E['id']): Promise<void> {
         // most tables extend requirement (Class Table Inheritance)
         // deleting from the requirement table will delete from descendant tables
         const sql = `

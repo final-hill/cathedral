@@ -1,4 +1,4 @@
-import Component from "~/server/domain/Component";
+import Component from "~/server/domain/requirements/Component";
 import PostgresRepository from "./PostgresRepository";
 import { type Uuid } from "~/server/domain/Uuid";
 

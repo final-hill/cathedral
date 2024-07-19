@@ -1,5 +1,5 @@
 import PostgresRepository from "./PostgresRepository";
-import Stakeholder from "~/server/domain/Stakeholder";
+import Stakeholder from "~/server/domain/requirements/Stakeholder";
 import { type Uuid } from "~/server/domain/Uuid";
 
 export default class StakeholderRepository extends PostgresRepository<Stakeholder> {

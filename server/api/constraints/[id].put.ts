@@ -2,7 +2,7 @@ import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
 import ConstraintInteractor from "~/server/application/ConstraintInteractor"
 import ConstraintRepository from "~/server/data/repositories/ConstraintRepository"
-import ConstraintCategory from "~/server/domain/ConstraintCategory"
+import ConstraintCategory from "~/server/domain/requirements/ConstraintCategory"
 
 const bodySchema = z.object({
     name: z.string().min(1),

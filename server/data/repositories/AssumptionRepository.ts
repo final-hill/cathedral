@@ -1,5 +1,5 @@
 import PostgresRepository from "./PostgresRepository";
-import Assumption from "~/server/domain/Assumption";
+import Assumption from "~/server/domain/requirements/Assumption";
 import { type Uuid } from "~/server/domain/Uuid";
 
 export default class AssumptionRepository extends PostgresRepository<Assumption> {

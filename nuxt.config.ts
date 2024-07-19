@@ -34,7 +34,36 @@ export default defineNuxtConfig({
     // https://primevue.org/
     // https://vite-pwa-org.netlify.app/frameworks/nuxt
     // https://primeflex.org/
-    modules: ["nuxt-primevue", "@vite-pwa/nuxt"],
+    // https://sidebase.io/nuxt-auth/getting-started
+    modules: ["nuxt-primevue", "@vite-pwa/nuxt", "@sidebase/nuxt-auth", "nuxt-security"],
+    // https://sidebase.io/nuxt-auth/configuration/nuxt-config
+    auth: {
+        isEnabled: true,
+        baseURL: `${process.env.AUTH_ORIGIN}/api/auth`,
+        // https://sidebase.io/nuxt-auth/v0.6/application-side/protecting-pages
+        globalAppMiddleware: true,
+        provider: {
+            type: 'authjs'
+        },
+        sessionRefresh: {
+            enableOnWindowFocus: true,
+            enablePeriodically: 30000
+        }
+    },
+    runtimeConfig: {
+        authSecret: process.env.AUTH_SECRET,
+        githubClientId: process.env.GITHUB_CLIENT_ID,
+        githubClientSecret: process.env.GITHUB_CLIENT_SECRET
+    },
+    // https://nuxt.com/modules/security
+    security: {
+        headers: {
+            crossOriginEmbedderPolicy: process.env.NODE_ENV === 'development' ? 'unsafe-none' : 'require-corp',
+            contentSecurityPolicy: {
+                'img-src': ["'self'", 'data:', 'blob:', 'https://avatars.githubusercontent.com'],
+            }
+        },
+    },
     nitro: {
         preset: 'node-server',
         experimental: {

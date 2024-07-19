@@ -1,5 +1,5 @@
 import Interactor from "~/server/application/Interactor";
-import GlossaryTerm from "~/server/domain/GlossaryTerm";
+import GlossaryTerm from "~/server/domain/requirements/GlossaryTerm";
 import Repository from "./Repository";
 
 export default class GlossaryTermInteractor extends Interactor<GlossaryTerm> {

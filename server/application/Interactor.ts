@@ -1,23 +1,22 @@
 import type Entity from "~/server/domain/Entity";
 import type Repository from "./Repository";
-import type { Uuid } from "~/server/domain/Uuid";
-import type { Properties } from "~/server/domain/Properties";
+import { type Properties } from "../domain/Properties";
 
-export default abstract class Interactor<E extends Entity> {
+export default abstract class Interactor<E extends Entity<any>> {
     constructor(
         readonly repository: Repository<E>,
         readonly Constructor: new (props: Properties<E>) => E
     ) { }
 
-    async create(item: Omit<Properties<E>, 'id'>): Promise<Uuid> {
+    async create(item: Omit<Properties<E>, 'id'>): Promise<E['id']> {
         return await this.repository.add(item)
     }
 
-    async delete(id: Uuid): Promise<void> {
+    async delete(id: E['id']): Promise<void> {
         return await this.repository.delete(id)
     }
 
-    async get(id: Uuid): Promise<E | undefined> {
+    async get(id: E['id']): Promise<E | undefined> {
         return await this.repository.get(id)
     }
 

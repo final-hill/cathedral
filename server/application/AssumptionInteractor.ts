@@ -1,5 +1,5 @@
 import Interactor from "~/server/application/Interactor";
-import Assumption from "~/server/domain/Assumption";
+import Assumption from "~/server/domain/requirements/Assumption";
 import Repository from "./Repository";
 
 export default class AssumptionInteractor extends Interactor<Assumption> {

@@ -1,5 +1,5 @@
 import PostgresRepository from "./PostgresRepository";
-import UseCase from "~/server/domain/UseCase";
+import UseCase from "~/server/domain/requirements/UseCase";
 import { type Uuid } from "~/server/domain/Uuid";
 
 export default class UseCaseRepository extends PostgresRepository<UseCase> {

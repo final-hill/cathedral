@@ -1,17 +1,16 @@
 import type Entity from '~/server/domain/Entity';
-import type { Properties } from '~/server/domain/Properties.js';
-import { type Uuid } from '../domain/Uuid';
+import { Properties } from '../domain/Properties';
 
 /**
  * A repository for entities.
  */
-export default abstract class Repository<E extends Entity> {
+export default abstract class Repository<E extends Entity<any>> {
     /**
      * Creates an item to the repository.
      * @param item The properties of the item to create.
      * @returns The id of the created item.
      */
-    abstract add(item: Omit<Properties<E>, 'id'>): Promise<Uuid>
+    abstract add(item: Omit<Properties<E>, 'id'>): Promise<E['id']>
 
     /**
      * Deletes an item from the repository.

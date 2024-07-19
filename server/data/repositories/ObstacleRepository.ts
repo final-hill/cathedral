@@ -1,4 +1,4 @@
-import Obstacle from "~/server/domain/Obstacle";
+import Obstacle from "~/server/domain/requirements/Obstacle";
 import PostgresRepository from "./PostgresRepository";
 import { type Uuid } from "~/server/domain/Uuid";
 

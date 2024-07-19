@@ -1,5 +1,5 @@
 import PostgresRepository from "./PostgresRepository";
-import NonFunctionalBehavior from "~/server/domain/NonFunctionalBehavior";
+import NonFunctionalBehavior from "~/server/domain/requirements/NonFunctionalBehavior";
 import { type Uuid } from "~/server/domain/Uuid";
 
 export default class NonFunctionalBehaviorRepository extends PostgresRepository<NonFunctionalBehavior> {

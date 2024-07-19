@@ -1,5 +1,5 @@
 import PostgresRepository from "./PostgresRepository";
-import GlossaryTerm from "~/server/domain/GlossaryTerm";
+import GlossaryTerm from "~/server/domain/requirements/GlossaryTerm";
 import { type Uuid } from "~/server/domain/Uuid";
 
 export default class GlossaryTermRepository extends PostgresRepository<GlossaryTerm> {

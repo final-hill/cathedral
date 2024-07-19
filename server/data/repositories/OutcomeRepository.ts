@@ -1,4 +1,4 @@
-import Outcome from "~/server/domain/Outcome";
+import Outcome from "~/server/domain/requirements/Outcome";
 import PostgresRepository from "./PostgresRepository";
 import { type Uuid } from "~/server/domain/Uuid";
 

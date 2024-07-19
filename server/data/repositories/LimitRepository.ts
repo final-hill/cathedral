@@ -1,5 +1,5 @@
 import PostgresRepository from "./PostgresRepository";
-import Limit from "~/server/domain/Limit";
+import Limit from "~/server/domain/requirements/Limit";
 import { type Uuid } from "~/server/domain/Uuid";
 
 // [limit] is a reserved word in SQL, so we need to escape it

@@ -1,5 +1,5 @@
 import PostgresRepository from "./PostgresRepository";
-import Constraint from "~/server/domain/Constraint";
+import Constraint from "~/server/domain/requirements/Constraint";
 import { type Uuid } from "~/server/domain/Uuid";
 
 // "constraint" is a reserved word in SQLite so we need to escape it
