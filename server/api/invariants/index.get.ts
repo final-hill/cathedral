@@ -1,6 +1,6 @@
 import { z } from "zod"
-import InvariantInteractor from "~/server/application/InvariantInteractor"
-import InvariantRepository from "~/server/data/repositories/InvariantRepository"
+import orm from "~/server/data/orm"
+import Invariant from "~/server/domain/Invariant"
 
 const querySchema = z.object({
     name: z.string().optional(),
@@ -18,8 +18,7 @@ const querySchema = z.object({
  * Returns all invariants that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const invariantInteractor = new InvariantInteractor(new InvariantRepository()),
-        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
+    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
 
     if (!query.success)
         throw createError({
@@ -27,10 +26,13 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid query parameters"
         })
 
-    return invariantInteractor.getAll(
-        Object.fromEntries(
+    const results = await orm.em.findAll(Invariant, {
+        where: Object.fromEntries(
             Object.entries(query.data)
                 .filter(([_, v]) => v !== undefined)
+                .map(([k, v]) => [k, { $eq: v }])
         )
-    )
+    })
+
+    return results
 })

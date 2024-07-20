@@ -1,7 +1,7 @@
-import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import OutcomeRepository from "~/server/data/repositories/OutcomeRepository"
-import OutcomeInteractor from "~/server/application/OutcomeInteractor"
+import orm from "~/server/data/orm"
+import Outcome from "~/server/domain/Outcome"
+import Solution from "~/server/domain/Solution"
 
 const bodySchema = z.object({
     name: z.string().min(1),
@@ -11,17 +11,11 @@ const bodySchema = z.object({
 
 /**
  * POST /api/obstacles
- *   body: {
- *     name: string,
- *     statement: string,
- *     solutionId: Uuid
- *   }
  *
  * Creates a new obstacle and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const outcomeInteractor = new OutcomeInteractor(new OutcomeRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
 
     if (!body.success)
         throw createError({
@@ -29,9 +23,19 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid body parameters"
         })
 
-    return outcomeInteractor.create({
+    const solution = await orm.em.findOne(Solution, body.data.solutionId)
+
+    if (!solution)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: Solution not found for id ${body.data.solutionId}`
+        })
+
+    const newOutcome = new Outcome({
         name: body.data.name,
         statement: body.data.statement,
-        solutionId: body.data.solutionId as Uuid
+        solution
     })
+
+    await orm.em.persistAndFlush(newOutcome)
 })

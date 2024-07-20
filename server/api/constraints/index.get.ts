@@ -1,12 +1,12 @@
 import { z } from "zod"
-import ConstraintRepository from "~/server/data/repositories/ConstraintRepository"
-import ConstraintInteractor from "~/server/application/ConstraintInteractor"
+import orm from "~/server/data/orm"
+import Constraint, { ConstraintCategory } from "~/server/domain/Constraint"
 
 const querySchema = z.object({
     name: z.string().optional(),
     statement: z.string().optional(),
     solutionId: z.string().uuid().optional(),
-    categoryId: z.enum(['BUSINESS', 'ENGINEERING', 'PHYSICS']).optional()
+    category: z.nativeEnum(ConstraintCategory).optional()
 })
 
 /**
@@ -19,8 +19,7 @@ const querySchema = z.object({
  * Returns all constraints that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const constraintInteractor = new ConstraintInteractor(new ConstraintRepository()),
-        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
+    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
 
     if (!query.success)
         throw createError({
@@ -28,10 +27,13 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid query parameters"
         })
 
-    return constraintInteractor.getAll(
-        Object.fromEntries(
+    const results = await orm.em.findAll(Constraint, {
+        where: Object.fromEntries(
             Object.entries(query.data)
                 .filter(([_, v]) => v !== undefined)
+                .map(([k, v]) => [k, { $eq: v }])
         )
-    )
+    })
+
+    return results
 })

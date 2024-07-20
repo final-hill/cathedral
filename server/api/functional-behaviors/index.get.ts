@@ -1,20 +1,20 @@
 import { z } from "zod"
-import FunctionalBehaviorInteractor from "~/server/application/FunctionalBehaviorInteractor"
-import FunctionalBehaviorRepository from "~/server/data/repositories/FunctionalBehaviorRepository"
+import orm from "~/server/data/orm"
+import FunctionalBehavior from "~/server/domain/FunctionalBehavior"
+import MoscowPriority from "~/server/domain/MoscowPriority"
 
 const querySchema = z.object({
     name: z.string().optional(),
     statement: z.string().optional(),
     solutionId: z.string().uuid().optional(),
-    priorityId: z.enum(['MUST', 'SHOULD', 'COULD', 'WONT']).optional()
+    priority: z.nativeEnum(MoscowPriority).optional()
 })
 
 /**
  * Returns all functional behaviors that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const functionalBehaviorInteractor = new FunctionalBehaviorInteractor(new FunctionalBehaviorRepository()),
-        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
+    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
 
     if (!query.success)
         throw createError({
@@ -22,10 +22,13 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid query parameters"
         })
 
-    return functionalBehaviorInteractor.getAll(
-        Object.fromEntries(
+    const results = await orm.em.findAll(FunctionalBehavior, {
+        where: Object.fromEntries(
             Object.entries(query.data)
                 .filter(([_, v]) => v !== undefined)
+                .map(([k, v]) => [k, { $eq: v }])
         )
-    )
+    })
+
+    return results
 })

@@ -1,6 +1,6 @@
 import { z } from "zod"
-import GlossaryTermRepository from "~/server/data/repositories/GlossaryTermRepository"
-import GlossaryTermInteractor from "~/server/application/GlossaryTermInteractor"
+import orm from "~/server/data/orm"
+import GlossaryTerm from "~/server/domain/GlossaryTerm.js"
 
 const querySchema = z.object({
     name: z.string().optional(),
@@ -18,8 +18,7 @@ const querySchema = z.object({
  * Returns all glossay terms that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const glossaryTermInteractor = new GlossaryTermInteractor(new GlossaryTermRepository()),
-        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
+    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
 
     if (!query.success)
         throw createError({
@@ -27,10 +26,13 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid query parameters"
         })
 
-    return glossaryTermInteractor.getAll(
-        Object.fromEntries(
+    const results = await orm.em.findAll(GlossaryTerm, {
+        where: Object.fromEntries(
             Object.entries(query.data)
                 .filter(([_, v]) => v !== undefined)
+                .map(([k, v]) => [k, { $eq: v }])
         )
-    )
+    })
+
+    return results
 })

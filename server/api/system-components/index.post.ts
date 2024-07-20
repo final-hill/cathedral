@@ -1,13 +1,13 @@
-import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import SystemComponentInteractor from "~/server/application/SystemComponentInteractor"
-import SystemComponentRepository from "~/server/data/repositories/SystemComponentRepository"
+import orm from "~/server/data/orm"
+import Solution from "~/server/domain/Solution"
+import SystemComponent from "~/server/domain/SystemComponent"
 
 const bodySchema = z.object({
     name: z.string(),
     statement: z.string(),
     solutionId: z.string().uuid(),
-    parentComponentId: z.string().uuid()
+    parentComponentId: z.string().uuid().optional()
 })
 
 /**
@@ -16,10 +16,7 @@ const bodySchema = z.object({
  * Creates a new system-component and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const systemComponentInteractor = new SystemComponentInteractor(
-        new SystemComponentRepository()
-    ),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
 
     if (!body.success)
         throw createError({
@@ -27,10 +24,26 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid body parameters"
         })
 
-    return systemComponentInteractor.create({
+    const solution = await orm.em.findOne(Solution, body.data.solutionId),
+        parentComponent = body.data.parentComponentId ? await orm.em.findOne(SystemComponent, body.data.parentComponentId) : undefined
+
+    if (!solution)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: Solution not found for id ${body.data.solutionId}`
+        })
+    if (!parentComponent)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: Parent stakeholder not found for id ${body.data.parentComponentId}`
+        })
+
+    const newSystemComponent = new SystemComponent({
         name: body.data.name,
         statement: body.data.statement,
-        solutionId: body.data.solutionId as Uuid,
-        parentComponentId: body.data.parentComponentId as Uuid
+        solution,
+        parentComponent: parentComponent || undefined
     })
+
+    await orm.em.persistAndFlush(newSystemComponent)
 })

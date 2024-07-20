@@ -1,25 +1,24 @@
-import { type Uuid, emptyUuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import StakeholderRepository from "~/server/data/repositories/StakeholderRepository"
-import StakeholderInteractor from "~/server/application/StakeholderInteractor"
+import orm from "~/server/data/orm"
+import Solution from "~/server/domain/Solution"
+import Stakeholder, { StakeholderCategory, StakeholderSegmentation } from "~/server/domain/Stakeholder"
 
 const bodySchema = z.object({
     name: z.string(),
     statement: z.string(),
-    solutionId: z.string(),
-    // parentComponentId: z.string().uuid(),
-    availability: z.number(),
-    influence: z.number(),
-    segmentationId: z.enum(["CLIENT", "VENDOR"]),
-    categoryId: z.enum(["KEY_STAKEHOLDER", "SHADOW_INFLUENCER", "FELLOW_TRAVELER", "OBSERVER"])
+    solutionId: z.string().uuid(),
+    parentComponentId: z.string().uuid(),
+    availability: z.number().min(0).max(100),
+    influence: z.number().min(0).max(100),
+    segmentationId: z.nativeEnum(StakeholderSegmentation),
+    categoryId: z.nativeEnum(StakeholderCategory)
 })
 
 /**
  * Creates a new stakeholder and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const stakeholderInteractor = new StakeholderInteractor(new StakeholderRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
 
     if (!body.success)
         throw createError({
@@ -27,15 +26,30 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid body parameters"
         })
 
-    return stakeholderInteractor.create({
+    const solution = await orm.em.findOne(Solution, body.data.solutionId),
+        parentStakeholder = await orm.em.findOne(Stakeholder, body.data.parentComponentId)
+
+    if (!solution)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: Solution not found for id ${body.data.solutionId}`
+        })
+    if (!parentStakeholder)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: Parent stakeholder not found for id ${body.data.parentComponentId}`
+        })
+
+    const newStakeholder = new Stakeholder({
         name: body.data.name,
         statement: body.data.statement,
-        solutionId: body.data.solutionId as Uuid,
+        solution,
+        parentComponent: parentStakeholder || undefined,
         availability: body.data.availability,
         influence: body.data.influence,
-        categoryId: body.data.categoryId,
-        // parentComponentId: body.data.parentComponentId as Uuid,
-        parentComponentId: emptyUuid,
-        segmentationId: body.data.segmentationId
+        segmentation: body.data.segmentationId,
+        category: body.data.categoryId
     })
+
+    await orm.em.persistAndFlush(newStakeholder)
 })

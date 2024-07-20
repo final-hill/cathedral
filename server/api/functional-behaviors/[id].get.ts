@@ -1,13 +1,14 @@
-import FunctionalBehaviorInteractor from "~/server/application/FunctionalBehaviorInteractor"
-import FunctionalBehaviorRepository from "~/server/data/repositories/FunctionalBehaviorRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
+import FunctionalBehavior from "~/server/domain/FunctionalBehavior"
 
+/**
+ * Returns a functional behavior by id
+ */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        functionalBehaviorInteractor = new FunctionalBehaviorInteractor(new FunctionalBehaviorRepository())
+    const id = event.context.params?.id
 
     if (id) {
-        const result = functionalBehaviorInteractor.get(id as Uuid)
+        const result = await orm.em.findOne(FunctionalBehavior, id)
 
         if (result)
             return result

@@ -1,5 +1,4 @@
-// import Entity from "~/server/domain/Entity";
-import { Entity, PrimaryKey, Property, BeforeUpsert } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import { v7 as uuidv7 } from 'uuid';
 import slugify from '../../lib/slugify.js';
 import { type Properties } from './Properties.js';
@@ -11,7 +10,7 @@ import { type Properties } from './Properties.js';
 export default class Solution {
     static readonly maxNameLength = 60;
 
-    constructor(properties: Omit<Properties<Solution>, 'slug'>) {
+    constructor(properties: Omit<Properties<Solution>, 'slug' | 'id'>) {
         Object.assign(this, properties);
         this.slug = slugify(this.name);
     }
@@ -39,9 +38,4 @@ export default class Solution {
      */
     @Property({ unique: true })
     slug!: string
-
-    @BeforeUpsert()
-    private _beforeUpsert() {
-        this.slug = slugify(this.name);
-    }
 }

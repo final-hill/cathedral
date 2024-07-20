@@ -1,13 +1,14 @@
-import NonFunctionalBehaviorInteractor from "~/server/application/NonFunctionalBehaviorInteractor"
-import NonFunctionalBehaviorRepository from "~/server/data/repositories/NonFunctionalBehaviorRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
+import NonFunctionalBehavior from "~/server/domain/NonFunctionalBehavior"
 
+/**
+ * Returns a non-functional behavior by id
+ */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        nonFunctionalBehaviorInteractor = new NonFunctionalBehaviorInteractor(new NonFunctionalBehaviorRepository())
+    const id = event.context.params?.id
 
     if (id) {
-        const result = nonFunctionalBehaviorInteractor.get(id as Uuid)
+        const result = await orm.em.findOne(NonFunctionalBehavior, id)
 
         if (result)
             return result

@@ -1,16 +1,14 @@
-import GlossaryTermInteractor from "~/server/application/GlossaryTermInteractor"
-import GlossaryTermRepository from "~/server/data/repositories/GlossaryTermRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
+import GlossaryTerm from "~/server/domain/GlossaryTerm"
 
 /**
  * Returns a glossary term by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        glossaryTermInteractor = new GlossaryTermInteractor(new GlossaryTermRepository())
+    const id = event.context.params?.id
 
     if (id) {
-        const result = glossaryTermInteractor.get(id as Uuid)
+        const result = await orm.em.findOne(GlossaryTerm, id)
 
         if (result)
             return result

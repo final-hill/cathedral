@@ -1,16 +1,14 @@
-import GoalInteractor from "~/server/application/GoalInteractor"
-import GoalRepository from "~/server/data/repositories/GoalRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
+import Justification from "~/server/domain/Justification"
 
 /**
- * Returns a goal by id
+ * Returns a justification by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        goalInteractor = new GoalInteractor(new GoalRepository())
+    const id = event.context.params?.id
 
     if (id) {
-        const result = goalInteractor.get(id as Uuid)
+        const result = await orm.em.findOne(Justification, id)
 
         if (result)
             return result

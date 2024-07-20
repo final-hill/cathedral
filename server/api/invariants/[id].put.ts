@@ -1,7 +1,7 @@
-import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import InvariantRepository from "~/server/data/repositories/InvariantRepository"
-import InvariantInteractor from "~/server/application/InvariantInteractor"
+import orm from "~/server/data/orm"
+import Invariant from "~/server/domain/Invariant"
+import Solution from "~/server/domain/Solution"
 
 const bodySchema = z.object({
     name: z.string().min(1),
@@ -15,7 +15,6 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        invariantInteractor = new InvariantInteractor(new InvariantRepository()),
         body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
 
     if (!body.success)
@@ -25,12 +24,25 @@ export default defineEventHandler(async (event) => {
         })
 
     if (id) {
-        return invariantInteractor.update({
-            id: id as Uuid,
-            name: body.data.name,
-            statement: body.data.statement,
-            solutionId: body.data.solutionId as Uuid,
-        })
+        const invariant = await orm.em.findOne(Invariant, id),
+            solution = await orm.em.findOne(Solution, body.data.solutionId)
+
+        if (!invariant)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No effect found with id: ${id}`
+            })
+        if (!solution)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
+            })
+
+        invariant.name = body.data.name
+        invariant.statement = body.data.statement
+        invariant.solution = solution
+
+        await orm.em.flush()
     } else {
         throw createError({
             statusCode: 400,

@@ -1,16 +1,14 @@
-import SolutionInteractor from "~/server/application/SolutionInteractor"
-import SolutionRepository from "~/server/data/repositories/SolutionRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
+import Solution from "~/server/domain/Solution"
 
 /**
  * Delete a solution by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        solutionInteractor = new SolutionInteractor(new SolutionRepository())
+    const id = event.context.params?.id
 
     if (id) {
-        solutionInteractor.delete(id as Uuid)
+        orm.em.remove(orm.em.getReference(Solution, id))
     } else {
         throw createError({
             statusCode: 400,

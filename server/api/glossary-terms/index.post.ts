@@ -1,7 +1,7 @@
-import { type Uuid, emptyUuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import GlossaryTermRepository from "~/server/data/repositories/GlossaryTermRepository"
-import GlossaryTermInteractor from "~/server/application/GlossaryTermInteractor"
+import orm from "~/server/data/orm"
+import GlossaryTerm from "~/server/domain/GlossaryTerm.js"
+import Solution from "~/server/domain/Solution.js"
 
 const bodySchema = z.object({
     name: z.string().min(1),
@@ -15,8 +15,7 @@ const bodySchema = z.object({
  * Creates a new glossary term and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const glossaryTermInteractor = new GlossaryTermInteractor(new GlossaryTermRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
 
     if (!body.success)
         throw createError({
@@ -24,10 +23,20 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid body parameters"
         })
 
-    return glossaryTermInteractor.create({
+    const solution = await orm.em.findOne(Solution, body.data.solutionId)
+
+    if (!solution)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: Solution not found for id ${body.data.solutionId}`
+        })
+
+    const glossaryTerm = new GlossaryTerm({
         name: body.data.name,
         statement: body.data.statement,
-        solutionId: body.data.solutionId as Uuid,
-        parentComponentId: null
+        solution,
+        parentComponent: undefined
     })
+
+    await orm.em.persistAndFlush(glossaryTerm)
 })

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
 import type FunctionalBehavior from '~/server/domain/FunctionalBehavior';
+import MoscowPriority from '~/server/domain/MoscowPriority';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
 useHead({ title: 'Functionality' })
@@ -10,10 +11,10 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.[0].id
 
-type FunctionalBehaviorViewModel = Pick<FunctionalBehavior, 'id' | 'name' | 'statement' | 'priorityId'>;
+type FunctionalBehaviorViewModel = Pick<FunctionalBehavior, 'id' | 'name' | 'statement' | 'priority'>;
 
 const { data: functionalBehaviors, refresh, status } = useFetch(`/api/functional-behaviors?solutionId=${solutionId}`),
-    emptyFunctionalBehavior: FunctionalBehaviorViewModel = { id: emptyUuid, name: '', statement: '', priorityId: 'MUST' };
+    emptyFunctionalBehavior: FunctionalBehaviorViewModel = { id: emptyUuid, name: '', statement: '', priority: MoscowPriority.MUST };
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -27,7 +28,7 @@ const onCreate = async (data: FunctionalBehaviorViewModel) => {
             name: data.name,
             statement: data.statement,
             solutionId,
-            priorityId: 'MUST'
+            priority: MoscowPriority.MUST
         }
     })
 
@@ -42,7 +43,7 @@ const onUpdate = async (data: FunctionalBehaviorViewModel) => {
             name: data.name,
             statement: data.statement,
             solutionId,
-            priorityId: data.priorityId
+            priority: data.priority
         }
     })
 

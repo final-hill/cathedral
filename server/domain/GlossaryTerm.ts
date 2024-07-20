@@ -1,3 +1,13 @@
-import Component from "~/server/domain/Component";
+import { Entity, ManyToOne } from "@mikro-orm/core";
+import Component from "./Component.js";
 
-export default class GlossaryTerm extends Component { }
+@Entity()
+export default class GlossaryTerm extends Component {
+    constructor({ parentComponent, ...rest }: Omit<GlossaryTerm, 'id'>) {
+        super(rest)
+        this.parentComponent = parentComponent
+    }
+
+    @ManyToOne()
+    parentComponent?: GlossaryTerm;
+}

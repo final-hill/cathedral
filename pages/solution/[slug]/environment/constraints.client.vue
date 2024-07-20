@@ -2,7 +2,7 @@
 import { useFetch } from 'nuxt/app';
 import { FilterMatchMode } from 'primevue/api';
 import type Constraint from '~/server/domain/Constraint';
-import ConstraintCategory from '~/server/domain/ConstraintCategory';
+import ConstraintCategory from '~/server/domain/Constraint';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
 useHead({ title: 'Constraints' })

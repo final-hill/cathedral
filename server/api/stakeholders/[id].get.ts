@@ -1,16 +1,14 @@
-import StakeholderInteractor from "~/server/application/StakeholderInteractor"
-import StakeholderRepository from "~/server/data/repositories/StakeholderRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
+import Stakeholder from "~/server/domain/Stakeholder"
 
 /**
  * Returns a stakeholder by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        stakeholderInteractor = new StakeholderInteractor(new StakeholderRepository())
+    const id = event.context.params?.id
 
     if (id) {
-        const result = stakeholderInteractor.get(id as Uuid)
+        const result = await orm.em.findOne(Stakeholder, id)
 
         if (result)
             return result

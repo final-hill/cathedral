@@ -2,6 +2,7 @@
 import { FilterMatchMode } from 'primevue/api';
 import type Behavior from '~/server/domain/Behavior';
 import type Functionality from '~/server/domain/Functionality';
+import MoscowPriority from '~/server/domain/MoscowPriority';
 import type { Properties } from '~/server/domain/Properties';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
@@ -12,7 +13,7 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.[0].id!;
 
-type BehaviorViewModel = Pick<Behavior, 'id' | 'name' | 'statement' | 'solutionId' | 'componentId' | 'priorityId'>
+type BehaviorViewModel = Pick<Behavior, 'id' | 'name' | 'statement' | 'solutionId' | 'componentId' | 'priority'>
 
 const { data: components, status, refresh } = await useFetch(`/api/system-components?solutionId=${solutionId}`),
     expandedRows = ref({}),
@@ -22,7 +23,7 @@ const { data: components, status, refresh } = await useFetch(`/api/system-compon
         statement: '',
         solutionId,
         componentId,
-        priorityId: 'MUST'
+        priority: MoscowPriority.MUST
     });
 
 const fnFunctionalBehaviors = async (componentId: Uuid) =>
@@ -50,7 +51,7 @@ const behaviorFilters = ref({
 //         statement: newData.statement,
 //         solutionId,
 //         componentId: newData.componentId,
-//         priorityId: 'MUST'
+//         priority: 'MUST'
 //     }
 
 //     if (newData.category === 'Functional')
@@ -68,7 +69,7 @@ const behaviorFilters = ref({
 //         statement: newData.statement,
 //         solutionId,
 //         componentId: newData.componentId,
-//         priorityId: newData.priorityId
+//         priority: newData.priority
 //     }
 
 //     if (newData.category === 'Functional')

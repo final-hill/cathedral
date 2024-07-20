@@ -37,6 +37,12 @@ export default defineNuxtConfig({
     modules: ["nuxt-primevue", "@vite-pwa/nuxt"],
     nitro: {
         preset: 'node-server',
+        // ref: https://github.com/nuxt/nuxt/issues/21756
+        esbuild: {
+            options: {
+                target: 'esnext'
+            }
+        },
         experimental: {
             // https://nitro.unjs.io/config#openapi
             openAPI: true
@@ -67,6 +73,14 @@ export default defineNuxtConfig({
         typeCheck: false
     },
     vite: {
-
+        esbuild: {
+            tsconfigRaw: {
+                compilerOptions: {
+                    experimentalDecorators: true,
+                    // @ts-ignore
+                    emitDecoratorMetadata: true
+                }
+            }
+        }
     }
 })

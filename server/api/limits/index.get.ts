@@ -1,6 +1,6 @@
 import { z } from "zod"
-import LimitInteractor from "~/server/application/LimitInteractor"
-import LimitRepository from "~/server/data/repositories/LimitRepository"
+import orm from "~/server/data/orm"
+import Limit from "~/server/domain/Limit"
 
 const querySchema = z.object({
     name: z.string().optional(),
@@ -14,8 +14,7 @@ const querySchema = z.object({
  * Returns all limits that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const limitInteractor = new LimitInteractor(new LimitRepository()),
-        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
+    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
 
     if (!query.success)
         throw createError({
@@ -23,10 +22,13 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid query parameters"
         })
 
-    return limitInteractor.getAll(
-        Object.fromEntries(
+    const results = await orm.em.findAll(Limit, {
+        where: Object.fromEntries(
             Object.entries(query.data)
                 .filter(([_, v]) => v !== undefined)
+                .map(([k, v]) => [k, { $eq: v }])
         )
-    )
+    })
+
+    return results
 })

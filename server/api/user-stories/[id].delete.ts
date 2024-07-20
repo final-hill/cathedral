@@ -1,16 +1,14 @@
-import UserStoryInteractor from "~/server/application/UserStoryInteractor"
-import UserStoryRepository from "~/server/data/repositories/UserStoryRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
+import UserStory from "~/server/domain/UserStory"
 
 /**
  * Delete User Story by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        userStoryInteractor = new UserStoryInteractor(new UserStoryRepository())
+    const id = event.context.params?.id
 
     if (id) {
-        userStoryInteractor.delete(id as Uuid)
+        orm.em.remove(orm.em.getReference(UserStory, id))
     } else {
         throw createError({
             statusCode: 400,

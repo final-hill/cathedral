@@ -10,59 +10,59 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.[0].id;
 
-let { data: visionGoals, refresh: refreshVision } = useFetch(`/api/goals?solutionId=${solutionId}&name=Vision`),
-    { data: missionGoals, refresh: refreshMission } = useFetch(`/api/goals?solutionId=${solutionId}&name=Mission`),
-    { data: situationGoals, refresh: refreshSituation } = useFetch(`/api/goals?solutionId=${solutionId}&name=Situation`),
-    { data: objectiveGoals, refresh: refreshObjective } = useFetch(`/api/goals?solutionId=${solutionId}&name=Objective`)
+let { data: visionJustifications, refresh: refreshVision } = useFetch(`/api/justifications?solutionId=${solutionId}&name=Vision`),
+    { data: missionJustifications, refresh: refreshMission } = useFetch(`/api/justifications?solutionId=${solutionId}&name=Mission`),
+    { data: situationJustifications, refresh: refreshSituation } = useFetch(`/api/justifications?solutionId=${solutionId}&name=Situation`),
+    { data: objectiveJustifications, refresh: refreshObjective } = useFetch(`/api/justifications?solutionId=${solutionId}&name=Objective`)
 
-if (!visionGoals.value?.length) {
-    await useFetch(`/api/goals`, {
+if (!visionJustifications.value?.length) {
+    await useFetch(`/api/justifications`, {
         method: 'POST',
         body: { solutionId, name: 'Vision', statement: '' }
     });
     await refreshVision();
 }
 
-if (!missionGoals.value?.length) {
-    await useFetch(`/api/goals`, {
+if (!missionJustifications.value?.length) {
+    await useFetch(`/api/justifications`, {
         method: 'POST',
         body: { solutionId, name: 'Mission', statement: '' }
     });
     await refreshMission();
 }
 
-if (!situationGoals.value?.length) {
-    await useFetch(`/api/goals`, {
+if (!situationJustifications.value?.length) {
+    await useFetch(`/api/justifications`, {
         method: 'POST',
         body: { solutionId, name: 'Situation', statement: '' }
     });
     await refreshSituation();
 }
 
-if (!objectiveGoals.value?.length) {
-    await useFetch(`/api/goals`, {
+if (!objectiveJustifications.value?.length) {
+    await useFetch(`/api/justifications`, {
         method: 'POST',
         body: { solutionId, name: 'Objective', statement: '' }
     });
     await refreshObjective();
 }
 
-const visionStatement = ref(visionGoals.value?.[0].statement!),
-    missionStatement = ref(missionGoals.value?.[0].statement!),
-    situationStatement = ref(situationGoals.value?.[0].statement!),
-    objectiveStatement = ref(objectiveGoals.value?.[0].statement!);
+const visionStatement = ref(visionJustifications.value?.[0].statement!),
+    missionStatement = ref(missionJustifications.value?.[0].statement!),
+    situationStatement = ref(situationJustifications.value?.[0].statement!),
+    objectiveStatement = ref(objectiveJustifications.value?.[0].statement!);
 
 const fieldTriple: [Ref<string>, Properties<Goal>, string][] = [
-    [visionStatement, visionGoals.value![0], 'Vision'],
-    [missionStatement, missionGoals.value![0], 'Mission'],
-    [situationStatement, situationGoals.value![0], 'Situation'],
-    [objectiveStatement, objectiveGoals.value![0], 'Objective']
+    [visionStatement, visionJustifications.value![0], 'Vision'],
+    [missionStatement, missionJustifications.value![0], 'Mission'],
+    [situationStatement, situationJustifications.value![0], 'Situation'],
+    [objectiveStatement, objectiveJustifications.value![0], 'Objective']
 ];
 
 fieldTriple.forEach(([goalStatement, goal, _name]) => {
     watch(goalStatement, debounce(() => {
         goal.statement = goalStatement.value;
-        $fetch(`/api/goals/${goal.id}`, {
+        $fetch(`/api/justifications/${goal.id}`, {
             method: 'PUT',
             body: goal
         });

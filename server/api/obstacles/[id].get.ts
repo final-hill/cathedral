@@ -1,16 +1,14 @@
-import ObstacleInteractor from "~/server/application/ObstacleInteractor"
-import ObstacleRepository from "~/server/data/repositories/ObstacleRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
+import Obstacle from "~/server/domain/Obstacle"
 
 /**
  * Returns a obstacle by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        obstacleInteractor = new ObstacleInteractor(new ObstacleRepository())
+    const id = event.context.params?.id
 
     if (id) {
-        const result = obstacleInteractor.get(id as Uuid)
+        const result = await orm.em.findOne(Obstacle, id)
 
         if (result)
             return result

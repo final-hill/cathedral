@@ -1,6 +1,6 @@
-import Behavior from "./Behavior";
+import Behavior from "./Behavior.js";
 
 /**
  * Illustration of behavior through a usage scenario
  */
-export default class Example extends Behavior { }
+export default abstract class Example extends Behavior { }

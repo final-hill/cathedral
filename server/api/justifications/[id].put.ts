@@ -1,18 +1,18 @@
-import { z } from "zod"
 import orm from "~/server/data/orm"
-import Limit from "~/server/domain/Limit"
+import { z } from "zod"
 import Solution from "~/server/domain/Solution"
+import Justification from "~/server/domain/Justification"
 
 const bodySchema = z.object({
-    name: z.string(),
-    statement: z.string(),
-    solutionId: z.string()
+    name: z.string().min(1),
+    statement: z.string().min(1),
+    solutionId: z.string().uuid()
 })
 
 /**
- * PUT /api/limits/:id
+ * PUT /api/justifications/:id
  *
- * Updates a limit by id.
+ * Updates a Justification by id.
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
@@ -25,10 +25,10 @@ export default defineEventHandler(async (event) => {
         })
 
     if (id) {
-        const limit = await orm.em.findOne(Limit, id),
+        const justification = await orm.em.findOne(Justification, id),
             solution = await orm.em.findOne(Solution, body.data.solutionId)
 
-        if (!limit)
+        if (!justification)
             throw createError({
                 statusCode: 400,
                 statusMessage: `Bad Request: No assumption found with id: ${id}`
@@ -39,9 +39,9 @@ export default defineEventHandler(async (event) => {
                 statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
             })
 
-        limit.name = body.data.name
-        limit.statement = body.data.statement
-        limit.solution = solution
+        justification.name = body.data.name
+        justification.statement = body.data.statement
+        justification.solution = solution
 
         await orm.em.flush()
     } else {

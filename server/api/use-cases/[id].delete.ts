@@ -1,16 +1,14 @@
-import UseCaseInteractor from "~/server/application/UseCaseInteractor"
-import UseCaseRepository from "~/server/data/repositories/UseCaseRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
+import UseCase from "~/server/domain/UseCase"
 
 /**
  * Delete UseCase by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        useCaseInteractor = new UseCaseInteractor(new UseCaseRepository())
+    const id = event.context.params?.id
 
     if (id) {
-        useCaseInteractor.delete(id as Uuid)
+        orm.em.remove(orm.em.getReference(UseCase, id))
     } else {
         throw createError({
             statusCode: 400,

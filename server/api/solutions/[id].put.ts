@@ -1,26 +1,19 @@
 import { z } from "zod"
-import SolutionInteractor from "~/server/application/SolutionInteractor"
-import SolutionRepository from "~/server/data/repositories/SolutionRepository"
+import orm from "~/server/data/orm"
 import Solution from "~/server/domain/Solution"
-import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string().min(1).max(Solution.maxNameLength),
-    description: z.string().min(1).max(Solution.maxDescriptionLength)
+    description: z.string()
 })
 
 /**
  * PUT /api/solutions/:id
- *   body: {
- *     name: string,
- *     description: string
- *    }
  *
  * Updates a solution by id.
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        solutionInteractor = new SolutionInteractor(new SolutionRepository()),
         body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
 
     if (!body.success)
@@ -30,12 +23,20 @@ export default defineEventHandler(async (event) => {
         })
 
     if (id) {
-        // @ts-ignore: missing slug property
-        return solutionInteractor.update({
-            id: id as Uuid,
+        const solution = await orm.em.findOne(Solution, id)
+
+        if (!solution)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No solution found with id: ${id}`
+            })
+
+        Object.assign(solution, {
             name: body.data.name,
             description: body.data.description
         })
+
+        await orm.em.flush()
     } else {
         throw createError({
             statusCode: 400,

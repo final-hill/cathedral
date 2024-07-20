@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
+import MoscowPriority from '~/server/domain/MoscowPriority';
 import type UseCase from '~/server/domain/UseCase';
 import type UserStory from '~/server/domain/UserStory';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
@@ -11,33 +12,33 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.[0].id!;
 
-type UserStoryViewModel = Pick<UserStory, 'id' | 'name' | 'primaryActorId' | 'functionalBehaviorId' | 'outcomeId' | 'priorityId'>
+type UserStoryViewModel = Pick<UserStory, 'id' | 'name' | 'primaryActorId' | 'functionalBehaviorId' | 'outcomeId' | 'priority'>
 
-type UseCaseViewModel = Pick<UseCase, 'id' | 'name' | 'primaryActorId' | 'extensions' | 'goalInContext' | 'level' | 'mainSuccessScenario' | 'preconditionId' | 'scope' | 'successGuaranteeId' | 'triggerId' | 'priorityId'>
+type UseCaseViewModel = Pick<UseCase, 'id' | 'name' | 'primaryActorId' | 'extensions' | 'goalInContext' | 'level' | 'mainSuccessScenario' | 'preconditionId' | 'scope' | 'successGuaranteeId' | 'triggerId' | 'priority'>
 
 const { data: userStories, refresh: refreshUserStories } = useFetch(`/api/user-stories?solutionId=${solutionId}`),
     { data: useCases, refresh: refreshUseCases } = useFetch(`/api/use-cases?solutionId=${solutionId}`),
     emptyUserStory: UserStoryViewModel = {
         id: emptyUuid,
         name: '',
-        primaryActorId: emptyUuid,
-        functionalBehaviorId: emptyUuid,
-        outcomeId: emptyUuid,
-        priorityId: 'MUST'
+        primaryActor: emptyUuid,
+        functionalBehavior: emptyUuid,
+        outcome: emptyUuid,
+        priority: MoscowPriority.MUST
     },
     emptyUseCase: UseCaseViewModel = {
         id: emptyUuid,
         name: '',
-        primaryActorId: emptyUuid,
+        primaryActor: emptyUuid,
         extensions: '',
         goalInContext: '',
         level: '',
         mainSuccessScenario: '',
-        preconditionId: emptyUuid,
+        precondition: emptyUuid,
         scope: '',
-        successGuaranteeId: emptyUuid,
+        successGuarantee: emptyUuid,
         triggerId: emptyUuid,
-        priorityId: 'MUST'
+        priority: MoscowPriority.MUST
     },
     { data: roles } = useFetch(`/api/stakeholders?solutionId=${solutionId}`),
     { data: functionalBehaviors } = useFetch(`/api/functional-behaviors?solutionId=${solutionId}`),
@@ -73,7 +74,7 @@ const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
             ...userStory,
             solutionId,
             statement: '',
-            priorityId: 'MUST'
+            priority: MoscowPriority.MUST
         }
     });
 
@@ -87,7 +88,7 @@ const onUseCaseCreate = async (useCase: UseCaseViewModel) => {
             ...useCase,
             solutionId,
             statement: '',
-            priorityId: 'MUST'
+            priority: MoscowPriority.MUST
         }
     });
 
@@ -101,7 +102,7 @@ const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
             ...userStory,
             solutionId,
             statement: '',
-            priorityId: userStory.priorityId
+            priority: userStory.priority
         }
     });
 

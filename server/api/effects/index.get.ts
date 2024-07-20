@@ -1,6 +1,6 @@
 import { z } from "zod"
-import EffectInteractor from "~/server/application/EffectInteractor"
-import EffectRepository from "~/server/data/repositories/EffectRepository"
+import orm from "~/server/data/orm"
+import Effect from "~/server/domain/Effect"
 
 const querySchema = z.object({
     name: z.string().optional(),
@@ -18,8 +18,7 @@ const querySchema = z.object({
  * Returns all effects that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const effectInteractor = new EffectInteractor(new EffectRepository()),
-        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
+    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
 
     if (!query.success)
         throw createError({
@@ -27,10 +26,13 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid query parameters"
         })
 
-    return effectInteractor.getAll(
-        Object.fromEntries(
+    const results = await orm.em.findAll(Effect, {
+        where: Object.fromEntries(
             Object.entries(query.data)
                 .filter(([_, v]) => v !== undefined)
+                .map(([k, v]) => [k, { $eq: v }])
         )
-    )
+    })
+
+    return results
 })

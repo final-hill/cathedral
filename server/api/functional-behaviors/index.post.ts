@@ -1,21 +1,21 @@
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
 import { z } from "zod"
-import FunctionalBehaviorInteractor from "~/server/application/FunctionalBehaviorInteractor"
-import FunctionalBehaviorRepository from "~/server/data/repositories/FunctionalBehaviorRepository"
+import MoscowPriority from "~/server/domain/MoscowPriority"
+import Solution from "~/server/domain/Solution"
+import FunctionalBehavior from "~/server/domain/FunctionalBehavior"
 
 const bodySchema = z.object({
     name: z.string().min(1),
     statement: z.string().min(1),
     solutionId: z.string().uuid(),
-    priorityId: z.enum(['MUST', 'SHOULD', 'COULD', 'WONT'])
+    priority: z.nativeEnum(MoscowPriority)
 })
 
 /**
  * Creates a new functional behavior and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const functionalBehaviorInteractor = new FunctionalBehaviorInteractor(new FunctionalBehaviorRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
 
     if (!body.success)
         throw createError({
@@ -23,10 +23,20 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid body parameters"
         })
 
-    return functionalBehaviorInteractor.create({
+    const solution = await orm.em.findOne(Solution, body.data.solutionId)
+
+    if (!solution)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: Solution not found for id ${body.data.solutionId}`
+        })
+
+    const newFunctionalBehavior = new FunctionalBehavior({
         name: body.data.name,
         statement: body.data.statement,
-        solutionId: body.data.solutionId as Uuid,
-        priorityId: body.data.priorityId
+        solution,
+        priority: body.data.priority
     })
+
+    await orm.em.persistAndFlush(newFunctionalBehavior)
 })

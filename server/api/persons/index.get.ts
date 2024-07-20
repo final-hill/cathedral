@@ -1,6 +1,6 @@
 import { z } from "zod"
-import PersonRepository from "~/server/data/repositories/PersonRepository"
-import PersonInteractor from "~/server/application/PersonInteractor"
+import orm from "~/server/data/orm"
+import Person from "~/server/domain/Person"
 
 const querySchema = z.object({
     name: z.string().optional(),
@@ -13,8 +13,7 @@ const querySchema = z.object({
  * Returns all persons that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const personInteractor = new PersonInteractor(new PersonRepository()),
-        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
+    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
 
     if (!query.success)
         throw createError({
@@ -22,10 +21,13 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid query parameters"
         })
 
-    return personInteractor.getAll(
-        Object.fromEntries(
+    const results = await orm.em.findAll(Person, {
+        where: Object.fromEntries(
             Object.entries(query.data)
                 .filter(([_, v]) => v !== undefined)
+                .map(([k, v]) => [k, { $eq: v }])
         )
-    )
+    })
+
+    return results
 })

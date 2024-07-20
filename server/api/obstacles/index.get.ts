@@ -1,6 +1,6 @@
 import { z } from "zod"
-import ObstacleRepository from "~/server/data/repositories/ObstacleRepository"
-import ObstacleInteractor from "~/server/application/ObstacleInteractor"
+import orm from "~/server/data/orm"
+import Obstacle from "~/server/domain/Obstacle"
 
 const querySchema = z.object({
     name: z.string().optional(),
@@ -14,8 +14,7 @@ const querySchema = z.object({
  * Returns all obstacles that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const obstacleInteractor = new ObstacleInteractor(new ObstacleRepository()),
-        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
+    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
 
     if (!query.success)
         throw createError({
@@ -23,10 +22,13 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid query parameters"
         })
 
-    return obstacleInteractor.getAll(
-        Object.fromEntries(
+    const results = await orm.em.findAll(Obstacle, {
+        where: Object.fromEntries(
             Object.entries(query.data)
                 .filter(([_, v]) => v !== undefined)
+                .map(([k, v]) => [k, { $eq: v }])
         )
-    )
+    })
+
+    return results
 })

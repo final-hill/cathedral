@@ -1,7 +1,8 @@
 import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import OutcomeRepository from "~/server/data/repositories/OutcomeRepository"
-import OutcomeInteractor from "~/server/application/OutcomeInteractor"
+import orm from "~/server/data/orm"
+import Outcome from "~/server/domain/Outcome"
+import Solution from "~/server/domain/Solution"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -14,7 +15,6 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        outcomeInteractor = new OutcomeInteractor(new OutcomeRepository()),
         body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
 
     if (!body.success)
@@ -24,12 +24,25 @@ export default defineEventHandler(async (event) => {
         })
 
     if (id) {
-        return outcomeInteractor.update({
-            id: id as Uuid,
-            name: body.data.name,
-            statement: body.data.statement,
-            solutionId: body.data.solutionId as Uuid
-        })
+        const outcome = await orm.em.findOne(Outcome, id),
+            solution = await orm.em.findOne(Solution, body.data.solutionId)
+
+        if (!outcome)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No assumption found with id: ${id}`
+            })
+        if (!solution)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
+            })
+
+        outcome.name = body.data.name
+        outcome.statement = body.data.statement
+        outcome.solution = solution
+
+        await orm.em.flush()
     } else {
         throw createError({
             statusCode: 400,

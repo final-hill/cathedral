@@ -1,7 +1,7 @@
 import orm from "~/server/data/orm"
 import { z } from "zod"
-import Effect from "~/server/domain/Effect"
 import Solution from "~/server/domain/Solution"
+import Justification from "~/server/domain/Justification"
 
 const bodySchema = z.object({
     name: z.string().min(1),
@@ -10,9 +10,9 @@ const bodySchema = z.object({
 })
 
 /**
- * POST /api/effects
+ * POST /api/justifications
  *
- * Creates a new effect and returns its id
+ * Creates a new justifications and returns its id
  */
 export default defineEventHandler(async (event) => {
     const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
@@ -31,11 +31,11 @@ export default defineEventHandler(async (event) => {
             statusMessage: `Bad Request: Solution not found for id ${body.data.solutionId}`
         })
 
-    const newEffect = new Effect({
+    const newJustification = new Justification({
         name: body.data.name,
         statement: body.data.statement,
         solution
     })
 
-    await orm.em.persistAndFlush(newEffect)
+    await orm.em.persistAndFlush(newJustification)
 })

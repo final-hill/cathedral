@@ -1,17 +1,21 @@
 import { z } from "zod"
 import orm from "~/server/data/orm"
-import MoscowPriority from "~/server/domain/MoscowPriority"
-import NonFunctionalBehavior from "~/server/domain/NonFunctionalBehavior"
+import Justification from "~/server/domain/Justification"
 
 const querySchema = z.object({
     name: z.string().optional(),
     statement: z.string().optional(),
-    solutionId: z.string().uuid().optional(),
-    priority: z.nativeEnum(MoscowPriority).optional()
+    solutionId: z.string().uuid().optional()
 })
 
 /**
- * Returns all non functional behaviors that match the query parameters
+ * GET /api/justifications
+ *
+ * Returns all justifications
+ *
+ * GET /api/justifications?name&statement&solutionId
+ *
+ * Returns all justifications that match the query parameters
  */
 export default defineEventHandler(async (event) => {
     const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
@@ -22,7 +26,7 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid query parameters"
         })
 
-    const results = await orm.em.findAll(NonFunctionalBehavior, {
+    const results = await orm.em.findAll(Justification, {
         where: Object.fromEntries(
             Object.entries(query.data)
                 .filter(([_, v]) => v !== undefined)

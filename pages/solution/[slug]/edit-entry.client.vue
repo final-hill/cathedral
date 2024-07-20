@@ -54,7 +54,7 @@ watch(() => solution.value.name, (newName) => {
             <label for="description" class="col-fixed w-7rem">Description</label>
             <div class="col">
                 <InputText id="description" name="description" placeholder="A description of the solution"
-                    class="w-23rem" :maxlength="Solution.maxDescriptionLength" v-model.trim="solution.description" />
+                    class="w-23rem" v-model.trim="solution.description" />
             </div>
         </div>
 

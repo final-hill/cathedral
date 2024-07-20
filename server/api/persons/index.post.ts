@@ -1,12 +1,12 @@
-import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import PersonRepository from "~/server/data/repositories/PersonRepository"
-import PersonInteractor from "~/server/application/PersonInteractor"
+import orm from "~/server/data/orm"
+import Solution from "~/server/domain/Solution"
+import Person from "~/server/domain/Person"
 
 const bodySchema = z.object({
     name: z.string(),
     statement: z.string(),
-    solutionId: z.string(),
+    solutionId: z.string().uuid(),
     email: z.string().email()
 })
 
@@ -14,8 +14,7 @@ const bodySchema = z.object({
  * Creates a new person and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const personInteractor = new PersonInteractor(new PersonRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
 
     if (!body.success)
         throw createError({
@@ -23,10 +22,20 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid body parameters"
         })
 
-    return personInteractor.create({
+    const solution = await orm.em.findOne(Solution, body.data.solutionId)
+
+    if (!solution)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: Solution not found for id ${body.data.solutionId}`
+        })
+
+    const newPerson = new Person({
         name: body.data.name,
         statement: body.data.statement,
-        solutionId: body.data.solutionId as Uuid,
+        solution,
         email: body.data.email
     })
+
+    await orm.em.persistAndFlush(newPerson)
 })

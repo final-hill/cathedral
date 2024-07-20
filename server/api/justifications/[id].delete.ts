@@ -1,14 +1,14 @@
 import orm from "~/server/data/orm"
-import EnvironmentComponent from "~/server/domain/EnvironmentComponent"
+import Justification from "~/server/domain/Justification"
 
 /**
- * Delete an functional behavior by id.
+ * Delete a justification by id.
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id
 
     if (id) {
-        orm.em.remove(orm.em.getReference(EnvironmentComponent, id))
+        orm.em.remove(orm.em.getReference(Justification, id))
     } else {
         throw createError({
             statusCode: 400,

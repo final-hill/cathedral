@@ -1,16 +1,14 @@
-import EffectInteractor from "~/server/application/EffectInteractor"
-import EffectRepository from "~/server/data/repositories/EffectRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
+import Effect from "~/server/domain/Effect"
 
 /**
- * Delete effect by id.
+ * Delete an effect by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        effectInteractor = new EffectInteractor(new EffectRepository())
+    const id = event.context.params?.id
 
     if (id) {
-        effectInteractor.delete(id as Uuid)
+        orm.em.remove(orm.em.getReference(Effect, id))
     } else {
         throw createError({
             statusCode: 400,

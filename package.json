@@ -23,11 +23,13 @@
         "dev": "nuxt dev --no-fork --inspect",
         "postinstall": "nuxt prepare",
         "typecheck": "nuxi typecheck",
-        "//migrate-up": "tsx server/npm-scripts.ts migrate-up",
-        "//migrate-down": "tsx server/npm-scripts.ts migrate-down",
         "orm-debug": "mikro-orm-esm debug",
         "orm-create-db": "mikro-orm-esm database:create",
-        "orm-create-initial-migration": "mikro-orm-esm migration:create --initial"
+        "orm-create-migration": "mikro-orm-esm migration:create",
+        "orm-list-pending-migrations": "mikro-orm-esm migration:pending",
+        "orm-list-executed-migrations": "mikro-orm-esm migration:list",
+        "orm-run-pending-migrations": "mikro-orm-esm migration:up",
+        "orm-rollback-migration": "mikro-orm-esm migration:down"
     },
     "dependencies": {
         "@mikro-orm/core": "^6.3.0",

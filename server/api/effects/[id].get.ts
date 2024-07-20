@@ -1,16 +1,14 @@
-import EffectInteractor from "~/server/application/EffectInteractor"
-import EffectRepository from "~/server/data/repositories/EffectRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
+import Effect from "~/server/domain/Effect"
 
 /**
  * Returns an effect by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        effectInteractor = new EffectInteractor(new EffectRepository())
+    const id = event.context.params?.id
 
     if (id) {
-        const result = effectInteractor.get(id as Uuid)
+        const result = await orm.em.findOne(Effect, id)
 
         if (result)
             return result

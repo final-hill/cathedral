@@ -1,16 +1,14 @@
-import ConstraintInteractor from "~/server/application/ConstraintInteractor"
-import ConstraintRepository from "~/server/data/repositories/ConstraintRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
+import Constraint from "~/server/domain/Constraint"
 
 /**
  * Delete constraint by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        constraintInteractor = new ConstraintInteractor(new ConstraintRepository())
+    const id = event.context.params?.id
 
     if (id) {
-        constraintInteractor.delete(id as Uuid)
+        orm.em.remove(orm.em.getReference(Constraint, id))
     } else {
         throw createError({
             statusCode: 400,

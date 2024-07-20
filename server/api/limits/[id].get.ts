@@ -1,16 +1,14 @@
-import LimitInteractor from "~/server/application/LimitInteractor"
-import LimitRepository from "~/server/data/repositories/LimitRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
+import Limit from "~/server/domain/Limit"
 
 /**
  * Returns a limit by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        limitInteractor = new LimitInteractor(new LimitRepository())
+    const id = event.context.params?.id
 
     if (id) {
-        const result = limitInteractor.get(id as Uuid)
+        const result = await orm.em.findOne(Limit, id)
 
         if (result)
             return result

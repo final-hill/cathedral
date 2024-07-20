@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
+import MoscowPriority from '~/server/domain/MoscowPriority';
 import type UserStory from '~/server/domain/UserStory';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
@@ -10,16 +11,16 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions/?slug=${slug}`),
     solutionId = solutions.value?.[0].id;
 
-type UserStoryViewModel = Pick<UserStory, 'id' | 'name' | 'primaryActorId' | 'functionalBehaviorId' | 'outcomeId' | 'priorityId'>
+type UserStoryViewModel = Pick<UserStory, 'id' | 'name' | 'primaryActorId' | 'functionalBehaviorId' | 'outcomeId' | 'priority'>
 
 const { data: userStories, refresh, status } = useFetch(`/api/user-stories?solutionId=${solutionId}`),
     emptyUserStory: UserStoryViewModel = {
         id: emptyUuid,
         name: '',
-        primaryActorId: emptyUuid,
-        functionalBehaviorId: emptyUuid,
-        outcomeId: emptyUuid,
-        priorityId: 'MUST'
+        primaryActor: emptyUuid,
+        functionalBehavior: emptyUuid,
+        outcome: emptyUuid,
+        priority: MoscowPriority.MUST
     },
     { data: roles } = useFetch(`/api/stakeholders?solutionId=${solutionId}`),
     { data: functionalBehaviors } = useFetch(`/api/functional-behaviors?solutionId=${solutionId}`),
@@ -38,10 +39,10 @@ const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
             name: userStory.name,
             statement: '',
             solutionId,
-            primaryActorId: userStory.primaryActorId,
-            priorityId: 'MUST',
-            outcomeId: userStory.outcomeId,
-            functionalBehaviorId: userStory.functionalBehaviorId,
+            primaryActorId: userStory.primaryActor,
+            priority: MoscowPriority.MUST,
+            outcomeId: userStory.outcome,
+            functionalBehaviorId: userStory.functionalBehavior,
         }
     });
 
@@ -54,10 +55,10 @@ const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
             name: userStory.name,
             statement: '',
             solutionId,
-            priorityId: 'MUST',
-            primaryActorId: userStory.primaryActorId,
-            outcomeId: userStory.outcomeId,
-            functionalBehaviorId: userStory.functionalBehaviorId,
+            priority: MoscowPriority.MUST,
+            primaryActorId: userStory.primaryActor,
+            outcomeId: userStory.outcome,
+            functionalBehaviorId: userStory.functionalBehavior,
         }
     });
 

@@ -1,6 +1,13 @@
-import Component from "./Component";
+import { Entity, ManyToOne } from "@mikro-orm/core";
+import Component from "./Component.js";
 
-/**
- * Idenfitication of a part (of the Project, Environment, Goals, or System)
- */
-export default class EnvironmentComponent extends Component { }
+@Entity()
+export default class EnvironmentComponent extends Component {
+    constructor({ parentComponent, ...rest }: Omit<EnvironmentComponent, 'id'>) {
+        super(rest)
+        this.parentComponent = parentComponent
+    }
+
+    @ManyToOne()
+    parentComponent?: EnvironmentComponent
+}

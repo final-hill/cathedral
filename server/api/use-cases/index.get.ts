@@ -1,18 +1,20 @@
 import { z } from "zod"
-import UseCaseInteractor from "~/server/application/UseCaseInteractor"
-import UseCaseRepository from "~/server/data/repositories/UseCaseRepository"
+import orm from "~/server/data/orm"
+import MoscowPriority from "~/server/domain/MoscowPriority"
+import UseCase from "~/server/domain/UseCase"
+import { emptyUuid } from "~/server/domain/Uuid"
 
 const querySchema = z.object({
     name: z.string().optional(),
     statement: z.string().optional(),
     solutionId: z.string().uuid().optional(),
     primaryActorId: z.string().uuid().optional(),
-    priorityId: z.enum(["MUST", "SHOULD", "COULD", "WONT"]).optional(),
+    priority: z.nativeEnum(MoscowPriority).optional(),
     scope: z.string().optional(),
     level: z.string().optional(),
     goalInContext: z.string().optional(),
     preconditionId: z.string().uuid().optional(),
-    triggerId: z.string().uuid().optional(),
+    triggerId: z.literal(emptyUuid).optional(),
     mainSuccessScenario: z.string().optional(),
     successGuaranteeId: z.string().uuid().optional(),
     extensions: z.string().optional()
@@ -22,8 +24,7 @@ const querySchema = z.object({
  * Returns all stakeholders that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const useCaseInteractor = new UseCaseInteractor(new UseCaseRepository()),
-        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
+    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
 
     if (!query.success)
         throw createError({
@@ -31,10 +32,13 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid query parameters"
         })
 
-    return useCaseInteractor.getAll(
-        Object.fromEntries(
+    const results = await orm.em.findAll(UseCase, {
+        where: Object.fromEntries(
             Object.entries(query.data)
                 .filter(([_, v]) => v !== undefined)
+                .map(([k, v]) => [k, { $eq: v }])
         )
-    )
+    })
+
+    return results
 })

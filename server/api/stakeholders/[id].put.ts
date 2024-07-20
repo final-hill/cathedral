@@ -1,17 +1,17 @@
-import { type Uuid, emptyUuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import StakeholderInteractor from "~/server/application/StakeholderInteractor"
-import StakeholderRepository from "~/server/data/repositories/StakeholderRepository"
+import orm from "~/server/data/orm"
+import Solution from "~/server/domain/Solution"
+import Stakeholder, { StakeholderCategory, StakeholderSegmentation } from "~/server/domain/Stakeholder"
 
 const bodySchema = z.object({
     name: z.string(),
     statement: z.string(),
-    solutionId: z.string(),
-    // parentComponentId: z.string().uuid(),
-    availability: z.number(),
-    influence: z.number(),
-    segmentationId: z.enum(["CLIENT", "VENDOR"]),
-    categoryId: z.enum(["KEY_STAKEHOLDER", "SHADOW_INFLUENCER", "FELLOW_TRAVELER", "OBSERVER"])
+    solutionId: z.string().uuid(),
+    parentComponentId: z.string().uuid(),
+    availability: z.number().min(0).max(100),
+    influence: z.number().min(0).max(100),
+    segmentationId: z.nativeEnum(StakeholderSegmentation),
+    categoryId: z.nativeEnum(StakeholderCategory)
 })
 
 /**
@@ -21,7 +21,6 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        stakeholderInteractor = new StakeholderInteractor(new StakeholderRepository()),
         body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
 
     if (!body.success)
@@ -31,18 +30,31 @@ export default defineEventHandler(async (event) => {
         })
 
     if (id) {
-        return stakeholderInteractor.update({
-            id: id as Uuid,
-            name: body.data.name,
-            statement: body.data.statement,
-            solutionId: body.data.solutionId as Uuid,
-            availability: body.data.availability,
-            influence: body.data.influence,
-            categoryId: body.data.categoryId,
-            // parentComponentId: body.data.parentComponentId as Uuid,
-            parentComponentId: emptyUuid,
-            segmentationId: body.data.segmentationId
-        })
+        const stakeholder = await orm.em.findOne(Stakeholder, id),
+            solution = await orm.em.findOne(Solution, body.data.solutionId),
+            parentStakeholder = await orm.em.findOne(Stakeholder, body.data.parentComponentId)
+
+        if (!stakeholder)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No assumption found with id: ${id}`
+            })
+        if (!solution)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
+            })
+
+        stakeholder.name = body.data.name
+        stakeholder.statement = body.data.statement
+        stakeholder.solution = solution
+        stakeholder.availability = body.data.availability
+        stakeholder.influence = body.data.influence
+        stakeholder.segmentation = body.data.segmentationId
+        stakeholder.category = body.data.categoryId
+        stakeholder.parentComponent = parentStakeholder || undefined
+
+        await orm.em.flush()
     } else {
         throw createError({
             statusCode: 400,

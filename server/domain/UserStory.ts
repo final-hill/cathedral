@@ -1,6 +1,8 @@
-import type { Uuid } from "~/server/domain/Uuid";
-import Scenario from "./Scenario";
-import type { Properties } from "~/server/domain/Properties";
+import Scenario from "./Scenario.js";
+import type { Properties } from "~/server/domain/Properties.js";
+import { Entity, ManyToOne } from "@mikro-orm/core";
+import FunctionalBehavior from "./FunctionalBehavior.js";
+import Outcome from "./Outcome.js";
 
 /**
  * A User Story specifies the handling of a specific user need.
@@ -11,28 +13,23 @@ import type { Properties } from "~/server/domain/Properties";
  * [behavior] - behaviorId (Functional Behavior)
  * [goal] - outcomeId
  */
+@Entity()
 export default class UserStory extends Scenario {
-    constructor({ outcomeId, functionalBehaviorId, ...rest }: Properties<UserStory>) {
+    constructor({ outcome, functionalBehavior, ...rest }: Omit<Properties<UserStory>, 'id'>) {
         super(rest);
-        this.outcomeId = outcomeId;
-        this.functionalBehaviorId = functionalBehaviorId;
+        this.outcome = outcome;
+        this.functionalBehavior = functionalBehavior;
     }
 
     /**
      * The action that the user wants to perform.
      */
-    functionalBehaviorId: Uuid
+    @ManyToOne()
+    functionalBehavior: FunctionalBehavior
 
     /**
      * The outcome that the story is aiming to achieve.
      */
-    outcomeId: Uuid
-
-    override toJSON() {
-        return {
-            ...super.toJSON(),
-            functionalBehaviorId: this.functionalBehaviorId,
-            outcomeId: this.outcomeId
-        }
-    }
+    @ManyToOne()
+    outcome: Outcome
 }

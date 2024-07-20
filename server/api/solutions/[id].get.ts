@@ -1,16 +1,14 @@
-import { type Uuid } from "~/server/domain/Uuid"
-import SolutionInteractor from "~/server/application/SolutionInteractor"
-import SolutionRepository from "~/server/data/repositories/SolutionRepository"
+import orm from "~/server/data/orm"
+import Solution from "~/server/domain/Solution"
 
 /**
  * Returns a solution by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        solutionInteractor = new SolutionInteractor(new SolutionRepository())
+    const id = event.context.params?.id
 
     if (id) {
-        const result = solutionInteractor.get(id as Uuid)
+        const result = await orm.em.findOne(Solution, id)
 
         if (result)
             return result

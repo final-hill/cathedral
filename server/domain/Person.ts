@@ -1,19 +1,15 @@
-import Actor from "~/server/domain/Actor";
-import type { Properties } from "~/server/domain/Properties";
+import { Entity, Property } from "@mikro-orm/core";
+import Actor from "./Actor.js";
+import { type Properties } from "./Properties.js";
 
+@Entity()
 export default class Person extends Actor {
-    constructor({ email, ...rest }: Properties<Person>) {
+    constructor({ email, ...rest }: Omit<Properties<Person>, 'id'>) {
         super(rest);
 
-        Object.assign(this, { email });
+        this.email = email;
     }
 
-    email!: string;
-
-    override toJSON() {
-        return {
-            ...super.toJSON(),
-            email: this.email
-        };
-    }
+    @Property()
+    email: string;
 }

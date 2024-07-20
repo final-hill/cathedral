@@ -1,16 +1,14 @@
-import StakeholderInteractor from "~/server/application/StakeholderInteractor"
-import StakeholderRepository from "~/server/data/repositories/StakeholderRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
+import Stakeholder from "~/server/domain/Stakeholder"
 
 /**
  * Delete Stakeholder by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        stakeholderInteractor = new StakeholderInteractor(new StakeholderRepository())
+    const id = event.context.params?.id
 
     if (id) {
-        stakeholderInteractor.delete(id as Uuid)
+        orm.em.remove(orm.em.getReference(Stakeholder, id))
     } else {
         throw createError({
             statusCode: 400,

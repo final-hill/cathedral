@@ -1,16 +1,14 @@
-import InvariantInteractor from "~/server/application/InvariantInteractor"
-import InvariantRepository from "~/server/data/repositories/InvariantRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
+import Invariant from "~/server/domain/Invariant"
 
 /**
  * Delete invariant by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        invariantInteractor = new InvariantInteractor(new InvariantRepository())
+    const id = event.context.params?.id
 
     if (id) {
-        invariantInteractor.delete(id as Uuid)
+        orm.em.remove(orm.em.getReference(Invariant, id))
     } else {
         throw createError({
             statusCode: 400,

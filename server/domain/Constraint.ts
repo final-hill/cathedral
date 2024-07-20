@@ -1,20 +1,24 @@
-import type { Properties } from "~/server/domain/Properties";
-import Requirement from "~/server/domain/Requirement";
-import ConstraintCategory from "./ConstraintCategory";
+import { Entity, Enum } from '@mikro-orm/core';
+import Requirement from './Requirement.js';
+import { type Properties } from './Properties.js';
 
+export enum ConstraintCategory {
+    BUSINESS = 'Business Rule',
+    PHYSICS = 'Physical Law',
+    ENGINEERING = 'Engineering Decision'
+}
+
+/**
+ * A Constraint is a property imposed by the environment
+ */
+@Entity()
 export default class Constraint extends Requirement {
-    categoryId: keyof Omit<typeof ConstraintCategory, 'prototype'>
-
-    constructor({ categoryId, ...rest }: Properties<Constraint>) {
+    constructor({ category, ...rest }: Omit<Properties<Constraint>, 'id'>) {
         super(rest);
 
-        this.categoryId = categoryId;
+        this.category = category;
     }
 
-    override toJSON() {
-        return {
-            ...super.toJSON(),
-            categoryId: this.categoryId
-        }
-    }
+    @Enum(() => ConstraintCategory)
+    category: ConstraintCategory;
 }

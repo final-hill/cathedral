@@ -1,18 +1,14 @@
-import SystemComponentInteractor from "~/server/application/SystemComponentInteractor"
-import SystemComponentRepository from "~/server/data/repositories/SystemComponentRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import orm from "~/server/data/orm"
+import SystemComponent from "~/server/domain/SystemComponent"
 
 /**
  * Returns an system component by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        systemComponentInteractor = new SystemComponentInteractor(
-            new SystemComponentRepository()
-        )
+    const id = event.context.params?.id
 
     if (id) {
-        const result = systemComponentInteractor.get(id as Uuid)
+        const result = await orm.em.findOne(SystemComponent, id)
 
         if (result)
             return result

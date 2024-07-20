@@ -2,8 +2,7 @@
 import { FilterMatchMode } from 'primevue/api';
 import mermaid from 'mermaid';
 import Stakeholder from '~/server/domain/Stakeholder';
-import StakeholderCategory from '~/server/domain/StakeholderCategory';
-import StakeholderSegmentation from '~/server/domain/StakeholderSegmentation';
+import { StakeholderCategory, StakeholderSegmentation } from '~/server/domain/Stakeholder';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
 useHead({ title: 'Stakeholders' })
@@ -25,8 +24,8 @@ const { data: stakeholders, refresh, status } = useFetch(`/api/stakeholders?solu
         statement: '',
         availability: Stakeholder.AVAILABILITY_MIN,
         influence: Stakeholder.INFLUENCE_MIN,
-        categoryId: 'KEY_STAKEHOLDER',
-        segmentationId: 'VENDOR'
+        category: 'KEY_STAKEHOLDER',
+        segmentation: 'VENDOR'
     };
 
 // watch the stakeholders and re-render the chart

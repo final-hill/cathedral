@@ -1,13 +1,13 @@
-import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import SystemComponentInteractor from "~/server/application/SystemComponentInteractor"
-import SystemComponentRepository from "~/server/data/repositories/SystemComponentRepository"
+import orm from "~/server/data/orm"
+import Solution from "~/server/domain/Solution"
+import SystemComponent from "~/server/domain/SystemComponent"
 
 const bodySchema = z.object({
     name: z.string(),
     statement: z.string(),
     solutionId: z.string().uuid(),
-    parentComponentId: z.string().uuid()
+    parentComponentId: z.string().uuid().optional()
 })
 
 /**
@@ -15,9 +15,6 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        systemComponentInteractor = new SystemComponentInteractor(
-            new SystemComponentRepository()
-        ),
         body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
 
     if (!body.success)
@@ -27,13 +24,27 @@ export default defineEventHandler(async (event) => {
         })
 
     if (id) {
-        return systemComponentInteractor.update({
-            id: id as Uuid,
-            name: body.data.name,
-            statement: body.data.statement,
-            solutionId: body.data.solutionId as Uuid,
-            parentComponentId: body.data.parentComponentId as Uuid
-        })
+        const systemComponent = await orm.em.findOne(SystemComponent, id),
+            solution = await orm.em.findOne(Solution, body.data.solutionId),
+            parentComponent = body.data.parentComponentId ? await orm.em.findOne(SystemComponent, body.data.parentComponentId) : undefined
+
+        if (!systemComponent)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No assumption found with id: ${id}`
+            })
+        if (!solution)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
+            })
+
+        systemComponent.name = body.data.name
+        systemComponent.statement = body.data.statement
+        systemComponent.solution = solution
+        systemComponent.parentComponent = parentComponent || undefined
+
+        await orm.em.flush()
     } else {
         throw createError({
             statusCode: 400,
