@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type UserStory from '~/server/domain/UserStory';
+import MoscowPriority from '~/server/domain/MoscowPriority';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
 useHead({ title: 'Scenarios' })
@@ -10,20 +10,34 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions/?slug=${slug}`),
     solutionId = solutions.value?.[0].id;
 
-type UserStoryViewModel = Pick<UserStory, 'id' | 'name' | 'primaryActorId' | 'functionalBehaviorId' | 'outcomeId' | 'priorityId'>
+type UserStoryViewModel = {
+    id: Uuid;
+    name: string;
+    primaryActorId: Uuid;
+    functionalBehaviorId: Uuid;
+    outcomeId: Uuid;
+    priority: MoscowPriority;
+}
 
-const { data: userStories, refresh, status } = useFetch(`/api/user-stories?solutionId=${solutionId}`),
+const [
+    { data: userStories, refresh, status },
+    { data: roles },
+    { data: functionalBehaviors },
+    { data: outcomes },
+] = await Promise.all([
+    useFetch(`/api/user-stories?solutionId=${solutionId}`),
+    useFetch(`/api/stakeholders?solutionId=${solutionId}`),
+    useFetch(`/api/functional-behaviors?solutionId=${solutionId}`),
+    useFetch(`/api/outcomes?solutionId=${solutionId}`)
+]),
     emptyUserStory: UserStoryViewModel = {
         id: emptyUuid,
         name: '',
         primaryActorId: emptyUuid,
         functionalBehaviorId: emptyUuid,
         outcomeId: emptyUuid,
-        priorityId: 'MUST'
-    },
-    { data: roles } = useFetch(`/api/stakeholders?solutionId=${solutionId}`),
-    { data: functionalBehaviors } = useFetch(`/api/functional-behaviors?solutionId=${solutionId}`),
-    { data: outcomes } = useFetch(`/api/outcomes?solutionId=${solutionId}`);
+        priority: MoscowPriority.MUST
+    }
 
 const userStoryfilters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -39,7 +53,7 @@ const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
             statement: '',
             solutionId,
             primaryActorId: userStory.primaryActorId,
-            priorityId: 'MUST',
+            priority: MoscowPriority.MUST,
             outcomeId: userStory.outcomeId,
             functionalBehaviorId: userStory.functionalBehaviorId,
         }
@@ -54,7 +68,7 @@ const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
             name: userStory.name,
             statement: '',
             solutionId,
-            priorityId: 'MUST',
+            priority: MoscowPriority.MUST,
             primaryActorId: userStory.primaryActorId,
             outcomeId: userStory.outcomeId,
             functionalBehaviorId: userStory.functionalBehaviorId,
@@ -78,8 +92,9 @@ const onUserStoryDelete = async (id: Uuid) => {
     </p>
     <p>
         Before you can begin, you must define one or more
-        <NuxtLink class="underline" :to="{ name: 'Stakeholders', params: { slug } }">Actors</NuxtLink>,
-        <NuxtLink class="underline" :to="{ name: 'Goals Functionality', params: { slug } }">Behaviors</NuxtLink>,
+        <NuxtLink class="underline" :to="{ name: 'Stakeholders', params: { slug } }">Stakeholders</NuxtLink>,
+        <NuxtLink class="underline" :to="{ name: 'Goals Functionality', params: { slug } }"
+            v-text="'Functional Behaviors'" />,
         and <NuxtLink class="underline" :to="{ name: 'Outcomes', params: { slug } }">Outcomes</NuxtLink>
         for the solution.
     </p>
@@ -97,17 +112,17 @@ const onUserStoryDelete = async (id: Uuid) => {
                 <InputText v-model.trim="data[field]" required="true" placeholder="Enter a name" />
             </template>
         </Column>
-        <Column field="primaryActorId" header="Actor">
+        <Column field="primaryActorId" header="Stakeholder">
             <template #filter="{ filterModel, filterCallback }">
                 <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name" optionValue="id"
-                    :options="roles!" placeholder="Search by Actor" />
+                    :options="roles!" placeholder="Search by Stakeholder" />
             </template>
             <template #body="{ data, field }">
                 {{ roles?.find(r => r.id === data[field])?.name }}
             </template>
             <template #editor="{ data, field }">
                 <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="roles!"
-                    placeholder="Select an Actor" />
+                    placeholder="Select an Stakeholder" />
             </template>
         </Column>
         <Column field="functionalBehaviorId" header="Behavior">

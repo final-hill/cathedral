@@ -1,7 +1,8 @@
-import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import ObstacleRepository from "~/server/data/repositories/ObstacleRepository"
-import ObstacleInteractor from "~/server/application/ObstacleInteractor"
+import { fork } from "~/server/data/orm"
+import Obstacle from "~/server/domain/Obstacle"
+import Solution from "~/server/domain/Solution"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -11,32 +12,41 @@ const bodySchema = z.object({
 
 /**
  * PUT /api/obstacles/:id
- *   body: {
- *     name: string,
- *     statement: string
- *     solutionId: Uuid
- *   }
  *
  * Updates an obstacle by id.
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        obstacleInteractor = new ObstacleInteractor(new ObstacleRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        return obstacleInteractor.update({
-            id: id as Uuid,
-            name: body.data.name,
-            statement: body.data.statement,
-            solutionId: body.data.solutionId as Uuid
-        })
+        const obstacle = await em.findOne(Obstacle, id as Uuid),
+            solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+
+        if (!obstacle)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No assumption found with id: ${id}`
+            })
+        if (!solution)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
+            })
+
+        obstacle.name = body.data.name
+        obstacle.statement = body.data.statement
+        obstacle.solution = solution
+
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

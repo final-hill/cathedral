@@ -1,13 +1,14 @@
-import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import SystemComponentInteractor from "~/server/application/SystemComponentInteractor"
-import SystemComponentRepository from "~/server/data/repositories/SystemComponentRepository"
+import { fork } from "~/server/data/orm"
+import Solution from "~/server/domain/Solution"
+import SystemComponent from "~/server/domain/SystemComponent"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string(),
     statement: z.string(),
     solutionId: z.string().uuid(),
-    parentComponentId: z.string().uuid()
+    parentComponentId: z.string().uuid().optional()
 })
 
 /**
@@ -15,25 +16,38 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        systemComponentInteractor = new SystemComponentInteractor(
-            new SystemComponentRepository()
-        ),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        return systemComponentInteractor.update({
-            id: id as Uuid,
-            name: body.data.name,
-            statement: body.data.statement,
-            solutionId: body.data.solutionId as Uuid,
-            parentComponentId: body.data.parentComponentId as Uuid
-        })
+        const systemComponent = await em.findOne(SystemComponent, id as Uuid),
+            solution = await em.findOne(Solution, body.data.solutionId as Uuid),
+            parentComponent = body.data.parentComponentId ? await em.findOne(SystemComponent, body.data.parentComponentId as Uuid) : undefined
+
+        if (!systemComponent)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No assumption found with id: ${id}`
+            })
+        if (!solution)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
+            })
+
+        systemComponent.name = body.data.name
+        systemComponent.statement = body.data.statement
+        systemComponent.solution = solution
+        systemComponent.parentComponent = parentComponent || undefined
+
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

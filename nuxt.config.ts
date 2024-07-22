@@ -1,5 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+    compatibilityDate: '2024-07-22',
     devtools: {
         enabled: process.env.NODE_ENV === 'development'
     },
@@ -36,7 +37,6 @@ export default defineNuxtConfig({
     // https://primeflex.org/
     modules: ["nuxt-primevue", "@vite-pwa/nuxt"],
     nitro: {
-        preset: 'node-server',
         experimental: {
             // https://nitro.unjs.io/config#openapi
             openAPI: true
@@ -64,7 +64,7 @@ export default defineNuxtConfig({
 
     },
     typescript: {
-        typeCheck: false
+        typeCheck: true
     },
     vite: {
 

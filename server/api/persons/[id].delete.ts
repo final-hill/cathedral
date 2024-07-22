@@ -1,5 +1,5 @@
-import PersonInteractor from "~/server/application/PersonInteractor"
-import PersonRepository from "~/server/data/repositories/PersonRepository"
+import { fork } from "~/server/data/orm"
+import Person from "~/server/domain/Person"
 import { type Uuid } from "~/server/domain/Uuid"
 
 /**
@@ -7,10 +7,11 @@ import { type Uuid } from "~/server/domain/Uuid"
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        personInteractor = new PersonInteractor(new PersonRepository())
+        em = fork()
 
     if (id) {
-        personInteractor.delete(id as Uuid)
+        em.remove(em.getReference(Person, id as Uuid))
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

@@ -1,6 +1,5 @@
-import GlossaryTermInteractor from "~/server/application/GlossaryTermInteractor"
-import GlossaryTermRepository from "~/server/data/repositories/GlossaryTermRepository"
-
+import { fork } from "~/server/data/orm"
+import GlossaryTerm from "~/server/domain/GlossaryTerm"
 import { type Uuid } from "~/server/domain/Uuid"
 
 /**
@@ -8,10 +7,11 @@ import { type Uuid } from "~/server/domain/Uuid"
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        glossaryTermInteractor = new GlossaryTermInteractor(new GlossaryTermRepository())
+        em = fork()
 
     if (id) {
-        glossaryTermInteractor.delete(id as Uuid)
+        em.remove(em.getReference(GlossaryTerm, id as Uuid))
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

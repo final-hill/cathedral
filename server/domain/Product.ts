@@ -1,4 +1,4 @@
-import Requirement from "./Requirement";
+import Requirement from "./Requirement.js";
 
 /**
  * Artifact needed or produced by a task

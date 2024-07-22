@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type GlossaryTerm from '~/server/domain/GlossaryTerm';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
 useHead({ title: 'Glossary' })
@@ -10,9 +9,13 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.[0].id;
 
-type GlossaryTermViewModel = Pick<GlossaryTerm, 'id' | 'name' | 'statement'>;
+type GlossaryTermViewModel = {
+    id: Uuid;
+    name: string;
+    statement: string;
+}
 
-const { data: glossaryTerms, refresh, status } = useFetch(`/api/glossary-terms?solutionId=${solutionId}`),
+const { data: glossaryTerms, refresh, status } = await useFetch(`/api/glossary-terms?solutionId=${solutionId}`),
     emptyGlossaryTerm: GlossaryTermViewModel = { id: emptyUuid, name: '', statement: '' }
 
 const filters = ref({

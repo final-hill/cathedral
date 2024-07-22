@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import Outcome from '~/server/domain/Outcome';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
 useHead({ title: 'Outcomes' })
@@ -10,9 +9,13 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.[0].id;
 
-type OutcomeViewModel = Pick<Outcome, 'id' | 'name' | 'statement'>;
+type OutcomeViewModel = {
+    id: Uuid;
+    name: string;
+    statement: string;
+}
 
-const { data: outcomes, refresh, status } = useFetch(`/api/outcomes?solutionId=${solutionId}`),
+const { data: outcomes, refresh, status } = await useFetch(`/api/outcomes?solutionId=${solutionId}`),
     emptyOutcome: OutcomeViewModel = { id: emptyUuid, name: '', statement: '' };
 
 const filters = ref({
@@ -47,7 +50,7 @@ const onUpdate = async (data: OutcomeViewModel) => {
 }
 
 const onDelete = async (id: Uuid) => {
-    await $fetch<Outcome>(`/api/outcomes/${id}`, { method: 'DELETE' })
+    await $fetch(`/api/outcomes/${id}`, { method: 'DELETE' })
 
     refresh()
 }

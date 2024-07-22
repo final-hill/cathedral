@@ -1,32 +1,47 @@
-import { type Uuid } from "~/server/domain/Uuid"
+import { fork } from "~/server/data/orm"
 import { z } from "zod"
-import FunctionalBehaviorInteractor from "~/server/application/FunctionalBehaviorInteractor"
-import FunctionalBehaviorRepository from "~/server/data/repositories/FunctionalBehaviorRepository"
+import MoscowPriority from "~/server/domain/MoscowPriority"
+import Solution from "~/server/domain/Solution"
+import FunctionalBehavior from "~/server/domain/FunctionalBehavior"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string().min(1),
-    statement: z.string().min(1),
+    statement: z.string(),
     solutionId: z.string().uuid(),
-    priorityId: z.enum(['MUST', 'SHOULD', 'COULD', 'WONT'])
+    priority: z.nativeEnum(MoscowPriority)
 })
 
 /**
  * Creates a new functional behavior and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const functionalBehaviorInteractor = new FunctionalBehaviorInteractor(new FunctionalBehaviorRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
-    return functionalBehaviorInteractor.create({
+    const solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+
+    if (!solution)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: Solution not found for id ${body.data.solutionId}`
+        })
+
+    const newFunctionalBehavior = new FunctionalBehavior({
         name: body.data.name,
         statement: body.data.statement,
-        solutionId: body.data.solutionId as Uuid,
-        priorityId: body.data.priorityId
+        solution,
+        priority: body.data.priority
     })
+
+    await em.persistAndFlush(newFunctionalBehavior)
+
+    return newFunctionalBehavior.id
 })

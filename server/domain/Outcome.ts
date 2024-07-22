@@ -1,4 +1,4 @@
-import Goal from "./Goal";
+import Goal from "./Goal.js";
 
 /**
  * A result desired by an organization

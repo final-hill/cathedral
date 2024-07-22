@@ -1,5 +1,5 @@
-import GlossaryTermInteractor from "~/server/application/GlossaryTermInteractor"
-import GlossaryTermRepository from "~/server/data/repositories/GlossaryTermRepository"
+import { fork } from "~/server/data/orm"
+import GlossaryTerm from "~/server/domain/GlossaryTerm"
 import { type Uuid } from "~/server/domain/Uuid"
 
 /**
@@ -7,10 +7,10 @@ import { type Uuid } from "~/server/domain/Uuid"
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        glossaryTermInteractor = new GlossaryTermInteractor(new GlossaryTermRepository())
+        em = fork()
 
     if (id) {
-        const result = glossaryTermInteractor.get(id as Uuid)
+        const result = await em.findOne(GlossaryTerm, id as Uuid)
 
         if (result)
             return result

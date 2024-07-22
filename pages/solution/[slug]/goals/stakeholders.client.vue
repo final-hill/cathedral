@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
 import mermaid from 'mermaid';
-import Stakeholder from '~/server/domain/Stakeholder';
-import StakeholderCategory from '~/server/domain/StakeholderCategory';
-import StakeholderSegmentation from '~/server/domain/StakeholderSegmentation';
+import StakeholderSegmentation from "~/server/domain/StakeholderSegmentation";
+import StakeholderCategory from "~/server/domain/StakeholderCategory";
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
 useHead({ title: 'Stakeholders' })
@@ -14,29 +13,41 @@ const config = useAppConfig(),
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.[0].id;
 
-type StakeHolderViewModel = Pick<Stakeholder, 'id' | 'name' | 'statement' | 'availability' | 'influence' | 'categoryId' | 'segmentationId'>;
+type StakeHolderViewModel = {
+    id: Uuid;
+    name: string;
+    statement: string;
+    availability: number;
+    influence: number;
+    category: StakeholderCategory;
+    segmentation: StakeholderSegmentation;
+}
 
-const { data: stakeholders, refresh, status } = useFetch(`/api/stakeholders?solutionId=${solutionId}`),
-    categories = ref<StakeholderCategory[]>(Object.values(StakeholderCategory)),
-    segmentations = ref<StakeholderSegmentation[]>(Object.values(StakeholderSegmentation)),
+const { data: stakeholders, refresh, status } = await useFetch(`/api/stakeholders?solutionId=${solutionId}`),
+    categories = ref<{ id: string, description: string }[]>(
+        Object.values(StakeholderCategory).map((value) => ({ id: value, description: value }))
+    ),
+    segmentations = ref<{ id: string, description: string }[]>(
+        Object.values(StakeholderSegmentation).map((value) => ({ id: value, description: value }))
+    ),
     emptyStakeholder: StakeHolderViewModel = {
         id: emptyUuid,
         name: '',
         statement: '',
-        availability: Stakeholder.AVAILABILITY_MIN,
-        influence: Stakeholder.INFLUENCE_MIN,
-        categoryId: 'KEY_STAKEHOLDER',
-        segmentationId: 'VENDOR'
+        availability: 0,
+        influence: 0,
+        category: StakeholderCategory.KEY_STAKEHOLDER,
+        segmentation: StakeholderSegmentation.VENDOR
     };
 
 // watch the stakeholders and re-render the chart
 watch(stakeholders, async () => {
-    const groupStakeholders = Object.groupBy(stakeholders.value!, ({ segmentationId }) => segmentationId),
-        clientGroup = groupStakeholders.CLIENT ?? [],
-        vendorGroup = groupStakeholders.VENDOR ?? [];
+    const groupStakeholders = Object.groupBy(stakeholders.value!, ({ segmentation }) => segmentation),
+        clientGroup = groupStakeholders.Client ?? [],
+        vendorGroup = groupStakeholders.Vendor ?? [];
 
-    clientMap.value!.textContent = chartDefinition(clientGroup, segmentations.value[0])
-    vendorMap.value!.textContent = chartDefinition(vendorGroup, segmentations.value[1])
+    clientMap.value!.textContent = chartDefinition(clientGroup, StakeholderSegmentation.CLIENT)
+    vendorMap.value!.textContent = chartDefinition(vendorGroup, StakeholderSegmentation.VENDOR)
 
     await mermaid.run({
         nodes: [clientMap.value!, vendorMap.value!]
@@ -48,8 +59,8 @@ const filters = ref({
     'statement': { value: null, matchMode: FilterMatchMode.CONTAINS },
     'availability': { value: null, matchMode: FilterMatchMode.EQUALS },
     'influence': { value: null, matchMode: FilterMatchMode.EQUALS },
-    'categoryId': { value: null, matchMode: FilterMatchMode.EQUALS },
-    'segmentationId': { value: null, matchMode: FilterMatchMode.EQUALS },
+    'category': { value: null, matchMode: FilterMatchMode.EQUALS },
+    'segmentation': { value: null, matchMode: FilterMatchMode.EQUALS },
 });
 
 const themeMap = {
@@ -84,8 +95,7 @@ const onCreate = async (data: StakeHolderViewModel) => {
         method: 'POST',
         body: {
             ...data,
-            solutionId,
-            parentComponentId: emptyUuid
+            solutionId
         }
     })
 
@@ -97,8 +107,7 @@ const onUpdate = async (data: StakeHolderViewModel) => {
         method: 'PUT',
         body: {
             ...data,
-            solutionId,
-            parentComponentId: emptyUuid
+            solutionId
         }
     })
 
@@ -155,8 +164,7 @@ const onDelete = async (id: Uuid) => {
                         {{ data[field] }}
                     </template>
                     <template #editor="{ data, field }">
-                        <InputNumber v-model.trim="data[field]" :min="Stakeholder.AVAILABILITY_MIN"
-                            :max="Stakeholder.AVAILABILITY_MAX" placeholder="(0-100)" />
+                        <InputNumber v-model.trim="data[field]" :min="0" :max="100" placeholder="(0-100)" />
                     </template>
                 </Column>
                 <Column field="influence" header="Influence" sortable>
@@ -167,11 +175,10 @@ const onDelete = async (id: Uuid) => {
                         {{ data[field] }}
                     </template>
                     <template #editor="{ data, field }">
-                        <InputNumber v-model.trim="data[field]" :min="Stakeholder.INFLUENCE_MIN"
-                            :max="Stakeholder.INFLUENCE_MAX" placeholder="(0-100)" />
+                        <InputNumber v-model.trim="data[field]" :min="0" :max="100" placeholder="(0-100)" />
                     </template>
                 </Column>
-                <Column field="categoryId" header="Category" sortable>
+                <Column field="category" header="Category" sortable>
                     <template #filter="{ filterModel, filterCallback }">
                         <Dropdown v-model="filterModel.value" :options="categories" optionLabel="description"
                             optionValue="id" @input="filterCallback()" />
@@ -184,7 +191,7 @@ const onDelete = async (id: Uuid) => {
                             required="true" />
                     </template>
                 </Column>
-                <Column field="segmentationId" header="Segmentation" sortable>
+                <Column field="segmentation" header="Segmentation" sortable>
                     <template #filter="{ filterModel, filterCallback }">
                         <Dropdown v-model="filterModel.value" :options="segmentations" optionLabel="description"
                             optionValue="id" @input="filterCallback()" />

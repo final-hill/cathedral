@@ -1,5 +1,5 @@
-import UseCaseInteractor from "~/server/application/UseCaseInteractor"
-import UseCaseRepository from "~/server/data/repositories/UseCaseRepository"
+import { fork } from "~/server/data/orm"
+import UseCase from "~/server/domain/UseCase"
 import { type Uuid } from "~/server/domain/Uuid"
 
 /**
@@ -7,10 +7,10 @@ import { type Uuid } from "~/server/domain/Uuid"
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        useCaseInteractor = new UseCaseInteractor(new UseCaseRepository())
+        em = fork()
 
     if (id) {
-        const result = useCaseInteractor.get(id as Uuid)
+        const result = await em.findOne(UseCase, id as Uuid)
 
         if (result)
             return result

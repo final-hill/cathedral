@@ -1,5 +1,5 @@
-import UserStoryInteractor from "~/server/application/UserStoryInteractor"
-import UserStoryRepository from "~/server/data/repositories/UserStoryRepository"
+import { fork } from "~/server/data/orm"
+import UserStory from "~/server/domain/UserStory"
 import { type Uuid } from "~/server/domain/Uuid"
 
 /**
@@ -7,10 +7,10 @@ import { type Uuid } from "~/server/domain/Uuid"
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        userStoryInteractor = new UserStoryInteractor(new UserStoryRepository())
+        em = fork()
 
     if (id) {
-        const result = userStoryInteractor.get(id as Uuid)
+        const result = await em.findOne(UserStory, id as Uuid)
 
         if (result)
             return result

@@ -1,5 +1,5 @@
-import ConstraintInteractor from "~/server/application/ConstraintInteractor"
-import ConstraintRepository from "~/server/data/repositories/ConstraintRepository"
+import { fork } from "~/server/data/orm"
+import Constraint from "~/server/domain/Constraint"
 import { type Uuid } from "~/server/domain/Uuid"
 
 /**
@@ -7,10 +7,11 @@ import { type Uuid } from "~/server/domain/Uuid"
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        constraintInteractor = new ConstraintInteractor(new ConstraintRepository())
+        em = fork()
 
     if (id) {
-        constraintInteractor.delete(id as Uuid)
+        em.remove(em.getReference(Constraint, id as Uuid))
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

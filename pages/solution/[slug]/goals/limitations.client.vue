@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type Limit from '~/server/domain/Limit';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
 useHead({ title: 'Limitations' })
@@ -10,9 +9,13 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.[0].id
 
-type LimitViewModel = Pick<Limit, 'id' | 'name' | 'statement'>;
+type LimitViewModel = {
+    id: Uuid;
+    name: string;
+    statement: string;
+}
 
-const { data: limits, status, refresh } = useFetch(`/api/limits?solutionId=${solutionId}`),
+const { data: limits, status, refresh } = await useFetch(`/api/limits?solutionId=${solutionId}`),
     emptyLimit: LimitViewModel = { id: emptyUuid, name: '', statement: '' };
 
 const filters = ref({

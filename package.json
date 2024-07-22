@@ -16,6 +16,7 @@
     "license": "AGPL-3.0-only",
     "type": "module",
     "scripts": {
+        "analyze-build": "nuxt analyze",
         "build": "nuxt build",
         "preview": "nuxt preview",
         "generate-pwa-assets": "pwa-assets-generator",
@@ -23,29 +24,40 @@
         "dev": "nuxt dev --no-fork --inspect",
         "postinstall": "nuxt prepare",
         "typecheck": "nuxi typecheck",
-        "migrate-up": "tsx server/npm-scripts.ts migrate-up",
-        "migrate-down": "tsx server/npm-scripts.ts migrate-down"
+        "orm-debug": "mikro-orm-esm debug",
+        "orm-create-db": "mikro-orm-esm database:create",
+        "orm-create-migration": "mikro-orm-esm migration:create",
+        "orm-list-pending-migrations": "mikro-orm-esm migration:pending",
+        "orm-list-executed-migrations": "mikro-orm-esm migration:list",
+        "orm-run-pending-migrations": "mikro-orm-esm migration:up",
+        "orm-rollback-migration": "mikro-orm-esm migration:down"
     },
     "dependencies": {
-        "@vite-pwa/nuxt": "^0.8.1",
+        "@mikro-orm/core": "^6.3.0",
+        "@mikro-orm/postgresql": "^6.3.0",
+        "@mikro-orm/reflection": "^6.3.0",
+        "@vite-pwa/nuxt": "^0.9.1",
         "mermaid": "^10.9.1",
-        "nuxt": "^3.11.2",
+        "nuxt": "^3.12.4",
         "nuxt-primevue": "^3.0.0",
         "pg": "^8.12.0",
         "primeflex": "^3.3.1",
         "primeicons": "^7.0.0",
+        "uuid": "^10.0.0",
         "vue": "^3.4.27",
         "vue-router": "^4.3.2",
         "zod": "^3.23.8"
     },
     "devDependencies": {
-        "@types/node": "^20.14.8",
+        "@mikro-orm/cli": "^6.3.0",
+        "@mikro-orm/migrations": "^6.3.0",
+        "@types/node": "^20.14.11",
         "@types/pg": "^8.11.6",
         "@types/uuid": "^10.0.0",
         "@vite-pwa/assets-generator": "^0.2.4",
         "ts-node": "^10.9.2",
         "tsx": "^4.16.0",
-        "typescript": "^5.4.5",
-        "vue-tsc": "^1.8.27"
+        "typescript": "^5.5.3",
+        "vue-tsc": "^2.0.26"
     }
 }

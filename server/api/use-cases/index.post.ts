@@ -1,19 +1,24 @@
-import { type Uuid } from "~/server/domain/Uuid"
+import { emptyUuid, type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import UseCaseInteractor from "~/server/application/UseCaseInteractor"
-import UseCaseRepository from "~/server/data/repositories/UseCaseRepository"
+import MoscowPriority from "~/server/domain/MoscowPriority"
+import { fork } from "~/server/data/orm"
+import Solution from "~/server/domain/Solution"
+import Stakeholder from "~/server/domain/Stakeholder"
+import Assumption from "~/server/domain/Assumption"
+import Effect from "~/server/domain/Effect"
+import UseCase from "~/server/domain/UseCase"
 
 const bodySchema = z.object({
     name: z.string(),
-    statement: z.string().min(0),
+    statement: z.string(),
     solutionId: z.string().uuid(),
     primaryActorId: z.string().uuid(),
-    priorityId: z.enum(["MUST", "SHOULD", "COULD", "WONT"]),
+    priority: z.nativeEnum(MoscowPriority),
     scope: z.string(),
     level: z.string(),
     goalInContext: z.string(),
     preconditionId: z.string().uuid(),
-    triggerId: z.string().uuid(),
+    triggerId: z.literal(emptyUuid),
     mainSuccessScenario: z.string(),
     successGuaranteeId: z.string().uuid(),
     extensions: z.string()
@@ -23,28 +28,59 @@ const bodySchema = z.object({
  * Creates a new use case and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const useCaseInteractor = new UseCaseInteractor(new UseCaseRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
-    return useCaseInteractor.create({
+    const solution = await em.findOne(Solution, body.data.solutionId as Uuid),
+        primaryActor = await em.findOne(Stakeholder, body.data.primaryActorId as Uuid),
+        precondition = await em.findOne(Assumption, body.data.preconditionId as Uuid),
+        successGuarantee = await em.findOne(Effect, body.data.successGuaranteeId as Uuid)
+
+    if (!solution)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
+        })
+    if (!primaryActor)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: No primary actor found with id: ${body.data.primaryActorId}`
+        })
+    if (!precondition)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: No precondition found with id: ${body.data.preconditionId}`
+        })
+    if (!successGuarantee)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: No success guarantee found with id: ${body.data.successGuaranteeId}`
+        })
+
+    const newUseCase = new UseCase({
         name: body.data.name,
         statement: body.data.statement,
-        solutionId: body.data.solutionId as Uuid,
-        primaryActorId: body.data.primaryActorId as Uuid,
-        priorityId: body.data.priorityId,
+        solution,
+        primaryActor,
+        priority: body.data.priority,
         scope: body.data.scope,
         level: body.data.level,
         goalInContext: body.data.goalInContext,
-        preconditionId: body.data.preconditionId as Uuid,
-        triggerId: body.data.triggerId as Uuid,
+        precondition,
+        triggerId: body.data.triggerId,
         mainSuccessScenario: body.data.mainSuccessScenario,
-        extensions: body.data.extensions,
-        successGuaranteeId: body.data.successGuaranteeId as Uuid,
+        successGuarantee,
+        extensions: body.data.extensions
     })
+
+    await em.persistAndFlush(newUseCase)
+
+    return newUseCase.id
 })

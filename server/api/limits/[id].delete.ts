@@ -1,5 +1,5 @@
-import LimitInteractor from "~/server/application/LimitInteractor"
-import LimitRepository from "~/server/data/repositories/LimitRepository"
+import { fork } from "~/server/data/orm"
+import Limit from "~/server/domain/Limit"
 import { type Uuid } from "~/server/domain/Uuid"
 
 /**
@@ -7,10 +7,11 @@ import { type Uuid } from "~/server/domain/Uuid"
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        limitInteractor = new LimitInteractor(new LimitRepository())
+        em = fork()
 
     if (id) {
-        limitInteractor.delete(id as Uuid)
+        em.remove(em.getReference(Limit, id as Uuid))
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

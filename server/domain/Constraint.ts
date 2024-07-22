@@ -1,20 +1,23 @@
-import type { Properties } from "~/server/domain/Properties";
-import Requirement from "~/server/domain/Requirement";
-import ConstraintCategory from "./ConstraintCategory";
+import Requirement from './Requirement.js';
+import { type Properties } from './Properties.js';
+import ConstraintCategory from './ConstraintCategory.js';
 
+/**
+ * A Constraint is a property imposed by the environment
+ */
 export default class Constraint extends Requirement {
-    categoryId: keyof Omit<typeof ConstraintCategory, 'prototype'>
-
-    constructor({ categoryId, ...rest }: Properties<Constraint>) {
+    constructor({ category, ...rest }: Omit<Properties<Constraint>, 'id'>) {
         super(rest);
 
-        this.categoryId = categoryId;
+        this.category = category;
     }
+
+    category: ConstraintCategory;
 
     override toJSON() {
         return {
             ...super.toJSON(),
-            categoryId: this.categoryId
-        }
+            category: this.category
+        };
     }
 }

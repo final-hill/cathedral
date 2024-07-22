@@ -1,13 +1,15 @@
 import { z } from "zod"
-import UserStoryRepository from "~/server/data/repositories/UserStoryRepository"
-import UserStoryInteractor from "~/server/application/UserStoryInteractor"
+import { fork } from "~/server/data/orm"
+import MoscowPriority from "~/server/domain/MoscowPriority"
+import UserStory from "~/server/domain/UserStory"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const querySchema = z.object({
     name: z.string().optional(),
     statement: z.string().optional(),
     solutionId: z.string().uuid().optional(),
     primaryActorId: z.string().uuid().optional(),
-    priorityId: z.enum(["MUST", "SHOULD", "COULD", "WONT"]).optional(),
+    priority: z.nativeEnum(MoscowPriority).optional(),
     outcomeId: z.string().uuid().optional(),
     functionalBehaviorId: z.string().uuid().optional()
 })
@@ -16,8 +18,8 @@ const querySchema = z.object({
  * Returns all user stories that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const userStoryInteractor = new UserStoryInteractor(new UserStoryRepository()),
-        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
+    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q)),
+        em = fork()
 
     if (!query.success)
         throw createError({
@@ -25,10 +27,13 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid query parameters"
         })
 
-    return userStoryInteractor.getAll(
-        Object.fromEntries(
-            Object.entries(query.data)
-                .filter(([_, v]) => v !== undefined)
-        )
-    )
+    const results = await em.find(UserStory, Object.entries(query.data)
+        .filter(([_, value]) => value !== undefined)
+        .reduce((acc, [key, value]) => {
+            if (key.endsWith("Id"))
+                return { ...acc, [key.replace("Id", "")]: value as Uuid };
+            return { ...acc, [key]: { $eq: value } };
+        }, {}))
+
+    return results
 })

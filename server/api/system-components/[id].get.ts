@@ -1,5 +1,5 @@
-import SystemComponentInteractor from "~/server/application/SystemComponentInteractor"
-import SystemComponentRepository from "~/server/data/repositories/SystemComponentRepository"
+import { fork } from "~/server/data/orm"
+import SystemComponent from "~/server/domain/SystemComponent"
 import { type Uuid } from "~/server/domain/Uuid"
 
 /**
@@ -7,12 +7,10 @@ import { type Uuid } from "~/server/domain/Uuid"
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        systemComponentInteractor = new SystemComponentInteractor(
-            new SystemComponentRepository()
-        )
+        em = fork()
 
     if (id) {
-        const result = systemComponentInteractor.get(id as Uuid)
+        const result = await em.findOne(SystemComponent, id as Uuid)
 
         if (result)
             return result

@@ -1,6 +1,7 @@
-import type { Uuid } from "~/server/domain/Uuid";
-import Scenario from "./Scenario";
-import type { Properties } from "~/server/domain/Properties";
+import Scenario from "./Scenario.js";
+import type { Properties } from "~/server/domain/Properties.js";
+import FunctionalBehavior from "./FunctionalBehavior.js";
+import Outcome from "./Outcome.js";
 
 /**
  * A User Story specifies the handling of a specific user need.
@@ -12,27 +13,27 @@ import type { Properties } from "~/server/domain/Properties";
  * [goal] - outcomeId
  */
 export default class UserStory extends Scenario {
-    constructor({ outcomeId, functionalBehaviorId, ...rest }: Properties<UserStory>) {
+    constructor({ outcome, functionalBehavior, ...rest }: Omit<Properties<UserStory>, 'id'>) {
         super(rest);
-        this.outcomeId = outcomeId;
-        this.functionalBehaviorId = functionalBehaviorId;
+        this.outcome = outcome;
+        this.functionalBehavior = functionalBehavior;
     }
 
     /**
      * The action that the user wants to perform.
      */
-    functionalBehaviorId: Uuid
+    functionalBehavior: FunctionalBehavior
 
     /**
      * The outcome that the story is aiming to achieve.
      */
-    outcomeId: Uuid
+    outcome: Outcome
 
     override toJSON() {
         return {
             ...super.toJSON(),
-            functionalBehaviorId: this.functionalBehaviorId,
-            outcomeId: this.outcomeId
+            functionalBehaviorId: this.functionalBehavior.id,
+            outcomeId: this.outcome.id
         }
     }
 }

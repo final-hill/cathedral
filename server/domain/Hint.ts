@@ -1,4 +1,4 @@
-import Noise from "./Noise";
+import Noise from "./Noise.js";
 
 /**
  * Design or implementation suggestion

@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type UseCase from '~/server/domain/UseCase';
-import type UserStory from '~/server/domain/UserStory';
+import MoscowPriority from '~/server/domain/MoscowPriority';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
 useHead({ title: 'Scenarios' })
@@ -11,19 +10,40 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.[0].id!;
 
-type UserStoryViewModel = Pick<UserStory, 'id' | 'name' | 'primaryActorId' | 'functionalBehaviorId' | 'outcomeId' | 'priorityId'>
+type UserStoryViewModel = {
+    id: Uuid;
+    name: string;
+    primaryActorId: Uuid;
+    functionalBehaviorId: Uuid;
+    outcomeId: Uuid;
+    priority: MoscowPriority;
 
-type UseCaseViewModel = Pick<UseCase, 'id' | 'name' | 'primaryActorId' | 'extensions' | 'goalInContext' | 'level' | 'mainSuccessScenario' | 'preconditionId' | 'scope' | 'successGuaranteeId' | 'triggerId' | 'priorityId'>
+}
 
-const { data: userStories, refresh: refreshUserStories } = useFetch(`/api/user-stories?solutionId=${solutionId}`),
-    { data: useCases, refresh: refreshUseCases } = useFetch(`/api/use-cases?solutionId=${solutionId}`),
+type UseCaseViewModel = {
+    id: Uuid;
+    name: string;
+    primaryActorId: Uuid;
+    extensions: string;
+    goalInContext: string;
+    level: string;
+    mainSuccessScenario: string;
+    preconditionId: Uuid;
+    scope: string;
+    successGuaranteeId: Uuid;
+    triggerId: Uuid;
+    priority: MoscowPriority;
+}
+
+const { data: userStories, refresh: refreshUserStories } = await useFetch(`/api/user-stories?solutionId=${solutionId}`),
+    { data: useCases, refresh: refreshUseCases } = await useFetch(`/api/use-cases?solutionId=${solutionId}`),
     emptyUserStory: UserStoryViewModel = {
         id: emptyUuid,
         name: '',
         primaryActorId: emptyUuid,
         functionalBehaviorId: emptyUuid,
         outcomeId: emptyUuid,
-        priorityId: 'MUST'
+        priority: MoscowPriority.MUST
     },
     emptyUseCase: UseCaseViewModel = {
         id: emptyUuid,
@@ -37,13 +57,13 @@ const { data: userStories, refresh: refreshUserStories } = useFetch(`/api/user-s
         scope: '',
         successGuaranteeId: emptyUuid,
         triggerId: emptyUuid,
-        priorityId: 'MUST'
+        priority: MoscowPriority.MUST
     },
-    { data: roles } = useFetch(`/api/stakeholders?solutionId=${solutionId}`),
-    { data: functionalBehaviors } = useFetch(`/api/functional-behaviors?solutionId=${solutionId}`),
-    { data: outcomes } = useFetch(`/api/outcomes?solutionId=${solutionId}`),
-    { data: assumptions } = useFetch(`/api/assumptions?solutionId=${solutionId}`),
-    { data: effects } = useFetch(`/api/effects?solutionId=${solutionId}`),
+    { data: roles } = await useFetch(`/api/stakeholders?solutionId=${solutionId}`),
+    { data: functionalBehaviors } = await useFetch(`/api/functional-behaviors?solutionId=${solutionId}`),
+    { data: outcomes } = await useFetch(`/api/outcomes?solutionId=${solutionId}`),
+    { data: assumptions } = await useFetch(`/api/assumptions?solutionId=${solutionId}`),
+    { data: effects } = await useFetch(`/api/effects?solutionId=${solutionId}`),
     triggers = ref([])
 
 const userStoryfilters = ref({
@@ -73,7 +93,7 @@ const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
             ...userStory,
             solutionId,
             statement: '',
-            priorityId: 'MUST'
+            priority: MoscowPriority.MUST
         }
     });
 
@@ -87,7 +107,7 @@ const onUseCaseCreate = async (useCase: UseCaseViewModel) => {
             ...useCase,
             solutionId,
             statement: '',
-            priorityId: 'MUST'
+            priority: MoscowPriority.MUST
         }
     });
 
@@ -101,7 +121,7 @@ const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
             ...userStory,
             solutionId,
             statement: '',
-            priorityId: userStory.priorityId
+            priority: userStory.priority
         }
     });
 

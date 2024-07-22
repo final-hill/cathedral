@@ -1,37 +1,46 @@
-import { type Uuid } from "~/server/domain/Uuid"
+import { fork } from "~/server/data/orm"
 import { z } from "zod"
-import EffectInteractor from "~/server/application/EffectInteractor"
-import EffectRepository from "~/server/data/repositories/EffectRepository"
+import Effect from "~/server/domain/Effect"
+import Solution from "~/server/domain/Solution"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string().min(1),
-    statement: z.string().min(1),
+    statement: z.string(),
     solutionId: z.string().uuid()
 })
 
 /**
  * POST /api/effects
- *   body: {
- *     name: string,
- *     statement: string,
- *     solutionId: Uuid
- *   }
  *
  * Creates a new effect and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const effectInteractor = new EffectInteractor(new EffectRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
-    return effectInteractor.create({
+    const solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+
+    if (!solution)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: Solution not found for id ${body.data.solutionId}`
+        })
+
+    const newEffect = new Effect({
         name: body.data.name,
         statement: body.data.statement,
-        solutionId: body.data.solutionId as Uuid
+        solution
     })
+
+    await em.persistAndFlush(newEffect)
+
+    return newEffect.id
 })

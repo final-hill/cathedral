@@ -1,5 +1,5 @@
-import SolutionInteractor from "~/server/application/SolutionInteractor"
-import SolutionRepository from "~/server/data/repositories/SolutionRepository"
+import { fork } from "~/server/data/orm"
+import Solution from "~/server/domain/Solution"
 import { type Uuid } from "~/server/domain/Uuid"
 
 /**
@@ -7,10 +7,11 @@ import { type Uuid } from "~/server/domain/Uuid"
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        solutionInteractor = new SolutionInteractor(new SolutionRepository())
+        em = fork()
 
     if (id) {
-        solutionInteractor.delete(id as Uuid)
+        em.remove(em.getReference(Solution, id as Uuid))
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

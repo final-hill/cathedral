@@ -1,4 +1,4 @@
-import Requirement from "~/server/domain/Requirement";
+import Requirement from "./Requirement.js";
 
 /**
  * Environment property affected by the system

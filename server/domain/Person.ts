@@ -1,14 +1,17 @@
-import Actor from "~/server/domain/Actor";
-import type { Properties } from "~/server/domain/Properties";
+import Actor from "./Actor.js";
+import { type Properties } from "./Properties.js";
 
+/**
+ *  A person is a member of the Project staff
+ */
 export default class Person extends Actor {
-    constructor({ email, ...rest }: Properties<Person>) {
+    constructor({ email, ...rest }: Omit<Properties<Person>, 'id'>) {
         super(rest);
 
-        Object.assign(this, { email });
+        this.email = email;
     }
 
-    email!: string;
+    email: string;
 
     override toJSON() {
         return {

@@ -1,4 +1,4 @@
-import Functionality from "./Functionality";
+import Functionality from "./Functionality.js";
 
 /**
  * NonFunctionalBehavior is a type of Behavior that is not directly related to the functionality of a system.

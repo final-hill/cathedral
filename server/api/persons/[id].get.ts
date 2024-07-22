@@ -1,5 +1,5 @@
-import PersonInteractor from "~/server/application/PersonInteractor"
-import PersonRepository from "~/server/data/repositories/PersonRepository"
+import { fork } from "~/server/data/orm"
+import Person from "~/server/domain/Person"
 import { type Uuid } from "~/server/domain/Uuid"
 
 /**
@@ -7,10 +7,10 @@ import { type Uuid } from "~/server/domain/Uuid"
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        personInteractor = new PersonInteractor(new PersonRepository())
+        em = fork()
 
     if (id) {
-        const result = personInteractor.get(id as Uuid)
+        const result = await em.findOne(Person, id as Uuid)
 
         if (result)
             return result

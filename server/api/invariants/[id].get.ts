@@ -1,5 +1,5 @@
-import InvariantInteractor from "~/server/application/InvariantInteractor"
-import InvariantRepository from "~/server/data/repositories/InvariantRepository"
+import { fork } from "~/server/data/orm"
+import Invariant from "~/server/domain/Invariant"
 import { type Uuid } from "~/server/domain/Uuid"
 
 /**
@@ -7,10 +7,10 @@ import { type Uuid } from "~/server/domain/Uuid"
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        invariantInteractor = new InvariantInteractor(new InvariantRepository())
+        em = fork()
 
     if (id) {
-        const result = invariantInteractor.get(id as Uuid)
+        const result = await em.findOne(Invariant, id as Uuid)
 
         if (result)
             return result

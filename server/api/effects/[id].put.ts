@@ -1,42 +1,52 @@
-import { type Uuid } from "~/server/domain/Uuid"
+import { fork } from "~/server/data/orm"
 import { z } from "zod"
-import EffectInteractor from "~/server/application/EffectInteractor"
-import EffectRepository from "~/server/data/repositories/EffectRepository"
+import Effect from "~/server/domain/Effect"
+import Solution from "~/server/domain/Solution"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
-    name: z.string(),
+    name: z.string().min(1),
     statement: z.string(),
-    solutionId: z.string()
+    solutionId: z.string().uuid()
 })
 
 /**
  * PUT /api/effects/:id
- *   body: {
- *     name: string,
- *     statement: string
- *     solutionId: Uuid
- *   }
  *
  * Updates an effect by id.
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        effectInteractor = new EffectInteractor(new EffectRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        return effectInteractor.update({
-            id: id as Uuid,
-            name: body.data.name,
-            statement: body.data.statement,
-            solutionId: body.data.solutionId as Uuid
-        })
+        const effect = await em.findOne(Effect, id as Uuid),
+            solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+
+        if (!effect)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No effect found with id: ${id}`
+            })
+        if (!solution)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
+            })
+
+        effect.name = body.data.name
+        effect.statement = body.data.statement
+        effect.solution = solution
+
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

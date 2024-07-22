@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import slugify from '~/lib/slugify';
-import Solution from '~/server/domain/Solution';
 
 useHead({ title: 'Edit Solution' })
 definePageMeta({ name: 'Edit Solution' })
@@ -38,7 +37,7 @@ watch(() => solution.value.name, (newName) => {
             <label for="name" class="required col-fixed w-7rem">Name</label>
             <div class="col">
                 <InputText v-model.trim="solution.name" id="name" name="name" class="w-23rem"
-                    placeholder="Sample Solution" :maxlength="Solution.maxNameLength" />
+                    placeholder="Sample Solution" :maxlength="100" />
             </div>
         </div>
 
@@ -54,7 +53,7 @@ watch(() => solution.value.name, (newName) => {
             <label for="description" class="col-fixed w-7rem">Description</label>
             <div class="col">
                 <InputText id="description" name="description" placeholder="A description of the solution"
-                    class="w-23rem" :maxlength="Solution.maxDescriptionLength" v-model.trim="solution.description" />
+                    class="w-23rem" v-model.trim="solution.description" />
             </div>
         </div>
 

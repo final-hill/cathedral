@@ -2,7 +2,6 @@
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 import { FilterMatchMode } from 'primevue/api';
 import { useFetch } from 'nuxt/app';
-import type Assumption from '~/server/domain/Assumption';
 
 useHead({ title: 'Assumptions' })
 definePageMeta({ name: 'Assumptions' })
@@ -11,9 +10,13 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.at(0)?.id as Uuid;
 
-type AssumptionViewModel = Pick<Assumption, 'id' | 'name' | 'statement'>;
+type AssumptionViewModel = {
+    id: Uuid;
+    name: string;
+    statement: string;
+}
 
-const { data: assumptions, refresh, status } = useFetch(`/api/assumptions/?solutionId=${solutionId}`),
+const { data: assumptions, refresh, status } = await useFetch(`/api/assumptions/?solutionId=${solutionId}`),
     emptyAssumption = { id: emptyUuid, name: '', statement: '' };
 
 const filters = ref<Record<string, { value: any, matchMode: string }>>({

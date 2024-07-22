@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type Invariant from '~/server/domain/Invariant';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
 useHead({ title: 'Invariants' })
@@ -10,7 +9,11 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.[0].id
 
-type InvariantViewModel = Pick<Invariant, 'id' | 'name' | 'statement'>;
+type InvariantViewModel = {
+    id: Uuid;
+    name: string;
+    statement: string;
+}
 
 const { data: invariants, refresh, status } = await useFetch(`/api/invariants?solutionId=${solutionId}`),
     emptyInvariant: InvariantViewModel = { id: emptyUuid, name: '', statement: '' };

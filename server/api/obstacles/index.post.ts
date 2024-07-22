@@ -1,37 +1,46 @@
-import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import ObstacleRepository from "~/server/data/repositories/ObstacleRepository"
-import ObstacleInteractor from "~/server/application/ObstacleInteractor"
+import Solution from "~/server/domain/Solution"
+import { fork } from "~/server/data/orm"
+import Obstacle from "~/server/domain/Obstacle"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string().min(1),
-    statement: z.string().min(1),
+    statement: z.string(),
     solutionId: z.string().uuid()
 })
 
 /**
  * POST /api/obstacles
- *   body: {
- *     name: string,
- *     statement: string,
- *     solutionId: Uuid
- *   }
  *
  * Creates a new obstacle and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const obstacleInteractor = new ObstacleInteractor(new ObstacleRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
-    return obstacleInteractor.create({
+    const solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+
+    if (!solution)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: Solution not found for id ${body.data.solutionId}`
+        })
+
+    const newObstacle = new Obstacle({
         name: body.data.name,
         statement: body.data.statement,
-        solutionId: body.data.solutionId as Uuid
+        solution
     })
+
+    await em.persistAndFlush(newObstacle)
+
+    return newObstacle.id
 })

@@ -1,37 +1,46 @@
-import AssumptionInteractor from "~/server/application/AssumptionInteractor"
-import AssumptionRepository from "~/server/data/repositories/AssumptionRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import { fork } from "~/server/data/orm"
 import { z } from "zod"
+import Assumption from "~/server/domain/Assumption"
+import Solution from "~/server/domain/Solution"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string().min(1),
-    statement: z.string().min(1),
+    statement: z.string(),
     solutionId: z.string().uuid()
 })
 
 /**
  * POST /api/assumptions
- *   body: {
- *     name: string,
- *     statement: string,
- *     solutionId: Uuid
- *   }
  *
  * Creates a new assumption and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const assumptionInteractor = new AssumptionInteractor(new AssumptionRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
-    return assumptionInteractor.create({
+    const solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+
+    if (!solution)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: Solution not found for id ${body.data.solutionId}`
+        })
+
+    const newAssumption = new Assumption({
         name: body.data.name,
         statement: body.data.statement,
-        solutionId: body.data.solutionId as Uuid
+        solution
     })
+
+    await em.persistAndFlush(newAssumption)
+
+    return newAssumption.id
 })

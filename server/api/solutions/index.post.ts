@@ -1,11 +1,10 @@
 import { z } from "zod"
-import SolutionInteractor from "~/server/application/SolutionInteractor"
-import SolutionRepository from "~/server/data/repositories/SolutionRepository"
+import { fork } from "~/server/data/orm"
 import Solution from "~/server/domain/Solution"
 
 const bodySchema = z.object({
-    name: z.string().min(1).max(Solution.maxNameLength),
-    description: z.string().max(Solution.maxDescriptionLength)
+    name: z.string().min(1).max(100),
+    description: z.string()
 })
 
 /**
@@ -14,18 +13,22 @@ const bodySchema = z.object({
  * Creates a new solution and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const solutionInteractor = new SolutionInteractor(new SolutionRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
-    // @ts-ignore: missing slug property
-    return solutionInteractor.create({
-        name: body.data.name,
-        description: body.data.description
+    const newSolution = new Solution({
+        description: body.data.description,
+        name: body.data.name
     })
+
+    await em.persistAndFlush(newSolution)
+
+    return newSolution.id
 })

@@ -1,16 +1,22 @@
-import Entity from "./Entity";
-import type { Properties } from "./Properties";
-import type { Uuid } from "./Uuid";
+import { v7 as uuidv7 } from 'uuid';
+import type { Properties } from "./Properties.js";
+import Solution from './Solution.js';
+import { type Uuid } from './Uuid.js';
 
 /**
  * A Requirement is a statement that specifies a property.
  */
-export default class Requirement extends Entity {
-    constructor({ id, ...rest }: Properties<Requirement>) {
-        super({ id })
-
-        Object.assign(this, rest)
+export default abstract class Requirement {
+    constructor({ name, statement, solution }: Omit<Properties<Requirement>, 'id'>) {
+        this.name = name
+        this.statement = statement
+        this.solution = solution
     }
+
+    /**
+     * The unique identifier of the Requirement
+     */
+    id = uuidv7() as Uuid
 
     /**
      * A property is a Predicate formalizing its associated statement.
@@ -31,15 +37,14 @@ export default class Requirement extends Entity {
     /**
      * The solution that owns this requirement
      */
-    solutionId!: Uuid
+    solution!: Solution
 
-    override toJSON() {
+    toJSON() {
         return {
-            ...super.toJSON(),
-            // property: this.property,
+            id: this.id,
             name: this.name,
             statement: this.statement,
-            solutionId: this.solutionId
+            solutionId: this.solution.id
         }
     }
 }

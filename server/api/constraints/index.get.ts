@@ -1,12 +1,14 @@
 import { z } from "zod"
-import ConstraintRepository from "~/server/data/repositories/ConstraintRepository"
-import ConstraintInteractor from "~/server/application/ConstraintInteractor"
+import { fork } from "~/server/data/orm"
+import { type Uuid } from "~/server/domain/Uuid"
+import Constraint from "~/server/domain/Constraint"
+import ConstraintCategory from "~/server/domain/ConstraintCategory"
 
 const querySchema = z.object({
     name: z.string().optional(),
     statement: z.string().optional(),
     solutionId: z.string().uuid().optional(),
-    categoryId: z.enum(['BUSINESS', 'ENGINEERING', 'PHYSICS']).optional()
+    category: z.nativeEnum(ConstraintCategory).optional()
 })
 
 /**
@@ -14,13 +16,13 @@ const querySchema = z.object({
  *
  * Returns all constraints
  *
- * GET /api/constraints?name&statement&solutionId&categoryId
+ * GET /api/constraints?name&statement&solutionId&category
  *
  * Returns all constraints that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const constraintInteractor = new ConstraintInteractor(new ConstraintRepository()),
-        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
+    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q)),
+        em = fork()
 
     if (!query.success)
         throw createError({
@@ -28,10 +30,13 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid query parameters"
         })
 
-    return constraintInteractor.getAll(
-        Object.fromEntries(
-            Object.entries(query.data)
-                .filter(([_, v]) => v !== undefined)
-        )
-    )
+    const results = await em.find(Constraint, Object.entries(query.data)
+        .filter(([_, value]) => value !== undefined)
+        .reduce((acc, [key, value]) => {
+            if (key.endsWith("Id"))
+                return { ...acc, [key.replace("Id", "")]: value as Uuid };
+            return { ...acc, [key]: { $eq: value } };
+        }, {}))
+
+    return results
 })

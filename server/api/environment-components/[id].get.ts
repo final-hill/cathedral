@@ -1,5 +1,5 @@
-import EnvironmentComponentInteractor from "~/server/application/EnvironmentComponentInteractor"
-import EnvironmentComponentRepository from "~/server/data/repositories/EnvironmentComponentRepository"
+import { fork } from "~/server/data/orm"
+import EnvironmentComponent from "~/server/domain/EnvironmentComponent"
 import { type Uuid } from "~/server/domain/Uuid"
 
 /**
@@ -7,12 +7,10 @@ import { type Uuid } from "~/server/domain/Uuid"
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        environmentComponentInteractor = new EnvironmentComponentInteractor(
-            new EnvironmentComponentRepository()
-        )
+        em = fork()
 
     if (id) {
-        const result = environmentComponentInteractor.get(id as Uuid)
+        const result = await em.findOne(EnvironmentComponent, id as Uuid)
 
         if (result)
             return result

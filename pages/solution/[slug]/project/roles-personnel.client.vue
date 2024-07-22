@@ -1,18 +1,21 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type Person from '~/server/domain/Person';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
 useHead({ title: 'Roles & Personnel' })
 definePageMeta({ name: 'Roles & Personnel' })
 
 const slug = useRoute().params.slug as string,
-    { data: solutions } = useFetch(`/api/solutions?slug=${slug}`),
+    { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.[0].id
 
-type PersonnelViewModel = Pick<Person, 'id' | 'name' | 'email'>;
+type PersonnelViewModel = {
+    id: Uuid;
+    name: string;
+    email: string;
+}
 
-const { data: personnel, refresh, status } = useFetch(`/api/persons?solutionId=${solutionId}`),
+const { data: personnel, refresh, status } = await useFetch(`/api/persons?solutionId=${solutionId}`),
     emptyPersonnel: PersonnelViewModel = { id: emptyUuid, name: '', email: '' };
 
 const filters = ref({

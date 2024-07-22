@@ -1,41 +1,45 @@
 import { z } from "zod"
-import SolutionInteractor from "~/server/application/SolutionInteractor"
-import SolutionRepository from "~/server/data/repositories/SolutionRepository"
+import { fork } from "~/server/data/orm"
 import Solution from "~/server/domain/Solution"
 import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
-    name: z.string().min(1).max(Solution.maxNameLength),
-    description: z.string().min(1).max(Solution.maxDescriptionLength)
+    name: z.string().min(1).max(100),
+    description: z.string()
 })
 
 /**
  * PUT /api/solutions/:id
- *   body: {
- *     name: string,
- *     description: string
- *    }
  *
  * Updates a solution by id.
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        solutionInteractor = new SolutionInteractor(new SolutionRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        // @ts-ignore: missing slug property
-        return solutionInteractor.update({
-            id: id as Uuid,
+        const solution = await em.findOne(Solution, id as Uuid)
+
+        if (!solution)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No solution found with id: ${id}`
+            })
+
+        Object.assign(solution, {
             name: body.data.name,
             description: body.data.description
         })
+
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

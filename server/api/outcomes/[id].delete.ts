@@ -1,5 +1,5 @@
-import OutcomeInteractor from "~/server/application/OutcomeInteractor"
-import OutcomeRepository from "~/server/data/repositories/OutcomeRepository"
+import { fork } from "~/server/data/orm"
+import Outcome from "~/server/domain/Outcome"
 import { type Uuid } from "~/server/domain/Uuid"
 
 /**
@@ -7,10 +7,11 @@ import { type Uuid } from "~/server/domain/Uuid"
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        outcomeInteractor = new OutcomeInteractor(new OutcomeRepository())
+        em = fork()
 
     if (id) {
-        outcomeInteractor.delete(id as Uuid)
+        em.remove(em.getReference(Outcome, id as Uuid))
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

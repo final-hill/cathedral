@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { useFetch } from 'nuxt/app';
 import { FilterMatchMode } from 'primevue/api';
-import type Constraint from '~/server/domain/Constraint';
 import ConstraintCategory from '~/server/domain/ConstraintCategory';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
@@ -12,20 +11,24 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solution = (solutions.value ?? [])[0],
     solutionId = solution.id,
-    { data: constraints, status, refresh } = useFetch(`/api/constraints?solutionId=${solutionId}`)
+    { data: constraints, status, refresh } = await useFetch(`/api/constraints?solutionId=${solutionId}`)
 
+type ConstraintViewModel = {
+    id: Uuid;
+    name: string;
+    statement: string;
+    category: ConstraintCategory;
+}
 
-type ConstraintViewModel = Pick<Constraint, 'id' | 'name' | 'statement' | 'categoryId'>;
-
-const constraintCategories = ref<ConstraintCategory[]>(
-    Object.values(ConstraintCategory)
+const constraintCategories = ref<{ id: string, description: string }[]>(
+    Object.values(ConstraintCategory).map((value) => ({ id: value, description: value }))
 ),
-    emptyConstraint: ConstraintViewModel = { id: emptyUuid, name: '', statement: '', categoryId: 'BUSINESS' }
+    emptyConstraint: ConstraintViewModel = { id: emptyUuid, name: '', statement: '', category: ConstraintCategory.BUSINESS }
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
     'statement': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'categoryId': { value: null, matchMode: FilterMatchMode.EQUALS }
+    'category': { value: null, matchMode: FilterMatchMode.EQUALS }
 });
 
 const onCreate = async (data: ConstraintViewModel) => {
@@ -35,7 +38,7 @@ const onCreate = async (data: ConstraintViewModel) => {
             name: data.name,
             statement: data.statement,
             solutionId,
-            categoryId: data.categoryId
+            category: data.category
         }
     })
 
@@ -54,7 +57,7 @@ const onUpdate = async (data: ConstraintViewModel) => {
             name: data.name,
             statement: data.statement,
             solutionId,
-            categoryId: data.categoryId
+            category: data.category
         }
     })
     refresh()
@@ -79,7 +82,7 @@ const onUpdate = async (data: ConstraintViewModel) => {
                 <InputText v-model.trim="data[field]" required="true" />
             </template>
         </Column>
-        <Column field="categoryId" header="Category" sortable>
+        <Column field="category" header="Category" sortable>
             <template #filter="{ filterModel, filterCallback }">
                 <Dropdown v-model="filterModel.value" :options="constraintCategories" optionLabel="description"
                     optionValue="id" @change="filterCallback()" />

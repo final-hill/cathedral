@@ -1,14 +1,15 @@
-import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import ConstraintInteractor from "~/server/application/ConstraintInteractor"
-import ConstraintRepository from "~/server/data/repositories/ConstraintRepository"
+import Constraint from "~/server/domain/Constraint"
 import ConstraintCategory from "~/server/domain/ConstraintCategory"
+import { fork } from "~/server/data/orm"
+import Solution from "~/server/domain/Solution"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string().min(1),
-    statement: z.string().min(1),
+    statement: z.string(),
     solutionId: z.string().uuid(),
-    categoryId: z.enum(['BUSINESS', 'ENGINEERING', 'PHYSICS'])
+    category: z.nativeEnum(ConstraintCategory)
 })
 
 /**
@@ -18,23 +19,37 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        constraintInteractor = new ConstraintInteractor(new ConstraintRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        return constraintInteractor.update({
-            id: id as Uuid,
-            name: body.data.name,
-            statement: body.data.statement,
-            solutionId: body.data.solutionId as Uuid,
-            categoryId: body.data.categoryId as keyof Omit<typeof ConstraintCategory, 'prototype'>
-        })
+        const constraint = await em.findOne(Constraint, id as Uuid),
+            solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+
+        if (!constraint)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No constraint found with id: ${id}`
+            })
+        if (!solution)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
+            })
+
+        constraint.name = body.data.name
+        constraint.statement = body.data.statement
+        constraint.solution = solution
+        constraint.category = body.data.category
+
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

@@ -1,11 +1,12 @@
-import { type Uuid, emptyUuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import GlossaryTermRepository from "~/server/data/repositories/GlossaryTermRepository"
-import GlossaryTermInteractor from "~/server/application/GlossaryTermInteractor"
+import { fork } from "~/server/data/orm"
+import GlossaryTerm from "~/server/domain/GlossaryTerm.js"
+import Solution from "~/server/domain/Solution.js"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string().min(1),
-    statement: z.string().min(0),
+    statement: z.string(),
     solutionId: z.string().uuid()
 })
 
@@ -16,24 +17,38 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        glossaryTermInteractor = new GlossaryTermInteractor(new GlossaryTermRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        return glossaryTermInteractor.update({
-            id: id as Uuid,
-            name: body.data.name,
-            statement: body.data.statement,
-            solutionId: body.data.solutionId as Uuid,
-            // future use as part of Topic Maps?
-            parentComponentId: null
-        })
+        const glossaryTerm = await em.findOne(GlossaryTerm, id as Uuid),
+            solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+
+        if (!glossaryTerm)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No effect found with id: ${id}`
+            })
+        if (!solution)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
+            })
+
+        glossaryTerm.name = body.data.name
+        glossaryTerm.statement = body.data.statement
+        glossaryTerm.solution = solution
+        // TODO: future use as part of Topic Maps?
+        glossaryTerm.parentComponent = undefined
+
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

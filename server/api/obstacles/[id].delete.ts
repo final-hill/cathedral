@@ -1,5 +1,5 @@
-import ObstacleInteractor from "~/server/application/ObstacleInteractor"
-import ObstacleRepository from "~/server/data/repositories/ObstacleRepository"
+import { fork } from "~/server/data/orm"
+import Obstacle from "~/server/domain/Obstacle"
 import { type Uuid } from "~/server/domain/Uuid"
 
 /**
@@ -7,10 +7,11 @@ import { type Uuid } from "~/server/domain/Uuid"
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        obstacleInteractor = new ObstacleInteractor(new ObstacleRepository())
+        em = fork()
 
     if (id) {
-        obstacleInteractor.delete(id as Uuid)
+        em.remove(em.getReference(Obstacle, id as Uuid))
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,
