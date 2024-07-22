@@ -1,11 +1,12 @@
 import { z } from "zod"
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import FunctionalBehavior from "~/server/domain/FunctionalBehavior"
 import MoscowPriority from "~/server/domain/MoscowPriority"
 import Outcome from "~/server/domain/Outcome"
 import Solution from "~/server/domain/Solution"
 import Stakeholder from "~/server/domain/Stakeholder"
 import UserStory from "~/server/domain/UserStory"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -22,20 +23,22 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        const userStory = await orm.em.findOne(UserStory, id),
-            solution = await orm.em.findOne(Solution, body.data.solutionId),
-            primaryActor = await orm.em.findOne(Stakeholder, body.data.primaryActorId),
-            outcome = await orm.em.findOne(Outcome, body.data.outcomeId),
-            functionalBehavior = await orm.em.findOne(FunctionalBehavior, body.data.functionalBehaviorId)
+        const userStory = await em.findOne(UserStory, id as Uuid),
+            solution = await em.findOne(Solution, body.data.solutionId as Uuid),
+            primaryActor = await em.findOne(Stakeholder, body.data.primaryActorId as Uuid),
+            outcome = await em.findOne(Outcome, body.data.outcomeId as Uuid),
+            functionalBehavior = await em.findOne(FunctionalBehavior, body.data.functionalBehaviorId as Uuid)
 
         if (!userStory)
             throw createError({
@@ -71,7 +74,7 @@ export default defineEventHandler(async (event) => {
         userStory.outcome = outcome
         userStory.functionalBehavior = functionalBehavior
 
-        await orm.em.flush()
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

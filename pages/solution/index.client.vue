@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { Properties } from '~/server/domain/Properties';
-import type Solution from '~/server/domain/Solution';
+import type { Uuid } from '~/server/domain/Uuid';
 
 useHead({ title: 'Solutions' })
 definePageMeta({ name: 'Solutions' })
@@ -9,7 +9,14 @@ const router = useRouter(),
     { refresh, status, data: solutions } = await useFetch('/api/solutions'),
     confirm = useConfirm()
 
-const handleDelete = async (solution: Properties<Solution>) => {
+type SolutionModel = {
+    id: Uuid;
+    name: string;
+    description: string;
+    slug: string;
+}
+
+const handleDelete = async (solution: Properties<SolutionModel>) => {
     confirm.require({
         message: `Are you sure you want to delete ${solution.name}?`,
         header: 'Delete Confirmation',
@@ -26,7 +33,7 @@ const handleDelete = async (solution: Properties<Solution>) => {
     })
 }
 
-const handleEdit = (solution: Solution) => {
+const handleEdit = (solution: SolutionModel) => {
     router.push({ name: 'Edit Solution', params: { slug: solution.slug } });
 }
 </script>
@@ -57,9 +64,8 @@ const handleEdit = (solution: Solution) => {
                 {{ solution.description }}
             </template>
             <template #footer>
-                <Button icon="pi pi-pencil" class="edit-button mr-2" @click="handleEdit(solution as Solution)" />
-                <Button icon="pi pi-trash" class="delete-button" @click="handleDelete(solution as Solution)"
-                    severity="danger" />
+                <Button icon="pi pi-pencil" class="edit-button mr-2" @click="handleEdit(solution)" />
+                <Button icon="pi pi-trash" class="delete-button" @click="handleDelete(solution)" severity="danger" />
             </template>
         </Card>
     </div>

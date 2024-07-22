@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type Obstacle from '~/server/domain/Obstacle';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
 useHead({ title: 'Obstacles' })
@@ -10,9 +9,13 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.[0].id;
 
-type ObstacleViewModel = Pick<Obstacle, 'id' | 'name' | 'statement'>;
+type ObstacleViewModel = {
+    id: Uuid;
+    name: string;
+    statement: string;
+}
 
-const { data: obstacles, refresh, status } = useFetch(`/api/obstacles?solutionId=${solutionId}`),
+const { data: obstacles, refresh, status } = await useFetch(`/api/obstacles?solutionId=${solutionId}`),
     emptyObstacle: ObstacleViewModel = { id: emptyUuid, name: '', statement: '' };
 
 const filters = ref({

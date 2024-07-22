@@ -1,6 +1,8 @@
 import { z } from "zod"
-import orm from "~/server/data/orm"
-import Constraint, { ConstraintCategory } from "~/server/domain/Constraint"
+import { fork } from "~/server/data/orm"
+import { type Uuid } from "~/server/domain/Uuid"
+import Constraint from "~/server/domain/Constraint"
+import ConstraintCategory from "~/server/domain/ConstraintCategory"
 
 const querySchema = z.object({
     name: z.string().optional(),
@@ -14,12 +16,13 @@ const querySchema = z.object({
  *
  * Returns all constraints
  *
- * GET /api/constraints?name&statement&solutionId&categoryId
+ * GET /api/constraints?name&statement&solutionId&category
  *
  * Returns all constraints that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
+    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q)),
+        em = fork()
 
     if (!query.success)
         throw createError({
@@ -27,13 +30,13 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Bad Request: Invalid query parameters"
         })
 
-    const results = await orm.em.findAll(Constraint, {
-        where: Object.fromEntries(
-            Object.entries(query.data)
-                .filter(([_, v]) => v !== undefined)
-                .map(([k, v]) => [k, { $eq: v }])
-        )
-    })
+    const results = await em.find(Constraint, Object.entries(query.data)
+        .filter(([_, value]) => value !== undefined)
+        .reduce((acc, [key, value]) => {
+            if (key.endsWith("Id"))
+                return { ...acc, [key.replace("Id", "")]: value as Uuid };
+            return { ...acc, [key]: { $eq: value } };
+        }, {}))
 
     return results
 })

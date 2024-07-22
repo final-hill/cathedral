@@ -1,7 +1,5 @@
 <script lang="ts" setup>
 import debounce from '~/lib/debounce';
-import Goal from '~/server/domain/Goal';
-import type { Properties } from '~/server/domain/Properties';
 
 useHead({ title: 'Rationale' })
 definePageMeta({ name: 'Rationale' })
@@ -10,61 +8,81 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.[0].id;
 
-let { data: visionJustifications, refresh: refreshVision } = useFetch(`/api/justifications?solutionId=${solutionId}&name=Vision`),
-    { data: missionJustifications, refresh: refreshMission } = useFetch(`/api/justifications?solutionId=${solutionId}&name=Mission`),
-    { data: situationJustifications, refresh: refreshSituation } = useFetch(`/api/justifications?solutionId=${solutionId}&name=Situation`),
-    { data: objectiveJustifications, refresh: refreshObjective } = useFetch(`/api/justifications?solutionId=${solutionId}&name=Objective`)
+type JustificationModel = {
+    id: string;
+    name: string;
+    statement: string;
+}
+
+const [
+    { data: visionJustifications, refresh: refreshVision },
+    { data: missionJustifications, refresh: refreshMission },
+    { data: situationJustifications, refresh: refreshSituation },
+    { data: objectiveJustifications, refresh: refreshObjective }
+] = await Promise.all([
+    useFetch(`/api/justifications?solutionId=${solutionId}&name=Vision`),
+    useFetch(`/api/justifications?solutionId=${solutionId}&name=Mission`),
+    useFetch(`/api/justifications?solutionId=${solutionId}&name=Situation`),
+    useFetch(`/api/justifications?solutionId=${solutionId}&name=Objective`)
+]);
 
 if (!visionJustifications.value?.length) {
-    await useFetch(`/api/justifications`, {
+    useFetch(`/api/justifications`, {
         method: 'POST',
         body: { solutionId, name: 'Vision', statement: '' }
     });
-    await refreshVision();
 }
 
 if (!missionJustifications.value?.length) {
-    await useFetch(`/api/justifications`, {
+    useFetch(`/api/justifications`, {
         method: 'POST',
         body: { solutionId, name: 'Mission', statement: '' }
     });
-    await refreshMission();
 }
 
 if (!situationJustifications.value?.length) {
-    await useFetch(`/api/justifications`, {
+    useFetch(`/api/justifications`, {
         method: 'POST',
         body: { solutionId, name: 'Situation', statement: '' }
     });
-    await refreshSituation();
 }
 
 if (!objectiveJustifications.value?.length) {
-    await useFetch(`/api/justifications`, {
+    useFetch(`/api/justifications`, {
         method: 'POST',
         body: { solutionId, name: 'Objective', statement: '' }
     });
-    await refreshObjective();
 }
+
+await Promise.all([
+    refreshVision(),
+    refreshMission(),
+    refreshSituation(),
+    refreshObjective()
+]);
 
 const visionStatement = ref(visionJustifications.value?.[0].statement!),
     missionStatement = ref(missionJustifications.value?.[0].statement!),
     situationStatement = ref(situationJustifications.value?.[0].statement!),
     objectiveStatement = ref(objectiveJustifications.value?.[0].statement!);
 
-const fieldTriple: [Ref<string>, Properties<Goal>, string][] = [
+const fieldTriple: [Ref<string>, JustificationModel, string][] = [
     [visionStatement, visionJustifications.value![0], 'Vision'],
     [missionStatement, missionJustifications.value![0], 'Mission'],
     [situationStatement, situationJustifications.value![0], 'Situation'],
     [objectiveStatement, objectiveJustifications.value![0], 'Objective']
 ];
 
-fieldTriple.forEach(([goalStatement, goal, _name]) => {
+fieldTriple.forEach(([goalStatement, justification, _name]) => {
     watch(goalStatement, debounce(() => {
-        goal.statement = goalStatement.value;
-        $fetch(`/api/justifications/${goal.id}`, {
+        justification.statement = goalStatement.value;
+        $fetch(`/api/justifications/${justification.id}`, {
             method: 'PUT',
-            body: goal
+            body: {
+                solutionId,
+                name: justification.name,
+                statement: justification.statement
+            }
         });
     }, 500));
 });

@@ -1,14 +1,16 @@
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import Obstacle from "~/server/domain/Obstacle"
+import { type Uuid } from "~/server/domain/Uuid"
 
 /**
  * Returns a obstacle by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id
+    const id = event.context.params?.id,
+        em = fork()
 
     if (id) {
-        const result = await orm.em.findOne(Obstacle, id)
+        const result = await em.findOne(Obstacle, id as Uuid)
 
         if (result)
             return result

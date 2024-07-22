@@ -1,6 +1,5 @@
 import Scenario from "./Scenario.js";
 import type { Properties } from "~/server/domain/Properties.js";
-import { Entity, ManyToOne } from "@mikro-orm/core";
 import FunctionalBehavior from "./FunctionalBehavior.js";
 import Outcome from "./Outcome.js";
 
@@ -13,7 +12,6 @@ import Outcome from "./Outcome.js";
  * [behavior] - behaviorId (Functional Behavior)
  * [goal] - outcomeId
  */
-@Entity()
 export default class UserStory extends Scenario {
     constructor({ outcome, functionalBehavior, ...rest }: Omit<Properties<UserStory>, 'id'>) {
         super(rest);
@@ -24,12 +22,18 @@ export default class UserStory extends Scenario {
     /**
      * The action that the user wants to perform.
      */
-    @ManyToOne()
     functionalBehavior: FunctionalBehavior
 
     /**
      * The outcome that the story is aiming to achieve.
      */
-    @ManyToOne()
     outcome: Outcome
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            functionalBehaviorId: this.functionalBehavior.id,
+            outcomeId: this.outcome.id
+        }
+    }
 }

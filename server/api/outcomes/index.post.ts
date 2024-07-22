@@ -1,11 +1,12 @@
 import { z } from "zod"
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import Outcome from "~/server/domain/Outcome"
 import Solution from "~/server/domain/Solution"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string().min(1),
-    statement: z.string().min(1),
+    statement: z.string(),
     solutionId: z.string().uuid()
 })
 
@@ -15,15 +16,17 @@ const bodySchema = z.object({
  * Creates a new obstacle and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
-    const solution = await orm.em.findOne(Solution, body.data.solutionId)
+    const solution = await em.findOne(Solution, body.data.solutionId as Uuid)
 
     if (!solution)
         throw createError({
@@ -37,5 +40,7 @@ export default defineEventHandler(async (event) => {
         solution
     })
 
-    await orm.em.persistAndFlush(newOutcome)
+    await em.persistAndFlush(newOutcome)
+
+    return newOutcome.id
 })

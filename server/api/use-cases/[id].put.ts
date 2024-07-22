@@ -1,16 +1,16 @@
 import { z } from "zod"
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import Assumption from "~/server/domain/Assumption"
 import Effect from "~/server/domain/Effect"
 import MoscowPriority from "~/server/domain/MoscowPriority"
 import Solution from "~/server/domain/Solution"
 import Stakeholder from "~/server/domain/Stakeholder"
 import UseCase from "~/server/domain/UseCase"
-import { emptyUuid } from "~/server/domain/Uuid"
+import { emptyUuid, type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string(),
-    statement: z.string().min(0),
+    statement: z.string(),
     solutionId: z.string().uuid(),
     primaryActorId: z.string().uuid(),
     priority: z.nativeEnum(MoscowPriority),
@@ -29,20 +29,22 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        const useCase = await orm.em.findOne(UseCase, id),
-            solution = await orm.em.findOne(Solution, body.data.solutionId),
-            primaryActor = await orm.em.findOne(Stakeholder, body.data.primaryActorId),
-            precondition = await orm.em.findOne(Assumption, body.data.preconditionId),
-            successGuarantee = await orm.em.findOne(Effect, body.data.successGuaranteeId)
+        const useCase = await em.findOne(UseCase, id as Uuid),
+            solution = await em.findOne(Solution, body.data.solutionId as Uuid),
+            primaryActor = await em.findOne(Stakeholder, body.data.primaryActorId as Uuid),
+            precondition = await em.findOne(Assumption, body.data.preconditionId as Uuid),
+            successGuarantee = await em.findOne(Effect, body.data.successGuaranteeId as Uuid)
 
         if (!useCase)
             throw createError({
@@ -84,7 +86,7 @@ export default defineEventHandler(async (event) => {
         useCase.successGuarantee = successGuarantee
         useCase.extensions = body.data.extensions
 
-        await orm.em.flush()
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

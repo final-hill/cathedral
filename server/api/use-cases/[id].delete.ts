@@ -1,14 +1,17 @@
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import UseCase from "~/server/domain/UseCase"
+import { type Uuid } from "~/server/domain/Uuid"
 
 /**
  * Delete UseCase by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id
+    const id = event.context.params?.id,
+        em = fork()
 
     if (id) {
-        orm.em.remove(orm.em.getReference(UseCase, id))
+        em.remove(em.getReference(UseCase, id as Uuid))
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

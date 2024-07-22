@@ -1,14 +1,17 @@
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import UserStory from "~/server/domain/UserStory"
+import { type Uuid } from "~/server/domain/Uuid"
 
 /**
  * Delete User Story by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id
+    const id = event.context.params?.id,
+        em = fork()
 
     if (id) {
-        orm.em.remove(orm.em.getReference(UserStory, id))
+        em.remove(em.getReference(UserStory, id as Uuid))
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

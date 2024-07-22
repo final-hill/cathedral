@@ -1,11 +1,12 @@
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import { z } from "zod"
 import Effect from "~/server/domain/Effect"
 import Solution from "~/server/domain/Solution"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string().min(1),
-    statement: z.string().min(1),
+    statement: z.string(),
     solutionId: z.string().uuid()
 })
 
@@ -16,17 +17,19 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        const effect = await orm.em.findOne(Effect, id),
-            solution = await orm.em.findOne(Solution, body.data.solutionId)
+        const effect = await em.findOne(Effect, id as Uuid),
+            solution = await em.findOne(Solution, body.data.solutionId as Uuid)
 
         if (!effect)
             throw createError({
@@ -43,7 +46,7 @@ export default defineEventHandler(async (event) => {
         effect.statement = body.data.statement
         effect.solution = solution
 
-        await orm.em.flush()
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

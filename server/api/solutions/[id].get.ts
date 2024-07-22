@@ -1,14 +1,16 @@
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import Solution from "~/server/domain/Solution"
+import { type Uuid } from "~/server/domain/Uuid"
 
 /**
  * Returns a solution by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id
+    const id = event.context.params?.id,
+        em = fork()
 
     if (id) {
-        const result = await orm.em.findOne(Solution, id)
+        const result = await em.findOne(Solution, id as Uuid)
 
         if (result)
             return result

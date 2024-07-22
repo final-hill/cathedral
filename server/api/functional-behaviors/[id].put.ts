@@ -1,12 +1,13 @@
 import { z } from "zod"
 import MoscowPriority from "~/server/domain/MoscowPriority"
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import FunctionalBehavior from "~/server/domain/FunctionalBehavior"
 import Solution from "~/server/domain/Solution"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string().min(1),
-    statement: z.string().min(1),
+    statement: z.string(),
     solutionId: z.string().uuid(),
     priority: z.nativeEnum(MoscowPriority)
 })
@@ -16,17 +17,19 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        const functionalBehavior = await orm.em.findOne(FunctionalBehavior, id),
-            solution = await orm.em.findOne(Solution, body.data.solutionId)
+        const functionalBehavior = await em.findOne(FunctionalBehavior, id as Uuid),
+            solution = await em.findOne(Solution, body.data.solutionId as Uuid)
 
         if (!functionalBehavior)
             throw createError({
@@ -44,7 +47,7 @@ export default defineEventHandler(async (event) => {
         functionalBehavior.solution = solution
         functionalBehavior.priority = body.data.priority
 
-        await orm.em.flush()
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

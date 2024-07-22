@@ -5,29 +5,28 @@ import dotenv from "dotenv";
 import { type Options, PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import { Migrator } from '@mikro-orm/migrations';
-import Solution from './server/domain/Solution.js';
-import Actor from "./server/domain/Actor.js";
-import Assumption from "./server/domain/Assumption.js";
-import Constraint from "./server/domain/Constraint.js";
-import Effect from "./server/domain/Effect.js";
-import EnvironmentComponent from "./server/domain/EnvironmentComponent.js";
-import FunctionalBehavior from "./server/domain/FunctionalBehavior.js";
-import GlossaryTerm from "./server/domain/GlossaryTerm.js";
-import Justification from "./server/domain/Justification.js";
-import Hint from "./server/domain/Hint.js";
-import Invariant from "./server/domain/Invariant.js";
-import Limit from "./server/domain/Limit.js";
-import NonFunctionalBehavior from "./server/domain/NonFunctionalBehavior.js";
-import Obstacle from "./server/domain/Obstacle.js";
-import Outcome from "./server/domain/Outcome.js";
-import Person from "./server/domain/Person.js";
-import Product from "./server/domain/Product.js";
-import Stakeholder from "./server/domain/Stakeholder.js";
-import UseCase from "./server/domain/UseCase.js";
-import UserStory from "./server/domain/UserStory.js";
+import AssumptionSchema from "./server/data/models/AssumptionSchema.js";
+import ConstraintSchema from "./server/data/models/ConstraintSchema.js";
+import EffectSchema from "./server/data/models/EffectSchema.js";
+import EnvironmentComponentSchema from "./server/data/models/EnvironmentComponentSchema.js";
+import FunctionalBehaviorSchema from "./server/data/models/FunctionalBehaviorSchema.js";
+import GlossaryTermSchema from "./server/data/models/GlossaryTermSchema.js";
+import HintSchema from "./server/data/models/HintSchema.js";
+import InvariantSchema from "./server/data/models/InvariantSchema.js";
+import JustificationSchema from "./server/data/models/JustificationSchema.js";
+import LimitSchema from "./server/data/models/LimitSchema.js";
+import NonFunctionalBehaviorSchema from "./server/data/models/NonFunctionalBehaviorSchema.js";
+import ObstacleSchema from "./server/data/models/ObstacleSchema.js";
+import OutcomeSchema from "./server/data/models/OutcomeSchema.js";
+import PersonSchema from "./server/data/models/PersonSchema.js";
+import ProductSchema from "./server/data/models/ProductSchema.js";
+import SolutionSchema from "./server/data/models/SolutionSchema.js";
+import StakeholderSchema from "./server/data/models/StakeholderSchema.js";
+import UseCaseSchema from "./server/data/models/UseCaseSchema.js";
+import UserStorySchema from "./server/data/models/UserStorySchema.js";
+import SystemComponentSchema from "./server/data/models/SystemComponentSchema.js";
 
 dotenv.config();
-
 const config: Options = {
     extensions: [Migrator],
     driver: PostgreSqlDriver,
@@ -37,14 +36,12 @@ const config: Options = {
     password: process.env.POSTGRES_PASSWORD!,
     port: parseInt(process.env.POSTGRES_PORT!),
     entities: [
-        Solution, Actor, Assumption, Constraint, Effect, EnvironmentComponent,
-        FunctionalBehavior, GlossaryTerm, Justification, Hint, Invariant, Limit,
-        NonFunctionalBehavior, Obstacle, Outcome, Person, Product, Stakeholder,
-        UseCase, UserStory
+        AssumptionSchema, ConstraintSchema, EffectSchema, EnvironmentComponentSchema, FunctionalBehaviorSchema,
+        GlossaryTermSchema, HintSchema, InvariantSchema, JustificationSchema, LimitSchema, NonFunctionalBehaviorSchema,
+        ObstacleSchema, OutcomeSchema, PersonSchema, ProductSchema, SolutionSchema, StakeholderSchema, SystemComponentSchema,
+        UseCaseSchema, UserStorySchema
     ],
     forceUtcTimezone: true,
-    // we will use the ts-morph reflection, an alternative to the default reflect-metadata provider
-    // check the documentation for their differences: https://mikro-orm.io/docs/metadata-providers
     metadataProvider: TsMorphMetadataProvider,
     debug: process.env.NODE_ENV !== 'production',
     migrations: {

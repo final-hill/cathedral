@@ -1,9 +1,9 @@
 import { z } from "zod"
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import Solution from "~/server/domain/Solution"
 
 const bodySchema = z.object({
-    name: z.string().min(1).max(Solution.maxNameLength),
+    name: z.string().min(1).max(100),
     description: z.string()
 })
 
@@ -13,12 +13,14 @@ const bodySchema = z.object({
  * Creates a new solution and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     const newSolution = new Solution({
@@ -26,5 +28,7 @@ export default defineEventHandler(async (event) => {
         name: body.data.name
     })
 
-    await orm.em.persistAndFlush(newSolution)
+    await em.persistAndFlush(newSolution)
+
+    return newSolution.id
 })

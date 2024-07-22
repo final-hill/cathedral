@@ -16,6 +16,7 @@
     "license": "AGPL-3.0-only",
     "type": "module",
     "scripts": {
+        "analyze-build": "nuxt analyze",
         "build": "nuxt build",
         "preview": "nuxt preview",
         "generate-pwa-assets": "pwa-assets-generator",
@@ -35,9 +36,9 @@
         "@mikro-orm/core": "^6.3.0",
         "@mikro-orm/postgresql": "^6.3.0",
         "@mikro-orm/reflection": "^6.3.0",
-        "@vite-pwa/nuxt": "^0.8.1",
+        "@vite-pwa/nuxt": "^0.9.1",
         "mermaid": "^10.9.1",
-        "nuxt": "^3.11.2",
+        "nuxt": "^3.12.4",
         "nuxt-primevue": "^3.0.0",
         "pg": "^8.12.0",
         "primeflex": "^3.3.1",
@@ -56,7 +57,7 @@
         "@vite-pwa/assets-generator": "^0.2.4",
         "ts-node": "^10.9.2",
         "tsx": "^4.16.0",
-        "typescript": "^5.4.5",
-        "vue-tsc": "^1.8.27"
+        "typescript": "^5.5.3",
+        "vue-tsc": "^2.0.26"
     }
 }

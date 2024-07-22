@@ -1,4 +1,3 @@
-import { ManyToOne } from "@mikro-orm/core";
 import Example from "./Example.js";
 import { type Properties } from "./Properties.js";
 import Stakeholder from "./Stakeholder.js";
@@ -13,6 +12,12 @@ export default abstract class Scenario extends Example {
         this.primaryActor = primaryActor;
     }
 
-    @ManyToOne()
     primaryActor: Stakeholder
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            primaryActorId: this.primaryActor.id
+        }
+    }
 }

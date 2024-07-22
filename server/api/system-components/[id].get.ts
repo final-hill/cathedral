@@ -1,14 +1,16 @@
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import SystemComponent from "~/server/domain/SystemComponent"
+import { type Uuid } from "~/server/domain/Uuid"
 
 /**
  * Returns an system component by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id
+    const id = event.context.params?.id,
+        em = fork()
 
     if (id) {
-        const result = await orm.em.findOne(SystemComponent, id)
+        const result = await em.findOne(SystemComponent, id as Uuid)
 
         if (result)
             return result

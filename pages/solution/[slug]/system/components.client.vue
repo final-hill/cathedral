@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type SystemComponent from '~/server/domain/SystemComponent';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
 useHead({ title: 'Components' })
@@ -10,14 +9,19 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.[0].id;
 
-type SystemComponentViewModel = Pick<SystemComponent, 'id' | 'name' | 'statement' | 'parentComponentId'>;
+type SystemComponentViewModel = {
+    id: Uuid;
+    name: string;
+    statement: string;
+    parentComponentId?: Uuid;
+}
 
-const { data: systemComponents, refresh, status } = useFetch(`/api/system-components?solutionId=${solutionId}`),
+const { data: systemComponents, refresh, status } = await useFetch(`/api/system-components?solutionId=${solutionId}`),
     emptyComponent: SystemComponentViewModel = {
         id: emptyUuid,
         name: '',
         statement: '',
-        parentComponentId: emptyUuid
+        parentComponentId: undefined
     };
 
 const filters = ref({
@@ -38,7 +42,7 @@ const onCreate = async (data: SystemComponentViewModel) => {
 const onUpdate = async (data: SystemComponentViewModel) => {
     await $fetch(`/api/system-components/${data.id}`, {
         method: 'PUT',
-        body: { data, solutionId }
+        body: { ...data, solutionId }
     })
 
     refresh()

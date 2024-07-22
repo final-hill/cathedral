@@ -1,7 +1,7 @@
 import { emptyUuid, type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
 import MoscowPriority from "~/server/domain/MoscowPriority"
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import Solution from "~/server/domain/Solution"
 import Stakeholder from "~/server/domain/Stakeholder"
 import Assumption from "~/server/domain/Assumption"
@@ -10,7 +10,7 @@ import UseCase from "~/server/domain/UseCase"
 
 const bodySchema = z.object({
     name: z.string(),
-    statement: z.string().min(0),
+    statement: z.string(),
     solutionId: z.string().uuid(),
     primaryActorId: z.string().uuid(),
     priority: z.nativeEnum(MoscowPriority),
@@ -28,18 +28,20 @@ const bodySchema = z.object({
  * Creates a new use case and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
-    const solution = await orm.em.findOne(Solution, body.data.solutionId),
-        primaryActor = await orm.em.findOne(Stakeholder, body.data.primaryActorId),
-        precondition = await orm.em.findOne(Assumption, body.data.preconditionId),
-        successGuarantee = await orm.em.findOne(Effect, body.data.successGuaranteeId)
+    const solution = await em.findOne(Solution, body.data.solutionId as Uuid),
+        primaryActor = await em.findOne(Stakeholder, body.data.primaryActorId as Uuid),
+        precondition = await em.findOne(Assumption, body.data.preconditionId as Uuid),
+        successGuarantee = await em.findOne(Effect, body.data.successGuaranteeId as Uuid)
 
     if (!solution)
         throw createError({
@@ -78,5 +80,7 @@ export default defineEventHandler(async (event) => {
         extensions: body.data.extensions
     })
 
-    await orm.em.persistAndFlush(newUseCase)
+    await em.persistAndFlush(newUseCase)
+
+    return newUseCase.id
 })

@@ -1,8 +1,9 @@
-import { Entity, Property } from "@mikro-orm/core";
 import Actor from "./Actor.js";
 import { type Properties } from "./Properties.js";
 
-@Entity()
+/**
+ *  A person is a member of the Project staff
+ */
 export default class Person extends Actor {
     constructor({ email, ...rest }: Omit<Properties<Person>, 'id'>) {
         super(rest);
@@ -10,6 +11,12 @@ export default class Person extends Actor {
         this.email = email;
     }
 
-    @Property()
     email: string;
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            email: this.email
+        };
+    }
 }

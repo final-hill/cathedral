@@ -1,7 +1,8 @@
 import { z } from "zod"
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import Solution from "~/server/domain/Solution"
 import SystemComponent from "~/server/domain/SystemComponent"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -15,18 +16,20 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        const systemComponent = await orm.em.findOne(SystemComponent, id),
-            solution = await orm.em.findOne(Solution, body.data.solutionId),
-            parentComponent = body.data.parentComponentId ? await orm.em.findOne(SystemComponent, body.data.parentComponentId) : undefined
+        const systemComponent = await em.findOne(SystemComponent, id as Uuid),
+            solution = await em.findOne(Solution, body.data.solutionId as Uuid),
+            parentComponent = body.data.parentComponentId ? await em.findOne(SystemComponent, body.data.parentComponentId as Uuid) : undefined
 
         if (!systemComponent)
             throw createError({
@@ -44,7 +47,7 @@ export default defineEventHandler(async (event) => {
         systemComponent.solution = solution
         systemComponent.parentComponent = parentComponent || undefined
 
-        await orm.em.flush()
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

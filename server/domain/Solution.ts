@@ -1,41 +1,45 @@
-import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import { v7 as uuidv7 } from 'uuid';
 import slugify from '../../lib/slugify.js';
 import { type Properties } from './Properties.js';
+import { type Uuid } from './Uuid.js';
 
 /**
  * A Solution is the aggregation of a Project, Environment, Goals, and a System
  */
-@Entity()
 export default class Solution {
-    static readonly maxNameLength = 60;
-
     constructor(properties: Omit<Properties<Solution>, 'slug' | 'id'>) {
-        Object.assign(this, properties);
+        this.id = uuidv7() as Uuid;
+        this.description = properties.description;
+        this.name = properties.name
         this.slug = slugify(this.name);
     }
 
     /**
      * The unique identifier of the Solution
      */
-    @PrimaryKey({ type: 'uuid' })
-    id = uuidv7()
+    id: Uuid
 
     /**
      * The description of the Solution
      */
-    @Property()
-    description!: string
+    description: string
 
     /**
      * The name of the Solution
      */
-    @Property({ length: Solution.maxNameLength })
-    name!: string
+    name: string
 
     /**
      * A slugified version of the name
      */
-    @Property({ unique: true })
-    slug!: string
+    slug: string
+
+    toJSON() {
+        return {
+            id: this.id,
+            description: this.description,
+            name: this.name,
+            slug: this.slug
+        }
+    }
 }

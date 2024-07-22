@@ -1,5 +1,4 @@
 import MoscowPriority from "./MoscowPriority.js";
-import { Enum } from "@mikro-orm/core";
 import { type Properties } from "./Properties.js";
 import Requirement from "./Requirement.js";
 
@@ -15,6 +14,12 @@ export default abstract class Behavior extends Requirement {
     /**
      * The priority of the behavior.
      */
-    @Enum(() => MoscowPriority)
     priority: MoscowPriority
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            priority: this.priority
+        }
+    }
 }

@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type EnvironmentComponent from '~/server/domain/EnvironmentComponent';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
 useHead({ title: 'Components' })
@@ -9,10 +8,14 @@ definePageMeta({ name: 'Environment Components' })
 const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.[0].id,
-    { data: environmentComponents, status, refresh } = useFetch(`/api/environment-components?solutionId=${solutionId}`),
+    { data: environmentComponents, status, refresh } = await useFetch(`/api/environment-components?solutionId=${solutionId}`),
     emptyComponent = { id: emptyUuid, name: '', statement: '' }
 
-type EnvironmentComponentViewModel = Pick<EnvironmentComponent, 'id' | 'name' | 'statement'>;
+type EnvironmentComponentViewModel = {
+    id: Uuid;
+    name: string;
+    statement: string;
+}
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },

@@ -1,13 +1,21 @@
-import { Entity, ManyToOne } from "@mikro-orm/core";
 import Component from "./Component.js";
+import { type Properties } from "./Properties.js";
 
-@Entity()
+/**
+ * A GlossaryTerm is a word or phrase that is used in a specific domain and has a specific meaning
+ */
 export default class GlossaryTerm extends Component {
-    constructor({ parentComponent, ...rest }: Omit<GlossaryTerm, 'id'>) {
+    constructor({ parentComponent, ...rest }: Omit<Properties<GlossaryTerm>, 'id'>) {
         super(rest)
         this.parentComponent = parentComponent
     }
 
-    @ManyToOne()
     parentComponent?: GlossaryTerm;
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            parentComponentId: this.parentComponent?.id
+        }
+    }
 }

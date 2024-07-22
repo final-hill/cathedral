@@ -1,4 +1,3 @@
-import { Entity } from "@mikro-orm/core";
 import Requirement from "./Requirement.js";
 
 /**
@@ -6,5 +5,4 @@ import Requirement from "./Requirement.js";
  * It exists as both an assumption and an effect.
  * (precondition and postcondition)
  */
-@Entity()
 export default class Invariant extends Requirement { }

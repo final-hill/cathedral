@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type Effect from '~/server/domain/Effect';
 import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
 
 useHead({ title: 'Effects' })
@@ -10,7 +9,11 @@ const slug = useRoute().params.slug as string,
     { data: solutions } = await useFetch(`/api/solutions?slug=${slug}`),
     solutionId = solutions.value?.[0].id!
 
-type EffectViewModel = Pick<Effect, 'id' | 'name' | 'statement'>;
+type EffectViewModel = {
+    id: Uuid;
+    name: string;
+    statement: string;
+}
 
 const { data: effects, refresh, status } = await useFetch(`/api/effects?solutionId=${solutionId}`),
     emptyEffect: EffectViewModel = { id: emptyUuid, name: '', statement: '' }

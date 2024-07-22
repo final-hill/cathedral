@@ -1,14 +1,14 @@
-import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import EnvironmentComponent from "~/server/domain/EnvironmentComponent"
 import Solution from "~/server/domain/Solution"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string(),
     statement: z.string(),
     solutionId: z.string().uuid(),
-    parentComponentId: z.string().uuid().nullable()
+    parentComponentId: z.string().uuid().optional()
 })
 
 /**
@@ -18,18 +18,20 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        const environmentComponent = await orm.em.findOne(EnvironmentComponent, id),
-            parentComponent = body.data.parentComponentId ? await orm.em.findOne(EnvironmentComponent, body.data.parentComponentId) : null,
-            solution = await orm.em.findOne(Solution, body.data.solutionId)
+        const environmentComponent = await em.findOne(EnvironmentComponent, id as Uuid),
+            parentComponent = body.data.parentComponentId ? await em.findOne(EnvironmentComponent, body.data.parentComponentId as Uuid) : null,
+            solution = await em.findOne(Solution, body.data.solutionId as Uuid)
 
         if (!environmentComponent)
             throw createError({
@@ -47,7 +49,7 @@ export default defineEventHandler(async (event) => {
         environmentComponent.solution = solution
         environmentComponent.parentComponent = parentComponent ?? undefined
 
-        await orm.em.flush()
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

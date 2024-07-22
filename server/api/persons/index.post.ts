@@ -1,7 +1,8 @@
 import { z } from "zod"
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import Solution from "~/server/domain/Solution"
 import Person from "~/server/domain/Person"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -14,15 +15,17 @@ const bodySchema = z.object({
  * Creates a new person and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
-    const solution = await orm.em.findOne(Solution, body.data.solutionId)
+    const solution = await em.findOne(Solution, body.data.solutionId as Uuid)
 
     if (!solution)
         throw createError({
@@ -37,5 +40,7 @@ export default defineEventHandler(async (event) => {
         email: body.data.email
     })
 
-    await orm.em.persistAndFlush(newPerson)
+    await em.persistAndFlush(newPerson)
+
+    return newPerson.id
 })

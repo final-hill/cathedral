@@ -1,17 +1,20 @@
 import { z } from "zod"
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import Solution from "~/server/domain/Solution"
-import Stakeholder, { StakeholderCategory, StakeholderSegmentation } from "~/server/domain/Stakeholder"
+import Stakeholder from "~/server/domain/Stakeholder"
+import StakeholderSegmentation from "~/server/domain/StakeholderSegmentation"
+import StakeholderCategory from "~/server/domain/StakeholderCategory"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string(),
     statement: z.string(),
     solutionId: z.string().uuid(),
-    parentComponentId: z.string().uuid(),
+    parentComponentId: z.string().uuid().optional(),
     availability: z.number().min(0).max(100),
     influence: z.number().min(0).max(100),
-    segmentationId: z.nativeEnum(StakeholderSegmentation),
-    categoryId: z.nativeEnum(StakeholderCategory)
+    segmentation: z.nativeEnum(StakeholderSegmentation),
+    category: z.nativeEnum(StakeholderCategory)
 })
 
 /**
@@ -21,23 +24,27 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        const stakeholder = await orm.em.findOne(Stakeholder, id),
-            solution = await orm.em.findOne(Solution, body.data.solutionId),
-            parentStakeholder = await orm.em.findOne(Stakeholder, body.data.parentComponentId)
+        const stakeholder = await em.findOne(Stakeholder, id as Uuid),
+            solution = await em.findOne(Solution, body.data.solutionId as Uuid),
+            parentStakeholder = body.data.parentComponentId ?
+                await em.findOne(Stakeholder, body.data.parentComponentId as Uuid)
+                : undefined
 
         if (!stakeholder)
             throw createError({
                 statusCode: 400,
-                statusMessage: `Bad Request: No assumption found with id: ${id}`
+                statusMessage: `Bad Request: No stakeholder found with id: ${id}`
             })
         if (!solution)
             throw createError({
@@ -50,11 +57,11 @@ export default defineEventHandler(async (event) => {
         stakeholder.solution = solution
         stakeholder.availability = body.data.availability
         stakeholder.influence = body.data.influence
-        stakeholder.segmentation = body.data.segmentationId
-        stakeholder.category = body.data.categoryId
+        stakeholder.segmentation = body.data.segmentation
+        stakeholder.category = body.data.category
         stakeholder.parentComponent = parentStakeholder || undefined
 
-        await orm.em.flush()
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

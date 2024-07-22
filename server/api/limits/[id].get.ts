@@ -1,14 +1,16 @@
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import Limit from "~/server/domain/Limit"
+import { type Uuid } from "~/server/domain/Uuid"
 
 /**
  * Returns a limit by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id
+    const id = event.context.params?.id,
+        em = fork()
 
     if (id) {
-        const result = await orm.em.findOne(Limit, id)
+        const result = await em.findOne(Limit, id as Uuid)
 
         if (result)
             return result

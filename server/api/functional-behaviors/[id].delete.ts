@@ -1,14 +1,17 @@
-import orm from "~/server/data/orm"
-import EnvironmentComponent from "~/server/domain/EnvironmentComponent"
+import { fork } from "~/server/data/orm"
+import FunctionalBehavior from "~/server/domain/FunctionalBehavior"
+import { type Uuid } from "~/server/domain/Uuid"
 
 /**
  * Delete an functional behavior by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id
+    const id = event.context.params?.id,
+        em = fork()
 
     if (id) {
-        orm.em.remove(orm.em.getReference(EnvironmentComponent, id))
+        em.remove(em.getReference(FunctionalBehavior, id as Uuid))
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

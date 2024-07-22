@@ -1,7 +1,7 @@
-import { ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
 import { v7 as uuidv7 } from 'uuid';
 import type { Properties } from "./Properties.js";
 import Solution from './Solution.js';
+import { type Uuid } from './Uuid.js';
 
 /**
  * A Requirement is a statement that specifies a property.
@@ -16,8 +16,7 @@ export default abstract class Requirement {
     /**
      * The unique identifier of the Requirement
      */
-    @PrimaryKey({ type: 'uuid' })
-    id = uuidv7()
+    id = uuidv7() as Uuid
 
     /**
      * A property is a Predicate formalizing its associated statement.
@@ -28,18 +27,24 @@ export default abstract class Requirement {
     /**
      * A short name for the requirement
      */
-    @Property()
     name!: string
 
     /**
      * A human-readable description of a property
      */
-    @Property()
     statement!: string
 
     /**
      * The solution that owns this requirement
      */
-    @ManyToOne()
     solution!: Solution
+
+    toJSON() {
+        return {
+            id: this.id,
+            name: this.name,
+            statement: this.statement,
+            solutionId: this.solution.id
+        }
+    }
 }

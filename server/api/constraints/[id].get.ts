@@ -1,14 +1,16 @@
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import Constraint from "~/server/domain/Constraint"
+import { type Uuid } from "~/server/domain/Uuid"
 
 /**
  * Returns a constraint by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id
+    const id = event.context.params?.id,
+        em = fork()
 
     if (id) {
-        const result = await orm.em.findOne(Constraint, id)
+        const result = await em.findOne(Constraint, id as Uuid)
 
         if (result)
             return result

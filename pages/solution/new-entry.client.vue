@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import slugify from '~/lib/slugify';
-import Solution from '~/server/domain/Solution';
 
 useHead({ title: 'New Solution' })
 definePageMeta({ name: 'New Solution' })
@@ -23,6 +22,8 @@ const createSolution = async () => {
         if (solutionId) {
             const newSolution = (await $fetch(`/api/solutions/${solutionId}`));
             router.push({ name: 'Solution', params: { slug: newSolution?.slug } });
+        } else {
+            throw new Error('Failed to create solution. No solution ID returned.');
         }
     } catch (error) {
         console.error(error)
@@ -44,7 +45,7 @@ watch(() => name.value, (newName) => {
             <label for="name" class="required col-fixed w-7rem">Name</label>
             <div class="col">
                 <InputText v-model.trim="name" id="name" name="name" class="w-23rem" placeholder="Sample Solution"
-                    :maxlength="Solution.maxNameLength" required />
+                    :maxlength="100" required />
             </div>
         </div>
 

@@ -1,4 +1,3 @@
-import { Entity } from "@mikro-orm/core";
 import Functionality from "./Functionality.js";
 
 /**
@@ -6,5 +5,4 @@ import Functionality from "./Functionality.js";
  * the results or effects of the system's operation.
  * Generally expressed in the form "system must do <requirement>"
  */
-@Entity()
 export default class FunctionalBehavior extends Functionality { }

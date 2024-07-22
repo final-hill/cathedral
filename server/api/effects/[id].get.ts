@@ -1,14 +1,16 @@
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import Effect from "~/server/domain/Effect"
+import { type Uuid } from "~/server/domain/Uuid"
 
 /**
  * Returns an effect by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id
+    const id = event.context.params?.id,
+        em = fork()
 
     if (id) {
-        const result = await orm.em.findOne(Effect, id)
+        const result = await em.findOne(Effect, id as Uuid)
 
         if (result)
             return result

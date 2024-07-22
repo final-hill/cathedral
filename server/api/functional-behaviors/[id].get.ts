@@ -1,14 +1,16 @@
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import FunctionalBehavior from "~/server/domain/FunctionalBehavior"
+import { type Uuid } from "~/server/domain/Uuid"
 
 /**
  * Returns a functional behavior by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id
+    const id = event.context.params?.id,
+        em = fork()
 
     if (id) {
-        const result = await orm.em.findOne(FunctionalBehavior, id)
+        const result = await em.findOne(FunctionalBehavior, id as Uuid)
 
         if (result)
             return result

@@ -1,11 +1,13 @@
 import { z } from "zod"
-import Constraint, { ConstraintCategory } from "~/server/domain/Constraint"
-import orm from "~/server/data/orm"
+import Constraint from "~/server/domain/Constraint"
+import ConstraintCategory from "~/server/domain/ConstraintCategory"
+import { fork } from "~/server/data/orm"
 import Solution from "~/server/domain/Solution"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string().min(1),
-    statement: z.string().min(1),
+    statement: z.string(),
     solutionId: z.string().uuid(),
     category: z.nativeEnum(ConstraintCategory)
 })
@@ -17,17 +19,19 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        const constraint = await orm.em.findOne(Constraint, id),
-            solution = await orm.em.findOne(Solution, body.data.solutionId)
+        const constraint = await em.findOne(Constraint, id as Uuid),
+            solution = await em.findOne(Solution, body.data.solutionId as Uuid)
 
         if (!constraint)
             throw createError({
@@ -44,6 +48,8 @@ export default defineEventHandler(async (event) => {
         constraint.statement = body.data.statement
         constraint.solution = solution
         constraint.category = body.data.category
+
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

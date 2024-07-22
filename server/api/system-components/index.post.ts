@@ -1,7 +1,8 @@
 import { z } from "zod"
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import Solution from "~/server/domain/Solution"
 import SystemComponent from "~/server/domain/SystemComponent"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -16,26 +17,23 @@ const bodySchema = z.object({
  * Creates a new system-component and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
-    const solution = await orm.em.findOne(Solution, body.data.solutionId),
-        parentComponent = body.data.parentComponentId ? await orm.em.findOne(SystemComponent, body.data.parentComponentId) : undefined
+    const solution = await em.findOne(Solution, body.data.solutionId as Uuid),
+        parentComponent = body.data.parentComponentId ? await em.findOne(SystemComponent, body.data.parentComponentId as Uuid) : undefined
 
     if (!solution)
         throw createError({
             statusCode: 400,
             statusMessage: `Bad Request: Solution not found for id ${body.data.solutionId}`
-        })
-    if (!parentComponent)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: Parent stakeholder not found for id ${body.data.parentComponentId}`
         })
 
     const newSystemComponent = new SystemComponent({
@@ -45,5 +43,7 @@ export default defineEventHandler(async (event) => {
         parentComponent: parentComponent || undefined
     })
 
-    await orm.em.persistAndFlush(newSystemComponent)
+    await em.persistAndFlush(newSystemComponent)
+
+    return newSystemComponent.id
 })

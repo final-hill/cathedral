@@ -1,11 +1,12 @@
 import { z } from "zod"
 import MoscowPriority from "~/server/domain/MoscowPriority"
 import Solution from "~/server/domain/Solution"
-import orm from "~/server/data/orm"
+import { fork } from "~/server/data/orm"
 import Outcome from "~/server/domain/Outcome"
 import Stakeholder from "~/server/domain/Stakeholder"
 import FunctionalBehavior from "~/server/domain/FunctionalBehavior"
 import UserStory from "~/server/domain/UserStory"
+import { type Uuid } from "~/server/domain/Uuid"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -21,18 +22,22 @@ const bodySchema = z.object({
  * Creates a new user story and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
-    const solution = await orm.em.findOne(Solution, body.data.solutionId),
-        primaryActor = await orm.em.findOne(Stakeholder, body.data.primaryActorId),
-        outcome = await orm.em.findOne(Outcome, body.data.outcomeId),
-        functionalBehavior = await orm.em.findOne(FunctionalBehavior, body.data.functionalBehaviorId)
+    const [solution, primaryActor, outcome, functionalBehavior] = await Promise.all([
+        em.findOne(Solution, body.data.solutionId as Uuid),
+        em.findOne(Stakeholder, body.data.primaryActorId as Uuid),
+        em.findOne(Outcome, body.data.outcomeId as Uuid),
+        em.findOne(FunctionalBehavior, body.data.functionalBehaviorId as Uuid)
+    ]);
 
     if (!solution)
         throw createError({
@@ -65,5 +70,7 @@ export default defineEventHandler(async (event) => {
         priority: body.data.priority
     })
 
-    await orm.em.persistAndFlush(newUserStory)
+    await em.persistAndFlush(newUserStory)
+
+    return newUserStory.id
 })
