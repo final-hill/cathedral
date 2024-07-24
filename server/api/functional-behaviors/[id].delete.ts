@@ -1,13 +1,16 @@
-import { type Uuid } from "~/server/domain/Uuid"
-import FunctionalBehaviorInteractor from "~/server/application/FunctionalBehaviorInteractor"
-import FunctionalBehaviorRepository from "~/server/data/repositories/FunctionalBehaviorRepository"
+import { fork } from "~/server/data/orm"
+import FunctionalBehavior from "~/server/domain/requirements/FunctionalBehavior"
 
+/**
+ * Delete an functional behavior by id.
+ */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        functionalBehaviorInteractor = new FunctionalBehaviorInteractor(new FunctionalBehaviorRepository())
+        em = fork()
 
     if (id) {
-        functionalBehaviorInteractor.delete(id as Uuid)
+        em.remove(em.getReference(FunctionalBehavior, id))
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

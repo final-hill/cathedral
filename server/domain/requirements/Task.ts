@@ -1,4 +1,4 @@
-import Requirement from "./Requirement";
+import Requirement from "./Requirement.js";
 
 /**
  * Activity included in the project

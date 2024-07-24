@@ -1,4 +1,4 @@
-import Example from "./Example";
+import Example from "./Example.js";
 
 /**
  * A TestCase is a specification of the inputs, execution conditions,

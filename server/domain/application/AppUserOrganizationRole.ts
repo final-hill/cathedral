@@ -1,24 +1,38 @@
-import { type Properties } from "../Properties";
-import { type Uuid } from "../Uuid";
-import ValueObject from "../ValueObject";
+import { type Properties } from "../Properties.js";
+import AppUser from "./AppUser.js";
+import Organization from "./Organization.js";
+import AppRole from "./AppRole.js";
 
-export default class AppUserOrganizationRole extends ValueObject {
-    constructor({ appuserId, organizationId, roleId }: Properties<AppUserOrganizationRole>) {
-        super()
-        this.appuserId = appuserId
-        this.organizationId = organizationId
-        this.roleId = roleId
+/**
+ * An AppUserOrganizationRole is a mapping between an AppUser, an Organization, and a Role
+ */
+export default class AppUserOrganizationRole {
+    constructor({ appUser, organization, role }: Properties<AppUserOrganizationRole>) {
+        this.appUser = appUser
+        this.organization = organization
+        this.role = role
     }
 
-    appuserId: Uuid
-    organizationId: Uuid
-    roleId: Uuid
+    /**
+     * The AppUser associated with the OrganizationRole
+     */
+    appUser: AppUser
+
+    /**
+     * The Organization associated with the OrganizationRole
+     */
+    organization: Organization
+
+    /**
+     * The Role associated with the OrganizationRole
+     */
+    role: AppRole
 
     toJSON() {
         return {
-            appuserId: this.appuserId,
-            organizationId: this.organizationId,
-            roleId: this.roleId
+            appuserId: this.appUser,
+            organizationId: this.organization,
+            roleName: this.role
         }
     }
 }

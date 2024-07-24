@@ -1,54 +1,40 @@
-import Component from "~/server/domain/requirements/Component";
-import type { Properties } from "~/server/domain/requirements/Properties";
-import StakeholderSegmentation from "./StakeholderSegmentation";
-import StakeholderCategory from "./StakeholderCategory";
+import Component from "./Component.js";
+import type { Properties } from "../Properties.js";
+import StakeholderCategory from "./StakeholderCategory.js";
+import StakeholderSegmentation from "./StakeholderSegmentation.js";
 
 /**
  * A human actor who may affect or be affected by a project or its associated system
  */
 export default class Stakeholder extends Component {
-    static readonly INFLUENCE_MIN = 0
-    static readonly INFLUENCE_MAX = 100
-    static readonly AVAILABILITY_MIN = 0
-    static readonly AVAILABILITY_MAX = 100
-
-    private _influence!: number
-    private _availability!: number
-
-    segmentationId!: keyof Omit<typeof StakeholderSegmentation, 'prototype'>
-    categoryId!: keyof Omit<typeof StakeholderCategory, 'prototype'>
-
-    constructor({ influence, availability, segmentationId, categoryId, ...rest }: Properties<Stakeholder>) {
+    constructor({ influence, availability, segmentation, category, parentComponent, ...rest }: Omit<Properties<Stakeholder>, 'id'>) {
         super(rest)
 
-        Object.assign(this, { influence, availability, segmentationId, categoryId })
+        this.influence = influence
+        this.availability = availability
+        this.segmentation = segmentation
+        this.category = category
+        this.parentComponent = parentComponent
     }
 
-    get availability(): number {
-        return this._availability
-    }
-    set availability(value: number) {
-        if (value < Stakeholder.AVAILABILITY_MIN || value > Stakeholder.AVAILABILITY_MAX)
-            throw new Error(`Availability must be between ${Stakeholder.AVAILABILITY_MIN} and ${Stakeholder.AVAILABILITY_MAX}`)
-        this._availability = value
-    }
+    parentComponent?: Stakeholder
 
-    get influence(): number {
-        return this._influence
-    }
-    set influence(value: number) {
-        if (value < Stakeholder.INFLUENCE_MIN || value > Stakeholder.INFLUENCE_MAX)
-            throw new Error(`Influence must be between ${Stakeholder.INFLUENCE_MIN} and ${Stakeholder.INFLUENCE_MAX}`)
-        this._influence = value
-    }
+    segmentation: StakeholderSegmentation
+
+    category: StakeholderCategory
+
+    availability: number
+
+    influence: number
 
     override toJSON() {
         return {
             ...super.toJSON(),
-            influence: this.influence,
+            parentComponentId: this.parentComponent?.id,
+            segmentation: this.segmentation,
+            category: this.category,
             availability: this.availability,
-            segmentationId: this.segmentationId,
-            categoryId: this.categoryId
+            influence: this.influence
         }
     }
 }

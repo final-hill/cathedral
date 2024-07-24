@@ -1,5 +1,0 @@
-BEGIN;
-
-DROP SCHEMA cathedral CASCADE;
-
-COMMIT;

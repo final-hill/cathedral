@@ -1,4 +1,4 @@
-import Functionality from "./Functionality";
+import Functionality from "./Functionality.js";
 
 /**
  * FunctionalBehavior specifies **what** behavior the system should exhibit, i.e.,

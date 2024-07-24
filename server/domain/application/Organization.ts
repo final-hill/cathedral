@@ -1,63 +1,45 @@
-import Entity from "../Entity";
-import type { Properties } from "../Properties";
+import slugify from '../../../lib/slugify.js';
+import type { Properties } from "../Properties.js";
+import { v7 as uuidv7 } from 'uuid';
 
 /**
  * An Organization is a collection of people and solutions
  */
-export default class Organization extends Entity {
-    static readonly maxNameLength = 60;
-    static readonly maxDescriptionLength = 200;
-
-    private _description!: string;
-    private _name!: string;
-    private _slug!: string;
-
-    constructor({ id, ...rest }: Properties<Organization>) {
-        super({ id });
-        Object.assign(this, rest);
+export default class Organization {
+    constructor(properties: Omit<Properties<Organization>, 'id' | 'slug'>) {
+        this.id = uuidv7();
+        this.name = properties.name;
+        this.description = properties.description;
+        this.slug = slugify(this.name);
     }
 
     /**
-     * The description of the Organization
-     * @throws {Error} if the description is longer than 200 characters
+     * The unique identifier of the Organization
      */
-    get description(): string { return this._description; }
+    id: string
 
-    set description(value: string) {
-        const trimmed = value.trim();
-        if (trimmed.length >= Organization.maxDescriptionLength)
-            throw new Error(
-                `Organization description cannot be longer than ${Organization.maxDescriptionLength} characters`
-            );
-        this._description = trimmed;
-    }
+    /**
+     * The description of the Organization
+     */
+    description: string
 
     /**
      * The name of the Organization
      * @throws {Error} if the name is longer than 60 characters
      */
-    get name(): string { return this._name; }
+    name: string
 
-    set name(value: string) {
-        const trimmed = value.trim();
-        if (trimmed.length >= Organization.maxNameLength)
-            throw new Error(`Entity name cannot be longer than ${Organization.maxNameLength} characters`);
-        this._name = trimmed;
-    }
+    /**
+     * A slugified version of the name
+     */
+    slug: string
 
-    get slug(): string {
-        return this._slug
-    }
-    set slug(value: string) {
-        this._slug = value
-    }
-
-    override toJSON() {
+    toJSON() {
         return {
-            ...super.toJSON(),
+            id: this.id,
             description: this.description,
             name: this.name,
-            slug: this.slug
+            slug: this.slug,
         }
     }
 }

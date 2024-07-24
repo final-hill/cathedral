@@ -1,15 +1,14 @@
 <script lang="ts" setup>
-import { type Uuid, emptyUuid } from '~/server/domain/Uuid'
+import { NIL as emptyUuid } from 'uuid'
 
-// export type RowType = { id: Uuid, name: string }
 export type RowType = any
 
 const props = defineProps<{
     datasource: RowType[] | null,
     filters: Record<string, { value: any, matchMode: string }>,
-    emptyRecord: { id: Uuid, name: string },
+    emptyRecord: { id: string, name: string },
     onCreate: (data: RowType) => Promise<void>,
-    onDelete: (id: Uuid) => Promise<void>,
+    onDelete: (id: string) => Promise<void>,
     onUpdate: (data: RowType) => Promise<void>,
     onRowExpand?: (event: { data: RowType }) => void,
     onRowCollapse?: (event: { data: RowType }) => void

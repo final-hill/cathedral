@@ -1,21 +1,43 @@
-import Entity from "../Entity";
-import { type Properties } from "../Properties";
+import { type Properties } from "../Properties.js";
 
-export default class AppUser extends Entity<string> {
-    constructor({ id, ...rest }: Properties<AppUser>) {
-        super({ id });
-        this.defaultOrganizationId = rest.defaultOrganizationId;
-        this.creationDate = rest.creationDate;
+/**
+ * An AppUser is a user of the application
+ */
+export default class AppUser {
+    constructor(properties: Properties<AppUser>) {
+        this.id = properties.id;
+        this.creationDate = properties.creationDate;
+        this.isSystemAdmin = properties.isSystemAdmin;
+        this.name = properties.name;
     }
 
+    /**
+     * The unique identifier of the AppUser
+     * In this case, an email address
+     */
+    id: string
+
+    /**
+     * The name of the AppUser
+     */
+    name: string;
+
+    /**
+     * The date the AppUser was created
+     */
     creationDate: Date;
-    defaultOrganizationId: string;
+
+    /**
+     * Whether the AppUser is a system administrator
+     */
+    isSystemAdmin: boolean;
 
     toJSON() {
         return {
-            ...super.toJSON(),
-            defaultOrganizationId: this.defaultOrganizationId,
-            creationDate: this.creationDate.toISOString()
+            id: this.id,
+            name: this.name,
+            creationDate: this.creationDate.toISOString(),
+            isSystemAdmin: this.isSystemAdmin
         }
     }
 }

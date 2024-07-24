@@ -26,11 +26,11 @@ const handleDelete = async (organization: Properties<Organization>) => {
 }
 
 const handleEdit = (organization: Organization) => {
-    router.push({ name: 'Edit Organization', params: { organizationSlug: organization.slug } });
+    router.push({ name: 'Edit Organization', params: { organizationslug: organization.slug } });
 }
 
-const handleSettings = (organization: Organization) => {
-    router.push({ name: 'Organization Settings', params: { organizationSlug: organization.slug } });
+const handleUsers = (organization: Organization) => {
+    router.push({ name: 'Organization Users', params: { organizationslug: organization.slug } });
 }
 </script>
 
@@ -52,7 +52,7 @@ const handleSettings = (organization: Organization) => {
         </div>
         <Card class="col shadow-4" v-for="organization in organizations">
             <template #title>
-                <NuxtLink :to="{ name: 'Organization', params: { organizationSlug: organization.slug } }">
+                <NuxtLink :to="{ name: 'Organization', params: { organizationslug: organization.slug } }">
                     {{ organization.name }}
                 </NuxtLink>
             </template>
@@ -60,12 +60,12 @@ const handleSettings = (organization: Organization) => {
                 {{ organization.description }}
             </template>
             <template #footer>
-                <Button icon="pi pi-pencil" class="edit-button mr-2"
-                    @click="handleEdit(organization as Organization)" />
-                <Button icon="pi pi-cog" class="edit-button mr-2"
-                    @click="handleSettings(organization as Organization)" />
+                <Button icon="pi pi-pencil" class="edit-button mr-2" @click="handleEdit(organization as Organization)"
+                    title="Edit Organization" />
+                <Button icon="pi pi-users" class="edit-button mr-2" @click="handleUsers(organization as Organization)"
+                    title="Manage Users" />
                 <Button icon="pi pi-trash" class="delete-button" @click="handleDelete(organization as Organization)"
-                    severity="danger" />
+                    severity="danger" title="Delete Organization" />
             </template>
         </Card>
     </div>

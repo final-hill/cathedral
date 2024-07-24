@@ -1,19 +1,29 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type FunctionalBehavior from '~/server/domain/requirements/FunctionalBehavior';
-import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
+import MoscowPriority from '~/server/domain/requirements/MoscowPriority';
+import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Goals Functionality' })
 
-const solutionSlug = useRoute().params.solutionSlug as string,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionSlug}`),
+const { solutionslug } = useRoute('Functionality').params,
+    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
     solutionId = solutions.value?.[0].id
 
-type FunctionalBehaviorViewModel = Pick<FunctionalBehavior, 'id' | 'name' | 'statement' | 'priorityId'>;
+type FunctionalBehaviorViewModel = {
+    id: string;
+    name: string;
+    statement: string;
+    priority: MoscowPriority;
+}
 
-const { data: functionalBehaviors, refresh, status } = useFetch(`/api/functional-behaviors?solutionId=${solutionId}`),
-    emptyFunctionalBehavior: FunctionalBehaviorViewModel = { id: emptyUuid, name: '', statement: '', priorityId: 'MUST' };
+const { data: functionalBehaviors, refresh, status } = await useFetch(`/api/functional-behaviors?solutionId=${solutionId}`),
+    emptyFunctionalBehavior: FunctionalBehaviorViewModel = {
+        id: emptyUuid,
+        name: '',
+        statement: '',
+        priority: MoscowPriority.MUST
+    };
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -27,7 +37,7 @@ const onCreate = async (data: FunctionalBehaviorViewModel) => {
             name: data.name,
             statement: data.statement,
             solutionId,
-            priorityId: 'MUST'
+            priority: MoscowPriority.MUST
         }
     })
 
@@ -42,14 +52,14 @@ const onUpdate = async (data: FunctionalBehaviorViewModel) => {
             name: data.name,
             statement: data.statement,
             solutionId,
-            priorityId: data.priorityId
+            priority: data.priority
         }
     })
 
     refresh()
 }
 
-const onDelete = async (id: Uuid) => {
+const onDelete = async (id: string) => {
     await $fetch(`/api/functional-behaviors/${id}`, { method: 'DELETE' })
 
     refresh()

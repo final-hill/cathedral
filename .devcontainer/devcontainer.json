@@ -14,7 +14,7 @@
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [],
     // Use 'postCreateCommand' to run commands after the container is created.
-    "postCreateCommand": "npm install",
+    "postCreateCommand": "npm install --verbose --no-progress",
     // https://www.kenmuse.com/blog/avoiding-dubious-ownership-in-dev-containers/
     "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
     // Configure tool-specific properties.

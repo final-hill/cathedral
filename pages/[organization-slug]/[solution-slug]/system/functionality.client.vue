@@ -1,33 +1,38 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type Behavior from '~/server/domain/requirements/Behavior';
-import type Functionality from '~/server/domain/requirements/Functionality';
-import type { Properties } from '~/server/domain/requirements/Properties';
-import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
+import MoscowPriority from '~/server/domain/requirements/MoscowPriority';
+import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Functionality' })
 
-const solutionSlug = useRoute().params.solutionSlug as string,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionSlug}`),
-    solutionId = solutions.value?.[0].id!;
+const { solutionslug } = useRoute('Functionality').params,
+    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
+    solution = solutions.value?.[0]!,
+    solutionId = solution.id;
 
-type BehaviorViewModel = Pick<Behavior, 'id' | 'name' | 'statement' | 'solutionId' | 'priorityId'>
+type BehaviorViewModel = {
+    id: string;
+    name: string;
+    statement: string;
+    solutionId: string;
+    priority: MoscowPriority;
+}
 
 const { data: components, status, refresh } = await useFetch(`/api/system-components?solutionId=${solutionId}`),
     expandedRows = ref({}),
-    emptyBehavior = (componentId: Uuid): BehaviorViewModel => ({
+    emptyBehavior = (componentid: string): BehaviorViewModel => ({
         id: emptyUuid,
         name: '',
         statement: '',
         solutionId,
-        priorityId: 'MUST'
+        priority: MoscowPriority.MUST
     });
 
-const fnFunctionalBehaviors = async (componentId: Uuid) =>
+const fnFunctionalBehaviors = async (componentId: string) =>
     (await useFetch(`/api/functional-behaviors?componentId=${componentId}`)).data;
 
-const fnNonFunctionalBehaviors = async (componentId: Uuid) =>
+const fnNonFunctionalBehaviors = async (componentId: string) =>
     (await useFetch(`/api/non-functional-behaviors?componentId=${componentId}`)).data;
 
 const componentSortField = ref<string | undefined>('name')
@@ -49,7 +54,7 @@ const behaviorFilters = ref({
 //         statement: newData.statement,
 //         solutionId,
 //         componentId: newData.componentId,
-//         priorityId: 'MUST'
+//         priority: 'MUST'
 //     }
 
 //     if (newData.category === 'Functional')
@@ -67,7 +72,7 @@ const behaviorFilters = ref({
 //         statement: newData.statement,
 //         solutionId,
 //         componentId: newData.componentId,
-//         priorityId: newData.priorityId
+//         priority: newData.priority
 //     }
 
 //     if (newData.category === 'Functional')
@@ -75,11 +80,10 @@ const behaviorFilters = ref({
 //     else
 //         await nonFunctionalRequirementInteractor.update(b)
 
-
 //     refresh()
 // }
 
-// const onDelete = async (id: Uuid) => {
+// const onDelete = async (id: string) => {
 //     await Promise.all([
 //         functionalRequirementInteractor.delete(id),
 //         nonFunctionalRequirementInteractor.delete(id)

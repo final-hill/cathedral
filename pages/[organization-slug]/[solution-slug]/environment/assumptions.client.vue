@@ -1,19 +1,22 @@
 <script lang="ts" setup>
-import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
+import { NIL as emptyUuid } from 'uuid';
 import { FilterMatchMode } from 'primevue/api';
 import { useFetch } from 'nuxt/app';
-import type Assumption from '~/server/domain/requirements/Assumption';
 
 useHead({ title: 'Assumptions' })
 definePageMeta({ name: 'Assumptions' })
 
-const solutionSlug = useRoute().params.solutionSlugtionSlug as string,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionSlug}`),
-    solutionId = solutions.value?.at(0)?.id as Uuid;
+const { solutionslug } = useRoute('Assumptions').params,
+    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
+    solutionId = solutions.value?.at(0)?.id;
 
-type AssumptionViewModel = Pick<Assumption, 'id' | 'name' | 'statement'>;
+type AssumptionViewModel = {
+    id: string;
+    name: string;
+    statement: string;
+}
 
-const { data: assumptions, refresh, status } = useFetch(`/api/assumptions/?solutionId=${solutionId}`),
+const { data: assumptions, refresh, status } = await useFetch(`/api/assumptions/?solutionId=${solutionId}`),
     emptyAssumption = { id: emptyUuid, name: '', statement: '' };
 
 const filters = ref<Record<string, { value: any, matchMode: string }>>({
@@ -34,7 +37,7 @@ const onCreate = async (data: AssumptionViewModel) => {
     refresh()
 }
 
-const onDelete = async (id: Uuid) => {
+const onDelete = async (id: string) => {
     await $fetch(`/api/assumptions/${id}`, { method: 'delete' })
 
     refresh()

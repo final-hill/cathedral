@@ -1,16 +1,21 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type Effect from '~/server/domain/requirements/Effect';
-import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
+import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Effects' })
 definePageMeta({ name: 'Effects' })
 
-const solutionSlug = useRoute().params.solutionSlug as string,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionSlug}`),
+const { solutionslug } = useRoute('Effects').params,
+    { data: solutions } = await useFetch('/api/solutions', {
+        query: { slug: solutionslug }
+    }),
     solutionId = solutions.value?.[0].id!
 
-type EffectViewModel = Pick<Effect, 'id' | 'name' | 'statement'>;
+type EffectViewModel = {
+    id: string;
+    name: string;
+    statement: string;
+}
 
 const { data: effects, refresh, status } = await useFetch(`/api/effects?solutionId=${solutionId}`),
     emptyEffect: EffectViewModel = { id: emptyUuid, name: '', statement: '' }
@@ -44,7 +49,7 @@ const onUpdate = async (data: EffectViewModel) => {
     refresh()
 }
 
-const onDelete = async (id: Uuid) => {
+const onDelete = async (id: string) => {
     await $fetch(`/api/effects/${id}`, { method: 'DELETE' })
 
     refresh()

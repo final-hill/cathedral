@@ -1,4 +1,4 @@
-import Requirement from "./Requirement";
+import Requirement from "./Requirement.js";
 
 /**
  * Propery that is not in requirements but should be

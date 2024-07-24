@@ -1,18 +1,16 @@
-import SystemComponentInteractor from "~/server/application/SystemComponentInteractor"
-import SystemComponentRepository from "~/server/data/repositories/SystemComponentRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import { fork } from "~/server/data/orm"
+import SystemComponent from "~/server/domain/requirements/SystemComponent"
 
 /**
  * Delete an system component by id.
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        systemComponentInteractor = new SystemComponentInteractor(
-            new SystemComponentRepository()
-        )
+        em = fork()
 
     if (id) {
-        systemComponentInteractor.delete(id as Uuid)
+        em.remove(em.getReference(SystemComponent, id))
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

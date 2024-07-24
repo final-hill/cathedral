@@ -1,18 +1,15 @@
-import EnvironmentComponentInteractor from "~/server/application/EnvironmentComponentInteractor"
-import EnvironmentComponentRepository from "~/server/data/repositories/EnvironmentComponentRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import { fork } from "~/server/data/orm"
+import EnvironmentComponent from "~/server/domain/requirements/EnvironmentComponent"
 
 /**
  * Returns an environment component by id
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        environmentComponentInteractor = new EnvironmentComponentInteractor(
-            new EnvironmentComponentRepository()
-        )
+        em = fork()
 
     if (id) {
-        const result = environmentComponentInteractor.get(id as Uuid)
+        const result = await em.findOne(EnvironmentComponent, id)
 
         if (result)
             return result

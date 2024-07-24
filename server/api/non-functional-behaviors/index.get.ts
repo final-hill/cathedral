@@ -1,31 +1,36 @@
 import { z } from "zod"
-import NonFunctionalBehaviorInteractor from "~/server/application/NonFunctionalBehaviorInteractor"
-import NonFunctionalBehaviorRepository from "~/server/data/repositories/NonFunctionalBehaviorRepository"
+import { fork } from "~/server/data/orm"
+import MoscowPriority from "~/server/domain/requirements/MoscowPriority"
+import NonFunctionalBehavior from "~/server/domain/requirements/NonFunctionalBehavior"
 
 const querySchema = z.object({
     name: z.string().optional(),
     statement: z.string().optional(),
     solutionId: z.string().uuid().optional(),
-    priorityId: z.enum(['MUST', 'SHOULD', 'COULD', 'WONT']).optional()
+    priority: z.nativeEnum(MoscowPriority).optional()
 })
 
 /**
  * Returns all non functional behaviors that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const nonFunctionalBehaviorInteractor = new NonFunctionalBehaviorInteractor(new NonFunctionalBehaviorRepository()),
-        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
+    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q)),
+        em = fork()
 
     if (!query.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid query parameters"
+            statusMessage: "Bad Request: Invalid query parameters",
+            message: JSON.stringify(query.error.errors)
         })
 
-    return nonFunctionalBehaviorInteractor.getAll(
-        Object.fromEntries(
-            Object.entries(query.data)
-                .filter(([_, v]) => v !== undefined)
-        )
-    )
+    const results = await em.find(NonFunctionalBehavior, Object.entries(query.data)
+        .filter(([_, value]) => value !== undefined)
+        .reduce((acc, [key, value]) => {
+            if (key.endsWith("Id"))
+                return { ...acc, [key.replace("Id", "")]: value };
+            return { ...acc, [key]: { $eq: value } };
+        }, {}))
+
+    return results
 })

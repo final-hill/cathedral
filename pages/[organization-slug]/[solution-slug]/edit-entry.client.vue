@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import slugify from '~/lib/slugify';
-import Solution from '~/server/domain/application/Solution';
 
 useHead({ title: 'Edit Solution' })
 definePageMeta({ name: 'Edit Solution' })
 
-const router = useRouter(),
-    solutionSlug = useRoute().params.solutionSlug as string,
-    { data: solutions } = await useFetch(`/api/solutions/`, { query: { slug: solutionSlug } }),
+const route = useRoute('Edit Solution'),
+    { organizationslug, solutionslug } = route.params,
+    router = useRouter(),
+    { data: solutions } = await useFetch(`/api/solutions/`, { query: { slug: solutionslug } }),
     solution = ref(solutions.value![0]),
     newSlug = ref(solution.value.slug);
 
@@ -20,11 +20,11 @@ const updateSolution = async () => {
         }
     });
 
-    router.push({ name: 'Solution', params: { solutionSlug: newSlug.value } });
+    router.push(`/${organizationslug}/${solutionslug}/`)
 }
 
 const cancel = () => {
-    router.push({ name: 'Solutions' });
+    router.push(`/${organizationslug}/${solutionslug}/`)
 }
 
 watch(() => solution.value.name, (newName) => {
@@ -38,7 +38,7 @@ watch(() => solution.value.name, (newName) => {
             <label for="name" class="required col-fixed w-7rem">Name</label>
             <div class="col">
                 <InputText v-model.trim="solution.name" id="name" name="name" class="w-23rem"
-                    placeholder="Sample Solution" :maxlength="Solution.maxNameLength" />
+                    placeholder="Sample Solution" :maxlength="100" />
             </div>
         </div>
 
@@ -54,7 +54,7 @@ watch(() => solution.value.name, (newName) => {
             <label for="description" class="col-fixed w-7rem">Description</label>
             <div class="col">
                 <InputText id="description" name="description" placeholder="A description of the solution"
-                    class="w-23rem" :maxlength="Solution.maxDescriptionLength" v-model.trim="solution.description" />
+                    class="w-23rem" v-model.trim="solution.description" />
             </div>
         </div>
 

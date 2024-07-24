@@ -1,14 +1,14 @@
-import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import ConstraintInteractor from "~/server/application/ConstraintInteractor"
-import ConstraintRepository from "~/server/data/repositories/ConstraintRepository"
+import { fork } from "~/server/data/orm"
+import Constraint from "~/server/domain/requirements/Constraint"
+import Solution from "~/server/domain/application/Solution"
 import ConstraintCategory from "~/server/domain/requirements/ConstraintCategory"
 
 const bodySchema = z.object({
     name: z.string().min(1),
-    statement: z.string().min(1),
+    statement: z.string(),
     solutionId: z.string().uuid(),
-    categoryId: z.enum(['BUSINESS', 'ENGINEERING', 'PHYSICS'])
+    category: z.nativeEnum(ConstraintCategory)
 })
 
 /**
@@ -17,19 +17,32 @@ const bodySchema = z.object({
  * Creates a new constraint and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const constraintInteractor = new ConstraintInteractor(new ConstraintRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
-    return constraintInteractor.create({
+    const solution = await em.findOne(Solution, body.data.solutionId)
+
+    if (!solution)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: Solution not found for id ${body.data.solutionId}`
+        })
+
+    const newConstraint = new Constraint({
         name: body.data.name,
         statement: body.data.statement,
-        solutionId: body.data.solutionId as Uuid,
-        categoryId: body.data.categoryId as keyof Omit<typeof ConstraintCategory, 'prototype'>
+        solution,
+        category: body.data.category
     })
+
+    await em.persistAndFlush(newConstraint)
+
+    return newConstraint.id
 })

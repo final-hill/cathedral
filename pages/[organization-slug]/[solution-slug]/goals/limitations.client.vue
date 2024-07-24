@@ -1,18 +1,21 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type Limit from '~/server/domain/requirements/Limit';
-import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
+import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Limitations' })
 definePageMeta({ name: 'Limitations' })
 
-const solutionSlug = useRoute().params.solutionSlug as string,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionSlug}`),
+const { solutionslug } = useRoute('Limitations').params,
+    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
     solutionId = solutions.value?.[0].id
 
-type LimitViewModel = Pick<Limit, 'id' | 'name' | 'statement'>;
+type LimitViewModel = {
+    id: string;
+    name: string;
+    statement: string;
+}
 
-const { data: limits, status, refresh } = useFetch(`/api/limits?solutionId=${solutionId}`),
+const { data: limits, status, refresh } = await useFetch(`/api/limits?solutionId=${solutionId}`),
     emptyLimit: LimitViewModel = { id: emptyUuid, name: '', statement: '' };
 
 const filters = ref({
@@ -46,7 +49,7 @@ const onUpdate = async (data: LimitViewModel) => {
     refresh()
 }
 
-const onDelete = async (id: Uuid) => {
+const onDelete = async (id: string) => {
     await $fetch(`/api/limits/${id}`, { method: 'DELETE' })
 
     refresh()

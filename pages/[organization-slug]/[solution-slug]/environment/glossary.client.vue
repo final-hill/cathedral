@@ -1,18 +1,21 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type GlossaryTerm from '~/server/domain/requirements/GlossaryTerm';
-import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
+import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Glossary' })
 definePageMeta({ name: 'Glossary' })
 
-const solutionSlug = useRoute().params.solutionSlug as string,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionSlug}`),
+const { solutionslug } = useRoute('Glossary').params,
+    { data: solutions } = await useFetch('/api/solutions', { query: { slug: solutionslug } }),
     solutionId = solutions.value?.[0].id;
 
-type GlossaryTermViewModel = Pick<GlossaryTerm, 'id' | 'name' | 'statement'>;
+type GlossaryTermViewModel = {
+    id: string;
+    name: string;
+    statement: string;
+}
 
-const { data: glossaryTerms, refresh, status } = useFetch(`/api/glossary-terms?solutionId=${solutionId}`),
+const { data: glossaryTerms, refresh, status } = await useFetch(`/api/glossary-terms?solutionId=${solutionId}`),
     emptyGlossaryTerm: GlossaryTermViewModel = { id: emptyUuid, name: '', statement: '' }
 
 const filters = ref({
@@ -45,7 +48,7 @@ const onUpdate = async (data: GlossaryTermViewModel) => {
     refresh()
 }
 
-const onDelete = async (id: Uuid) => {
+const onDelete = async (id: string) => {
     await $fetch(`/api/glossary-terms/${id}`, { method: 'DELETE' })
     refresh()
 }

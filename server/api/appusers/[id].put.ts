@@ -1,39 +1,52 @@
-import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import AppUserInteractor from "~/server/application/AppUserInteractor"
-import AppUserRepository from "~/server/data/repositories/AppUserRepository"
+import { fork } from "~/server/data/orm"
+import AppUser from "~/server/domain/application/AppUser"
+import { getServerSession } from "#auth"
 
 const bodySchema = z.object({
-    defaultOrganizationId: z.string().uuid(),
-    creationDate: z.date()
+    isSystemAdmin: z.boolean()
 })
 
 /**
  * PUT /api/appusers/:id
  *
- * Updates an assumption by id.
+ * Updates an appuser by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        appUserInteractor = new AppUserInteractor(new AppUserRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const id = event.context.params?.id
 
-    if (!body.success)
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
-        })
-
-    if (id) {
-        return appUserInteractor.update({
-            id: id,
-            defaultOrganizationId: body.data.defaultOrganizationId as Uuid,
-            creationDate: body.data.creationDate
-        })
-    } else {
+    if (!id)
         throw createError({
             statusCode: 400,
             statusMessage: "Bad Request: id is required."
         })
-    }
+
+    const em = fork(),
+        [body, session, appUser] = await Promise.all([
+            readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+            getServerSession(event),
+            em.findOne(AppUser, { id })
+        ]),
+        sessionUser = (await em.findOne(AppUser, { id: session!.id }))!
+
+    if (!body.success)
+        throw createError({
+            statusCode: 400,
+            statusMessage: "Bad Request: Invalid body parameters",
+            message: JSON.stringify(body.error.errors)
+        })
+    if (!appUser)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: No appuser found with id: ${id}`
+        })
+    if (!sessionUser.isSystemAdmin)
+        throw createError({
+            statusCode: 403,
+            statusMessage: "Forbidden: You must be a system admin to update a user."
+        })
+
+    appUser.isSystemAdmin = body.data.isSystemAdmin
+
+    await em.flush()
 })

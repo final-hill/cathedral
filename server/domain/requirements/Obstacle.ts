@@ -1,4 +1,4 @@
-import Goal from "./Goal";
+import Goal from "./Goal.js";
 
 /**
  * Obstacles are the challenges that prevent the goals from being achieved.

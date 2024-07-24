@@ -1,14 +1,20 @@
 <script lang="ts" setup>
 import slugify from '~/lib/slugify';
-import Solution from '~/server/domain/application/Solution';
 
 useHead({ title: 'New Solution' })
 definePageMeta({ name: 'New Solution' })
 
-const router = useRouter(),
+const { organizationslug } = useRoute('New Solution').params,
+    router = useRouter(),
     name = ref(''),
     slug = ref(''),
     description = ref('')
+
+const { data: organizations } = await useFetch('/api/organizations', {
+    query: { slug: organizationslug }
+}),
+    organization = organizations.value![0],
+    organizationId = organization.id
 
 const createSolution = async () => {
     try {
@@ -17,12 +23,15 @@ const createSolution = async () => {
             body: {
                 name: name.value,
                 description: description.value,
+                organizationId
             }
         }))
 
         if (solutionId) {
             const newSolution = (await $fetch(`/api/solutions/${solutionId}`));
-            router.push({ name: 'Solution', params: { solutionSlug: newSolution?.slug } });
+            router.push(`/${organizationslug}/${newSolution.slug}`);
+        } else {
+            throw new Error('Failed to create solution. No solution ID returned.');
         }
     } catch (error) {
         console.error(error)
@@ -30,7 +39,7 @@ const createSolution = async () => {
 }
 
 const cancel = () => {
-    router.push({ name: 'Solutions' });
+    router.push(`/${organizationslug}`);
 }
 
 watch(() => name.value, (newName) => {
@@ -44,7 +53,7 @@ watch(() => name.value, (newName) => {
             <label for="name" class="required col-fixed w-7rem">Name</label>
             <div class="col">
                 <InputText v-model.trim="name" id="name" name="name" class="w-23rem" placeholder="Sample Solution"
-                    :maxlength="Solution.maxNameLength" required />
+                    :maxlength="100" required />
             </div>
         </div>
 
@@ -60,7 +69,7 @@ watch(() => name.value, (newName) => {
             <label for="description" class="col-fixed w-7rem">Description</label>
             <div class="col">
                 <InputText id="description" name="description" placeholder="A description of the solution"
-                    class="w-23rem" :maxlength="Solution.maxDescriptionLength" v-model.trim="description" />
+                    class="w-23rem" v-model.trim="description" />
             </div>
         </div>
 

@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import slugify from '~/lib/slugify';
-import Organization from '~/server/domain/application/Organization';
 
 useHead({ title: 'New Organization' })
 definePageMeta({ name: 'New Organization' })
@@ -22,7 +21,9 @@ const createOrganization = async () => {
 
         if (organizationId) {
             const newOrganization = (await $fetch(`/api/organizations/${organizationId}`));
-            router.push({ name: 'Organization', params: { organizationSlug: newOrganization?.slug } });
+            router.push({ name: 'Organization', params: { organizationslug: newOrganization?.slug } });
+        } else {
+            throw new Error('Failed to create organization. No organization ID returned.');
         }
     } catch (error) {
         console.error(error)
@@ -44,7 +45,7 @@ watch(() => name.value, (newName) => {
             <label for="name" class="required col-fixed w-7rem">Name</label>
             <div class="col">
                 <InputText v-model.trim="name" id="name" name="name" class="w-23rem" placeholder="Sample Organization"
-                    :maxlength="Organization.maxNameLength" required />
+                    required />
             </div>
         </div>
 
@@ -60,7 +61,7 @@ watch(() => name.value, (newName) => {
             <label for="description" class="col-fixed w-7rem">Description</label>
             <div class="col">
                 <InputText id="description" name="description" placeholder="A description of the organization"
-                    class="w-23rem" :maxlength="Organization.maxDescriptionLength" v-model.trim="description" />
+                    class="w-23rem" v-model.trim="description" />
             </div>
         </div>
 

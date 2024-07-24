@@ -1,4 +1,4 @@
-import Responsibility from "./Responsibility";
+import Responsibility from "./Responsibility.js";
 
 /**
  * Human responsibility

@@ -1,18 +1,21 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type Obstacle from '~/server/domain/requirements/Obstacle';
-import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
+import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Obstacles' })
 definePageMeta({ name: 'Obstacles' })
 
-const solutionSlug = useRoute().params.solutionSlug as string,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionSlug}`),
+const {solutionslug} = useRoute('Obstacles').params,
+    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
     solutionId = solutions.value?.[0].id;
 
-type ObstacleViewModel = Pick<Obstacle, 'id' | 'name' | 'statement'>;
+type ObstacleViewModel = {
+    id: string;
+    name: string;
+    statement: string;
+}
 
-const { data: obstacles, refresh, status } = useFetch(`/api/obstacles?solutionId=${solutionId}`),
+const { data: obstacles, refresh, status } = await useFetch(`/api/obstacles?solutionId=${solutionId}`),
     emptyObstacle: ObstacleViewModel = { id: emptyUuid, name: '', statement: '' };
 
 const filters = ref({
@@ -46,7 +49,7 @@ const onUpdate = async (data: ObstacleViewModel) => {
     refresh()
 }
 
-const onDelete = async (id: Uuid) => {
+const onDelete = async (id: string) => {
     await $fetch(`/api/obstacles/${id}`, { method: 'DELETE' })
 
     refresh()

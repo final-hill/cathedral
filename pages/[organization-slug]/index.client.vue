@@ -1,15 +1,54 @@
 <script lang="ts" setup>
-import type { Properties } from '~/server/domain/requirements/Properties';
-import type Solution from '~/server/domain/application/Solution';
+import Organization from '~/server/domain/application/Organization';
+import type { Properties } from '~/server/domain/Properties';
 
-useHead({ title: 'Solutions' })
-definePageMeta({ name: 'Solutions' })
+useHead({ title: 'Organization' })
+definePageMeta({ name: 'Organization' })
 
-const router = useRouter(),
-    { refresh, status, data: solutions } = await useFetch('/api/solutions'),
+const { organizationslug } = useRoute('Organization').params,
+    router = useRouter(),
+    { data: organizations } = await useFetch('/api/organizations', {
+        query: { slug: organizationslug }
+    }),
+    organization = organizations.value![0],
+    { refresh, status, data: solutions } = await useFetch('/api/solutions', {
+        query: { slug: organizationslug }
+    }),
     confirm = useConfirm()
 
-const handleDelete = async (solution: Properties<Solution>) => {
+type SolutionModel = {
+    id: string;
+    name: string;
+    description: string;
+    slug: string;
+}
+
+const handleOrganizationDelete = async () => {
+    confirm.require({
+        message: `Are you sure you want to delete ${Organization.name}? This will also delete all associated solutions.`,
+        header: 'Delete Confirmation',
+        icon: 'pi pi-exclamation-triangle',
+        rejectLabel: 'Cancel',
+        acceptLabel: 'Delete',
+        accept: async () => {
+            await $fetch(`/api/organizations/${organization.id}`, {
+                method: 'delete'
+            })
+            router.push({ name: 'Home' })
+        },
+        reject: () => { }
+    })
+}
+
+const handleOrganizationEdit = () => {
+    router.push({ name: 'Edit Organization', params: { organizationslug: organization.slug } });
+}
+
+const handleOrganizationUsers = () => {
+    router.push({ name: 'Organization Users', params: { organizationslug: organization.slug } });
+}
+
+const handleSolutionDelete = async (solution: Properties<SolutionModel>) => {
     confirm.require({
         message: `Are you sure you want to delete ${solution.name}?`,
         header: 'Delete Confirmation',
@@ -20,23 +59,34 @@ const handleDelete = async (solution: Properties<Solution>) => {
             await $fetch(`/api/solutions/${solution.id}`, {
                 method: 'delete'
             })
-            refresh()
+            router.push({ name: 'Organization', params: { organizationslug } });
         },
         reject: () => { }
     })
 }
 
-const handleEdit = (solution: Solution) => {
-    router.push({ name: 'Edit Solution', params: { solutionSlug: solution.slug } });
+const handleSolutionEdit = (solution: SolutionModel) => {
+    router.push({ name: 'Edit Solution', params: { organizationslug, solutionslug: solution.slug } });
 }
 </script>
 
 <template>
+    <Toolbar class="mb-6">
+        <template #end>
+            <Button icon="pi pi-pencil" class="edit-button mr-2" @click="handleOrganizationEdit()"
+                label="Edit Organization" />
+            <Button icon="pi pi-users" class="edit-button mr-2" @click="handleOrganizationUsers()"
+                label="Manage Users" />
+            <Button icon="pi pi-trash" class="delete-button" @click="handleOrganizationDelete()" severity="danger"
+                label="Delete Organization" />
+        </template>
+    </Toolbar>
+
     <ConfirmDialog></ConfirmDialog>
     <div class="grid gap-3">
         <Card class="col shadow-4 border-dashed">
             <template #title>
-                <NuxtLink :to="{ name: 'New Solution' }">
+                <NuxtLink :to="{ name: 'New Solution', params: { organizationslug } }">
                     New Solution
                 </NuxtLink>
             </template>
@@ -49,7 +99,7 @@ const handleEdit = (solution: Solution) => {
         </div>
         <Card class="col shadow-4" v-for="solution in solutions">
             <template #title>
-                <NuxtLink :to="{ name: 'Solution', params: { solutionSlug: solution.slug } }">
+                <NuxtLink :to="{ name: 'Solution', params: { organizationslug, solutionslug: solution.slug } }">
                     {{ solution.name }}
                 </NuxtLink>
             </template>
@@ -57,8 +107,8 @@ const handleEdit = (solution: Solution) => {
                 {{ solution.description }}
             </template>
             <template #footer>
-                <Button icon="pi pi-pencil" class="edit-button mr-2" @click="handleEdit(solution as Solution)" />
-                <Button icon="pi pi-trash" class="delete-button" @click="handleDelete(solution as Solution)"
+                <Button icon="pi pi-pencil" class="edit-button mr-2" @click="handleSolutionEdit(solution)" />
+                <Button icon="pi pi-trash" class="delete-button" @click="handleSolutionDelete(solution)"
                     severity="danger" />
             </template>
         </Card>

@@ -1,18 +1,16 @@
-import EnvironmentComponentInteractor from "~/server/application/EnvironmentComponentInteractor"
-import EnvironmentComponentRepository from "~/server/data/repositories/EnvironmentComponentRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import { fork } from "~/server/data/orm"
+import EnvironmentComponent from "~/server/domain/requirements/EnvironmentComponent"
 
 /**
  * Delete an environment component by id.
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        environmentComponentInteractor = new EnvironmentComponentInteractor(
-            new EnvironmentComponentRepository()
-        )
+        em = fork()
 
     if (id) {
-        environmentComponentInteractor.delete(id as Uuid)
+        em.remove(em.getReference(EnvironmentComponent, id))
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

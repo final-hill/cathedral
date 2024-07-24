@@ -1,29 +1,49 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type UseCase from '~/server/domain/requirements/UseCase';
-import type UserStory from '~/server/domain/requirements/UserStory';
-import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
+import MoscowPriority from '~/server/domain/requirements/MoscowPriority';
+import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Scenarios' })
 
-const solutionSlug = useRoute().params.solutionSlug as string,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionSlug}`),
+const { solutionslug } = useRoute('Scenarios').params,
+    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
     solutionId = solutions.value?.[0].id!;
 
-type UserStoryViewModel = Pick<UserStory, 'id' | 'name' | 'primaryActorId' | 'functionalBehaviorId' | 'outcomeId' | 'priorityId'>
+type UserStoryViewModel = {
+    id: string;
+    name: string;
+    primaryActorId: string;
+    functionalBehaviorId: string;
+    outcomeId: string;
+    priority: MoscowPriority;
 
-type UseCaseViewModel = Pick<UseCase, 'id' | 'name' | 'primaryActorId' | 'extensions' | 'goalInContext' | 'level' | 'mainSuccessScenario' | 'preconditionId' | 'scope' | 'successGuaranteeId' | 'triggerId' | 'priorityId'>
+}
 
-const { data: userStories, refresh: refreshUserStories } = useFetch(`/api/user-stories?solutionId=${solutionId}`),
-    { data: useCases, refresh: refreshUseCases } = useFetch(`/api/use-cases?solutionId=${solutionId}`),
+type UseCaseViewModel = {
+    id: string;
+    name: string;
+    primaryActorId: string;
+    extensions: string;
+    goalInContext: string;
+    level: string;
+    mainSuccessScenario: string;
+    preconditionId: string;
+    scope: string;
+    successGuaranteeId: string;
+    triggerid: string;
+    priority: MoscowPriority;
+}
+
+const { data: userStories, refresh: refreshUserStories } = await useFetch(`/api/user-stories?solutionId=${solutionId}`),
+    { data: useCases, refresh: refreshUseCases } = await useFetch(`/api/use-cases?solutionId=${solutionId}`),
     emptyUserStory: UserStoryViewModel = {
         id: emptyUuid,
         name: '',
         primaryActorId: emptyUuid,
         functionalBehaviorId: emptyUuid,
         outcomeId: emptyUuid,
-        priorityId: 'MUST'
+        priority: MoscowPriority.MUST
     },
     emptyUseCase: UseCaseViewModel = {
         id: emptyUuid,
@@ -36,14 +56,14 @@ const { data: userStories, refresh: refreshUserStories } = useFetch(`/api/user-s
         preconditionId: emptyUuid,
         scope: '',
         successGuaranteeId: emptyUuid,
-        triggerId: emptyUuid,
-        priorityId: 'MUST'
+        triggerid: emptyUuid,
+        priority: MoscowPriority.MUST
     },
-    { data: roles } = useFetch(`/api/stakeholders?solutionId=${solutionId}`),
-    { data: functionalBehaviors } = useFetch(`/api/functional-behaviors?solutionId=${solutionId}`),
-    { data: outcomes } = useFetch(`/api/outcomes?solutionId=${solutionId}`),
-    { data: assumptions } = useFetch(`/api/assumptions?solutionId=${solutionId}`),
-    { data: effects } = useFetch(`/api/effects?solutionId=${solutionId}`),
+    { data: roles } = await useFetch(`/api/stakeholders?solutionId=${solutionId}`),
+    { data: functionalBehaviors } = await useFetch(`/api/functional-behaviors?solutionId=${solutionId}`),
+    { data: outcomes } = await useFetch(`/api/outcomes?solutionId=${solutionId}`),
+    { data: assumptions } = await useFetch(`/api/assumptions?solutionId=${solutionId}`),
+    { data: effects } = await useFetch(`/api/effects?solutionId=${solutionId}`),
     triggers = ref([])
 
 const userStoryfilters = ref({
@@ -73,7 +93,7 @@ const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
             ...userStory,
             solutionId,
             statement: '',
-            priorityId: 'MUST'
+            priority: MoscowPriority.MUST
         }
     });
 
@@ -87,7 +107,7 @@ const onUseCaseCreate = async (useCase: UseCaseViewModel) => {
             ...useCase,
             solutionId,
             statement: '',
-            priorityId: 'MUST'
+            priority: MoscowPriority.MUST
         }
     });
 
@@ -101,7 +121,7 @@ const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
             ...userStory,
             solutionId,
             statement: '',
-            priorityId: userStory.priorityId
+            priority: userStory.priority
         }
     });
 
@@ -113,7 +133,6 @@ const onUseCaseUpdate = async (useCase: UseCaseViewModel) => {
         method: 'PUT',
         body: {
             ...useCase,
-            triggerId: useCase.triggerId ?? emptyUuid,
             solutionId,
             statement: ''
         }
@@ -122,13 +141,13 @@ const onUseCaseUpdate = async (useCase: UseCaseViewModel) => {
     refreshUseCases();
 }
 
-const onUserStoryDelete = async (id: Uuid) => {
+const onUserStoryDelete = async (id: string) => {
     await $fetch(`/api/user-stories/${id}`, { method: 'DELETE' });
 
     refreshUserStories();
 }
 
-const onUseCaseDelete = async (id: Uuid) => {
+const onUseCaseDelete = async (id: string) => {
     await $fetch(`/api/use-cases/${id}`, { method: 'DELETE' });
 
     refreshUseCases();
@@ -330,7 +349,7 @@ const onUseCaseDelete = async (id: Uuid) => {
                 <!-- <Column field="stakeHoldersAndInterests" header="Stakeholders and Interests">
                     <template #body="{ data, field }">
                         {{
-                            data[field].map((id: Uuid) => roles.find((r: any) => r.id === id)?.name).join(', ')
+                            data[field].map((id: string) => roles.find((r: any) => r.id === id)?.name).join(', ')
                         }}
                     </template>
                     <template #editor="{ data, field }">

@@ -1,6 +1,6 @@
 import { z } from "zod"
-import EffectInteractor from "~/server/application/EffectInteractor"
-import EffectRepository from "~/server/data/repositories/EffectRepository"
+import { fork } from "~/server/data/orm"
+import Effect from "~/server/domain/requirements/Effect"
 
 const querySchema = z.object({
     name: z.string().optional(),
@@ -18,19 +18,23 @@ const querySchema = z.object({
  * Returns all effects that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const effectInteractor = new EffectInteractor(new EffectRepository()),
-        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
+    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q)),
+        em = fork()
 
     if (!query.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid query parameters"
+            statusMessage: "Bad Request: Invalid query parameters",
+            message: JSON.stringify(query.error.errors)
         })
 
-    return effectInteractor.getAll(
-        Object.fromEntries(
-            Object.entries(query.data)
-                .filter(([_, v]) => v !== undefined)
-        )
-    )
+    const results = await em.find(Effect, Object.entries(query.data)
+        .filter(([_, value]) => value !== undefined)
+        .reduce((acc, [key, value]) => {
+            if (key.endsWith("Id"))
+                return { ...acc, [key.replace("Id", "")]: value };
+            return { ...acc, [key]: { $eq: value } };
+        }, {}))
+
+    return results
 })

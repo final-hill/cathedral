@@ -1,8 +1,7 @@
-import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import LimitInteractor from "~/server/application/LimitInteractor"
-import LimitRepository from "~/server/data/repositories/LimitRepository"
-
+import { fork } from "~/server/data/orm"
+import Limit from "~/server/domain/requirements/Limit"
+import Solution from "~/server/domain/application/Solution"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -12,32 +11,41 @@ const bodySchema = z.object({
 
 /**
  * PUT /api/limits/:id
- *   body: {
- *     name: string,
- *     statement: string
- *     solutionId: Uuid
- *   }
  *
  * Updates a limit by id.
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        limitInteractor = new LimitInteractor(new LimitRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        return limitInteractor.update({
-            id: id as Uuid,
-            name: body.data.name,
-            statement: body.data.statement,
-            solutionId: body.data.solutionId as Uuid
-        })
+        const limit = await em.findOne(Limit, id),
+            solution = await em.findOne(Solution, body.data.solutionId)
+
+        if (!limit)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No assumption found with id: ${id}`
+            })
+        if (!solution)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
+            })
+
+        limit.name = body.data.name
+        limit.statement = body.data.statement
+        limit.solution = solution
+
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

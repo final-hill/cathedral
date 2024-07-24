@@ -1,18 +1,23 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type EnvironmentComponent from '~/server/domain/requirements/EnvironmentComponent';
-import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
+import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Components' })
 definePageMeta({ name: 'Environment Components' })
 
-const solutionSlug = useRoute().params.solutionSlug as string,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionSlug}`),
+const { solutionslug } = useRoute('Environment Components').params,
+    { data: solutions } = await useFetch('/api/solutions', { query: { slug: solutionslug } }),
     solutionId = solutions.value?.[0].id,
-    { data: environmentComponents, status, refresh } = useFetch(`/api/environment-components?solutionId=${solutionId}`),
+    { data: environmentComponents, status, refresh } = await useFetch('/api/environment-components', {
+        query: { solutionId }
+    }),
     emptyComponent = { id: emptyUuid, name: '', statement: '' }
 
-type EnvironmentComponentViewModel = Pick<EnvironmentComponent, 'id' | 'name' | 'statement'>;
+type EnvironmentComponentViewModel = {
+    id: string;
+    name: string;
+    statement: string;
+}
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -32,7 +37,7 @@ const onCreate = async (data: EnvironmentComponentViewModel) => {
     refresh()
 }
 
-const onDelete = async (id: Uuid) => {
+const onDelete = async (id: string) => {
     await $fetch(`/api/environment-components/${id}`, { method: 'DELETE' })
     refresh()
 }

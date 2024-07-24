@@ -1,23 +1,6 @@
-import type { Properties } from "../Properties";
-import type { Uuid } from "../Uuid";
-import Actor from "./Actor";
+import Actor from "./Actor.js";
 
 /**
  * Idenfitication of a part (of the Project, Environment, Goals, or System)
  */
-export default class Component extends Actor {
-    constructor({ parentComponentId, ...rest }: Properties<Component>) {
-        super(rest)
-
-        this.parentComponentId = parentComponentId
-    }
-
-    parentComponentId: Uuid | null
-
-    override toJSON() {
-        return {
-            ...super.toJSON(),
-            parentComponentId: this.parentComponentId
-        }
-    }
-}
+export default abstract class Component extends Actor { }

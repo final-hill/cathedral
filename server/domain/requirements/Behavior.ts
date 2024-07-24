@@ -1,26 +1,25 @@
-import type { Properties } from "~/server/domain/requirements/Properties";
-import Requirement from "~/server/domain/requirements/Requirement";
-import type MoscowPriority from "./MoscowPriority";
+import type { Properties } from "../Properties.js";
+import Requirement from "./Requirement.js";
+import type MoscowPriority from "./MoscowPriority.js";
 
 /**
  * Property of the operation of the system
  */
-export default class Behavior extends Requirement {
+export default abstract class Behavior extends Requirement {
+    constructor({ priority, ...rest }: Omit<Properties<Behavior>, 'id'>) {
+        super(rest)
+        this.priority = priority
+    }
 
     /**
      * The priority of the behavior.
      */
-    priorityId: keyof Omit<typeof MoscowPriority, 'prototype'>
-
-    constructor({ priorityId, ...rest }: Properties<Behavior>) {
-        super(rest)
-        this.priorityId = priorityId
-    }
+    priority: MoscowPriority
 
     override toJSON() {
         return {
             ...super.toJSON(),
-            priorityId: this.priorityId
+            priority: this.priority
         }
     }
 }

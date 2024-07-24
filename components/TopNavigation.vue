@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import deSlugify from '~/lib/deSlugify';
 
-const { data, signOut, signIn } = useAuth()
-
 const router = useRouter()
 
 let getCrumbs = () => {
@@ -27,6 +25,9 @@ router.afterEach(() => { crumbs.value = getCrumbs(); });
 const op = ref();
 
 const toggle = (event: Event) => op.value.toggle(event)
+
+const { data, getSession, signOut, signIn } = useAuth(),
+    session = await getSession();
 </script>
 
 <template>
@@ -47,14 +48,14 @@ const toggle = (event: Event) => op.value.toggle(event)
         </template>
         <template #end>
             <Button type="button" @click="toggle" link>
-                <Avatar v-if="data?.user?.image" :image="data.user?.image ?? undefined" shape="circle" />
+                <Avatar v-if="session?.user?.image" :image="session?.user?.image ?? undefined" shape="circle" />
                 <Avatar v-else icon="pi pi-user" shape="circle" />
             </Button>
         </template>
     </Menubar>
 
     <OverlayPanel ref="op">
-        <p> {{ data?.user?.name ?? 'Guest' }} </p>
+        <p> {{ data?.user?.name }} </p>
         <small> {{ data?.user?.email }} </small>
         <hr>
         <Button v-if="!data?.user" type="button" @click="signIn(undefined)" label="Sign In" icon="pi pi-sign-in" />

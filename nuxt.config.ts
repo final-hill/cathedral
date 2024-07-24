@@ -1,5 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+    compatibilityDate: '2024-07-22',
     devtools: {
         enabled: process.env.NODE_ENV === 'development'
     },
@@ -35,7 +36,13 @@ export default defineNuxtConfig({
     // https://vite-pwa-org.netlify.app/frameworks/nuxt
     // https://primeflex.org/
     // https://sidebase.io/nuxt-auth/getting-started
-    modules: ["nuxt-primevue", "@vite-pwa/nuxt", "@sidebase/nuxt-auth", "nuxt-security"],
+    modules: [
+        "nuxt-primevue",
+        "@vite-pwa/nuxt",
+        "@sidebase/nuxt-auth",
+        "nuxt-security",
+        "nuxt-typed-router"
+    ],
     // https://sidebase.io/nuxt-auth/configuration/nuxt-config
     auth: {
         isEnabled: true,
@@ -65,7 +72,11 @@ export default defineNuxtConfig({
         },
     },
     nitro: {
-        preset: 'node-server',
+        esbuild: {
+            options: {
+                target: 'esnext'
+            }
+        },
         experimental: {
             // https://nitro.unjs.io/config#openapi
             openAPI: true
@@ -93,7 +104,7 @@ export default defineNuxtConfig({
 
     },
     typescript: {
-        typeCheck: false
+        typeCheck: true
     },
     vite: {
 

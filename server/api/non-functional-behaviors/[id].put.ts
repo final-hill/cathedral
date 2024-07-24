@@ -1,13 +1,14 @@
-import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import NonFunctionalBehaviorInteractor from "~/server/application/NonFunctionalBehaviorInteractor"
-import NonFunctionalBehaviorRepository from "~/server/data/repositories/NonFunctionalBehaviorRepository"
+import { fork } from "~/server/data/orm"
+import MoscowPriority from "~/server/domain/requirements/MoscowPriority"
+import NonFunctionalBehavior from "~/server/domain/requirements/NonFunctionalBehavior"
+import Solution from "~/server/domain/application/Solution"
 
 const bodySchema = z.object({
     name: z.string().min(1),
-    statement: z.string().min(1),
+    statement: z.string(),
     solutionId: z.string().uuid(),
-    priorityId: z.enum(['MUST', 'SHOULD', 'COULD', 'WONT'])
+    priority: z.nativeEnum(MoscowPriority)
 })
 
 /**
@@ -15,23 +16,37 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        nonFunctionalBehaviorInteractor = new NonFunctionalBehaviorInteractor(new NonFunctionalBehaviorRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        return nonFunctionalBehaviorInteractor.update({
-            id: id as Uuid,
-            name: body.data.name,
-            statement: body.data.statement,
-            solutionId: body.data.solutionId as Uuid,
-            priorityId: body.data.priorityId
-        })
+        const nonFunctionalBehavior = await em.findOne(NonFunctionalBehavior, id),
+            solution = await em.findOne(Solution, body.data.solutionId)
+
+        if (!nonFunctionalBehavior)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No assumption found with id: ${id}`
+            })
+        if (!solution)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
+            })
+
+        nonFunctionalBehavior.name = body.data.name
+        nonFunctionalBehavior.statement = body.data.statement
+        nonFunctionalBehavior.solution = solution
+        nonFunctionalBehavior.priority = body.data.priority
+
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

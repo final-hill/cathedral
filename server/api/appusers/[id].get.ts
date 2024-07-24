@@ -1,16 +1,18 @@
-import AppUserInteractor from "~/server/application/AppUserInteractor"
-import AppUserRepository from "~/server/data/repositories/AppUserRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import { fork } from "~/server/data/orm"
+import AppUser from "~/server/domain/application/AppUser"
 
 /**
  * Returns an appuser by id
  */
 export default defineEventHandler(async (event) => {
+    // To get a specific appuser, you just need to be logged in (middleware)
+    // and provide the id of the appuser
+
     const id = event.context.params?.id,
-        appUserInteractor = new AppUserInteractor(new AppUserRepository())
+        em = fork()
 
     if (id) {
-        const result = appUserInteractor.get(id as Uuid)
+        const result = await em.findOne(AppUser, id)
 
         if (result)
             return result

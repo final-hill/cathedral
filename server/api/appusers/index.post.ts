@@ -1,12 +1,13 @@
-import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import AppUserRepository from "~/server/data/repositories/AppUserRepository"
-import AppUserInteractor from "~/server/application/AppUserInteractor"
+import { fork } from "~/server/data/orm"
+import AppUser from "~/server/domain/application/AppUser"
+import { getServerSession } from "#auth"
+import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 
 const bodySchema = z.object({
     id: z.string().email(),
-    defaultOrganizationId: z.string().uuid(),
-    creationDate: z.date()
+    organizationId: z.string().uuid(),
+    isSystemAdmin: z.boolean()
 })
 
 /**
@@ -15,18 +16,39 @@ const bodySchema = z.object({
  * Creates a new appuser and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const appUserInteractor = new AppUserInteractor(new AppUserRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const em = fork(),
+        [body, session] = await Promise.all([
+            readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+            getServerSession(event)
+        ]),
+        sessionUser = (await em.findOne(AppUser, { id: session!.id }))!
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
-    return appUserInteractor.create({
-        id: body.data.id,
-        defaultOrganizationId: body.data.defaultOrganizationId as Uuid,
-        creationDate: body.data.creationDate
-    })
+    const sessionUserOrgRoles = await em.findAll(AppUserOrganizationRole, { where: { appUser: sessionUser } })
+
+    // Only system admins and organization admins can create new appusers
+    if (sessionUser.isSystemAdmin || sessionUserOrgRoles.some(r => { return r.role.name === 'Organization Admin' })) {
+        const newAppUser = new AppUser({
+            id: body.data.id,
+            name: '{Anonymous}',
+            creationDate: new Date(),
+            // Only system admins can create other system admins
+            isSystemAdmin: sessionUser.isSystemAdmin ? body.data.isSystemAdmin : false
+        })
+
+        await em.persistAndFlush(newAppUser)
+
+        return newAppUser.id
+    } else {
+        throw createError({
+            statusCode: 403,
+            statusMessage: 'Forbidden: You must be a system admin or organization admin to create a user.'
+        })
+    }
 })

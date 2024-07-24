@@ -1,7 +1,7 @@
-import { type Uuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import PersonRepository from "~/server/data/repositories/PersonRepository"
-import PersonInteractor from "~/server/application/PersonInteractor"
+import { fork } from "~/server/data/orm"
+import Person from "~/server/domain/requirements/Person"
+import Solution from "~/server/domain/application/Solution"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -15,23 +15,37 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        personInteractor = new PersonInteractor(new PersonRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        return personInteractor.update({
-            id: id as Uuid,
-            name: body.data.name,
-            statement: body.data.statement,
-            solutionId: body.data.solutionId as Uuid,
-            email: body.data.email
-        })
+        const person = await em.findOne(Person, id),
+            solution = await em.findOne(Solution, body.data.solutionId)
+
+        if (!person)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No assumption found with id: ${id}`
+            })
+        if (!solution)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
+            })
+
+        person.name = body.data.name
+        person.statement = body.data.statement
+        person.solution = solution
+        person.email = body.data.email
+
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

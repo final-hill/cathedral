@@ -1,6 +1,6 @@
 import { z } from "zod"
-import GlossaryTermRepository from "~/server/data/repositories/GlossaryTermRepository"
-import GlossaryTermInteractor from "~/server/application/GlossaryTermInteractor"
+import { fork } from "~/server/data/orm"
+import GlossaryTerm from "~/server/domain/requirements/GlossaryTerm"
 
 const querySchema = z.object({
     name: z.string().optional(),
@@ -18,19 +18,24 @@ const querySchema = z.object({
  * Returns all glossay terms that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const glossaryTermInteractor = new GlossaryTermInteractor(new GlossaryTermRepository()),
-        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
+    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q)),
+        em = fork()
 
     if (!query.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid query parameters"
+            statusMessage: "Bad Request: Invalid query parameters",
+            message: JSON.stringify(query.error.errors)
         })
 
-    return glossaryTermInteractor.getAll(
-        Object.fromEntries(
-            Object.entries(query.data)
-                .filter(([_, v]) => v !== undefined)
-        )
-    )
+    const results = await em.find(GlossaryTerm, Object.entries(query.data)
+        .filter(([_, value]) => value !== undefined)
+        .reduce((acc, [key, value]) => {
+            if (key.endsWith("Id"))
+                return { ...acc, [key.replace("Id", "")]: value };
+            return { ...acc, [key]: { $eq: value } };
+        }, {})
+    );
+
+    return results
 })

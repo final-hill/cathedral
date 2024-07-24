@@ -1,6 +1,18 @@
-import Component from "./Component";
+import Component from "./Component.js";
+import { type Properties } from "../Properties.js";
 
-/**
- * Idenfitication of a part (of the Project, Environment, Goals, or System)
- */
-export default class EnvironmentComponent extends Component { }
+export default class EnvironmentComponent extends Component {
+    constructor({ parentComponent, ...rest }: Omit<Properties<EnvironmentComponent>, 'id'>) {
+        super(rest)
+        this.parentComponent = parentComponent
+    }
+
+    parentComponent?: EnvironmentComponent
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            parentComponentId: this.parentComponent?.id
+        }
+    }
+}

@@ -1,16 +1,16 @@
-import PersonInteractor from "~/server/application/PersonInteractor"
-import PersonRepository from "~/server/data/repositories/PersonRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import { fork } from "~/server/data/orm"
+import Person from "~/server/domain/requirements/Person"
 
 /**
  * Delete Person by id.
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        personInteractor = new PersonInteractor(new PersonRepository())
+        em = fork()
 
     if (id) {
-        personInteractor.delete(id as Uuid)
+        em.remove(em.getReference(Person, id))
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

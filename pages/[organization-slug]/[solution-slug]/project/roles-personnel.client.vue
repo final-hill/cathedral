@@ -1,26 +1,29 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type Person from '~/server/domain/requirements/Person';
-import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
+import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Roles & Personnel' })
 definePageMeta({ name: 'Roles & Personnel' })
 
-const solutionSlug = useRoute().params.solutionSlug as string,
-    { data: solutions } = useFetch(`/api/solutions?slug=${solutionSlug}`),
+const { solutionslug } = useRoute('Roles & Personnel').params,
+    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
     solutionId = solutions.value?.[0].id
 
-type PersonnelViewModel = Pick<Person, 'id' | 'name' | 'email'>;
+type PersonViewModel = {
+    id: string;
+    name: string;
+    email: string;
+}
 
-const { data: personnel, refresh, status } = useFetch(`/api/persons?solutionId=${solutionId}`),
-    emptyPersonnel: PersonnelViewModel = { id: emptyUuid, name: '', email: '' };
+const { data: personnel, refresh, status } = await useFetch(`/api/persons?solutionId=${solutionId}`),
+    emptyPerson: PersonViewModel = { id: emptyUuid, name: '', email: '' };
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
     'email': { value: null, matchMode: FilterMatchMode.CONTAINS }
 });
 
-const onCreate = async (data: PersonnelViewModel) => {
+const onCreate = async (data: PersonViewModel) => {
     await $fetch(`/api/persons`, {
         method: 'POST', body: {
             ...data,
@@ -32,7 +35,7 @@ const onCreate = async (data: PersonnelViewModel) => {
     refresh();
 }
 
-const onUpdate = async (data: PersonnelViewModel) => {
+const onUpdate = async (data: PersonViewModel) => {
     await $fetch(`/api/persons/${data.id}`, {
         method: 'PUT', body: {
             ...data,
@@ -44,7 +47,7 @@ const onUpdate = async (data: PersonnelViewModel) => {
     refresh();
 }
 
-const onDelete = async (id: Uuid) => {
+const onDelete = async (id: string) => {
     await $fetch(`/api/persons/${id}`, { method: 'DELETE' })
     refresh();
 }
@@ -55,7 +58,7 @@ const onDelete = async (id: Uuid) => {
         along with their responsibilities, availability, and contact information.
     </p>
 
-    <XDataTable :datasource="personnel" :empty-record="emptyPersonnel" :filters="filters" :on-create="onCreate"
+    <XDataTable :datasource="personnel" :empty-record="emptyPerson" :filters="filters" :on-create="onCreate"
         :on-update="onUpdate" :on-delete="onDelete">
         <Column field="name" header="Name" sortable>
             <template #filter="{ filterModel, filterCallback }">

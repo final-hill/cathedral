@@ -1,16 +1,16 @@
-import ObstacleInteractor from "~/server/application/ObstacleInteractor"
-import ObstacleRepository from "~/server/data/repositories/ObstacleRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import { fork } from "~/server/data/orm"
+import Obstacle from "~/server/domain/requirements/Obstacle"
 
 /**
  * Delete obstacle by id.
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        obstacleInteractor = new ObstacleInteractor(new ObstacleRepository())
+        em = fork()
 
     if (id) {
-        obstacleInteractor.delete(id as Uuid)
+        em.remove(em.getReference(Obstacle, id))
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

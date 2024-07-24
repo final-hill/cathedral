@@ -1,16 +1,19 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type Invariant from '~/server/domain/requirements/Invariant';
-import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
+import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Invariants' })
 definePageMeta({ name: 'Invariants' })
 
-const solutionSlug = useRoute().params.solutionSlug as string,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionSlug}`),
+const { solutionslug } = useRoute('Invariants').params,
+    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
     solutionId = solutions.value?.[0].id
 
-type InvariantViewModel = Pick<Invariant, 'id' | 'name' | 'statement'>;
+type InvariantViewModel = {
+    id: string;
+    name: string;
+    statement: string;
+}
 
 const { data: invariants, refresh, status } = await useFetch(`/api/invariants?solutionId=${solutionId}`),
     emptyInvariant: InvariantViewModel = { id: emptyUuid, name: '', statement: '' };
@@ -45,7 +48,7 @@ const onUpdate = async (data: InvariantViewModel) => {
     refresh()
 }
 
-const onDelete = async (id: Uuid) => {
+const onDelete = async (id: string) => {
     await useFetch(`/api/invariants/${id}`, { method: 'DELETE' })
 
     refresh()

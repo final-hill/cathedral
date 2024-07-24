@@ -1,16 +1,16 @@
-import UserStoryInteractor from "~/server/application/UserStoryInteractor"
-import UserStoryRepository from "~/server/data/repositories/UserStoryRepository"
-import { type Uuid } from "~/server/domain/Uuid"
+import { fork } from "~/server/data/orm"
+import UserStory from "~/server/domain/requirements/UserStory"
 
 /**
  * Delete User Story by id.
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        userStoryInteractor = new UserStoryInteractor(new UserStoryRepository())
+        em = fork()
 
     if (id) {
-        userStoryInteractor.delete(id as Uuid)
+        em.remove(em.getReference(UserStory, id))
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

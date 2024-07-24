@@ -1,23 +1,27 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import type SystemComponent from '~/server/domain/requirements/SystemComponent';
-import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
+import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Components' })
 definePageMeta({ name: 'System Components' })
 
-const solutionSlug = useRoute().params.solutionSlug as string,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionSlug}`),
+const { solutionslug } = useRoute('System Components').params,
+    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
     solutionId = solutions.value?.[0].id;
 
-type SystemComponentViewModel = Pick<SystemComponent, 'id' | 'name' | 'statement' | 'parentComponentId'>;
+type SystemComponentViewModel = {
+    id: string;
+    name: string;
+    statement: string;
+    parentComponentId?: string;
+}
 
-const { data: systemComponents, refresh, status } = useFetch(`/api/system-components?solutionId=${solutionId}`),
+const { data: systemComponents, refresh, status } = await useFetch(`/api/system-components?solutionId=${solutionId}`),
     emptyComponent: SystemComponentViewModel = {
         id: emptyUuid,
         name: '',
         statement: '',
-        parentComponentId: emptyUuid
+        parentComponentId: undefined
     };
 
 const filters = ref({
@@ -38,13 +42,13 @@ const onCreate = async (data: SystemComponentViewModel) => {
 const onUpdate = async (data: SystemComponentViewModel) => {
     await $fetch(`/api/system-components/${data.id}`, {
         method: 'PUT',
-        body: { data, solutionId }
+        body: { ...data, solutionId }
     })
 
     refresh()
 }
 
-const onDelete = async (id: Uuid) => {
+const onDelete = async (id: string) => {
     await $fetch(`/api/system-components/${id}`, {
         method: 'DELETE'
     })

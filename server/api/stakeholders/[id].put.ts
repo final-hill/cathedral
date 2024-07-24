@@ -1,17 +1,19 @@
-import { type Uuid, emptyUuid } from "~/server/domain/Uuid"
 import { z } from "zod"
-import StakeholderInteractor from "~/server/application/StakeholderInteractor"
-import StakeholderRepository from "~/server/data/repositories/StakeholderRepository"
+import { fork } from "~/server/data/orm"
+import Solution from "~/server/domain/application/Solution"
+import Stakeholder from "~/server/domain/requirements/Stakeholder"
+import StakeholderSegmentation from "~/server/domain/requirements/StakeholderSegmentation"
+import StakeholderCategory from "~/server/domain/requirements/StakeholderCategory"
 
 const bodySchema = z.object({
     name: z.string(),
     statement: z.string(),
-    solutionId: z.string(),
-    // parentComponentId: z.string().uuid(),
-    availability: z.number(),
-    influence: z.number(),
-    segmentationId: z.enum(["CLIENT", "VENDOR"]),
-    categoryId: z.enum(["KEY_STAKEHOLDER", "SHADOW_INFLUENCER", "FELLOW_TRAVELER", "OBSERVER"])
+    solutionId: z.string().uuid(),
+    parentComponentId: z.string().uuid().optional(),
+    availability: z.number().min(0).max(100),
+    influence: z.number().min(0).max(100),
+    segmentation: z.nativeEnum(StakeholderSegmentation),
+    category: z.nativeEnum(StakeholderCategory)
 })
 
 /**
@@ -21,28 +23,44 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const id = event.context.params?.id,
-        stakeholderInteractor = new StakeholderInteractor(new StakeholderRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        em = fork()
 
     if (!body.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
         })
 
     if (id) {
-        return stakeholderInteractor.update({
-            id: id as Uuid,
-            name: body.data.name,
-            statement: body.data.statement,
-            solutionId: body.data.solutionId as Uuid,
-            availability: body.data.availability,
-            influence: body.data.influence,
-            categoryId: body.data.categoryId,
-            // parentComponentId: body.data.parentComponentId as Uuid,
-            parentComponentId: emptyUuid,
-            segmentationId: body.data.segmentationId
-        })
+        const stakeholder = await em.findOne(Stakeholder, id),
+            solution = await em.findOne(Solution, body.data.solutionId),
+            parentStakeholder = body.data.parentComponentId ?
+                await em.findOne(Stakeholder, body.data.parentComponentId)
+                : undefined
+
+        if (!stakeholder)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No stakeholder found with id: ${id}`
+            })
+        if (!solution)
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
+            })
+
+        stakeholder.name = body.data.name
+        stakeholder.statement = body.data.statement
+        stakeholder.solution = solution
+        stakeholder.availability = body.data.availability
+        stakeholder.influence = body.data.influence
+        stakeholder.segmentation = body.data.segmentation
+        stakeholder.category = body.data.category
+        stakeholder.parentComponent = parentStakeholder || undefined
+
+        await em.flush()
     } else {
         throw createError({
             statusCode: 400,

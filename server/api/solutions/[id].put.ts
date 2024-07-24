@@ -1,13 +1,14 @@
 import { z } from "zod"
-import SolutionInteractor from "~/server/application/SolutionInteractor"
-import SolutionRepository from "~/server/data/repositories/SolutionRepository"
+import { fork } from "~/server/data/orm"
+import { getServerSession } from "#auth"
 import Solution from "~/server/domain/application/Solution"
-import { type Uuid } from "~/server/domain/Uuid"
+import AppUser from "~/server/domain/application/AppUser"
+import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
+import Organization from "~/server/domain/application/Organization"
 
 const bodySchema = z.object({
-    name: z.string().min(1).max(Solution.maxNameLength),
-    description: z.string().min(1).max(Solution.maxDescriptionLength),
-    organizationId: z.string().uuid()
+    name: z.string().min(1).max(100),
+    description: z.string()
 })
 
 /**
@@ -16,28 +17,55 @@ const bodySchema = z.object({
  * Updates a solution by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        solutionInteractor = new SolutionInteractor(new SolutionRepository()),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const id = event.context.params?.id
 
-    if (!body.success)
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters"
-        })
-
-    if (id) {
-        // @ts-ignore: missing slug property
-        return solutionInteractor.update({
-            id: id as Uuid,
-            name: body.data.name,
-            description: body.data.description,
-            organizationId: body.data.organizationId as Uuid
-        })
-    } else {
+    if (!id)
         throw createError({
             statusCode: 400,
             statusMessage: "Bad Request: id is required."
         })
+
+    const em = fork(),
+        [body, session, solution] = await Promise.all([
+            readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+            getServerSession(event),
+            em.findOne(Solution, id),
+        ])
+
+    if (!solution)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: No solution found with id: ${id}`
+        })
+    if (!body.success)
+        throw createError({
+            statusCode: 400,
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
+        })
+
+    const [appUser, organization] = await Promise.all([
+        em.findOne(AppUser, { id: session!.id }),
+        em.findOne(Organization, { id: solution!.organization.id })
+    ]),
+        appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser, organization })
+
+    // A solution can only be updated by a system admin
+    // or the associated organization admin, or organization contributor
+
+    if (appUser!.isSystemAdmin || appUserOrgRoles.some(r => {
+        return r.role.name === 'Organization Contributor' || r.role.name === 'Organization Admin'
+    })) {
+        solution!.name = body.data.name
+        solution!.description = body.data.description
+
+        await em.flush()
+    } else {
+        throw createError({
+            statusCode: 403,
+            statusMessage: "Forbidden: You must be a system admin, an organization admin," +
+                " or an organization contributor to update a solution."
+        })
     }
+
 })

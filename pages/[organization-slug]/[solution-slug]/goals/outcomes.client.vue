@@ -1,18 +1,21 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import Outcome from '~/server/domain/requirements/Outcome';
-import { type Uuid, emptyUuid } from '~/server/domain/Uuid';
+import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Outcomes' })
 definePageMeta({ name: 'Outcomes' })
 
-const solutionSlug = useRoute().params.solutionSlug as string,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionSlug}`),
+const { solutionslug } = useRoute('Outcomes').params,
+    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
     solutionId = solutions.value?.[0].id;
 
-type OutcomeViewModel = Pick<Outcome, 'id' | 'name' | 'statement'>;
+type OutcomeViewModel = {
+    id: string;
+    name: string;
+    statement: string;
+}
 
-const { data: outcomes, refresh, status } = useFetch(`/api/outcomes?solutionId=${solutionId}`),
+const { data: outcomes, refresh, status } = await useFetch(`/api/outcomes?solutionId=${solutionId}`),
     emptyOutcome: OutcomeViewModel = { id: emptyUuid, name: '', statement: '' };
 
 const filters = ref({
@@ -46,8 +49,8 @@ const onUpdate = async (data: OutcomeViewModel) => {
     refresh()
 }
 
-const onDelete = async (id: Uuid) => {
-    await $fetch<Outcome>(`/api/outcomes/${id}`, { method: 'DELETE' })
+const onDelete = async (id: string) => {
+    await $fetch(`/api/outcomes/${id}`, { method: 'DELETE' })
 
     refresh()
 }

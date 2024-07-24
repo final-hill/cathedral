@@ -1,12 +1,27 @@
-import Scenario from "./Scenario";
-import type { Uuid } from "~/server/domain/Uuid";
-import type { Properties } from "~/server/domain/requirements/Properties";
+import Scenario from "./Scenario.js";
+import { NIL as emptyUuid } from "uuid";
+import type { Properties } from "../Properties.js";
+import Assumption from "./Assumption.js";
+import Effect from "./Effect.js";
 
 /**
  * A Use Case specifies the scenario of a complete
  * interaction of a user through a system.
  */
 export default class UseCase extends Scenario {
+    constructor(props: Omit<Properties<UseCase>, 'id'>) {
+        super(props)
+        this.scope = props.scope
+        this.level = props.level
+        this.goalInContext = props.goalInContext
+        this.precondition = props.precondition
+        this.triggerId = props.triggerId
+        this.mainSuccessScenario = props.mainSuccessScenario
+        this.successGuarantee = props.successGuarantee
+        this.extensions = props.extensions
+        // this.stakeHoldersAndInterests = props.stakeHoldersAndInterests
+    }
+
     /**
      * TODO: <https://github.com/final-hill/cathedral/issues/154>
      */
@@ -25,10 +40,10 @@ export default class UseCase extends Scenario {
     /**
      * The precondition is an Assumption that must be true before the use case can start.
      */
-    preconditionId: Uuid
+    precondition: Assumption
 
     // the action upon the system that starts the use case
-    triggerId: Uuid
+    triggerId: string = emptyUuid
 
     /**
      * The main success scenario is the most common path through the system.
@@ -44,7 +59,7 @@ export default class UseCase extends Scenario {
     /**
      * An Effect that is guaranteed to be true after the use case is completed.
      */
-    successGuaranteeId: Uuid
+    successGuarantee: Effect
 
     /**
      *
@@ -55,20 +70,7 @@ export default class UseCase extends Scenario {
     /**
      *
      */
-    // stakeHoldersAndInterests: Uuid[] // Actor[]
-
-    constructor(props: Properties<UseCase>) {
-        super(props)
-        this.scope = props.scope
-        this.level = props.level
-        this.goalInContext = props.goalInContext
-        this.preconditionId = props.preconditionId
-        this.triggerId = props.triggerId
-        this.mainSuccessScenario = props.mainSuccessScenario
-        this.successGuaranteeId = props.successGuaranteeId
-        this.extensions = props.extensions
-        // this.stakeHoldersAndInterests = props.stakeHoldersAndInterests
-    }
+    // stakeHoldersAndInterests: string[] // Actor[]
 
     override toJSON() {
         return {
@@ -76,11 +78,11 @@ export default class UseCase extends Scenario {
             scope: this.scope,
             level: this.level,
             goalInContext: this.goalInContext,
-            preconditionId: this.preconditionId,
+            preconditionId: this.precondition.id,
             triggerId: this.triggerId,
             mainSuccessScenario: this.mainSuccessScenario,
-            successGuaranteeId: this.successGuaranteeId,
-            extensions: this.extensions,
+            successGuaranteeId: this.successGuarantee.id,
+            extensions: this.extensions
             // stakeHoldersAndInterests: this.stakeHoldersAndInterests
         }
     }

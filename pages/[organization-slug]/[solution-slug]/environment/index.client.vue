@@ -1,10 +1,12 @@
 <script lang="ts" setup>
+import type { RoutesNamesList } from '#build/typed-router/__routes';
+
 useHead({ title: 'Environment' })
 definePageMeta({ name: 'Environment' })
 
-const solutionSlug = useRoute().params.solutionSlug as string
+const { solutionslug, organizationslug } = useRoute('Environment').params
 
-const links = [
+const links: { name: RoutesNamesList, icon: string, label: string }[] = [
     { name: 'Assumptions', icon: 'pi-sun', label: 'Assumptions' },
     { name: 'Environment Components', icon: 'pi-th-large', label: 'Components' },
     { name: 'Constraints', icon: 'pi-link', label: 'Constraints' },
@@ -21,8 +23,8 @@ const links = [
     </p>
 
     <div class="grid">
-        <NuxtLink v-for="link in links" :key="link.name" :to="{ name: link.name, params: { solutionSlug } }"
-            class="col-fixed w-2 mr-4">
+        <NuxtLink v-for="link in links" :key="link.name"
+            :to="{ name: link.name, params: { organizationslug, solutionslug } }" class="col-fixed w-2 mr-4">
             <Button :label="link.label" class="w-full h-5rem text-1xl" :icon="`pi ${link.icon} text-3xl`" iconPos="top"
                 severity="secondary" />
         </NuxtLink>
