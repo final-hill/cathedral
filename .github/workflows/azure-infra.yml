@@ -30,7 +30,7 @@ jobs:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ secrets.AZURE_RG }}
           template: ./azure/bicep/main.bicep
-          parameters: 'environment=prod '
+          # parameters: 'environment=prod '
           scope: 'resourcegroup'
           failOnStdErr: false
           additionalArguments: --what-if
@@ -54,6 +54,6 @@ jobs:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ secrets.AZURE_RG }}
           template: ./azure/bicep/main.bicep
-          parameters: 'environment=prod '
+          # parameters: 'environment=prod '
           scope: 'resourcegroup'
           failOnStdErr: false
