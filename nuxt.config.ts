@@ -59,8 +59,8 @@ export default defineNuxtConfig({
     },
     runtimeConfig: {
         authSecret: process.env.AUTH_SECRET,
-        githubClientId: process.env.GITHUB_CLIENT_ID,
-        githubClientSecret: process.env.GITHUB_CLIENT_SECRET
+        githubClientId: process.env.GH_CLIENT_ID,
+        githubClientSecret: process.env.GH_CLIENT_SECRET
     },
     // https://nuxt.com/modules/security
     security: {

@@ -25,7 +25,8 @@
                 "Vue.volar",
                 "EditorConfig.EditorConfig",
                 "github.vscode-github-actions",
-                "AlexShen.classdiagram-ts"
+                "AlexShen.classdiagram-ts",
+                "ms-azuretools.vscode-bicep"
             ]
         }
     }
