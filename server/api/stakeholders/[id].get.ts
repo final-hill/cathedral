@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Stakeholder from "~/server/domain/Stakeholder"
-import { type Uuid } from "~/server/domain/Uuid"
+import Stakeholder from "~/server/domain/requirements/Stakeholder"
 
 /**
  * Returns a stakeholder by id
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        const result = await em.findOne(Stakeholder, id as Uuid)
+        const result = await em.findOne(Stakeholder, id)
 
         if (result)
             return result

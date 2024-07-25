@@ -1,9 +1,8 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import Stakeholder from "~/server/domain/Stakeholder"
-import StakeholderSegmentation from "~/server/domain/StakeholderSegmentation"
-import StakeholderCategory from "~/server/domain/StakeholderCategory"
-import { type Uuid } from "~/server/domain/Uuid"
+import Stakeholder from "~/server/domain/requirements/Stakeholder"
+import StakeholderSegmentation from "~/server/domain/requirements/StakeholderSegmentation"
+import StakeholderCategory from "~/server/domain/requirements/StakeholderCategory"
 
 const querySchema = z.object({
     name: z.string().optional(),
@@ -32,14 +31,15 @@ export default defineEventHandler(async (event) => {
     if (!query.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid query parameters"
+            statusMessage: "Bad Request: Invalid query parameters",
+            message: JSON.stringify(query.error.errors)
         })
 
     const results = await em.find(Stakeholder, Object.entries(query.data)
         .filter(([_, value]) => value !== undefined)
         .reduce((acc, [key, value]) => {
             if (key.endsWith("Id"))
-                return { ...acc, [key.replace("Id", "")]: value as Uuid };
+                return { ...acc, [key.replace("Id", "")]: value };
             return { ...acc, [key]: { $eq: value } };
         }, {} as Record<string, any>));
 

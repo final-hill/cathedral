@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import SystemComponent from "~/server/domain/SystemComponent"
-import { type Uuid } from "~/server/domain/Uuid"
+import SystemComponent from "~/server/domain/requirements/SystemComponent"
 
 /**
  * Delete an system component by id.
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        em.remove(em.getReference(SystemComponent, id as Uuid))
+        em.remove(em.getReference(SystemComponent, id))
         await em.flush()
     } else {
         throw createError({

@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Invariant from "~/server/domain/Invariant"
-import { type Uuid } from "~/server/domain/Uuid"
+import Invariant from "~/server/domain/requirements/Invariant"
 
 /**
  * Returns an invariant by id
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        const result = await em.findOne(Invariant, id as Uuid)
+        const result = await em.findOne(Invariant, id)
 
         if (result)
             return result

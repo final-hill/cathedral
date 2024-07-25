@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import UseCase from "~/server/domain/UseCase"
-import { type Uuid } from "~/server/domain/Uuid"
+import UseCase from "~/server/domain/requirements/UseCase"
 
 /**
  * Returns a UseCase by id
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        const result = await em.findOne(UseCase, id as Uuid)
+        const result = await em.findOne(UseCase, id)
 
         if (result)
             return result

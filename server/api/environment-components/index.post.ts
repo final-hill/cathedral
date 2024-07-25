@@ -1,8 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import Solution from "~/server/domain/Solution"
-import EnvironmentComponent from "~/server/domain/EnvironmentComponent"
-import { type Uuid } from "~/server/domain/Uuid"
+import Solution from "~/server/domain/application/Solution"
+import EnvironmentComponent from "~/server/domain/requirements/EnvironmentComponent"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -27,7 +26,7 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(body.error.errors)
         })
 
-    const solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+    const solution = await em.findOne(Solution, body.data.solutionId)
 
     if (!solution)
         throw createError({
@@ -35,7 +34,7 @@ export default defineEventHandler(async (event) => {
             statusMessage: `Bad Request: Solution not found for id ${body.data.solutionId}`
         })
 
-    const parentComponent = body.data.parentComponentId ? await em.findOne(EnvironmentComponent, body.data.parentComponentId as Uuid) : null
+    const parentComponent = body.data.parentComponentId ? await em.findOne(EnvironmentComponent, body.data.parentComponentId) : null
 
     const newEnvironmentComponent = new EnvironmentComponent({
         name: body.data.name,

@@ -1,8 +1,7 @@
 import { fork } from "~/server/data/orm"
 import { z } from "zod"
-import Assumption from "~/server/domain/Assumption"
-import Solution from "~/server/domain/Solution"
-import { type Uuid } from "~/server/domain/Uuid"
+import Assumption from "~/server/domain/requirements/Assumption"
+import Solution from "~/server/domain/application/Solution"
 
 const bodySchema = z.object({
     name: z.string().min(1),
@@ -28,8 +27,8 @@ export default defineEventHandler(async (event) => {
         })
 
     if (id) {
-        const assumption = await em.findOne(Assumption, id as Uuid),
-            solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+        const assumption = await em.findOne(Assumption, id),
+            solution = await em.findOne(Solution, body.data.solutionId)
 
         if (!assumption)
             throw createError({

@@ -1,8 +1,7 @@
 import { fork } from "~/server/data/orm"
 import { z } from "zod"
-import Solution from "~/server/domain/Solution"
-import Justification from "~/server/domain/Justification"
-import { type Uuid } from "~/server/domain/Uuid"
+import Solution from "~/server/domain/application/Solution"
+import Justification from "~/server/domain/requirements/Justification"
 
 const bodySchema = z.object({
     name: z.string().min(1),
@@ -26,7 +25,7 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(body.error.errors)
         })
 
-    const solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+    const solution = await em.findOne(Solution, body.data.solutionId)
 
     if (!solution)
         throw createError({

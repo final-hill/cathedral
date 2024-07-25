@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import UserStory from "~/server/domain/UserStory"
-import { type Uuid } from "~/server/domain/Uuid"
+import UserStory from "~/server/domain/requirements/UserStory"
 
 /**
  * Delete User Story by id.
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        em.remove(em.getReference(UserStory, id as Uuid))
+        em.remove(em.getReference(UserStory, id))
         await em.flush()
     } else {
         throw createError({

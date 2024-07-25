@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import GlossaryTerm from "~/server/domain/GlossaryTerm"
-import { type Uuid } from "~/server/domain/Uuid"
+import GlossaryTerm from "~/server/domain/requirements/GlossaryTerm"
 
 /**
  * Returns a glossary term by id
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        const result = await em.findOne(GlossaryTerm, id as Uuid)
+        const result = await em.findOne(GlossaryTerm, id)
 
         if (result)
             return result

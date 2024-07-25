@@ -1,8 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import Solution from "~/server/domain/Solution"
-import SystemComponent from "~/server/domain/SystemComponent"
-import { type Uuid } from "~/server/domain/Uuid"
+import Solution from "~/server/domain/application/Solution"
+import SystemComponent from "~/server/domain/requirements/SystemComponent"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -27,8 +26,8 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(body.error.errors)
         })
 
-    const solution = await em.findOne(Solution, body.data.solutionId as Uuid),
-        parentComponent = body.data.parentComponentId ? await em.findOne(SystemComponent, body.data.parentComponentId as Uuid) : undefined
+    const solution = await em.findOne(Solution, body.data.solutionId),
+        parentComponent = body.data.parentComponentId ? await em.findOne(SystemComponent, body.data.parentComponentId) : undefined
 
     if (!solution)
         throw createError({

@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Constraint from "~/server/domain/Constraint"
-import { type Uuid } from "~/server/domain/Uuid"
+import Constraint from "~/server/domain/requirements/Constraint"
 
 /**
  * Returns a constraint by id
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        const result = await em.findOne(Constraint, id as Uuid)
+        const result = await em.findOne(Constraint, id)
 
         if (result)
             return result

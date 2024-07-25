@@ -1,8 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import EnvironmentComponent from "~/server/domain/EnvironmentComponent"
-import Solution from "~/server/domain/Solution"
-import { type Uuid } from "~/server/domain/Uuid"
+import EnvironmentComponent from "~/server/domain/requirements/EnvironmentComponent"
+import Solution from "~/server/domain/application/Solution"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -29,9 +28,9 @@ export default defineEventHandler(async (event) => {
         })
 
     if (id) {
-        const environmentComponent = await em.findOne(EnvironmentComponent, id as Uuid),
-            parentComponent = body.data.parentComponentId ? await em.findOne(EnvironmentComponent, body.data.parentComponentId as Uuid) : null,
-            solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+        const environmentComponent = await em.findOne(EnvironmentComponent, id),
+            parentComponent = body.data.parentComponentId ? await em.findOne(EnvironmentComponent, body.data.parentComponentId) : null,
+            solution = await em.findOne(Solution, body.data.solutionId)
 
         if (!environmentComponent)
             throw createError({

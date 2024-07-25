@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import UserStory from "~/server/domain/UserStory"
-import { type Uuid } from "~/server/domain/Uuid"
+import UserStory from "~/server/domain/requirements/UserStory"
 
 /**
  * Returns a User Story by id
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        const result = await em.findOne(UserStory, id as Uuid)
+        const result = await em.findOne(UserStory, id)
 
         if (result)
             return result

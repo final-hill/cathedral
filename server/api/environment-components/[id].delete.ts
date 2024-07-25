@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import EnvironmentComponent from "~/server/domain/EnvironmentComponent"
-import { type Uuid } from "~/server/domain/Uuid"
+import EnvironmentComponent from "~/server/domain/requirements/EnvironmentComponent"
 
 /**
  * Delete an environment component by id.
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        em.remove(em.getReference(EnvironmentComponent, id as Uuid))
+        em.remove(em.getReference(EnvironmentComponent, id))
         await em.flush()
     } else {
         throw createError({

@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Limit from "~/server/domain/Limit"
-import { type Uuid } from "~/server/domain/Uuid"
+import Limit from "~/server/domain/requirements/Limit"
 
 /**
  * Delete limit by id.
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        em.remove(em.getReference(Limit, id as Uuid))
+        em.remove(em.getReference(Limit, id))
         await em.flush()
     } else {
         throw createError({

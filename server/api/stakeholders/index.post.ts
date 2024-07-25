@@ -1,10 +1,9 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import Solution from "~/server/domain/Solution"
-import Stakeholder from "~/server/domain/Stakeholder"
-import StakeholderSegmentation from "~/server/domain/StakeholderSegmentation"
-import StakeholderCategory from "~/server/domain/StakeholderCategory"
-import { type Uuid } from "~/server/domain/Uuid"
+import Solution from "~/server/domain/application/Solution"
+import Stakeholder from "~/server/domain/requirements/Stakeholder"
+import StakeholderSegmentation from "~/server/domain/requirements/StakeholderSegmentation"
+import StakeholderCategory from "~/server/domain/requirements/StakeholderCategory"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -31,9 +30,9 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(body.error.errors)
         })
 
-    const solution = await em.findOne(Solution, body.data.solutionId as Uuid),
+    const solution = await em.findOne(Solution, body.data.solutionId),
         parentStakeholder = body.data.parentComponentId ?
-            await em.findOne(Stakeholder, body.data.parentComponentId as Uuid)
+            await em.findOne(Stakeholder, body.data.parentComponentId)
             : undefined
 
     if (!solution)

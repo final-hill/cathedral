@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import FunctionalBehavior from "~/server/domain/FunctionalBehavior"
-import { type Uuid } from "~/server/domain/Uuid"
+import FunctionalBehavior from "~/server/domain/requirements/FunctionalBehavior"
 
 /**
  * Returns a functional behavior by id
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        const result = await em.findOne(FunctionalBehavior, id as Uuid)
+        const result = await em.findOne(FunctionalBehavior, id)
 
         if (result)
             return result

@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import UseCase from "~/server/domain/UseCase"
-import { type Uuid } from "~/server/domain/Uuid"
+import UseCase from "~/server/domain/requirements/UseCase"
 
 /**
  * Delete UseCase by id.
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        em.remove(em.getReference(UseCase, id as Uuid))
+        em.remove(em.getReference(UseCase, id))
         await em.flush()
     } else {
         throw createError({

@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import NonFunctionalBehavior from "~/server/domain/NonFunctionalBehavior"
-import { type Uuid } from "~/server/domain/Uuid"
+import NonFunctionalBehavior from "~/server/domain/requirements/NonFunctionalBehavior"
 
 /**
  * Returns a non-functional behavior by id
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        const result = await em.findOne(NonFunctionalBehavior, id as Uuid)
+        const result = await em.findOne(NonFunctionalBehavior, id)
 
         if (result)
             return result

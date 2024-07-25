@@ -1,7 +1,10 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import Solution from "~/server/domain/Solution"
-import { type Uuid } from "~/server/domain/Uuid"
+import { getServerSession } from "#auth"
+import Solution from "~/server/domain/application/Solution"
+import AppUser from "~/server/domain/application/AppUser"
+import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
+import Organization from "~/server/domain/application/Organization"
 
 const bodySchema = z.object({
     name: z.string().min(1).max(100),
@@ -14,10 +17,26 @@ const bodySchema = z.object({
  * Updates a solution by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-        em = fork()
+    const id = event.context.params?.id
 
+    if (!id)
+        throw createError({
+            statusCode: 400,
+            statusMessage: "Bad Request: id is required."
+        })
+
+    const em = fork(),
+        [body, session, solution] = await Promise.all([
+            readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+            getServerSession(event),
+            em.findOne(Solution, id),
+        ])
+
+    if (!solution)
+        throw createError({
+            statusCode: 400,
+            statusMessage: `Bad Request: No solution found with id: ${id}`
+        })
     if (!body.success)
         throw createError({
             statusCode: 400,
@@ -25,25 +44,28 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(body.error.errors)
         })
 
-    if (id) {
-        const solution = await em.findOne(Solution, id as Uuid)
+    const [appUser, organization] = await Promise.all([
+        em.findOne(AppUser, { id: session!.id }),
+        em.findOne(Organization, { id: solution!.organization.id })
+    ]),
+        appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser, organization })
 
-        if (!solution)
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Bad Request: No solution found with id: ${id}`
-            })
+    // A solution can only be updated by a system admin
+    // or the associated organization admin, or organization contributor
 
-        Object.assign(solution, {
-            name: body.data.name,
-            description: body.data.description
-        })
+    if (appUser!.isSystemAdmin || appUserOrgRoles.some(r => {
+        return r.role.name === 'Organization Contributor' || r.role.name === 'Organization Admin'
+    })) {
+        solution!.name = body.data.name
+        solution!.description = body.data.description
 
         await em.flush()
     } else {
         throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: id is required."
+            statusCode: 403,
+            statusMessage: "Forbidden: You must be a system admin, an organization admin," +
+                " or an organization contributor to update a solution."
         })
     }
+
 })

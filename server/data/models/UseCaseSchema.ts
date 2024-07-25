@@ -1,6 +1,6 @@
 import { EntitySchema } from "@mikro-orm/core";
-import Scenario from "../../domain/Scenario.js";
-import UseCase from "../../domain/UseCase.js";
+import Scenario from "../../domain/requirements/Scenario.js";
+import UseCase from "../../domain/requirements/UseCase.js";
 import ScenarioSchema from "./ScenarioSchema.js";
 
 export default new EntitySchema<UseCase, Scenario>({

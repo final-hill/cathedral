@@ -1,12 +1,11 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import FunctionalBehavior from "~/server/domain/FunctionalBehavior"
-import MoscowPriority from "~/server/domain/MoscowPriority"
-import Outcome from "~/server/domain/Outcome"
-import Solution from "~/server/domain/Solution"
-import Stakeholder from "~/server/domain/Stakeholder"
-import UserStory from "~/server/domain/UserStory"
-import { type Uuid } from "~/server/domain/Uuid"
+import FunctionalBehavior from "~/server/domain/requirements/FunctionalBehavior"
+import MoscowPriority from "~/server/domain/requirements/MoscowPriority"
+import Outcome from "~/server/domain/requirements/Outcome"
+import Solution from "~/server/domain/application/Solution"
+import Stakeholder from "~/server/domain/requirements/Stakeholder"
+import UserStory from "~/server/domain/requirements/UserStory"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -34,11 +33,11 @@ export default defineEventHandler(async (event) => {
         })
 
     if (id) {
-        const userStory = await em.findOne(UserStory, id as Uuid),
-            solution = await em.findOne(Solution, body.data.solutionId as Uuid),
-            primaryActor = await em.findOne(Stakeholder, body.data.primaryActorId as Uuid),
-            outcome = await em.findOne(Outcome, body.data.outcomeId as Uuid),
-            functionalBehavior = await em.findOne(FunctionalBehavior, body.data.functionalBehaviorId as Uuid)
+        const userStory = await em.findOne(UserStory, id),
+            solution = await em.findOne(Solution, body.data.solutionId),
+            primaryActor = await em.findOne(Stakeholder, body.data.primaryActorId),
+            outcome = await em.findOne(Outcome, body.data.outcomeId),
+            functionalBehavior = await em.findOne(FunctionalBehavior, body.data.functionalBehaviorId)
 
         if (!userStory)
             throw createError({

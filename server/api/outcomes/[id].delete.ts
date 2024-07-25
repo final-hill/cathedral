@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Outcome from "~/server/domain/Outcome"
-import { type Uuid } from "~/server/domain/Uuid"
+import Outcome from "~/server/domain/requirements/Outcome"
 
 /**
  * Delete outcome by id.
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        em.remove(em.getReference(Outcome, id as Uuid))
+        em.remove(em.getReference(Outcome, id))
         await em.flush()
     } else {
         throw createError({

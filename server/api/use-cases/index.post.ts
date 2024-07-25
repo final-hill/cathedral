@@ -1,12 +1,12 @@
-import { emptyUuid, type Uuid } from "~/server/domain/Uuid"
+import { NIL as emptyUuid } from "uuid"
 import { z } from "zod"
-import MoscowPriority from "~/server/domain/MoscowPriority"
+import MoscowPriority from "~/server/domain/requirements/MoscowPriority"
 import { fork } from "~/server/data/orm"
-import Solution from "~/server/domain/Solution"
-import Stakeholder from "~/server/domain/Stakeholder"
-import Assumption from "~/server/domain/Assumption"
-import Effect from "~/server/domain/Effect"
-import UseCase from "~/server/domain/UseCase"
+import Solution from "~/server/domain/application/Solution"
+import Stakeholder from "~/server/domain/requirements/Stakeholder"
+import Assumption from "~/server/domain/requirements/Assumption"
+import Effect from "~/server/domain/requirements/Effect"
+import UseCase from "~/server/domain/requirements/UseCase"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -38,10 +38,10 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(body.error.errors)
         })
 
-    const solution = await em.findOne(Solution, body.data.solutionId as Uuid),
-        primaryActor = await em.findOne(Stakeholder, body.data.primaryActorId as Uuid),
-        precondition = await em.findOne(Assumption, body.data.preconditionId as Uuid),
-        successGuarantee = await em.findOne(Effect, body.data.successGuaranteeId as Uuid)
+    const solution = await em.findOne(Solution, body.data.solutionId),
+        primaryActor = await em.findOne(Stakeholder, body.data.primaryActorId),
+        precondition = await em.findOne(Assumption, body.data.preconditionId),
+        successGuarantee = await em.findOne(Effect, body.data.successGuaranteeId)
 
     if (!solution)
         throw createError({

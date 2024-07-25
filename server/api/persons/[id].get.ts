@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Person from "~/server/domain/Person"
-import { type Uuid } from "~/server/domain/Uuid"
+import Person from "~/server/domain/requirements/Person"
 
 /**
  * Returns a person by id
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        const result = await em.findOne(Person, id as Uuid)
+        const result = await em.findOne(Person, id)
 
         if (result)
             return result

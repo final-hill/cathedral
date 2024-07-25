@@ -1,9 +1,8 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import MoscowPriority from "~/server/domain/MoscowPriority"
-import NonFunctionalBehavior from "~/server/domain/NonFunctionalBehavior"
-import Solution from "~/server/domain/Solution"
-import { type Uuid } from "~/server/domain/Uuid"
+import MoscowPriority from "~/server/domain/requirements/MoscowPriority"
+import NonFunctionalBehavior from "~/server/domain/requirements/NonFunctionalBehavior"
+import Solution from "~/server/domain/application/Solution"
 
 const bodySchema = z.object({
     name: z.string().min(1),
@@ -28,8 +27,8 @@ export default defineEventHandler(async (event) => {
         })
 
     if (id) {
-        const nonFunctionalBehavior = await em.findOne(NonFunctionalBehavior, id as Uuid),
-            solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+        const nonFunctionalBehavior = await em.findOne(NonFunctionalBehavior, id),
+            solution = await em.findOne(Solution, body.data.solutionId)
 
         if (!nonFunctionalBehavior)
             throw createError({

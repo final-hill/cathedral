@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import GlossaryTerm from "~/server/domain/GlossaryTerm"
-import { type Uuid } from "~/server/domain/Uuid"
+import GlossaryTerm from "~/server/domain/requirements/GlossaryTerm"
 
 /**
  * Delete glossary term by id.
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        em.remove(em.getReference(GlossaryTerm, id as Uuid))
+        em.remove(em.getReference(GlossaryTerm, id))
         await em.flush()
     } else {
         throw createError({

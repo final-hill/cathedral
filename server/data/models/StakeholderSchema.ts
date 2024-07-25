@@ -1,9 +1,9 @@
 import { EntitySchema } from "@mikro-orm/core";
-import Component from "../../domain/Component.js";
+import Component from "../../domain/requirements/Component.js";
 import RequirementSchema from "./RequirementSchema.js";
-import Stakeholder from "../../domain/Stakeholder.js";
-import StakeholderSegmentation from "../../domain/StakeholderSegmentation.js";
-import StakeholderCategory from "../../domain/StakeholderCategory.js";
+import Stakeholder from "../../domain/requirements/Stakeholder.js";
+import StakeholderSegmentation from "../../domain/requirements/StakeholderSegmentation.js";
+import StakeholderCategory from "../../domain/requirements/StakeholderCategory.js";
 
 export default new EntitySchema<Stakeholder, Component>({
     class: Stakeholder,

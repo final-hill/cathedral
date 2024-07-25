@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Effect from "~/server/domain/Effect"
-import { type Uuid } from "~/server/domain/Uuid"
+import Effect from "~/server/domain/requirements/Effect"
 
 /**
  * Delete an effect by id.
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        em.remove(em.getReference(Effect, id as Uuid))
+        em.remove(em.getReference(Effect, id))
         await em.flush()
     } else {
         throw createError({

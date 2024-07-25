@@ -1,8 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import GlossaryTerm from "~/server/domain/GlossaryTerm.js"
-import Solution from "~/server/domain/Solution.js"
-import { type Uuid } from "~/server/domain/Uuid"
+import GlossaryTerm from "~/server/domain/requirements/GlossaryTerm.js"
+import Solution from "~/server/domain/application/Solution.js"
 
 const bodySchema = z.object({
     name: z.string().min(1),
@@ -28,8 +27,8 @@ export default defineEventHandler(async (event) => {
         })
 
     if (id) {
-        const glossaryTerm = await em.findOne(GlossaryTerm, id as Uuid),
-            solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+        const glossaryTerm = await em.findOne(GlossaryTerm, id),
+            solution = await em.findOne(Solution, body.data.solutionId)
 
         if (!glossaryTerm)
             throw createError({

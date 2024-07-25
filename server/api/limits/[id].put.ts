@@ -1,8 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import Limit from "~/server/domain/Limit"
-import Solution from "~/server/domain/Solution"
-import { type Uuid } from "~/server/domain/Uuid"
+import Limit from "~/server/domain/requirements/Limit"
+import Solution from "~/server/domain/application/Solution"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -28,8 +27,8 @@ export default defineEventHandler(async (event) => {
         })
 
     if (id) {
-        const limit = await em.findOne(Limit, id as Uuid),
-            solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+        const limit = await em.findOne(Limit, id),
+            solution = await em.findOne(Solution, body.data.solutionId)
 
         if (!limit)
             throw createError({

@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Obstacle from "~/server/domain/Obstacle"
-import { type Uuid } from "~/server/domain/Uuid"
+import Obstacle from "~/server/domain/requirements/Obstacle"
 
 /**
  * Returns a obstacle by id
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        const result = await em.findOne(Obstacle, id as Uuid)
+        const result = await em.findOne(Obstacle, id)
 
         if (result)
             return result

@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Stakeholder from "~/server/domain/Stakeholder"
-import { type Uuid } from "~/server/domain/Uuid"
+import Stakeholder from "~/server/domain/requirements/Stakeholder"
 
 /**
  * Delete Stakeholder by id.
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        em.remove(em.getReference(Stakeholder, id as Uuid))
+        em.remove(em.getReference(Stakeholder, id))
         await em.flush()
     } else {
         throw createError({

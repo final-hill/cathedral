@@ -1,9 +1,8 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { type Uuid } from "~/server/domain/Uuid"
-import Constraint from "~/server/domain/Constraint"
-import Solution from "~/server/domain/Solution"
-import ConstraintCategory from "~/server/domain/ConstraintCategory"
+import Constraint from "~/server/domain/requirements/Constraint"
+import Solution from "~/server/domain/application/Solution"
+import ConstraintCategory from "~/server/domain/requirements/ConstraintCategory"
 
 const bodySchema = z.object({
     name: z.string().min(1),
@@ -28,7 +27,7 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(body.error.errors)
         })
 
-    const solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+    const solution = await em.findOne(Solution, body.data.solutionId)
 
     if (!solution)
         throw createError({

@@ -1,12 +1,11 @@
 import { z } from "zod"
-import MoscowPriority from "~/server/domain/MoscowPriority"
-import Solution from "~/server/domain/Solution"
+import MoscowPriority from "~/server/domain/requirements/MoscowPriority"
+import Solution from "~/server/domain/application/Solution"
 import { fork } from "~/server/data/orm"
-import Outcome from "~/server/domain/Outcome"
-import Stakeholder from "~/server/domain/Stakeholder"
-import FunctionalBehavior from "~/server/domain/FunctionalBehavior"
-import UserStory from "~/server/domain/UserStory"
-import { type Uuid } from "~/server/domain/Uuid"
+import Outcome from "~/server/domain/requirements/Outcome"
+import Stakeholder from "~/server/domain/requirements/Stakeholder"
+import FunctionalBehavior from "~/server/domain/requirements/FunctionalBehavior"
+import UserStory from "~/server/domain/requirements/UserStory"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -33,10 +32,10 @@ export default defineEventHandler(async (event) => {
         })
 
     const [solution, primaryActor, outcome, functionalBehavior] = await Promise.all([
-        em.findOne(Solution, body.data.solutionId as Uuid),
-        em.findOne(Stakeholder, body.data.primaryActorId as Uuid),
-        em.findOne(Outcome, body.data.outcomeId as Uuid),
-        em.findOne(FunctionalBehavior, body.data.functionalBehaviorId as Uuid)
+        em.findOne(Solution, body.data.solutionId),
+        em.findOne(Stakeholder, body.data.primaryActorId),
+        em.findOne(Outcome, body.data.outcomeId),
+        em.findOne(FunctionalBehavior, body.data.functionalBehaviorId)
     ]);
 
     if (!solution)

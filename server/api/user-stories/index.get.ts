@@ -1,8 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import MoscowPriority from "~/server/domain/MoscowPriority"
-import UserStory from "~/server/domain/UserStory"
-import { type Uuid } from "~/server/domain/Uuid"
+import MoscowPriority from "~/server/domain/requirements/MoscowPriority"
+import UserStory from "~/server/domain/requirements/UserStory"
 
 const querySchema = z.object({
     name: z.string().optional(),
@@ -24,14 +23,15 @@ export default defineEventHandler(async (event) => {
     if (!query.success)
         throw createError({
             statusCode: 400,
-            statusMessage: "Bad Request: Invalid query parameters"
+            statusMessage: "Bad Request: Invalid query parameters",
+            message: JSON.stringify(query.error.errors)
         })
 
     const results = await em.find(UserStory, Object.entries(query.data)
         .filter(([_, value]) => value !== undefined)
         .reduce((acc, [key, value]) => {
             if (key.endsWith("Id"))
-                return { ...acc, [key.replace("Id", "")]: value as Uuid };
+                return { ...acc, [key.replace("Id", "")]: value };
             return { ...acc, [key]: { $eq: value } };
         }, {}))
 

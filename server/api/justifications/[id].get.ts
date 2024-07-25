@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Justification from "~/server/domain/Justification"
-import { type Uuid } from "~/server/domain/Uuid"
+import Justification from "~/server/domain/requirements/Justification"
 
 /**
  * Returns a justification by id
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        const result = await em.findOne(Justification, id as Uuid)
+        const result = await em.findOne(Justification, id)
 
         if (result)
             return result

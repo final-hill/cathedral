@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Constraint from "~/server/domain/Constraint"
-import { type Uuid } from "~/server/domain/Uuid"
+import Constraint from "~/server/domain/requirements/Constraint"
 
 /**
  * Delete constraint by id.
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        em.remove(em.getReference(Constraint, id as Uuid))
+        em.remove(em.getReference(Constraint, id))
         await em.flush()
     } else {
         throw createError({

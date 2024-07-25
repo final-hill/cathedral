@@ -1,8 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import Invariant from "~/server/domain/Invariant"
-import Solution from "~/server/domain/Solution"
-import { type Uuid } from "~/server/domain/Uuid"
+import Invariant from "~/server/domain/requirements/Invariant"
+import Solution from "~/server/domain/application/Solution"
 
 const bodySchema = z.object({
     name: z.string().min(1),
@@ -27,8 +26,8 @@ export default defineEventHandler(async (event) => {
         })
 
     if (id) {
-        const invariant = await em.findOne(Invariant, id as Uuid),
-            solution = await em.findOne(Solution, body.data.solutionId as Uuid)
+        const invariant = await em.findOne(Invariant, id),
+            solution = await em.findOne(Solution, body.data.solutionId)
 
         if (!invariant)
             throw createError({

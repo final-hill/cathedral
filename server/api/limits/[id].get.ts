@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Limit from "~/server/domain/Limit"
-import { type Uuid } from "~/server/domain/Uuid"
+import Limit from "~/server/domain/requirements/Limit"
 
 /**
  * Returns a limit by id
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     if (id) {
-        const result = await em.findOne(Limit, id as Uuid)
+        const result = await em.findOne(Limit, id)
 
         if (result)
             return result
