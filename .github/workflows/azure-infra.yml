@@ -21,12 +21,6 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      # Temporary step to verify the resource group
-      # It exists, but is not being seen by the next step
-      - name: Verify Resource Group
-        run: |
-          az group show --name ${{ secrets.AZURE_RG }} --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
       - name: Lint Bicep
         run: |
           az bicep build --file ./azure/bicep/main.bicep
@@ -38,6 +32,7 @@ jobs:
           template: ./azure/bicep/main.bicep
           # parameters: 'environment=prod '
           scope: 'resourcegroup'
+          deploymentMode: 'Validate'
           failOnStdErr: false
           additionalArguments: --what-if
   bicep-deploy:
@@ -60,6 +55,7 @@ jobs:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ secrets.AZURE_RG }}
           template: ./azure/bicep/main.bicep
+          deploymentMode: 'Complete'
           # parameters: 'environment=prod '
           scope: 'resourcegroup'
           failOnStdErr: false
