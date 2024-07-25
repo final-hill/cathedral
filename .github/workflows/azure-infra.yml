@@ -5,7 +5,8 @@ permissions:
   contents: read
 
 on:
-  deployment:
+  workflow_dispatch:
+  # deployment:
 
 jobs:
   bicep-deploy:
