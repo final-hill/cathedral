@@ -3,12 +3,14 @@ targetScope = 'resourceGroup'
 // @allowed(['dev', 'prod'])
 // param environment string = 'dev'
 param location string = resourceGroup().location
+@minLength(3)
+@maxLength(22)
 param name string = 'cathedral'
 // param dockerComposeFile string
 
 // Dummy for testing
 resource stg 'Microsoft.Storage/storageAccounts@2023-04-01' = {
-  name: toLower('st-${name}')
+  name: toLower('st${name}')
   location: location
   sku: {
     name: 'Standard_LRS'
