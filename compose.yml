@@ -5,9 +5,9 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - ${WEBAPP_STORAGE_HOME}/pgdata:/var/lib/postgresql/data
+      # - ${WEBAPP_STORAGE_HOME}/pgdata:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql/data
     environment:
-      PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
@@ -18,3 +18,7 @@ services:
     restart: unless-stopped
     # puts the Dev Container on the same network as the database, so that it can access it on localhost
     network_mode: service:db
+
+volumes:
+   db-data:
+      driver: local
