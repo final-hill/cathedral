@@ -18,6 +18,8 @@ services:
     restart: unless-stopped
     # puts the Dev Container on the same network as the database, so that it can access it on localhost
     network_mode: service:db
+    volumes:
+      - /home/site/wwwroot/server:/home/site/wwwroot/server
     command: node /home/site/wwwroot/server/index.mjs
 
 volumes:
