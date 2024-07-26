@@ -24,12 +24,6 @@ jobs:
       - name: Lint Bicep
         run: |
           az bicep build --file ./azure/bicep/main.bicep
-      - name: Convert compose.yml to base64
-        id: convert_compose
-        run: |
-          base64 ./compose.yml > compose.base64
-          base64Compose=$(cat compose.base64)
-          echo "::set-output name=base64Compose::$base64Compose"
       - name: Run what-if
         uses: azure/arm-deploy@v2
         with:
@@ -46,7 +40,6 @@ jobs:
             postgresPassword=${{ secrets.POSTGRES_PASSWORD }}
             postgresPort=${{ secrets.POSTGRES_PORT }}
             postgresUser=${{ secrets.POSTGRES_USER }}
-            base64Compose=${{ steps.convert_compose.outputs.base64Compose }}
           scope: 'resourcegroup'
           deploymentMode: 'Incremental'
           failOnStdErr: false
@@ -64,12 +57,6 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - name: Convert compose.yml to base64
-        id: convert_compose
-        run: |
-          base64 ./compose.yml > compose.base64
-          base64Compose=$(cat compose.base64)
-          echo "::set-output name=base64Compose::$base64Compose"
       - name: Deploy Bicep
         uses: azure/arm-deploy@v2
         with:
@@ -88,6 +75,5 @@ jobs:
             postgresPassword=${{ secrets.POSTGRES_PASSWORD }}
             postgresPort=${{ secrets.POSTGRES_PORT }}
             postgresUser=${{ secrets.POSTGRES_USER }}
-            base64Compose=${{ steps.convert_compose.outputs.base64Compose }}
           scope: 'resourcegroup'
           failOnStdErr: false
