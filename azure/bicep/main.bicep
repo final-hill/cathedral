@@ -6,7 +6,7 @@ param location string = resourceGroup().location
 @minLength(3)
 @maxLength(22)
 param name string = 'cathedral'
-param dockerComposeFile string
+param base64Compose string
 
 @secure()
 param authOrigin string
@@ -56,8 +56,7 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
     siteConfig: {
       // Possible values obtainable from:
       // az webapp list-runtimes --os linux
-      linuxFxVersion: 'COMPOSE|${base64(dockerComposeFile)}'
-      // linuxFxVersion: 'COMPOSE|'
+      linuxFxVersion: 'COMPOSE|${base64Compose}'
       ftpsState: 'Disabled'
       http20Enabled: true
       appSettings: [
@@ -65,6 +64,14 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
           value: 'true'
+        }
+        {
+          name: 'DOCKER_ENABLE_CI'
+          value: 'true'
+        }
+        {
+          name: 'DOCKER_REGISTRY_SERVER_URL'
+          value: 'https://index.docker.io/v1/'
         }
         {
           name: 'AUTH_ORIGIN'
