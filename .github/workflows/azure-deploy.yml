@@ -1,4 +1,4 @@
-name: Deploy Azure Infrastructure
+name: Deploy To Azure
 
 permissions:
   id-token: write
@@ -6,10 +6,12 @@ permissions:
 
 on:
   workflow_dispatch:
+  release:
+    types: [created]
   # deployment:
 
 jobs:
-  validate:
+  validate_infrastructure:
     runs-on: ubuntu-latest
     environment: azure-prod
     steps:
@@ -44,8 +46,42 @@ jobs:
           deploymentMode: 'Incremental'
           failOnStdErr: false
           additionalArguments: --what-if
+      - name: logout
+        run: az logout
+  build_app:
+    name: Build
+    runs-on: ubuntu-latest
+    environment: azure-prod
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22.x
+          cache: "npm"
+      - name: Restore Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install dependencies
+        run: npm install
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build Application
+        run: npm run build
+      - name: Generate PWA Assets
+        run: npm run generate-pwa-assets
+      # - name: Run Unit Tests
+      #   run: npm run test
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: .output/public
   bicep-deploy:
-    needs: validate
+    needs: validate_infrastructure
     environment: azure-prod
     runs-on: ubuntu-latest
     steps:
@@ -77,3 +113,23 @@ jobs:
             postgresUser=${{ secrets.POSTGRES_USER }}
           scope: 'resourcegroup'
           failOnStdErr: false
+      - name: logout
+        run: az logout
+  deploy_app:
+    needs: [build_app, bicep-deploy]
+    runs-on: ubuntu-latest
+    environment: azure-prod
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Deploy app to Azure
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'app-cathedral'
+          package: .output/public
+      - name: logout
+        run: az logout
