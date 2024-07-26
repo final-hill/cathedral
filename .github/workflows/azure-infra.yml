@@ -28,7 +28,8 @@ jobs:
         id: convert_compose
         run: |
           base64 ./compose.yml > compose.base64
-          dockerComposeFile=$(cat compose.base64)
+          base64Compose=$(cat compose.base64)
+          echo "::set-output name=base64Compose::$base64Compose"
       - name: Run what-if
         uses: azure/arm-deploy@v2
         with:
@@ -45,7 +46,7 @@ jobs:
             postgresPassword=${{ secrets.POSTGRES_PASSWORD }}
             postgresPort=${{ secrets.POSTGRES_PORT }}
             postgresUser=${{ secrets.POSTGRES_USER }}
-            dockerComposeFile=${{ steps.convert_compose.outputs.dockerComposeFile }}
+            base64Compose=${{ steps.convert_compose.outputs.base64Compose }}
           scope: 'resourcegroup'
           deploymentMode: 'Incremental'
           failOnStdErr: false
@@ -67,7 +68,8 @@ jobs:
         id: convert_compose
         run: |
           base64 ./compose.yml > compose.base64
-          dockerComposeFile=$(cat compose.base64)
+          base64Compose=$(cat compose.base64)
+          echo "::set-output name=base64Compose::$base64Compose"
       - name: Deploy Bicep
         uses: azure/arm-deploy@v2
         with:
@@ -86,6 +88,6 @@ jobs:
             postgresPassword=${{ secrets.POSTGRES_PASSWORD }}
             postgresPort=${{ secrets.POSTGRES_PORT }}
             postgresUser=${{ secrets.POSTGRES_USER }}
-            dockerComposeFile=${{ steps.convert_compose.outputs.dockerComposeFile }}
+            base64Compose=${{ steps.convert_compose.outputs.base64Compose }}
           scope: 'resourcegroup'
           failOnStdErr: false
