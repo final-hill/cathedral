@@ -8,6 +8,25 @@ param location string = resourceGroup().location
 param name string = 'cathedral'
 // param dockerComposeFile string
 
+@secure()
+param authOrigin string
+@secure()
+param authSecret string
+@secure()
+param ghClientId string
+@secure()
+param ghClientSecret string
+@secure()
+param postgresDb string
+@secure()
+param postgresHost string
+@secure()
+param postgresPassword string
+@secure()
+param postgresPort string
+@secure()
+param postgresUser string
+
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: toLower('plan-${name}')
   location: location
@@ -46,6 +65,42 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
           value: 'true'
+        }
+        {
+          name: 'AUTH_ORIGIN'
+          value: authOrigin
+        }
+        {
+          name: 'AUTH_SECRET'
+          value: authSecret
+        }
+        {
+          name: 'GH_CLIENT_ID'
+          value: ghClientId
+        }
+        {
+          name: 'GH_CLIENT_SECRET'
+          value: ghClientSecret
+        }
+        {
+          name: 'POSTGRES_DB'
+          value: postgresDb
+        }
+        {
+          name: 'POSTGRES_HOST'
+          value: postgresHost
+        }
+        {
+          name: 'POSTGRES_PASSWORD'
+          value: postgresPassword
+        }
+        {
+          name: 'POSTGRES_PORT'
+          value: postgresPort
+        }
+        {
+          name: 'POSTGRES_USER'
+          value: postgresUser
         }
       ]
     }

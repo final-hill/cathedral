@@ -30,9 +30,17 @@ jobs:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ secrets.AZURE_RG }}
           template: ./azure/bicep/main.bicep
-          # parameters: 'environment=prod '
+          parameters: |
+            authOrigin=${{ secrets.AUTH_ORIGIN }}
+            authSecret=${{ secrets.AUTH_SECRET }}
+            ghClientId=${{ secrets.GH_CLIENT_ID }}
+            ghClientSecret=${{ secrets.GH_CLIENT_SECRET }}
+            postgresDb=${{ secrets.POSTGRES_DB }}
+            postgresHost=${{ secrets.POSTGRES_HOST }}
+            postgresPassword=${{ secrets.POSTGRES_PASSWORD }}
+            postgresPort=${{ secrets.POSTGRES_PORT }}
+            postgresUser=${{ secrets.POSTGRES_USER }}
           scope: 'resourcegroup'
-          deploymentMode: 'Validate'
           failOnStdErr: false
           additionalArguments: --what-if
   bicep-deploy:
@@ -51,11 +59,20 @@ jobs:
       - name: Deploy Bicep
         uses: azure/arm-deploy@v2
         with:
-          deploymentName: ${{ github.run_number }}
+          deploymentName: github-${{ github.run_number }}
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ secrets.AZURE_RG }}
           template: ./azure/bicep/main.bicep
           deploymentMode: 'Complete'
-          # parameters: 'environment=prod '
+          parameters: |
+            authOrigin=${{ secrets.AUTH_ORIGIN }}
+            authSecret=${{ secrets.AUTH_SECRET }}
+            ghClientId=${{ secrets.GH_CLIENT_ID }}
+            ghClientSecret=${{ secrets.GH_CLIENT_SECRET }}
+            postgresDb=${{ secrets.POSTGRES_DB }}
+            postgresHost=${{ secrets.POSTGRES_HOST }}
+            postgresPassword=${{ secrets.POSTGRES_PASSWORD }}
+            postgresPort=${{ secrets.POSTGRES_PORT }}
+            postgresUser=${{ secrets.POSTGRES_USER }}
           scope: 'resourcegroup'
           failOnStdErr: false
