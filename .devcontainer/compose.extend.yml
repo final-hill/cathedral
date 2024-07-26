@@ -14,6 +14,3 @@ services:
     command: /bin/sh -c "while sleep 1000; do :; done"
     # puts the Dev Container on the same network as the database, so that it can access it on localhost
     network_mode: service:db
-
-volumes:
-  postgres-data:
