@@ -113,4 +113,27 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
       ]
     }
   }
+  resource appConfigLogs 'config@2023-12-01' = {
+    name: 'logs'
+    properties: {
+      applicationLogs: {
+        fileSystem: {
+          level: 'Information'
+        }
+      }
+      detailedErrorMessages: {
+        enabled: true
+      }
+      failedRequestsTracing: {
+        enabled: true
+      }
+      httpLogs: {
+        fileSystem: {
+          retentionInDays: 3
+          retentionInMb: 50
+          enabled: true
+        }
+      }
+    }
+  }
 }
