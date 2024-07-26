@@ -55,12 +55,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 22.x
           cache: "npm"
       - name: Restore Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -77,8 +77,9 @@ jobs:
       # - name: Run Unit Tests
       #   run: npm run test
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
+          name: build_artifact
           path: .output/public
   bicep-deploy:
     needs: validate_infrastructure
@@ -126,6 +127,11 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build_artifact
+          path: .output/public
       - name: Deploy app to Azure
         uses: azure/webapps-deploy@v2
         with:
