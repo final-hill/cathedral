@@ -30,7 +30,7 @@ jobs:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ secrets.AZURE_RG }}
           template: ./azure/bicep/main.bicep
-          parameters: |
+          parameters: >
             authOrigin=${{ secrets.AUTH_ORIGIN }}
             authSecret=${{ secrets.AUTH_SECRET }}
             ghClientId=${{ secrets.GH_CLIENT_ID }}
@@ -64,7 +64,7 @@ jobs:
           resourceGroupName: ${{ secrets.AZURE_RG }}
           template: ./azure/bicep/main.bicep
           deploymentMode: 'Complete'
-          parameters: |
+          parameters: >
             authOrigin=${{ secrets.AUTH_ORIGIN }}
             authSecret=${{ secrets.AUTH_SECRET }}
             ghClientId=${{ secrets.GH_CLIENT_ID }}
