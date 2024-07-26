@@ -6,7 +6,8 @@ param location string = resourceGroup().location
 @minLength(3)
 @maxLength(22)
 param name string = 'cathedral'
-param base64Compose string
+
+var base64Compose = loadFileAsBase64('../../compose.yml')
 
 @secure()
 param authOrigin string
