@@ -41,6 +41,7 @@ jobs:
             postgresPort=${{ secrets.POSTGRES_PORT }}
             postgresUser=${{ secrets.POSTGRES_USER }}
           scope: 'resourcegroup'
+          deploymentMode: 'Validate'
           failOnStdErr: false
           additionalArguments: --what-if
   bicep-deploy:
