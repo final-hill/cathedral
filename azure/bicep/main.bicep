@@ -26,6 +26,8 @@ param postgresPort string
 @secure()
 param postgresUser string
 
+var sites_app_cathedral_name = 'app-cathedral'
+
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: toLower('plan-${name}')
   location: location
@@ -50,11 +52,33 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
   kind: 'app,linux'
   location: location
   properties: {
+    enabled: true
     serverFarmId: appServicePlan.id
-    httpsOnly: true
     reserved: true
     clientAffinityEnabled: false
+    keyVaultReferenceIdentity: 'SystemAssigned'
     publicNetworkAccess: 'Enabled'
+    httpsOnly: true
+    clientCertMode: 'Required'
+    customDomainVerificationId: '521CA701F4D0A3BE22D86F048FD6AE5D30138FDAE840B2439C3B4C29B6F3C807'
+    hostNameSslStates: [
+      {
+        name: '${toLower('app-${name}')}.azurewebsites.net'
+        sslState: 'Disabled'
+        hostType: 'Standard'
+      }
+      {
+        name: 'cathedral.final-hill.com'
+        sslState: 'SniEnabled'
+        thumbprint: '6A8557D66169186AF4B0BFA73933F859FE01239A'
+        hostType: 'Standard'
+      }
+      {
+        name: '${toLower('app-${name}')}.scm.azurewebsites.net'
+        sslState: 'Disabled'
+        hostType: 'Repository'
+      }
+    ]
     siteConfig: {
       linuxFxVersion: 'NODE|20-lts'
       appCommandLine: 'node server/index.mjs'
@@ -97,11 +121,15 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
           name: 'POSTGRES_USER'
           value: postgresUser
         }
+        {
+          name: 'NODE_ENV'
+          value: 'production'
+        }
       ]
     }
   }
 
-resource appConfigLogs 'config@2023-12-01' = {
+  resource appConfigLogs 'config@2023-12-01' = {
     name: 'logs'
     properties: {
       applicationLogs: {
@@ -144,6 +172,24 @@ resource appConfigLogs 'config@2023-12-01' = {
       scmType: 'None'
       use32BitWorkerProcess: false
       webSocketsEnabled: true
+    }
+  }
+
+  resource appCathedralName 'hostNameBindings@2023-12-01' = {
+    name: '${sites_app_cathedral_name}.azurewebsites.net'
+    properties: {
+      siteName: 'app-cathedral'
+      hostNameType: 'Verified'
+    }
+  }
+
+  resource appCathedralFinalHill 'hostNameBindings@2023-12-01' = {
+    name: 'cathedral.final-hill.com'
+    properties: {
+      siteName: 'app-cathedral'
+      hostNameType: 'Verified'
+      sslState: 'SniEnabled'
+      thumbprint: '6A8557D66169186AF4B0BFA73933F859FE01239A'
     }
   }
 }
