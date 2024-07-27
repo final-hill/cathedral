@@ -152,7 +152,7 @@ jobs:
       - name: logout
         run: az logout
   apply_db_migrations:
-    needs: [deploy_app]
+    needs: [bicep-deploy]
     runs-on: ubuntu-latest
     environment: azure-prod
     steps:
