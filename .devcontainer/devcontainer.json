@@ -6,6 +6,9 @@
         "../compose.yml",
         "compose.extend.yml"
     ],
+    "forwardPorts": [
+        5432
+    ],
     "service": "web",
     "workspaceFolder": "/workspace/${localWorkspaceFolderBasename}",
     "shutdownAction": "stopCompose",

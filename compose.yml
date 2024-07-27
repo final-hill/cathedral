@@ -6,18 +6,18 @@ services:
       - 5432:5432
     volumes:
       # - ${WEBAPP_STORAGE_HOME}/pgdata:/var/lib/postgresql/data
-      - db-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+    networks:
+      - app-network
   web:
     image: node:22.5.1-bookworm
     depends_on:
       - db
     restart: unless-stopped
-    # puts the Dev Container on the same network as the database, so that it can access it on localhost
-    network_mode: service:db
     volumes:
       - ${WEBAPP_STORAGE_HOME}/site/wwwroot:/home/site/wwwroot
     command: node /home/site/wwwroot/server/index.mjs
@@ -26,7 +26,12 @@ services:
       NUXT_PORT: 3000
     ports:
       - 443:3000
+    networks:
+      - app-network
 
 volumes:
-   db-data:
-      driver: local
+  postgres-data:
+    driver: local
+
+networks:
+  app-network:
