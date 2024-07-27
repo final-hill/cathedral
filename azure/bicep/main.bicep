@@ -62,14 +62,6 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
       http20Enabled: true
       appSettings: [
         {
-          name: 'NUXT_HOST'
-          value: '0.0.0.0'
-        }
-        {
-          name: 'NUXT_PORT'
-          value: '3000'
-        }
-        {
           name: 'AUTH_ORIGIN'
           value: authOrigin
         }
