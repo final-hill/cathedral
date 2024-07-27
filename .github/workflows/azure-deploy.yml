@@ -42,6 +42,7 @@ jobs:
             postgresPassword=${{ secrets.POSTGRES_PASSWORD }}
             postgresPort=${{ secrets.POSTGRES_PORT }}
             postgresUser=${{ secrets.POSTGRES_USER }}
+            postgresSsl=${{ secrets.POSTGRES_SSL }}
           scope: 'resourcegroup'
           deploymentMode: 'Incremental'
           failOnStdErr: false
@@ -125,6 +126,7 @@ jobs:
             postgresPassword=${{ secrets.POSTGRES_PASSWORD }}
             postgresPort=${{ secrets.POSTGRES_PORT }}
             postgresUser=${{ secrets.POSTGRES_USER }}
+            postgresSsl=${{ secrets.POSTGRES_SSL }}
           scope: 'resourcegroup'
           failOnStdErr: false
       - name: logout
