@@ -7,8 +7,6 @@ param location string = resourceGroup().location
 @maxLength(22)
 param name string = 'cathedral'
 
-var base64Compose = loadFileAsBase64('../../compose.yml')
-
 @secure()
 param authOrigin string
 @secure()
@@ -45,6 +43,9 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
 }
 
 resource appService 'Microsoft.Web/sites@2023-12-01' = {
+  dependsOn: [
+    dbServer
+  ]
   name: toLower('app-${name}')
   kind: 'app,linux,container'
   location: location
@@ -55,9 +56,7 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
     clientAffinityEnabled: false
     publicNetworkAccess: 'Enabled'
     siteConfig: {
-      // Possible values obtainable from:
-      // az webapp list-runtimes --os linux
-      linuxFxVersion: 'COMPOSE|${base64Compose}'
+      linuxFxVersion: 'DOCKER|node:22.5.1-bookworm'
       ftpsState: 'Disabled'
       http20Enabled: true
       appSettings: [
@@ -73,6 +72,14 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'DOCKER_REGISTRY_SERVER_URL'
           value: 'https://index.docker.io/v1/'
+        }
+        {
+          name: 'NUXT_HOST'
+          value: '0.0.0.0'
+        }
+        {
+          name: 'NUXT_PORT'
+          value: '3000'
         }
         {
           name: 'AUTH_ORIGIN'
@@ -113,6 +120,12 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
       ]
     }
   }
+  resource appConfigWeb 'config@2023-12-01' = {
+    name: 'web'
+    properties: {
+      appCommandLine: '--name web --restart unless-stopped -v \${WEBAPP_STORAGE_HOME}/site/wwwroot:/home/site/wwwroot -p 443:3000 node /home/site/wwwroot/server/index.mjs'
+    }
+  }
   resource appConfigLogs 'config@2023-12-01' = {
     name: 'logs'
     properties: {
@@ -134,6 +147,55 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
           enabled: true
         }
       }
+    }
+  }
+}
+
+// https://learn.microsoft.com/en-us/azure/templates/microsoft.dbforpostgresql/flexibleservers?pivots=deployment-language-bicep
+resource dbServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview' = {
+  name: toLower('db-${name}')
+  location: location
+  sku: {
+    name: 'Standard_B1ms'
+    tier: 'Burstable'
+  }
+  properties: {
+    replica: {
+      role: 'Primary'
+    }
+    replicationRole: 'Primary'
+    storage: {
+      iops: 120
+      tier: 'P4'
+      storageSizeGB: 32
+      autoGrow: 'Disabled'
+    }
+    network: {
+      publicNetworkAccess: 'Enabled'
+    }
+    dataEncryption: {
+      type: 'SystemManaged'
+    }
+    authConfig: {
+      activeDirectoryAuth: 'Disabled'
+      passwordAuth: 'Enabled'
+    }
+    version: '16'
+    administratorLogin: postgresUser
+    administratorLoginPassword: postgresPassword
+    availabilityZone: '1'
+    backup: {
+      backupRetentionDays: 7
+      geoRedundantBackup: 'Disabled'
+    }
+    highAvailability: {
+      mode: 'Disabled'
+    }
+    maintenanceWindow: {
+      customWindow: 'Disabled'
+      dayOfWeek: 0
+      startHour: 0
+      startMinute: 0
     }
   }
 }

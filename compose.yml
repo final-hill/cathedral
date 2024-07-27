@@ -1,22 +1,6 @@
 services:
-  db:
-    image: postgres:16-bookworm
-    restart: unless-stopped
-    ports:
-      - 5432:5432
-    volumes:
-      # - ${WEBAPP_STORAGE_HOME}/pgdata:/var/lib/postgresql/data
-      - postgres-data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    networks:
-      - app-network
   web:
     image: node:22.5.1-bookworm
-    depends_on:
-      - db
     restart: unless-stopped
     volumes:
       - ${WEBAPP_STORAGE_HOME}/site/wwwroot:/home/site/wwwroot
@@ -26,12 +10,3 @@ services:
       NUXT_PORT: 3000
     ports:
       - 443:3000
-    networks:
-      - app-network
-
-volumes:
-  postgres-data:
-    driver: local
-
-networks:
-  app-network:
