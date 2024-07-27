@@ -241,4 +241,20 @@ resource dbServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview'
       startMinute: 0
     }
   }
+
+  resource dbServerAllAzureFirewallRule 'firewallRules@2023-12-01-preview' = {
+    name: 'AllowAllAzureServicesAndResourcesWithinAzureIps_2024-7-27_12-38-13'
+    properties: {
+      startIpAddress: '0.0.0.0'
+      endIpAddress: '0.0.0.0'
+    }
+  }
+
+  resource dbServerAdminClientFirewallRule 'firewallRules@2023-12-01-preview' = {
+    name: 'ClientIPAddress_2024-7-27_12-8-16'
+    properties: {
+      startIpAddress: '98.144.135.200'
+      endIpAddress: '98.144.135.200'
+    }
+  }
 }
