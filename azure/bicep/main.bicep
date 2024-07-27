@@ -57,6 +57,7 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
     publicNetworkAccess: 'Enabled'
     siteConfig: {
       linuxFxVersion: 'NODE|20-lts'
+      appCommandLine: 'node server/index.mjs'
       ftpsState: 'Disabled'
       http20Enabled: true
       appSettings: [
@@ -121,6 +122,28 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
           enabled: true
         }
       }
+    }
+  }
+
+  resource appConfigWeb 'config@2023-12-01' = {
+    name: 'web'
+    properties: {
+      cors: {
+        allowedOrigins: [
+          '*'
+        ]
+      }
+      ipSecurityRestrictions: [
+        {
+          ipAddress: 'Any'
+          action: 'Allow'
+        }
+      ]
+      requestTracingEnabled: true
+      requestTracingExpirationTime: '1'
+      scmType: 'None'
+      use32BitWorkerProcess: false
+      webSocketsEnabled: true
     }
   }
 }
