@@ -26,7 +26,7 @@ param postgresPort string
 @secure()
 param postgresUser string
 
-var sites_app_cathedral_name = 'app-cathedral'
+// var sites_app_cathedral_name = 'app-cathedral'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: toLower('plan-${name}')
