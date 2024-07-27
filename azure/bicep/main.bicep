@@ -25,6 +25,7 @@ param postgresPassword string
 param postgresPort string
 @secure()
 param postgresUser string
+param postgresSsl bool
 
 // var sites_app_cathedral_name = 'app-cathedral'
 
@@ -120,6 +121,10 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'POSTGRES_USER'
           value: postgresUser
+        }
+        {
+          name: 'POSTGRES_SSL'
+          value: '${postgresSsl}'
         }
         {
           name: 'NODE_ENV'
