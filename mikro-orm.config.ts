@@ -39,6 +39,12 @@ const config: Options = {
     host: process.env.POSTGRES_HOST!,
     password: process.env.POSTGRES_PASSWORD!,
     port: parseInt(process.env.POSTGRES_PORT!),
+    // https://github.com/mikro-orm/mikro-orm/issues/303
+    driverOptions: {
+        connection: {
+            ssl: Boolean(process.env.POSTGRES_SSL)
+        }
+    },
     entities: [
         AppRoleSchema, AppUserOrganizationRoleSchema, AppUserSchema, AssumptionSchema,
         ConstraintSchema, EffectSchema, EnvironmentComponentSchema, FunctionalBehaviorSchema,
