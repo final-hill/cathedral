@@ -47,7 +47,7 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
     dbServer
   ]
   name: toLower('app-${name}')
-  kind: 'app,linux,container'
+  kind: 'app,linux'
   location: location
   properties: {
     serverFarmId: appServicePlan.id
@@ -56,31 +56,10 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
     clientAffinityEnabled: false
     publicNetworkAccess: 'Enabled'
     siteConfig: {
-      linuxFxVersion: 'DOCKER|node:22.5.1-bookworm'
+      linuxFxVersion: 'NODE|20-lts'
       ftpsState: 'Disabled'
       http20Enabled: true
       appSettings: [
-        // https://learn.microsoft.com/en-us/azure/app-service/configure-custom-container?tabs=debian&pivots=container-linux#use-persistent-shared-storage
-        {
-          name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
-          value: 'true'
-        }
-        {
-          name: 'DOCKER_ENABLE_CI'
-          value: 'true'
-        }
-        {
-          name: 'DOCKER_REGISTRY_SERVER_URL'
-          value: 'https://index.docker.io/v1/'
-        }
-        {
-          name: 'NUXT_HOST'
-          value: '0.0.0.0'
-        }
-        {
-          name: 'NUXT_PORT'
-          value: '3000'
-        }
         {
           name: 'AUTH_ORIGIN'
           value: authOrigin
@@ -120,12 +99,7 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
       ]
     }
   }
-  resource appConfigWeb 'config@2023-12-01' = {
-    name: 'web'
-    properties: {
-      appCommandLine: '--name web --restart unless-stopped -v \${WEBAPP_STORAGE_HOME}/site/wwwroot:/home/site/wwwroot -p 443:3000 node /home/site/wwwroot/server/index.mjs'
-    }
-  }
+
   resource appConfigLogs 'config@2023-12-01' = {
     name: 'logs'
     properties: {
