@@ -175,6 +175,8 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
     }
   }
 
+  // FIXME: This is not working
+  /*
   resource appCathedralName 'hostNameBindings@2023-12-01' = {
     name: '${sites_app_cathedral_name}.azurewebsites.net'
     properties: {
@@ -192,6 +194,7 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
       thumbprint: '6A8557D66169186AF4B0BFA73933F859FE01239A'
     }
   }
+  */
 }
 
 // https://learn.microsoft.com/en-us/azure/templates/microsoft.dbforpostgresql/flexibleservers?pivots=deployment-language-bicep
