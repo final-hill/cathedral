@@ -130,6 +130,9 @@ jobs:
             postgresPassword=${{ secrets.POSTGRES_PASSWORD }}
             postgresPort=${{ secrets.POSTGRES_PORT }}
             postgresUser=${{ secrets.POSTGRES_USER }}
+            slackAdminMemberId=${{ secrets.SLACK_ADMIN_MEMBER_ID }}
+            slackBotToken=${{ secrets.SLACK_BOT_TOKEN }}
+            slackSigningSecret=${{ secrets.SLACK_SIGNING_SECRET }}
           scope: 'resourcegroup'
           failOnStdErr: false
       - name: logout
