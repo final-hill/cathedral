@@ -47,11 +47,26 @@ async function sendResponse(slackEvent: NonNullable<typeof bodySchema._type.even
     }
 }
 
-function isValidSlackRequest(headers: Headers, body: typeof bodySchema._type) {
+// https://api.slack.com/authentication/verifying-requests-from-slack#validating-a-request
+function isValidSlackRequest(headers: Headers, rawBody: string) {
     const signingSecret = process.env.SLACK_SIGNING_SECRET!,
-        timestamp = headers.get('X-Slack-Request-Timestamp')!,
-        slackSignature = headers.get('X-Slack-Signature')!,
-        base = `v0:${timestamp}:${JSON.stringify(body)}`,
+        timestamp = headers.get('X-Slack-Request-Timestamp')!
+
+    // Prevent replay attacks by checking the timestamp
+    // to verify that it does not differ from local time by more than five minutes.
+    const curTimestamp = Math.floor(Date.now() / 1000),
+        reqTimestamp = parseInt(timestamp, 10);
+
+    if (Math.abs(curTimestamp - reqTimestamp) > 300) {
+        throw createError({
+            statusCode: 403,
+            statusMessage: 'Forbidden',
+            message: 'Invalid Slack request timestamp'
+        });
+    }
+
+    const slackSignature = headers.get('X-Slack-Signature')!,
+        base = `v0:${timestamp}:${rawBody}`,
         hmac = crypto
             .createHmac('sha256', signingSecret)
             .update(base)
@@ -66,6 +81,7 @@ function isValidSlackRequest(headers: Headers, body: typeof bodySchema._type) {
  */
 export default defineEventHandler(async (event) => {
     const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        rawBody = (await readRawBody(event))!,
         headers = event.headers
 
     if (!body.success)
@@ -75,17 +91,17 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(body.error.errors)
         })
 
-    const requestType = body.data.type
-
-    if (requestType === 'url_verification')
-        return { challenge: body.data.challenge };
-
-    if (!isValidSlackRequest(headers, body.data))
+    if (!isValidSlackRequest(headers, rawBody))
         throw createError({
             statusCode: 403,
             statusMessage: 'Forbidden',
             message: 'Invalid Slack request signature'
         })
+
+    const requestType = body.data.type
+
+    if (requestType === 'url_verification')
+        return { challenge: body.data.challenge };
 
     if (requestType === 'event_callback') {
         const eventType = body.data.event!.type
