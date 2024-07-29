@@ -26,6 +26,12 @@ param postgresPort string
 @secure()
 param postgresUser string
 param postgresSsl bool
+@secure()
+param slackAdminMemberId string
+@secure()
+param slackBotToken string
+@secure()
+param slackSigningSecret string
 
 // var sites_app_cathedral_name = 'app-cathedral'
 
@@ -125,6 +131,18 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'POSTGRES_SSL'
           value: '${postgresSsl}'
+        }
+        {
+          name: 'SLACK_ADMIN_MEMBER_ID'
+          value: slackAdminMemberId
+        }
+        {
+          name: 'SLACK_BOT_TOKEN'
+          value: slackBotToken
+        }
+        {
+          name: 'SLACK_SIGNING_SECRET'
+          value: slackSigningSecret
         }
         {
           name: 'NODE_ENV'

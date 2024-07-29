@@ -43,6 +43,9 @@ jobs:
             postgresPort=${{ secrets.POSTGRES_PORT }}
             postgresUser=${{ secrets.POSTGRES_USER }}
             postgresSsl=${{ secrets.POSTGRES_SSL }}
+            slackAdminMemberId=${{ secrets.SLACK_ADMIN_MEMBER_ID }}
+            slackBotToken=${{ secrets.SLACK_BOT_TOKEN }}
+            slackSigningSecret=${{ secrets.SLACK_SIGNING_SECRET }}
           scope: 'resourcegroup'
           deploymentMode: 'Incremental'
           failOnStdErr: false
@@ -84,6 +87,9 @@ jobs:
           echo "GH_CLIENT_SECRET=${{secrets.GH_CLIENT_SECRET}}" >> .env
           echo "AUTH_SECRET=${{secrets.AUTH_SECRET}}" >> .env
           echo "AUTH_ORIGIN=${{secrets.AUTH_ORIGIN}}" >> .env
+          echo "SLACK_ADMIN_MEMBER_ID=${{secrets.SLACK_ADMIN_MEMBER_ID}}" >> .env
+          echo "SLACK_BOT_TOKEN=${{secrets.SLACK_BOT_TOKEN}}" >> .env
+          echo "SLACK_SIGNING_SECRET=${{secrets.SLACK_SIGNING_SECRET}}" >> .env
       - name: Build Application
         run: npm run build
       - name: Generate PWA Assets
