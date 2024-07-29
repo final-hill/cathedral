@@ -180,27 +180,27 @@ const onDelete = async (id: string) => {
                 </Column>
                 <Column field="category" header="Category" sortable>
                     <template #filter="{ filterModel, filterCallback }">
-                        <Select v-model="filterModel.value" :options="categories" optionLabel="description"
+                        <Dropdown v-model="filterModel.value" :options="categories" optionLabel="description"
                             optionValue="id" @input="filterCallback()" />
                     </template>
                     <template #body="{ data, field }">
                         {{ categories.find(({ id }) => id === data[field])?.description }}
                     </template>
                     <template #editor="{ data, field }">
-                        <Select v-model="data[field]" :options="categories" optionLabel="description" optionValue="id"
+                        <Dropdown v-model="data[field]" :options="categories" optionLabel="description" optionValue="id"
                             required="true" />
                     </template>
                 </Column>
                 <Column field="segmentation" header="Segmentation" sortable>
                     <template #filter="{ filterModel, filterCallback }">
-                        <Select v-model="filterModel.value" :options="segmentations" optionLabel="description"
+                        <Dropdown v-model="filterModel.value" :options="segmentations" optionLabel="description"
                             optionValue="id" @input="filterCallback()" />
                     </template>
                     <template #body="{ data, field }">
                         {{ segmentations.find(({ id }) => id === data[field])?.description }}
                     </template>
                     <template #editor="{ data, field }">
-                        <Select v-model="data[field]" :options="segmentations" optionLabel="description"
+                        <Dropdown v-model="data[field]" :options="segmentations" optionLabel="description"
                             optionValue="id" required="true" />
                     </template>
                 </Column>

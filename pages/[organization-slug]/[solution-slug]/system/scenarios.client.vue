@@ -182,40 +182,40 @@ const onUseCaseDelete = async (id: string) => {
                 </Column>
                 <Column field="primaryActorId" header="Actor">
                     <template #filter="{ filterModel, filterCallback }">
-                        <Select v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
+                        <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
                             optionValue="id" :options="roles!" placeholder="Search by Actor" />
                     </template>
                     <template #body="{ data, field }">
                         {{ roles?.find(r => r.id === data[field])?.name }}
                     </template>
                     <template #editor="{ data, field }">
-                        <Select v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="roles!"
+                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="roles!"
                             placeholder="Select an Actor" />
                     </template>
                 </Column>
                 <Column field="functionalBehaviorId" header="Behavior">
                     <template #filter="{ filterModel, filterCallback }">
-                        <Select v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
+                        <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
                             optionValue="id" :options="functionalBehaviors!" placeholder="Search by Behavior" />
                     </template>
                     <template #body="{ data, field }">
                         {{ functionalBehaviors?.find(b => b.id === data[field])?.name }}
                     </template>
                     <template #editor="{ data, field }">
-                        <Select v-model.trim="data[field]" optionLabel="name" optionValue="id"
+                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id"
                             :options="functionalBehaviors!" placeholder="Select a Behavior" />
                     </template>
                 </Column>
                 <Column field="outcomeId" header="Outcome">
                     <template #filter="{ filterModel, filterCallback }">
-                        <Select v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
+                        <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
                             optionValue="id" :options="outcomes!" placeholder="Search by Outcome" />
                     </template>
                     <template #body="{ data, field }">
                         {{ outcomes?.find(o => o.id === data[field])?.name }}
                     </template>
                     <template #editor="{ data, field }">
-                        <Select v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="outcomes!"
+                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="outcomes!"
                             placeholder="Select an Outcome" />
                     </template>
                 </Column>
@@ -266,14 +266,14 @@ const onUseCaseDelete = async (id: string) => {
                 </Column>
                 <Column field="primaryActorId" header="Actor">
                     <template #filter="{ filterModel, filterCallback }">
-                        <Select v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
+                        <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
                             optionValue="id" :options="roles!" placeholder="Search by Actor" />
                     </template>
                     <template #body="{ data, field }">
                         {{ roles?.find(r => r.id === data[field])?.name }}
                     </template>
                     <template #editor="{ data, field }">
-                        <Select v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="roles!"
+                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="roles!"
                             placeholder="Select an Actor" />
                     </template>
                 </Column>
@@ -291,27 +291,27 @@ const onUseCaseDelete = async (id: string) => {
                 </Column>
                 <Column field="preconditionId" header="Precondition">
                     <template #filter="{ filterModel, filterCallback }">
-                        <Select v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
+                        <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
                             optionValue="id" :options="assumptions!" placeholder="Search by precondition" />
                     </template>
                     <template #body="{ data, field }">
                         {{ assumptions?.find(a => a.id === data[field])?.name }}
                     </template>
                     <template #editor="{ data, field }">
-                        <Select v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="assumptions!"
+                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="assumptions!"
                             placeholder="Select a pre-condition" />
                     </template>
                 </Column>
                 <Column field="triggerId" header="Trigger">
                     <template #filter="{ filterModel, filterCallback }">
-                        <Select v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
+                        <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
                             optionValue="id" :options="triggers!" placeholder="Search by trigger" />
                     </template>
                     <template #body="{ data, field }">
                         {{ effects?.find(e => e.id === data[field])?.name }}
                     </template>
                     <template #editor="{ data, field }">
-                        <Select v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="triggers!"
+                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="triggers!"
                             placeholder="Select a trigger" />
                     </template>
                 </Column>
@@ -326,14 +326,14 @@ const onUseCaseDelete = async (id: string) => {
                 </Column>
                 <Column field="successGuaranteeId" header="Success Guarantee">
                     <template #filter="{ filterModel, filterCallback }">
-                        <Select v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
+                        <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
                             optionValue="id" :options="effects!" placeholder="Search by success guarantee" />
                     </template>
                     <template #body="{ data, field }">
                         {{ effects?.find(e => e.id === data[field])?.name }}
                     </template>
                     <template #editor="{ data, field }">
-                        <Select v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="effects!"
+                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="effects!"
                             placeholder="Select a success guarantee" />
                     </template>
                 </Column>
