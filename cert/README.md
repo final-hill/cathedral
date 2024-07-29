@@ -1,0 +1,1 @@
+This folder contains an SSL certificate for use with the localhost server.

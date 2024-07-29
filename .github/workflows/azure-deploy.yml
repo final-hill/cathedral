@@ -42,7 +42,6 @@ jobs:
             postgresPassword=${{ secrets.POSTGRES_PASSWORD }}
             postgresPort=${{ secrets.POSTGRES_PORT }}
             postgresUser=${{ secrets.POSTGRES_USER }}
-            postgresSsl=${{ secrets.POSTGRES_SSL }}
             slackAdminMemberId=${{ secrets.SLACK_ADMIN_MEMBER_ID }}
             slackBotToken=${{ secrets.SLACK_BOT_TOKEN }}
             slackSigningSecret=${{ secrets.SLACK_SIGNING_SECRET }}
@@ -82,7 +81,6 @@ jobs:
           echo "POSTGRES_HOST=${{secrets.POSTGRES_HOST}}" >> .env
           echo "POSTGRES_PORT=${{secrets.POSTGRES_PORT}}" >> .env
           echo "POSTGRES_DB=${{secrets.POSTGRES_DB}}" >> .env
-          echo "POSTGRES_SSL=${{secrets.POSTGRES_SSL}}" >> .env
           echo "GH_CLIENT_ID=${{secrets.GH_CLIENT_ID}}" >> .env
           echo "GH_CLIENT_SECRET=${{secrets.GH_CLIENT_SECRET}}" >> .env
           echo "AUTH_SECRET=${{secrets.AUTH_SECRET}}" >> .env
@@ -132,7 +130,6 @@ jobs:
             postgresPassword=${{ secrets.POSTGRES_PASSWORD }}
             postgresPort=${{ secrets.POSTGRES_PORT }}
             postgresUser=${{ secrets.POSTGRES_USER }}
-            postgresSsl=${{ secrets.POSTGRES_SSL }}
           scope: 'resourcegroup'
           failOnStdErr: false
       - name: logout
@@ -189,7 +186,6 @@ jobs:
           echo "POSTGRES_HOST=${{secrets.POSTGRES_HOST}}" >> .env
           echo "POSTGRES_PORT=${{secrets.POSTGRES_PORT}}" >> .env
           echo "POSTGRES_DB=${{secrets.POSTGRES_DB}}" >> .env
-          echo "POSTGRES_SSL=${{secrets.POSTGRES_SSL}}" >> .env
           echo "GH_CLIENT_ID=${{secrets.GH_CLIENT_ID}}" >> .env
           echo "GH_CLIENT_SECRET=${{secrets.GH_CLIENT_SECRET}}" >> .env
           echo "AUTH_SECRET=${{secrets.AUTH_SECRET}}" >> .env

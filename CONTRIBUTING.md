@@ -33,9 +33,9 @@ There are a number of commands defined in `package.json` that can be run to popu
 
 ## Running the project
 
-The project can be run in debug mode via: `npm run dev`. You can then access the application at `http://localhost:3000`.
+The project can be run in debug mode via: `npm run dev`. You can then access the application at `https://localhost:3000`.
 
-A production build can be run via: `npm run build` followed by `npm run preview`. You can then access the application at `http://localhost:3000`.
+A production build can be run via: `npm run build` followed by `npm run preview`. You can then access the application at `https://localhost:3000`.
 
 ## Application Infrastructure
 

@@ -4,6 +4,12 @@ export default defineNuxtConfig({
     devtools: {
         enabled: process.env.NODE_ENV === 'development'
     },
+    devServer: {
+        https: {
+            key: './cert/localhost.key',
+            cert: './cert/localhost.crt'
+        }
+    },
     sourcemap: process.env.NODE_ENV === 'development',
     css: [
         '~/assets/css/main.css',
