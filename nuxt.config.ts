@@ -47,8 +47,7 @@ export default defineNuxtConfig({
         "@vite-pwa/nuxt",
         "@sidebase/nuxt-auth",
         "nuxt-security",
-        "nuxt-typed-router",
-        'nuxt-applicationinsights'
+        "nuxt-typed-router"
     ],
     // https://sidebase.io/nuxt-auth/configuration/nuxt-config
     auth: {
