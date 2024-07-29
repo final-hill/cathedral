@@ -3,13 +3,18 @@ import { getServerSession } from "#auth"
 import { z } from "zod"
 import Solution from "~/server/domain/application/Solution"
 import AppUser from "~/server/domain/application/AppUser"
+import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
+import Organization from "~/server/domain/application/Organization"
 
 const querySchema = z.object({
     name: z.string().max(100).optional(),
     description: z.string().optional(),
     organizationId: z.string().uuid().optional(),
+    organizationSlug: z.string().max(100).optional(),
     slug: z.string().max(100).optional()
-})
+}).refine((value) => {
+    return value.organizationId !== undefined || value.organizationSlug !== undefined;
+}, "At least one of organizationId or organizationSlug should be provided");
 
 /**
  * GET /api/solutions
@@ -36,40 +41,48 @@ export default defineEventHandler(async (event) => {
     const em = fork(),
         appUser = (await em.findOne(AppUser, { id: session!.id }))!;
 
+    const organization = await em.findOne(Organization, {
+        ...(query.data.organizationId ? { id: query.data.organizationId } : {}),
+        ...(query.data.organizationSlug ? { slug: query.data.organizationSlug } : {}),
+    })
+
+    if (!organization)
+        throw createError({
+            statusCode: 404,
+            statusMessage: "Not Found: Organization not found"
+        })
+
     // If the user is a system admin, return all solutions
     // filtered by the query parameters
-    if (appUser.isSystemAdmin) {
-        let allSolutions = em.createQueryBuilder(Solution)
-            .select('*')
+    const allOrgSolutions = await em.findAll(Solution, {
+        where: {
+            ...{ organization },
+            ...(query.data.name ? { name: query.data.name } : {}),
+            ...(query.data.description ? { description: query.data.description } : {}),
+            ...(query.data.slug ? { slug: query.data.slug } : {}),
+        }
+    })
 
-        if (query.data.name)
-            allSolutions = allSolutions.andWhere('name = ?', [query.data.name])
-        if (query.data.description)
-            allSolutions = allSolutions.andWhere('description = ?', [query.data.description])
-        if (query.data.slug)
-            allSolutions = allSolutions.andWhere('slug = ?', [query.data.slug])
-        if (query.data.organizationId)
-            allSolutions = allSolutions.andWhere('organization_id = ?', [query.data.organizationId])
+    if (allOrgSolutions.length === 0)
+        return []
 
-        return allSolutions.execute('all')
-    }
+    if (appUser.isSystemAdmin)
+        return allOrgSolutions
 
-    // If the user is not a system admin, return only organizations
+    // If the user is not a system admin, return only solutions
     // that the user is associated with
-    let appUserOrgs = em.createQueryBuilder(Solution)
-        .select('*')
-        .leftJoin('app_user_organization_role', 'aour')
-        .where('aour.organization_id = solution.organization_id')
-        .andWhere('aour.app_user_id = ?', [appUser.id])
+    const appUserOrgs = await em.findAll(AppUserOrganizationRole, {
+        where: {
+            appUser: appUser.id,
+            organization
+        },
+    })
 
-    if (query.data.name)
-        appUserOrgs = appUserOrgs.andWhere('name = ?', [query.data.name])
-    if (query.data.description)
-        appUserOrgs = appUserOrgs.andWhere('description = ?', [query.data.description])
-    if (query.data.slug)
-        appUserOrgs = appUserOrgs.andWhere('slug = ?', [query.data.slug])
-    if (query.data.organizationId)
-        appUserOrgs = appUserOrgs.andWhere('organization_id = ?', [query.data.organizationId])
+    if (appUserOrgs.length === 0)
+        throw createError({
+            statusCode: 403,
+            statusMessage: "Forbidden: You do not have access to this organization"
+        })
 
-    return appUserOrgs.execute('all')
+    return allOrgSolutions.filter((sol) => appUserOrgs.some((aou) => aou.organization === sol.organization))
 })

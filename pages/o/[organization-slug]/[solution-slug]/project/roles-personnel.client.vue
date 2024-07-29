@@ -5,8 +5,13 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Roles & Personnel' })
 definePageMeta({ name: 'Roles & Personnel' })
 
-const { solutionslug } = useRoute('Roles & Personnel').params,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
+const { solutionslug, organizationslug } = useRoute('Roles & Personnel').params,
+    { data: solutions } = await useFetch(`/api/solutions`, {
+        query: {
+            slug: solutionslug,
+            organizationSlug: organizationslug
+        }
+    }),
     solutionId = solutions.value?.[0].id
 
 type PersonViewModel = {

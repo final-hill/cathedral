@@ -6,8 +6,13 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Functionality' })
 
-const { solutionslug } = useRoute('Functionality').params,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
+const { solutionslug, organizationslug } = useRoute('Functionality').params,
+    { data: solutions } = await useFetch(`/api/solutions`, {
+        query: {
+            slug: solutionslug,
+            organizationSlug: organizationslug
+        }
+    }),
     solution = solutions.value?.[0]!,
     solutionId = solution.id;
 

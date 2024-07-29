@@ -3,6 +3,7 @@ import { fork } from "~/server/data/orm"
 import { getServerSession } from "#auth"
 import Organization from "~/server/domain/application/Organization"
 import AppUser from "~/server/domain/application/AppUser"
+import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 
 const querySchema = z.object({
     name: z.string().optional(),
@@ -38,33 +39,30 @@ export default defineEventHandler(async (event) => {
     // If the user is a system admin, return all organizations
     // filtered by the query parameters
     if (sessionUser.isSystemAdmin) {
-        let allOrgs = em.createQueryBuilder(Organization)
-            .select('*')
+        const organizations = em.findAll(Organization, {
+            where: {
+                ...(query.data.name ? { name: query.data.name } : {}),
+                ...(query.data.description ? { description: query.data.description } : {}),
+                ...(query.data.slug ? { slug: query.data.slug } : {})
+            }
+        })
 
-        if (query.data.name)
-            allOrgs = allOrgs.andWhere('name = ?', [query.data.name])
-        if (query.data.description)
-            allOrgs = allOrgs.andWhere('description = ?', [query.data.description])
-        if (query.data.slug)
-            allOrgs = allOrgs.andWhere('slug = ?', [query.data.slug])
-
-        return allOrgs.execute('all')
+        return organizations
     }
 
     // If the user is not a system admin, return only organizations
     // that the user is associated with
-    let appUserOrgs = em.createQueryBuilder(Organization)
-        .select('*')
-        .leftJoin('app_user_organization_role', 'aour')
-        .where('aour.organization_id = id')
-        .andWhere('aour.app_user_id = ?', [sessionUser.id])
+    const organizations = (await em.findAll(AppUserOrganizationRole, {
+        where: {
+            appUser: sessionUser.id,
+            organization: {
+                ...(query.data.name ? { name: query.data.name } : {}),
+                ...(query.data.description ? { description: query.data.description } : {}),
+                ...(query.data.slug ? { slug: query.data.slug } : {})
+            }
+        },
+        populate: ['organization']
+    })).map((aour) => aour.organization)
 
-    if (query.data.name)
-        appUserOrgs = appUserOrgs.andWhere('name = ?', [query.data.name])
-    if (query.data.description)
-        appUserOrgs = appUserOrgs.andWhere('description = ?', [query.data.description])
-    if (query.data.slug)
-        appUserOrgs = appUserOrgs.andWhere('slug = ?', [query.data.slug])
-
-    return appUserOrgs.execute('all')
+    return organizations
 })

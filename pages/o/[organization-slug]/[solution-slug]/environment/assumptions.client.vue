@@ -6,8 +6,13 @@ import { useFetch } from 'nuxt/app';
 useHead({ title: 'Assumptions' })
 definePageMeta({ name: 'Assumptions' })
 
-const { solutionslug } = useRoute('Assumptions').params,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
+const { solutionslug, organizationslug } = useRoute('Assumptions').params,
+    { data: solutions } = await useFetch(`/api/solutions`, {
+        query: {
+            organizationSlug: organizationslug,
+            slug: solutionslug
+        }
+    }),
     solutionId = solutions.value?.at(0)?.id;
 
 type AssumptionViewModel = {

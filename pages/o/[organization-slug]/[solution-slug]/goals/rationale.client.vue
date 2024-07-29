@@ -4,8 +4,13 @@ import debounce from '~/lib/debounce';
 useHead({ title: 'Rationale' })
 definePageMeta({ name: 'Rationale' })
 
-const { solutionslug } = useRoute('Rationale').params,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
+const { solutionslug, organizationslug } = useRoute('Rationale').params,
+    { data: solutions } = await useFetch(`/api/solutions`, {
+        query: {
+            slug: solutionslug,
+            organizationSlug: organizationslug
+        }
+    }),
     solutionId = solutions.value?.[0].id;
 
 type JustificationModel = {

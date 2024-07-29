@@ -5,8 +5,13 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Limitations' })
 definePageMeta({ name: 'Limitations' })
 
-const { solutionslug } = useRoute('Limitations').params,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
+const { solutionslug, organizationslug } = useRoute('Limitations').params,
+    { data: solutions } = await useFetch(`/api/solutions`, {
+        query: {
+            slug: solutionslug,
+            organizationSlug: organizationslug
+        }
+    }),
     solutionId = solutions.value?.[0].id
 
 type LimitViewModel = {

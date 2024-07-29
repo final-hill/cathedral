@@ -7,7 +7,12 @@ definePageMeta({ name: 'Edit Solution' })
 const route = useRoute('Edit Solution'),
     { organizationslug, solutionslug } = route.params,
     router = useRouter(),
-    { data: solutions } = await useFetch(`/api/solutions/`, { query: { slug: solutionslug } }),
+    { data: solutions } = await useFetch(`/api/solutions/`, {
+        query: {
+            organizationSlug: organizationslug,
+            slug: solutionslug
+        }
+    }),
     solution = ref(solutions.value![0]),
     newSlug = ref(solution.value.slug);
 

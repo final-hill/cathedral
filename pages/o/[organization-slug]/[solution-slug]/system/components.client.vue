@@ -5,8 +5,13 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Components' })
 definePageMeta({ name: 'System Components' })
 
-const { solutionslug } = useRoute('System Components').params,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
+const { solutionslug, organizationslug } = useRoute('System Components').params,
+    { data: solutions } = await useFetch(`/api/solutions`, {
+        query: {
+            slug: solutionslug,
+            organizationSlug: organizationslug
+        }
+    }),
     solutionId = solutions.value?.[0].id;
 
 type SystemComponentViewModel = {
