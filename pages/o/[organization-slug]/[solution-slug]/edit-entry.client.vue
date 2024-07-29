@@ -20,11 +20,11 @@ const updateSolution = async () => {
         }
     });
 
-    router.push(`/${organizationslug}/${solutionslug}/`)
+    router.push({ name: 'Organization', params: { organizationslug } });
 }
 
 const cancel = () => {
-    router.push(`/${organizationslug}/${solutionslug}/`)
+    router.push({ name: 'Solution', params: { organizationslug, solutionslug } });
 }
 
 watch(() => solution.value.name, (newName) => {

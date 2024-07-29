@@ -15,7 +15,7 @@ let getCrumbs = () => {
                 route: '/' + crumbs.slice(0, index + 1).join('/')
             };
         })
-    ];
+    ].filter(({ route }) => route !== '/o');
 };
 
 const crumbs = ref(getCrumbs());
