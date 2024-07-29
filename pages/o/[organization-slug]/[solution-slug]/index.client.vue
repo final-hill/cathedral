@@ -7,7 +7,10 @@ definePageMeta({ name: 'Solution' })
 const { solutionslug, organizationslug } = useRoute('Solution').params,
     router = useRouter(),
     { data: solutions } = await useFetch('/api/solutions', {
-        query: { slug: solutionslug }
+        query: {
+            organizationSlug: organizationslug,
+            slug: solutionslug
+        }
     }),
     solution = solutions.value![0],
     confirm = useConfirm()

@@ -41,11 +41,11 @@ export default defineEventHandler(async (event) => {
 
     // If the user is not associated with the organization
     // or is not a system admin, return a 403
-    if (!sessionUserOrg || !sessionUser.isSystemAdmin)
+    if (!sessionUserOrg && !sessionUser.isSystemAdmin)
         throw createError({
             statusCode: 403,
             statusMessage: "Forbidden",
-            message: "You are not associated with the organization"
+            message: "You are not associated with the organization."
         })
 
     type ResponseType = {

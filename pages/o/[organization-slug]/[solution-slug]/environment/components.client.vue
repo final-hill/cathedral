@@ -5,8 +5,13 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Components' })
 definePageMeta({ name: 'Environment Components' })
 
-const { solutionslug } = useRoute('Environment Components').params,
-    { data: solutions } = await useFetch('/api/solutions', { query: { slug: solutionslug } }),
+const { solutionslug, organizationslug } = useRoute('Environment Components').params,
+    { data: solutions } = await useFetch('/api/solutions', {
+        query: {
+            slug: solutionslug,
+            organizationSlug: organizationslug
+        }
+    }),
     solutionId = solutions.value?.[0].id,
     { data: environmentComponents, status, refresh } = await useFetch('/api/environment-components', {
         query: { solutionId }

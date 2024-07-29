@@ -6,8 +6,13 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Scenarios' })
 
-const { solutionslug } = useRoute('Scenarios').params,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
+const { solutionslug, organizationslug } = useRoute('Scenarios').params,
+    { data: solutions } = await useFetch(`/api/solutions`, {
+        query: {
+            slug: solutionslug,
+            organizationSlug: organizationslug
+        }
+    }),
     solutionId = solutions.value?.[0].id!;
 
 type UserStoryViewModel = {

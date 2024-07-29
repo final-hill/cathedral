@@ -5,8 +5,13 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Invariants' })
 definePageMeta({ name: 'Invariants' })
 
-const { solutionslug } = useRoute('Invariants').params,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
+const { solutionslug, organizationslug } = useRoute('Invariants').params,
+    { data: solutions } = await useFetch(`/api/solutions`, {
+        query: {
+            slug: solutionslug,
+            organizationSlug: organizationslug
+        }
+    }),
     solutionId = solutions.value?.[0].id
 
 type InvariantViewModel = {

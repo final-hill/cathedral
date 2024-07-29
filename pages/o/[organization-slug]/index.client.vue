@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import Organization from '~/server/domain/application/Organization';
 import type { Properties } from '~/server/domain/Properties';
 
 useHead({ title: 'Organization' })
@@ -12,7 +11,7 @@ const { organizationslug } = useRoute('Organization').params,
     }),
     organization = organizations.value![0],
     { refresh, status, data: solutions } = await useFetch('/api/solutions', {
-        query: { slug: organizationslug }
+        query: { organizationSlug: organizationslug }
     }),
     confirm = useConfirm()
 
@@ -25,7 +24,7 @@ type SolutionModel = {
 
 const handleOrganizationDelete = async () => {
     confirm.require({
-        message: `Are you sure you want to delete ${Organization.name}? This will also delete all associated solutions.`,
+        message: `Are you sure you want to delete "${organization.name}"? This will also delete all associated solutions.`,
         header: 'Delete Confirmation',
         icon: 'pi pi-exclamation-triangle',
         rejectLabel: 'Cancel',

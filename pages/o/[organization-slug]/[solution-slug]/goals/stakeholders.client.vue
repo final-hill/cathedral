@@ -9,8 +9,13 @@ useHead({ title: 'Stakeholders' })
 definePageMeta({ name: 'Stakeholders' })
 
 const config = useAppConfig(),
-    { solutionslug } = useRoute('Stakeholders').params,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
+    { solutionslug, organizationslug } = useRoute('Stakeholders').params,
+    { data: solutions } = await useFetch(`/api/solutions`, {
+        query: {
+            slug: solutionslug,
+            organizationSlug: organizationslug
+        }
+    }),
     solutionId = solutions.value?.[0].id;
 
 type StakeHolderViewModel = {

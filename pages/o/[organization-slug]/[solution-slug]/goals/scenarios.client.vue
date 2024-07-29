@@ -7,7 +7,12 @@ useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Goal Scenarios' })
 
 const { solutionslug, organizationslug } = useRoute('Scenarios').params,
-    { data: solutions } = await useFetch(`/api/solutions/?slug=${solutionslug}`),
+    { data: solutions } = await useFetch(`/api/solutions`, {
+        query: {
+            slug: solutionslug,
+            organizationSlug: organizationslug
+        }
+    }),
     solutionId = solutions.value?.[0].id;
 
 type UserStoryViewModel = {

@@ -6,8 +6,13 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Goals Functionality' })
 
-const { solutionslug } = useRoute('Functionality').params,
-    { data: solutions } = await useFetch(`/api/solutions?slug=${solutionslug}`),
+const { solutionslug, organizationslug } = useRoute('Functionality').params,
+    { data: solutions } = await useFetch(`/api/solutions`, {
+        query: {
+            slug: solutionslug,
+            organizationSlug: organizationslug
+        }
+    }),
     solutionId = solutions.value?.[0].id
 
 type FunctionalBehaviorViewModel = {
