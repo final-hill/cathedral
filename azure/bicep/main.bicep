@@ -25,7 +25,6 @@ param postgresPassword string
 param postgresPort string
 @secure()
 param postgresUser string
-param postgresSsl bool
 @secure()
 param slackAdminMemberId string
 @secure()
@@ -127,10 +126,6 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'POSTGRES_USER'
           value: postgresUser
-        }
-        {
-          name: 'POSTGRES_SSL'
-          value: '${postgresSsl}'
         }
         {
           name: 'SLACK_ADMIN_MEMBER_ID'

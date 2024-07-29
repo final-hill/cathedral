@@ -42,7 +42,7 @@ const config: Options = {
     // https://github.com/mikro-orm/mikro-orm/issues/303
     driverOptions: {
         connection: {
-            ssl: JSON.parse(process.env.POSTGRES_SSL || 'false')
+            ssl: true
         }
     },
     entities: [
