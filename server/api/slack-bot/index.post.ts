@@ -91,6 +91,9 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(body.error.errors)
         })
 
+    console.log('Slack event headers', JSON.stringify(headers))
+    console.log('Slack event body', rawBody)
+
     if (!isValidSlackRequest(headers, rawBody))
         throw createError({
             statusCode: 403,
