@@ -29,7 +29,7 @@ const createSolution = async () => {
 
         if (solutionId) {
             const newSolution = (await $fetch(`/api/solutions/${solutionId}`));
-            router.push(`/${organizationslug}/${newSolution.slug}`);
+            router.push({ name: 'Solution', params: { organizationslug, solutionslug: newSolution.slug } });
         } else {
             throw new Error('Failed to create solution. No solution ID returned.');
         }
@@ -39,7 +39,7 @@ const createSolution = async () => {
 }
 
 const cancel = () => {
-    router.push(`/${organizationslug}`);
+    router.push({ name: 'Organization', params: { organizationslug } });
 }
 
 watch(() => name.value, (newName) => {
