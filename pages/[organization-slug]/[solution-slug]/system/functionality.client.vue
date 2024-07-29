@@ -129,7 +129,7 @@ const onRowCollapse = (event: any) => {
         </Column>
         <Column field="parentId" header="Parent">
             <template #filter="{ filterModel, filterCallback }">
-                <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name" optionValue="id"
+                <Select v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name" optionValue="id"
                     :options="components!" placeholder="Search by Component" />
             </template>
             <template #body="{ data, field }">

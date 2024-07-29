@@ -87,14 +87,14 @@ const onDelete = async (id: string) => {
         </Column>
         <Column field="parentComponentId" header="Parent">
             <template #filter="{ filterModel, filterCallback }">
-                <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name" optionValue="id"
+                <Select v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name" optionValue="id"
                     :options="systemComponents!" placeholder="Search by Component" />
             </template>
             <template #body="{ data, field }">
                 {{ systemComponents?.find(c => c.id === data[field])?.name }}
             </template>
             <template #editor="{ data, field }">
-                <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id"
+                <Select v-model.trim="data[field]" optionLabel="name" optionValue="id"
                     :options="systemComponents!.filter(c => c.id !== data.id)" placeholder="Select a Component"
                     showClear />
             </template>

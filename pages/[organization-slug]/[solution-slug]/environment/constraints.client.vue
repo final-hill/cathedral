@@ -86,15 +86,15 @@ const onUpdate = async (data: ConstraintViewModel) => {
         </Column>
         <Column field="category" header="Category" sortable>
             <template #filter="{ filterModel, filterCallback }">
-                <Dropdown v-model="filterModel.value" :options="constraintCategories" optionLabel="description"
+                <Select v-model="filterModel.value" :options="constraintCategories" optionLabel="description"
                     optionValue="id" @change="filterCallback()" />
             </template>
             <template #body="{ data, field }">
                 {{ constraintCategories.find(o => o.id === data[field])?.description }}
             </template>
             <template #editor="{ data, field }">
-                <Dropdown v-model="data[field]" :options="constraintCategories" optionLabel="description"
-                    optionValue="id" required="true" />
+                <Select v-model="data[field]" :options="constraintCategories" optionLabel="description" optionValue="id"
+                    required="true" />
             </template>
         </Column>
         <Column field="statement" header="Description">
