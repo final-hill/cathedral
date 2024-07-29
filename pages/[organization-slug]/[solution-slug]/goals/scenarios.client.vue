@@ -116,40 +116,40 @@ const onUserStoryDelete = async (id: string) => {
         </Column>
         <Column field="primaryActorId" header="Stakeholder">
             <template #filter="{ filterModel, filterCallback }">
-                <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name" optionValue="id"
+                <Select v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name" optionValue="id"
                     :options="roles!" placeholder="Search by Stakeholder" />
             </template>
             <template #body="{ data, field }">
                 {{ roles?.find(r => r.id === data[field])?.name }}
             </template>
             <template #editor="{ data, field }">
-                <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="roles!"
+                <Select v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="roles!"
                     placeholder="Select an Stakeholder" />
             </template>
         </Column>
         <Column field="functionalBehaviorId" header="Behavior">
             <template #filter="{ filterModel, filterCallback }">
-                <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name" optionValue="id"
+                <Select v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name" optionValue="id"
                     :options="functionalBehaviors!" placeholder="Search by Behavior" />
             </template>
             <template #body="{ data, field }">
                 {{ functionalBehaviors?.find(b => b.id === data[field])?.name }}
             </template>
             <template #editor="{ data, field }">
-                <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="functionalBehaviors!"
+                <Select v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="functionalBehaviors!"
                     placeholder="Select a Behavior" />
             </template>
         </Column>
         <Column field="outcomeId" header="Outcome">
             <template #filter="{ filterModel, filterCallback }">
-                <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name" optionValue="id"
+                <Select v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name" optionValue="id"
                     :options="outcomes!" placeholder="Search by Outcome" />
             </template>
             <template #body="{ data, field }">
                 {{ outcomes?.find(o => o.id === data[field])?.name }}
             </template>
             <template #editor="{ data, field }">
-                <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="outcomes!"
+                <Select v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="outcomes!"
                     placeholder="Select an Outcome" />
             </template>
         </Column>
