@@ -87,13 +87,19 @@ export default defineEventHandler(async (event) => {
         rawBody = (await readRawBody(event))!,
         headers = event.headers
 
+    if (!process.env.SLACK_BOT_TOKEN)
+        throw createError({
+            statusCode: 500,
+            statusMessage: 'Internal Server Error',
+            message: 'Slack bot token not found'
+        })
+
     if (!body.success)
         throw createError({
             statusCode: 400,
             statusMessage: 'Bad Request: Invalid body parameters',
             message: JSON.stringify(body.error.errors)
         })
-
 
     ai.trackTrace({
         message: `SlackBotMessage Headers: ${JSON.stringify(headers)}`

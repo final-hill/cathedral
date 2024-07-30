@@ -1,6 +1,9 @@
 import appInsights from 'applicationinsights';
 
-export default defineNuxtPlugin(nuxtApp => {
+export default defineNuxtPlugin(async nuxtApp => {
+    if (!process.env.APPINSIGHTS_CONNECTIONSTRING)
+        return;
+
     // https://learn.microsoft.com/en-us/azure/azure-monitor/app/nodejs#telemetryclient-api
     appInsights.setup(process.env.APPINSIGHTS_CONNECTIONSTRING)
         .setAutoCollectRequests(true)
