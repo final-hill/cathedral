@@ -83,11 +83,11 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
       http20Enabled: true
       appSettings: [
         {
-          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
+          name: 'APPLICATIONINSIGHTS_INSTRUMENTATIONKEY'
           value: appInsightsInstrumentationKey
         }
         {
-          name: 'APPINSIGHTS_CONNECTIONSTRING'
+          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
           value: appInsightsConnectionString
         }
         {
