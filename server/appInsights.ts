@@ -1,5 +1,6 @@
 import * as appInsights from 'applicationinsights';
 
+// https://learn.microsoft.com/en-us/azure/azure-monitor/app/nodejs#telemetryclient-api
 appInsights.setup(process.env.APPINSIGHTS_INSTRUMENTATIONKEY)
     .setAutoCollectRequests(true)
     .setAutoCollectPerformance(true, true)
@@ -11,3 +12,5 @@ appInsights.setup(process.env.APPINSIGHTS_INSTRUMENTATIONKEY)
     .setInternalLogging(false, true)
     .enableWebInstrumentation(false)
     .start();
+
+export default appInsights;
