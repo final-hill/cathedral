@@ -2,23 +2,47 @@ import { z } from "zod"
 import crypto from 'crypto'
 import { WebClient } from "@slack/web-api"
 
-const bodySchema = z.object({
+// https://api.slack.com/events
+const eventSchema = z.object({
     type: z.string(),
-    challenge: z.string().optional(),
-    // https://api.slack.com/events
-    event: z.object({
-        type: z.string(),
-        user: z.string(),
-        text: z.string(),
-        ts: z.string(),
-        channel: z.string(),
-        event_ts: z.string(),
-    }).optional()
+    user: z.string(),
+    text: z.string(),
+    ts: z.string(),
+    channel: z.string(),
+    event_ts: z.string(),
 })
+
+const urlVerificationSchema = z.object({
+    token: z.string(),
+    challenge: z.string(),
+    type: z.literal("url_verification"),
+})
+
+const appMentionSchema = z.object({
+    type: z.literal("app_mention"),
+    user: z.string(),
+    text: z.string(),
+    ts: z.string(),
+    channel: z.string(),
+    event_ts: z.string(),
+})
+
+const eventCallbackSchema = z.object({
+    token: z.string(),
+    team_id: z.string(),
+    api_app_id: z.string(),
+    event: appMentionSchema,
+    type: z.literal("event_callback"),
+    event_id: z.string(),
+    event_time: z.number(),
+    authed_users: z.array(z.string()),
+})
+
+const bodySchema = z.union([urlVerificationSchema, eventCallbackSchema])
 
 const slack = new WebClient(process.env.SLACK_BOT_TOKEN)
 
-async function sendResponse(slackEvent: NonNullable<typeof bodySchema._type.event>) {
+async function sendResponse(slackEvent: NonNullable<typeof eventSchema._type>) {
     const { channel, ts } = slackEvent
 
     try {
@@ -98,9 +122,6 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(body.error.errors)
         })
 
-    console.log('SlackBotMessage Headers:', JSON.stringify(headers))
-    console.log('SlackBotMessage rawBody:', { rawBody })
-
     if (!isValidSlackRequest(headers, rawBody))
         throw createError({
             statusCode: 403,
@@ -110,17 +131,24 @@ export default defineEventHandler(async (event) => {
 
     const requestType = body.data.type
 
-    if (requestType === 'url_verification')
-        return { challenge: body.data.challenge };
+    switch (requestType) {
+        case 'url_verification':
+            return { challenge: body.data.challenge };
+        case 'event_callback':
+            const eventType = body.data.event!.type
+            if (eventType === 'app_mention')
+                return await sendResponse(body.data.event!)
 
-    if (requestType === 'event_callback') {
-        const eventType = body.data.event!.type
-        if (eventType === 'app_mention') {
-            await sendResponse(body.data.event!)
-
-            return {}
-        }
+            throw createError({
+                statusCode: 400,
+                statusMessage: 'Bad Request: Invalid event type',
+                message: `Unhandled event type: ${eventType}`
+            })
+        default:
+            throw createError({
+                statusCode: 400,
+                statusMessage: 'Bad Request: Invalid request type',
+                message: `Unhandled request type: ${requestType}`
+            })
     }
-
-    return {}
 })
