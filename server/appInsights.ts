@@ -11,3 +11,5 @@ appInsights.setup(process.env.APPINSIGHTS_INSTRUMENTATIONKEY)
     .setInternalLogging(false, true)
     .enableWebInstrumentation(false)
     .start();
+
+export default appInsights;
