@@ -1,9 +1,7 @@
 import { z } from "zod"
 import crypto from 'crypto'
 import { WebClient } from "@slack/web-api"
-import appInsights from '../../appInsights'
-
-const ai = appInsights.defaultClient;
+import fs from 'fs';
 
 const bodySchema = z.object({
     type: z.string(),
@@ -94,12 +92,8 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(body.error.errors)
         })
 
-    ai.trackTrace({
-        message: 'SlackBotMessage Headers: ' + JSON.stringify(headers)
-    })
-    ai.trackTrace({
-        message: 'SlackBotMessage rawBody: ' + rawBody
-    })
+    fs.appendFileSync('/log/slackbot.log', `SlackBotMessage Headers: ${JSON.stringify(headers)}\n`);
+    fs.appendFileSync('/slack-bot/slackbot.log', `SlackBotMessage rawBody: ${rawBody}\n`);
 
     if (!isValidSlackRequest(headers, rawBody))
         throw createError({
