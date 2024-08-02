@@ -1,5 +1,4 @@
 import { fork } from "~/server/data/orm"
-import { getServerSession } from "#auth"
 import { z } from "zod"
 import Solution from "~/server/domain/application/Solution"
 import AppUser from "~/server/domain/application/AppUser"
@@ -26,10 +25,11 @@ const querySchema = z.object({
  * Returns all solutions that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const [query, session] = await Promise.all([
-        getValidatedQuery(event, (q) => querySchema.safeParse(q)),
-        getServerSession(event)
-    ])
+    const config = useRuntimeConfig(),
+        [query, session] = await Promise.all([
+            getValidatedQuery(event, (q) => querySchema.safeParse(q)),
+            useSession(event, { password: config.sessionPassword })
+        ])
 
     if (!query.success)
         throw createError({
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
         })
 
     const em = fork(),
-        appUser = (await em.findOne(AppUser, { id: session!.id }))!;
+        appUser = (await em.findOne(AppUser, { id: session.id }))!;
 
     const organization = await em.findOne(Organization, {
         ...(query.data.organizationId ? { id: query.data.organizationId } : {}),

@@ -1,6 +1,5 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { getServerSession } from "#auth"
 import AppUser from "~/server/domain/application/AppUser"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 import Organization from "~/server/domain/application/Organization"
@@ -18,7 +17,8 @@ const bodySchema = z.object({
  * Deletes an existing appuser-organization-role
  */
 export default defineEventHandler(async (event) => {
-    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const config = useRuntimeConfig(),
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
 
     if (!body.success)
         throw createError({
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
         })
 
     const em = fork(),
-        session = (await getServerSession(event))!,
+        session = await useSession(event, { password: config.sessionPassword }),
         [sessionUser, organization, role, appUser, sessionUserOrgRoles] = await Promise.all([
             em.findOne(AppUser, { id: session.id }),
             em.getReference(Organization, body.data.organizationId),

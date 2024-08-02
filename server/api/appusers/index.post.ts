@@ -1,7 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
 import AppUser from "~/server/domain/application/AppUser"
-import { getServerSession } from "#auth"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 
 const bodySchema = z.object({
@@ -16,12 +15,13 @@ const bodySchema = z.object({
  * Creates a new appuser and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const em = fork(),
+    const config = useRuntimeConfig(),
+        em = fork(),
         [body, session] = await Promise.all([
             readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-            getServerSession(event)
+            useSession(event, { password: config.sessionPassword })
         ]),
-        sessionUser = (await em.findOne(AppUser, { id: session!.id }))!
+        sessionUser = (await em.findOne(AppUser, { id: session.id }))!
 
     if (!body.success)
         throw createError({

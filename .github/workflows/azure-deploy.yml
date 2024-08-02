@@ -33,8 +33,6 @@ jobs:
           resourceGroupName: ${{ secrets.AZURE_RG }}
           template: ./azure/bicep/main.bicep
           parameters: >
-            authOrigin=${{ secrets.AUTH_ORIGIN }}
-            authSecret=${{ secrets.AUTH_SECRET }}
             ghClientId=${{ secrets.GH_CLIENT_ID }}
             ghClientSecret=${{ secrets.GH_CLIENT_SECRET }}
             postgresDb=${{ secrets.POSTGRES_DB }}
@@ -83,8 +81,6 @@ jobs:
           echo "POSTGRES_DB=${{secrets.POSTGRES_DB}}" >> .env
           echo "GH_CLIENT_ID=${{secrets.GH_CLIENT_ID}}" >> .env
           echo "GH_CLIENT_SECRET=${{secrets.GH_CLIENT_SECRET}}" >> .env
-          echo "AUTH_SECRET=${{secrets.AUTH_SECRET}}" >> .env
-          echo "AUTH_ORIGIN=${{secrets.AUTH_ORIGIN}}" >> .env
           echo "SLACK_ADMIN_MEMBER_ID=${{secrets.SLACK_ADMIN_MEMBER_ID}}" >> .env
           echo "SLACK_BOT_TOKEN=${{secrets.SLACK_BOT_TOKEN}}" >> .env
           echo "SLACK_SIGNING_SECRET=${{secrets.SLACK_SIGNING_SECRET}}" >> .env
@@ -121,8 +117,6 @@ jobs:
           template: ./azure/bicep/main.bicep
           deploymentMode: 'Incremental'
           parameters: >
-            authOrigin=${{ secrets.AUTH_ORIGIN }}
-            authSecret=${{ secrets.AUTH_SECRET }}
             ghClientId=${{ secrets.GH_CLIENT_ID }}
             ghClientSecret=${{ secrets.GH_CLIENT_SECRET }}
             postgresDb=${{ secrets.POSTGRES_DB }}
@@ -191,8 +185,6 @@ jobs:
           echo "POSTGRES_DB=${{secrets.POSTGRES_DB}}" >> .env
           echo "GH_CLIENT_ID=${{secrets.GH_CLIENT_ID}}" >> .env
           echo "GH_CLIENT_SECRET=${{secrets.GH_CLIENT_SECRET}}" >> .env
-          echo "AUTH_SECRET=${{secrets.AUTH_SECRET}}" >> .env
-          echo "AUTH_ORIGIN=${{secrets.AUTH_ORIGIN}}" >> .env
       - name: Login to Azure
         uses: azure/login@v2
         with:

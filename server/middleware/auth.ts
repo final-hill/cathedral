@@ -1,18 +1,27 @@
-import { getServerSession } from '#auth'
-
 /**
  * Redirects to login page if user is not authenticated
- * when accessing an API route (except /api/auth)
- *
- * https://h3.unjs.io/utils/request#getrequesturlevent-opts-xforwardedhost-xforwardedproto
+ * (except /api/slack-bot and the /auth routes)
  */
 export default eventHandler(async (event) => {
-    const url = event.node.req.url!
+    const config = useRuntimeConfig(),
+        url = event.node.req.url!
 
-    if (url.startsWith('/api/slack-bot') || url.startsWith("/api/auth") || !url.startsWith("/api"))
+    if (url.startsWith('/auth'))
         return
 
-    const session = await getServerSession(event)
-    if (!session || !session.user?.email)
-        throw createError({ statusMessage: "Unauthenticated", statusCode: 403 })
+    const session = await useSession(event, { password: config.sessionPassword })
+
+    console.log('MIDDLEWARE: session.data', session.data)
+
+    if (!session || Object.keys(session.data).length === 0) {
+        if (url.startsWith('/api/slack-bot'))
+            return
+        if (url.startsWith('/api')) {
+            throw createError({
+                statusCode: 401,
+                message: 'Unauthorized'
+            })
+        }
+        sendRedirect(event, '/auth/sign-in')
+    }
 })

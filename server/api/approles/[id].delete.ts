@@ -1,14 +1,14 @@
 import { fork } from "~/server/data/orm"
 import AppRole from "~/server/domain/application/AppRole"
-import { getServerSession } from "#auth"
 import AppUser from "~/server/domain/application/AppUser"
 
 /**
  * Delete an approle by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        session = (await getServerSession(event))!,
+    const config = useRuntimeConfig(),
+        id = event.context.params?.id,
+        session = await useSession(event, { password: config.sessionPassword }),
         em = fork()
 
     // check if the user is a system admin before deleting the role

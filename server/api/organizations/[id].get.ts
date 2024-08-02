@@ -1,6 +1,5 @@
 import { fork } from "~/server/data/orm"
 import Organization from "~/server/domain/application/Organization"
-import { getServerSession } from "#auth"
 import AppUser from "~/server/domain/application/AppUser"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 
@@ -8,7 +7,8 @@ import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganiza
  * Returns an organization by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id
+    const config = useRuntimeConfig(),
+        id = event.context.params?.id
 
     if (!id)
         throw createError({
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
         })
 
     const em = fork(),
-        session = (await getServerSession(event))!,
+        session = await useSession(event, { password: config.sessionPassword }),
         [organization, appUser] = await Promise.all([
             em.findOne(Organization, id),
             em.findOne(AppUser, { id: session.id })

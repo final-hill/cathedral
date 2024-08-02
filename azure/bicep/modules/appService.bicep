@@ -4,10 +4,6 @@ param appInsightsInstrumentationKey string
 @secure()
 param appInsightsConnectionString string
 @secure()
-param authOrigin string
-@secure()
-param authSecret string
-@secure()
 param ghClientId string
 @secure()
 param ghClientSecret string
@@ -89,14 +85,6 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
           value: appInsightsConnectionString
-        }
-        {
-          name: 'AUTH_ORIGIN'
-          value: authOrigin
-        }
-        {
-          name: 'AUTH_SECRET'
-          value: authSecret
         }
         {
           name: 'GH_CLIENT_ID'

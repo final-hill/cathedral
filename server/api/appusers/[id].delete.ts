@@ -1,12 +1,12 @@
 import { fork } from "~/server/data/orm"
 import AppUser from "~/server/domain/application/AppUser"
-import { getServerSession } from "#auth"
 
 /**
  * Delete an appuser by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id
+    const config = useRuntimeConfig(),
+        id = event.context.params?.id
 
     if (!id)
         throw createError({
@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
         })
 
     const em = fork(),
-        session = (await getServerSession(event))!,
+        session = await useSession(event, { password: config.sessionPassword }),
         appUser = (await em.findOne(AppUser, { id: session.id }))!
 
     // A user can only be deleted by a system admin

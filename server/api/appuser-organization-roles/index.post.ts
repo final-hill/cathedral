@@ -4,7 +4,6 @@ import AppRole from "~/server/domain/application/AppRole"
 import AppUser from "~/server/domain/application/AppUser"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 import Organization from "~/server/domain/application/Organization"
-import { getServerSession } from "#auth"
 
 const bodySchema = z.object({
     appUserId: z.string().uuid(),
@@ -18,10 +17,11 @@ const bodySchema = z.object({
  * creates a new appuser-organization-role
  */
 export default defineEventHandler(async (event) => {
-    const em = fork(),
+    const config = useRuntimeConfig(),
+        em = fork(),
         [body, session] = await Promise.all([
             readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-            getServerSession(event)
+            useSession(event, { password: config.sessionPassword })
         ])
 
     if (!body.success)
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
         em.findOne(AppUser, body.data.appUserId),
         em.findOne(Organization, body.data.organizationId),
         em.findOne(AppRole, { name: body.data.roleName }),
-        em.findOne(AppUser, { id: session!.id })
+        em.findOne(AppUser, { id: session.id })
     ]),
         sessionUserOrgRoles = await em.find(AppUserOrganizationRole, {
             appUser: { id: sessionUser!.id },

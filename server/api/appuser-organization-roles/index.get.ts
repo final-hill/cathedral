@@ -1,7 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
-import { getServerSession } from "#auth"
 import AppUser from "~/server/domain/application/AppUser"
 
 const querySchema = z.object({
@@ -16,10 +15,11 @@ const querySchema = z.object({
  * Returns all appuser-organization-roles for the organization that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const [query, session] = await Promise.all([
-        getValidatedQuery(event, (q) => querySchema.safeParse(q)),
-        getServerSession(event)
-    ])
+    const config = useRuntimeConfig(),
+        [query, session] = await Promise.all([
+            getValidatedQuery(event, (q) => querySchema.safeParse(q)),
+            useSession(event, { password: config.sessionPassword })
+        ])
 
     if (!query.success)
         throw createError({
@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
         })
 
     const em = fork(),
-        sessionUser = await em.findOne(AppUser, { id: session!.id })
+        sessionUser = await em.findOne(AppUser, { id: session.id })
 
     let appUserRolesQuery = em.createQueryBuilder(AppUserOrganizationRole)
         .select('*')

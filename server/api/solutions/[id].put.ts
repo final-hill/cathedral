@@ -1,6 +1,5 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { getServerSession } from "#auth"
 import Solution from "~/server/domain/application/Solution"
 import AppUser from "~/server/domain/application/AppUser"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
@@ -17,7 +16,8 @@ const bodySchema = z.object({
  * Updates a solution by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id
+    const config = useRuntimeConfig(),
+        id = event.context.params?.id
 
     if (!id)
         throw createError({
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     const em = fork(),
         [body, session, solution] = await Promise.all([
             readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-            getServerSession(event),
+            useSession(event, { password: config.sessionPassword }),
             em.findOne(Solution, id),
         ])
 
@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
         })
 
     const [appUser, organization] = await Promise.all([
-        em.findOne(AppUser, { id: session!.id }),
+        em.findOne(AppUser, { id: session.id }),
         em.findOne(Organization, { id: solution!.organization.id })
     ]),
         appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser, organization })

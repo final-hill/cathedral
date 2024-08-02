@@ -36,11 +36,11 @@
     },
     "dependencies": {
         "@azure/monitor-opentelemetry": "^1.6.0",
+        "@azure/msal-node": "^2.12.0",
         "@mikro-orm/core": "^6.3.0",
         "@mikro-orm/postgresql": "^6.3.0",
         "@mikro-orm/reflection": "^6.3.0",
         "@mikro-orm/seeder": "^6.3.0",
-        "@sidebase/nuxt-auth": "^0.8.1",
         "@slack/web-api": "^7.3.1",
         "@vite-pwa/nuxt": "^0.9.1",
         "mermaid": "^10.9.1",

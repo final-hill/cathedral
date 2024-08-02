@@ -1,7 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
 import Organization from "~/server/domain/application/Organization"
-import { getServerSession } from "#auth"
 import AppUser from "~/server/domain/application/AppUser"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 import slugify from "~/lib/slugify"
@@ -15,7 +14,8 @@ const bodySchema = z.object({
  * Updates an organization by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id;
+    const config = useRuntimeConfig(),
+        id = event.context.params?.id;
 
     if (!id)
         throw createError({
@@ -26,10 +26,10 @@ export default defineEventHandler(async (event) => {
     const em = fork(),
         [body, session] = await Promise.all([
             readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-            getServerSession(event)
+            useSession(event, { password: config.sessionPassword })
         ]),
         organization = await em.findOne(Organization, id),
-        appUser = (await em.findOne(AppUser, { id: session!.id }))!,
+        appUser = (await em.findOne(AppUser, { id: session.id }))!,
         appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser, organization })
 
     if (!body.success)

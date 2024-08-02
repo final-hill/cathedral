@@ -1,6 +1,5 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { getServerSession } from "#auth"
 import Organization from "~/server/domain/application/Organization"
 import AppUser from "~/server/domain/application/AppUser"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
@@ -21,10 +20,11 @@ const querySchema = z.object({
  * Returns all organizations that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const [query, session] = await Promise.all([
-        getValidatedQuery(event, (q) => querySchema.safeParse(q)),
-        getServerSession(event)
-    ])
+    const config = useRuntimeConfig(),
+        [query, session] = await Promise.all([
+            getValidatedQuery(event, (q) => querySchema.safeParse(q)),
+            useSession(event, { password: config.sessionPassword })
+        ])
 
     if (!query.success)
         throw createError({
@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
         })
 
     const em = fork(),
-        sessionUser = (await em.findOne(AppUser, { id: session!.id }))!;
+        sessionUser = (await em.findOne(AppUser, { id: session.id }))!;
 
     // If the user is a system admin, return all organizations
     // filtered by the query parameters

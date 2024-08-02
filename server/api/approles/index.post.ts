@@ -1,6 +1,5 @@
 import { promise, z } from "zod"
 import { fork } from "~/server/data/orm"
-import { getServerSession } from "#auth"
 import AppRole from "~/server/domain/application/AppRole"
 import AppUser from "~/server/domain/application/AppUser"
 
@@ -14,10 +13,11 @@ const bodySchema = z.object({
  * Creates a new approle and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const [body, session] = await Promise.all([
-        readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-        getServerSession(event)
-    ]),
+    const config = useRuntimeConfig(),
+        [body, session] = await Promise.all([
+            readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+            useSession(event, { password: config.sessionPassword })
+        ]),
         em = fork()
 
     if (!body.success)
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
         })
 
     // check if the user is a system admin before creating the role
-    const appUser = await em.findOne(AppUser, { id: session!.id })
+    const appUser = await em.findOne(AppUser, { id: session.id })
     if (!appUser?.isSystemAdmin)
         throw createError({
             statusCode: 403,

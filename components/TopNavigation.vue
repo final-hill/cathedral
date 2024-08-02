@@ -25,9 +25,6 @@ router.afterEach(() => { crumbs.value = getCrumbs(); });
 const op = ref();
 
 const toggle = (event: Event) => op.value.toggle(event)
-
-const { data, getSession, signOut, signIn } = useAuth(),
-    session = await getSession();
 </script>
 
 <template>
@@ -47,19 +44,19 @@ const { data, getSession, signOut, signIn } = useAuth(),
             </div>
         </template>
         <template #end>
-            <Button type="button" @click="toggle" link>
+            <!-- <Button type="button" @click="toggle" link>
                 <Avatar v-if="session?.user?.image" :image="session?.user?.image ?? undefined" shape="circle" />
                 <Avatar v-else icon="pi pi-user" shape="circle" />
-            </Button>
+            </Button> -->
         </template>
     </Menubar>
 
     <OverlayPanel ref="op">
-        <p> {{ data?.user?.name }} </p>
+        <!-- <p> {{ data?.user?.name }} </p>
         <small> {{ data?.user?.email }} </small>
         <hr>
         <Button v-if="!data?.user" type="button" @click="signIn(undefined)" label="Sign In" icon="pi pi-sign-in" />
-        <Button v-else type="button" @click="signOut()" label="Sign Out" icon="pi pi-sign-out" />
+        <Button v-else type="button" @click="signOut()" label="Sign Out" icon="pi pi-sign-out" /> -->
     </OverlayPanel>
 </template>
 
