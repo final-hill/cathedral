@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import slugify from '~/lib/slugify';
-
 useHead({ title: 'New Organization' })
 definePageMeta({ name: 'New Organization' })
 

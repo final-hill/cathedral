@@ -1,9 +1,9 @@
 import { fork } from "~/server/data/orm"
 import { z } from "zod"
 import Solution from "~/server/domain/application/Solution"
-import AppUser from "~/server/domain/application/AppUser"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 import Organization from "~/server/domain/application/Organization"
+import { getServerSession } from '#auth'
 
 const querySchema = z.object({
     name: z.string().max(100).optional(),
@@ -25,11 +25,9 @@ const querySchema = z.object({
  * Returns all solutions that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const config = useRuntimeConfig(),
-        [query, session] = await Promise.all([
-            getValidatedQuery(event, (q) => querySchema.safeParse(q)),
-            useSession(event, { password: config.sessionPassword })
-        ])
+    const
+        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q)),
+        session = (await getServerSession(event))!
 
     if (!query.success)
         throw createError({
@@ -38,8 +36,7 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(query.error.errors)
         })
 
-    const em = fork(),
-        appUser = (await em.findOne(AppUser, { id: session.id }))!;
+    const em = fork()
 
     const organization = await em.findOne(Organization, {
         ...(query.data.organizationId ? { id: query.data.organizationId } : {}),
@@ -66,14 +63,14 @@ export default defineEventHandler(async (event) => {
     if (allOrgSolutions.length === 0)
         return []
 
-    if (appUser.isSystemAdmin)
+    if (session.user.isSystemAdmin)
         return allOrgSolutions
 
     // If the user is not a system admin, return only solutions
     // that the user is associated with
     const appUserOrgs = await em.findAll(AppUserOrganizationRole, {
         where: {
-            appUser: appUser.id,
+            appUserId: session.user.id,
             organization
         },
     })

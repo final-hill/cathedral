@@ -2,8 +2,8 @@ import { z } from "zod"
 import { fork } from "~/server/data/orm"
 import Organization from "~/server/domain/application/Organization"
 import Solution from "~/server/domain/application/Solution"
-import AppUser from "~/server/domain/application/AppUser"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
+import { getServerSession } from '#auth'
 
 const bodySchema = z.object({
     name: z.string().min(1).max(100),
@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
     const config = useRuntimeConfig(),
         [body, session] = await Promise.all([
             readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-            useSession(event, { password: config.sessionPassword })
+            getServerSession(event)
         ]),
         em = fork()
 
@@ -41,10 +41,10 @@ export default defineEventHandler(async (event) => {
 
     // Only System Admins and Organization Admins can create solutions
     // An Organization Admin can only create solutions for their organization
-    const appUser = (await em.findOne(AppUser, { id: session.id }))!,
-        appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser, organization })
+    const appUserId = session?.user.id,
+        appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUserId: appUserId, organization })
 
-    if (!appUser.isSystemAdmin && !appUserOrgRoles.some(r => {
+    if (!session?.user.isSystemAdmin && !appUserOrgRoles.some(r => {
         return r.role.name === 'Organization Admin'
     }))
         throw createError({

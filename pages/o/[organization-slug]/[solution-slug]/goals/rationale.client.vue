@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import debounce from '~/lib/debounce';
-
 useHead({ title: 'Rationale' })
 definePageMeta({ name: 'Rationale' })
 

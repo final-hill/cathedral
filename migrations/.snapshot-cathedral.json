@@ -37,53 +37,23 @@
     },
     {
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "char(254)",
+        "app_user_id": {
+          "name": "app_user_id",
+          "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 254,
-          "mappedType": "character"
-        },
-        "name": {
-          "name": "name",
-          "type": "char(254)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 254,
-          "mappedType": "character"
-        },
-        "creation_date": {
-          "name": "creation_date",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "is_system_admin": {
-          "name": "is_system_admin",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "boolean"
+          "mappedType": "uuid"
         }
       },
-      "name": "app_user",
+      "name": "app_user_system_admin_role",
       "schema": "public",
       "indexes": [
         {
-          "keyName": "app_user_pkey",
+          "keyName": "app_user_system_admin_role_pkey",
           "columnNames": [
-            "id"
+            "app_user_id"
           ],
           "composite": false,
           "constraint": true,
@@ -169,13 +139,12 @@
       "columns": {
         "app_user_id": {
           "name": "app_user_id",
-          "type": "char(254)",
+          "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": true,
-          "length": 254,
-          "mappedType": "character"
+          "nullable": false,
+          "mappedType": "uuid"
         },
         "organization_id": {
           "name": "organization_id",
@@ -215,18 +184,6 @@
       ],
       "checks": [],
       "foreignKeys": {
-        "app_user_organization_role_app_user_id_foreign": {
-          "constraintName": "app_user_organization_role_app_user_id_foreign",
-          "columnNames": [
-            "app_user_id"
-          ],
-          "localTableName": "public.app_user_organization_role",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "deleteRule": "cascade"
-        },
         "app_user_organization_role_organization_id_foreign": {
           "constraintName": "app_user_organization_role_organization_id_foreign",
           "columnNames": [

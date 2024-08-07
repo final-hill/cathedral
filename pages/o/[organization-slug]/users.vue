@@ -4,12 +4,11 @@ import { FilterMatchMode } from 'primevue/api';
 useHead({ title: 'Users' })
 definePageMeta({ name: 'Organization Users' })
 
-const { getSession, } = useAuth(),
-    session = await getSession();
-
 const { organizationslug } = useRoute('Organization Users').params,
     { data: organizations } = await useFetch(`/api/organizations/`, { query: { slug: organizationslug } }),
-    organization = ref(organizations.value?.[0])
+    organization = ref(organizations.value?.[0]),
+    { data: session } = useAuth(),
+    user = session.value?.user
 
 const { data: users, status, refresh } = await useFetch('/api/appusers', {
     query: {
@@ -105,7 +104,7 @@ const onUpdate = async (data: UserViewModel) => {
             <template #body="{ data, field }">
                 <Checkbox v-model="data[field]" disabled />
             </template>
-            <template #editor="{ data, field }" v-if="session.isSystemAdmin">
+            <template #editor="{ data, field }" v-if="user && user.isSystemAdmin">
                 <Checkbox v-model="data[field]" />
             </template>
         </Column>

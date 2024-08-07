@@ -4,12 +4,9 @@ import AppUserOrganizationRole from "../../domain/application/AppUserOrganizatio
 export default new EntitySchema<AppUserOrganizationRole>({
     class: AppUserOrganizationRole,
     properties: {
-        appUser: {
-            kind: 'm:1',
-            entity: 'AppUser',
-            primary: true,
-            ref: true,
-            cascade: [Cascade.REMOVE]
+        appUserId: {
+            type: 'uuid',
+            primary: true
         },
         organization: {
             kind: 'm:1',

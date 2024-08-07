@@ -1,15 +1,14 @@
 import { fork } from "~/server/data/orm"
 import Solution from "~/server/domain/application/Solution"
 import Organization from "~/server/domain/application/Organization";
-import AppUser from "~/server/domain/application/AppUser";
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole";
+import { getServerSession } from '#auth'
 
 /**
  * Delete a solution by id.
  */
 export default defineEventHandler(async (event) => {
-    const config = useRuntimeConfig(),
-        id = event.context.params?.id;
+    const id = event.context.params?.id;
 
     if (!id)
         throw createError({
@@ -18,11 +17,8 @@ export default defineEventHandler(async (event) => {
         })
 
     const em = fork(),
-        session = await useSession(event, { password: config.sessionPassword }),
-        [appUser, solution] = await Promise.all([
-            em.findOne(AppUser, { id: session.id }),
-            em.findOne(Solution, { id })
-        ])
+        session = (await getServerSession(event))!,
+        solution = await em.findOne(Solution, { id })
 
     if (!solution)
         throw createError({
@@ -31,12 +27,12 @@ export default defineEventHandler(async (event) => {
         })
 
     const organization = await em.findOne(Organization, { id: solution.organization.id }),
-        appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser, organization })
+        appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUserId: session.user.id, organization })
 
     // A solution can only be deleted by a system admin
     // or the associated organization admin
 
-    if (appUser!.isSystemAdmin || appUserOrgRoles.some(r => r.role.name === 'Organization Admin')) {
+    if (session.user.isSystemAdmin || appUserOrgRoles.some(r => r.role.name === 'Organization Admin')) {
         em.remove(solution)
         await em.flush()
     } else {

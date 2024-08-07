@@ -2,8 +2,8 @@ import { z } from "zod"
 import { fork } from "~/server/data/orm"
 import Organization from "~/server/domain/application/Organization"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
-import AppUser from "~/server/domain/application/AppUser"
 import AppRole from "~/server/domain/application/AppRole"
+import { getServerSession } from '#auth'
 
 const bodySchema = z.object({
     name: z.string().min(1),
@@ -16,11 +16,8 @@ const bodySchema = z.object({
  * Creates a new organization and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const config = useRuntimeConfig(),
-        [body, session] = await Promise.all([
-            readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-            useSession(event, { password: config.sessionPassword })
-        ]),
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        session = (await getServerSession(event))!,
         em = fork()
 
     if (!body.success)
@@ -35,9 +32,11 @@ export default defineEventHandler(async (event) => {
         description: body.data.description
     })
 
+    console.log('Session', session)
+
     // add the current user as an admin of the new organization
     const newAppUserOrgRole = new AppUserOrganizationRole({
-        appUser: em.getReference(AppUser, session.id),
+        appUserId: session.user.id,
         organization: newOrg,
         role: (await em.findOne(AppRole, { name: 'Organization Admin' }))!
     })

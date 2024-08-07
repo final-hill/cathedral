@@ -1,7 +1,7 @@
-import { promise, z } from "zod"
+import { z } from "zod"
 import { fork } from "~/server/data/orm"
 import AppRole from "~/server/domain/application/AppRole"
-import AppUser from "~/server/domain/application/AppUser"
+import { getServerSession } from '#auth'
 
 const bodySchema = z.object({
     name: z.string().min(1),
@@ -13,11 +13,8 @@ const bodySchema = z.object({
  * Creates a new approle and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const config = useRuntimeConfig(),
-        [body, session] = await Promise.all([
-            readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-            useSession(event, { password: config.sessionPassword })
-        ]),
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        session = (await getServerSession(event))!,
         em = fork()
 
     if (!body.success)
@@ -28,8 +25,7 @@ export default defineEventHandler(async (event) => {
         })
 
     // check if the user is a system admin before creating the role
-    const appUser = await em.findOne(AppUser, { id: session.id })
-    if (!appUser?.isSystemAdmin)
+    if (!session?.user?.isSystemAdmin)
         throw createError({
             statusCode: 403,
             statusMessage: "Forbidden: You must be a system admin to create a role"

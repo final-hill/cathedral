@@ -35,7 +35,7 @@ const handleUsers = (organization: Organization) => {
 </script>
 
 <template>
-    <ConfirmDialog></ConfirmDialog>
+    <ConfirmDialog v-if="(organizations ?? []).length > 0"></ConfirmDialog>
     <div class="grid gap-3">
         <Card class="col shadow-4 border-dashed">
             <template #title>

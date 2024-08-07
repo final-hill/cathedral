@@ -46,7 +46,8 @@ export default defineNuxtConfig({
         "nuxt-primevue",
         "@vite-pwa/nuxt",
         "nuxt-security",
-        "nuxt-typed-router"
+        "nuxt-typed-router",
+        "@sidebase/nuxt-auth"
     ],
     runtimeConfig: {
         // The private keys which are only available within server-side
@@ -58,15 +59,33 @@ export default defineNuxtConfig({
         authAuthorityDomain: '',
         authSignUpSignInAuthority: '',
         authEditProfileAuthority: '',
+        authTenantName: '',
+        authPrimaryUserFlow: '',
         sessionPassword: '',
         origin: '',
 
-        githubClientId: '',
-        githubClientSecret: '',
+        // githubClientId: '',
+        // githubClientSecret: '',
 
 
         // The public keys which are available both client-side and server-side
         public: {}
+    },
+    // https://auth.sidebase.io/guide/application-side/configuration
+    // https://sidebase.io/nuxt-auth/configuration/nuxt-config
+    auth: {
+        isEnabled: true,
+        disableServerSideAuth: false,
+        baseURL: `${process.env.NUXT_ORIGIN}/api/auth`,
+        // https://auth.sidebase.io/guide/application-side/protecting-pages#global-middleware
+        globalAppMiddleware: true,
+        provider: {
+            type: 'authjs',
+        },
+        sessionRefresh: {
+            enableOnWindowFocus: true,
+            enablePeriodically: 30000
+        }
     },
     // https://nuxt.com/modules/security
     security: {

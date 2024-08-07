@@ -1,9 +1,9 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
 import Organization from "~/server/domain/application/Organization"
-import AppUser from "~/server/domain/application/AppUser"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
-import slugify from "~/lib/slugify"
+import { getServerSession } from '#auth'
+import slugify from "~/utils/slugify"
 
 const bodySchema = z.object({
     name: z.string().min(1),
@@ -14,8 +14,7 @@ const bodySchema = z.object({
  * Updates an organization by id.
  */
 export default defineEventHandler(async (event) => {
-    const config = useRuntimeConfig(),
-        id = event.context.params?.id;
+    const id = event.context.params?.id;
 
     if (!id)
         throw createError({
@@ -24,13 +23,10 @@ export default defineEventHandler(async (event) => {
         })
 
     const em = fork(),
-        [body, session] = await Promise.all([
-            readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-            useSession(event, { password: config.sessionPassword })
-        ]),
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        session = (await getServerSession(event))!,
         organization = await em.findOne(Organization, id),
-        appUser = (await em.findOne(AppUser, { id: session.id }))!,
-        appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser, organization })
+        sessionUserOrgRoles = await em.find(AppUserOrganizationRole, { appUserId: session.user.id, organization })
 
     if (!body.success)
         throw createError({
@@ -47,7 +43,7 @@ export default defineEventHandler(async (event) => {
 
     // An organization can only be updated by a system admin
     // or the associated organization admin, or organization contributor
-    if (appUser.isSystemAdmin || appUserOrgRoles.some(r => {
+    if (session.user.isSystemAdmin || sessionUserOrgRoles.some(r => {
         return r.role.name === 'Organization Contributor' || r.role.name === 'Organization Admin'
     })) {
         organization.name = body.data.name

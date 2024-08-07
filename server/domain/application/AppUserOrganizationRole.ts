@@ -1,5 +1,4 @@
 import { type Properties } from "../Properties.js";
-import AppUser from "./AppUser.js";
 import Organization from "./Organization.js";
 import AppRole from "./AppRole.js";
 
@@ -7,16 +6,16 @@ import AppRole from "./AppRole.js";
  * An AppUserOrganizationRole is a mapping between an AppUser, an Organization, and a Role
  */
 export default class AppUserOrganizationRole {
-    constructor({ appUser, organization, role }: Properties<AppUserOrganizationRole>) {
-        this.appUser = appUser
+    constructor({ appUserId, organization, role }: Properties<AppUserOrganizationRole>) {
+        this.appUserId = appUserId
         this.organization = organization
         this.role = role
     }
 
     /**
-     * The AppUser associated with the OrganizationRole
+     * The userId associated with the OrganizationRole
      */
-    appUser: AppUser
+    appUserId: string
 
     /**
      * The Organization associated with the OrganizationRole
@@ -30,7 +29,7 @@ export default class AppUserOrganizationRole {
 
     toJSON() {
         return {
-            appuserId: this.appUser,
+            appuserId: this.appUserId,
             organizationId: this.organization,
             roleName: this.role
         }

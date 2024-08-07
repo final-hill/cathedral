@@ -1,27 +1,22 @@
+import { getServerSession } from '#auth'
+
 /**
  * Redirects to login page if user is not authenticated
- * (except /api/slack-bot and the /auth routes)
+ * when accessing an API route (except /api/auth)
  */
 export default eventHandler(async (event) => {
-    const config = useRuntimeConfig(),
-        url = event.node.req.url!
+    const url = event.node.req.url!
 
-    if (url.startsWith('/auth'))
+    if (url.startsWith('/api/slack-bot') || url.startsWith("/api/auth") || !url.startsWith("/api"))
         return
 
-    const session = await useSession(event, { password: config.sessionPassword })
+    const session = await getServerSession(event)
 
-    console.log('MIDDLEWARE: session.data', session.data)
-
-    if (!session || Object.keys(session.data).length === 0) {
-        if (url.startsWith('/api/slack-bot'))
-            return
-        if (url.startsWith('/api')) {
-            throw createError({
-                statusCode: 401,
-                message: 'Unauthorized'
-            })
-        }
-        sendRedirect(event, '/auth/sign-in')
+    if (!session) {
+        throw createError({
+            statusMessage: 'Unauthenticated',
+            statusCode: 403
+        })
     }
 })
+

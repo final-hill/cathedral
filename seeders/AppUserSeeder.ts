@@ -1,21 +1,25 @@
 import type { EntityManager } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
-import AppUser from '../server/domain/application/AppUser.js';
+import AppUserSystemAdminRole from '~/server/domain/application/AppUserSystemAdminRole';
 
 export class AppUserSeeder extends Seeder {
 
     async run(em: EntityManager): Promise<void> {
-        const sysAdminUserCount = await em.count(AppUser, { id: 'tno@thenewobjective.com' });
+        const isDev = process.env.NODE_ENV === 'development';
 
-        if (sysAdminUserCount > 0)
-            return;
+        if (isDev) {
+            const mlHaufeId = 'a6e97f11-725b-439d-b8dc-06ca77c08dd7'
 
-        em.create(AppUser, {
-            id: 'tno@thenewobjective.com',
-            name: 'Michael L Haufe',
-            creationDate: new Date(),
-            isSystemAdmin: true
-        });
+            const adminCount = await em.count(AppUserSystemAdminRole, { appUserId: mlHaufeId });
+
+            if (adminCount === 0) {
+                em.create(AppUserSystemAdminRole, {
+                    appUserId: mlHaufeId
+                });
+            }
+        } else {
+
+        }
     }
 
 }

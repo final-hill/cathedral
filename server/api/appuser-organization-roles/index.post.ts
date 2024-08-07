@@ -1,9 +1,9 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
 import AppRole from "~/server/domain/application/AppRole"
-import AppUser from "~/server/domain/application/AppUser"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 import Organization from "~/server/domain/application/Organization"
+import { getServerSession } from '#auth'
 
 const bodySchema = z.object({
     appUserId: z.string().uuid(),
@@ -17,12 +17,9 @@ const bodySchema = z.object({
  * creates a new appuser-organization-role
  */
 export default defineEventHandler(async (event) => {
-    const config = useRuntimeConfig(),
-        em = fork(),
-        [body, session] = await Promise.all([
-            readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-            useSession(event, { password: config.sessionPassword })
-        ])
+    const em = fork(),
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        session = (await getServerSession(event))!;
 
     if (!body.success)
         throw createError({
@@ -31,22 +28,15 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(body.error.errors)
         })
 
-    const [appUser, organization, role, sessionUser] = await Promise.all([
-        em.findOne(AppUser, body.data.appUserId),
+    const [organization, role] = await Promise.all([
         em.findOne(Organization, body.data.organizationId),
-        em.findOne(AppRole, { name: body.data.roleName }),
-        em.findOne(AppUser, { id: session.id })
+        em.findOne(AppRole, { name: body.data.roleName })
     ]),
         sessionUserOrgRoles = await em.find(AppUserOrganizationRole, {
-            appUser: { id: sessionUser!.id },
+            appUserId: session.user.id,
             organization: { id: body.data.organizationId },
         })
 
-    if (!appUser)
-        throw createError({
-            statusCode: 404,
-            statusMessage: "Not Found: AppUser not found with id " + body.data.appUserId
-        })
     if (!organization)
         throw createError({
             statusCode: 404,
@@ -59,9 +49,9 @@ export default defineEventHandler(async (event) => {
         })
 
     // If the user is a system admin or an organization admin, create the appuser-organization-role
-    if (sessionUser!.isSystemAdmin || sessionUserOrgRoles.some(r => { return r.role.name === 'Organization Admin' })) {
+    if (session.user.isSystemAdmin || sessionUserOrgRoles.some(r => { return r.role.name === 'Organization Admin' })) {
         const appUserOrganizationRole = new AppUserOrganizationRole({
-            appUser, organization, role
+            appUserId: body.data.appUserId, organization, role
         })
 
         await em.persistAndFlush(appUserOrganizationRole)

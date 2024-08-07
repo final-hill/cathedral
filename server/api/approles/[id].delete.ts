@@ -1,6 +1,6 @@
 import { fork } from "~/server/data/orm"
 import AppRole from "~/server/domain/application/AppRole"
-import AppUser from "~/server/domain/application/AppUser"
+import { getServerSession } from '#auth'
 
 /**
  * Delete an approle by id.
@@ -8,12 +8,11 @@ import AppUser from "~/server/domain/application/AppUser"
 export default defineEventHandler(async (event) => {
     const config = useRuntimeConfig(),
         id = event.context.params?.id,
-        session = await useSession(event, { password: config.sessionPassword }),
+        session = (await getServerSession(event))!,
         em = fork()
 
     // check if the user is a system admin before deleting the role
-    const sessionUser = await em.findOne(AppUser, { id: session.id })
-    if (!sessionUser?.isSystemAdmin)
+    if (!session.user.isSystemAdmin)
         throw createError({
             statusCode: 403,
             statusMessage: "Forbidden: You must be a system admin to delete a role"

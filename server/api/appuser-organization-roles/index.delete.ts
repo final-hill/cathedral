@@ -1,9 +1,9 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import AppUser from "~/server/domain/application/AppUser"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 import Organization from "~/server/domain/application/Organization"
 import AppRole from "~/server/domain/application/AppRole"
+import { getServerSession } from '#auth'
 
 const bodySchema = z.object({
     appUserId: z.string().uuid(),
@@ -17,8 +17,7 @@ const bodySchema = z.object({
  * Deletes an existing appuser-organization-role
  */
 export default defineEventHandler(async (event) => {
-    const config = useRuntimeConfig(),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
 
     if (!body.success)
         throw createError({
@@ -28,16 +27,14 @@ export default defineEventHandler(async (event) => {
         })
 
     const em = fork(),
-        session = await useSession(event, { password: config.sessionPassword }),
-        [sessionUser, organization, role, appUser, sessionUserOrgRoles] = await Promise.all([
-            em.findOne(AppUser, { id: session.id }),
+        session = (await getServerSession(event))!,
+        [organization, role, sessionUserOrgRoles] = await Promise.all([
             em.getReference(Organization, body.data.organizationId),
             em.findOne(AppRole, { name: body.data.roleName }),
-            em.findOne(AppUser, { id: body.data.appUserId }),
-            em.find(AppUserOrganizationRole, { appUser: { id: session.id }, organization: { id: body.data.organizationId } })
+            em.find(AppUserOrganizationRole, { appUserId: session.user.id, organization: { id: body.data.organizationId } })
         ]),
         appUserOrganizationRole = await em.findOne(AppUserOrganizationRole, {
-            appUser, organization, role
+            appUserId: body.data.appUserId, organization, role
         })
 
     if (!organization)
@@ -50,11 +47,6 @@ export default defineEventHandler(async (event) => {
             statusCode: 404,
             statusMessage: "Not Found: Role not found"
         })
-    if (!appUser)
-        throw createError({
-            statusCode: 404,
-            statusMessage: "Not Found: AppUser not found"
-        })
     if (!appUserOrganizationRole)
         throw createError({
             statusCode: 404,
@@ -64,7 +56,7 @@ export default defineEventHandler(async (event) => {
     // An appuser-organization-role can only be deleted by a system admin
     // or the associated organization admin
 
-    if (sessionUser!.isSystemAdmin || sessionUserOrgRoles.some(r => r.role.name === 'Organization Admin')) {
+    if (session.user.isSystemAdmin || sessionUserOrgRoles.some(r => r.role.name === 'Organization Admin')) {
         em.remove(appUserOrganizationRole)
         await em.flush()
     } else {
