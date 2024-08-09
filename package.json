@@ -31,8 +31,7 @@
         "orm-list-executed-migrations": "mikro-orm-esm migration:list",
         "orm-run-pending-migrations": "mikro-orm-esm migration:up",
         "orm-rollback-migration": "mikro-orm-esm migration:down",
-        "orm-seed-users": "mikro-orm-esm seeder:run -c AppUserSeeder",
-        "orm-seed-roles": "mikro-orm-esm seeder:run -c AppRoleSeeder"
+        "orm-seed-users": "mikro-orm-esm seeder:run -c AppUserSeeder"
     },
     "dependencies": {
         "@azure/monitor-opentelemetry": "^1.6.0",
@@ -44,6 +43,7 @@
         "@slack/web-api": "^7.3.1",
         "@vite-pwa/nuxt": "^0.9.1",
         "mermaid": "^10.9.1",
+        "mitt": "^3.0.1",
         "nuxt": "^3.12.4",
         "nuxt-primevue": "^3.0.0",
         "nuxt-security": "^2.0.0-rc.9",

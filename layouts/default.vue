@@ -1,7 +1,31 @@
+<script lang="ts" setup>
+import { useToast } from "primevue/usetoast";
+
+const { $eventBus } = useNuxtApp(),
+    toast = useToast();
+
+const showError = (e: unknown) => {
+    let error = ''
+
+    if (e instanceof Error)
+        error = e.message
+    else if (typeof e === 'string')
+        error = e
+    else
+        error = 'An error occurred. Check the browser console for more details.'
+
+    console.error(error);
+    toast.add({ severity: 'error', summary: 'Error', detail: error, group: 'br', life: 5000 });
+}
+
+$eventBus.$on('page-error', showError);
+
+</script>
 <template>
     <TopNavigation />
     <section id="content" class="surface-ground">
-        <slot />
+        <slot @page-error="showError" />
+        <Toast position="bottom-right" group="br" />
     </section>
     <footer>
         &copy; Final Hill 2024. All rights reserved. |

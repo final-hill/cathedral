@@ -5,8 +5,9 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Roles & Personnel' })
 definePageMeta({ name: 'Roles & Personnel' })
 
-const { solutionslug, organizationslug } = useRoute('Roles & Personnel').params,
-    { data: solutions } = await useFetch(`/api/solutions`, {
+const { $eventBus } = useNuxtApp(),
+    { solutionslug, organizationslug } = useRoute('Roles & Personnel').params,
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -14,14 +15,20 @@ const { solutionslug, organizationslug } = useRoute('Roles & Personnel').params,
     }),
     solutionId = solutions.value?.[0].id
 
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value)
+
 type PersonViewModel = {
     id: string;
     name: string;
     email: string;
 }
 
-const { data: personnel, refresh, status } = await useFetch(`/api/persons?solutionId=${solutionId}`),
+const { data: personnel, refresh, status, error: getPersonnelError } = await useFetch(`/api/persons?solutionId=${solutionId}`),
     emptyPerson: PersonViewModel = { id: emptyUuid, name: '', email: '' };
+
+if (getPersonnelError.value)
+    $eventBus.$emit('page-error', getPersonnelError.value)
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -35,7 +42,7 @@ const onCreate = async (data: PersonViewModel) => {
             solutionId,
             statement: ''
         }
-    });
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh();
 }
@@ -47,13 +54,14 @@ const onUpdate = async (data: PersonViewModel) => {
             solutionId,
             statement: ''
         }
-    });
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh();
 }
 
 const onDelete = async (id: string) => {
     await $fetch(`/api/persons/${id}`, { method: 'DELETE' })
+        .catch((e) => $eventBus.$emit('page-error', e))
     refresh();
 }
 </script>

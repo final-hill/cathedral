@@ -3,6 +3,7 @@ import Solution from "~/server/domain/application/Solution"
 import Organization from "~/server/domain/application/Organization";
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole";
 import { getServerSession } from '#auth'
+import AppRole from "~/server/domain/application/AppRole";
 
 /**
  * Delete a solution by id.
@@ -27,12 +28,12 @@ export default defineEventHandler(async (event) => {
         })
 
     const organization = await em.findOne(Organization, { id: solution.organization.id }),
-        appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUserId: session.user.id, organization })
+        appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser: session.id, organization })
 
     // A solution can only be deleted by a system admin
     // or the associated organization admin
 
-    if (session.user.isSystemAdmin || appUserOrgRoles.some(r => r.role.name === 'Organization Admin')) {
+    if (session.isSystemAdmin || appUserOrgRoles.some(r => r.role === AppRole.ORGANIZATION_ADMIN)) {
         em.remove(solution)
         await em.flush()
     } else {

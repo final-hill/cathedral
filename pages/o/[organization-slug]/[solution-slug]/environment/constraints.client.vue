@@ -7,8 +7,9 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Constraints' })
 definePageMeta({ name: 'Constraints' })
 
-const { solutionslug, organizationslug } = useRoute('Constraints').params,
-    { data: solutions } = await useFetch('/api/solutions', {
+const { $eventBus } = useNuxtApp(),
+    { solutionslug, organizationslug } = useRoute('Constraints').params,
+    { data: solutions, error: getSolutionError } = await useFetch('/api/solutions', {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -16,9 +17,15 @@ const { solutionslug, organizationslug } = useRoute('Constraints').params,
     }),
     solution = (solutions.value ?? [])[0],
     solutionId = solution.id,
-    { data: constraints, status, refresh } = await useFetch('/api/constraints', {
+    { data: constraints, status, refresh, error: getConstraintsError } = await useFetch('/api/constraints', {
         query: { solutionId }
     });
+
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value)
+
+if (getConstraintsError.value)
+    $eventBus.$emit('page-error', getConstraintsError.value)
 
 type ConstraintViewModel = {
     id: string;
@@ -47,13 +54,14 @@ const onCreate = async (data: ConstraintViewModel) => {
             solutionId,
             category: data.category
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
 
 const onDelete = async (id: string) => {
     await $fetch(`/api/constraints/${id}`, { method: 'DELETE' })
+        .catch((e) => $eventBus.$emit('page-error', e))
     refresh()
 }
 
@@ -66,7 +74,7 @@ const onUpdate = async (data: ConstraintViewModel) => {
             solutionId,
             category: data.category
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
     refresh()
 }
 </script>

@@ -6,14 +6,18 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Scenarios' })
 
-const { solutionslug, organizationslug } = useRoute('Scenarios').params,
-    { data: solutions } = await useFetch(`/api/solutions`, {
+const { $eventBus } = useNuxtApp(),
+    { solutionslug, organizationslug } = useRoute('Scenarios').params,
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
         }
     }),
     solutionId = solutions.value?.[0].id!;
+
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value);
 
 type UserStoryViewModel = {
     id: string;
@@ -40,8 +44,8 @@ type UseCaseViewModel = {
     priority: MoscowPriority;
 }
 
-const { data: userStories, refresh: refreshUserStories } = await useFetch(`/api/user-stories?solutionId=${solutionId}`),
-    { data: useCases, refresh: refreshUseCases } = await useFetch(`/api/use-cases?solutionId=${solutionId}`),
+const { data: userStories, refresh: refreshUserStories, error: getUserStoriesError } = await useFetch(`/api/user-stories?solutionId=${solutionId}`),
+    { data: useCases, refresh: refreshUseCases, error: getUseCasesError } = await useFetch(`/api/use-cases?solutionId=${solutionId}`),
     emptyUserStory: UserStoryViewModel = {
         id: emptyUuid,
         name: '',
@@ -64,12 +68,25 @@ const { data: userStories, refresh: refreshUserStories } = await useFetch(`/api/
         triggerid: emptyUuid,
         priority: MoscowPriority.MUST
     },
-    { data: roles } = await useFetch(`/api/stakeholders?solutionId=${solutionId}`),
-    { data: functionalBehaviors } = await useFetch(`/api/functional-behaviors?solutionId=${solutionId}`),
-    { data: outcomes } = await useFetch(`/api/outcomes?solutionId=${solutionId}`),
-    { data: assumptions } = await useFetch(`/api/assumptions?solutionId=${solutionId}`),
-    { data: effects } = await useFetch(`/api/effects?solutionId=${solutionId}`),
+    { data: roles, error: getRolesError } = await useFetch(`/api/stakeholders?solutionId=${solutionId}`),
+    { data: functionalBehaviors, error: getFunctionalBehaviorsError } = await useFetch(`/api/functional-behaviors?solutionId=${solutionId}`),
+    { data: outcomes, error: getOutcomesError } = await useFetch(`/api/outcomes?solutionId=${solutionId}`),
+    { data: assumptions, error: getAssumptionsError } = await useFetch(`/api/assumptions?solutionId=${solutionId}`),
+    { data: effects, error: getEffectsError } = await useFetch(`/api/effects?solutionId=${solutionId}`),
     triggers = ref([])
+
+if (getUserStoriesError.value)
+    $eventBus.$emit('page-error', getUserStoriesError.value);
+if (getRolesError.value)
+    $eventBus.$emit('page-error', getRolesError.value);
+if (getFunctionalBehaviorsError.value)
+    $eventBus.$emit('page-error', getFunctionalBehaviorsError.value);
+if (getOutcomesError.value)
+    $eventBus.$emit('page-error', getOutcomesError.value);
+if (getAssumptionsError.value)
+    $eventBus.$emit('page-error', getAssumptionsError.value);
+if (getEffectsError.value)
+    $eventBus.$emit('page-error', getEffectsError.value);
 
 const userStoryfilters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -100,7 +117,7 @@ const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
             statement: '',
             priority: MoscowPriority.MUST
         }
-    });
+    }).catch((e) => $eventBus.$emit('page-error', e));
 
     refreshUserStories();
 }
@@ -114,7 +131,7 @@ const onUseCaseCreate = async (useCase: UseCaseViewModel) => {
             statement: '',
             priority: MoscowPriority.MUST
         }
-    });
+    }).catch((e) => $eventBus.$emit('page-error', e));
 
     refreshUseCases();
 }
@@ -128,7 +145,7 @@ const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
             statement: '',
             priority: userStory.priority
         }
-    });
+    }).catch((e) => $eventBus.$emit('page-error', e));
 
     refreshUserStories();
 }
@@ -141,19 +158,21 @@ const onUseCaseUpdate = async (useCase: UseCaseViewModel) => {
             solutionId,
             statement: ''
         }
-    });
+    }).catch((e) => $eventBus.$emit('page-error', e));
 
     refreshUseCases();
 }
 
 const onUserStoryDelete = async (id: string) => {
-    await $fetch(`/api/user-stories/${id}`, { method: 'DELETE' });
+    await $fetch(`/api/user-stories/${id}`, { method: 'DELETE' })
+        .catch((e) => $eventBus.$emit('page-error', e));
 
     refreshUserStories();
 }
 
 const onUseCaseDelete = async (id: string) => {
-    await $fetch(`/api/use-cases/${id}`, { method: 'DELETE' });
+    await $fetch(`/api/use-cases/${id}`, { method: 'DELETE' })
+        .catch((e) => $eventBus.$emit('page-error', e));
 
     refreshUseCases();
 }

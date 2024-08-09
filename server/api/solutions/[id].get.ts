@@ -27,10 +27,10 @@ export default defineEventHandler(async (event) => {
         })
 
     const organization = await em.findOne(Organization, { id: solution.organization.id }),
-        sessionUserOrgRoles = await em.find(AppUserOrganizationRole, { appUserId: session.user.id, organization })
+        sessionUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser: session.id, organization })
 
     // check if the user is a member of the organization or a system admin before returning it
-    const result = session.user.isSystemAdmin || sessionUserOrgRoles.length > 0 ? solution : null
+    const result = session.isSystemAdmin || sessionUserOrgRoles.length > 0 ? solution : null
 
     if (!result)
         throw createError({

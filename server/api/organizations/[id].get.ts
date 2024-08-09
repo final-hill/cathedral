@@ -19,10 +19,10 @@ export default defineEventHandler(async (event) => {
     const em = fork(),
         session = (await getServerSession(event))!,
         organization = await em.findOne(Organization, id),
-        sessionUserOrgRoles = await em.find(AppUserOrganizationRole, { appUserId: session.user.id, organization })
+        sessionUserOrgRoleCount = await em.count(AppUserOrganizationRole, { appUser: session.id, organization })
 
     // check if the user is a member of the organization or a system admin before returning it
-    const result = session.user.isSystemAdmin || sessionUserOrgRoles.length > 0 ? organization : null
+    const result = session.isSystemAdmin || sessionUserOrgRoleCount ? organization : null
 
     if (!result)
         throw createError({

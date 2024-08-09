@@ -60,13 +60,10 @@ export default defineNuxtConfig({
         authSignUpSignInAuthority: '',
         authEditProfileAuthority: '',
         authTenantName: '',
+        authTenantId: '',
         authPrimaryUserFlow: '',
         sessionPassword: '',
         origin: '',
-
-        // githubClientId: '',
-        // githubClientSecret: '',
-
 
         // The public keys which are available both client-side and server-side
         public: {}

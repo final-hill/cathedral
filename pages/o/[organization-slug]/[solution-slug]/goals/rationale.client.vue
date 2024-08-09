@@ -2,14 +2,18 @@
 useHead({ title: 'Rationale' })
 definePageMeta({ name: 'Rationale' })
 
-const { solutionslug, organizationslug } = useRoute('Rationale').params,
-    { data: solutions } = await useFetch(`/api/solutions`, {
+const { $eventBus } = useNuxtApp(),
+    { solutionslug, organizationslug } = useRoute('Rationale').params,
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
         }
     }),
     solutionId = solutions.value?.[0].id;
+
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value);
 
 type JustificationModel = {
     id: string;
@@ -18,10 +22,10 @@ type JustificationModel = {
 }
 
 const [
-    { data: visionJustifications, refresh: refreshVision },
-    { data: missionJustifications, refresh: refreshMission },
-    { data: situationJustifications, refresh: refreshSituation },
-    { data: objectiveJustifications, refresh: refreshObjective }
+    { data: visionJustifications, refresh: refreshVision, error: getVisionError },
+    { data: missionJustifications, refresh: refreshMission, error: getMissionError },
+    { data: situationJustifications, refresh: refreshSituation, error: getSituationError },
+    { data: objectiveJustifications, refresh: refreshObjective, error: getObjectiveError }
 ] = await Promise.all([
     useFetch(`/api/justifications?solutionId=${solutionId}&name=Vision`),
     useFetch(`/api/justifications?solutionId=${solutionId}&name=Mission`),
@@ -29,32 +33,41 @@ const [
     useFetch(`/api/justifications?solutionId=${solutionId}&name=Objective`)
 ]);
 
+if (getVisionError.value)
+    $eventBus.$emit('page-error', getVisionError.value);
+if (getMissionError.value)
+    $eventBus.$emit('page-error', getMissionError.value);
+if (getSituationError.value)
+    $eventBus.$emit('page-error', getSituationError.value);
+if (getObjectiveError.value)
+    $eventBus.$emit('page-error', getObjectiveError.value);
+
 if (!visionJustifications.value?.length) {
     useFetch(`/api/justifications`, {
         method: 'POST',
         body: { solutionId, name: 'Vision', statement: '' }
-    });
+    }).catch((e) => $eventBus.$emit('page-error', e));
 }
 
 if (!missionJustifications.value?.length) {
     useFetch(`/api/justifications`, {
         method: 'POST',
         body: { solutionId, name: 'Mission', statement: '' }
-    });
+    }).catch((e) => $eventBus.$emit('page-error', e));
 }
 
 if (!situationJustifications.value?.length) {
     useFetch(`/api/justifications`, {
         method: 'POST',
         body: { solutionId, name: 'Situation', statement: '' }
-    });
+    }).catch((e) => $eventBus.$emit('page-error', e));
 }
 
 if (!objectiveJustifications.value?.length) {
     useFetch(`/api/justifications`, {
         method: 'POST',
         body: { solutionId, name: 'Objective', statement: '' }
-    });
+    }).catch((e) => $eventBus.$emit('page-error', e));
 }
 
 await Promise.all([
@@ -86,7 +99,7 @@ fieldTriple.forEach(([goalStatement, justification, _name]) => {
                 name: justification.name,
                 statement: justification.statement
             }
-        });
+        }).catch((e) => $eventBus.$emit('page-error', e));
     }, 500));
 });
 </script>

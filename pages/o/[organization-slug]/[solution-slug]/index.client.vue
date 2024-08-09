@@ -4,9 +4,10 @@ import type { RoutesNamesList } from '#build/typed-router/__routes';
 useHead({ title: 'Solution' })
 definePageMeta({ name: 'Solution' })
 
-const { solutionslug, organizationslug } = useRoute('Solution').params,
+const { $eventBus } = useNuxtApp(),
+    { solutionslug, organizationslug } = useRoute('Solution').params,
     router = useRouter(),
-    { data: solutions } = await useFetch('/api/solutions', {
+    { data: solutions, error: getSolutionError } = await useFetch('/api/solutions', {
         query: {
             organizationSlug: organizationslug,
             slug: solutionslug
@@ -14,6 +15,9 @@ const { solutionslug, organizationslug } = useRoute('Solution').params,
     }),
     solution = solutions.value![0],
     confirm = useConfirm()
+
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value)
 
 const links: { name: RoutesNamesList, icon: string, label: string }[] = [
     { name: 'Project', icon: 'pi-box', label: 'Project' },
@@ -32,7 +36,7 @@ const handleSolutionDelete = async () => {
         accept: async () => {
             await $fetch(`/api/solutions/${solution.id}`, {
                 method: 'delete'
-            })
+            }).catch((e) => $eventBus.$emit('page-error', e))
             router.push({ name: 'Organization', params: { organizationslug } })
         },
         reject: () => { }

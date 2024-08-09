@@ -4,16 +4,23 @@ import type { Properties } from '~/server/domain/Properties';
 useHead({ title: 'Organization' })
 definePageMeta({ name: 'Organization' })
 
-const { organizationslug } = useRoute('Organization').params,
+const { $eventBus } = useNuxtApp(),
+    { organizationslug } = useRoute('Organization').params,
     router = useRouter(),
-    { data: organizations } = await useFetch('/api/organizations', {
+    { data: organizations, error: getOrgError } = await useFetch('/api/organizations', {
         query: { slug: organizationslug }
     }),
     organization = organizations.value![0],
-    { refresh, status, data: solutions } = await useFetch('/api/solutions', {
+    { refresh, status, data: solutions, error: getSolutionError } = await useFetch('/api/solutions', {
         query: { organizationSlug: organizationslug }
     }),
     confirm = useConfirm()
+
+if (getOrgError.value)
+    $eventBus.$emit('page-error', getOrgError.value)
+
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value)
 
 type SolutionModel = {
     id: string;
@@ -32,7 +39,7 @@ const handleOrganizationDelete = async () => {
         accept: async () => {
             await $fetch(`/api/organizations/${organization.id}`, {
                 method: 'delete'
-            })
+            }).catch((e) => $eventBus.$emit('page-error', e))
             router.push({ name: 'Home' })
         },
         reject: () => { }
@@ -57,7 +64,7 @@ const handleSolutionDelete = async (solution: Properties<SolutionModel>) => {
         accept: async () => {
             await $fetch(`/api/solutions/${solution.id}`, {
                 method: 'delete'
-            })
+            }).catch((e) => $eventBus.$emit('page-error', e))
             router.push({ name: 'Organization', params: { organizationslug } });
         },
         reject: () => { }

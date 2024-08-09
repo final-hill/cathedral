@@ -3,9 +3,10 @@ useHead({ title: 'Edit Solution' })
 definePageMeta({ name: 'Edit Solution' })
 
 const route = useRoute('Edit Solution'),
+    { $eventBus } = useNuxtApp(),
     { organizationslug, solutionslug } = route.params,
     router = useRouter(),
-    { data: solutions } = await useFetch(`/api/solutions/`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions/`, {
         query: {
             organizationSlug: organizationslug,
             slug: solutionslug
@@ -14,6 +15,9 @@ const route = useRoute('Edit Solution'),
     solution = ref(solutions.value![0]),
     newSlug = ref(solution.value.slug);
 
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value);
+
 const updateSolution = async () => {
     await $fetch(`/api/solutions/${solution.value.id}`, {
         method: 'PUT',
@@ -21,7 +25,7 @@ const updateSolution = async () => {
             name: solution.value.name,
             description: solution.value.description
         }
-    });
+    }).catch((e) => $eventBus.$emit('page-error', e));
 
     router.push({ name: 'Organization', params: { organizationslug } });
 }

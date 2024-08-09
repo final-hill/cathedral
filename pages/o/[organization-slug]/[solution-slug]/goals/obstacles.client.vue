@@ -5,8 +5,9 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Obstacles' })
 definePageMeta({ name: 'Obstacles' })
 
-const { solutionslug, organizationslug } = useRoute('Obstacles').params,
-    { data: solutions } = await useFetch(`/api/solutions`, {
+const { $eventBus } = useNuxtApp(),
+    { solutionslug, organizationslug } = useRoute('Obstacles').params,
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -14,13 +15,16 @@ const { solutionslug, organizationslug } = useRoute('Obstacles').params,
     }),
     solutionId = solutions.value?.[0].id;
 
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value);
+
 type ObstacleViewModel = {
     id: string;
     name: string;
     statement: string;
 }
 
-const { data: obstacles, refresh, status } = await useFetch(`/api/obstacles?solutionId=${solutionId}`),
+const { data: obstacles, refresh, status, error: getObstaclesError } = await useFetch(`/api/obstacles?solutionId=${solutionId}`),
     emptyObstacle: ObstacleViewModel = { id: emptyUuid, name: '', statement: '' };
 
 const filters = ref({
@@ -36,7 +40,7 @@ const onCreate = async (data: ObstacleViewModel) => {
             statement: data.statement,
             solutionId
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
@@ -49,13 +53,14 @@ const onUpdate = async (data: ObstacleViewModel) => {
             statement: data.statement,
             solutionId
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
 
 const onDelete = async (id: string) => {
     await $fetch(`/api/obstacles/${id}`, { method: 'DELETE' })
+        .catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }

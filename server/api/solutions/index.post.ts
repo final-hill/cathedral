@@ -4,6 +4,7 @@ import Organization from "~/server/domain/application/Organization"
 import Solution from "~/server/domain/application/Solution"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 import { getServerSession } from '#auth'
+import AppRole from "~/server/domain/application/AppRole"
 
 const bodySchema = z.object({
     name: z.string().min(1).max(100),
@@ -18,10 +19,8 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const config = useRuntimeConfig(),
-        [body, session] = await Promise.all([
-            readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-            getServerSession(event)
-        ]),
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        session = (await getServerSession(event))!,
         em = fork()
 
     if (!body.success)
@@ -41,11 +40,11 @@ export default defineEventHandler(async (event) => {
 
     // Only System Admins and Organization Admins can create solutions
     // An Organization Admin can only create solutions for their organization
-    const appUserId = session?.user.id,
-        appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUserId: appUserId, organization })
+    const appUserId = session.id,
+        appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser: appUserId, organization })
 
-    if (!session?.user.isSystemAdmin && !appUserOrgRoles.some(r => {
-        return r.role.name === 'Organization Admin'
+    if (!session.isSystemAdmin && !appUserOrgRoles.some(r => {
+        return r.role === AppRole.ORGANIZATION_ADMIN
     }))
         throw createError({
             statusCode: 403,

@@ -6,14 +6,18 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Goals Functionality' })
 
-const { solutionslug, organizationslug } = useRoute('Functionality').params,
-    { data: solutions } = await useFetch(`/api/solutions`, {
+const { $eventBus } = useNuxtApp(),
+    { solutionslug, organizationslug } = useRoute('Functionality').params,
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
         }
     }),
     solutionId = solutions.value?.[0].id
+
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value)
 
 type FunctionalBehaviorViewModel = {
     id: string;
@@ -22,13 +26,16 @@ type FunctionalBehaviorViewModel = {
     priority: MoscowPriority;
 }
 
-const { data: functionalBehaviors, refresh, status } = await useFetch(`/api/functional-behaviors?solutionId=${solutionId}`),
+const { data: functionalBehaviors, refresh, status, error: getFunctionalBehaviorsError } = await useFetch(`/api/functional-behaviors?solutionId=${solutionId}`),
     emptyFunctionalBehavior: FunctionalBehaviorViewModel = {
         id: emptyUuid,
         name: '',
         statement: '',
         priority: MoscowPriority.MUST
     };
+
+if (getFunctionalBehaviorsError.value)
+    $eventBus.$emit('page-error', getFunctionalBehaviorsError.value);
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -44,7 +51,7 @@ const onCreate = async (data: FunctionalBehaviorViewModel) => {
             solutionId,
             priority: MoscowPriority.MUST
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
@@ -59,13 +66,14 @@ const onUpdate = async (data: FunctionalBehaviorViewModel) => {
             solutionId,
             priority: data.priority
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
 
 const onDelete = async (id: string) => {
     await $fetch(`/api/functional-behaviors/${id}`, { method: 'DELETE' })
+        .catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }

@@ -5,8 +5,9 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Invariants' })
 definePageMeta({ name: 'Invariants' })
 
-const { solutionslug, organizationslug } = useRoute('Invariants').params,
-    { data: solutions } = await useFetch(`/api/solutions`, {
+const { $eventBus } = useNuxtApp(),
+    { solutionslug, organizationslug } = useRoute('Invariants').params,
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -14,14 +15,20 @@ const { solutionslug, organizationslug } = useRoute('Invariants').params,
     }),
     solutionId = solutions.value?.[0].id
 
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value)
+
 type InvariantViewModel = {
     id: string;
     name: string;
     statement: string;
 }
 
-const { data: invariants, refresh, status } = await useFetch(`/api/invariants?solutionId=${solutionId}`),
+const { data: invariants, refresh, status, error: getInvariantsError } = await useFetch(`/api/invariants?solutionId=${solutionId}`),
     emptyInvariant: InvariantViewModel = { id: emptyUuid, name: '', statement: '' };
+
+if (getInvariantsError.value)
+    $eventBus.$emit('page-error', getInvariantsError.value)
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -35,7 +42,7 @@ const onCreate = async (data: InvariantViewModel) => {
             statement: data.statement,
             solutionId
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
@@ -48,13 +55,14 @@ const onUpdate = async (data: InvariantViewModel) => {
             statement: data.statement,
             solutionId
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
 
 const onDelete = async (id: string) => {
     await useFetch(`/api/invariants/${id}`, { method: 'DELETE' })
+        .catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }

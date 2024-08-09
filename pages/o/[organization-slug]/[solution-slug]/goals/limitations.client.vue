@@ -5,8 +5,9 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Limitations' })
 definePageMeta({ name: 'Limitations' })
 
-const { solutionslug, organizationslug } = useRoute('Limitations').params,
-    { data: solutions } = await useFetch(`/api/solutions`, {
+const { $eventBus } = useNuxtApp(),
+    { solutionslug, organizationslug } = useRoute('Limitations').params,
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -14,14 +15,20 @@ const { solutionslug, organizationslug } = useRoute('Limitations').params,
     }),
     solutionId = solutions.value?.[0].id
 
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value)
+
 type LimitViewModel = {
     id: string;
     name: string;
     statement: string;
 }
 
-const { data: limits, status, refresh } = await useFetch(`/api/limits?solutionId=${solutionId}`),
+const { data: limits, status, refresh, error: getLimitsError } = await useFetch(`/api/limits?solutionId=${solutionId}`),
     emptyLimit: LimitViewModel = { id: emptyUuid, name: '', statement: '' };
+
+if (getLimitsError.value)
+    $eventBus.$emit('page-error', getLimitsError.value)
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -36,7 +43,7 @@ const onCreate = async (data: LimitViewModel) => {
             statement: data.statement,
             solutionId
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
@@ -49,13 +56,14 @@ const onUpdate = async (data: LimitViewModel) => {
             statement: data.statement,
             solutionId
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
 
 const onDelete = async (id: string) => {
     await $fetch(`/api/limits/${id}`, { method: 'DELETE' })
+        .catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }

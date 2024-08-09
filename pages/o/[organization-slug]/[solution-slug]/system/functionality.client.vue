@@ -6,8 +6,9 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Functionality' })
 
-const { solutionslug, organizationslug } = useRoute('Functionality').params,
-    { data: solutions } = await useFetch(`/api/solutions`, {
+const { $eventBus } = useNuxtApp(),
+    { solutionslug, organizationslug } = useRoute('Functionality').params,
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -15,6 +16,9 @@ const { solutionslug, organizationslug } = useRoute('Functionality').params,
     }),
     solution = solutions.value?.[0]!,
     solutionId = solution.id;
+
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value)
 
 type BehaviorViewModel = {
     id: string;
@@ -24,7 +28,7 @@ type BehaviorViewModel = {
     priority: MoscowPriority;
 }
 
-const { data: components, status, refresh } = await useFetch(`/api/system-components?solutionId=${solutionId}`),
+const { data: components, status, refresh, error: getComponentsError } = await useFetch(`/api/system-components?solutionId=${solutionId}`),
     expandedRows = ref({}),
     emptyBehavior = (componentid: string): BehaviorViewModel => ({
         id: emptyUuid,
@@ -34,11 +38,16 @@ const { data: components, status, refresh } = await useFetch(`/api/system-compon
         priority: MoscowPriority.MUST
     });
 
+if (getComponentsError.value)
+    $eventBus.$emit('page-error', getComponentsError.value)
+
 const fnFunctionalBehaviors = async (componentId: string) =>
-    (await useFetch(`/api/functional-behaviors?componentId=${componentId}`)).data;
+    await $fetch(`/api/functional-behaviors?componentId=${componentId}`)
+        .catch((e) => $eventBus.$emit('page-error', e));
 
 const fnNonFunctionalBehaviors = async (componentId: string) =>
-    (await useFetch(`/api/non-functional-behaviors?componentId=${componentId}`)).data;
+    await $fetch(`/api/non-functional-behaviors?componentId=${componentId}`)
+        .catch((e) => $eventBus.$emit('page-error', e))
 
 const componentSortField = ref<string | undefined>('name')
 

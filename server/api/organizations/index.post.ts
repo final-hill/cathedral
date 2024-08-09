@@ -4,6 +4,7 @@ import Organization from "~/server/domain/application/Organization"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 import AppRole from "~/server/domain/application/AppRole"
 import { getServerSession } from '#auth'
+import AppUser from "~/server/domain/application/AppUser"
 
 const bodySchema = z.object({
     name: z.string().min(1),
@@ -27,18 +28,18 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(body.error.errors)
         })
 
+    const sessionUser = em.getReference(AppUser, session.id)
+
     const newOrg = new Organization({
         name: body.data.name,
         description: body.data.description
     })
 
-    console.log('Session', session)
-
     // add the current user as an admin of the new organization
     const newAppUserOrgRole = new AppUserOrganizationRole({
-        appUserId: session.user.id,
+        appUser: sessionUser,
         organization: newOrg,
-        role: (await em.findOne(AppRole, { name: 'Organization Admin' }))!
+        role: AppRole.ORGANIZATION_ADMIN
     })
 
     await em.persistAndFlush([newOrg, newAppUserOrgRole])

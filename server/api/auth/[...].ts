@@ -1,7 +1,7 @@
 import { NuxtAuthHandler } from '#auth'
 import AzureADB2CProvider, { type AzureB2CProfile } from "next-auth/providers/azure-ad-b2c";
 import { fork } from '~/server/data/orm'
-import AppUserSystemAdminRole from '~/server/domain/application/AppUserSystemAdminRole';
+import AppUser from '~/server/domain/application/AppUser';
 
 const config = useRuntimeConfig()
 
@@ -18,49 +18,60 @@ export default NuxtAuthHandler({
             primaryUserFlow: config.authPrimaryUserFlow,
             authorization: {
                 params: { scope: 'openid' }
-            },
-            async profile(profile: AzureB2CProfile) {
-                const em = fork()
-
-                const isSystemAdmin = await em.count(AppUserSystemAdminRole, {
-                    appUserId: profile.oid
-                }) > 0
-
-                return {
-                    id: profile.oid,
-                    name: profile.name,
-                    email: profile.emails[0],
-                    isSystemAdmin
-                    // image: profile.???
-                }
             }
         })
     ],
     callbacks: {
-        jwt({ token, account, profile }) {
-            if (account)
-                token.sessionToken = account.session_token
-            if (profile)
-                token.profile = profile
+        async jwt({ token, account, profile, user }) {
+            // The arguments user, account, profile and isNewUser
+            // are only passed the first time this callback is called on a new session,
+            // after the user signs in. In subsequent calls, only token will be available.
+
+            if (account) {
+                const p = profile as AzureB2CProfile,
+                    em = fork()
+
+                let appUser = await em.findOne(AppUser, {
+                    id: p.oid
+                })
+
+                if (!appUser) {
+                    appUser = em.create(AppUser, {
+                        id: p.oid,
+                        creationDate: new Date(),
+                        lastLoginDate: new Date(),
+                        isSystemAdmin: false,
+                        name: p.name,
+                        email: p.emails[0]
+                    })
+                } else {
+                    appUser.name = p.name
+                    appUser.email = p.emails[0]
+                    appUser.lastLoginDate = new Date()
+                }
+
+                await em.flush()
+
+                Object.assign(token, {
+                    id: p.oid,
+                    name: p.name,
+                    email: p.emails[0],
+                    isSystemAdmin: appUser?.isSystemAdmin ?? false,
+                    image: undefined,
+                    accessToken: account.access_token,
+                    sessionToken: account.session_token,
+                })
+            }
+
             return token
         },
         async session({ session, token }) {
-            // Fetch data OR add previous data from the JWT callback.
-            // const additionalUserData = await $fetch(`/api/session/${token}`)
+            Object.assign(session, { ...token })
 
-            const profile = token.profile as any
-
-            // Return the modified session
-            return {
-                ...session,
-                user: {
-                    id: profile.id,
-                    name: profile.name,
-                    email: profile.email,
-                    isSystemAdmin: profile.isSystemAdmin,
-                    picture: profile.picture
-                }
-            }
+            return session
         }
+    },
+    session: {
+        strategy: 'jwt'
     }
 })

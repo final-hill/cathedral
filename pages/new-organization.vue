@@ -3,6 +3,7 @@ useHead({ title: 'New Organization' })
 definePageMeta({ name: 'New Organization' })
 
 const router = useRouter(),
+    { $eventBus } = useNuxtApp(),
     name = ref(''),
     slug = ref(''),
     description = ref('')
@@ -15,16 +16,16 @@ const createOrganization = async () => {
                 name: name.value,
                 description: description.value,
             }
-        }))
+        }).catch((e) => $eventBus.$emit('page-error', e)));
 
         if (organizationId) {
             const newOrganization = (await $fetch(`/api/organizations/${organizationId}`));
             router.push({ name: 'Organization', params: { organizationslug: newOrganization?.slug } });
         } else {
-            throw new Error('Failed to create organization. No organization ID returned.');
+            $eventBus.$emit('page-error', 'Failed to create organization. No organization ID returned.');
         }
     } catch (error) {
-        console.error(error)
+        $eventBus.$emit('page-error', error);
     }
 }
 

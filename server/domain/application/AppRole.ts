@@ -1,15 +1,10 @@
-import { type Properties } from "../Properties.js";
-
 /**
  * Represents a role in the Organization.
  */
-export default class AppRole {
-    constructor({ name }: Properties<AppRole>) {
-        this.name = name
-    }
-
-    /**
-     * The name of the role.
-     */
-    name: string;
+enum AppRole {
+    ORGANIZATION_ADMIN = 'Organization Admin',
+    ORGANIZATION_CONTRIBUTOR = 'Organization Contributor',
+    ORGANIZATION_READER = 'Organization Reader',
 }
+
+export default AppRole

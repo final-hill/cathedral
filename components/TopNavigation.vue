@@ -44,15 +44,15 @@ const toggle = (event: Event) => op.value.toggle(event)
         </template>
         <template #end>
             <Button type="button" @click="toggle" link>
-                <!-- <Avatar v-if="data?.user?.image" :image="data?.user?.image ?? undefined" shape="circle" /> -->
-                <Avatar icon="pi pi-user" shape="circle" />
+                <Avatar v-if="data?.user?.image" :image="data?.user?.image ?? undefined" shape="circle" />
+                <Avatar v-else icon="pi pi-user" shape="circle" />
             </Button>
         </template>
     </Menubar>
 
     <OverlayPanel ref="op">
-        <p> {{ data?.user?.name }} </p>
-        <small> {{ data?.user?.email }} </small>
+        <p> {{ data?.name }} </p>
+        <small> {{ data?.email }} </small>
         <hr>
         <Button v-if="!data?.user" type="button" @click="signIn(undefined)" label="Sign In" icon="pi pi-sign-in" />
         <Button v-else type="button" @click="signOut()" label="Sign Out" icon="pi pi-sign-out" />

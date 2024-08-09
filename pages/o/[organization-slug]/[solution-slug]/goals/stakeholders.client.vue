@@ -9,14 +9,18 @@ useHead({ title: 'Stakeholders' })
 definePageMeta({ name: 'Stakeholders' })
 
 const config = useAppConfig(),
+    { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Stakeholders').params,
-    { data: solutions } = await useFetch(`/api/solutions`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
         }
     }),
     solutionId = solutions.value?.[0].id;
+
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value);
 
 type StakeHolderViewModel = {
     id: string;
@@ -28,7 +32,7 @@ type StakeHolderViewModel = {
     segmentation: StakeholderSegmentation;
 }
 
-const { data: stakeholders, refresh, status } = await useFetch(`/api/stakeholders?solutionId=${solutionId}`),
+const { data: stakeholders, refresh, status, error: getStakeholdersError } = await useFetch(`/api/stakeholders?solutionId=${solutionId}`),
     categories = ref<{ id: string, description: string }[]>(
         Object.values(StakeholderCategory).map((value) => ({ id: value, description: value }))
     ),
@@ -44,6 +48,9 @@ const { data: stakeholders, refresh, status } = await useFetch(`/api/stakeholder
         category: StakeholderCategory.KEY_STAKEHOLDER,
         segmentation: StakeholderSegmentation.VENDOR
     };
+
+if (getStakeholdersError.value)
+    $eventBus.$emit('page-error', getStakeholdersError.value);
 
 // watch the stakeholders and re-render the chart
 watch(stakeholders, async () => {
@@ -102,7 +109,7 @@ const onCreate = async (data: StakeHolderViewModel) => {
             ...data,
             solutionId
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
@@ -114,13 +121,14 @@ const onUpdate = async (data: StakeHolderViewModel) => {
             ...data,
             solutionId
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
 
 const onDelete = async (id: string) => {
     await $fetch(`/api/stakeholders/${id}`, { method: 'DELETE' })
+        .catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }

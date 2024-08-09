@@ -4,6 +4,7 @@ import Organization from "~/server/domain/application/Organization"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 import { getServerSession } from '#auth'
 import slugify from "~/utils/slugify"
+import AppRole from "~/server/domain/application/AppRole"
 
 const bodySchema = z.object({
     name: z.string().min(1),
@@ -26,7 +27,7 @@ export default defineEventHandler(async (event) => {
         body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
         session = (await getServerSession(event))!,
         organization = await em.findOne(Organization, id),
-        sessionUserOrgRoles = await em.find(AppUserOrganizationRole, { appUserId: session.user.id, organization })
+        sessionUserOrgRole = await em.findOne(AppUserOrganizationRole, { appUser: session.id, organization })
 
     if (!body.success)
         throw createError({
@@ -43,9 +44,7 @@ export default defineEventHandler(async (event) => {
 
     // An organization can only be updated by a system admin
     // or the associated organization admin, or organization contributor
-    if (session.user.isSystemAdmin || sessionUserOrgRoles.some(r => {
-        return r.role.name === 'Organization Contributor' || r.role.name === 'Organization Admin'
-    })) {
+    if (session.isSystemAdmin || sessionUserOrgRole && [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR].includes(sessionUserOrgRole.role)) {
         organization.name = body.data.name
         organization.slug = slugify(body.data.name);
         organization.description = body.data.description

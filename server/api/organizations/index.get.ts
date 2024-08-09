@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
 
     // If the user is a system admin, return all organizations
     // filtered by the query parameters
-    if (session.user.isSystemAdmin) {
+    if (session.isSystemAdmin) {
         const organizations = em.findAll(Organization, {
             where: {
                 ...(query.data.name ? { name: query.data.name } : {}),
@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
     // that the user is associated with
     const organizations = (await em.findAll(AppUserOrganizationRole, {
         where: {
-            appUserId: session.user.id,
+            appUser: session.id,
             organization: {
                 ...(query.data.name ? { name: query.data.name } : {}),
                 ...(query.data.description ? { description: query.data.description } : {}),

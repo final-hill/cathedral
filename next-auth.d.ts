@@ -6,12 +6,9 @@ declare module 'next-auth' {
     /* Returned by `useAuth`, `getSession` and `getServerSession` */
     interface Session extends DefaultSession {
         id: string
-        user: {
-            id: string
-            name: string
-            email: string
-            // image: string
-            isSystemAdmin: boolean
-        }
+        name: string
+        email: string
+        image: string
+        isSystemAdmin: boolean
     }
 }

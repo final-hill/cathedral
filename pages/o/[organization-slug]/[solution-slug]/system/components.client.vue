@@ -5,14 +5,18 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Components' })
 definePageMeta({ name: 'System Components' })
 
-const { solutionslug, organizationslug } = useRoute('System Components').params,
-    { data: solutions } = await useFetch(`/api/solutions`, {
+const { $eventBus } = useNuxtApp(),
+    { solutionslug, organizationslug } = useRoute('System Components').params,
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
         }
     }),
     solutionId = solutions.value?.[0].id;
+
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value);
 
 type SystemComponentViewModel = {
     id: string;
@@ -21,13 +25,16 @@ type SystemComponentViewModel = {
     parentComponentId?: string;
 }
 
-const { data: systemComponents, refresh, status } = await useFetch(`/api/system-components?solutionId=${solutionId}`),
+const { data: systemComponents, refresh, status, error: getSystemComponentsError } = await useFetch(`/api/system-components?solutionId=${solutionId}`),
     emptyComponent: SystemComponentViewModel = {
         id: emptyUuid,
         name: '',
         statement: '',
         parentComponentId: undefined
     };
+
+if (getSystemComponentsError.value)
+    $eventBus.$emit('page-error', getSystemComponentsError.value);
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -39,7 +46,7 @@ const onCreate = async (data: SystemComponentViewModel) => {
     await $fetch('/api/system-components', {
         method: 'POST',
         body: { ...data, solutionId }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
@@ -48,7 +55,7 @@ const onUpdate = async (data: SystemComponentViewModel) => {
     await $fetch(`/api/system-components/${data.id}`, {
         method: 'PUT',
         body: { ...data, solutionId }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
@@ -56,7 +63,7 @@ const onUpdate = async (data: SystemComponentViewModel) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/system-components/${id}`, {
         method: 'DELETE'
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }

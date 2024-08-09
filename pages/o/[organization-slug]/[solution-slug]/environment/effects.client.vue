@@ -5,8 +5,9 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Effects' })
 definePageMeta({ name: 'Effects' })
 
-const { solutionslug, organizationslug } = useRoute('Effects').params,
-    { data: solutions } = await useFetch('/api/solutions', {
+const { $eventBus } = useNuxtApp(),
+    { solutionslug, organizationslug } = useRoute('Effects').params,
+    { data: solutions, error: getSolutionError } = await useFetch('/api/solutions', {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -14,14 +15,20 @@ const { solutionslug, organizationslug } = useRoute('Effects').params,
     }),
     solutionId = solutions.value?.[0].id!
 
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value)
+
 type EffectViewModel = {
     id: string;
     name: string;
     statement: string;
 }
 
-const { data: effects, refresh, status } = await useFetch(`/api/effects?solutionId=${solutionId}`),
+const { data: effects, refresh, status, error: getEffectsError } = await useFetch(`/api/effects?solutionId=${solutionId}`),
     emptyEffect: EffectViewModel = { id: emptyUuid, name: '', statement: '' }
+
+if (getEffectsError.value)
+    $eventBus.$emit('page-error', getEffectsError.value)
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -35,7 +42,7 @@ const onCreate = async (data: EffectViewModel) => {
             statement: data.statement,
             solutionId
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
     refresh()
 }
 
@@ -47,7 +54,7 @@ const onUpdate = async (data: EffectViewModel) => {
             statement: data.statement,
             solutionId
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }

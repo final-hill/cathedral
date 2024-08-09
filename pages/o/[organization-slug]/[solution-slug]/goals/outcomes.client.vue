@@ -5,8 +5,9 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Outcomes' })
 definePageMeta({ name: 'Outcomes' })
 
-const { solutionslug, organizationslug } = useRoute('Outcomes').params,
-    { data: solutions } = await useFetch(`/api/solutions`, {
+const { $eventBus } = useNuxtApp(),
+    { solutionslug, organizationslug } = useRoute('Outcomes').params,
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -14,14 +15,20 @@ const { solutionslug, organizationslug } = useRoute('Outcomes').params,
     }),
     solutionId = solutions.value?.[0].id;
 
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value);
+
 type OutcomeViewModel = {
     id: string;
     name: string;
     statement: string;
 }
 
-const { data: outcomes, refresh, status } = await useFetch(`/api/outcomes?solutionId=${solutionId}`),
+const { data: outcomes, refresh, status, error: getOutcomesError } = await useFetch(`/api/outcomes?solutionId=${solutionId}`),
     emptyOutcome: OutcomeViewModel = { id: emptyUuid, name: '', statement: '' };
+
+if (getOutcomesError.value)
+    $eventBus.$emit('page-error', getOutcomesError.value);
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -36,7 +43,7 @@ const onCreate = async (data: OutcomeViewModel) => {
             statement: data.statement,
             solutionId
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
@@ -49,13 +56,14 @@ const onUpdate = async (data: OutcomeViewModel) => {
             statement: data.statement,
             solutionId
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
 
 const onDelete = async (id: string) => {
     await $fetch(`/api/outcomes/${id}`, { method: 'DELETE' })
+        .catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }

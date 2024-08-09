@@ -4,6 +4,7 @@ import Solution from "~/server/domain/application/Solution"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 import Organization from "~/server/domain/application/Organization"
 import { getServerSession } from '#auth'
+import AppRole from "~/server/domain/application/AppRole"
 
 const bodySchema = z.object({
     name: z.string().min(1).max(100),
@@ -42,13 +43,13 @@ export default defineEventHandler(async (event) => {
         })
 
     const organization = await em.findOne(Organization, { id: solution!.organization.id }),
-        sessionUserOrgRoles = await em.find(AppUserOrganizationRole, { appUserId: session.user.id, organization })
+        sessionUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser: session.id, organization })
 
     // A solution can only be updated by a system admin
     // or the associated organization admin, or organization contributor
 
-    if (session.user.isSystemAdmin || sessionUserOrgRoles.some(r => {
-        return r.role.name === 'Organization Contributor' || r.role.name === 'Organization Admin'
+    if (session.isSystemAdmin || sessionUserOrgRoles.some(r => {
+        return r.role === AppRole.ORGANIZATION_CONTRIBUTOR || r.role === AppRole.ORGANIZATION_ADMIN
     })) {
         solution!.name = body.data.name
         solution!.description = body.data.description

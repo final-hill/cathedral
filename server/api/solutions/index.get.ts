@@ -63,14 +63,14 @@ export default defineEventHandler(async (event) => {
     if (allOrgSolutions.length === 0)
         return []
 
-    if (session.user.isSystemAdmin)
+    if (session.isSystemAdmin)
         return allOrgSolutions
 
     // If the user is not a system admin, return only solutions
     // that the user is associated with
     const appUserOrgs = await em.findAll(AppUserOrganizationRole, {
         where: {
-            appUserId: session.user.id,
+            appUser: session.id,
             organization
         },
     })

@@ -5,8 +5,12 @@ import type { Properties } from '~/server/domain/Properties';
 definePageMeta({ name: 'Home' })
 
 const router = useRouter(),
-    { status, data: organizations, refresh } = await useFetch('/api/organizations'),
-    confirm = useConfirm()
+    { status, data: organizations, refresh, error: getOrgError } = await useFetch('/api/organizations'),
+    confirm = useConfirm(),
+    { $eventBus } = useNuxtApp()
+
+if (getOrgError.value)
+    $eventBus.$emit('page-error', getOrgError.value)
 
 const handleDelete = async (organization: Properties<Organization>) => {
     confirm.require({
@@ -18,7 +22,7 @@ const handleDelete = async (organization: Properties<Organization>) => {
         accept: async () => {
             await $fetch(`/api/organizations/${organization.id}`, {
                 method: 'delete'
-            })
+            }).catch((e) => $eventBus.$emit('page-error', e))
             refresh()
         },
         reject: () => { }
