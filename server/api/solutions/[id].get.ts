@@ -1,9 +1,8 @@
 import { fork } from "~/server/data/orm"
 import Solution from "~/server/domain/application/Solution"
-import { getServerSession } from "#auth"
-import AppUser from "~/server/domain/application/AppUser"
 import Organization from "~/server/domain/application/Organization"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
+import { getServerSession } from '#auth'
 
 /**
  * Returns a solution by id
@@ -19,10 +18,7 @@ export default defineEventHandler(async (event) => {
 
     const em = fork(),
         session = (await getServerSession(event))!,
-        [appUser, solution] = await Promise.all([
-            em.findOne(AppUser, { id: session.id }),
-            em.findOne(Solution, { id })
-        ])
+        solution = await em.findOne(Solution, { id })
 
     if (!solution)
         throw createError({
@@ -31,10 +27,10 @@ export default defineEventHandler(async (event) => {
         })
 
     const organization = await em.findOne(Organization, { id: solution.organization.id }),
-        appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser, organization })
+        sessionUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser: session.id, organization })
 
     // check if the user is a member of the organization or a system admin before returning it
-    const result = appUser!.isSystemAdmin || appUserOrgRoles.length > 0 ? solution : null
+    const result = session.isSystemAdmin || sessionUserOrgRoles.length > 0 ? solution : null
 
     if (!result)
         throw createError({

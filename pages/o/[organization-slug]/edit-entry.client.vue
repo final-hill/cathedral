@@ -1,14 +1,16 @@
 <script lang="ts" setup>
-import slugify from '~/lib/slugify';
-
 useHead({ title: 'Edit Organization' })
 definePageMeta({ name: 'Edit Organization' })
 
 const router = useRouter(),
+    { $eventBus } = useNuxtApp(),
     { organizationslug } = useRoute('Edit Organization').params,
-    { data: organizations } = await useFetch(`/api/organizations/`, { query: { slug: organizationslug } }),
+    { data: organizations, error: getOrgError } = await useFetch(`/api/organizations/`, { query: { slug: organizationslug } }),
     organization = ref(organizations.value![0]),
     newSlug = ref(organization.value.slug);
+
+if (getOrgError.value)
+    $eventBus.$emit('page-error', getOrgError.value);
 
 const updateOrganization = async () => {
     await $fetch(`/api/organizations/${organization.value.id}`, {
@@ -17,7 +19,7 @@ const updateOrganization = async () => {
             name: organization.value.name,
             description: organization.value.description
         }
-    });
+    }).catch((e) => $eventBus.$emit('page-error', e));
 
     router.push({ name: 'Organization', params: { organizationslug: newSlug.value } });
 }

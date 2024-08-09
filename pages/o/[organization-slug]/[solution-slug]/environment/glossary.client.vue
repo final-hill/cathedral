@@ -5,8 +5,9 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Glossary' })
 definePageMeta({ name: 'Glossary' })
 
-const { solutionslug, organizationslug } = useRoute('Glossary').params,
-    { data: solutions } = await useFetch('/api/solutions', {
+const { $eventBus } = useNuxtApp(),
+    { solutionslug, organizationslug } = useRoute('Glossary').params,
+    { data: solutions, error: getSolutionError } = await useFetch('/api/solutions', {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -14,14 +15,20 @@ const { solutionslug, organizationslug } = useRoute('Glossary').params,
     }),
     solutionId = solutions.value?.[0].id;
 
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value);
+
 type GlossaryTermViewModel = {
     id: string;
     name: string;
     statement: string;
 }
 
-const { data: glossaryTerms, refresh, status } = await useFetch(`/api/glossary-terms?solutionId=${solutionId}`),
+const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = await useFetch(`/api/glossary-terms?solutionId=${solutionId}`),
     emptyGlossaryTerm: GlossaryTermViewModel = { id: emptyUuid, name: '', statement: '' }
+
+if (getGlossaryTermsError.value)
+    $eventBus.$emit('page-error', getGlossaryTermsError.value)
 
 const filters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -35,7 +42,7 @@ const onCreate = async (data: GlossaryTermViewModel) => {
             statement: data.statement,
             solutionId
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
@@ -48,13 +55,14 @@ const onUpdate = async (data: GlossaryTermViewModel) => {
             statement: data.statement,
             solutionId
         }
-    })
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
 
 const onDelete = async (id: string) => {
     await $fetch(`/api/glossary-terms/${id}`, { method: 'DELETE' })
+        .catch((e) => $eventBus.$emit('page-error', e))
     refresh()
 }
 </script>

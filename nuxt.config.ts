@@ -45,27 +45,44 @@ export default defineNuxtConfig({
     modules: [
         "nuxt-primevue",
         "@vite-pwa/nuxt",
-        "@sidebase/nuxt-auth",
         "nuxt-security",
-        "nuxt-typed-router"
+        "nuxt-typed-router",
+        "@sidebase/nuxt-auth"
     ],
+    runtimeConfig: {
+        // The private keys which are only available within server-side
+
+        // These values are overwritten by the associated NUXT_ environment variables
+        authClientId: '',
+        authClientSecret: '',
+        authRedirectUri: '',
+        authAuthorityDomain: '',
+        authSignUpSignInAuthority: '',
+        authEditProfileAuthority: '',
+        authTenantName: '',
+        authTenantId: '',
+        authPrimaryUserFlow: '',
+        sessionPassword: '',
+        origin: '',
+
+        // The public keys which are available both client-side and server-side
+        public: {}
+    },
+    // https://auth.sidebase.io/guide/application-side/configuration
     // https://sidebase.io/nuxt-auth/configuration/nuxt-config
     auth: {
         isEnabled: true,
-        baseURL: `${process.env.AUTH_ORIGIN}/api/auth`,
+        disableServerSideAuth: false,
+        baseURL: `${process.env.NUXT_ORIGIN}/api/auth`,
+        // https://auth.sidebase.io/guide/application-side/protecting-pages#global-middleware
         globalAppMiddleware: true,
         provider: {
-            type: 'authjs'
+            type: 'authjs',
         },
         sessionRefresh: {
             enableOnWindowFocus: true,
             enablePeriodically: 30000
         }
-    },
-    runtimeConfig: {
-        authSecret: process.env.AUTH_SECRET,
-        githubClientId: process.env.GH_CLIENT_ID,
-        githubClientSecret: process.env.GH_CLIENT_SECRET
     },
     // https://nuxt.com/modules/security
     security: {

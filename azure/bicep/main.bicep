@@ -8,10 +8,6 @@ param location string = resourceGroup().location
 param name string = 'cathedral'
 
 @secure()
-param authOrigin string
-@secure()
-param authSecret string
-@secure()
 param ghClientId string
 @secure()
 param ghClientSecret string
@@ -60,8 +56,6 @@ module appService './modules/appService.bicep' = {
     appInsightsInstrumentationKey: appInsights.outputs.appInsightsInstrumentationKey
     appInsightsConnectionString: appInsights.outputs.appInsightsConnectionString
     name: name
-    authOrigin: authOrigin
-    authSecret: authSecret
     ghClientId: ghClientId
     ghClientSecret: ghClientSecret
     postgresDb: postgresDb

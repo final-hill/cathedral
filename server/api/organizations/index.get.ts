@@ -1,9 +1,8 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { getServerSession } from "#auth"
 import Organization from "~/server/domain/application/Organization"
-import AppUser from "~/server/domain/application/AppUser"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
+import { getServerSession } from '#auth'
 
 const querySchema = z.object({
     name: z.string().optional(),
@@ -21,10 +20,8 @@ const querySchema = z.object({
  * Returns all organizations that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const [query, session] = await Promise.all([
-        getValidatedQuery(event, (q) => querySchema.safeParse(q)),
-        getServerSession(event)
-    ])
+    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q)),
+        session = (await getServerSession(event))!
 
     if (!query.success)
         throw createError({
@@ -33,12 +30,11 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(query.error.errors)
         })
 
-    const em = fork(),
-        sessionUser = (await em.findOne(AppUser, { id: session!.id }))!;
+    const em = fork()
 
     // If the user is a system admin, return all organizations
     // filtered by the query parameters
-    if (sessionUser.isSystemAdmin) {
+    if (session.isSystemAdmin) {
         const organizations = em.findAll(Organization, {
             where: {
                 ...(query.data.name ? { name: query.data.name } : {}),
@@ -54,7 +50,7 @@ export default defineEventHandler(async (event) => {
     // that the user is associated with
     const organizations = (await em.findAll(AppUserOrganizationRole, {
         where: {
-            appUser: sessionUser.id,
+            appUser: session.id,
             organization: {
                 ...(query.data.name ? { name: query.data.name } : {}),
                 ...(query.data.description ? { description: query.data.description } : {}),

@@ -1,5 +1,6 @@
 import { Cascade, EntitySchema } from "@mikro-orm/core";
 import AppUserOrganizationRole from "../../domain/application/AppUserOrganizationRole.js";
+import AppRole from "../../domain/application/AppRole.js";
 
 export default new EntitySchema<AppUserOrganizationRole>({
     class: AppUserOrganizationRole,
@@ -19,11 +20,10 @@ export default new EntitySchema<AppUserOrganizationRole>({
             cascade: [Cascade.REMOVE]
         },
         role: {
-            kind: 'm:1',
-            entity: 'AppRole',
-            ref: true,
-            primary: true,
-            cascade: [Cascade.REMOVE]
+            enum: true,
+            items: () => AppRole,
+            default: AppRole.ORGANIZATION_READER,
+            primary: true
         }
     }
 })

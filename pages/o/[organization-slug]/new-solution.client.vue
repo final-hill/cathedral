@@ -1,20 +1,22 @@
 <script lang="ts" setup>
-import slugify from '~/lib/slugify';
-
 useHead({ title: 'New Solution' })
 definePageMeta({ name: 'New Solution' })
 
-const { organizationslug } = useRoute('New Solution').params,
+const { $eventBus } = useNuxtApp(),
+    { organizationslug } = useRoute('New Solution').params,
     router = useRouter(),
     name = ref(''),
     slug = ref(''),
     description = ref('')
 
-const { data: organizations } = await useFetch('/api/organizations', {
+const { data: organizations, error: getOrgError } = await useFetch('/api/organizations', {
     query: { slug: organizationslug }
 }),
     organization = organizations.value![0],
     organizationId = organization.id
+
+if (getOrgError.value)
+    $eventBus.$emit('page-error', getOrgError.value)
 
 const createSolution = async () => {
     try {
@@ -25,13 +27,13 @@ const createSolution = async () => {
                 description: description.value,
                 organizationId
             }
-        }))
+        }).catch((e) => $eventBus.$emit('page-error', e)));
 
         if (solutionId) {
             const newSolution = (await $fetch(`/api/solutions/${solutionId}`));
             router.push({ name: 'Solution', params: { organizationslug, solutionslug: newSolution.slug } });
         } else {
-            throw new Error('Failed to create solution. No solution ID returned.');
+            $eventBus.$emit('page-error', 'Failed to create solution. No solution ID returned.');
         }
     } catch (error) {
         console.error(error)

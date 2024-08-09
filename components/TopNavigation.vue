@@ -1,7 +1,6 @@
 <script lang="ts" setup>
-import deSlugify from '~/lib/deSlugify';
-
-const router = useRouter()
+const { data, signIn, signOut } = useAuth(),
+    router = useRouter()
 
 let getCrumbs = () => {
     const route = router.currentRoute.value,
@@ -25,9 +24,6 @@ router.afterEach(() => { crumbs.value = getCrumbs(); });
 const op = ref();
 
 const toggle = (event: Event) => op.value.toggle(event)
-
-const { data, getSession, signOut, signIn } = useAuth(),
-    session = await getSession();
 </script>
 
 <template>
@@ -48,15 +44,15 @@ const { data, getSession, signOut, signIn } = useAuth(),
         </template>
         <template #end>
             <Button type="button" @click="toggle" link>
-                <Avatar v-if="session?.user?.image" :image="session?.user?.image ?? undefined" shape="circle" />
+                <Avatar v-if="data?.user?.image" :image="data?.user?.image ?? undefined" shape="circle" />
                 <Avatar v-else icon="pi pi-user" shape="circle" />
             </Button>
         </template>
     </Menubar>
 
     <OverlayPanel ref="op">
-        <p> {{ data?.user?.name }} </p>
-        <small> {{ data?.user?.email }} </small>
+        <p> {{ data?.name }} </p>
+        <small> {{ data?.email }} </small>
         <hr>
         <Button v-if="!data?.user" type="button" @click="signIn(undefined)" label="Sign In" icon="pi pi-sign-in" />
         <Button v-else type="button" @click="signOut()" label="Sign Out" icon="pi pi-sign-out" />

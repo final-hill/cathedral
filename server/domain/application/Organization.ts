@@ -1,4 +1,4 @@
-import slugify from '../../../lib/slugify.js';
+import slugify from "../../../utils/slugify.js";
 import type { Properties } from "../Properties.js";
 import { v7 as uuidv7 } from 'uuid';
 

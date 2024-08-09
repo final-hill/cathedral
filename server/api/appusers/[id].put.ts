@@ -1,20 +1,27 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import AppUser from "~/server/domain/application/AppUser"
 import { getServerSession } from "#auth"
+import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
+import AppRole from "~/server/domain/application/AppRole"
 
 const bodySchema = z.object({
-    isSystemAdmin: z.boolean()
+    organizationId: z.string().uuid(),
+    role: z.nativeEnum(AppRole)
 })
 
 /**
- * PUT /api/appusers/:id
- *
- * Updates an appuser by id.
+ * Update an appuser by id in a given organization to have a new role
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id
+    const id = event.context.params?.id,
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
 
+    if (!body.success)
+        throw createError({
+            statusCode: 400,
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(body.error.errors)
+        })
     if (!id)
         throw createError({
             statusCode: 400,
@@ -22,31 +29,51 @@ export default defineEventHandler(async (event) => {
         })
 
     const em = fork(),
-        [body, session, appUser] = await Promise.all([
-            readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-            getServerSession(event),
-            em.findOne(AppUser, { id })
-        ]),
-        sessionUser = (await em.findOne(AppUser, { id: session!.id }))!
+        session = (await getServerSession(event))!,
+        [sessionUserRole, appUserRole, orgAdminCount] = await Promise.all([
+            em.findOne(AppUserOrganizationRole, {
+                appUser: session.id,
+                organization: body.data.organizationId
+            }, { populate: ['appUser'] }),
+            em.findOne(AppUserOrganizationRole, {
+                appUser: id,
+                organization: body.data.organizationId
+            }, { populate: ['appUser'] }),
+            em.count(AppUserOrganizationRole, {
+                organization: body.data.organizationId,
+                role: AppRole.ORGANIZATION_ADMIN
+            })
+        ])
 
-    if (!body.success)
+    if (!appUserRole)
         throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: Invalid body parameters",
-            message: JSON.stringify(body.error.errors)
+            statusCode: 404,
+            statusMessage: "Not Found",
+            message: "AppUser not found for the given ID and organization."
         })
-    if (!appUser)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No appuser found with id: ${id}`
-        })
-    if (!sessionUser.isSystemAdmin)
+    if (!sessionUserRole && !session.isSystemAdmin)
         throw createError({
             statusCode: 403,
-            statusMessage: "Forbidden: You must be a system admin to update a user."
+            statusMessage: "Forbidden",
+            message: "You are not associated with the organization."
+        })
+    // you can't remove the last organization admin
+    if (appUserRole.role === AppRole.ORGANIZATION_ADMIN && orgAdminCount === 1
+        && body.data.role !== AppRole.ORGANIZATION_ADMIN
+    )
+        throw createError({
+            statusCode: 403,
+            statusMessage: "Forbidden",
+            message: "You can't remove the last organization admin."
         })
 
-    appUser.isSystemAdmin = body.data.isSystemAdmin
+    if (!session.isSystemAdmin && sessionUserRole && sessionUserRole.role !== AppRole.ORGANIZATION_ADMIN)
+        throw createError({
+            statusCode: 403,
+            statusMessage: "Forbidden",
+            message: "You must be an organization admin or a system admin to update an appuser."
+        })
 
+    appUserRole.role = body.data.role
     await em.flush()
 })

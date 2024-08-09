@@ -6,37 +6,6 @@
   "tables": [
     {
       "columns": {
-        "name": {
-          "name": "name",
-          "type": "varchar(100)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 100,
-          "mappedType": "string"
-        }
-      },
-      "name": "app_role",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "app_role_pkey",
-          "columnNames": [
-            "name"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {},
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
         "id": {
           "name": "id",
           "type": "char(254)",
@@ -67,6 +36,16 @@
           "length": 6,
           "mappedType": "datetime"
         },
+        "last_login_date": {
+          "name": "last_login_date",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
         "is_system_admin": {
           "name": "is_system_admin",
           "type": "boolean",
@@ -75,6 +54,16 @@
           "primary": false,
           "nullable": false,
           "mappedType": "boolean"
+        },
+        "email": {
+          "name": "email",
+          "type": "char(254)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 254,
+          "mappedType": "character"
         }
       },
       "name": "app_user",
@@ -186,15 +175,20 @@
           "nullable": true,
           "mappedType": "uuid"
         },
-        "role_name": {
-          "name": "role_name",
-          "type": "varchar(100)",
+        "role": {
+          "name": "role",
+          "type": "text",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": true,
-          "length": 100,
-          "mappedType": "string"
+          "nullable": false,
+          "default": "'Organization Reader'",
+          "enumItems": [
+            "Organization Admin",
+            "Organization Contributor",
+            "Organization Reader"
+          ],
+          "mappedType": "enum"
         }
       },
       "name": "app_user_organization_role",
@@ -205,7 +199,7 @@
           "columnNames": [
             "app_user_id",
             "organization_id",
-            "role_name"
+            "role"
           ],
           "composite": true,
           "constraint": true,
@@ -237,18 +231,6 @@
             "id"
           ],
           "referencedTableName": "public.organization",
-          "deleteRule": "cascade"
-        },
-        "app_user_organization_role_role_name_foreign": {
-          "constraintName": "app_user_organization_role_role_name_foreign",
-          "columnNames": [
-            "role_name"
-          ],
-          "localTableName": "public.app_user_organization_role",
-          "referencedColumnNames": [
-            "name"
-          ],
-          "referencedTableName": "public.app_role",
           "deleteRule": "cascade"
         }
       },

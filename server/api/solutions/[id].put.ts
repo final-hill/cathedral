@@ -1,10 +1,10 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { getServerSession } from "#auth"
 import Solution from "~/server/domain/application/Solution"
-import AppUser from "~/server/domain/application/AppUser"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 import Organization from "~/server/domain/application/Organization"
+import { getServerSession } from '#auth'
+import AppRole from "~/server/domain/application/AppRole"
 
 const bodySchema = z.object({
     name: z.string().min(1).max(100),
@@ -26,11 +26,9 @@ export default defineEventHandler(async (event) => {
         })
 
     const em = fork(),
-        [body, session, solution] = await Promise.all([
-            readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-            getServerSession(event),
-            em.findOne(Solution, id),
-        ])
+        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        session = (await getServerSession(event))!,
+        solution = await em.findOne(Solution, id);
 
     if (!solution)
         throw createError({
@@ -44,17 +42,14 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(body.error.errors)
         })
 
-    const [appUser, organization] = await Promise.all([
-        em.findOne(AppUser, { id: session!.id }),
-        em.findOne(Organization, { id: solution!.organization.id })
-    ]),
-        appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser, organization })
+    const organization = await em.findOne(Organization, { id: solution!.organization.id }),
+        sessionUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser: session.id, organization })
 
     // A solution can only be updated by a system admin
     // or the associated organization admin, or organization contributor
 
-    if (appUser!.isSystemAdmin || appUserOrgRoles.some(r => {
-        return r.role.name === 'Organization Contributor' || r.role.name === 'Organization Admin'
+    if (session.isSystemAdmin || sessionUserOrgRoles.some(r => {
+        return r.role === AppRole.ORGANIZATION_CONTRIBUTOR || r.role === AppRole.ORGANIZATION_ADMIN
     })) {
         solution!.name = body.data.name
         solution!.description = body.data.description

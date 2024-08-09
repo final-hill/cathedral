@@ -1,30 +1,45 @@
+import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import AppUser from "~/server/domain/application/AppUser"
+import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
+
+const querySchema = z.object({
+    organizationId: z.string().uuid(),
+})
 
 /**
- * Returns an appuser by id
+ * Returns an appuser by id in a given organization
  */
 export default defineEventHandler(async (event) => {
-    // To get a specific appuser, you just need to be logged in (middleware)
-    // and provide the id of the appuser
-
     const id = event.context.params?.id,
-        em = fork()
+        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
 
-    if (id) {
-        const result = await em.findOne(AppUser, id)
-
-        if (result)
-            return result
-        else
-            throw createError({
-                statusCode: 404,
-                statusMessage: `Item not found with the given id: ${id}`
-            })
-    } else {
+    if (!query.success)
+        throw createError({
+            statusCode: 400,
+            statusMessage: 'Bad Request: Invalid body parameters',
+            message: JSON.stringify(query.error.errors)
+        })
+    if (!id)
         throw createError({
             statusCode: 400,
             statusMessage: "Bad Request: id is required."
         })
+
+    const em = fork(),
+        appUserRole = await em.findOne(AppUserOrganizationRole, {
+            appUser: id,
+            organization: query.data.organizationId
+        }, { populate: ['appUser'] })
+
+    if (!appUserRole)
+        throw createError({
+            statusCode: 404,
+            statusMessage: "Not Found",
+            message: "AppUser not found for the given ID and organization."
+        })
+
+    return {
+        ...appUserRole.appUser.toJSON(),
+        role: appUserRole.role
     }
 })

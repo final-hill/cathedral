@@ -1,8 +1,8 @@
 import { fork } from "~/server/data/orm"
 import Organization from "~/server/domain/application/Organization"
-import { getServerSession } from "#auth"
-import AppUser from "~/server/domain/application/AppUser"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
+import { getServerSession } from '#auth'
+import AppRole from "~/server/domain/application/AppRole"
 
 /**
  * Delete an organization by id.
@@ -19,12 +19,14 @@ export default defineEventHandler(async (event) => {
     const em = fork(),
         session = (await getServerSession(event))!,
         organization = em.getReference(Organization, id),
-        appUser = (await em.findOne(AppUser, { id: session.id }))!,
-        appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser, organization })
+        sessionUserOrgRole = await em.findOne(AppUserOrganizationRole, {
+            appUser: session.id,
+            organization
+        })
 
     // An organization can only be deleted by a system admin
     // or the associated organization admin
-    if (appUser.isSystemAdmin || appUserOrgRoles.some(r => r.role.name === 'Organization Admin')) {
+    if (session.isSystemAdmin || sessionUserOrgRole?.role === AppRole.ORGANIZATION_ADMIN) {
         em.remove(organization)
         await em.flush()
     } else {

@@ -6,14 +6,18 @@ import { NIL as emptyUuid } from 'uuid';
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Goal Scenarios' })
 
-const { solutionslug, organizationslug } = useRoute('Scenarios').params,
-    { data: solutions } = await useFetch(`/api/solutions`, {
+const { $eventBus } = useNuxtApp(),
+    { solutionslug, organizationslug } = useRoute('Scenarios').params,
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
         }
     }),
     solutionId = solutions.value?.[0].id;
+
+if (getSolutionError.value)
+    $eventBus.$emit('page-error', getSolutionError.value);
 
 type UserStoryViewModel = {
     id: string;
@@ -25,10 +29,10 @@ type UserStoryViewModel = {
 }
 
 const [
-    { data: userStories, refresh, status },
-    { data: roles },
-    { data: functionalBehaviors },
-    { data: outcomes },
+    { data: userStories, refresh, status, error: getUserStoriesError },
+    { data: roles, error: getRolesError },
+    { data: functionalBehaviors, error: getFunctionalBehaviorsError },
+    { data: outcomes, error: getOutcomesError },
 ] = await Promise.all([
     useFetch(`/api/user-stories?solutionId=${solutionId}`),
     useFetch(`/api/stakeholders?solutionId=${solutionId}`),
@@ -43,6 +47,15 @@ const [
         outcomeId: emptyUuid,
         priority: MoscowPriority.MUST
     }
+
+if (getUserStoriesError.value)
+    $eventBus.$emit('page-error', getUserStoriesError.value);
+if (getRolesError.value)
+    $eventBus.$emit('page-error', getRolesError.value);
+if (getFunctionalBehaviorsError.value)
+    $eventBus.$emit('page-error', getFunctionalBehaviorsError.value);
+if (getOutcomesError.value)
+    $eventBus.$emit('page-error', getOutcomesError.value);
 
 const userStoryfilters = ref({
     'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -62,7 +75,7 @@ const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
             outcomeId: userStory.outcomeId,
             functionalBehaviorId: userStory.functionalBehaviorId,
         }
-    });
+    }).catch((e) => $eventBus.$emit('page-error', e));
 
     refresh();
 }
@@ -78,13 +91,14 @@ const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
             outcomeId: userStory.outcomeId,
             functionalBehaviorId: userStory.functionalBehaviorId,
         }
-    });
+    }).catch((e) => $eventBus.$emit('page-error', e));
 
     refresh();
 }
 
 const onUserStoryDelete = async (id: string) => {
-    await $fetch(`/api/user-stories/${id}`, { method: 'DELETE' });
+    await $fetch(`/api/user-stories/${id}`, { method: 'DELETE' })
+        .catch((e) => $eventBus.$emit('page-error', e));
     refresh();
 }
 </script>

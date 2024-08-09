@@ -26,9 +26,8 @@ import UseCaseSchema from "./server/data/models/UseCaseSchema.js";
 import UserStorySchema from "./server/data/models/UserStorySchema.js";
 import SystemComponentSchema from "./server/data/models/SystemComponentSchema.js";
 import OrganizationSchema from "./server/data/models/OrganizationSchema.js";
-import AppRoleSchema from "./server/data/models/AppRoleSchema.js";
-import AppUserSchema from "./server/data/models/AppUserSchema.js";
 import AppUserOrganizationRoleSchema from "./server/data/models/AppUserOrganizationRoleSchema.js";
+import AppUserSchema from "./server/data/models/AppUserSchema.js";
 
 dotenv.config();
 const config: Options = {
@@ -46,11 +45,12 @@ const config: Options = {
         }
     },
     entities: [
-        AppRoleSchema, AppUserOrganizationRoleSchema, AppUserSchema, AssumptionSchema,
-        ConstraintSchema, EffectSchema, EnvironmentComponentSchema, FunctionalBehaviorSchema,
-        GlossaryTermSchema, HintSchema, InvariantSchema, JustificationSchema, LimitSchema,
-        NonFunctionalBehaviorSchema, ObstacleSchema, OrganizationSchema, OutcomeSchema, PersonSchema,
-        ProductSchema, SolutionSchema, StakeholderSchema, SystemComponentSchema, UseCaseSchema, UserStorySchema
+        AppUserSchema, AppUserOrganizationRoleSchema,
+        AssumptionSchema, ConstraintSchema, EffectSchema, EnvironmentComponentSchema,
+        FunctionalBehaviorSchema, GlossaryTermSchema, HintSchema, InvariantSchema,
+        JustificationSchema, LimitSchema, NonFunctionalBehaviorSchema, ObstacleSchema,
+        OrganizationSchema, OutcomeSchema, PersonSchema, ProductSchema, SolutionSchema,
+        StakeholderSchema, SystemComponentSchema, UseCaseSchema, UserStorySchema
     ],
     seeder: {},
     forceUtcTimezone: true,

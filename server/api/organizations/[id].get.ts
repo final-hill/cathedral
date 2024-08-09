@@ -1,14 +1,14 @@
 import { fork } from "~/server/data/orm"
 import Organization from "~/server/domain/application/Organization"
-import { getServerSession } from "#auth"
-import AppUser from "~/server/domain/application/AppUser"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
+import { getServerSession } from '#auth'
 
 /**
  * Returns an organization by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id
+    const config = useRuntimeConfig(),
+        id = event.context.params?.id
 
     if (!id)
         throw createError({
@@ -18,14 +18,11 @@ export default defineEventHandler(async (event) => {
 
     const em = fork(),
         session = (await getServerSession(event))!,
-        [organization, appUser] = await Promise.all([
-            em.findOne(Organization, id),
-            em.findOne(AppUser, { id: session.id })
-        ]),
-        appUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser, organization })
+        organization = await em.findOne(Organization, id),
+        sessionUserOrgRoleCount = await em.count(AppUserOrganizationRole, { appUser: session.id, organization })
 
     // check if the user is a member of the organization or a system admin before returning it
-    const result = appUser!.isSystemAdmin || appUserOrgRoles.length > 0 ? organization : null
+    const result = session.isSystemAdmin || sessionUserOrgRoleCount ? organization : null
 
     if (!result)
         throw createError({

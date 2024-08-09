@@ -1,27 +1,21 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import AppUser from "~/server/domain/application/AppUser"
 import { getServerSession } from "#auth"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
+import AppRole from "~/server/domain/application/AppRole"
+import AppUser from "~/server/domain/application/AppUser"
 
 const bodySchema = z.object({
-    id: z.string().email(),
+    email: z.string(),
     organizationId: z.string().uuid(),
-    isSystemAdmin: z.boolean()
+    role: z.nativeEnum(AppRole)
 })
 
 /**
- * POST /api/appusers
- *
- * Creates a new appuser and returns its id
+ * Invite an appuser to an organization with a role
  */
 export default defineEventHandler(async (event) => {
-    const em = fork(),
-        [body, session] = await Promise.all([
-            readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-            getServerSession(event)
-        ]),
-        sessionUser = (await em.findOne(AppUser, { id: session!.id }))!
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b))
 
     if (!body.success)
         throw createError({
@@ -30,25 +24,52 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(body.error.errors)
         })
 
-    const sessionUserOrgRoles = await em.findAll(AppUserOrganizationRole, { where: { appUser: sessionUser } })
-
-    // Only system admins and organization admins can create new appusers
-    if (sessionUser.isSystemAdmin || sessionUserOrgRoles.some(r => { return r.role.name === 'Organization Admin' })) {
-        const newAppUser = new AppUser({
-            id: body.data.id,
-            name: '{Anonymous}',
-            creationDate: new Date(),
-            // Only system admins can create other system admins
-            isSystemAdmin: sessionUser.isSystemAdmin ? body.data.isSystemAdmin : false
+    const em = fork(),
+        session = (await getServerSession(event))!,
+        [sessionUserRole, appUser] = await Promise.all([
+            em.findOne(AppUserOrganizationRole, {
+                appUser: session.id,
+                organization: body.data.organizationId
+            }, { populate: ['appUser'] }),
+            em.findOne(AppUser, {
+                email: body.data.email
+            })
+        ]),
+        existingOrgAppUserRole = await em.findOne(AppUserOrganizationRole, {
+            appUser: appUser,
+            organization: body.data.organizationId
         })
 
-        await em.persistAndFlush(newAppUser)
-
-        return newAppUser.id
-    } else {
+    if (!appUser)
+        throw createError({
+            statusCode: 404,
+            statusMessage: "Not Found",
+            message: "The appuser with the given email does not exist."
+        })
+    if (!sessionUserRole && !session.isSystemAdmin)
         throw createError({
             statusCode: 403,
-            statusMessage: 'Forbidden: You must be a system admin or organization admin to create a user.'
+            statusMessage: "Forbidden",
+            message: "You are not associated with the organization."
         })
-    }
+    if (!session.isSystemAdmin && sessionUserRole && sessionUserRole.role !== AppRole.ORGANIZATION_ADMIN)
+        throw createError({
+            statusCode: 403,
+            statusMessage: "Forbidden",
+            message: "You must be an organization admin or a system admin to invite an appuser."
+        })
+    if (existingOrgAppUserRole)
+        throw createError({
+            statusCode: 409,
+            statusMessage: "Conflict",
+            message: "The appuser is already associated with the organization."
+        })
+
+    em.create(AppUserOrganizationRole, {
+        appUser: appUser,
+        organization: body.data.organizationId,
+        role: body.data.role
+    })
+
+    await em.flush()
 })

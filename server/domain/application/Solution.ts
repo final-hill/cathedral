@@ -1,7 +1,7 @@
 import { v7 as uuidv7 } from 'uuid';
 import { type Properties } from '../Properties.js';
-import slugify from '../../../lib/slugify.js';
 import Organization from './Organization.js';
+import slugify from '../../../utils/slugify.js';
 
 /**
  * A Solution is the aggregation of a Project, Environment, Goals, and a System

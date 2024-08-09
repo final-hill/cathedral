@@ -1,10 +1,10 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
 import Organization from "~/server/domain/application/Organization"
-import { getServerSession } from "#auth"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
-import AppUser from "~/server/domain/application/AppUser"
 import AppRole from "~/server/domain/application/AppRole"
+import { getServerSession } from '#auth'
+import AppUser from "~/server/domain/application/AppUser"
 
 const bodySchema = z.object({
     name: z.string().min(1),
@@ -17,10 +17,8 @@ const bodySchema = z.object({
  * Creates a new organization and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const [body, session] = await Promise.all([
-        readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-        getServerSession(event)
-    ]),
+    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+        session = (await getServerSession(event))!,
         em = fork()
 
     if (!body.success)
@@ -30,6 +28,8 @@ export default defineEventHandler(async (event) => {
             message: JSON.stringify(body.error.errors)
         })
 
+    const sessionUser = em.getReference(AppUser, session.id)
+
     const newOrg = new Organization({
         name: body.data.name,
         description: body.data.description
@@ -37,9 +37,9 @@ export default defineEventHandler(async (event) => {
 
     // add the current user as an admin of the new organization
     const newAppUserOrgRole = new AppUserOrganizationRole({
-        appUser: em.getReference(AppUser, session!.id),
+        appUser: sessionUser,
         organization: newOrg,
-        role: (await em.findOne(AppRole, { name: 'Organization Admin' }))!
+        role: AppRole.ORGANIZATION_ADMIN
     })
 
     await em.persistAndFlush([newOrg, newAppUserOrgRole])

@@ -7,6 +7,7 @@ const props = defineProps<{
     datasource: RowType[] | null,
     filters: Record<string, { value: any, matchMode: string }>,
     emptyRecord: { id: string, name: string },
+    btnCreateLabel?: string,
     onCreate: (data: RowType) => Promise<void>,
     onDelete: (id: string) => Promise<void>,
     onUpdate: (data: RowType) => Promise<void>,
@@ -126,7 +127,8 @@ const onSort = (event: any) => {
         <ConfirmDialog></ConfirmDialog>
         <Toolbar>
             <template #start>
-                <Button label="Create" severity="info" @click="onCreateEmpty" :disabled="createDisabled" />
+                <Button :label="props.btnCreateLabel ?? 'Create'" severity="info" @click="onCreateEmpty"
+                    :disabled="createDisabled" />
             </template>
         </Toolbar>
         <DataTable ref="dataTable" :value="props.datasource as unknown as any[]" dataKey="id" filterDisplay="row"

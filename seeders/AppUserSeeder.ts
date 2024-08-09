@@ -5,17 +5,19 @@ import AppUser from '../server/domain/application/AppUser.js';
 export class AppUserSeeder extends Seeder {
 
     async run(em: EntityManager): Promise<void> {
-        const sysAdminUserCount = await em.count(AppUser, { id: 'tno@thenewobjective.com' });
+        const isDev = process.env.NODE_ENV === 'development';
 
-        if (sysAdminUserCount > 0)
-            return;
+        if (isDev) {
+            const mlHaufeId = 'a6e97f11-725b-439d-b8dc-06ca77c08dd7'
 
-        em.create(AppUser, {
-            id: 'tno@thenewobjective.com',
-            name: 'Michael L Haufe',
-            creationDate: new Date(),
-            isSystemAdmin: true
-        });
+            const sysAdminUser = await em.findOne(AppUser, {
+                id: mlHaufeId
+            })
+
+            if (sysAdminUser) {
+                sysAdminUser.isSystemAdmin = true
+                await em.flush()
+            }
+        }
     }
-
 }
