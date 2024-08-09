@@ -10,7 +10,6 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    environment: azure-prod
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -31,26 +30,6 @@ jobs:
         run: npm install
       - name: Typecheck
         run: npm run typecheck
-      - name: 'Create env file'
-        run: |
-          touch .env
-          echo "POSTGRES_USER=${{secrets.POSTGRES_USER}}" > .env
-          echo "POSTGRES_PASSWORD=${{secrets.POSTGRES_PASSWORD}}" >> .env
-          echo "POSTGRES_HOST=${{secrets.POSTGRES_HOST}}" >> .env
-          echo "POSTGRES_PORT=${{secrets.POSTGRES_PORT}}" >> .env
-          echo "POSTGRES_DB=${{secrets.POSTGRES_DB}}" >> .env
-          echo "NODE_ENV=production" >> .env
-          echo "NUXT_ORIGIN=${{secrets.NUXT_ORIGIN}}" >> .env
-          echo "NUXT_SESSION_PASSWORD=${{secrets.NUXT_SESSION_PASSWORD}}" >> .env
-          echo "NUXT_AUTH_CLIENT_ID=${{secrets.NUXT_AUTH_CLIENT_ID}}" >> .env
-          echo "NUXT_AUTH_CLIENT_SECRET=${{secrets.NUXT_AUTH_CLIENT_SECRET}}" >> .env
-          echo "NUXT_AUTH_TENANT_NAME=${{secrets.NUXT_AUTH_TENANT_NAME}}" >> .env
-          echo "NUXT_AUTH_TENANT_ID=${{secrets.NUXT_AUTH_TENANT_ID}}" >> .env
-          echo "NUXT_AUTH_AUTHORITY_DOMAIN=${{secrets.NUXT_AUTH_AUTHORITY_DOMAIN}}" >> .env
-          echo "NUXT_AUTH_PRIMARY_USER_FLOW=${{secrets.NUXT_AUTH_PRIMARY_USER_FLOW}}" >> .env
-          echo "SLACK_ADMIN_MEMBER_ID=${{secrets.SLACK_ADMIN_MEMBER_ID}}" >> .env
-          echo "SLACK_BOT_TOKEN=${{secrets.SLACK_BOT_TOKEN}}" >> .env
-          echo "SLACK_SIGNING_SECRET=${{secrets.SLACK_SIGNING_SECRET}}" >> .env
       - name: Build Application
         run: npm run build
       - name: Generate PWA Assets
