@@ -220,6 +220,5 @@ jobs:
       - name: Seed Database defaults
         run: |
           npm run orm-seed-users
-          npm run orm-seed-roles
       - name: logout
         run: az logout

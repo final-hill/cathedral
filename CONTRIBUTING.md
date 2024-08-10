@@ -29,7 +29,6 @@ There are a number of commands defined in `package.json` that can be run to popu
 1. `npm run orm-create-db`
 2. `npm run orm-run-pending-migrations`
 3. `npm run orm-seed-users`
-4. `npm run orm-seed-roles`
 
 ## Running the project
 
