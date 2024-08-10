@@ -115,12 +115,15 @@ export default defineEventHandler(async (event) => {
             message: 'Slack bot token not found'
         })
 
-    if (!body.success)
-        throw createError({
-            statusCode: 400,
-            statusMessage: 'Bad Request: Invalid body parameters',
-            message: JSON.stringify(body.error.errors)
-        })
+    console.log('SLACKBOT API BODY:', JSON.stringify(body.data))
+    /*
+        if (!body.success)
+            throw createError({
+                statusCode: 400,
+                statusMessage: 'Bad Request: Invalid body parameters',
+                message: JSON.stringify(body.error.errors)
+            })
+    */
 
     if (!isValidSlackRequest(headers, rawBody))
         throw createError({
@@ -129,15 +132,15 @@ export default defineEventHandler(async (event) => {
             message: 'Invalid Slack request signature'
         })
 
-    const requestType = body.data.type
+    const requestType = body.data!.type
 
     switch (requestType) {
         case 'url_verification':
-            return { challenge: body.data.challenge };
+            return { challenge: body.data!.challenge };
         case 'event_callback':
-            const eventType = body.data.event!.type
+            const eventType = body.data!.event!.type
             if (eventType === 'app_mention')
-                return await sendResponse(body.data.event!)
+                return await sendResponse(body.data!.event!)
 
             throw createError({
                 statusCode: 400,
