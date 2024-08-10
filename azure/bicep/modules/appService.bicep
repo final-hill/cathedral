@@ -18,6 +18,24 @@ param postgresPort string
 @secure()
 param postgresUser string
 @secure()
+param nodeEnv string
+@secure()
+param nuxtOrigin string
+@secure()
+param nuxtSessionPassword string
+@secure()
+param nuxtAuthClientId string
+@secure()
+param nuxtAuthClientSecret string
+@secure()
+param nuxtAuthTenantName string
+@secure()
+param nuxtAuthTenantId string
+@secure()
+param nuxtAuthAuthorityDomain string
+@secure()
+param nuxtAuthPrimaryUserFlow string
+@secure()
 param slackAdminMemberId string
 @secure()
 param slackBotToken string
@@ -113,6 +131,42 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'POSTGRES_USER'
           value: postgresUser
+        }
+        {
+          name: 'NODE_ENV'
+          value: nodeEnv
+        }
+        {
+          name: 'NUXT_ORIGIN'
+          value: nuxtOrigin
+        }
+        {
+          name: 'NUXT_SESSION_PASSWORD'
+          value: nuxtSessionPassword
+        }
+        {
+          name: 'NUXT_AUTH_CLIENT_ID'
+          value: nuxtAuthClientId
+        }
+        {
+          name: 'NUXT_AUTH_CLIENT_SECRET'
+          value: nuxtAuthClientSecret
+        }
+        {
+          name: 'NUXT_AUTH_TENANT_NAME'
+          value: nuxtAuthTenantName
+        }
+        {
+          name: 'NUXT_AUTH_TENANT_ID'
+          value: nuxtAuthTenantId
+        }
+        {
+          name: 'NUXT_AUTH_AUTHORITY_DOMAIN'
+          value: nuxtAuthAuthorityDomain
+        }
+        {
+          name: 'NUXT_AUTH_PRIMARY_USER_FLOW'
+          value: nuxtAuthPrimaryUserFlow
         }
         {
           name: 'SLACK_ADMIN_MEMBER_ID'
