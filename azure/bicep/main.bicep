@@ -22,24 +22,6 @@ param postgresPort string
 @secure()
 param postgresUser string
 @secure()
-param nodeEnv string
-@secure()
-param nuxtOrigin string
-@secure()
-param nuxtSessionPassword string
-@secure()
-param nuxtAuthClientId string
-@secure()
-param nuxtAuthClientSecret string
-@secure()
-param nuxtAuthTenantName string
-@secure()
-param nuxtAuthTenantId string
-@secure()
-param nuxtAuthAuthorityDomain string
-@secure()
-param nuxtAuthPrimaryUserFlow string
-@secure()
 param slackAdminMemberId string
 @secure()
 param slackBotToken string
@@ -81,15 +63,6 @@ module appService './modules/appService.bicep' = {
     postgresPassword: postgresPassword
     postgresPort: postgresPort
     postgresUser: postgresUser
-    nodeEnv: nodeEnv
-    nuxtOrigin: nuxtOrigin
-    nuxtSessionPassword: nuxtSessionPassword
-    nuxtAuthClientId: nuxtAuthClientId
-    nuxtAuthClientSecret: nuxtAuthClientSecret
-    nuxtAuthTenantName: nuxtAuthTenantName
-    nuxtAuthTenantId: nuxtAuthTenantId
-    nuxtAuthAuthorityDomain: nuxtAuthAuthorityDomain
-    nuxtAuthPrimaryUserFlow: nuxtAuthPrimaryUserFlow
     slackAdminMemberId: slackAdminMemberId
     slackBotToken: slackBotToken
     slackSigningSecret: slackSigningSecret
