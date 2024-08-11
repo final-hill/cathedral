@@ -33,16 +33,24 @@ jobs:
           resourceGroupName: ${{ secrets.AZURE_RG }}
           template: ./azure/bicep/main.bicep
           parameters: >
-            ghClientId=${{ secrets.GH_CLIENT_ID }}
-            ghClientSecret=${{ secrets.GH_CLIENT_SECRET }}
-            postgresDb=${{ secrets.POSTGRES_DB }}
-            postgresHost=${{ secrets.POSTGRES_HOST }}
-            postgresPassword=${{ secrets.POSTGRES_PASSWORD }}
-            postgresPort=${{ secrets.POSTGRES_PORT }}
-            postgresUser=${{ secrets.POSTGRES_USER }}
-            slackAdminMemberId=${{ secrets.SLACK_ADMIN_MEMBER_ID }}
-            slackBotToken=${{ secrets.SLACK_BOT_TOKEN }}
-            slackSigningSecret=${{ secrets.SLACK_SIGNING_SECRET }}
+            ghClientId="${{ secrets.GH_CLIENT_ID }}"
+            ghClientSecret="${{ secrets.GH_CLIENT_SECRET }}"
+            postgresDb="${{ secrets.POSTGRES_DB }}"
+            postgresHost="${{ secrets.POSTGRES_HOST }}"
+            postgresPassword="${{ secrets.POSTGRES_PASSWORD }}"
+            postgresPort="${{ secrets.POSTGRES_PORT }}"
+            postgresUser="${{ secrets.POSTGRES_USER }}"
+            slackAdminMemberId="${{ secrets.SLACK_ADMIN_MEMBER_ID }}"
+            slackBotToken="${{ secrets.SLACK_BOT_TOKEN }}"
+            slackSigningSecret="${{ secrets.SLACK_SIGNING_SECRET }}"
+            nuxtOrigin="${{ secrets.NUXT_ORIGIN }}"
+            nuxtSessionPassword="${{ secrets.NUXT_SESSION_PASSWORD }}"
+            nuxtAuthClientId="${{ secrets.NUXT_AUTH_CLIENT_ID }}"
+            nuxtAuthClientSecret="${{ secrets.NUXT_AUTH_CLIENT_SECRET }}"
+            nuxtAuthTenantName="${{ secrets.NUXT_AUTH_TENANT_NAME }}"
+            nuxtAuthTenantId="${{ secrets.NUXT_AUTH_TENANT_ID }}"
+            nuxtAuthAuthorityDomain="${{ secrets.NUXT_AUTH_AUTHORITY_DOMAIN }}"
+            nuxtAuthPrimaryUserFlow="${{ secrets.NUXT_AUTH_PRIMARY_USER_FLOW }}"
           scope: 'resourcegroup'
           deploymentMode: 'Incremental'
           failOnStdErr: false
@@ -124,16 +132,24 @@ jobs:
           template: ./azure/bicep/main.bicep
           deploymentMode: 'Incremental'
           parameters: >
-            ghClientId=${{ secrets.GH_CLIENT_ID }}
-            ghClientSecret=${{ secrets.GH_CLIENT_SECRET }}
-            postgresDb=${{ secrets.POSTGRES_DB }}
-            postgresHost=${{ secrets.POSTGRES_HOST }}
-            postgresPassword=${{ secrets.POSTGRES_PASSWORD }}
-            postgresPort=${{ secrets.POSTGRES_PORT }}
-            postgresUser=${{ secrets.POSTGRES_USER }}
-            slackAdminMemberId=${{ secrets.SLACK_ADMIN_MEMBER_ID }}
-            slackBotToken=${{ secrets.SLACK_BOT_TOKEN }}
-            slackSigningSecret=${{ secrets.SLACK_SIGNING_SECRET }}
+            ghClientId="${{ secrets.GH_CLIENT_ID }}"
+            ghClientSecret="${{ secrets.GH_CLIENT_SECRET }}"
+            postgresDb="${{ secrets.POSTGRES_DB }}"
+            postgresHost="${{ secrets.POSTGRES_HOST }}"
+            postgresPassword="${{ secrets.POSTGRES_PASSWORD }}"
+            postgresPort="${{ secrets.POSTGRES_PORT }}"
+            postgresUser="${{ secrets.POSTGRES_USER }}"
+            slackAdminMemberId="${{ secrets.SLACK_ADMIN_MEMBER_ID }}"
+            slackBotToken="${{ secrets.SLACK_BOT_TOKEN }}"
+            slackSigningSecret="${{ secrets.SLACK_SIGNING_SECRET }}"
+            nuxtOrigin="${{ secrets.NUXT_ORIGIN }}"
+            nuxtSessionPassword="${{ secrets.NUXT_SESSION_PASSWORD }}"
+            nuxtAuthClientId="${{ secrets.NUXT_AUTH_CLIENT_ID }}"
+            nuxtAuthClientSecret="${{ secrets.NUXT_AUTH_CLIENT_SECRET }}"
+            nuxtAuthTenantName="${{ secrets.NUXT_AUTH_TENANT_NAME }}"
+            nuxtAuthTenantId="${{ secrets.NUXT_AUTH_TENANT_ID }}"
+            nuxtAuthAuthorityDomain="${{ secrets.NUXT_AUTH_AUTHORITY_DOMAIN }}"
+            nuxtAuthPrimaryUserFlow="${{ secrets.NUXT_AUTH_PRIMARY_USER_FLOW }}"
           scope: 'resourcegroup'
           failOnStdErr: false
       - name: logout

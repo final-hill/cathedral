@@ -27,6 +27,22 @@ param slackAdminMemberId string
 param slackBotToken string
 @secure()
 param slackSigningSecret string
+@secure()
+param nuxtOrigin string
+@secure()
+param nuxtSessionPassword string
+@secure()
+param nuxtAuthClientId string
+@secure()
+param nuxtAuthClientSecret string
+@secure()
+param nuxtAuthTenantName string
+@secure()
+param nuxtAuthTenantId string
+@secure()
+param nuxtAuthAuthorityDomain string
+@secure()
+param nuxtAuthPrimaryUserFlow string
 
 module appInsights './modules/appInsights.bicep' = {
   name: 'appInsights'
@@ -66,5 +82,14 @@ module appService './modules/appService.bicep' = {
     slackAdminMemberId: slackAdminMemberId
     slackBotToken: slackBotToken
     slackSigningSecret: slackSigningSecret
+    nodeEnv: 'production'
+    nuxtAuthAuthorityDomain: nuxtAuthAuthorityDomain
+    nuxtAuthClientId: nuxtAuthClientId
+    nuxtAuthClientSecret: nuxtAuthClientSecret
+    nuxtAuthPrimaryUserFlow: nuxtAuthPrimaryUserFlow
+    nuxtAuthTenantId: nuxtAuthTenantId
+    nuxtAuthTenantName: nuxtAuthTenantName
+    nuxtOrigin: nuxtOrigin
+    nuxtSessionPassword: nuxtSessionPassword
   }
 }
