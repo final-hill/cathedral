@@ -1,6 +1,7 @@
 param name string
 param location string
 param appInsightsInstrumentationKey string
+param nodeEnv string
 @secure()
 param appInsightsConnectionString string
 @secure()
@@ -23,6 +24,22 @@ param slackAdminMemberId string
 param slackBotToken string
 @secure()
 param slackSigningSecret string
+@secure()
+param nuxtOrigin string
+@secure()
+param nuxtSessionPassword string
+@secure()
+param nuxtAuthClientId string
+@secure()
+param nuxtAuthClientSecret string
+@secure()
+param nuxtAuthTenantName string
+@secure()
+param nuxtAuthTenantId string
+@secure()
+param nuxtAuthAuthorityDomain string
+@secure()
+param nuxtAuthPrimaryUserFlow string
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: toLower('plan-${name}')
@@ -128,7 +145,39 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
         }
         {
           name: 'NODE_ENV'
-          value: 'production'
+          value: nodeEnv
+        }
+        {
+          name: 'NUXT_ORIGIN'
+          value: nuxtOrigin
+        }
+        {
+          name: 'NUXT_SESSION_PASSWORD'
+          value: nuxtSessionPassword
+        }
+        {
+          name: 'NUXT_AUTH_CLIENT_ID'
+          value: nuxtAuthClientId
+        }
+        {
+          name: 'NUXT_AUTH_CLIENT_SECRET'
+          value: nuxtAuthClientSecret
+        }
+        {
+          name: 'NUXT_AUTH_TENANT_NAME'
+          value: nuxtAuthTenantName
+        }
+        {
+          name: 'NUXT_AUTH_TENANT_ID'
+          value: nuxtAuthTenantId
+        }
+        {
+          name: 'NUXT_AUTH_AUTHORITY_DOMAIN'
+          value: nuxtAuthAuthorityDomain
+        }
+        {
+          name: 'NUXT_AUTH_PRIMARY_USER_FLOW'
+          value: nuxtAuthPrimaryUserFlow
         }
       ]
     }
