@@ -2,25 +2,32 @@
 # deletes the certificates and host entries created by create-dev-certs.ps1
 ############################################################################
 
-# https://github.com/stopthatastronaut/poshdotenv
-if(-not (Get-Module -Name DotEnv -ListAvailable)) {
-    Install-Module -Name DotEnv -Scope CurrentUser -Force
+Push-Location ../
+
+# https://github.com/rajivharris/Set-PsEnv
+if(-not (Get-Module -Name Set-PsEnv -ListAvailable)) {
+    Install-Module -Name Set-PsEnv -Scope CurrentUser -Force
 }
+
+Import-Module Set-PsEnv
 
 # https://github.com/richardszalay/pshosts
 if(-not (Get-Module -Name PsHosts -ListAvailable)) {
     Install-Module -Name PsHosts -Scope CurrentUser -Force
 }
 
-# Load the .env file
-Set-DotEnv
+Import-Module PsHosts
 
-$host = [System.Uri]$env:NUXT_ORIGIN | Select-Object -ExpandProperty Host
+# Load the .env file
+Set-PsEnv
+
+$hostName = [uri]$env:NUXT_ORIGIN | Select-Object -ExpandProperty Host
 $certFolder = '.\certs'
 
 function Remove-Certificate {
-    $cert = "$certFolder\$($host).crt"
-    $localhostCaCert = New-Object -TypeName "System.Security.Cryptography.X509Certificates.X509Certificate2" @($cert)
+    $cert = Join-Path -Path $certFolder -ChildPath "$($hostName).crt"
+    $absoluteCertPath = Resolve-Path -Path $cert
+    $localhostCaCert = New-Object -TypeName "System.Security.Cryptography.X509Certificates.X509Certificate2" @($absoluteCertPath)
     $storeName = [System.Security.Cryptography.X509Certificates.StoreName]::Root
     $storeLocation = [System.Security.Cryptography.X509Certificates.StoreLocation]::LocalMachine
     $store = New-Object System.Security.Cryptography.X509Certificates.X509Store($storeName, $storeLocation)
@@ -32,12 +39,9 @@ function Remove-Certificate {
         Write-Host "Certificate Thumbprint: $($localhostCaCert.Thumbprint)"
 
         # cleanup file
-        Remove-Item -Path $httpsFolder\$($host).crt -Force
-        Remove-Item -Path $httpsFolder\$($host).key -Force
-        Remove-Item -Path $httpsFolder\$($host).pfx -Force
-        Remove-Item -Path $httpsFolder\$($host).conf -Force
+        Remove-Item -Path $certFolder -Force -Recurse
 
-        Write-Host "$($host) certificate files removed"
+        Write-Host "$($hostName) certificate files removed"
     } finally {
         $store.Close()
         $store.Dispose()
@@ -45,4 +49,6 @@ function Remove-Certificate {
 }
 
 Remove-Certificate
-Remove-HostEntry $host
+Remove-HostEntry $hostName
+
+Pop-Location

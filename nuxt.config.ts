@@ -10,7 +10,9 @@ export default defineNuxtConfig({
         https: {
             key: globSync('.certs/*.key')[0],
             cert: globSync('.certs/*.crt')[0]
-        }
+        },
+        host: '0.0.0.0',
+        port: 443
     },
     sourcemap: process.env.NODE_ENV === 'development',
     css: [

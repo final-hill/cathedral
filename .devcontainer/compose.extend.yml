@@ -11,9 +11,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     command: >
-        -c ssl=on
-        -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
-        -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+      -c ssl=on -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
     networks:
       - app-network
   web:
@@ -27,8 +25,8 @@ services:
     # Overrides default command so things don't shut down after the process ends.
     command: /bin/sh -c "while sleep 1000; do :; done"
     hostname: ${NUXT_HOSTNAME}
-    ports:
-      - 3000:3000
+    # ports:
+    #   - 3000:3000
     networks:
       app-network:
         aliases:
@@ -36,6 +34,7 @@ services:
 
 networks:
   app-network:
+
 
 volumes:
   postgres-data:

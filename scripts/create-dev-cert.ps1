@@ -3,12 +3,14 @@
 # https://cathedral.local
 #####################################################################################
 
-# https://github.com/stopthatastronaut/poshdotenv
-if(-not (Get-Module -Name DotEnv -ListAvailable)) {
-    Install-Module -Name DotEnv -Scope CurrentUser -Force
+Push-Location ../
+
+# https://github.com/rajivharris/Set-PsEnv
+if(-not (Get-Module -Name Set-PsEnv -ListAvailable)) {
+    Install-Module -Name Set-PsEnv -Scope CurrentUser -Force
 }
 
-Import-Module DotEnv
+Import-Module Set-PsEnv
 
 # https://github.com/richardszalay/pshosts
 if(-not (Get-Module -Name PsHosts -ListAvailable)) {
@@ -18,24 +20,24 @@ if(-not (Get-Module -Name PsHosts -ListAvailable)) {
 Import-Module PsHosts
 
 # Load the .env file
-Set-DotEnv
+Set-PsEnv
 
 $openssl = $env:ProgramFiles + '\Git\usr\bin\openssl.exe'
 $certFolder = '.\certs'
-$host = [System.Uri]$env:NUXT_ORIGIN | Select-Object -ExpandProperty Host
+$hostName = [uri]$env:NUXT_ORIGIN | Select-Object -ExpandProperty Host
 $sslPass = $env:NUXT_ORIGIN_SSL_PASSPHRASE
 
 function Create-Certificate {
     $confFileContent = @"
 [req]
 default_bits = 2048
-default_keyfile = $($host).key
+default_keyfile = $($hostName).key
 distinguished_name = req_distinguished_name
 req_extensions = req_ext
 x509_extensions = v3_ca
 
 [req_distinguished_name]
-commonName = $($host)
+commonName = $($hostName)
 
 [req_ext]
 subjectAltName = @alt_names
@@ -48,32 +50,37 @@ extendedKeyUsage = 1.3.6.1.5.5.7.3.1
 1.3.6.1.4.1.311.84.1.1 = DER:01
 
 [alt_names]
-DNS.1 = $($host)
+DNS.1 = $($hostName)
 "@
 
+    # create the cert folder if it doesn't exist
+    if(-not (Test-Path -Path $certFolder)) {
+        New-Item -Path $certFolder -ItemType Directory
+    }
     # create the conf file
-    $confFile = Join-Path -Path $certFolder -ChildPath "$($host).conf"
+    $confFile = Join-Path -Path $certFolder -ChildPath "$($hostName).conf"
     Set-Content -Path $confFile -Value $confFileContent
 
     # create new certificate for the domain
     & $openssl req -x509 -nodes -days 365 -newkey rsa:2048  `
-        -keyout $certFolder\$(host).key `
-        -out $certFolder\$(host).crt `
+        -keyout $certFolder\$($hostName).key `
+        -out $certFolder\$($hostName).crt `
         -config $confFile `
-        -subj "/CN=$($host)"
+        -subj "/CN=$($hostName)"
 
     # create pfx
     & $openssl pkcs12 -export `
-        -out $certFolder\$($host).pfx `
-        -inkey $certFolder\$($host).key `
-        -in $certFolder\$($host).crt `
-        -passout pass:$($host)
+        -out $certFolder\$($hostName).pfx `
+        -inkey $certFolder\$($hostName).key `
+        -in $certFolder\$($hostName).crt `
+        -passout pass:$($hostName)
 }
 
 # Add the certificate to the Trusted Root Certification Authorities store
 function Trust-Certificate {
-    $cert = "$certFolder\$($host).crt"
-    $localhostCaCert = New-Object -TypeName "System.Security.Cryptography.X509Certificates.X509Certificate2" @($cert)
+    $cert = Join-Path -Path $certFolder -ChildPath "$($hostName).crt"
+    $absoluteCertPath = Resolve-Path -Path $cert
+    $localhostCaCert = New-Object -TypeName "System.Security.Cryptography.X509Certificates.X509Certificate2" $absoluteCertPath
     $storeName = [System.Security.Cryptography.X509Certificates.StoreName]::Root
     $storeLocation = [System.Security.Cryptography.X509Certificates.StoreLocation]::LocalMachine
     $store = New-Object System.Security.Cryptography.X509Certificates.X509Store($storeName, $storeLocation)
@@ -90,6 +97,13 @@ function Trust-Certificate {
     }
 }
 
+# If the cert folder exists, throw an error
+if(Test-Path -Path $certFolder) {
+    throw "The certs folder already exists. Please delete it and try again."
+}
+
 Create-Certificate
 Trust-Certificate
-Set-HostEntry $host 127.0.0.1
+Set-HostEntry $hostName 127.0.0.1 -Force
+
+Pop-Location
