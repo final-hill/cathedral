@@ -11,6 +11,40 @@
 - [pgAdmin](https://www.pgadmin.org/)
   - `choco install pgadmin4`
 
+## Installation
+
+Clone the repository to your local machine, preferably in a directory under your WSL2 home directory
+(e.g. `~/projects/final-hill`). If you do not then efficiency may be impacted due to the way WSL2 handles file access (some operations may betreated like network operations).
+
+```bash
+cd ~/projects/final-hill
+git clone https://github.com/final-hill/cathedral.git
+```
+
+## Install SSL Certificate
+
+The project uses SSL for local development. The certificate is self-signed and needs to be installed on your machine. From the POWERSHELL terminal, navigate to the `scripts` folder of the project:
+
+```powershell
+cd \\wsl.localhost\Ubuntu\home\<username>\projects\final-hill\cathedral\scripts
+```
+
+Set the execution policy to allow the script to run:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
+```
+
+Run the following command to install the certificate:
+
+```powershell
+.\create-dev-cert.ps1
+```
+
+You may be prompted to confirm the execution of the script. Note the script
+may take a few moments to run as it installs a couple helper modules before
+installing the certificate ([DotEnv](https://github.com/stopthatastronaut/poshdotenv) & [PsHosts](https://github.com/richardszalay/pshosts))
+
 ## Project Setup
 
 1. Start Docker Desktop.

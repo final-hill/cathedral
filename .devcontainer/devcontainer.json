@@ -7,7 +7,7 @@
         "compose.extend.yml"
     ],
     "forwardPorts": [
-        5432
+        5433
     ],
     "service": "web",
     "workspaceFolder": "/workspace/${localWorkspaceFolderBasename}",

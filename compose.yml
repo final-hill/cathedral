@@ -4,9 +4,7 @@ services:
     restart: unless-stopped
     volumes:
       - ${WEBAPP_STORAGE_HOME}/site/wwwroot:/home/site/wwwroot
-    command: node /home/site/wwwroot/server/index.mjs
-    environment:
-      NUXT_HOST: 0.0.0.0
-      NUXT_PORT: 3000
+      - ./certs/cathedral.local.crt:/usr/local/share/ca-certificates/cathedral.local.crt
+    command: /bin/sh -c "update-ca-certificates && node /home/site/wwwroot/server/index.mjs"
     ports:
       - 443:3000

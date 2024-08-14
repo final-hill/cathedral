@@ -31,3 +31,6 @@ public/pwa-*.png
 
 # mikro-orm
 temp
+
+# Local Certificates
+certs

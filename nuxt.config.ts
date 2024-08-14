@@ -1,3 +1,5 @@
+import { globSync } from "fs"
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     compatibilityDate: '2024-07-22',
@@ -6,8 +8,8 @@ export default defineNuxtConfig({
     },
     devServer: {
         https: {
-            key: './cert/localhost.key',
-            cert: './cert/localhost.crt'
+            key: globSync('.certs/*.key')[0],
+            cert: globSync('.certs/*.crt')[0]
         }
     },
     sourcemap: process.env.NODE_ENV === 'development',
