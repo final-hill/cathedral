@@ -64,6 +64,8 @@ export default defineNuxtConfig({
         authPrimaryUserFlow: '',
         sessionPassword: '',
         origin: '',
+        slackBotToken: '',
+        slackSigningSecret: '',
 
         // The public keys which are available both client-side and server-side
         public: {}

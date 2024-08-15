@@ -1,6 +1,6 @@
 {
     "name": "@final-hill/cathedral",
-    "version": "0.12.2",
+    "version": "0.13.0",
     "description": "Requirements management system",
     "keywords": [],
     "private": true,
@@ -39,7 +39,9 @@
         "@mikro-orm/postgresql": "^6.3.4",
         "@mikro-orm/reflection": "^6.3.4",
         "@mikro-orm/seeder": "^6.3.4",
+        "@seratch_/bolt-http-runner": "^1.0.5",
         "@sidebase/nuxt-auth": "^0.8.1",
+        "@slack/bolt": "^3.21.0",
         "@slack/web-api": "^7.3.1",
         "@vite-pwa/nuxt": "^0.9.1",
         "mermaid": "^10.9.1",
