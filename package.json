@@ -41,7 +41,7 @@
         "@mikro-orm/seeder": "^6.3.4",
         "@sidebase/nuxt-auth": "^0.8.1",
         "@slack/web-api": "^7.3.1",
-        "@vite-pwa/nuxt": "^0.9.1",
+        "@vite-pwa/nuxt": "^0.10.0",
         "mermaid": "^10.9.1",
         "mitt": "^3.0.1",
         "nuxt": "^3.12.4",
