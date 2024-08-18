@@ -4,7 +4,7 @@ import AppUser from "../../domain/application/AppUser.js";
 export default new EntitySchema<AppUser>({
     class: AppUser,
     properties: {
-        id: { type: 'character varying', primary: true, length: 254 },
+        id: { type: 'uuid', primary: true },
         name: { type: 'character varying', nullable: false, length: 254 },
         creationDate: { type: 'datetime', nullable: false },
         lastLoginDate: { type: 'datetime', nullable: true },
