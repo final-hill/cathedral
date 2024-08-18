@@ -8,13 +8,12 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "char(254)",
+          "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 254,
-          "mappedType": "character"
+          "mappedType": "uuid"
         },
         "name": {
           "name": "name",
@@ -158,13 +157,12 @@
       "columns": {
         "app_user_id": {
           "name": "app_user_id",
-          "type": "char(254)",
+          "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "length": 254,
-          "mappedType": "character"
+          "mappedType": "uuid"
         },
         "organization_id": {
           "name": "organization_id",
