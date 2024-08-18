@@ -78,6 +78,22 @@ Communication between GitHub and Azure is managed by OpenID Connect.
   - [Supporting details](https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-cli%2Cwindows#use-the-azure-login-action-with-openid-connect)
 - [GitHub Environment details](https://docs.github.com/en/actions/administering-github-actions/managing-environments-for-deployment)
 
+## Slackbot testing
+
+Create an ngrok tunnel to the local server:
+
+```bash
+ngrok http https://localhost:3000
+```
+
+Update the Slackbot configuration (Event Subscriptions) to point to the generated ngrok tunnel.
+
+`https://<ngrok-url>/api/slack`
+
+Note that this will only work if the server is running locally (`npm run dev`).
+
+Once the local server is stopped, the ngrok tunnel will be closed and the Slackbot will no longer work.
+
 ## Troubleshooting
 
 Most issues can be resolved by restarting the dev container. This can be done by closinng and reopening VSCode. Don't do this too quickly. When VSCode is closed, the Docker containers take some time to stop.
