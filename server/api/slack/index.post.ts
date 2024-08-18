@@ -1,79 +1,87 @@
-import { z } from "zod"
-import crypto from 'crypto'
 import { WebClient } from "@slack/web-api"
+import crypto from 'crypto'
+import { z } from "zod"
 
 // https://api.slack.com/events
-const eventSchema = z.object({
-    type: z.string(),
-    user: z.string(),
-    text: z.string(),
-    ts: z.string(),
-    channel: z.string(),
-    event_ts: z.string(),
-})
-
 const urlVerificationSchema = z.object({
     token: z.string(),
     challenge: z.string(),
-    type: z.literal("url_verification"),
+    type: z.literal("url_verification")
 })
 
 const appMentionSchema = z.object({
     type: z.literal("app_mention"),
     user: z.string(),
+    bot_id: z.string().optional(),
     text: z.string(),
     ts: z.string(),
     channel: z.string(),
     event_ts: z.string(),
+})
+
+const messageSchema = z.object({
+    type: z.literal("message"),
+    bot_id: z.string().optional(),
+    user: z.string(),
+    text: z.string(),
+    ts: z.string(),
+    channel: z.string(),
+    event_ts: z.string()
 })
 
 const eventCallbackSchema = z.object({
     token: z.string(),
     team_id: z.string(),
     api_app_id: z.string(),
-    event: appMentionSchema,
-    type: z.literal("event_callback"),
+    event: z.union([appMentionSchema, messageSchema]),
+    type: z.literal('event_callback'),
     event_id: z.string(),
     event_time: z.number(),
-    authed_users: z.array(z.string()),
-})
+    authorizations: z.array(z.object({
+        enterprise_id: z.string().nullable(),
+        team_id: z.string(),
+        user_id: z.string(),
+        is_bot: z.boolean(),
+        is_enterprise_install: z.boolean()
+    })),
+    is_ext_shared_channel: z.boolean(),
+    event_context: z.string()
+});
 
 const bodySchema = z.union([urlVerificationSchema, eventCallbackSchema])
 
-const slack = new WebClient(process.env.SLACK_BOT_TOKEN)
+const config = useRuntimeConfig(),
+    slack = new WebClient(config.slackBotToken)
 
-async function sendResponse(slackEvent: NonNullable<typeof eventSchema._type>) {
-    const { channel, ts } = slackEvent
-
+async function sendResponse(slackEvent: typeof eventCallbackSchema._type.event) {
     try {
-        const thread = await slack.conversations.replies({
-            channel,
-            ts,
-            inclusive: true,
-        })
+        // const thread = await slack.conversations.replies({
+        //     channel,
+        //     ts,
+        //     // inclusive: true,
+        // })
 
         // const prompts = await generatePromptFromThread(thread)
         // const llmResponse = await getLlmResponse(prompts)
 
-        await slack.chat.postMessage({
-            channel,
-            text: 'Your message has been received, but I am unable to respond at this time.',
-            thread_ts: ts,
+        const result = await slack.chat.postMessage({
+            channel: slackEvent.channel,
+            text: 'Message received. I do not have a response yet.',
+            thread_ts: slackEvent.ts,
         })
     } catch (error) {
-        await slack.chat.postMessage({
-            channel,
-            thread_ts: ts,
-            text: `@${process.env.SLACK_ADMIN_MEMBER_ID} ` +
-                `There was an error processing the message. ` +
-                `Error: ${error instanceof Error ? error.message : JSON.stringify(error)}`
+        throw createError({
+            statusCode: 500,
+            statusMessage: 'Internal Server Error',
+            message: 'Failed to send response to Slack',
+            data: { error }
         })
     }
 }
 
 // https://api.slack.com/authentication/verifying-requests-from-slack#validating-a-request
 function isValidSlackRequest(headers: Headers, rawBody: string) {
-    const signingSecret = process.env.SLACK_SIGNING_SECRET!,
+    const signingSecret = config.slackSigningSecret,
         timestamp = headers.get('X-Slack-Request-Timestamp')!
 
     // Prevent replay attacks by checking the timestamp
@@ -100,30 +108,18 @@ function isValidSlackRequest(headers: Headers, rawBody: string) {
     return computedSignature === slackSignature
 }
 
-/**
- * Manages communications from the Slack bot
- */
 export default defineEventHandler(async (event) => {
+    const rawBody = (await readRawBody(event))!
+
     const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-        rawBody = (await readRawBody(event))!,
         headers = event.headers
 
-    if (!process.env.SLACK_BOT_TOKEN)
+    if (!body.success)
         throw createError({
-            statusCode: 500,
-            statusMessage: 'Internal Server Error',
-            message: 'Slack bot token not found'
+            statusCode: 400,
+            statusMessage: 'Bad Request',
+            message: 'Invalid request body'
         })
-
-    console.log('SLACKBOT API BODY:', JSON.stringify(body.data))
-    /*
-        if (!body.success)
-            throw createError({
-                statusCode: 400,
-                statusMessage: 'Bad Request: Invalid body parameters',
-                message: JSON.stringify(body.error.errors)
-            })
-    */
 
     if (!isValidSlackRequest(headers, rawBody))
         throw createError({
@@ -132,21 +128,31 @@ export default defineEventHandler(async (event) => {
             message: 'Invalid Slack request signature'
         })
 
-    const requestType = body.data!.type
+    const requestType = body.data?.type
+
+    if (!body.data)
+        return {}
 
     switch (requestType) {
         case 'url_verification':
-            return { challenge: body.data!.challenge };
+            return { challenge: body.data.challenge }
         case 'event_callback':
-            const eventType = body.data!.event!.type
-            if (eventType === 'app_mention')
-                return await sendResponse(body.data!.event!)
-
-            throw createError({
-                statusCode: 400,
-                statusMessage: 'Bad Request: Invalid event type',
-                message: `Unhandled event type: ${eventType}`
-            })
+            const eventType = body.data.event.type
+            switch (eventType) {
+                case 'app_mention':
+                case 'message':
+                    // prevent infinite loop by ignoring messages from bots
+                    // Including messages from our own bot
+                    if (body.data.event.bot_id)
+                        return {}
+                    return await sendResponse(body.data.event)
+                default:
+                    throw createError({
+                        statusCode: 400,
+                        statusMessage: 'Bad Request: Invalid event type',
+                        message: `Unhandled event type: ${eventType}`
+                    })
+            }
         default:
             throw createError({
                 statusCode: 400,

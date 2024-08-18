@@ -64,8 +64,12 @@ export default defineNuxtConfig({
         authPrimaryUserFlow: '',
         sessionPassword: '',
         origin: '',
-        slackBotToken: '',
+        port: '',
+        slackAppToken: '',
         slackSigningSecret: '',
+        slackClientId: '',
+        slackClientSecret: '',
+        slackBotToken: '',
 
         // The public keys which are available both client-side and server-side
         public: {}
@@ -94,6 +98,13 @@ export default defineNuxtConfig({
                 'img-src': ["'self'", 'data:', 'blob:', 'https://avatars.githubusercontent.com'],
             }
         },
+    },
+    routeRules: {
+        '/api/slack': {
+            security: {
+                xssValidator: false
+            }
+        }
     },
     nitro: {
         esbuild: {
