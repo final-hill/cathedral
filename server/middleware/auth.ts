@@ -7,7 +7,7 @@ import { getServerSession } from '#auth'
 export default eventHandler(async (event) => {
     const url = event.node.req.url!
 
-    if (url.startsWith('/api/slack-bot') || url.startsWith("/api/auth") || !url.startsWith("/api"))
+    if (url.startsWith('/api/slack') || url.startsWith("/api/auth") || !url.startsWith("/api"))
         return
 
     const session = await getServerSession(event)

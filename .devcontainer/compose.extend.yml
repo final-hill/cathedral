@@ -28,6 +28,7 @@ services:
     command: /bin/sh -c "while sleep 1000; do :; done"
     ports:
       - 3000:3000
+      - 443:3000
     networks:
       - app-network
     # puts the Dev Container on the same network as the database, so that it can access it on localhost
