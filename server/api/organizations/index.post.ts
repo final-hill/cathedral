@@ -32,7 +32,8 @@ export default defineEventHandler(async (event) => {
 
     const newOrg = new Organization({
         name: body.data.name,
-        description: body.data.description
+        description: body.data.description,
+        solutions: []
     })
 
     // add the current user as an admin of the new organization

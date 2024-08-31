@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Stakeholder from "~/server/domain/requirements/Stakeholder"
+import { Stakeholder } from "~/server/domain/requirements/index"
 
 /**
  * Delete Stakeholder by id.

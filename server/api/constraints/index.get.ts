@@ -1,7 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import Constraint from "~/server/domain/requirements/Constraint"
-import ConstraintCategory from "~/server/domain/requirements/ConstraintCategory"
+import { Constraint, ConstraintCategory } from "~/server/domain/requirements/index"
 
 const querySchema = z.object({
     name: z.string().optional(),

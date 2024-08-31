@@ -1,12 +1,10 @@
-import Component from "./Component.js";
 import type { Properties } from "../Properties.js";
-import StakeholderCategory from "./StakeholderCategory.js";
-import StakeholderSegmentation from "./StakeholderSegmentation.js";
+import { Component, StakeholderCategory, StakeholderSegmentation } from "./index.js";
 
 /**
  * A human actor who may affect or be affected by a project or its associated system
  */
-export default class Stakeholder extends Component {
+export class Stakeholder extends Component {
     constructor({ influence, availability, segmentation, category, parentComponent, ...rest }: Omit<Properties<Stakeholder>, 'id'>) {
         super(rest)
 

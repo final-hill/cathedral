@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import GlossaryTerm from "~/server/domain/requirements/GlossaryTerm"
+import { GlossaryTerm } from "~/server/domain/requirements/index"
 
 const querySchema = z.object({
     name: z.string().optional(),

@@ -1,6 +1,6 @@
-import Noise from "./Noise.js";
+import { Noise } from "./index.js";
 
 /**
  * Design or implementation suggestion
  */
-export default class Hint extends Noise { }
+export class Hint extends Noise { }

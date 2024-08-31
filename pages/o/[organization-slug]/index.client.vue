@@ -11,7 +11,7 @@ const { $eventBus } = useNuxtApp(),
         query: { slug: organizationslug }
     }),
     organization = organizations.value![0],
-    { refresh, status, data: solutions, error: getSolutionError } = await useFetch('/api/solutions', {
+    { refresh: refreshSolutions, status, data: solutions, error: getSolutionError } = await useFetch('/api/solutions', {
         query: { organizationSlug: organizationslug }
     }),
     confirm = useConfirm()
@@ -65,7 +65,7 @@ const handleSolutionDelete = async (solution: Properties<SolutionModel>) => {
             await $fetch(`/api/solutions/${solution.id}`, {
                 method: 'delete'
             }).catch((e) => $eventBus.$emit('page-error', e))
-            router.push({ name: 'Organization', params: { organizationslug } });
+            await refreshSolutions()
         },
         reject: () => { }
     })

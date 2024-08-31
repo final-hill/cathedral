@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import EnvironmentComponent from "~/server/domain/requirements/EnvironmentComponent"
+import { EnvironmentComponent } from "~/server/domain/requirements/index"
 
 /**
  * Returns an environment component by id

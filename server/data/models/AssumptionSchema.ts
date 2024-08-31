@@ -1,7 +1,6 @@
 import { EntitySchema } from "@mikro-orm/core";
 import RequirementSchema from "./RequirementSchema.js";
-import Assumption from "../../domain/requirements/Assumption.js";
-import Requirement from "../../domain/requirements/Requirement.js";
+import { Assumption, Requirement } from "../../domain/requirements/index.js";
 
 export default new EntitySchema<Assumption, Requirement>({
     class: Assumption,

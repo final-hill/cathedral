@@ -1,9 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
 import Solution from "~/server/domain/application/Solution"
-import Stakeholder from "~/server/domain/requirements/Stakeholder"
-import StakeholderSegmentation from "~/server/domain/requirements/StakeholderSegmentation"
-import StakeholderCategory from "~/server/domain/requirements/StakeholderCategory"
+import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from "~/server/domain/requirements/index"
 
 const bodySchema = z.object({
     name: z.string(),

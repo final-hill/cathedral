@@ -81,5 +81,5 @@ export default defineEventHandler(async (event) => {
             statusMessage: "Forbidden: You do not have access to this organization"
         })
 
-    return allOrgSolutions.filter((sol) => appUserOrgs.some((aou) => aou.organization === sol.organization))
+    return allOrgSolutions.filter((sol) => appUserOrgs.some((aou) => aou.organization.id === sol.organization.id))
 })

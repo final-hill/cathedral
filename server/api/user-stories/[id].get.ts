@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import UserStory from "~/server/domain/requirements/UserStory"
+import { UserStory } from "~/server/domain/requirements/index"
 
 /**
  * Returns a User Story by id

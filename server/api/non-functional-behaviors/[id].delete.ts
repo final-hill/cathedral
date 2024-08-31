@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import NonFunctionalBehavior from "~/server/domain/requirements/NonFunctionalBehavior"
+import { NonFunctionalBehavior } from "~/server/domain/requirements/index"
 
 /**
  * Delete non-functional behavior by id.

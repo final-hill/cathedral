@@ -1,6 +1,6 @@
-import Requirement from "./Requirement.js";
+import { Requirement } from "./index.js";
 
 /**
  * Environment property affected by the system
  */
-export default class Effect extends Requirement { }
+export class Effect extends Requirement { }

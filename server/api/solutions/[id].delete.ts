@@ -4,6 +4,7 @@ import Organization from "~/server/domain/application/Organization";
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole";
 import { getServerSession } from '#auth'
 import AppRole from "~/server/domain/application/AppRole";
+import { Collection } from "@mikro-orm/core";
 
 /**
  * Delete a solution by id.
@@ -32,10 +33,15 @@ export default defineEventHandler(async (event) => {
 
     // A solution can only be deleted by a system admin
     // or the associated organization admin
-
     if (session.isSystemAdmin || appUserOrgRoles.some(r => r.role === AppRole.ORGANIZATION_ADMIN)) {
-        em.remove(solution)
+        // for each property of the solution that is a collection, remove all items
+        for (const key in solution) {
+            const maybeCollection = Reflect.get(solution, key) as Collection<any>
+            if (maybeCollection instanceof Collection)
+                maybeCollection.removeAll()
+        }
         await em.flush()
+        await em.removeAndFlush(solution)
     } else {
         throw createError({
             statusCode: 403,

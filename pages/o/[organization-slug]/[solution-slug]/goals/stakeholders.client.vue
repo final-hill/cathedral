@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
 import mermaid from 'mermaid';
-import StakeholderCategory from '~/server/domain/requirements/StakeholderCategory';
-import StakeholderSegmentation from '~/server/domain/requirements/StakeholderSegmentation';
+import { StakeholderCategory, StakeholderSegmentation } from '~/server/domain/requirements/index';
 import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Stakeholders' })

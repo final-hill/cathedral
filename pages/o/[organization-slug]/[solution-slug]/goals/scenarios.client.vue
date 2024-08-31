@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
-import MoscowPriority from '~/server/domain/requirements/MoscowPriority';
+import { MoscowPriority } from '~/server/domain/requirements/index';
 import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Scenarios' })

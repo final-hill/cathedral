@@ -5,7 +5,7 @@ import Solution from '../application/Solution.js';
 /**
  * A Requirement is a statement that specifies a property.
  */
-export default abstract class Requirement {
+export abstract class Requirement {
     constructor({ name, statement, solution }: Omit<Properties<Requirement>, 'id'>) {
         this.id = uuidv7();
         this.name = name

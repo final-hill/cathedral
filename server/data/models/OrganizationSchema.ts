@@ -7,6 +7,7 @@ export default new EntitySchema<Organization>({
         id: { type: 'uuid', primary: true },
         name: { type: 'string', nullable: false, length: 100 },
         description: { type: 'string', nullable: false },
-        slug: { type: 'string', unique: true }
+        slug: { type: 'string', unique: true },
+        solutions: { kind: '1:m', entity: 'Solution', mappedBy: 'organization', orphanRemoval: true }
     }
 })

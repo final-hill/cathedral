@@ -1,6 +1,5 @@
 import { z } from "zod"
-import Constraint from "~/server/domain/requirements/Constraint"
-import ConstraintCategory from "~/server/domain/requirements/ConstraintCategory"
+import { Constraint, ConstraintCategory } from "~/server/domain/requirements/index"
 import { fork } from "~/server/data/orm"
 import Solution from "~/server/domain/application/Solution"
 

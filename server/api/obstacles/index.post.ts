@@ -1,7 +1,7 @@
 import { z } from "zod"
 import Solution from "~/server/domain/application/Solution"
 import { fork } from "~/server/data/orm"
-import Obstacle from "~/server/domain/requirements/Obstacle"
+import { Obstacle } from "~/server/domain/requirements/index"
 
 const bodySchema = z.object({
     name: z.string().min(1),

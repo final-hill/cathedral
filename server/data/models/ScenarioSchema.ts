@@ -1,7 +1,6 @@
 import { EntitySchema } from "@mikro-orm/core";
-import Example from "../../domain/requirements/Example.js";
-import Scenario from "../../domain/requirements/Scenario.js";
 import BehaviorSchema from "./BehaviorSchema.js";
+import { Example, Scenario } from "../../domain/requirements/index.js";
 
 export default new EntitySchema<Scenario, Example>({
     abstract: true,

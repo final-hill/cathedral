@@ -1,11 +1,10 @@
 import type { Properties } from "../Properties.js";
-import Requirement from "./Requirement.js";
-import type MoscowPriority from "./MoscowPriority.js";
+import { Requirement, type MoscowPriority } from "./index.js";
 
 /**
  * Property of the operation of the system
  */
-export default abstract class Behavior extends Requirement {
+export abstract class Behavior extends Requirement {
     constructor({ priority, ...rest }: Omit<Properties<Behavior>, 'id'>) {
         super(rest)
         this.priority = priority

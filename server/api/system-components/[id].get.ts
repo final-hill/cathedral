@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import SystemComponent from "~/server/domain/requirements/SystemComponent"
+import { SystemComponent } from "~/server/domain/requirements/index"
 
 /**
  * Returns an system component by id

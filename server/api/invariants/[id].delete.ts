@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Invariant from "~/server/domain/requirements/Invariant"
+import { Invariant } from "~/server/domain/requirements/index"
 
 /**
  * Delete invariant by id.

@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Justification from "~/server/domain/requirements/Justification"
+import { Justification } from "~/server/domain/requirements/index"
 
 /**
  * Delete a justification by id.

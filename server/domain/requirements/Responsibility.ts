@@ -1,6 +1,6 @@
-import Requirement from "./Requirement.js";
+import { Requirement } from "./index.js";
 
 /**
  * Assignment of behavior or task to a component
  */
-export default class Responsibility extends Requirement { }
+export class Responsibility extends Requirement { }

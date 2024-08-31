@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import Effect from "~/server/domain/requirements/Effect"
+import { Effect } from "~/server/domain/requirements/index"
 
 const querySchema = z.object({
     name: z.string().optional(),

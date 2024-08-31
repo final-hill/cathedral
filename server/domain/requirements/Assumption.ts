@@ -1,6 +1,6 @@
-import Requirement from "./Requirement.js";
+import { Requirement } from "./index.js";
 
 /**
  * Posited property of the environment
  */
-export default class Assumption extends Requirement { }
+export class Assumption extends Requirement { }

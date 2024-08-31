@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import EnvironmentComponent from "~/server/domain/requirements/EnvironmentComponent"
+import { EnvironmentComponent } from "~/server/domain/requirements/index"
 import Solution from "~/server/domain/application/Solution"
 
 const bodySchema = z.object({

@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import FunctionalBehavior from "~/server/domain/requirements/FunctionalBehavior"
+import { FunctionalBehavior } from "~/server/domain/requirements/index"
 
 /**
  * Delete an functional behavior by id.

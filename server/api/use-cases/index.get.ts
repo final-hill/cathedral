@@ -1,7 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import MoscowPriority from "~/server/domain/requirements/MoscowPriority"
-import UseCase from "~/server/domain/requirements/UseCase"
+import { UseCase, MoscowPriority } from "~/server/domain/requirements/index"
 import { NIL as emptyUuid } from "uuid"
 
 const querySchema = z.object({

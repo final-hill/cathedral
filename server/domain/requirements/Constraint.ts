@@ -1,11 +1,10 @@
-import Requirement from './Requirement.js';
 import { type Properties } from '../Properties.js';
-import ConstraintCategory from './ConstraintCategory.js';
+import { Requirement, ConstraintCategory } from './index.js';
 
 /**
  * A Constraint is a property imposed by the environment
  */
-export default class Constraint extends Requirement {
+export class Constraint extends Requirement {
     constructor({ category, ...rest }: Omit<Properties<Constraint>, 'id'>) {
         super(rest);
 

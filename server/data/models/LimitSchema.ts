@@ -1,7 +1,6 @@
 import { EntitySchema } from "@mikro-orm/core";
 import RequirementSchema from "./RequirementSchema.js";
-import Requirement from "../../domain/requirements/Requirement.js";
-import Limit from "../../domain/requirements/Limit.js";
+import { Requirement, Limit } from "../../domain/requirements/index.js";
 
 export default new EntitySchema<Limit, Requirement>({
     class: Limit,

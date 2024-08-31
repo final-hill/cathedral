@@ -1,6 +1,6 @@
-import Requirement from "./Requirement.js";
+import { Requirement } from "./index.js";
 
 /**
  * Propery that is not in requirements but should be
  */
-export default class Silence extends Requirement { }
+export class Silence extends Requirement { }

@@ -22,10 +22,10 @@ type JustificationModel = {
 }
 
 const [
-    { data: visionJustifications, refresh: refreshVision, error: getVisionError },
-    { data: missionJustifications, refresh: refreshMission, error: getMissionError },
-    { data: situationJustifications, refresh: refreshSituation, error: getSituationError },
-    { data: objectiveJustifications, refresh: refreshObjective, error: getObjectiveError }
+    { data: visionJustifications, error: getVisionError },
+    { data: missionJustifications, error: getMissionError },
+    { data: situationJustifications, error: getSituationError },
+    { data: objectiveJustifications, error: getObjectiveError }
 ] = await Promise.all([
     useFetch(`/api/justifications?solutionId=${solutionId}&name=Vision`),
     useFetch(`/api/justifications?solutionId=${solutionId}&name=Mission`),
@@ -41,41 +41,6 @@ if (getSituationError.value)
     $eventBus.$emit('page-error', getSituationError.value);
 if (getObjectiveError.value)
     $eventBus.$emit('page-error', getObjectiveError.value);
-
-if (!visionJustifications.value?.length) {
-    useFetch(`/api/justifications`, {
-        method: 'POST',
-        body: { solutionId, name: 'Vision', statement: '' }
-    }).catch((e) => $eventBus.$emit('page-error', e));
-}
-
-if (!missionJustifications.value?.length) {
-    useFetch(`/api/justifications`, {
-        method: 'POST',
-        body: { solutionId, name: 'Mission', statement: '' }
-    }).catch((e) => $eventBus.$emit('page-error', e));
-}
-
-if (!situationJustifications.value?.length) {
-    useFetch(`/api/justifications`, {
-        method: 'POST',
-        body: { solutionId, name: 'Situation', statement: '' }
-    }).catch((e) => $eventBus.$emit('page-error', e));
-}
-
-if (!objectiveJustifications.value?.length) {
-    useFetch(`/api/justifications`, {
-        method: 'POST',
-        body: { solutionId, name: 'Objective', statement: '' }
-    }).catch((e) => $eventBus.$emit('page-error', e));
-}
-
-await Promise.all([
-    refreshVision(),
-    refreshMission(),
-    refreshSituation(),
-    refreshObjective()
-]);
 
 const visionStatement = ref(visionJustifications.value?.[0].statement!),
     missionStatement = ref(missionJustifications.value?.[0].statement!),

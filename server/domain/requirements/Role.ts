@@ -1,6 +1,6 @@
-import Responsibility from "./Responsibility.js";
+import { Responsibility } from "./index.js";
 
 /**
  * Human responsibility
  */
-export default class Role extends Responsibility { }
+export class Role extends Responsibility { }

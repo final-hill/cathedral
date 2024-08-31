@@ -1,6 +1,6 @@
-import Requirement from "./Requirement.js";
+import { Requirement } from "./index.js";
 
 /**
  * Exclusion from the scope of requirements
  */
-export default class Limit extends Requirement { }
+export class Limit extends Requirement { }

@@ -321,7 +321,7 @@
             "id"
           ],
           "referencedTableName": "public.organization",
-          "deleteRule": "cascade"
+          "updateRule": "cascade"
         }
       },
       "nativeEnums": {}
