@@ -1,6 +1,6 @@
-import Requirement from "./Requirement.js";
+import { Requirement } from "./index.js";
 
 /**
  * Activity included in the project
  */
-export default class Task extends Requirement { }
+export class Task extends Requirement { }

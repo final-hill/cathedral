@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import UseCase from "~/server/domain/requirements/UseCase"
+import { UseCase } from "~/server/domain/requirements/index"
 
 /**
  * Returns a UseCase by id

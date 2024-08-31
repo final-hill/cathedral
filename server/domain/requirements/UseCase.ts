@@ -1,14 +1,12 @@
-import Scenario from "./Scenario.js";
 import { NIL as emptyUuid } from "uuid";
 import type { Properties } from "../Properties.js";
-import Assumption from "./Assumption.js";
-import Effect from "./Effect.js";
+import { Assumption, Effect, Scenario } from "./index.js";
 
 /**
  * A Use Case specifies the scenario of a complete
  * interaction of a user through a system.
  */
-export default class UseCase extends Scenario {
+export class UseCase extends Scenario {
     constructor(props: Omit<Properties<UseCase>, 'id'>) {
         super(props)
         this.scope = props.scope

@@ -1,6 +1,6 @@
-import Requirement from "./Requirement.js";
+import { Requirement } from "./index.js";
 
 /**
  * Property of requirements themselves (not of the Project, Environment, Goals, or System)
  */
-export default abstract class MetaRequirement extends Requirement { }
+export abstract class MetaRequirement extends Requirement { }

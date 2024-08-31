@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Outcome from "~/server/domain/requirements/Outcome"
+import { Outcome } from "~/server/domain/requirements/index"
 
 /**
  * Returns an outcome by id

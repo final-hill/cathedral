@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import UserStory from "~/server/domain/requirements/UserStory"
+import { UserStory } from "~/server/domain/requirements/index"
 
 /**
  * Delete User Story by id.

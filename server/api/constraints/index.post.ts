@@ -1,8 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import Constraint from "~/server/domain/requirements/Constraint"
+import { Constraint, ConstraintCategory } from "~/server/domain/requirements/index"
 import Solution from "~/server/domain/application/Solution"
-import ConstraintCategory from "~/server/domain/requirements/ConstraintCategory"
 
 const bodySchema = z.object({
     name: z.string().min(1),

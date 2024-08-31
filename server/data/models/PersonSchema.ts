@@ -1,7 +1,6 @@
 import { EntitySchema } from "@mikro-orm/core";
-import Actor from "../../domain/requirements/Actor.js";
-import Person from "../../domain/requirements/Person.js";
 import RequirementSchema from "./RequirementSchema.js";
+import { Actor, Person } from "../../domain/requirements/index.js";
 
 export default new EntitySchema<Person, Actor>({
     class: Person,

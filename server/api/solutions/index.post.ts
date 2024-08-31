@@ -5,6 +5,7 @@ import Solution from "~/server/domain/application/Solution"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 import { getServerSession } from '#auth'
 import AppRole from "~/server/domain/application/AppRole"
+import { Justification } from "~/server/domain/requirements/index"
 
 const bodySchema = z.object({
     name: z.string().min(1).max(100),
@@ -54,8 +55,46 @@ export default defineEventHandler(async (event) => {
     const newSolution = new Solution({
         name: body.data.name,
         description: body.data.description,
-        organization
+        organization,
+        assumptions: [],
+        constraints: [],
+        effects: [],
+        environmentComponents: [],
+        functionalBehaviors: [],
+        glossaryTerms: [],
+        invariants: [],
+        justifications: [],
+        limits: [],
+        nonFunctionalBehaviors: [],
+        obstacles: [],
+        outcomes: [],
+        persons: [],
+        stakeholders: [],
+        systemComponents: [],
+        useCases: [],
+        userStories: []
     })
+
+    newSolution.justifications.add(new Justification({
+        name: 'Vision',
+        solution: newSolution,
+        statement: ''
+    }))
+    newSolution.justifications.add(new Justification({
+        name: 'Mission',
+        solution: newSolution,
+        statement: ''
+    }))
+    newSolution.justifications.add(new Justification({
+        name: 'Situation',
+        solution: newSolution,
+        statement: ''
+    }))
+    newSolution.justifications.add(new Justification({
+        name: 'Objective',
+        solution: newSolution,
+        statement: ''
+    }))
 
     await em.persistAndFlush(newSolution)
 

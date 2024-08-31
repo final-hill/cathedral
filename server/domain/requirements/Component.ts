@@ -1,6 +1,6 @@
-import Actor from "./Actor.js";
+import { Actor } from "./index.js";
 
 /**
  * Idenfitication of a part (of the Project, Environment, Goals, or System)
  */
-export default abstract class Component extends Actor { }
+export abstract class Component extends Actor { }

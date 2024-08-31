@@ -1,8 +1,6 @@
 import { EntitySchema } from "@mikro-orm/core";
-import Behavior from "../../domain/requirements/Behavior.js";
-import MoscowPriority from "../../domain/requirements/MoscowPriority.js";
-import Requirement from "../../domain/requirements/Requirement.js";
 import RequirementSchema from "./RequirementSchema.js";
+import { Behavior, MoscowPriority, Requirement } from "../../domain/requirements/index.js";
 
 export default new EntitySchema<Behavior, Requirement>({
     class: Behavior,

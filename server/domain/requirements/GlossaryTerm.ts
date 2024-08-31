@@ -1,7 +1,7 @@
 import { type Properties } from "../Properties.js";
-import Component from "./Component.js";
+import { Component } from "./index.js";
 
-export default class GlossaryTerm extends Component {
+export class GlossaryTerm extends Component {
     constructor({ parentComponent, ...rest }: Omit<Properties<GlossaryTerm>, 'id'>) {
         super(rest)
         this.parentComponent = parentComponent

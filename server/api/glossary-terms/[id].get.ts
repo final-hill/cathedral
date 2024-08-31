@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import GlossaryTerm from "~/server/domain/requirements/GlossaryTerm"
+import { GlossaryTerm } from "~/server/domain/requirements/index"
 
 /**
  * Returns a glossary term by id

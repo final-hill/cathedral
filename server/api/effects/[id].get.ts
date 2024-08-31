@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Effect from "~/server/domain/requirements/Effect"
+import { Effect } from "~/server/domain/requirements/index"
 
 /**
  * Returns an effect by id

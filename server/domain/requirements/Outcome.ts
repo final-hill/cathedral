@@ -1,6 +1,6 @@
-import Goal from "./Goal.js";
+import { Goal } from "./index.js";
 
 /**
  * A result desired by an organization
  */
-export default class Outcome extends Goal { }
+export class Outcome extends Goal { }

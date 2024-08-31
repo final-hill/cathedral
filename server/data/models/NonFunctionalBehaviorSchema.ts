@@ -1,7 +1,6 @@
 import { EntitySchema } from "@mikro-orm/core";
-import Functionality from "../../domain/requirements/Functionality.js";
 import BehaviorSchema from "./BehaviorSchema.js";
-import NonFunctionalBehavior from "../../domain/requirements/NonFunctionalBehavior.js";
+import { Functionality, NonFunctionalBehavior } from "../../domain/requirements/index.js";
 
 export default new EntitySchema<NonFunctionalBehavior, Functionality>({
     class: NonFunctionalBehavior,

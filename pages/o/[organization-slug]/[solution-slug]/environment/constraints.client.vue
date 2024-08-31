@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useFetch } from 'nuxt/app';
 import { FilterMatchMode } from 'primevue/api';
-import ConstraintCategory from '~/server/domain/requirements/ConstraintCategory';
+import { ConstraintCategory } from '~/server/domain/requirements/index';
 import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Constraints' })

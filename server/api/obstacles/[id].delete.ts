@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Obstacle from "~/server/domain/requirements/Obstacle"
+import { Obstacle } from "~/server/domain/requirements/index"
 
 /**
  * Delete obstacle by id.

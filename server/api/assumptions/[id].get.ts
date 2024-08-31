@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Assumption from "~/server/domain/requirements/Assumption"
+import { Assumption } from "~/server/domain/requirements/index"
 
 /**
  * Returns an assumption by id

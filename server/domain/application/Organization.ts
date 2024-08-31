@@ -1,16 +1,19 @@
+import { Collection } from "@mikro-orm/core";
 import slugify from "../../../utils/slugify.js";
 import type { Properties } from "../Properties.js";
 import { v7 as uuidv7 } from 'uuid';
+import type Solution from "./Solution.js";
 
 /**
  * An Organization is a collection of people and solutions
  */
 export default class Organization {
-    constructor(properties: Omit<Properties<Organization>, 'id' | 'slug'>) {
+    constructor(properties: Omit<Properties<Organization>, 'id' | 'slug' | 'solutions'> & { solutions: Solution[] }) {
         this.id = uuidv7();
         this.name = properties.name;
         this.description = properties.description;
         this.slug = slugify(this.name);
+        properties.solutions.forEach(solution => this.solutions.add(solution));
     }
 
     /**
@@ -34,12 +37,17 @@ export default class Organization {
      */
     slug: string
 
+    /**
+     * The solutions that belong to this organization
+     */
+    solutions = new Collection<Solution>(this);
+
     toJSON() {
         return {
             id: this.id,
             description: this.description,
             name: this.name,
-            slug: this.slug,
+            slug: this.slug
         }
     }
 }

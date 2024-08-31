@@ -1,12 +1,11 @@
-import Example from "./Example.js";
 import { type Properties } from "../Properties.js";
-import Stakeholder from "./Stakeholder.js";
+import { Example, Stakeholder } from "./index.js";
 
 /**
  * A Scenario specifies system behavior by describing paths
  * of interaction between actors and the system.
  */
-export default abstract class Scenario extends Example {
+export abstract class Scenario extends Example {
     constructor({ primaryActor, ...rest }: Omit<Properties<Scenario>, 'id'>) {
         super(rest);
         this.primaryActor = primaryActor;

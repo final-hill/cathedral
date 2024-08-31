@@ -1,6 +1,6 @@
-import Requirement from "./Requirement.js";
+import { Requirement } from "./index.js";
 
 /**
  * Artifact needed or produced by a task
  */
-export default class Product extends Requirement { }
+export class Product extends Requirement { }

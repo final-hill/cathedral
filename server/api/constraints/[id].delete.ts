@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Constraint from "~/server/domain/requirements/Constraint"
+import { Constraint } from "~/server/domain/requirements/index"
 
 /**
  * Delete constraint by id.

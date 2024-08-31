@@ -1,11 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import Assumption from "~/server/domain/requirements/Assumption"
-import Effect from "~/server/domain/requirements/Effect"
-import MoscowPriority from "~/server/domain/requirements/MoscowPriority"
+import { Assumption, Effect, MoscowPriority, Stakeholder, UseCase } from "~/server/domain/requirements/index"
 import Solution from "~/server/domain/application/Solution"
-import Stakeholder from "~/server/domain/requirements/Stakeholder"
-import UseCase from "~/server/domain/requirements/UseCase"
 import { NIL as emptyUuid } from "uuid"
 
 const bodySchema = z.object({

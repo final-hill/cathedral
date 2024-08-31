@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
 import Solution from "~/server/domain/application/Solution"
-import SystemComponent from "~/server/domain/requirements/SystemComponent"
+import { SystemComponent } from "~/server/domain/requirements/index"
 
 const bodySchema = z.object({
     name: z.string(),

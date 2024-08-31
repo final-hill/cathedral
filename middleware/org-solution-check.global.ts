@@ -4,21 +4,21 @@
  */
 export default defineNuxtRouteMiddleware(async (to, from) => {
     if (to.params.organizationslug) {
-        const { data: organizations } = await useFetch('/api/organizations', {
+        const organizations = await $fetch('/api/organizations', {
             query: { slug: to.params.organizationslug }
         })
 
-        if (!(organizations?.value ?? []).length) {
+        if (!(organizations ?? []).length) {
             return navigateTo('/')
         } else if (to.params.solutionslug) {
-            const { data: solutions } = await useFetch('/api/solutions', {
+            const solutions = await $fetch('/api/solutions', {
                 query: {
                     organizationSlug: to.params.organizationslug,
                     slug: to.params.solutionslug
                 }
             })
 
-            if (!(solutions?.value ?? []).length)
+            if (!(solutions ?? []).length)
                 return navigateTo(`/o/${to.params.organizationslug}`)
         }
     }

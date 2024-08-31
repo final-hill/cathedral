@@ -1,7 +1,6 @@
 import { EntitySchema } from "@mikro-orm/core";
-import Component from "../../domain/requirements/Component.js";
-import GlossaryTerm from "../../domain/requirements/GlossaryTerm.js";
 import RequirementSchema from "./RequirementSchema.js";
+import { Component, GlossaryTerm } from "../../domain/requirements/index.js";
 
 export default new EntitySchema<GlossaryTerm, Component>({
     class: GlossaryTerm,

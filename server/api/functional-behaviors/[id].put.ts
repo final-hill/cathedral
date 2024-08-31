@@ -1,7 +1,6 @@
 import { z } from "zod"
-import MoscowPriority from "~/server/domain/requirements/MoscowPriority"
 import { fork } from "~/server/data/orm"
-import FunctionalBehavior from "~/server/domain/requirements/FunctionalBehavior"
+import { FunctionalBehavior, MoscowPriority } from "~/server/domain/requirements/index"
 import Solution from "~/server/domain/application/Solution"
 
 const bodySchema = z.object({

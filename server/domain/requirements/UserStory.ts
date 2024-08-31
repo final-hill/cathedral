@@ -1,7 +1,5 @@
-import Scenario from "./Scenario.js";
 import type { Properties } from "../Properties.js";
-import FunctionalBehavior from "./FunctionalBehavior.js";
-import Outcome from "./Outcome.js";
+import { FunctionalBehavior, Outcome, Scenario } from "./index.js";
 
 /**
  * A User Story specifies the handling of a specific user need.
@@ -12,7 +10,7 @@ import Outcome from "./Outcome.js";
  * [behavior] - behaviorId (Functional Behavior)
  * [goal] - outcomeId
  */
-export default class UserStory extends Scenario {
+export class UserStory extends Scenario {
     constructor({ outcome, functionalBehavior, ...rest }: Omit<Properties<UserStory>, 'id'>) {
         super(rest);
         this.outcome = outcome;

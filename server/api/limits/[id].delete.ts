@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Limit from "~/server/domain/requirements/Limit"
+import { Limit } from "~/server/domain/requirements/index"
 
 /**
  * Delete limit by id.

@@ -1,5 +1,5 @@
 import { fork } from "~/server/data/orm"
-import Person from "~/server/domain/requirements/Person"
+import { Person } from "~/server/domain/requirements/index"
 
 /**
  * Returns a person by id

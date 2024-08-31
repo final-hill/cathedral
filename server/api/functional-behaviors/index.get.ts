@@ -1,7 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import FunctionalBehavior from "~/server/domain/requirements/FunctionalBehavior"
-import MoscowPriority from "~/server/domain/requirements/MoscowPriority"
+import { FunctionalBehavior, MoscowPriority } from "~/server/domain/requirements/index"
 
 const querySchema = z.object({
     name: z.string().optional(),

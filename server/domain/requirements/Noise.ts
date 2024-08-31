@@ -1,6 +1,6 @@
-import Requirement from "./Requirement.js";
+import { Requirement } from "./index.js";
 
 /**
  * Property that is in requirements but should not be
  */
-export default class Noise extends Requirement { }
+export class Noise extends Requirement { }

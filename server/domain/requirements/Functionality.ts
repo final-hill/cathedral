@@ -1,6 +1,6 @@
-import Behavior from "./Behavior.js";
+import { Behavior } from "./index.js";
 
 /**
  * Functionality describes what system will do and how it will do it.
  */
-export default abstract class Functionality extends Behavior { }
+export abstract class Functionality extends Behavior { }
