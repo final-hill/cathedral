@@ -6,6 +6,10 @@ import Organization from "~/server/domain/application/Organization"
 import { getServerSession } from '#auth'
 import AppRole from "~/server/domain/application/AppRole"
 
+const paramSchema = z.object({
+    id: z.string().uuid()
+})
+
 const bodySchema = z.object({
     name: z.string().min(1).max(100),
     description: z.string()
@@ -17,50 +21,13 @@ const bodySchema = z.object({
  * Updates a solution by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id
+    const { id } = await validateEventParams(event, paramSchema),
+        { description, name } = await validateEventBody(event, bodySchema),
+        { solution } = await assertSolutionContributor(event, id),
+        em = fork()
 
-    if (!id)
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: id is required."
-        })
+    solution!.name = name
+    solution!.description = description
 
-    const em = fork(),
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-        session = (await getServerSession(event))!,
-        solution = await em.findOne(Solution, id);
-
-    if (!solution)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No solution found with id: ${id}`
-        })
-    if (!body.success)
-        throw createError({
-            statusCode: 400,
-            statusMessage: 'Bad Request: Invalid body parameters',
-            message: JSON.stringify(body.error.errors)
-        })
-
-    const organization = await em.findOne(Organization, { id: solution!.organization.id }),
-        sessionUserOrgRoles = await em.find(AppUserOrganizationRole, { appUser: session.id, organization })
-
-    // A solution can only be updated by a system admin
-    // or the associated organization admin, or organization contributor
-
-    if (session.isSystemAdmin || sessionUserOrgRoles.some(r => {
-        return r.role === AppRole.ORGANIZATION_CONTRIBUTOR || r.role === AppRole.ORGANIZATION_ADMIN
-    })) {
-        solution!.name = body.data.name
-        solution!.description = body.data.description
-
-        await em.flush()
-    } else {
-        throw createError({
-            statusCode: 403,
-            statusMessage: "Forbidden: You must be a system admin, an organization admin," +
-                " or an organization contributor to update a solution."
-        })
-    }
-
+    await em.flush()
 })
