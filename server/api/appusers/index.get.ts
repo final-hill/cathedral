@@ -10,8 +10,6 @@ const querySchema = z.object({
 })
 
 /**
- * GET /api/appusers?organizationId
- *
  * Returns all appusers for the organization with their associated roles
  */
 export default defineEventHandler(async (event) => {

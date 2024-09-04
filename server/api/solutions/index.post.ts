@@ -10,8 +10,6 @@ const bodySchema = z.object({
 })
 
 /**
- * POST /api/solutions
- *
  * Creates a new solution and returns its id
  */
 export default defineEventHandler(async (event) => {

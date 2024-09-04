@@ -12,13 +12,7 @@ const querySchema = z.object({
 })
 
 /**
- * GET /api/assumptions
- *
- * Returns all assumptions
- *
- * GET /api/assumptions?name&statement&solutionId
- *
- * Returns all assumptions that match the query parameters
+ * Returns all assumptions that match the optional query parameters
  */
 export default defineEventHandler(async (event) => {
     const { solutionId } = await validateEventParams(event, paramSchema),

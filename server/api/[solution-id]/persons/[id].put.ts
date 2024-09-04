@@ -1,12 +1,15 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { Person } from "~/server/domain/requirements/index"
-import Solution from "~/server/domain/application/Solution"
+import { Person } from "~/server/domain/requirements/index.js"
+
+const paramSchema = z.object({
+    solutionId: z.string().uuid(),
+    id: z.string().uuid()
+})
 
 const bodySchema = z.object({
     name: z.string(),
     statement: z.string(),
-    solutionId: z.string().uuid(),
     email: z.string().email()
 })
 
@@ -14,42 +17,23 @@ const bodySchema = z.object({
  * Updates a person by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+    const { id, solutionId } = await validateEventParams(event, paramSchema),
+        { sessionUser } = await assertSolutionContributor(event, solutionId),
+        { email, name, statement } = await validateEventBody(event, bodySchema),
         em = fork()
 
-    if (!body.success)
+    const person = await em.findOne(Person, id)
+
+    if (!person)
         throw createError({
             statusCode: 400,
-            statusMessage: 'Bad Request: Invalid body parameters',
-            message: JSON.stringify(body.error.errors)
+            statusMessage: `Bad Request: No assumption found with id: ${id}`
         })
 
-    if (id) {
-        const person = await em.findOne(Person, id),
-            solution = await em.findOne(Solution, body.data.solutionId)
+    person.name = name
+    person.statement = statement
+    person.email = email
+    person.modifiedBy = sessionUser
 
-        if (!person)
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Bad Request: No assumption found with id: ${id}`
-            })
-        if (!solution)
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
-            })
-
-        person.name = body.data.name
-        person.statement = body.data.statement
-        person.solution = solution
-        person.email = body.data.email
-
-        await em.flush()
-    } else {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: id is required."
-        })
-    }
+    await em.flush()
 })

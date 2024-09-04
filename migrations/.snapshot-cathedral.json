@@ -365,6 +365,26 @@
           "primary": false,
           "nullable": false,
           "mappedType": "uuid"
+        },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
+          "mappedType": "uuid"
         }
       },
       "name": "product",
@@ -393,6 +413,18 @@
             "id"
           ],
           "referencedTableName": "public.solution",
+          "updateRule": "cascade"
+        },
+        "product_modified_by_id_foreign": {
+          "constraintName": "product_modified_by_id_foreign",
+          "columnNames": [
+            "modified_by_id"
+          ],
+          "localTableName": "public.product",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
           "updateRule": "cascade"
         }
       },
@@ -436,6 +468,26 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "mappedType": "uuid"
+        },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
           "mappedType": "uuid"
         },
         "email": {
@@ -476,6 +528,18 @@
           ],
           "referencedTableName": "public.solution",
           "updateRule": "cascade"
+        },
+        "person_modified_by_id_foreign": {
+          "constraintName": "person_modified_by_id_foreign",
+          "columnNames": [
+            "modified_by_id"
+          ],
+          "localTableName": "public.person",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
+          "updateRule": "cascade"
         }
       },
       "nativeEnums": {}
@@ -518,6 +582,26 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "mappedType": "uuid"
+        },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
           "mappedType": "uuid"
         }
       },
@@ -548,77 +632,17 @@
           ],
           "referencedTableName": "public.solution",
           "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
         },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "obstacle",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "obstacle_pkey",
+        "outcome_modified_by_id_foreign": {
+          "constraintName": "outcome_modified_by_id_foreign",
           "columnNames": [
-            "id"
+            "modified_by_id"
           ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "obstacle_solution_id_foreign": {
-          "constraintName": "obstacle_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.obstacle",
+          "localTableName": "public.outcome",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.solution",
+          "referencedTableName": "public.app_user",
           "updateRule": "cascade"
         }
       },
@@ -662,6 +686,130 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "mappedType": "uuid"
+        },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
+          "mappedType": "uuid"
+        }
+      },
+      "name": "obstacle",
+      "schema": "public",
+      "indexes": [
+        {
+          "keyName": "obstacle_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "obstacle_solution_id_foreign": {
+          "constraintName": "obstacle_solution_id_foreign",
+          "columnNames": [
+            "solution_id"
+          ],
+          "localTableName": "public.obstacle",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.solution",
+          "updateRule": "cascade"
+        },
+        "obstacle_modified_by_id_foreign": {
+          "constraintName": "obstacle_modified_by_id_foreign",
+          "columnNames": [
+            "modified_by_id"
+          ],
+          "localTableName": "public.obstacle",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "statement": {
+          "name": "statement",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "solution_id": {
+          "name": "solution_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
           "mappedType": "uuid"
         },
         "priority": {
@@ -707,6 +855,18 @@
           ],
           "referencedTableName": "public.solution",
           "updateRule": "cascade"
+        },
+        "non_functional_behavior_modified_by_id_foreign": {
+          "constraintName": "non_functional_behavior_modified_by_id_foreign",
+          "columnNames": [
+            "modified_by_id"
+          ],
+          "localTableName": "public.non_functional_behavior",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
+          "updateRule": "cascade"
         }
       },
       "nativeEnums": {}
@@ -749,6 +909,26 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "mappedType": "uuid"
+        },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
           "mappedType": "uuid"
         }
       },
@@ -779,6 +959,18 @@
           ],
           "referencedTableName": "public.solution",
           "updateRule": "cascade"
+        },
+        "limit_modified_by_id_foreign": {
+          "constraintName": "limit_modified_by_id_foreign",
+          "columnNames": [
+            "modified_by_id"
+          ],
+          "localTableName": "public.limit",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
+          "updateRule": "cascade"
         }
       },
       "nativeEnums": {}
@@ -821,6 +1013,26 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "mappedType": "uuid"
+        },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
           "mappedType": "uuid"
         }
       },
@@ -851,6 +1063,18 @@
           ],
           "referencedTableName": "public.solution",
           "updateRule": "cascade"
+        },
+        "justification_modified_by_id_foreign": {
+          "constraintName": "justification_modified_by_id_foreign",
+          "columnNames": [
+            "modified_by_id"
+          ],
+          "localTableName": "public.justification",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
+          "updateRule": "cascade"
         }
       },
       "nativeEnums": {}
@@ -893,6 +1117,26 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "mappedType": "uuid"
+        },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
           "mappedType": "uuid"
         }
       },
@@ -923,77 +1167,17 @@
           ],
           "referencedTableName": "public.solution",
           "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
         },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "hint",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "hint_pkey",
+        "invariant_modified_by_id_foreign": {
+          "constraintName": "invariant_modified_by_id_foreign",
           "columnNames": [
-            "id"
+            "modified_by_id"
           ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "hint_solution_id_foreign": {
-          "constraintName": "hint_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.hint",
+          "localTableName": "public.invariant",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.solution",
+          "referencedTableName": "public.app_user",
           "updateRule": "cascade"
         }
       },
@@ -1037,6 +1221,130 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "mappedType": "uuid"
+        },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
+          "mappedType": "uuid"
+        }
+      },
+      "name": "hint",
+      "schema": "public",
+      "indexes": [
+        {
+          "keyName": "hint_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "hint_solution_id_foreign": {
+          "constraintName": "hint_solution_id_foreign",
+          "columnNames": [
+            "solution_id"
+          ],
+          "localTableName": "public.hint",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.solution",
+          "updateRule": "cascade"
+        },
+        "hint_modified_by_id_foreign": {
+          "constraintName": "hint_modified_by_id_foreign",
+          "columnNames": [
+            "modified_by_id"
+          ],
+          "localTableName": "public.hint",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "statement": {
+          "name": "statement",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "solution_id": {
+          "name": "solution_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
           "mappedType": "uuid"
         },
         "parent_component_id": {
@@ -1075,6 +1383,18 @@
             "id"
           ],
           "referencedTableName": "public.solution",
+          "updateRule": "cascade"
+        },
+        "glossary_term_modified_by_id_foreign": {
+          "constraintName": "glossary_term_modified_by_id_foreign",
+          "columnNames": [
+            "modified_by_id"
+          ],
+          "localTableName": "public.glossary_term",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
           "updateRule": "cascade"
         },
         "glossary_term_parent_component_id_foreign": {
@@ -1133,6 +1453,26 @@
           "nullable": false,
           "mappedType": "uuid"
         },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
+          "mappedType": "uuid"
+        },
         "priority": {
           "name": "priority",
           "type": "text",
@@ -1175,6 +1515,18 @@
             "id"
           ],
           "referencedTableName": "public.solution",
+          "updateRule": "cascade"
+        },
+        "functional_behavior_modified_by_id_foreign": {
+          "constraintName": "functional_behavior_modified_by_id_foreign",
+          "columnNames": [
+            "modified_by_id"
+          ],
+          "localTableName": "public.functional_behavior",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
           "updateRule": "cascade"
         }
       },
@@ -1220,6 +1572,26 @@
           "nullable": false,
           "mappedType": "uuid"
         },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
+          "mappedType": "uuid"
+        },
         "parent_component_id": {
           "name": "parent_component_id",
           "type": "uuid",
@@ -1256,6 +1628,18 @@
             "id"
           ],
           "referencedTableName": "public.solution",
+          "updateRule": "cascade"
+        },
+        "environment_component_modified_by_id_foreign": {
+          "constraintName": "environment_component_modified_by_id_foreign",
+          "columnNames": [
+            "modified_by_id"
+          ],
+          "localTableName": "public.environment_component",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
           "updateRule": "cascade"
         },
         "environment_component_parent_component_id_foreign": {
@@ -1313,6 +1697,26 @@
           "primary": false,
           "nullable": false,
           "mappedType": "uuid"
+        },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
+          "mappedType": "uuid"
         }
       },
       "name": "effect",
@@ -1341,6 +1745,18 @@
             "id"
           ],
           "referencedTableName": "public.solution",
+          "updateRule": "cascade"
+        },
+        "effect_modified_by_id_foreign": {
+          "constraintName": "effect_modified_by_id_foreign",
+          "columnNames": [
+            "modified_by_id"
+          ],
+          "localTableName": "public.effect",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
           "updateRule": "cascade"
         }
       },
@@ -1384,6 +1800,26 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "mappedType": "uuid"
+        },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
           "mappedType": "uuid"
         },
         "category": {
@@ -1428,77 +1864,17 @@
           ],
           "referencedTableName": "public.solution",
           "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
         },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "assumption",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "assumption_pkey",
+        "constraint_modified_by_id_foreign": {
+          "constraintName": "constraint_modified_by_id_foreign",
           "columnNames": [
-            "id"
+            "modified_by_id"
           ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "assumption_solution_id_foreign": {
-          "constraintName": "assumption_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.assumption",
+          "localTableName": "public.constraint",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.solution",
+          "referencedTableName": "public.app_user",
           "updateRule": "cascade"
         }
       },
@@ -1542,6 +1918,130 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "mappedType": "uuid"
+        },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
+          "mappedType": "uuid"
+        }
+      },
+      "name": "assumption",
+      "schema": "public",
+      "indexes": [
+        {
+          "keyName": "assumption_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "assumption_solution_id_foreign": {
+          "constraintName": "assumption_solution_id_foreign",
+          "columnNames": [
+            "solution_id"
+          ],
+          "localTableName": "public.assumption",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.solution",
+          "updateRule": "cascade"
+        },
+        "assumption_modified_by_id_foreign": {
+          "constraintName": "assumption_modified_by_id_foreign",
+          "columnNames": [
+            "modified_by_id"
+          ],
+          "localTableName": "public.assumption",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "statement": {
+          "name": "statement",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "solution_id": {
+          "name": "solution_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
           "mappedType": "uuid"
         },
         "influence": {
@@ -1628,6 +2128,18 @@
           "referencedTableName": "public.solution",
           "updateRule": "cascade"
         },
+        "stakeholder_modified_by_id_foreign": {
+          "constraintName": "stakeholder_modified_by_id_foreign",
+          "columnNames": [
+            "modified_by_id"
+          ],
+          "localTableName": "public.stakeholder",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
+          "updateRule": "cascade"
+        },
         "stakeholder_parent_component_id_foreign": {
           "constraintName": "stakeholder_parent_component_id_foreign",
           "columnNames": [
@@ -1684,6 +2196,26 @@
           "nullable": false,
           "mappedType": "uuid"
         },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
+          "mappedType": "uuid"
+        },
         "parent_component_id": {
           "name": "parent_component_id",
           "type": "uuid",
@@ -1720,6 +2252,18 @@
             "id"
           ],
           "referencedTableName": "public.solution",
+          "updateRule": "cascade"
+        },
+        "system_component_modified_by_id_foreign": {
+          "constraintName": "system_component_modified_by_id_foreign",
+          "columnNames": [
+            "modified_by_id"
+          ],
+          "localTableName": "public.system_component",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
           "updateRule": "cascade"
         },
         "system_component_parent_component_id_foreign": {
@@ -1776,6 +2320,26 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "mappedType": "uuid"
+        },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
           "mappedType": "uuid"
         },
         "priority": {
@@ -1908,6 +2472,18 @@
           "referencedTableName": "public.solution",
           "updateRule": "cascade"
         },
+        "use_case_modified_by_id_foreign": {
+          "constraintName": "use_case_modified_by_id_foreign",
+          "columnNames": [
+            "modified_by_id"
+          ],
+          "localTableName": "public.use_case",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
+          "updateRule": "cascade"
+        },
         "use_case_primary_actor_id_foreign": {
           "constraintName": "use_case_primary_actor_id_foreign",
           "columnNames": [
@@ -1987,6 +2563,26 @@
           "nullable": false,
           "mappedType": "uuid"
         },
+        "last_modified": {
+          "name": "last_modified",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "modified_by_id": {
+          "name": "modified_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
+          "mappedType": "uuid"
+        },
         "priority": {
           "name": "priority",
           "type": "text",
@@ -2056,6 +2652,18 @@
             "id"
           ],
           "referencedTableName": "public.solution",
+          "updateRule": "cascade"
+        },
+        "user_story_modified_by_id_foreign": {
+          "constraintName": "user_story_modified_by_id_foreign",
+          "columnNames": [
+            "modified_by_id"
+          ],
+          "localTableName": "public.user_story",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
           "updateRule": "cascade"
         },
         "user_story_primary_actor_id_foreign": {

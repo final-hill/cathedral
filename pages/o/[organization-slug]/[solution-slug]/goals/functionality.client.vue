@@ -26,7 +26,7 @@ type FunctionalBehaviorViewModel = {
     priority: MoscowPriority;
 }
 
-const { data: functionalBehaviors, refresh, status, error: getFunctionalBehaviorsError } = await useFetch(`/api/functional-behaviors?solutionId=${solutionId}`),
+const { data: functionalBehaviors, refresh, status, error: getFunctionalBehaviorsError } = await useFetch(`/api/${solutionId}/functional-behaviors`),
     emptyFunctionalBehavior: FunctionalBehaviorViewModel = {
         id: emptyUuid,
         name: '',
@@ -43,12 +43,11 @@ const filters = ref({
 });
 
 const onCreate = async (data: FunctionalBehaviorViewModel) => {
-    await $fetch('/api/functional-behaviors', {
+    await $fetch(`/api/${solutionId}/functional-behaviors`, {
         method: 'POST',
         body: {
             name: data.name,
             statement: data.statement,
-            solutionId,
             priority: MoscowPriority.MUST
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -57,13 +56,12 @@ const onCreate = async (data: FunctionalBehaviorViewModel) => {
 }
 
 const onUpdate = async (data: FunctionalBehaviorViewModel) => {
-    await $fetch(`/api/functional-behaviors/${data.id}`, {
+    await $fetch(`/api/${solutionId}/functional-behaviors/${data.id}`, {
         method: 'PUT',
         body: {
             id: data.id,
             name: data.name,
             statement: data.statement,
-            solutionId,
             priority: data.priority
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -72,7 +70,7 @@ const onUpdate = async (data: FunctionalBehaviorViewModel) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/functional-behaviors/${id}`, { method: 'DELETE' })
+    await $fetch(`/api/${solutionId}/functional-behaviors/${id}`, { method: 'DELETE' })
         .catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()

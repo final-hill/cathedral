@@ -18,11 +18,11 @@ export default defineEventHandler(async (event) => {
 
     const result = await em.findOne(Assumption, id)
 
-    if (result)
-        return result
-    else
+    if (!result)
         throw createError({
             statusCode: 404,
             statusMessage: `Item not found with the given id: ${id}`
         })
+
+    return result
 })

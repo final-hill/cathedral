@@ -16,7 +16,7 @@ const querySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
         { organizationId } = await validateEventQuery(event, querySchema),
-        { organization } = await assertOrgReader(event, organizationId),
+        { } = await assertOrgReader(event, organizationId),
         em = fork(),
         appUserRole = await em.findOne(AppUserOrganizationRole, {
             appUser: id,

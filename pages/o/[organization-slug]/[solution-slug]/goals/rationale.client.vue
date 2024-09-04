@@ -27,10 +27,10 @@ const [
     { data: situationJustifications, error: getSituationError },
     { data: objectiveJustifications, error: getObjectiveError }
 ] = await Promise.all([
-    useFetch(`/api/justifications?solutionId=${solutionId}&name=Vision`),
-    useFetch(`/api/justifications?solutionId=${solutionId}&name=Mission`),
-    useFetch(`/api/justifications?solutionId=${solutionId}&name=Situation`),
-    useFetch(`/api/justifications?solutionId=${solutionId}&name=Objective`)
+    useFetch(`/api/${solutionId}/justifications?name=Vision`),
+    useFetch(`/api/${solutionId}/justifications?name=Mission`),
+    useFetch(`/api/${solutionId}/justifications?name=Situation`),
+    useFetch(`/api/${solutionId}/justifications?name=Objective`)
 ]);
 
 if (getVisionError.value)
@@ -57,10 +57,9 @@ const fieldTriple: [Ref<string>, JustificationModel, string][] = [
 fieldTriple.forEach(([goalStatement, justification, _name]) => {
     watch(goalStatement, debounce(() => {
         justification.statement = goalStatement.value;
-        $fetch(`/api/justifications/${justification.id}`, {
+        $fetch(`/api/${solutionId}/justifications/${justification.id}`, {
             method: 'PUT',
             body: {
-                solutionId,
                 name: justification.name,
                 statement: justification.statement
             }

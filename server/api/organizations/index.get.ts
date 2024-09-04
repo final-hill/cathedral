@@ -11,39 +11,23 @@ const querySchema = z.object({
 })
 
 /**
- * GET /api/organizations
- *
- * Returns all organizations
- *
- * GET /api/organizations?name&description&slug
- *
- * Returns all organizations that match the query parameters
+ * Returns all organizations that match the optional query parameters
  */
 export default defineEventHandler(async (event) => {
-    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q)),
-        session = (await getServerSession(event))!
-
-    if (!query.success)
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: Invalid query parameters",
-            message: JSON.stringify(query.error.errors)
-        })
-
-    const em = fork()
+    const { description, name, slug } = await validateEventParams(event, querySchema),
+        session = (await getServerSession(event))!,
+        em = fork()
 
     // If the user is a system admin, return all organizations
     // filtered by the query parameters
     if (session.isSystemAdmin) {
-        const organizations = em.findAll(Organization, {
+        return em.findAll(Organization, {
             where: {
-                ...(query.data.name ? { name: query.data.name } : {}),
-                ...(query.data.description ? { description: query.data.description } : {}),
-                ...(query.data.slug ? { slug: query.data.slug } : {})
+                ...(name ? { name } : {}),
+                ...(description ? { description } : {}),
+                ...(slug ? { slug } : {})
             }
         })
-
-        return organizations
     }
 
     // If the user is not a system admin, return only organizations
@@ -52,9 +36,9 @@ export default defineEventHandler(async (event) => {
         where: {
             appUser: session.id,
             organization: {
-                ...(query.data.name ? { name: query.data.name } : {}),
-                ...(query.data.description ? { description: query.data.description } : {}),
-                ...(query.data.slug ? { slug: query.data.slug } : {})
+                ...(name ? { name } : {}),
+                ...(description ? { description } : {}),
+                ...(slug ? { slug } : {})
             }
         },
         populate: ['organization']

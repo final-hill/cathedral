@@ -1,13 +1,14 @@
 import { z } from "zod"
-import Solution from "~/server/domain/application/Solution"
+import { MoscowPriority, Outcome, Stakeholder, FunctionalBehavior, UserStory } from "~/server/domain/requirements/index.js"
 import { fork } from "~/server/data/orm"
-import { FunctionalBehavior, MoscowPriority, Outcome, Stakeholder } from "~/server/domain/requirements/index"
-import { UserStory } from "~/server/domain/requirements/index"
+
+const paramSchema = z.object({
+    solutionId: z.string().uuid()
+})
 
 const bodySchema = z.object({
     name: z.string(),
     statement: z.string(),
-    solutionId: z.string().uuid(),
     primaryActorId: z.string().uuid(),
     priority: z.nativeEnum(MoscowPriority),
     outcomeId: z.string().uuid(),
@@ -18,52 +19,43 @@ const bodySchema = z.object({
  * Creates a new user story and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+    const { solutionId } = await validateEventParams(event, paramSchema),
+        body = await validateEventBody(event, bodySchema),
+        { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    if (!body.success)
-        throw createError({
-            statusCode: 400,
-            statusMessage: 'Bad Request: Invalid body parameters',
-            message: JSON.stringify(body.error.errors)
-        })
-
-    const [solution, primaryActor, outcome, functionalBehavior] = await Promise.all([
-        em.findOne(Solution, body.data.solutionId),
-        em.findOne(Stakeholder, body.data.primaryActorId),
-        em.findOne(Outcome, body.data.outcomeId),
-        em.findOne(FunctionalBehavior, body.data.functionalBehaviorId)
+    const [primaryActor, outcome, functionalBehavior] = await Promise.all([
+        em.findOne(Stakeholder, body.primaryActorId),
+        em.findOne(Outcome, body.outcomeId),
+        em.findOne(FunctionalBehavior, body.functionalBehaviorId)
     ]);
 
-    if (!solution)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
-        })
     if (!primaryActor)
         throw createError({
             statusCode: 400,
-            statusMessage: `Bad Request: No primary actor found with id: ${body.data.primaryActorId}`
+            statusMessage: `Bad Request: No primary actor found with id: ${body.primaryActorId}`
         })
     if (!outcome)
         throw createError({
             statusCode: 400,
-            statusMessage: `Bad Request: No outcome found with id: ${body.data.outcomeId}`
+            statusMessage: `Bad Request: No outcome found with id: ${body.outcomeId}`
         })
     if (!functionalBehavior)
         throw createError({
             statusCode: 400,
-            statusMessage: `Bad Request: No functional behavior found with id: ${body.data.functionalBehaviorId}`
+            statusMessage: `Bad Request: No functional behavior found with id: ${body.functionalBehaviorId}`
         })
 
     const newUserStory = new UserStory({
         functionalBehavior,
         outcome,
-        name: body.data.name,
-        statement: body.data.statement,
+        name: body.name,
+        statement: body.statement,
         solution,
         primaryActor,
-        priority: body.data.priority
+        priority: body.priority,
+        lastModified: new Date(),
+        modifiedBy: sessionUser
     })
 
     await em.persistAndFlush(newUserStory)

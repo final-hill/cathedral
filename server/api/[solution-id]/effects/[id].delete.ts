@@ -1,20 +1,21 @@
+import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { Effect } from "~/server/domain/requirements/index"
+import { Effect } from "~/server/domain/requirements/index.js"
+
+const paramSchema = z.object({
+    solutionId: z.string().uuid(),
+    id: z.string().uuid()
+})
 
 /**
  * Delete an effect by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
+    const { id, solutionId } = await validateEventParams(event, paramSchema),
         em = fork()
 
-    if (id) {
-        em.remove(em.getReference(Effect, id))
-        await em.flush()
-    } else {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: id is required."
-        })
-    }
+    await assertSolutionContributor(event, solutionId)
+
+    em.remove(em.getReference(Effect, id))
+    await em.flush()
 })

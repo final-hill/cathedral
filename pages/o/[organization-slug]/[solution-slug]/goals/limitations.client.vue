@@ -24,7 +24,7 @@ type LimitViewModel = {
     statement: string;
 }
 
-const { data: limits, status, refresh, error: getLimitsError } = await useFetch(`/api/limits?solutionId=${solutionId}`),
+const { data: limits, status, refresh, error: getLimitsError } = await useFetch(`/api/${solutionId}/limits`),
     emptyLimit: LimitViewModel = { id: emptyUuid, name: '', statement: '' };
 
 if (getLimitsError.value)
@@ -36,12 +36,11 @@ const filters = ref({
 });
 
 const onCreate = async (data: LimitViewModel) => {
-    await $fetch(`/api/limits`, {
+    await $fetch(`/api/${solutionId}/limits`, {
         method: 'POST',
         body: {
             name: data.name,
-            statement: data.statement,
-            solutionId
+            statement: data.statement
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -49,12 +48,11 @@ const onCreate = async (data: LimitViewModel) => {
 }
 
 const onUpdate = async (data: LimitViewModel) => {
-    await $fetch(`/api/limits/${data.id}`, {
+    await $fetch(`/api/${solutionId}/limits/${data.id}`, {
         method: 'PUT', body: {
             id: data.id,
             name: data.name,
-            statement: data.statement,
-            solutionId
+            statement: data.statement
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -62,7 +60,7 @@ const onUpdate = async (data: LimitViewModel) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/limits/${id}`, { method: 'DELETE' })
+    await $fetch(`/api/${solutionId}/limits/${id}`, { method: 'DELETE' })
         .catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()

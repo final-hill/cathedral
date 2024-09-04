@@ -24,7 +24,7 @@ type OutcomeViewModel = {
     statement: string;
 }
 
-const { data: outcomes, refresh, status, error: getOutcomesError } = await useFetch(`/api/outcomes?solutionId=${solutionId}`),
+const { data: outcomes, refresh, status, error: getOutcomesError } = await useFetch(`/api/${solutionId}/outcomes`),
     emptyOutcome: OutcomeViewModel = { id: emptyUuid, name: '', statement: '' };
 
 if (getOutcomesError.value)
@@ -36,12 +36,11 @@ const filters = ref({
 });
 
 const onCreate = async (data: OutcomeViewModel) => {
-    await $fetch(`/api/outcomes`, {
+    await $fetch(`/api/${solutionId}/outcomes`, {
         method: 'POST',
         body: {
             name: data.name,
-            statement: data.statement,
-            solutionId
+            statement: data.statement
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -49,12 +48,11 @@ const onCreate = async (data: OutcomeViewModel) => {
 }
 
 const onUpdate = async (data: OutcomeViewModel) => {
-    await $fetch(`/api/outcomes/${data.id}`, {
+    await $fetch(`/api/${solutionId}/outcomes/${data.id}`, {
         method: 'PUT',
         body: {
             name: data.name,
-            statement: data.statement,
-            solutionId
+            statement: data.statement
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -62,7 +60,7 @@ const onUpdate = async (data: OutcomeViewModel) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/outcomes/${id}`, { method: 'DELETE' })
+    await $fetch(`/api/${solutionId}/outcomes/${id}`, { method: 'DELETE' })
         .catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()

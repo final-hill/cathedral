@@ -13,8 +13,6 @@ const bodySchema = z.object({
 })
 
 /**
- * PUT /api/assumptions/:id
- *
  * Updates an assumption by id.
  */
 export default defineEventHandler(async (event) => {

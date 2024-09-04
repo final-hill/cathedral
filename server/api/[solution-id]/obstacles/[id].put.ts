@@ -1,55 +1,37 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { Obstacle } from "~/server/domain/requirements/index"
-import Solution from "~/server/domain/application/Solution"
+import { Obstacle } from "~/server/domain/requirements/index.js"
+
+const paramSchema = z.object({
+    solutionId: z.string().uuid(),
+    id: z.string().uuid()
+})
 
 const bodySchema = z.object({
     name: z.string(),
-    statement: z.string(),
-    solutionId: z.string()
+    statement: z.string()
 })
 
 /**
- * PUT /api/obstacles/:id
- *
  * Updates an obstacle by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+    const { id, solutionId } = await validateEventParams(event, paramSchema),
+        { sessionUser } = await assertSolutionContributor(event, solutionId),
+        { name, statement } = await validateEventBody(event, bodySchema),
         em = fork()
 
-    if (!body.success)
+    const obstacle = await em.findOne(Obstacle, id)
+
+    if (!obstacle)
         throw createError({
             statusCode: 400,
-            statusMessage: 'Bad Request: Invalid body parameters',
-            message: JSON.stringify(body.error.errors)
+            statusMessage: `Bad Request: No assumption found with id: ${id}`
         })
 
-    if (id) {
-        const obstacle = await em.findOne(Obstacle, id),
-            solution = await em.findOne(Solution, body.data.solutionId)
+    obstacle.name = name
+    obstacle.statement = statement
+    obstacle.modifiedBy = sessionUser
 
-        if (!obstacle)
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Bad Request: No assumption found with id: ${id}`
-            })
-        if (!solution)
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
-            })
-
-        obstacle.name = body.data.name
-        obstacle.statement = body.data.statement
-        obstacle.solution = solution
-
-        await em.flush()
-    } else {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: id is required."
-        })
-    }
+    await em.flush()
 })

@@ -13,13 +13,7 @@ const querySchema = z.object({
 })
 
 /**
- * GET /api/constraints
- *
- * Returns all constraints
- *
- * GET /api/constraints?name&statement&solutionId&category
- *
- * Returns all constraints that match the query parameters
+ * Returns all constraints that match the optional query parameters
  */
 export default defineEventHandler(async (event) => {
     const { solutionId } = await validateEventParams(event, paramSchema),

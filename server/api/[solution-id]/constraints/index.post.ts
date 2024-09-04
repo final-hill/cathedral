@@ -13,21 +13,19 @@ const bodySchema = z.object({
 })
 
 /**
- * POST /api/constraints
- *
  * Creates a new constraint and returns its id
  */
 export default defineEventHandler(async (event) => {
     const { solutionId } = await validateEventParams(event, paramSchema),
-        body = await validateEventBody(event, bodySchema),
+        { category, name, statement } = await validateEventBody(event, bodySchema),
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
     const newConstraint = new Constraint({
-        name: body.name,
-        statement: body.statement,
+        name,
+        statement,
         solution,
-        category: body.category,
+        category,
         lastModified: new Date(),
         modifiedBy: sessionUser
     })

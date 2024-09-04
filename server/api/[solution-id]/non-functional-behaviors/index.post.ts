@@ -1,12 +1,14 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { NonFunctionalBehavior, MoscowPriority } from "~/server/domain/requirements/index"
-import Solution from "~/server/domain/application/Solution"
+import { MoscowPriority, NonFunctionalBehavior } from "~/server/domain/requirements/index.js"
+
+const paramSchema = z.object({
+    solutionId: z.string().uuid()
+})
 
 const bodySchema = z.object({
     name: z.string().min(1),
     statement: z.string(),
-    solutionId: z.string().uuid(),
     priority: z.nativeEnum(MoscowPriority)
 })
 
@@ -14,29 +16,18 @@ const bodySchema = z.object({
  * Creates a new non functional behavior and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+    const { solutionId } = await validateEventParams(event, paramSchema),
+        { name, priority, statement } = await validateEventBody(event, bodySchema),
+        { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    if (!body.success)
-        throw createError({
-            statusCode: 400,
-            statusMessage: 'Bad Request: Invalid body parameters',
-            message: JSON.stringify(body.error.errors)
-        })
-
-    const solution = await em.findOne(Solution, body.data.solutionId)
-
-    if (!solution)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: Solution not found for id ${body.data.solutionId}`
-        })
-
     const newNonFunctionalBehavior = new NonFunctionalBehavior({
-        name: body.data.name,
-        statement: body.data.statement,
+        name,
+        statement,
         solution,
-        priority: body.data.priority
+        priority,
+        lastModified: new Date(),
+        modifiedBy: sessionUser
     })
 
     await em.persistAndFlush(newNonFunctionalBehavior)

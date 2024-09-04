@@ -24,7 +24,7 @@ type EffectViewModel = {
     statement: string;
 }
 
-const { data: effects, refresh, status, error: getEffectsError } = await useFetch(`/api/effects?solutionId=${solutionId}`),
+const { data: effects, refresh, status, error: getEffectsError } = await useFetch(`/api/${solutionId}/effects`),
     emptyEffect: EffectViewModel = { id: emptyUuid, name: '', statement: '' }
 
 if (getEffectsError.value)
@@ -36,23 +36,21 @@ const filters = ref({
 });
 
 const onCreate = async (data: EffectViewModel) => {
-    await $fetch('/api/effects', {
+    await $fetch(`/api/${solutionId}/effects`, {
         method: 'POST', body: {
             name: data.name,
-            statement: data.statement,
-            solutionId
+            statement: data.statement
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
     refresh()
 }
 
 const onUpdate = async (data: EffectViewModel) => {
-    await $fetch(`/api/effects/${data.id}`, {
+    await $fetch(`/api/${solutionId}/effects/${data.id}`, {
         method: 'PUT',
         body: {
             name: data.name,
-            statement: data.statement,
-            solutionId
+            statement: data.statement
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -60,7 +58,7 @@ const onUpdate = async (data: EffectViewModel) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/effects/${id}`, { method: 'DELETE' })
+    await $fetch(`/api/${solutionId}/effects/${id}`, { method: 'DELETE' })
 
     refresh()
 }

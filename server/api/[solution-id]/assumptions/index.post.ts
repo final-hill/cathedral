@@ -12,8 +12,6 @@ const bodySchema = z.object({
 })
 
 /**
- * POST /api/assumptions
- *
  * Creates a new assumption and returns its id
  */
 export default defineEventHandler(async (event) => {

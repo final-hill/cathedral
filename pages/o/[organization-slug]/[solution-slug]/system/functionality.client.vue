@@ -28,7 +28,7 @@ type BehaviorViewModel = {
     priority: MoscowPriority;
 }
 
-const { data: components, status, refresh, error: getComponentsError } = await useFetch(`/api/system-components?solutionId=${solutionId}`),
+const { data: components, status, refresh, error: getComponentsError } = await useFetch(`/api/${solutionId}/system-components`),
     expandedRows = ref({}),
     emptyBehavior = (componentid: string): BehaviorViewModel => ({
         id: emptyUuid,
@@ -42,11 +42,11 @@ if (getComponentsError.value)
     $eventBus.$emit('page-error', getComponentsError.value)
 
 const fnFunctionalBehaviors = async (componentId: string) =>
-    await $fetch(`/api/functional-behaviors?componentId=${componentId}`)
+    await $fetch(`/api/${solutionId}/functional-behaviors?componentId=${componentId}`)
         .catch((e) => $eventBus.$emit('page-error', e));
 
 const fnNonFunctionalBehaviors = async (componentId: string) =>
-    await $fetch(`/api/non-functional-behaviors?componentId=${componentId}`)
+    await $fetch(`/api/${solutionId}/non-functional-behaviors?componentId=${componentId}`)
         .catch((e) => $eventBus.$emit('page-error', e))
 
 const componentSortField = ref<string | undefined>('name')

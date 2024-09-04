@@ -13,13 +13,7 @@ const querySchema = z.object({
 }, "At least one of organizationId or organizationSlug should be provided");
 
 /**
- * GET /api/solutions
- *
- * Returns all solutions
- *
- * GET /api/solutions?name&description&slug&organizationId
- *
- * Returns all solutions that match the query parameters
+ * Returns all solutions that match the optional query parameters
  */
 export default defineEventHandler(async (event) => {
     const { description, name, organizationId, organizationSlug, slug } = await validateEventQuery(event, querySchema),

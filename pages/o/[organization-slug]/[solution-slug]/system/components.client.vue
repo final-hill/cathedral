@@ -25,7 +25,7 @@ type SystemComponentViewModel = {
     parentComponentId?: string;
 }
 
-const { data: systemComponents, refresh, status, error: getSystemComponentsError } = await useFetch(`/api/system-components?solutionId=${solutionId}`),
+const { data: systemComponents, refresh, status, error: getSystemComponentsError } = await useFetch(`/api/${solutionId}/system-components`),
     emptyComponent: SystemComponentViewModel = {
         id: emptyUuid,
         name: '',
@@ -43,25 +43,25 @@ const filters = ref({
 })
 
 const onCreate = async (data: SystemComponentViewModel) => {
-    await $fetch('/api/system-components', {
+    await $fetch(`/api/${solutionId}/system-components`, {
         method: 'POST',
-        body: { ...data, solutionId }
+        body: data
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
 
 const onUpdate = async (data: SystemComponentViewModel) => {
-    await $fetch(`/api/system-components/${data.id}`, {
+    await $fetch(`/api/${solutionId}/system-components/${data.id}`, {
         method: 'PUT',
-        body: { ...data, solutionId }
+        body: data
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/system-components/${id}`, {
+    await $fetch(`/api/${solutionId}/system-components/${id}`, {
         method: 'DELETE'
     }).catch((e) => $eventBus.$emit('page-error', e))
 
