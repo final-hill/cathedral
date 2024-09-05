@@ -1,4 +1,4 @@
-import { Cascade, EntitySchema } from "@mikro-orm/core";
+import { EntitySchema } from "@mikro-orm/core";
 import { Requirement } from "../../domain/requirements/index.js";
 
 export default new EntitySchema<Requirement>({
@@ -9,7 +9,13 @@ export default new EntitySchema<Requirement>({
         name: { type: 'string', nullable: false },
         statement: { type: 'string', nullable: false },
         solution: { kind: 'm:1', entity: 'Solution' },
-        lastModified: { type: 'datetime', nullable: false, onCreate: () => new Date(), onUpdate: () => new Date() },
+        lastModified: {
+            type: 'datetime',
+            nullable: false,
+            onCreate: () => new Date(),
+            onUpdate: () => new Date(),
+            defaultRaw: 'now()'
+        },
         modifiedBy: {
             kind: 'm:1', entity: 'AppUser', nullable: false,
             // System Admin is the default user for the initial migration
