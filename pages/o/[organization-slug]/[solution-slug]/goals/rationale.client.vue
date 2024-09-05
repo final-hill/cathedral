@@ -27,10 +27,10 @@ const [
     { data: situationJustifications, error: getSituationError },
     { data: objectiveJustifications, error: getObjectiveError }
 ] = await Promise.all([
-    useFetch(`/api/justifications?solutionId=${solutionId}&name=Vision`),
-    useFetch(`/api/justifications?solutionId=${solutionId}&name=Mission`),
-    useFetch(`/api/justifications?solutionId=${solutionId}&name=Situation`),
-    useFetch(`/api/justifications?solutionId=${solutionId}&name=Objective`)
+    useFetch(`/api/justifications`, { query: { name: 'Vision', solutionId } }),
+    useFetch(`/api/justifications`, { query: { name: 'Mission', solutionId } }),
+    useFetch(`/api/justifications`, { query: { name: 'Situation', solutionId } }),
+    useFetch(`/api/justifications`, { query: { name: 'Objective', solutionId } })
 ]);
 
 if (getVisionError.value)

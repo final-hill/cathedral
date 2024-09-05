@@ -6,6 +6,6 @@ export default new EntitySchema<SystemComponent, Component>({
     class: SystemComponent,
     extends: RequirementSchema,
     properties: {
-        parentComponent: { kind: 'm:1', entity: 'SystemComponent', ref: true, nullable: true }
+        parentComponent: { kind: 'm:1', entity: 'SystemComponent', nullable: true }
     }
 })

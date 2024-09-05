@@ -1,12 +1,12 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { UseCase, MoscowPriority } from "~/server/domain/requirements/index"
+import { MoscowPriority, UseCase } from "~/server/domain/requirements/index.js"
 import { NIL as emptyUuid } from "uuid"
 
 const querySchema = z.object({
+    solutionId: z.string().uuid(),
     name: z.string().optional(),
     statement: z.string().optional(),
-    solutionId: z.string().uuid().optional(),
     primaryActorId: z.string().uuid().optional(),
     priority: z.nativeEnum(MoscowPriority).optional(),
     scope: z.string().optional(),
@@ -23,17 +23,12 @@ const querySchema = z.object({
  * Returns all stakeholders that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q)),
+    const query = await validateEventQuery(event, querySchema),
         em = fork()
 
-    if (!query.success)
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: Invalid query parameters",
-            message: JSON.stringify(query.error.errors)
-        })
+    await assertSolutionReader(event, query.solutionId)
 
-    const results = await em.find(UseCase, Object.entries(query.data)
+    const results = await em.find(UseCase, Object.entries(query)
         .filter(([_, value]) => value !== undefined)
         .reduce((acc, [key, value]) => {
             if (key.endsWith("Id"))

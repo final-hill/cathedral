@@ -1,12 +1,15 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import Solution from "~/server/domain/application/Solution"
-import { SystemComponent } from "~/server/domain/requirements/index"
+import { SystemComponent } from "~/server/domain/requirements/index.js"
+
+const paramSchema = z.object({
+    id: z.string().uuid()
+})
 
 const bodySchema = z.object({
+    solutionId: z.string().uuid(),
     name: z.string(),
     statement: z.string(),
-    solutionId: z.string().uuid(),
     parentComponentId: z.string().uuid().optional()
 })
 
@@ -14,43 +17,24 @@ const bodySchema = z.object({
  * Updates an environment component by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+    const { id } = await validateEventParams(event, paramSchema),
+        { name, statement, parentComponentId, solutionId } = await validateEventBody(event, bodySchema),
+        { sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    if (!body.success)
+    const systemComponent = await em.findOne(SystemComponent, id),
+        parentComponent = parentComponentId ? await em.findOne(SystemComponent, parentComponentId) : undefined
+
+    if (!systemComponent)
         throw createError({
             statusCode: 400,
-            statusMessage: 'Bad Request: Invalid body parameters',
-            message: JSON.stringify(body.error.errors)
+            statusMessage: `Bad Request: No assumption found with id: ${id}`
         })
 
-    if (id) {
-        const systemComponent = await em.findOne(SystemComponent, id),
-            solution = await em.findOne(Solution, body.data.solutionId),
-            parentComponent = body.data.parentComponentId ? await em.findOne(SystemComponent, body.data.parentComponentId) : undefined
+    systemComponent.name = name
+    systemComponent.statement = statement
+    systemComponent.parentComponent = parentComponent || undefined
+    systemComponent.modifiedBy = sessionUser
 
-        if (!systemComponent)
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Bad Request: No assumption found with id: ${id}`
-            })
-        if (!solution)
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
-            })
-
-        systemComponent.name = body.data.name
-        systemComponent.statement = body.data.statement
-        systemComponent.solution = solution
-        systemComponent.parentComponent = parentComponent || undefined
-
-        await em.flush()
-    } else {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: id is required."
-        })
-    }
+    await em.flush()
 })

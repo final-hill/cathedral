@@ -1,16 +1,19 @@
 import { v7 as uuidv7 } from 'uuid';
 import type { Properties } from "../Properties.js";
 import Solution from '../application/Solution.js';
+import AppUser from '../application/AppUser.js';
 
 /**
  * A Requirement is a statement that specifies a property.
  */
 export abstract class Requirement {
-    constructor({ name, statement, solution }: Omit<Properties<Requirement>, 'id'>) {
+    constructor({ name, statement, solution, lastModified, modifiedBy }: Omit<Properties<Requirement>, 'id'>) {
         this.id = uuidv7();
         this.name = name
         this.statement = statement
         this.solution = solution
+        this.lastModified = lastModified
+        this.modifiedBy = modifiedBy
     }
 
     /**
@@ -39,12 +42,24 @@ export abstract class Requirement {
      */
     solution: Solution
 
+    /**
+     * The date and time when the requirement was last modified
+     */
+    lastModified: Date
+
+    /**
+     * The user who last modified the requirement
+     */
+    modifiedBy: AppUser
+
     toJSON() {
         return {
             id: this.id,
             name: this.name,
             statement: this.statement,
-            solutionId: this.solution.id
+            solutionId: this.solution.id,
+            lastModified: this.lastModified.toISOString(),
+            modifiedById: this.modifiedBy.id
         }
     }
 }

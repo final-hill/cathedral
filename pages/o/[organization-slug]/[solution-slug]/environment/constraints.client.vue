@@ -17,7 +17,7 @@ const { $eventBus } = useNuxtApp(),
     }),
     solution = (solutions.value ?? [])[0],
     solutionId = solution.id,
-    { data: constraints, status, refresh, error: getConstraintsError } = await useFetch('/api/constraints', {
+    { data: constraints, status, refresh, error: getConstraintsError } = await useFetch(`/api/constraints`, {
         query: { solutionId }
     });
 
@@ -51,8 +51,8 @@ const onCreate = async (data: ConstraintViewModel) => {
         body: {
             name: data.name,
             statement: data.statement,
-            solutionId,
-            category: data.category
+            category: data.category,
+            solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -60,8 +60,10 @@ const onCreate = async (data: ConstraintViewModel) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/constraints/${id}`, { method: 'DELETE' })
-        .catch((e) => $eventBus.$emit('page-error', e))
+    await $fetch(`/api/constraints/${id}`, {
+        method: 'DELETE',
+        body: { solutionId }
+    }).catch((e) => $eventBus.$emit('page-error', e))
     refresh()
 }
 
@@ -71,8 +73,8 @@ const onUpdate = async (data: ConstraintViewModel) => {
         body: {
             name: data.name,
             statement: data.statement,
-            solutionId,
-            category: data.category
+            category: data.category,
+            solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
     refresh()

@@ -1,20 +1,25 @@
+import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { Obstacle } from "~/server/domain/requirements/index"
+import { Obstacle } from "~/server/domain/requirements/index.js"
+
+const paramSchema = z.object({
+    id: z.string().uuid()
+})
+
+const bodySchema = z.object({
+    solutionId: z.string().uuid()
+})
 
 /**
  * Delete obstacle by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
+    const { id } = await validateEventParams(event, paramSchema),
+        { solutionId } = await validateEventBody(event, bodySchema),
         em = fork()
 
-    if (id) {
-        em.remove(em.getReference(Obstacle, id))
-        await em.flush()
-    } else {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: id is required."
-        })
-    }
+    await assertSolutionContributor(event, solutionId)
+
+    em.remove(em.getReference(Obstacle, id))
+    await em.flush()
 })

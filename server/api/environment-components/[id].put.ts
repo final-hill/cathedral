@@ -1,58 +1,40 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { EnvironmentComponent } from "~/server/domain/requirements/index"
-import Solution from "~/server/domain/application/Solution"
+import { EnvironmentComponent } from "~/server/domain/requirements/index.js"
+
+const paramSchema = z.object({
+    id: z.string().uuid()
+})
 
 const bodySchema = z.object({
+    solutionId: z.string().uuid(),
     name: z.string(),
     statement: z.string(),
-    solutionId: z.string().uuid(),
     parentComponentId: z.string().uuid().optional()
 })
 
 /**
- * PUT /api/environment-components/:id
- *
  * Updates an assumption by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+    const { id } = await validateEventParams(event, paramSchema),
+        { name, statement, parentComponentId, solutionId } = await validateEventBody(event, bodySchema),
+        { sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    if (!body.success)
+    const environmentComponent = await em.findOne(EnvironmentComponent, id),
+        parentComponent = parentComponentId ? await em.findOne(EnvironmentComponent, parentComponentId) : null
+
+    if (!environmentComponent)
         throw createError({
             statusCode: 400,
-            statusMessage: 'Bad Request: Invalid body parameters',
-            message: JSON.stringify(body.error.errors)
+            statusMessage: `Bad Request: No effect found with id: ${id}`
         })
 
-    if (id) {
-        const environmentComponent = await em.findOne(EnvironmentComponent, id),
-            parentComponent = body.data.parentComponentId ? await em.findOne(EnvironmentComponent, body.data.parentComponentId) : null,
-            solution = await em.findOne(Solution, body.data.solutionId)
+    environmentComponent.name = name
+    environmentComponent.statement = statement
+    environmentComponent.parentComponent = parentComponent ?? undefined
+    environmentComponent.modifiedBy = sessionUser
 
-        if (!environmentComponent)
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Bad Request: No effect found with id: ${id}`
-            })
-        if (!solution)
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
-            })
-
-        environmentComponent.name = body.data.name
-        environmentComponent.statement = body.data.statement
-        environmentComponent.solution = solution
-        environmentComponent.parentComponent = parentComponent ?? undefined
-
-        await em.flush()
-    } else {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: id is required."
-        })
-    }
+    await em.flush()
 })

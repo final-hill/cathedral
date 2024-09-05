@@ -1,57 +1,39 @@
 import { z } from "zod"
-import { Constraint, ConstraintCategory } from "~/server/domain/requirements/index"
+import { Constraint, ConstraintCategory } from "~/server/domain/requirements/index.js"
 import { fork } from "~/server/data/orm"
-import Solution from "~/server/domain/application/Solution"
+
+const paramSchema = z.object({
+    id: z.string().uuid()
+})
 
 const bodySchema = z.object({
+    solutionId: z.string().uuid(),
     name: z.string().min(1),
     statement: z.string(),
-    solutionId: z.string().uuid(),
     category: z.nativeEnum(ConstraintCategory)
 })
 
 /**
- * PUT /api/constraints/:id
- *
  * Updates a constraint by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+    const { id } = await validateEventParams(event, paramSchema),
+        { category, name, statement, solutionId } = await validateEventBody(event, bodySchema),
+        { sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    if (!body.success)
+    const constraint = await em.findOne(Constraint, id)
+
+    if (!constraint)
         throw createError({
             statusCode: 400,
-            statusMessage: 'Bad Request: Invalid body parameters',
-            message: JSON.stringify(body.error.errors)
+            statusMessage: `Bad Request: No constraint found with id: ${id}`
         })
 
-    if (id) {
-        const constraint = await em.findOne(Constraint, id),
-            solution = await em.findOne(Solution, body.data.solutionId)
+    constraint.name = name
+    constraint.statement = statement
+    constraint.category = category
+    constraint.modifiedBy = sessionUser
 
-        if (!constraint)
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Bad Request: No constraint found with id: ${id}`
-            })
-        if (!solution)
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
-            })
-
-        constraint.name = body.data.name
-        constraint.statement = body.data.statement
-        constraint.solution = solution
-        constraint.category = body.data.category
-
-        await em.flush()
-    } else {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: id is required."
-        })
-    }
+    await em.flush()
 })

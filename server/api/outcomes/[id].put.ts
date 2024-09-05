@@ -1,53 +1,37 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { Outcome } from "~/server/domain/requirements/index"
-import Solution from "~/server/domain/application/Solution"
+import { Outcome } from "~/server/domain/requirements/index.js"
+
+const paramSchema = z.object({
+    id: z.string().uuid()
+})
 
 const bodySchema = z.object({
+    solutionId: z.string().uuid(),
     name: z.string(),
-    statement: z.string(),
-    solutionId: z.string()
+    statement: z.string()
 })
 
 /**
  * Updates an outcome by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+    const { id } = await validateEventParams(event, paramSchema),
+        { name, statement, solutionId } = await validateEventBody(event, bodySchema),
+        { sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    if (!body.success)
+    const outcome = await em.findOne(Outcome, id)
+
+    if (!outcome)
         throw createError({
             statusCode: 400,
-            statusMessage: 'Bad Request: Invalid body parameters',
-            message: JSON.stringify(body.error.errors)
+            statusMessage: `Bad Request: No assumption found with id: ${id}`
         })
 
-    if (id) {
-        const outcome = await em.findOne(Outcome, id),
-            solution = await em.findOne(Solution, body.data.solutionId)
+    outcome.name = name
+    outcome.statement = statement
+    outcome.modifiedBy = sessionUser
 
-        if (!outcome)
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Bad Request: No assumption found with id: ${id}`
-            })
-        if (!solution)
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
-            })
-
-        outcome.name = body.data.name
-        outcome.statement = body.data.statement
-        outcome.solution = solution
-
-        await em.flush()
-    } else {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: id is required."
-        })
-    }
+    await em.flush()
 })

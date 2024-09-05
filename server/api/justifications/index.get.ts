@@ -1,34 +1,23 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { Justification } from "~/server/domain/requirements/index"
+import { Justification } from "~/server/domain/requirements/index.js"
 
 const querySchema = z.object({
+    solutionId: z.string().uuid(),
     name: z.string().optional(),
-    statement: z.string().optional(),
-    solutionId: z.string().uuid().optional()
+    statement: z.string().optional()
 })
 
 /**
- * GET /api/justifications
- *
- * Returns all justifications
- *
- * GET /api/justifications?name&statement&solutionId
- *
  * Returns all justifications that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const query = await getValidatedQuery(event, (q) => querySchema.safeParse(q)),
+    const query = await validateEventQuery(event, querySchema),
         em = fork()
 
-    if (!query.success)
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: Invalid query parameters",
-            message: JSON.stringify(query.error.errors)
-        })
+    await assertSolutionReader(event, query.solutionId)
 
-    const results = await em.find(Justification, Object.entries(query.data)
+    const results = await em.find(Justification, Object.entries(query)
         .filter(([_, value]) => value !== undefined)
         .reduce((acc, [key, value]) => {
             if (key.endsWith("Id"))

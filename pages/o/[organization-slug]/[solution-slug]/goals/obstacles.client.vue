@@ -24,7 +24,9 @@ type ObstacleViewModel = {
     statement: string;
 }
 
-const { data: obstacles, refresh, status, error: getObstaclesError } = await useFetch(`/api/obstacles?solutionId=${solutionId}`),
+const { data: obstacles, refresh, status, error: getObstaclesError } = await useFetch(`/api/obstacles`, {
+    query: { solutionId }
+}),
     emptyObstacle: ObstacleViewModel = { id: emptyUuid, name: '', statement: '' };
 
 const filters = ref({
@@ -36,9 +38,9 @@ const onCreate = async (data: ObstacleViewModel) => {
     await $fetch(`/api/obstacles`, {
         method: 'POST',
         body: {
+            solutionId,
             name: data.name,
-            statement: data.statement,
-            solutionId
+            statement: data.statement
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -49,9 +51,9 @@ const onUpdate = async (data: ObstacleViewModel) => {
     await $fetch(`/api/obstacles/${data.id}`, {
         method: 'PUT',
         body: {
+            solutionId,
             name: data.name,
-            statement: data.statement,
-            solutionId
+            statement: data.statement
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -59,8 +61,10 @@ const onUpdate = async (data: ObstacleViewModel) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/obstacles/${id}`, { method: 'DELETE' })
-        .catch((e) => $eventBus.$emit('page-error', e))
+    await $fetch(`/api/obstacles/${id}`, {
+        method: 'DELETE',
+        body: { solutionId }
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }

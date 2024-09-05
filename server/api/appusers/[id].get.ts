@@ -2,6 +2,10 @@ import { z } from "zod"
 import { fork } from "~/server/data/orm"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
 
+const paramSchema = z.object({
+    id: z.string().uuid()
+})
+
 const querySchema = z.object({
     organizationId: z.string().uuid(),
 })
@@ -10,25 +14,13 @@ const querySchema = z.object({
  * Returns an appuser by id in a given organization
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        query = await getValidatedQuery(event, (q) => querySchema.safeParse(q))
-
-    if (!query.success)
-        throw createError({
-            statusCode: 400,
-            statusMessage: 'Bad Request: Invalid body parameters',
-            message: JSON.stringify(query.error.errors)
-        })
-    if (!id)
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: id is required."
-        })
-
-    const em = fork(),
+    const { id } = await validateEventParams(event, paramSchema),
+        { organizationId } = await validateEventQuery(event, querySchema),
+        { } = await assertOrgReader(event, organizationId),
+        em = fork(),
         appUserRole = await em.findOne(AppUserOrganizationRole, {
             appUser: id,
-            organization: query.data.organizationId
+            organization: organizationId
         }, { populate: ['appUser'] })
 
     if (!appUserRole)

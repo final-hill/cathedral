@@ -8,16 +8,12 @@ export default new EntitySchema<AppUserOrganizationRole>({
         appUser: {
             kind: 'm:1',
             entity: 'AppUser',
-            primary: true,
-            ref: true,
-            cascade: [Cascade.REMOVE]
+            primary: true
         },
         organization: {
             kind: 'm:1',
             entity: 'Organization',
-            ref: true,
-            primary: true,
-            cascade: [Cascade.REMOVE]
+            primary: true
         },
         role: {
             enum: true,

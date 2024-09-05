@@ -1,54 +1,37 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { Invariant } from "~/server/domain/requirements/index"
-import Solution from "~/server/domain/application/Solution"
+import { Invariant } from "~/server/domain/requirements/index.js"
+
+const paramSchema = z.object({
+    id: z.string().uuid()
+})
 
 const bodySchema = z.object({
+    solutionId: z.string().uuid(),
     name: z.string().min(1),
-    statement: z.string(),
-    solutionId: z.string().uuid()
+    statement: z.string()
 })
 
 /**
- * PUT /api/invariants/:id
  * Updates an invariant by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
-        body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+    const { id } = await validateEventParams(event, paramSchema),
+        { name, statement, solutionId } = await validateEventBody(event, bodySchema),
+        { sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    if (!body.success)
+    const invariant = await em.findOne(Invariant, id)
+
+    if (!invariant)
         throw createError({
             statusCode: 400,
-            statusMessage: 'Bad Request: Invalid body parameters',
-            message: JSON.stringify(body.error.errors)
+            statusMessage: `Bad Request: No effect found with id: ${id}`
         })
 
-    if (id) {
-        const invariant = await em.findOne(Invariant, id),
-            solution = await em.findOne(Solution, body.data.solutionId)
+    invariant.name = name
+    invariant.statement = statement
+    invariant.modifiedBy = sessionUser
 
-        if (!invariant)
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Bad Request: No effect found with id: ${id}`
-            })
-        if (!solution)
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
-            })
-
-        invariant.name = body.data.name
-        invariant.statement = body.data.statement
-        invariant.solution = solution
-
-        await em.flush()
-    } else {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: id is required."
-        })
-    }
+    await em.flush()
 })

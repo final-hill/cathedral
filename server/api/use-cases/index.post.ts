@@ -1,15 +1,12 @@
 import { NIL as emptyUuid } from "uuid"
 import { z } from "zod"
+import { MoscowPriority, Stakeholder, Assumption, Effect, UseCase } from "~/server/domain/requirements/index.js"
 import { fork } from "~/server/data/orm"
-import Solution from "~/server/domain/application/Solution"
-import { Assumption, MoscowPriority, Stakeholder } from "~/server/domain/requirements/index"
-import { Effect } from "~/server/domain/requirements/index"
-import { UseCase } from "~/server/domain/requirements/index"
 
 const bodySchema = z.object({
+    solutionId: z.string().uuid(),
     name: z.string(),
     statement: z.string(),
-    solutionId: z.string().uuid(),
     primaryActorId: z.string().uuid(),
     priority: z.nativeEnum(MoscowPriority),
     scope: z.string(),
@@ -26,56 +23,46 @@ const bodySchema = z.object({
  * Creates a new use case and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+    const body = await validateEventBody(event, bodySchema),
+        { solution, sessionUser } = await assertSolutionContributor(event, body.solutionId),
         em = fork()
 
-    if (!body.success)
-        throw createError({
-            statusCode: 400,
-            statusMessage: 'Bad Request: Invalid body parameters',
-            message: JSON.stringify(body.error.errors)
-        })
+    const primaryActor = await em.findOne(Stakeholder, body.primaryActorId),
+        precondition = await em.findOne(Assumption, body.preconditionId),
+        successGuarantee = await em.findOne(Effect, body.successGuaranteeId)
 
-    const solution = await em.findOne(Solution, body.data.solutionId),
-        primaryActor = await em.findOne(Stakeholder, body.data.primaryActorId),
-        precondition = await em.findOne(Assumption, body.data.preconditionId),
-        successGuarantee = await em.findOne(Effect, body.data.successGuaranteeId)
-
-    if (!solution)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No solution found with id: ${body.data.solutionId}`
-        })
     if (!primaryActor)
         throw createError({
             statusCode: 400,
-            statusMessage: `Bad Request: No primary actor found with id: ${body.data.primaryActorId}`
+            statusMessage: `Bad Request: No primary actor found with id: ${body.primaryActorId}`
         })
     if (!precondition)
         throw createError({
             statusCode: 400,
-            statusMessage: `Bad Request: No precondition found with id: ${body.data.preconditionId}`
+            statusMessage: `Bad Request: No precondition found with id: ${body.preconditionId}`
         })
     if (!successGuarantee)
         throw createError({
             statusCode: 400,
-            statusMessage: `Bad Request: No success guarantee found with id: ${body.data.successGuaranteeId}`
+            statusMessage: `Bad Request: No success guarantee found with id: ${body.successGuaranteeId}`
         })
 
     const newUseCase = new UseCase({
-        name: body.data.name,
-        statement: body.data.statement,
+        name: body.name,
+        statement: body.statement,
         solution,
         primaryActor,
-        priority: body.data.priority,
-        scope: body.data.scope,
-        level: body.data.level,
-        goalInContext: body.data.goalInContext,
+        priority: body.priority,
+        scope: body.scope,
+        level: body.level,
+        goalInContext: body.goalInContext,
         precondition,
-        triggerId: body.data.triggerId,
-        mainSuccessScenario: body.data.mainSuccessScenario,
+        triggerId: body.triggerId,
+        mainSuccessScenario: body.mainSuccessScenario,
         successGuarantee,
-        extensions: body.data.extensions
+        extensions: body.extensions,
+        lastModified: new Date(),
+        modifiedBy: sessionUser
     })
 
     await em.persistAndFlush(newUseCase)

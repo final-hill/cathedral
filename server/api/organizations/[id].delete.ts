@@ -1,38 +1,46 @@
+import { Collection } from "@mikro-orm/core"
+import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import Organization from "~/server/domain/application/Organization"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
-import { getServerSession } from '#auth'
-import AppRole from "~/server/domain/application/AppRole"
+
+const paramSchema = z.object({
+    id: z.string().uuid()
+})
 
 /**
  * Delete an organization by id.
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id;
+    const { id } = await validateEventParams(event, paramSchema),
+        { organization } = await assertOrgAdmin(event, id),
+        em = fork()
 
-    if (!id)
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: id is required."
-        })
+    const solutions = await organization.solutions.load()
 
-    const em = fork(),
-        session = (await getServerSession(event))!,
-        organization = em.getReference(Organization, id),
-        sessionUserOrgRole = await em.findOne(AppUserOrganizationRole, {
-            appUser: session.id,
-            organization
-        })
-
-    // An organization can only be deleted by a system admin
-    // or the associated organization admin
-    if (session.isSystemAdmin || sessionUserOrgRole?.role === AppRole.ORGANIZATION_ADMIN) {
-        em.remove(organization)
+    for (const solution of solutions) {
+        // for each property of the solution that is a collection, remove all items
+        for (const key in solution) {
+            const maybeCollection = Reflect.get(solution, key) as Collection<any>
+            if (maybeCollection instanceof Collection) {
+                await maybeCollection.load()
+                maybeCollection.getItems().map(item => em.remove(item))
+                maybeCollection.removeAll()
+            }
+        }
         await em.flush()
-    } else {
-        throw createError({
-            statusCode: 403,
-            statusMessage: "Forbidden: You must be a system admin or an organization admin to delete an organization."
-        })
+        await em.removeAndFlush(solution)
     }
+
+    organization.solutions.removeAll()
+
+    const appUserOrganizationRoles = await em.findAll(AppUserOrganizationRole, {
+        where: { organization }
+    })
+
+    for (const auor of appUserOrganizationRoles)
+        em.remove(auor)
+
+    em.remove(organization)
+
+    await em.removeAndFlush(organization)
 })

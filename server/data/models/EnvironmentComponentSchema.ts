@@ -6,6 +6,6 @@ export default new EntitySchema<EnvironmentComponent, Component>({
     class: EnvironmentComponent,
     extends: RequirementSchema,
     properties: {
-        parentComponent: { kind: 'm:1', entity: 'EnvironmentComponent', ref: true, nullable: true }
+        parentComponent: { kind: 'm:1', entity: 'EnvironmentComponent', nullable: true }
     }
 })

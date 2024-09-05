@@ -24,7 +24,9 @@ type PersonViewModel = {
     email: string;
 }
 
-const { data: personnel, refresh, status, error: getPersonnelError } = await useFetch(`/api/persons?solutionId=${solutionId}`),
+const { data: personnel, refresh, status, error: getPersonnelError } = await useFetch(`/api/persons`, {
+    query: { solutionId }
+}),
     emptyPerson: PersonViewModel = { id: emptyUuid, name: '', email: '' };
 
 if (getPersonnelError.value)
@@ -37,7 +39,8 @@ const filters = ref({
 
 const onCreate = async (data: PersonViewModel) => {
     await $fetch(`/api/persons`, {
-        method: 'POST', body: {
+        method: 'POST',
+        body: {
             ...data,
             solutionId,
             statement: ''
@@ -49,7 +52,8 @@ const onCreate = async (data: PersonViewModel) => {
 
 const onUpdate = async (data: PersonViewModel) => {
     await $fetch(`/api/persons/${data.id}`, {
-        method: 'PUT', body: {
+        method: 'PUT',
+        body: {
             ...data,
             solutionId,
             statement: ''
@@ -60,8 +64,10 @@ const onUpdate = async (data: PersonViewModel) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/persons/${id}`, { method: 'DELETE' })
-        .catch((e) => $eventBus.$emit('page-error', e))
+    await $fetch(`/api/persons/${id}`, {
+        method: 'DELETE',
+        body: { solutionId }
+    }).catch((e) => $eventBus.$emit('page-error', e))
     refresh();
 }
 </script>

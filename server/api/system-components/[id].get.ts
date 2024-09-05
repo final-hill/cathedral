@@ -1,27 +1,32 @@
+import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { SystemComponent } from "~/server/domain/requirements/index"
+import { SystemComponent } from "~/server/domain/requirements/index.js"
+
+const paramSchema = z.object({
+    id: z.string().uuid()
+})
+
+const querySchema = z.object({
+    solutionId: z.string().uuid()
+})
 
 /**
  * Returns an system component by id
  */
 export default defineEventHandler(async (event) => {
-    const id = event.context.params?.id,
+    const { id } = await validateEventParams(event, paramSchema),
+        { solutionId } = await validateEventQuery(event, querySchema),
         em = fork()
 
-    if (id) {
-        const result = await em.findOne(SystemComponent, id)
+    await assertSolutionReader(event, solutionId)
 
-        if (result)
-            return result
-        else
-            throw createError({
-                statusCode: 404,
-                statusMessage: `Item not found with the given id: ${id}`
-            })
-    } else {
+    const result = await em.findOne(SystemComponent, id)
+
+    if (!result)
         throw createError({
-            statusCode: 400,
-            statusMessage: "Bad Request: id is required."
+            statusCode: 404,
+            statusMessage: `Item not found with the given id: ${id}`
         })
-    }
+
+    return result
 })

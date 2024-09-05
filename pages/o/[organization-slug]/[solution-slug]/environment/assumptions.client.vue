@@ -25,7 +25,9 @@ type AssumptionViewModel = {
     statement: string;
 }
 
-const { data: assumptions, refresh, status, error: getAssumptionsError } = await useFetch(`/api/assumptions/?solutionId=${solutionId}`),
+const { data: assumptions, refresh, status, error: getAssumptionsError } = await useFetch(`/api/assumptions`, {
+    query: { solutionId }
+}),
     emptyAssumption = { id: emptyUuid, name: '', statement: '' };
 
 if (getAssumptionsError.value)
@@ -37,7 +39,7 @@ const filters = ref<Record<string, { value: any, matchMode: string }>>({
 });
 
 const onCreate = async (data: AssumptionViewModel) => {
-    await $fetch(`/api/assumptions/`, {
+    await $fetch(`/api/assumptions`, {
         method: 'post',
         body: {
             name: data.name,
@@ -50,7 +52,10 @@ const onCreate = async (data: AssumptionViewModel) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/assumptions/${id}`, { method: 'delete' })
+    await $fetch(`/api/assumptions/${id}`, {
+        method: 'delete',
+        body: { solutionId }
+    })
         .catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()

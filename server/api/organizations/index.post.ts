@@ -12,27 +12,18 @@ const bodySchema = z.object({
 })
 
 /**
- * POST /api/organizations
- *
  * Creates a new organization and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
+    const { name, description } = await validateEventBody(event, bodySchema),
         session = (await getServerSession(event))!,
         em = fork()
-
-    if (!body.success)
-        throw createError({
-            statusCode: 400,
-            statusMessage: 'Bad Request: Invalid body parameters',
-            message: JSON.stringify(body.error.errors)
-        })
 
     const sessionUser = em.getReference(AppUser, session.id)
 
     const newOrg = new Organization({
-        name: body.data.name,
-        description: body.data.description,
+        name,
+        description,
         solutions: []
     })
 

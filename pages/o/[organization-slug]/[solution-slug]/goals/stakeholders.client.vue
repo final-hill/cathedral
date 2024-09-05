@@ -31,7 +31,9 @@ type StakeHolderViewModel = {
     segmentation: StakeholderSegmentation;
 }
 
-const { data: stakeholders, refresh, status, error: getStakeholdersError } = await useFetch(`/api/stakeholders?solutionId=${solutionId}`),
+const { data: stakeholders, refresh, status, error: getStakeholdersError } = await useFetch(`/api/stakeholders`, {
+    query: { solutionId }
+}),
     categories = ref<{ id: string, description: string }[]>(
         Object.values(StakeholderCategory).map((value) => ({ id: value, description: value }))
     ),
@@ -102,7 +104,7 @@ const clientMap = ref<HTMLElement>(),
     vendorMap = ref<HTMLElement>();
 
 const onCreate = async (data: StakeHolderViewModel) => {
-    await $fetch('/api/stakeholders', {
+    await $fetch(`/api/stakeholders`, {
         method: 'POST',
         body: {
             ...data,
@@ -126,8 +128,10 @@ const onUpdate = async (data: StakeHolderViewModel) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/stakeholders/${id}`, { method: 'DELETE' })
-        .catch((e) => $eventBus.$emit('page-error', e))
+    await $fetch(`/api/stakeholders/${id}`, {
+        method: 'DELETE',
+        body: { solutionId }
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }

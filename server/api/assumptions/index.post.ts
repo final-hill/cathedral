@@ -1,43 +1,28 @@
 import { fork } from "~/server/data/orm"
 import { z } from "zod"
-import { Assumption } from "~/server/domain/requirements/index"
-import Solution from "~/server/domain/application/Solution"
+import { Assumption } from "~/server/domain/requirements/index.js"
 
 const bodySchema = z.object({
+    solutionId: z.string().uuid(),
     name: z.string().min(1),
-    statement: z.string(),
-    solutionId: z.string().uuid()
+    statement: z.string()
 })
 
 /**
- * POST /api/assumptions
- *
  * Creates a new assumption and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-        em = fork()
+    const { name, statement, solutionId } = await validateEventBody(event, bodySchema),
+        { solution, sessionUser } = await assertSolutionContributor(event, solutionId)
 
-    if (!body.success)
-        throw createError({
-            statusCode: 400,
-            statusMessage: 'Bad Request: Invalid body parameters',
-            message: JSON.stringify(body.error.errors)
+    const em = fork(),
+        newAssumption = new Assumption({
+            name,
+            statement,
+            solution,
+            modifiedBy: sessionUser,
+            lastModified: new Date()
         })
-
-    const solution = await em.findOne(Solution, body.data.solutionId)
-
-    if (!solution)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: Solution not found for id ${body.data.solutionId}`
-        })
-
-    const newAssumption = new Assumption({
-        name: body.data.name,
-        statement: body.data.statement,
-        solution
-    })
 
     await em.persistAndFlush(newAssumption)
 

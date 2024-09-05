@@ -14,7 +14,7 @@ const { $eventBus } = useNuxtApp(),
         }
     }),
     solutionId = solutions.value?.[0].id,
-    { data: environmentComponents, status, refresh, error: getEnvironmentComponentsError } = await useFetch('/api/environment-components', {
+    { data: environmentComponents, status, refresh, error: getEnvironmentComponentsError } = await useFetch(`/api/environment-components`, {
         query: { solutionId }
     }),
     emptyComponent = { id: emptyUuid, name: '', statement: '' }
@@ -50,8 +50,10 @@ const onCreate = async (data: EnvironmentComponentViewModel) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/environment-components/${id}`, { method: 'DELETE' })
-        .catch((e) => $eventBus.$emit('page-error', e))
+    await $fetch(`/api/environment-components/${id}`, {
+        method: 'DELETE',
+        body: { solutionId }
+    }).catch((e) => $eventBus.$emit('page-error', e))
     refresh()
 }
 
