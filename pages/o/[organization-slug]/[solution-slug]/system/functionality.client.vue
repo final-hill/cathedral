@@ -28,7 +28,9 @@ type BehaviorViewModel = {
     priority: MoscowPriority;
 }
 
-const { data: components, status, refresh, error: getComponentsError } = await useFetch(`/api/${solutionId}/system-components`),
+const { data: components, status, refresh, error: getComponentsError } = await useFetch(`/api/system-components`, {
+    query: { solutionId }
+}),
     expandedRows = ref({}),
     emptyBehavior = (componentid: string): BehaviorViewModel => ({
         id: emptyUuid,
@@ -42,12 +44,14 @@ if (getComponentsError.value)
     $eventBus.$emit('page-error', getComponentsError.value)
 
 const fnFunctionalBehaviors = async (componentId: string) =>
-    await $fetch(`/api/${solutionId}/functional-behaviors?componentId=${componentId}`)
-        .catch((e) => $eventBus.$emit('page-error', e));
+    await $fetch(`/api/functional-behaviors`, {
+        query: { solutionId, componentId }
+    }).catch((e) => $eventBus.$emit('page-error', e));
 
 const fnNonFunctionalBehaviors = async (componentId: string) =>
-    await $fetch(`/api/${solutionId}/non-functional-behaviors?componentId=${componentId}`)
-        .catch((e) => $eventBus.$emit('page-error', e))
+    await $fetch(`/api/non-functional-behaviors`, {
+        query: { solutionId, componentId }
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
 const componentSortField = ref<string | undefined>('name')
 

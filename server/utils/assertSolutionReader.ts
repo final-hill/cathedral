@@ -4,6 +4,7 @@ import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganiza
 import { fork } from "~/server/data/orm"
 import AppUser from '../domain/application/AppUser';
 import Solution from '../domain/application/Solution';
+import AppRole from '../domain/application/AppRole';
 
 /**
  * Asserts that the user is a member of the organization that owns the solution or is a system admin
@@ -25,12 +26,13 @@ export default async function assertSolutionReader(event: H3Event<EventHandlerRe
     const sessionUserOrgRole = await em.findOne(AppUserOrganizationRole, {
         appUser: session.id,
         organization: solution.organization.id
-    });
+    }),
+        isOrgReader = sessionUserOrgRole?.role && [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR, AppRole.ORGANIZATION_READER].includes(sessionUserOrgRole?.role)
 
-    if (!session.isSystemAdmin && !sessionUserOrgRole)
+    if (!session.isSystemAdmin && !isOrgReader)
         throw createError({
             statusCode: 403,
-            statusMessage: 'Forbidden: You do not have permission to view these items'
+            statusMessage: 'Forbidden: You do not have permission to access these items'
         })
 
     return {

@@ -12,6 +12,6 @@ export default new EntitySchema<Stakeholder, Component>({
         availability: { type: 'number', nullable: false, check: 'availability >= 0 AND availability <= 100' },
         segmentation: { enum: true, items: () => StakeholderSegmentation, nullable: false },
         category: { enum: true, items: () => StakeholderCategory, nullable: false },
-        parentComponent: { kind: 'm:1', entity: 'Stakeholder', ref: true, nullable: true }
+        parentComponent: { kind: 'm:1', entity: 'Stakeholder', nullable: true }
     }
 })

@@ -26,12 +26,13 @@ export default async function assertSolutionAdmin(event: H3Event<EventHandlerReq
     const sessionUserOrgRole = await em.findOne(AppUserOrganizationRole, {
         appUser: session.id,
         organization: solution.organization.id
-    });
+    }),
+        isOrgAdmin = sessionUserOrgRole?.role && [AppRole.ORGANIZATION_ADMIN].includes(sessionUserOrgRole?.role)
 
-    if (!session.isSystemAdmin && sessionUserOrgRole?.role !== AppRole.ORGANIZATION_ADMIN)
+    if (!session.isSystemAdmin && !isOrgAdmin)
         throw createError({
             statusCode: 403,
-            statusMessage: 'Forbidden: You do not have permission to view these items'
+            statusMessage: 'Forbidden: You do not have permission to access these items'
         })
 
     return {

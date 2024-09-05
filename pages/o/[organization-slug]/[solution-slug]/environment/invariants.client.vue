@@ -24,7 +24,9 @@ type InvariantViewModel = {
     statement: string;
 }
 
-const { data: invariants, refresh, status, error: getInvariantsError } = await useFetch(`/api/${solutionId}/invariants`),
+const { data: invariants, refresh, status, error: getInvariantsError } = await useFetch(`/api/invariants`, {
+    query: { solutionId }
+}),
     emptyInvariant: InvariantViewModel = { id: emptyUuid, name: '', statement: '' };
 
 if (getInvariantsError.value)
@@ -36,10 +38,12 @@ const filters = ref({
 });
 
 const onCreate = async (data: InvariantViewModel) => {
-    await useFetch(`/api/${solutionId}/invariants`, {
-        method: 'POST', body: {
+    await useFetch(`/api/invariants`, {
+        method: 'POST',
+        body: {
             name: data.name,
-            statement: data.statement
+            statement: data.statement,
+            solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -47,11 +51,12 @@ const onCreate = async (data: InvariantViewModel) => {
 }
 
 const onUpdate = async (data: InvariantViewModel) => {
-    await useFetch(`/api/${solutionId}/invariants/${data.id}`, {
+    await useFetch(`/api/invariants/${data.id}`, {
         method: 'PUT', body: {
             id: data.id,
             name: data.name,
-            statement: data.statement
+            statement: data.statement,
+            solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -59,8 +64,10 @@ const onUpdate = async (data: InvariantViewModel) => {
 }
 
 const onDelete = async (id: string) => {
-    await useFetch(`/api/${solutionId}/invariants/${id}`, { method: 'DELETE' })
-        .catch((e) => $eventBus.$emit('page-error', e))
+    await useFetch(`/api/invariants/${id}`, {
+        method: 'DELETE',
+        body: { solutionId }
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }

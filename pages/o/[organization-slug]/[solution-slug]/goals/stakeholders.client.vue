@@ -31,7 +31,9 @@ type StakeHolderViewModel = {
     segmentation: StakeholderSegmentation;
 }
 
-const { data: stakeholders, refresh, status, error: getStakeholdersError } = await useFetch(`/api/${solutionId}/stakeholders`),
+const { data: stakeholders, refresh, status, error: getStakeholdersError } = await useFetch(`/api/stakeholders`, {
+    query: { solutionId }
+}),
     categories = ref<{ id: string, description: string }[]>(
         Object.values(StakeholderCategory).map((value) => ({ id: value, description: value }))
     ),
@@ -102,26 +104,34 @@ const clientMap = ref<HTMLElement>(),
     vendorMap = ref<HTMLElement>();
 
 const onCreate = async (data: StakeHolderViewModel) => {
-    await $fetch(`/api/${solutionId}/stakeholders`, {
+    await $fetch(`/api/stakeholders`, {
         method: 'POST',
-        body: data
+        body: {
+            ...data,
+            solutionId
+        }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
 
 const onUpdate = async (data: StakeHolderViewModel) => {
-    await $fetch(`/api/${solutionId}/stakeholders/${data.id}`, {
+    await $fetch(`/api/stakeholders/${data.id}`, {
         method: 'PUT',
-        body: data
+        body: {
+            ...data,
+            solutionId
+        }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/${solutionId}/stakeholders/${id}`, { method: 'DELETE' })
-        .catch((e) => $eventBus.$emit('page-error', e))
+    await $fetch(`/api/stakeholders/${id}`, {
+        method: 'DELETE',
+        body: { solutionId }
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }

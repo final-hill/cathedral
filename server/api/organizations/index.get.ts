@@ -11,7 +11,7 @@ const querySchema = z.object({
 })
 
 /**
- * Returns all organizations that match the optional query parameters
+ * Returns all organizations that match the query parameters
  */
 export default defineEventHandler(async (event) => {
     const { description, name, slug } = await validateEventParams(event, querySchema),

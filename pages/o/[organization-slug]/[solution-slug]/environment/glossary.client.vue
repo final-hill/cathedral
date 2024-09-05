@@ -24,7 +24,9 @@ type GlossaryTermViewModel = {
     statement: string;
 }
 
-const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = await useFetch(`/api/${solutionId}/glossary-terms`),
+const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = await useFetch(`/api/glossary-terms`, {
+    query: { solutionId }
+}),
     emptyGlossaryTerm: GlossaryTermViewModel = { id: emptyUuid, name: '', statement: '' }
 
 if (getGlossaryTermsError.value)
@@ -36,10 +38,12 @@ const filters = ref({
 });
 
 const onCreate = async (data: GlossaryTermViewModel) => {
-    await $fetch(`/api/${solutionId}/glossary-terms`, {
-        method: 'POST', body: {
+    await $fetch(`/api/glossary-terms`, {
+        method: 'POST',
+        body: {
             name: data.name,
-            statement: data.statement
+            statement: data.statement,
+            solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -47,11 +51,13 @@ const onCreate = async (data: GlossaryTermViewModel) => {
 }
 
 const onUpdate = async (data: GlossaryTermViewModel) => {
-    await $fetch(`/api/${solutionId}/glossary-terms/${data.id}`, {
-        method: 'PUT', body: {
+    await $fetch(`/api/glossary-terms/${data.id}`, {
+        method: 'PUT',
+        body: {
             id: data.id,
             name: data.name,
-            statement: data.statement
+            statement: data.statement,
+            solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -59,8 +65,10 @@ const onUpdate = async (data: GlossaryTermViewModel) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/${solutionId}/glossary-terms/${id}`, { method: 'DELETE' })
-        .catch((e) => $eventBus.$emit('page-error', e))
+    await $fetch(`/api/glossary-terms/${id}`, {
+        method: 'DELETE',
+        body: { solutionId }
+    }).catch((e) => $eventBus.$emit('page-error', e))
     refresh()
 }
 </script>

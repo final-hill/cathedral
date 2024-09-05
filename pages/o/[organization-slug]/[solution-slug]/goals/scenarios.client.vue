@@ -34,10 +34,10 @@ const [
     { data: functionalBehaviors, error: getFunctionalBehaviorsError },
     { data: outcomes, error: getOutcomesError },
 ] = await Promise.all([
-    useFetch(`/api/${solutionId}/user-stories`),
-    useFetch(`/api/${solutionId}/stakeholders`),
-    useFetch(`/api/${solutionId}/functional-behaviors`),
-    useFetch(`/api/${solutionId}/outcomes`)
+    useFetch(`/api/user-stories`, { query: { solutionId } }),
+    useFetch(`/api/stakeholders`, { query: { solutionId } }),
+    useFetch(`/api/functional-behaviors`, { query: { solutionId } }),
+    useFetch(`/api/outcomes`, { query: { solutionId } })
 ]),
     emptyUserStory: UserStoryViewModel = {
         id: emptyUuid,
@@ -65,8 +65,10 @@ const userStoryfilters = ref({
 })
 
 const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
-    await $fetch(`/api/${solutionId}/user-stories`, {
-        method: 'POST', body: {
+    await $fetch(`/api/user-stories`, {
+        method: 'POST',
+        body: {
+            solutionId,
             name: userStory.name,
             statement: '',
             primaryActorId: userStory.primaryActorId,
@@ -80,8 +82,10 @@ const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
 }
 
 const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
-    await $fetch(`/api/${solutionId}/user-stories/${userStory.id}`, {
-        method: 'PUT', body: {
+    await $fetch(`/api/user-stories/${userStory.id}`, {
+        method: 'PUT',
+        body: {
+            solutionId,
             name: userStory.name,
             statement: '',
             priority: MoscowPriority.MUST,
@@ -95,8 +99,10 @@ const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
 }
 
 const onUserStoryDelete = async (id: string) => {
-    await $fetch(`/api/${solutionId}/user-stories/${id}`, { method: 'DELETE' })
-        .catch((e) => $eventBus.$emit('page-error', e));
+    await $fetch(`/api/user-stories/${id}`, {
+        method: 'DELETE',
+        body: { solutionId }
+    }).catch((e) => $eventBus.$emit('page-error', e));
     refresh();
 }
 </script>

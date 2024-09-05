@@ -161,7 +161,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": true,
+          "nullable": false,
           "mappedType": "uuid"
         },
         "organization_id": {
@@ -170,7 +170,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": true,
+          "nullable": false,
           "mappedType": "uuid"
         },
         "role": {
@@ -217,7 +217,7 @@
             "id"
           ],
           "referencedTableName": "public.app_user",
-          "deleteRule": "cascade"
+          "updateRule": "cascade"
         },
         "app_user_organization_role_organization_id_foreign": {
           "constraintName": "app_user_organization_role_organization_id_foreign",
@@ -229,7 +229,7 @@
             "id"
           ],
           "referencedTableName": "public.organization",
-          "deleteRule": "cascade"
+          "updateRule": "cascade"
         }
       },
       "nativeEnums": {}

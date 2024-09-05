@@ -24,7 +24,9 @@ type PersonViewModel = {
     email: string;
 }
 
-const { data: personnel, refresh, status, error: getPersonnelError } = await useFetch(`/api/${solutionId}/persons`),
+const { data: personnel, refresh, status, error: getPersonnelError } = await useFetch(`/api/persons`, {
+    query: { solutionId }
+}),
     emptyPerson: PersonViewModel = { id: emptyUuid, name: '', email: '' };
 
 if (getPersonnelError.value)
@@ -36,9 +38,11 @@ const filters = ref({
 });
 
 const onCreate = async (data: PersonViewModel) => {
-    await $fetch(`/api/${solutionId}/persons`, {
-        method: 'POST', body: {
+    await $fetch(`/api/persons`, {
+        method: 'POST',
+        body: {
             ...data,
+            solutionId,
             statement: ''
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -47,9 +51,11 @@ const onCreate = async (data: PersonViewModel) => {
 }
 
 const onUpdate = async (data: PersonViewModel) => {
-    await $fetch(`/api/${solutionId}/persons/${data.id}`, {
-        method: 'PUT', body: {
+    await $fetch(`/api/persons/${data.id}`, {
+        method: 'PUT',
+        body: {
             ...data,
+            solutionId,
             statement: ''
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -58,8 +64,10 @@ const onUpdate = async (data: PersonViewModel) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/${solutionId}/persons/${id}`, { method: 'DELETE' })
-        .catch((e) => $eventBus.$emit('page-error', e))
+    await $fetch(`/api/persons/${id}`, {
+        method: 'DELETE',
+        body: { solutionId }
+    }).catch((e) => $eventBus.$emit('page-error', e))
     refresh();
 }
 </script>

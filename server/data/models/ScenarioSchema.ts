@@ -7,6 +7,6 @@ export default new EntitySchema<Scenario, Example>({
     class: Scenario,
     extends: BehaviorSchema,
     properties: {
-        primaryActor: { kind: 'm:1', entity: 'Stakeholder', ref: true, nullable: false }
+        primaryActor: { kind: 'm:1', entity: 'Stakeholder', nullable: false }
     }
 })
