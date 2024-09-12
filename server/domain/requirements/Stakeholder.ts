@@ -1,6 +1,14 @@
 import type { Properties } from "../Properties.js";
 import { Component, StakeholderCategory, StakeholderSegmentation } from "./index.js";
 
+export interface IStakeholder {
+    influence: number
+    availability: number
+    segmentation: StakeholderSegmentation
+    category: StakeholderCategory
+    parentComponent: Stakeholder
+}
+
 /**
  * A human actor who may affect or be affected by a project or its associated system
  */
