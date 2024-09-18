@@ -76,9 +76,9 @@ const filters = ref({
     'segmentation': { value: null, matchMode: FilterMatchMode.EQUALS },
 });
 
-const themeMap = {
-    light: 'default',
-    dark: 'dark',
+enum themeMap {
+    light = 'default',
+    dark = 'dark'
 };
 
 mermaid.initialize({
