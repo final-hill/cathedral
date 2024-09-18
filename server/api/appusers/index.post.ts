@@ -1,8 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
-import AppRole from "~/server/domain/application/AppRole"
-import AppUser from "~/server/domain/application/AppUser"
+import { AppRole, AppUser, AppUserOrganizationRole } from "~/server/domain/application/index"
 
 const bodySchema = z.object({
     email: z.string(),

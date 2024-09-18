@@ -3,7 +3,7 @@ import { type Properties } from "../Properties.js";
 /**
  * An AppUser is a user of the application
  */
-export default class AppUser {
+export class AppUser {
     constructor(properties: Properties<AppUser>) {
         this.id = properties.id;
         this.creationDate = properties.creationDate;

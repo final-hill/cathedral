@@ -1,7 +1,7 @@
 import { NuxtAuthHandler } from '#auth'
 import AzureADB2CProvider, { type AzureB2CProfile } from "next-auth/providers/azure-ad-b2c";
 import { fork } from '~/server/data/orm'
-import AppUser from '~/server/domain/application/AppUser';
+import { AppUser } from '~/server/domain/application/index';
 
 const config = useRuntimeConfig()
 

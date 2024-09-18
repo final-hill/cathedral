@@ -1,6 +1,5 @@
 import { EntitySchema } from "@mikro-orm/core";
-import Solution from "../../domain/application/Solution.js";
-import Organization from "../../domain/application/Organization.js";
+import { Organization, Solution } from "../../domain/application/index.js";
 import {
     Assumption, Constraint, Effect, EnvironmentComponent, FunctionalBehavior,
     GlossaryTerm, Invariant, Justification, Limit, NonFunctionalBehavior, Obstacle,

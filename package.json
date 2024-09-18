@@ -56,7 +56,8 @@
         "uuid": "^10.0.0",
         "vue": "^3.4.36",
         "vue-router": "^4.4.3",
-        "zod": "^3.23.8"
+        "zod": "^3.23.8",
+        "zod-to-json-schema": "^3.23.3"
     },
     "devDependencies": {
         "@mikro-orm/cli": "^6.3.4",

@@ -557,6 +557,109 @@
           "nullable": false,
           "mappedType": "uuid"
         },
+        "solution_id": {
+          "name": "solution_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "statement": {
+          "name": "statement",
+          "type": "varchar(1000)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 1000,
+          "mappedType": "string"
+        },
+        "submitted_by_id": {
+          "name": "submitted_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "submitted_at": {
+          "name": "submitted_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "default": "now()",
+          "mappedType": "datetime"
+        },
+        "json_result": {
+          "name": "json_result",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "json"
+        }
+      },
+      "name": "parsed_requirements",
+      "schema": "public",
+      "indexes": [
+        {
+          "keyName": "parsed_requirements_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "parsed_requirements_solution_id_foreign": {
+          "constraintName": "parsed_requirements_solution_id_foreign",
+          "columnNames": [
+            "solution_id"
+          ],
+          "localTableName": "public.parsed_requirements",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.solution",
+          "updateRule": "cascade"
+        },
+        "parsed_requirements_submitted_by_id_foreign": {
+          "constraintName": "parsed_requirements_submitted_by_id_foreign",
+          "columnNames": [
+            "submitted_by_id"
+          ],
+          "localTableName": "public.parsed_requirements",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
         "name": {
           "name": "name",
           "type": "varchar(255)",

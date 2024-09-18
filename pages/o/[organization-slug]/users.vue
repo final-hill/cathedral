@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { FilterMatchMode } from 'primevue/api';
 import { NIL as emptyUuid } from 'uuid'
-import AppRole from '~/server/domain/application/AppRole';
+import { AppRole } from '~/server/domain/application/index';
 
 useHead({ title: 'Users' })
 definePageMeta({ name: 'Organization Users' })

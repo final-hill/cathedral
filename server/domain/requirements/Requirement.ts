@@ -1,7 +1,6 @@
 import { v7 as uuidv7 } from 'uuid';
 import type { Properties } from "../Properties.js";
-import Solution from '../application/Solution.js';
-import AppUser from '../application/AppUser.js';
+import { AppUser, Solution } from '../application/index.js';
 
 /**
  * A Requirement is a statement that specifies a property.

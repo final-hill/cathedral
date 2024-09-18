@@ -1,9 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
+import { AppUser, AppRole, AppUserOrganizationRole } from "~/server/domain/application/index"
 import { type Properties } from "~/server/domain/Properties"
-import AppUser from "~/server/domain/application/AppUser"
-import AppRole from "~/server/domain/application/AppRole"
 
 const querySchema = z.object({
     organizationId: z.string().uuid(),

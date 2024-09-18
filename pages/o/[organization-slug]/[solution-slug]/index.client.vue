@@ -5,9 +5,9 @@ useHead({ title: 'Solution' })
 definePageMeta({ name: 'Solution' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Solution').params,
+    { solutionslug, organizationslug } = useRoute('Solution').params as { solutionslug: string, organizationslug: string },
     router = useRouter(),
-    { data: solutions, error: getSolutionError } = await useFetch('/api/solutions', {
+    { data: solutions, error: solutionError } = await useFetch('/api/solutions', {
         query: {
             organizationSlug: organizationslug,
             slug: solutionslug
@@ -18,10 +18,10 @@ const { $eventBus } = useNuxtApp(),
 
 const rawRequirement = ref(''),
     rawRequirementSizeLimit = 1000,
-    parsedRequirements = ref<any[]>([])
+    parsedRequirementCount = ref<number | null>(null)
 
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value)
+if (solutionError.value)
+    $eventBus.$emit('page-error', solutionError.value)
 
 const links: { name: RoutesNamesList, icon: string, label: string }[] = [
     { name: 'Project', icon: 'pi-box', label: 'Project' },
@@ -51,19 +51,25 @@ const handleSolutionEdit = () => {
     router.push({ name: 'Edit Solution', params: { solutionslug, organizationslug } })
 }
 
+const parsingRequirements = ref(false),
+    parsingError = ref('')
 const parseRawRequirement = async () => {
+    parsingRequirements.value = true
     const response = await $fetch('/api/parse-requirements', {
         method: 'post',
         body: {
             solutionId: solution.id,
             statement: rawRequirement.value
         }
-    }).catch((e) => $eventBus.$emit('page-error', e))
+    }).catch((e) => {
+        $eventBus.$emit('page-error', e)
+        parsingError.value = e.message
+    }).finally(() => parsingRequirements.value = false)
 
-    if (response) {
-        parsedRequirements.value = response.requirements
+    parsedRequirementCount.value = response ?? null
+
+    if (response)
         resetRawRequirement()
-    }
 }
 
 const resetRawRequirement = () => {
@@ -73,6 +79,11 @@ const resetRawRequirement = () => {
 
 <template>
     <Toolbar class="mb-6">
+        <template #start>
+            <NuxtLink :to="{ name: 'Workbox', params: { solutionslug, organizationslug } }" class="col-fixed w-2 mr-4">
+                <Button label="Workbox" :icon="`pi pi-briefcase text-3xl`" severity="help" />
+            </NuxtLink>
+        </template>
         <template #end>
             <Button icon="pi pi-pencil" class="edit-button mr-2" @click="handleSolutionEdit()" label="Edit Solution" />
             <Button icon="pi pi-trash" class="delete-button" @click="handleSolutionDelete()" severity="danger"
@@ -112,14 +123,36 @@ const resetRawRequirement = () => {
                 </Toolbar>
             </form>
 
-            <div class="mt-4">
-                <p class="text-xl">Parsed Requirements</p>
-                <ul>
-                    <li v-for="requirement of parsedRequirements">
-                        <pre>{{ JSON.stringify(requirement) }}</pre>
-                    </li>
-                </ul>
-            </div>
+            <InlineMessage severity="info" class="mt-4" v-if="parsingRequirements">
+                Parsing requirement statement...
+            </InlineMessage>
+            <InlineMessage severity="error" class="mt-4" v-if="parsingError">
+                {{ parsingError }}
+            </InlineMessage>
+            <InlineMessage severity="success" class="mt-4" v-if="parsedRequirementCount">
+                {{ parsedRequirementCount }} requirements added to the workbox.
+            </InlineMessage>
         </TabPanel>
+        <!--
+        <TabPanel header="Workbox">
+            <p>The Workbox is the list of parsed requirements awaiting review</p>
+            <InlineMessage v-if="!parsedRequirements" severity="info">
+                The Workbox is empty.
+            </InlineMessage>
+            <Accordion v-if="parsedRequirements">
+                <AccordionTab v-for="parsedRequirement in parsedRequirements" :key="parsedRequirement.id"
+                    :header="parsedRequirement.statement.substring(0, 100)">
+                    <p>{{ parsedRequirement.statement }}</p>
+                    <DataView :value="parsedRequirement.jsonResult" :data-key="undefined">
+                        <template #list="slotProps">
+                            <div v-for="(item, index) in slotProps.items" :key="index">
+                                <pre>{{ JSON.stringify(item) }}</pre>
+                            </div>
+                        </template>
+                    </DataView>
+                </AccordionTab>
+            </Accordion>
+        </TabPanel>
+    -->
     </TabView>
 </template>

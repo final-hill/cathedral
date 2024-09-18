@@ -1,10 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import Organization from "~/server/domain/application/Organization"
-import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
-import AppRole from "~/server/domain/application/AppRole"
+import { AppRole, AppUserOrganizationRole, AppUser, Organization } from "~/server/domain/application/index"
 import { getServerSession } from '#auth'
-import AppUser from "~/server/domain/application/AppUser"
 
 const bodySchema = z.object({
     name: z.string().min(1),

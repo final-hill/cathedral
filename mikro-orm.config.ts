@@ -18,6 +18,7 @@ import LimitSchema from "./server/data/models/LimitSchema.js";
 import NonFunctionalBehaviorSchema from "./server/data/models/NonFunctionalBehaviorSchema.js";
 import ObstacleSchema from "./server/data/models/ObstacleSchema.js";
 import OutcomeSchema from "./server/data/models/OutcomeSchema.js";
+import ParsedRequirementsSchema from "./server/data/models/ParsedRequirementsSchema.js";
 import PersonSchema from "./server/data/models/PersonSchema.js";
 import ProductSchema from "./server/data/models/ProductSchema.js";
 import SolutionSchema from "./server/data/models/SolutionSchema.js";
@@ -49,8 +50,9 @@ const config: Options = {
         AssumptionSchema, ConstraintSchema, EffectSchema, EnvironmentComponentSchema,
         FunctionalBehaviorSchema, GlossaryTermSchema, HintSchema, InvariantSchema,
         JustificationSchema, LimitSchema, NonFunctionalBehaviorSchema, ObstacleSchema,
-        OrganizationSchema, OutcomeSchema, PersonSchema, ProductSchema, SolutionSchema,
-        StakeholderSchema, SystemComponentSchema, UseCaseSchema, UserStorySchema
+        OrganizationSchema, OutcomeSchema, ParsedRequirementsSchema, PersonSchema,
+        ProductSchema, SolutionSchema, StakeholderSchema, SystemComponentSchema,
+        UseCaseSchema, UserStorySchema
     ],
     seeder: {},
     forceUtcTimezone: true,

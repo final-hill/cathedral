@@ -1,6 +1,6 @@
 import type { EntityManager } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
-import AppUser from '../server/domain/application/AppUser.js';
+import { AppUser } from '../server/domain/application/index.js';
 
 export class AppUserSeeder extends Seeder {
 

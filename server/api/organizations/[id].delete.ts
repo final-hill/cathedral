@@ -1,7 +1,7 @@
 import { Collection } from "@mikro-orm/core"
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
+import { AppUserOrganizationRole } from "~/server/domain/application/index"
 
 const paramSchema = z.object({
     id: z.string().uuid()

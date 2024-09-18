@@ -1,6 +1,6 @@
 import { v7 as uuidv7 } from 'uuid';
 import { type Properties } from '../Properties.js';
-import Organization from './Organization.js';
+import { Organization } from './index.js';
 import slugify from '../../../utils/slugify.js';
 import { Collection } from '@mikro-orm/core';
 import {
@@ -17,7 +17,7 @@ type CollectionToArrayProps<T> = {
 /**
  * A Solution is the aggregation of a Project, Environment, Goals, and a System
  */
-export default class Solution {
+export class Solution {
     constructor(properties: Omit<Properties<CollectionToArrayProps<Solution>>, 'slug' | 'id'>) {
         this.id = uuidv7();
         this.description = properties.description;

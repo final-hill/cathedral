@@ -1,10 +1,7 @@
 import type { H3Event, EventHandlerRequest } from 'h3'
 import { getServerSession } from '#auth'
-import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
-import Solution from "~/server/domain/application/Solution"
+import { AppRole, AppUser, AppUserOrganizationRole, Solution } from "~/server/domain/application/index"
 import { fork } from "~/server/data/orm"
-import AppRole from '../domain/application/AppRole'
-import AppUser from '../domain/application/AppUser';
 
 /**
  * Asserts that the user is a contributor of the organization that owns the solution or is a system admin

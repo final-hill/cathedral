@@ -1,6 +1,5 @@
-import { Cascade, EntitySchema } from "@mikro-orm/core";
-import AppUserOrganizationRole from "../../domain/application/AppUserOrganizationRole.js";
-import AppRole from "../../domain/application/AppRole.js";
+import { EntitySchema } from "@mikro-orm/core";
+import { AppRole, AppUserOrganizationRole } from "../../domain/application/index.js";
 
 export default new EntitySchema<AppUserOrganizationRole>({
     class: AppUserOrganizationRole,

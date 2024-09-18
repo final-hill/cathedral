@@ -20,4 +20,4 @@ export default z.object({
         .describe('The % of time the stakeholder is available to the project'),
     influence: z.number().int()
         .describe('The % of influence the stakeholder has over the project'),
-}).describe('A human actor who may affect or be affected by a project or its associated system')
+}).describe('A human actor who may affect or be affected by a project or its associated system. This is a role, not a specific person')

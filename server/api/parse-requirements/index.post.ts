@@ -1,16 +1,24 @@
 import { z } from "zod"
 import { zodResponseFormat } from "openai/helpers/zod";
-import zodSchema from '../../data/zod-schemas'
+import zodSchema from '../../data/llm-zod-schemas'
 import { AzureOpenAI } from "openai";
+import zodToJsonSchema from "zod-to-json-schema";
+import { ParsedRequirements } from "~/server/domain/application/index";
+import { fork } from "~/server/data/orm";
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     statement: z.string().max(1000, 'Requirement must be less than or equal to 1000 characters')
 })
 
+/**
+ * Parse requirements from a statement, save the parsed requirements to the database,
+ * and return the number of requirements parsed.
+ */
 export default defineEventHandler(async (event) => {
     const { statement, solutionId } = await validateEventBody(event, bodySchema),
-        { } = await assertSolutionContributor(event, solutionId)
+        { sessionUser, solution } = await assertSolutionContributor(event, solutionId),
+        em = fork()
 
     const aiClient = new AzureOpenAI({
         apiKey: process.env.AZURE_OPENAI_API_KEY,
@@ -28,14 +36,19 @@ export default defineEventHandler(async (event) => {
             {
                 role: "system",
                 content: dedent(`
-                    Your role is to parse Requirements from user input.
-                    A valid Requirement is a Stakeholder or Silence.
+                    Your role is to parse Requirements from user input and derive any strongly implied requirements.
+                    Requirements are defined by the following json schema:
+
+                    """
+                    ${zodToJsonSchema(zodSchema, 'requirements')}
+                    """
+
                     Any statement or substatement that can not be expressed or understood should be considered a Silence.
                 `)
             },
             {
                 role: "user",
-                content: statement.trim()
+                content: statement
             }
         ],
         response_format: zodResponseFormat(zodSchema, 'requirements')
@@ -43,5 +56,15 @@ export default defineEventHandler(async (event) => {
 
     const result = completion.choices[0].message.parsed;
 
-    return result
+    const parsedRequirements = new ParsedRequirements({
+        solution,
+        statement,
+        submittedBy: sessionUser,
+        submittedAt: new Date(),
+        jsonResult: result
+    })
+
+    await em.persistAndFlush(parsedRequirements)
+
+    return result?.requirements.length ?? 0
 })

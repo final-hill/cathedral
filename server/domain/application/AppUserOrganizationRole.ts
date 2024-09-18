@@ -1,12 +1,10 @@
 import { type Properties } from "../Properties.js";
-import Organization from "./Organization.js";
-import AppRole from "./AppRole.js";
-import AppUser from "./AppUser.js";
+import { AppRole, AppUser, Organization } from "./index.js";
 
 /**
  * An AppUserOrganizationRole is a mapping between an AppUser, an Organization, and a Role
  */
-export default class AppUserOrganizationRole {
+export class AppUserOrganizationRole {
     constructor({ appUser, organization, role }: Properties<AppUserOrganizationRole>) {
         this.appUser = appUser
         this.organization = organization
