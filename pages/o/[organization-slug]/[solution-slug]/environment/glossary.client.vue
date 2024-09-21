@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { FilterMatchMode } from 'primevue/api';
 import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Glossary' })
@@ -31,11 +30,6 @@ const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = a
 
 if (getGlossaryTermsError.value)
     $eventBus.$emit('page-error', getGlossaryTermsError.value)
-
-const filters = ref({
-    'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'statement': { value: null, matchMode: FilterMatchMode.CONTAINS },
-});
 
 const onCreate = async (data: GlossaryTermViewModel) => {
     await $fetch(`/api/glossary-terms`, {
@@ -77,30 +71,50 @@ const onDelete = async (id: string) => {
     <p>
         A Glossary is a list of terms in a particular domain of knowledge with the definitions for those terms.
     </p>
-    <XDataTable :datasource="glossaryTerms" :empty-record="emptyGlossaryTerm" :filters="filters" :on-create="onCreate"
-        :on-delete="onDelete" :on-update="onUpdate">
-        <Column field="name" header="Term" sortable>
-            <template #filter="{ filterModel, filterCallback }">
-                <InputText v-model.trim="filterModel.value" @input="filterCallback()" placeholder="Search by term" />
-            </template>
-            <template #body="{ data }">
-                {{ data.name }}
-            </template>
-            <template #editor="{ data, field }">
-                <InputText v-model.trim="data[field]" required="true" />
-            </template>
-        </Column>
-        <Column field="statement" header="Definition">
-            <template #filter="{ filterModel, filterCallback }">
-                <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                    placeholder="Search by definition" />
-            </template>
-            <template #body="{ data }">
-                {{ data.statement }}
-            </template>
-            <template #editor="{ data, field }">
-                <InputText v-model.trim="data[field]" required="true" />
-            </template>
-        </Column>
+    <XDataTable :datasource="glossaryTerms" :empty-record="emptyGlossaryTerm" :on-create="onCreate"
+        :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'">
+        <template #rows>
+            <Column field="name" header="Term" sortable>
+                <template #filter="{ filterModel, filterCallback }">
+                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                        placeholder="Search by term" />
+                </template>
+                <template #body="{ data }">
+                    {{ data.name }}
+                </template>
+            </Column>
+            <Column field="statement" header="Definition">
+                <template #filter="{ filterModel, filterCallback }">
+                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                        placeholder="Search by definition" />
+                </template>
+                <template #body="{ data }">
+                    {{ data.statement }}
+                </template>
+            </Column>
+        </template>
+        <template #createDialog="{ data } : { data: GlossaryTermViewModel }">
+            <div class="field grid">
+                <label for="term" class="required col-fixed w-7rem">Term</label>
+                <InputText name="name" v-model.trim="data.name" required placeholder="Enter term" class="col" />
+            </div>
+            <div class="field grid">
+                <label for="statement" class="required col-fixed w-7rem">Definition</label>
+                <InputText name="statement" v-model.trim="data.statement" required placeholder="Enter definition"
+                    class="col" />
+            </div>
+        </template>
+        <template #editDialog="{ data } : { data: GlossaryTermViewModel }">
+            <input type="hidden" v-model="data.id" name="id" />
+            <div class="field grid">
+                <label for="term" class="required col-fixed w-7rem">Term</label>
+                <InputText v-model.trim="data.name" name="name" required placeholder="Enter term" class="col" />
+            </div>
+            <div class="field grid">
+                <label for="statement" class="required col-fixed w-7rem">Definition</label>
+                <InputText v-model.trim="data.statement" name="statement" required placeholder="Enter definition"
+                    class="col" />
+            </div>
+        </template>
     </XDataTable>
 </template>

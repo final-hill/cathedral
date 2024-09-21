@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { FilterMatchMode } from 'primevue/api';
 import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Limitations' })
@@ -31,11 +30,6 @@ const { data: limits, status, refresh, error: getLimitsError } = await useFetch(
 
 if (getLimitsError.value)
     $eventBus.$emit('page-error', getLimitsError.value)
-
-const filters = ref({
-    'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'statement': { value: null, matchMode: FilterMatchMode.CONTAINS },
-});
 
 const onCreate = async (data: LimitViewModel) => {
     await $fetch(`/api/limits`, {
@@ -78,30 +72,48 @@ const onDelete = async (id: string) => {
         Example: "Providing an interface to the user to change the color of the background is out-of-scope."
     </p>
 
-    <XDataTable :datasource="limits" :empty-record="emptyLimit" :filters="filters" :on-create="onCreate"
-        :on-update="onUpdate" :on-delete="onDelete">
-        <Column field="name" header="Name" sortable>
-            <template #filter="{ filterModel, filterCallback }">
-                <InputText v-model.trim="filterModel.value" @input="filterCallback()" placeholder="Search by name" />
-            </template>
-            <template #body="{ data }">
-                {{ data.name }}
-            </template>
-            <template #editor="{ data, field }">
-                <InputText v-model.trim="data[field]" required />
-            </template>
-        </Column>
-        <Column field="statement" header="Description">
-            <template #filter="{ filterModel, filterCallback }">
-                <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                    placeholder="Search by Description" />
-            </template>
-            <template #body="{ data }">
-                {{ data.statement }}
-            </template>
-            <template #editor="{ data, field }">
-                <InputText v-model.trim="data[field]" required="true" />
-            </template>
-        </Column>
+    <XDataTable :datasource="limits" :empty-record="emptyLimit" :on-create="onCreate" :on-update="onUpdate"
+        :on-delete="onDelete" :loading="status === 'pending'">
+        <template #rows>
+            <Column field="name" header="Name" sortable>
+                <template #filter="{ filterModel, filterCallback }">
+                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                        placeholder="Search by name" />
+                </template>
+                <template #body="{ data }">
+                    {{ data.name }}
+                </template>
+            </Column>
+            <Column field="statement" header="Description">
+                <template #filter="{ filterModel, filterCallback }">
+                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                        placeholder="Search by Description" />
+                </template>
+                <template #body="{ data }">
+                    {{ data.statement }}
+                </template>
+            </Column>
+        </template>
+        <template #createDialog="{ data } : { data: LimitViewModel }">
+            <div class="field grid">
+                <label for="name" class="required col-fixed w-7rem">Name</label>
+                <InputText v-model.trim="data.name" name="name" required class="col" />
+            </div>
+            <div class="field grid">
+                <label for="statement" class="col-fixed w-7rem">Description</label>
+                <InputText v-model.trim="data.statement" name="statement" class="col" />
+            </div>
+        </template>
+        <template #editDialog="{ data } : { data: LimitViewModel }">
+            <input type="hidden" v-model="data.id" name="id" />
+            <div class="field grid">
+                <label for="name" class="required col-fixed w-7rem">Name</label>
+                <InputText v-model.trim="data.name" name="name" required class="col" />
+            </div>
+            <div class="field grid">
+                <label for="statement" class="col-fixed w-7rem">Description</label>
+                <InputText v-model.trim="data.statement" name="statement" class="col" />
+            </div>
+        </template>
     </XDataTable>
 </template>

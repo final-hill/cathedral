@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { FilterMatchMode } from 'primevue/api';
 import { MoscowPriority } from '~/server/domain/requirements/index';
 import { NIL as emptyUuid } from 'uuid';
 
@@ -7,7 +6,7 @@ useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Goal Scenarios' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Scenarios').params,
+    { solutionslug, organizationslug } = useRoute('Scenarios').params as { solutionslug: string, organizationslug: string },
     { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
         query: {
             slug: solutionslug,
@@ -57,24 +56,14 @@ if (getFunctionalBehaviorsError.value)
 if (getOutcomesError.value)
     $eventBus.$emit('page-error', getOutcomesError.value);
 
-const userStoryfilters = ref({
-    'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'primaryActorId': { value: null, matchMode: FilterMatchMode.EQUALS },
-    'functionalBehaviorId': { value: null, matchMode: FilterMatchMode.EQUALS },
-    'outcomeId': { value: null, matchMode: FilterMatchMode.EQUALS }
-})
-
 const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
     await $fetch(`/api/user-stories`, {
         method: 'POST',
         body: {
+            ...userStory,
             solutionId,
-            name: userStory.name,
             statement: '',
-            primaryActorId: userStory.primaryActorId,
-            priority: MoscowPriority.MUST,
-            outcomeId: userStory.outcomeId,
-            functionalBehaviorId: userStory.functionalBehaviorId,
+            priority: MoscowPriority.MUST
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
 
@@ -85,13 +74,10 @@ const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
     await $fetch(`/api/user-stories/${userStory.id}`, {
         method: 'PUT',
         body: {
+            ...userStory,
             solutionId,
-            name: userStory.name,
             statement: '',
-            priority: MoscowPriority.MUST,
-            primaryActorId: userStory.primaryActorId,
-            outcomeId: userStory.outcomeId,
-            functionalBehaviorId: userStory.functionalBehaviorId,
+            priority: MoscowPriority.MUST
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
 
@@ -124,58 +110,126 @@ const onUserStoryDelete = async (id: string) => {
         for the solution.
     </p>
 
-    <XDataTable :datasource="userStories" :filters="userStoryfilters" :emptyRecord="emptyUserStory"
-        :onCreate="onUserStoryCreate" :onUpdate="onUserStoryUpdate" :onDelete="onUserStoryDelete">
-        <Column field="name" header="Name" sortable>
-            <template #filter="{ filterModel, filterCallback }">
-                <InputText v-model.trim="filterModel.value" @input="filterCallback()" placeholder="Search by name" />
-            </template>
-            <template #body="{ data, field }">
-                {{ data[field] }}
-            </template>
-            <template #editor="{ data, field }">
-                <InputText v-model.trim="data[field]" required="true" placeholder="Enter a name" />
-            </template>
-        </Column>
-        <Column field="primaryActorId" header="Stakeholder">
-            <template #filter="{ filterModel, filterCallback }">
-                <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name" optionValue="id"
-                    :options="roles!" placeholder="Search by Stakeholder" />
-            </template>
-            <template #body="{ data, field }">
-                {{ roles?.find(r => r.id === data[field])?.name }}
-            </template>
-            <template #editor="{ data, field }">
-                <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="roles!"
-                    placeholder="Select an Stakeholder" />
-            </template>
-        </Column>
-        <Column field="functionalBehaviorId" header="Behavior">
-            <template #filter="{ filterModel, filterCallback }">
-                <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name" optionValue="id"
-                    :options="functionalBehaviors!" placeholder="Search by Behavior" />
-            </template>
-            <template #body="{ data, field }">
-                {{ functionalBehaviors?.find(b => b.id === data[field])?.name }}
-            </template>
-            <template #editor="{ data, field }">
-                <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="functionalBehaviors!"
-                    placeholder="Select a Behavior" />
-            </template>
-        </Column>
-        <Column field="outcomeId" header="Outcome">
-            <template #filter="{ filterModel, filterCallback }">
-                <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name" optionValue="id"
-                    :options="outcomes!" placeholder="Search by Outcome" />
-            </template>
-            <template #body="{ data, field }">
-                {{ outcomes?.find(o => o.id === data[field])?.name }}
-            </template>
-            <template #editor="{ data, field }">
-                <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="outcomes!"
-                    placeholder="Select an Outcome" />
-            </template>
-        </Column>
+    <XDataTable :datasource="userStories" :emptyRecord="emptyUserStory" :onCreate="onUserStoryCreate"
+        :onUpdate="onUserStoryUpdate" :onDelete="onUserStoryDelete" :loading="status === 'pending'">
+        <template #rows>
+            <Column field="name" header="Name" sortable>
+                <template #filter="{ filterModel, filterCallback }">
+                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                        placeholder="Search by name" />
+                </template>
+                <template #body="{ data, field }">
+                    {{ data[field] }}
+                </template>
+            </Column>
+            <Column field="primaryActorId" header="Stakeholder">
+                <template #filter="{ filterModel, filterCallback }">
+                    <select class="p-inputtext p-component" v-model.trim="filterModel.value" @input="filterCallback()">
+                        <option value="" disabled>Select a Stakeholder</option>
+                        <option v-for="role in roles" :key="role.id" :value="role.id">
+                            {{ role.name }}
+                        </option>
+                    </select>
+                </template>
+                <template #body="{ data, field }">
+                    {{ roles?.find(r => r.id === data[field])?.name }}
+                </template>
+            </Column>
+            <Column field="functionalBehaviorId" header="Behavior">
+                <template #filter="{ filterModel, filterCallback }">
+                    <select class="p-inputtext p-component" v-model.trim="filterModel.value" @input="filterCallback()">
+                        <option value="" disabled>Select a Behavior</option>
+                        <option v-for="behavior in functionalBehaviors" :key="behavior.id" :value="behavior.id">
+                            {{ behavior.name }}
+                        </option>
+                    </select>
+                </template>
+                <template #body="{ data, field }">
+                    {{ functionalBehaviors?.find(b => b.id === data[field])?.name }}
+                </template>
+            </Column>
+            <Column field="outcomeId" header="Outcome">
+                <template #filter="{ filterModel, filterCallback }">
+                    <select class="p-inputtext p-component" v-model.trim="filterModel.value" @input="filterCallback()">
+                        <option value="" disabled>Select an Outcome</option>
+                        <option v-for="outcome in outcomes" :key="outcome.id" :value="outcome.id">
+                            {{ outcome.name }}
+                        </option>
+                    </select>
+                </template>
+                <template #body="{ data, field }">
+                    {{ outcomes?.find(o => o.id === data[field])?.name }}
+                </template>
+            </Column>
+        </template>
+        <template #createDialog="{ data } : { data: UserStoryViewModel }">
+            <div class="field grid">
+                <label for="name" class="required col-fixed w-7rem">Name</label>
+                <InputText name="name" v-model.trim="data.name" required placeholder="Enter a name" class="col" />
+            </div>
+            <div class="field grid">
+                <label for="primaryActorId" class="required col-fixed w-7rem">Stakeholder</label>
+                <select class="p-inputtext p-component col" name="primaryActorId" v-model.trim="data.primaryActorId">
+                    <option value="" disabled>Select a Stakeholder</option>
+                    <option v-for="role in roles" :key="role.id" :value="role.id">
+                        {{ role.name }}
+                    </option>
+                </select>
+            </div>
+            <div class="field grid">
+                <label for="functionalBehaviorId" class="required col-fixed w-7rem">Behavior</label>
+                <select class="p-inputtext p-component col" name="functionalBehaviorId"
+                    v-model.trim="data.functionalBehaviorId">
+                    <option value="" disabled>Select a Behavior</option>
+                    <option v-for="behavior in functionalBehaviors" :key="behavior.id" :value="behavior.id">
+                        {{ behavior.name }}
+                    </option>
+                </select>
+            </div>
+            <div class="field grid">
+                <label for="outcomeId" class="required col-fixed w-7rem">Outcome</label>
+                <select class="p-inputtext p-component col" name="outcomeId" v-model.trim="data.outcomeId">
+                    <option value="" disabled>Select an Outcome</option>
+                    <option v-for="outcome in outcomes" :key="outcome.id" :value="outcome.id">
+                        {{ outcome.name }}
+                    </option>
+                </select>
+            </div>
+        </template>
+        <template #editDialog="{ data } : { data: UserStoryViewModel }">
+            <input type="hidden" name="id" v-model.trim="data.id" />
+            <div class="field grid">
+                <label for="name" class="required col-fixed w-7rem">Name</label>
+                <InputText name="name" v-model.trim="data.name" required placeholder="Enter a name" class="col" />
+            </div>
+            <div class="field grid">
+                <label for="primaryActorId" class="required col-fixed w-7rem">Stakeholder</label>
+                <select class="p-inputtext p-component col" name="primaryActorId" v-model.trim="data.primaryActorId">
+                    <option value="" disabled>Select a Stakeholder</option>
+                    <option v-for="role in roles" :key="role.id" :value="role.id">
+                        {{ role.name }}
+                    </option>
+                </select>
+            </div>
+            <div class="field grid">
+                <label for="functionalBehaviorId" class="required col-fixed w-7rem">Behavior</label>
+                <select class="p-inputtext p-component col" name="functionalBehaviorId"
+                    v-model.trim="data.functionalBehaviorId">
+                    <option value="" disabled>Select a Behavior</option>
+                    <option v-for="behavior in functionalBehaviors" :key="behavior.id" :value="behavior.id">
+                        {{ behavior.name }}
+                    </option>
+                </select>
+            </div>
+            <div class="field grid">
+                <label for="outcomeId" class="required col-fixed w-7rem">Outcome</label>
+                <select class="p-inputtext p-component col" name="outcomeId" v-model.trim="data.outcomeId">
+                    <option value="" disabled>Select an Outcome</option>
+                    <option v-for="outcome in outcomes" :key="outcome.id" :value="outcome.id">
+                        {{ outcome.name }}
+                    </option>
+                </select>
+            </div>
+        </template>
     </XDataTable>
-
 </template>
