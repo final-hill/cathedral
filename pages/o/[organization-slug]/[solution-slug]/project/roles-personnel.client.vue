@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { FilterMatchMode } from 'primevue/api';
 import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Roles & Personnel' })
@@ -31,11 +30,6 @@ const { data: personnel, refresh, status, error: getPersonnelError } = await use
 
 if (getPersonnelError.value)
     $eventBus.$emit('page-error', getPersonnelError.value)
-
-const filters = ref({
-    'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'email': { value: null, matchMode: FilterMatchMode.CONTAINS }
-});
 
 const onCreate = async (data: PersonViewModel) => {
     await $fetch(`/api/persons`, {
@@ -77,29 +71,48 @@ const onDelete = async (id: string) => {
         along with their responsibilities, availability, and contact information.
     </p>
 
-    <XDataTable :datasource="personnel" :empty-record="emptyPerson" :filters="filters" :on-create="onCreate"
-        :on-update="onUpdate" :on-delete="onDelete">
-        <Column field="name" header="Name" sortable>
-            <template #filter="{ filterModel, filterCallback }">
-                <InputText v-model.trim="filterModel.value" @input="filterCallback()" placeholder="Search by name" />
-            </template>
-            <template #body="{ data }">
-                {{ data.name }}
-            </template>
-            <template #editor="{ data, field }">
-                <InputText v-model.trim="data[field]" required />
-            </template>
-        </Column>
-        <Column field="email" header="Email" sortable>
-            <template #filter="{ filterModel, filterCallback }">
-                <InputText v-model.trim="filterModel.value" @input="filterCallback()" placeholder="Search by name" />
-            </template>
-            <template #body="{ data, field }">
-                {{ data[field] }}
-            </template>
-            <template #editor="{ data, field }">
-                <InputText v-model.trim="data[field]" required />
-            </template>
-        </Column>
+    <XDataTable :datasource="personnel" :empty-record="emptyPerson" :on-create="onCreate" :on-update="onUpdate"
+        :on-delete="onDelete" :loading="status === 'pending'">
+        <template #rows>
+            <Column field="name" header="Name" sortable>
+                <template #filter="{ filterModel, filterCallback }">
+                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                        placeholder="Search by name" />
+                </template>
+                <template #body="{ data }">
+                    {{ data.name }}
+                </template>
+            </Column>
+            <Column field="email" header="Email" sortable>
+                <template #filter="{ filterModel, filterCallback }">
+                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                        placeholder="Search by name" />
+                </template>
+                <template #body="{ data, field }">
+                    {{ data[field] }}
+                </template>
+            </Column>
+        </template>
+        <template #createDialog="{ data } : { data: PersonViewModel }">
+            <div class="field grid">
+                <label for="name" class="required col-fixed w-7rem">Name</label>
+                <InputText name="name" v-model.trim="data.name" required placeholder="Name" class="col" />
+            </div>
+            <div class="field grid">
+                <label for="email" class="required col-fixed w-7rem">Email</label>
+                <InputText name="email" v-model.trim="data.email" required placeholder="Email" class="col" />
+            </div>
+        </template>
+        <template #editDialog="{ data } : { data: PersonViewModel }">
+            <input type="hidden" v-model="data.id" name="id" />
+            <div class="field grid">
+                <label for="name" class="required col-fixed w-7rem">Name</label>
+                <InputText v-model.trim="data.name" name="name" required placeholder="Name" class="col" />
+            </div>
+            <div class="field grid">
+                <label for="email" class="required col-fixed w-7rem">Email</label>
+                <InputText v-model.trim="data.email" name="email" required placeholder="Email" class="col" />
+            </div>
+        </template>
     </XDataTable>
 </template>

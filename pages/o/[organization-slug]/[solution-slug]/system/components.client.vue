@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { FilterMatchMode } from 'primevue/api';
 import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Components' })
@@ -38,12 +37,6 @@ const { data: systemComponents, refresh, status, error: getSystemComponentsError
 if (getSystemComponentsError.value)
     $eventBus.$emit('page-error', getSystemComponentsError.value);
 
-const filters = ref({
-    'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'statement': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'parentComponentId': { value: null, matchMode: FilterMatchMode.EQUALS }
-})
-
 const onCreate = async (data: SystemComponentViewModel) => {
     await $fetch(`/api/system-components`, {
         method: 'POST',
@@ -71,7 +64,7 @@ const onUpdate = async (data: SystemComponentViewModel) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/system-components/${id}`, {
         method: 'DELETE',
-        body: {solutionId}
+        body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
@@ -81,44 +74,83 @@ const onDelete = async (id: string) => {
     <p>
         Components describe the structure of the system as a list or hierarchy.
     </p>
-    <XDataTable :datasource="systemComponents" :filters="filters" :emptyRecord="emptyComponent" :onCreate="onCreate"
-        :onUpdate="onUpdate" :onDelete="onDelete">
-        <Column field="name" header="Name" sortable>
-            <template #filter="{ filterModel, filterCallback }">
-                <InputText v-model.trim="filterModel.value" @input="filterCallback()" placeholder="Search by name" />
-            </template>
-            <template #body="{ data, field }">
-                {{ data[field] }}
-            </template>
-            <template #editor="{ data, field }">
-                <InputText v-model.trim="data[field]" required="true" placeholder="Enter a name" />
-            </template>
-        </Column>
-        <Column field="statement" header="Description">
-            <template #filter="{ filterModel, filterCallback }">
-                <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                    placeholder="Search by description" />
-            </template>
-            <template #body="{ data, field }">
-                {{ data[field] }}
-            </template>
-            <template #editor="{ data, field }">
-                <InputText v-model.trim="data[field]" required="true" placeholder="Enter a description" />
-            </template>
-        </Column>
-        <Column field="parentComponentId" header="Parent">
-            <template #filter="{ filterModel, filterCallback }">
-                <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name" optionValue="id"
-                    :options="systemComponents!" placeholder="Search by Component" />
-            </template>
-            <template #body="{ data, field }">
-                {{ systemComponents?.find(c => c.id === data[field])?.name }}
-            </template>
-            <template #editor="{ data, field }">
-                <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id"
-                    :options="systemComponents!.filter(c => c.id !== data.id)" placeholder="Select a Component"
-                    showClear />
-            </template>
-        </Column>
+    <XDataTable :datasource="systemComponents" :emptyRecord="emptyComponent" :onCreate="onCreate" :onUpdate="onUpdate"
+        :onDelete="onDelete" :loading="status === 'pending'">
+        <template #rows>
+            <Column field="name" header="Name" sortable>
+                <template #filter="{ filterModel, filterCallback }">
+                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                        placeholder="Search by name" />
+                </template>
+                <template #body="{ data, field }">
+                    {{ data[field] }}
+                </template>
+            </Column>
+            <Column field="statement" header="Description">
+                <template #filter="{ filterModel, filterCallback }">
+                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                        placeholder="Search by description" />
+                </template>
+                <template #body="{ data, field }">
+                    {{ data[field] }}
+                </template>
+            </Column>
+            <Column field="parentComponentId" header="Parent">
+                <template #filter="{ filterModel, filterCallback }">
+                    <select class="p-inputtext p-component" v-model="filterModel.value" @change="filterCallback()">
+                        <option value="">Search by Component</option>
+                        <option v-for="component in systemComponents" :key="component.id" :value="component.id">
+                            {{ component.name }}
+                        </option>
+                    </select>
+                </template>
+                <template #body="{ data, field }">
+                    {{ systemComponents?.find(c => c.id === data[field])?.name }}
+                </template>
+            </Column>
+        </template>
+        <template #createDialog="{ data } : { data: SystemComponentViewModel }">
+            <div class="field grid">
+                <label for="name" class="required col-fixed w-7rem">Name</label>
+                <InputText v-model.trim="data.name" name="name" required placeholder="Enter a name" class="col" />
+            </div>
+            <div class="field grid">
+                <label for="statement" class="required col-fixed w-7rem">Description</label>
+                <InputText v-model.trim="data.statement" name="statement" required placeholder="Enter a description"
+                    class="col" />
+            </div>
+            <div class="field grid">
+                <label for="parentComponentId" class="col-fixed w-7rem">Parent</label>
+                <select class="p-inputtext p-component col" v-model="data.parentComponentId" name="parentComponentId">
+                    <option value="">Select a Component</option>
+                    <option v-for="component in (systemComponents ?? []).filter(c => c.id !== data.id)"
+                        :key="component.id" :value="component.id">
+                        {{ component.name }}
+                    </option>
+                </select>
+            </div>
+        </template>
+        <template #editDialog="{ data } : { data: SystemComponentViewModel }">
+            <input type="hidden" name="id" v-model.trim="data.id" />
+            <div class="field grid">
+                <label for="name" class="required col-fixed w-7rem">Name</label>
+                <InputText v-model.trim="data.name" name="name" required placeholder="Enter a name" class="col" />
+            </div>
+            <div class="field grid">
+                <label for="statement" class="required col-fixed w-7rem">Description</label>
+                <InputText v-model.trim="data.statement" name="statement" required placeholder="Enter a description"
+                    class="col" />
+            </div>
+            <div class="field grid">
+                <label for="parentComponentId" class="col-fixed w-7rem">Parent</label>
+                <select class="p-inputtext p-component col" v-model="data.parentComponentId" name="parentComponentId">
+                    <option value="">Select a Component</option>
+                    <option v-for="component in (systemComponents ?? []).filter(c => c.id !== data.id)"
+                        :key="component.id" :value="component.id">
+                        {{ component.name }}
+                    </option>
+                </select>
+            </div>
+        </template>
     </XDataTable>
 </template>

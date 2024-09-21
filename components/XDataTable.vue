@@ -1,38 +1,46 @@
-<script lang="ts" setup>
-import { NIL as emptyUuid } from 'uuid'
+<script lang="ts" generic="RowType extends {id: string, name: string}" setup>
+import type Dialog from 'primevue/dialog'
+import type DataTable from 'primevue/datatable'
+import { FilterMatchMode } from 'primevue/api';
 
-export type RowType = any
+export type EmptyRecord = { id: string, name: string }
 
 const props = defineProps<{
     datasource: RowType[] | null,
-    filters: Record<string, { value: any, matchMode: string }>,
-    emptyRecord: { id: string, name: string },
-    btnCreateLabel?: string,
+    emptyRecord: EmptyRecord,
+    loading: boolean,
     onCreate: (data: RowType) => Promise<void>,
     onDelete: (id: string) => Promise<void>,
-    onUpdate: (data: RowType) => Promise<void>,
-    onRowExpand?: (event: { data: RowType }) => void,
-    onRowCollapse?: (event: { data: RowType }) => void
+    onUpdate: (data: RowType) => Promise<void>
 }>()
 
-const dataTable = ref<any>(),
+const slots = defineSlots<{
+    rows: { data: RowType }[],
+    createDialog: { data: EmptyRecord },
+    editDialog: { data: RowType }
+}>()
+
+const dataTable = ref<DataTable>(),
     createDisabled = ref(false),
-    editingRows = ref<RowType[]>([]),
     sortField = ref<string | undefined>('name'),
-    confirm = useConfirm()
+    confirm = useConfirm(),
+    createDialog = ref<Dialog>(),
+    createDialogVisible = ref(false),
+    createDialogItem = ref<EmptyRecord>({ ...props.emptyRecord }),
+    editDialog = ref<Dialog>(),
+    editDialogVisible = ref(false),
+    editDialogItem = ref<RowType>()
 
-const onCreateEmpty = async () => {
-    (props.datasource ?? []).unshift(Object.assign({}, props.emptyRecord))
-    editingRows.value = [(props.datasource ?? [])[0]]
-    createDisabled.value = true
-    // remove the sortfield to avoid the new row from being sorted
-    sortField.value = undefined
+const filters = ref<Record<string, { value: any, matchMode: string }>>({
+    'global': { value: null, matchMode: FilterMatchMode.CONTAINS }
+});
 
-    // focus on the first input
-    setTimeout(() => {
-        const input = dataTable.value!.$el.querySelector('.p-datatable-tbody tr input')! as HTMLInputElement
-        input.focus()
-    }, 100)
+const openEditDialog = (item: RowType) => {
+    editDialogVisible.value = true
+    // focus on the first element under the #editDialogForm with a name attribute that isn't 'hidden'
+    const firstInput = document.querySelector('#editDialogForm [name]:not([type="hidden"])') as HTMLInputElement
+    if (firstInput) firstInput.focus()
+    editDialogItem.value = { ...item }
 }
 
 const onDelete = (item: RowType) => new Promise<void>((resolve, _reject) => {
@@ -50,75 +58,53 @@ const onDelete = (item: RowType) => new Promise<void>((resolve, _reject) => {
     })
 })
 
-const onCancel = ({ data, index }: { data: RowType, index: number }) => {
-    if (data.id !== emptyUuid)
+const onCreateDialogSave = async (e: Event) => {
+    const form = e.target as HTMLFormElement
+    if (!form.reportValidity())
         return
+    const data = [...new FormData(form).entries()].reduce((acc, [key, value]) => {
+        // If the data entry was from a form input element with inputmode="numeric", convert it to a number
+        const input = form.querySelector(`[name="${key}"]`) as HTMLInputElement
+        Object.assign(acc, { [key]: input.inputMode === 'numeric' ? parseFloat(value as string) : value })
+        return acc
+    }, {} as RowType)
 
-    (props.datasource ?? []).splice(index, 1)
-    createDisabled.value = false
-    sortField.value = 'name'
+    await props.onCreate(data)
+    createDialogVisible.value = false
+    createDialogItem.value = { ...props.emptyRecord }
 }
 
-const onRowExpand = (event: { data: RowType }) => {
-    if (props.onRowExpand)
-        props.onRowExpand(event)
+const onCreateDialogCancel = () => {
+    createDialogItem.value = { ...props.emptyRecord }
+    createDialogVisible.value = false
 }
 
-const onRowCollapse = (event: { data: RowType }) => {
-    if (props.onRowCollapse)
-        props.onRowCollapse(event)
+const openCreateDialog = () => {
+    createDialogVisible.value = true
+    // focus on the first element under the #createDialogForm with a name attribute that isn't 'hidden'
+    const firstInput = document.querySelector('#createDialogForm [name]:not([type="hidden"])') as HTMLInputElement
+    if (firstInput) firstInput.focus()
 }
 
-const onRowEditSave = async (event: { newData: RowType, originalEvent: Event }) => {
-    const { newData, originalEvent } = event
-
-    const row = (originalEvent.target! as HTMLElement).closest('tr')!,
-        inputs = row.querySelectorAll('input'),
-        dropDowns = row.querySelectorAll('.p-dropdown[required="true"]')
-
-    if (![...inputs].every(o => o.reportValidity())) {
-        editingRows.value = [newData]
+const onEditDialogSave = async (e: Event) => {
+    const form = e.target as HTMLFormElement
+    if (!form.reportValidity())
         return
-    }
+    const data = [...new FormData(form).entries()].reduce((acc, [key, value]) => {
+        // If the data entry was from a form input element with inputmode="numeric", convert it to a number
+        const input = form.querySelector(`[name="${key}"]`) as HTMLInputElement
+        Object.assign(acc, { [key]: input.inputMode === 'numeric' ? parseFloat(value as string) : value })
+        return acc
+    }, {} as RowType)
 
-    if (![...dropDowns].every(dd => {
-        const value = dd.querySelector('.p-inputtext')!.textContent?.trim(),
-            result = value !== '' && !value?.startsWith('Select')
-
-        dd.classList.toggle('p-invalid', !result)
-
-        return result
-    })) {
-        editingRows.value = [newData]
-        return
-    }
-
-    if (newData.id === emptyUuid) {
-        await props.onCreate(newData)
-        createDisabled.value = false
-    } else {
-        await props.onUpdate(newData)
-    }
+    await props.onUpdate(data)
+    editDialogVisible.value = false
+    editDialogItem.value = undefined
 }
 
-const onRowEditInit = ({ originalEvent }: any) => {
-    // focus on the first input when editing
-    const row = originalEvent.target.closest('tr')
-    setTimeout(() => {
-        const input = row.querySelector('input')
-        input.focus()
-    }, 100)
-}
-
-const onSort = (event: any) => {
-    if (editingRows.value.length > 0) {
-        // cancel editing of the dummy row
-        if (editingRows.value[0].id === emptyUuid)
-            onCancel({ data: editingRows.value[0], index: 0 })
-
-        editingRows.value = []
-        createDisabled.value = false
-    }
+const onEditDialogCancel = () => {
+    editDialogItem.value = undefined
+    editDialogVisible.value = false
 }
 </script>
 
@@ -127,34 +113,47 @@ const onSort = (event: any) => {
         <ConfirmDialog></ConfirmDialog>
         <Toolbar>
             <template #start>
-                <Button :label="props.btnCreateLabel ?? 'Create'" severity="info" @click="onCreateEmpty"
-                    :disabled="createDisabled" />
+                <Button label="'Create" severity="info" @click="openCreateDialog" :disabled="createDisabled" />
+            </template>
+            <template #end>
+                <InputText v-model="filters['global'].value" placeholder="Keyword Search" />
             </template>
         </Toolbar>
-        <DataTable ref="dataTable" :value="props.datasource as unknown as any[]" dataKey="id" filterDisplay="row"
-            v-model:filters="filters as any" :globalFilterFields="Object.keys(filters)" editMode="row"
-            @row-edit-init="onRowEditInit" v-model:editingRows="editingRows" @row-edit-save="onRowEditSave"
-            @row-edit-cancel="onCancel" @row-expand="onRowExpand" @row-collapse="onRowCollapse" @sort="onSort"
-            :sortField="sortField" :sortOrder="1">
-            <slot></slot>
+        <DataTable ref="dataTable" :value="props.datasource as unknown as any[]" dataKey="id" v-model:filters="filters"
+            :globalFilterFields="Object.keys(props.datasource?.[0] ?? {})" :sortField="sortField" :sortOrder="1"
+            :loading="props.loading">
+            <slot name="rows"></slot>
             <Column frozen align-frozen="right">
-                <template #body="{ data, editorInitCallback }">
-                    <Button icon="pi pi-pencil" text rounded @click="editorInitCallback" />
+                <template #body="{ data }">
+                    <Button icon="pi pi-pencil" text rounded @click="openEditDialog(data)" />
                     <Button icon="pi pi-trash" text rounded severity="danger" @click="onDelete(data)" />
-                </template>
-                <template #editor="{ editorSaveCallback, editorCancelCallback }">
-                    <Button icon="pi pi-check" text rounded @click="editorSaveCallback" />
-                    <Button icon="pi pi-times" text rounded severity="danger" @click="editorCancelCallback" />
                 </template>
             </Column>
             <template #empty>No data found</template>
             <template #loading>Loading data...</template>
         </DataTable>
     </section>
-</template>
 
-<style scoped>
-:deep(.p-cell-editing) {
-    background-color: var(--highlight-bg);
-}
-</style>
+    <Dialog ref="createDialog" v-model:visible="createDialogVisible" :modal="true" class="p-fluid">
+        <template #header>Create Item</template>
+        <form id="createDialogForm" autocomplete="off" @submit.prevent="onCreateDialogSave"
+            @reset="onCreateDialogCancel">
+            <slot name="createDialog" v-bind="{ data: createDialogItem }"></slot>
+        </form>
+        <template #footer>
+            <Button label="Save" form="createDialogForm" type="submit" icon="pi pi-check" class="p-button-text" />
+            <Button label="Cancel" type="reset" form="createDialogForm" icon="pi pi-times" class="p-button-text" />
+        </template>
+    </Dialog>
+
+    <Dialog ref="editDialog" v-model:visible="editDialogVisible" :modal="true" class="p-fluid">
+        <template #header>Edit Item</template>
+        <form id="editDialogForm" autocomplete="off" @submit.prevent="onEditDialogSave" @reset="onEditDialogCancel">
+            <slot name="editDialog" v-bind="{ data: editDialogItem }"></slot>
+        </form>
+        <template #footer>
+            <Button label="Save" type="submit" form="editDialogForm" icon="pi pi-check" class="p-button-text" />
+            <Button label="Cancel" type="reset" form="editDialogForm" icon="pi pi-times" class="p-button-text" />
+        </template>
+    </Dialog>
+</template>

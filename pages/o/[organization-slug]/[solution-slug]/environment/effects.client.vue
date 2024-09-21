@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { FilterMatchMode } from 'primevue/api';
 import { NIL as emptyUuid } from 'uuid';
 
 useHead({ title: 'Effects' })
@@ -31,11 +30,6 @@ const { data: effects, refresh, status, error: getEffectsError } = await useFetc
 
 if (getEffectsError.value)
     $eventBus.$emit('page-error', getEffectsError.value)
-
-const filters = ref({
-    'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'statement': { value: null, matchMode: FilterMatchMode.CONTAINS },
-});
 
 const onCreate = async (data: EffectViewModel) => {
     await $fetch(`/api/effects`, {
@@ -77,30 +71,50 @@ const onDelete = async (id: string) => {
         An Effect is an environment property affected by a System.
         Example: "The running system will cause the temperature of the room to increase."
     </p>
-    <XDataTable :datasource="effects" :empty-record="emptyEffect" :filters="filters" :on-create="onCreate"
-        :on-delete="onDelete" :on-update="onUpdate">
-        <Column field="name" header="Name" sortable>
-            <template #filter="{ filterModel, filterCallback }">
-                <InputText v-model.trim="filterModel.value" @input="filterCallback()" placeholder="Search by name" />
-            </template>
-            <template #body="{ data }">
-                {{ data.name }}
-            </template>
-            <template #editor="{ data, field }">
-                <InputText v-model.trim="data[field]" required="true" />
-            </template>
-        </Column>
-        <Column field="statement" header="Description">
-            <template #filter="{ filterModel, filterCallback }">
-                <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                    placeholder="Search by description" />
-            </template>
-            <template #body="{ data }">
-                {{ data.statement }}
-            </template>
-            <template #editor="{ data, field }">
-                <InputText v-model.trim="data[field]" required="true" />
-            </template>
-        </Column>
+    <XDataTable :datasource="effects" :empty-record="emptyEffect" :on-create="onCreate" :on-delete="onDelete"
+        :on-update="onUpdate" :loading="status === 'pending'">
+        <template #rows>
+            <Column field="name" header="Name" sortable>
+                <template #filter="{ filterModel, filterCallback }">
+                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                        placeholder="Search by name" />
+                </template>
+                <template #body="{ data }">
+                    {{ data.name }}
+                </template>
+            </Column>
+            <Column field="statement" header="Description">
+                <template #filter="{ filterModel, filterCallback }">
+                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                        placeholder="Search by description" />
+                </template>
+                <template #body="{ data }">
+                    {{ data.statement }}
+                </template>
+            </Column>
+        </template>
+        <template #createDialog="{ data } : { data: EffectViewModel }">
+            <div class="field grid">
+                <label for="name" class="required col-fixed w-7rem">Name</label>
+                <InputText name="name" v-model.trim="data.name" required placeholder="Enter name" class="col" />
+            </div>
+            <div class="field grid">
+                <label for="statement" class="required col-fixed w-7rem">Description</label>
+                <InputText name="statement" v-model.trim="data.statement" required placeholder="Enter description"
+                    class="col" />
+            </div>
+        </template>
+        <template #editDialog="{ data } : { data: EffectViewModel }">
+            <input type="hidden" name="id" v-model.trim="data.id" />
+            <div class="field grid">
+                <label for="name" class="required col-fixed w-7rem">Name</label>
+                <InputText name="name" v-model.trim="data.name" required placeholder="Enter name" class="col" />
+            </div>
+            <div class="field grid">
+                <label for="statement" class="required col-fixed w-7rem">Description</label>
+                <InputText name="statement" v-model.trim="data.statement" required placeholder="Enter description"
+                    class="col" />
+            </div>
+        </template>
     </XDataTable>
 </template>
