@@ -37,26 +37,19 @@ watch(() => organization.value.name, (newName) => {
     <form autocomplete="off" @submit.prevent="updateOrganization" @reset="cancel">
         <div class="field grid">
             <label for="name" class="required col-fixed w-7rem">Name</label>
-            <div class="col">
-                <InputText v-model.trim="organization.name" id="name" name="name" class="w-23rem"
-                    placeholder="Sample Organization" :maxlength="100" />
-            </div>
+            <InputText v-model.trim="organization.name" name="name" class="w-23rem col"
+                placeholder="Sample Organization" :maxlength="100" />
         </div>
 
         <div class="field grid">
             <label for="slug" class="col-fixed w-7rem">Slug</label>
-            <div class="col">
-                <InputText id="slug" name="slug" disabled tabindex="-1" v-model="newSlug" variant="filled"
-                    class="w-23rem" />
-            </div>
+            <InputText name="slug" disabled tabindex="-1" v-model="newSlug" variant="filled" class="w-23rem col" />
         </div>
 
         <div class="field grid">
             <label for="description" class="col-fixed w-7rem">Description</label>
-            <div class="col">
-                <InputText id="description" name="description" placeholder="A description of the organization"
-                    class="w-23rem" v-model.trim="organization.description" />
-            </div>
+            <InputText name="description" placeholder="A description of the organization" class="w-23rem col"
+                v-model.trim="organization.description" />
         </div>
 
         <Toolbar class="w-30rem">

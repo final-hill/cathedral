@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { FilterMatchMode } from 'primevue/api';
 import { MoscowPriority } from '~/server/domain/requirements/index';
 import { NIL as emptyUuid } from 'uuid';
 
@@ -39,14 +38,14 @@ type UseCaseViewModel = {
     preconditionId: string;
     scope: string;
     successGuaranteeId: string;
-    triggerid: string;
+    triggerId: string;
     priority: MoscowPriority;
 }
 
-const { data: userStories, refresh: refreshUserStories, error: getUserStoriesError } = await useFetch(`/api/user-stories`, {
+const { data: userStories, refresh: refreshUserStories, error: getUserStoriesError, status: userStoryStatus } = await useFetch(`/api/user-stories`, {
     query: { solutionId }
 }),
-    { data: useCases, refresh: refreshUseCases, error: getUseCasesError } = await useFetch(`/api/use-cases`, {
+    { data: useCases, refresh: refreshUseCases, error: getUseCasesError, status: useCaseStatus } = await useFetch(`/api/use-cases`, {
         query: { solutionId }
     }),
     emptyUserStory: UserStoryViewModel = {
@@ -68,7 +67,7 @@ const { data: userStories, refresh: refreshUserStories, error: getUserStoriesErr
         preconditionId: emptyUuid,
         scope: '',
         successGuaranteeId: emptyUuid,
-        triggerid: emptyUuid,
+        triggerId: emptyUuid,
         priority: MoscowPriority.MUST
     },
     { data: roles, error: getRolesError } = await useFetch(`/api/stakeholders`, { query: { solutionId } }),
@@ -76,7 +75,7 @@ const { data: userStories, refresh: refreshUserStories, error: getUserStoriesErr
     { data: outcomes, error: getOutcomesError } = await useFetch(`/api/outcomes`, { query: { solutionId } }),
     { data: assumptions, error: getAssumptionsError } = await useFetch(`/api/assumptions`, { query: { solutionId } }),
     { data: effects, error: getEffectsError } = await useFetch(`/api/effects`, { query: { solutionId } }),
-    triggers = ref([])
+    triggers = ref<{ id: string, name: string }[]>([])
 
 if (getUserStoriesError.value)
     $eventBus.$emit('page-error', getUserStoriesError.value);
@@ -90,26 +89,6 @@ if (getAssumptionsError.value)
     $eventBus.$emit('page-error', getAssumptionsError.value);
 if (getEffectsError.value)
     $eventBus.$emit('page-error', getEffectsError.value);
-
-const userStoryfilters = ref({
-    'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'primaryActorId': { value: null, matchMode: FilterMatchMode.EQUALS },
-    'functionalBehaviorId': { value: null, matchMode: FilterMatchMode.EQUALS },
-    'outcomeId': { value: null, matchMode: FilterMatchMode.EQUALS }
-})
-
-const useCasefilters = ref({
-    'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'primaryActorId': { value: null, matchMode: FilterMatchMode.EQUALS },
-    'extensions': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'goalInContext': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'level': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'mainSuccessScenario': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'preconditionId': { value: null, matchMode: FilterMatchMode.EQUALS },
-    'scope': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'successGuaranteeId': { value: null, matchMode: FilterMatchMode.EQUALS },
-    'triggerId': { value: null, matchMode: FilterMatchMode.EQUALS }
-})
 
 const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
     await $fetch(`/api/user-stories`, {
@@ -197,59 +176,134 @@ const onUseCaseDelete = async (id: string) => {
                 leveraging a particular behavior of the system.
             </p>
 
-            <XDataTable :datasource="userStories" :filters="userStoryfilters" :emptyRecord="emptyUserStory"
-                :onCreate="onUserStoryCreate" :onUpdate="onUserStoryUpdate" :onDelete="onUserStoryDelete">
-                <Column field="name" header="Name" sortable>
-                    <template #filter="{ filterModel, filterCallback }">
-                        <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                            placeholder="Search by name" />
-                    </template>
-                    <template #body="{ data, field }">
-                        {{ data[field] }}
-                    </template>
-                    <template #editor="{ data, field }">
-                        <InputText v-model.trim="data[field]" required="true" placeholder="Enter a name" />
-                    </template>
-                </Column>
-                <Column field="primaryActorId" header="Actor">
-                    <template #filter="{ filterModel, filterCallback }">
-                        <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
-                            optionValue="id" :options="roles!" placeholder="Search by Actor" />
-                    </template>
-                    <template #body="{ data, field }">
-                        {{ roles?.find(r => r.id === data[field])?.name }}
-                    </template>
-                    <template #editor="{ data, field }">
-                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="roles!"
-                            placeholder="Select an Actor" />
-                    </template>
-                </Column>
-                <Column field="functionalBehaviorId" header="Behavior">
-                    <template #filter="{ filterModel, filterCallback }">
-                        <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
-                            optionValue="id" :options="functionalBehaviors!" placeholder="Search by Behavior" />
-                    </template>
-                    <template #body="{ data, field }">
-                        {{ functionalBehaviors?.find(b => b.id === data[field])?.name }}
-                    </template>
-                    <template #editor="{ data, field }">
-                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id"
-                            :options="functionalBehaviors!" placeholder="Select a Behavior" />
-                    </template>
-                </Column>
-                <Column field="outcomeId" header="Outcome">
-                    <template #filter="{ filterModel, filterCallback }">
-                        <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
-                            optionValue="id" :options="outcomes!" placeholder="Search by Outcome" />
-                    </template>
-                    <template #body="{ data, field }">
-                        {{ outcomes?.find(o => o.id === data[field])?.name }}
-                    </template>
-                    <template #editor="{ data, field }">
-                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="outcomes!"
-                            placeholder="Select an Outcome" />
-                    </template>
-                </Column>
+            <XDataTable :datasource="userStories" :emptyRecord="emptyUserStory" :onCreate="onUserStoryCreate"
+                :onUpdate="onUserStoryUpdate" :onDelete="onUserStoryDelete" :loading="userStoryStatus === 'pending'">
+                <template #rows>
+                    <Column field="name" header="Name" sortable>
+                        <template #filter="{ filterModel, filterCallback }">
+                            <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                                placeholder="Search by name" />
+                        </template>
+                        <template #body="{ data, field }">
+                            {{ data[field] }}
+                        </template>
+                    </Column>
+                    <Column field="primaryActorId" header="Actor">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <select class="p-inputtext p-component" v-model.trim="filterModel.value"
+                                @input="filterCallback()">
+                                <option value="" disabled>Select an Actor</option>
+                                <option v-for="role in roles" :key="role.id" :value="role.id">
+                                    {{ role.name }}
+                                </option>
+                            </select>
+                        </template>
+                        <template #body="{ data, field }">
+                            {{ roles?.find(r => r.id === data[field])?.name }}
+                        </template>
+                    </Column>
+                    <Column field="functionalBehaviorId" header="Behavior">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <select class="p-inputtext p-component" v-model.trim="filterModel.value"
+                                @input="filterCallback()">
+                                <option value="" disabled>Select a Behavior</option>
+                                <option v-for="behavior in functionalBehaviors" :key="behavior.id" :value="behavior.id">
+                                    {{ behavior.name }}
+                                </option>
+                            </select>
+                        </template>
+                        <template #body="{ data, field }">
+                            {{ functionalBehaviors?.find(b => b.id === data[field])?.name }}
+                        </template>
+                    </Column>
+                    <Column field="outcomeId" header="Outcome">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <select class="p-inputtext p-component" v-model.trim="filterModel.value"
+                                @input="filterCallback()">
+                                <option value="" disabled>Select an Outcome</option>
+                                <option v-for="outcome in outcomes" :key="outcome.id" :value="outcome.id">
+                                    {{ outcome.name }}
+                                </option>
+                            </select>
+                        </template>
+                        <template #body="{ data, field }">
+                            {{ outcomes?.find(o => o.id === data[field])?.name }}
+                        </template>
+                    </Column>
+                </template>
+                <template #createDialog="{ data } : { data: UserStoryViewModel }">
+                    <div class="field grid">
+                        <label for="name" class="required col-fixed w-7rem">Name</label>
+                        <InputText v-model.trim="data.name" name="name" required placeholder="Enter a name"
+                            class="col" />
+                    </div>
+                    <div class="field grid">
+                        <label for="primaryActorId" class="required col-fixed w-7rem">Actor</label>
+                        <select class="p-inputtext p-component col" v-model.trim="data.primaryActorId"
+                            name="primaryActorId">
+                            <option value="" disabled>Select an Actor</option>
+                            <option v-for="role in roles" :key="role.id" :value="role.id">
+                                {{ role.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="field grid">
+                        <label for="functionalBehaviorId" class="required col-fixed w-7rem">Behavior</label>
+                        <select class="p-inputtext p-component col" v-model.trim="data.functionalBehaviorId"
+                            name="functionalBehaviorId">
+                            <option value="" disabled>Select a Behavior</option>
+                            <option v-for="behavior in functionalBehaviors" :key="behavior.id" :value="behavior.id">
+                                {{ behavior.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="field grid">
+                        <label for="outcomeId" class="required col-fixed w-7rem">Outcome</label>
+                        <select class="p-inputtext p-component col" v-model.trim="data.outcomeId" name="outcomeId">
+                            <option value="" disabled>Select an Outcome</option>
+                            <option v-for="outcome in outcomes" :key="outcome.id" :value="outcome.id">
+                                {{ outcome.name }}
+                            </option>
+                        </select>
+                    </div>
+                </template>
+                <template #editDialog="{ data } : { data: UserStoryViewModel }">
+                    <input type="hidden" name="id" v-model.trim="data.id" />
+                    <div class="field grid">
+                        <label for="name" class="required col-fixed w-7rem">Name</label>
+                        <InputText v-model.trim="data.name" name="name" required placeholder="Enter a name"
+                            class="col" />
+                    </div>
+                    <div class="field grid">
+                        <label for="primaryActorId" class="required col-fixed w-7rem">Actor</label>
+                        <select class="p-inputtext p-component col" v-model.trim="data.primaryActorId"
+                            name="primaryActorId">
+                            <option value="" disabled>Select an Actor</option>
+                            <option v-for="role in roles" :key="role.id" :value="role.id">
+                                {{ role.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="field grid">
+                        <label for="functionalBehaviorId" class="required col-fixed w-7rem">Behavior</label>
+                        <select class="p-inputtext p-component col" v-model.trim="data.functionalBehaviorId"
+                            name="functionalBehaviorId">
+                            <option value="" disabled>Select a Behavior</option>
+                            <option v-for="behavior in functionalBehaviors" :key="behavior.id" :value="behavior.id">
+                                {{ behavior.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="field grid">
+                        <label for="outcomeId" class="required col-fixed w-7rem">Outcome</label>
+                        <select class="p-inputtext p-component col" v-model.trim="data.outcomeId" name="outcomeId">
+                            <option value="" disabled>Select an Outcome</option>
+                            <option v-for="outcome in outcomes" :key="outcome.id" :value="outcome.id">
+                                {{ outcome.name }}
+                            </option>
+                        </select>
+                    </div>
+                </template>
             </XDataTable>
         </TabPanel>
         <TabPanel header="Use Cases">
@@ -257,137 +311,257 @@ const onUseCaseDelete = async (id: string) => {
                 A Use Case describes a complete interaction between an actor and the
                 system to achieve a goal.
             </p>
-            <XDataTable :datasource="useCases!" :filters="useCasefilters" :emptyRecord="emptyUseCase"
-                :onCreate="onUseCaseCreate" :onUpdate="onUseCaseUpdate" :onDelete="onUseCaseDelete">
-                <Column field="name" header="Name" sortable>
-                    <template #filter="{ filterModel, filterCallback }">
-                        <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                            placeholder="Search by name" />
-                    </template>
-                    <template #body="{ data, field }">
-                        {{ data[field] }}
-                    </template>
-                    <template #editor="{ data, field }">
-                        <InputText v-model.trim="data[field]" required="true" placeholder="Enter a name" />
-                    </template>
-                </Column>
-                <Column field="scope" header="Scope">
-                    <template #filter="{ filterModel, filterCallback }">
-                        <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                            placeholder="Search by scope" />
-                    </template>
-                    <template #body="{ data, field }">
-                        {{ data[field] }}
-                    </template>
-                    <template #editor="{ data, field }">
-                        <InputText v-model.trim="data[field]" required="true" placeholder="Enter a scope" />
-                    </template>
-                </Column>
-                <Column field="level" header="Level">
-                    <template #filter="{ filterModel, filterCallback }">
-                        <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                            placeholder="Search by level" />
-                    </template>
-                    <template #body="{ data, field }">
-                        {{ data[field] }}
-                    </template>
-                    <template #editor="{ data, field }">
-                        <InputText v-model.trim="data[field]" required="true" placeholder="Enter a level" />
-                    </template>
-                </Column>
-                <Column field="primaryActorId" header="Actor">
-                    <template #filter="{ filterModel, filterCallback }">
-                        <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
-                            optionValue="id" :options="roles!" placeholder="Search by Actor" />
-                    </template>
-                    <template #body="{ data, field }">
-                        {{ roles?.find(r => r.id === data[field])?.name }}
-                    </template>
-                    <template #editor="{ data, field }">
-                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="roles!"
-                            placeholder="Select an Actor" />
-                    </template>
-                </Column>
-                <Column field="goalInContext" header="Goal in Context">
-                    <template #filter="{ filterModel, filterCallback }">
-                        <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                            placeholder="Search by goal in context" />
-                    </template>
-                    <template #body="{ data, field }">
-                        {{ data[field] }}
-                    </template>
-                    <template #editor="{ data, field }">
-                        <InputText v-model.trim="data[field]" required="true" placeholder="Enter a goal in context" />
-                    </template>
-                </Column>
-                <Column field="preconditionId" header="Precondition">
-                    <template #filter="{ filterModel, filterCallback }">
-                        <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
-                            optionValue="id" :options="assumptions!" placeholder="Search by precondition" />
-                    </template>
-                    <template #body="{ data, field }">
-                        {{ assumptions?.find(a => a.id === data[field])?.name }}
-                    </template>
-                    <template #editor="{ data, field }">
-                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="assumptions!"
-                            placeholder="Select a pre-condition" />
-                    </template>
-                </Column>
-                <Column field="triggerId" header="Trigger">
-                    <template #filter="{ filterModel, filterCallback }">
-                        <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
-                            optionValue="id" :options="triggers!" placeholder="Search by trigger" />
-                    </template>
-                    <template #body="{ data, field }">
-                        {{ effects?.find(e => e.id === data[field])?.name }}
-                    </template>
-                    <template #editor="{ data, field }">
-                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="triggers!"
-                            placeholder="Select a trigger" />
-                    </template>
-                </Column>
-                <Column field="mainSuccessScenario" header="Main Success Scenario">
-                    <template #body="{ data, field }">
-                        {{ data[field] }}
-                    </template>
-                    <template #editor="{ data, field }">
-                        <Textarea v-model.trim="data[field]" required="true" placeholder="Enter a main success scenario"
-                            rows="5" cols="30" />
-                    </template>
-                </Column>
-                <Column field="successGuaranteeId" header="Success Guarantee">
-                    <template #filter="{ filterModel, filterCallback }">
-                        <Dropdown v-model.trim="filterModel.value" @input="filterCallback()" optionLabel="name"
-                            optionValue="id" :options="effects!" placeholder="Search by success guarantee" />
-                    </template>
-                    <template #body="{ data, field }">
-                        {{ effects?.find(e => e.id === data[field])?.name }}
-                    </template>
-                    <template #editor="{ data, field }">
-                        <Dropdown v-model.trim="data[field]" optionLabel="name" optionValue="id" :options="effects!"
-                            placeholder="Select a success guarantee" />
-                    </template>
-                </Column>
-                <Column field="extensions" header="Extensions">
-                    <template #body="{ data, field }">
-                        {{ data[field] }}
-                    </template>
-                    <template #editor="{ data, field }">
-                        <Textarea v-model.trim="data[field]" required="true" placeholder="Enter extensions" rows="5"
-                            cols="30" />
-                    </template>
-                </Column>
-                <!-- <Column field="stakeHoldersAndInterests" header="Stakeholders and Interests">
-                    <template #body="{ data, field }">
-                        {{
-                            data[field].map((id: string) => roles.find((r: any) => r.id === id)?.name).join(', ')
-                        }}
-                    </template>
-                    <template #editor="{ data, field }">
-                        <Listbox v-model.trim="data[field]" :options="roles" optionLabel="name" filter multiple
-                            checkmark />
-                    </template>
-                </Column> -->
+            <XDataTable :datasource="useCases!" :emptyRecord="emptyUseCase" :onCreate="onUseCaseCreate"
+                :onUpdate="onUseCaseUpdate" :onDelete="onUseCaseDelete" :loading="useCaseStatus === 'pending'">
+                <template #rows>
+                    <Column field="name" header="Name" sortable>
+                        <template #filter="{ filterModel, filterCallback }">
+                            <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                                placeholder="Search by name" />
+                        </template>
+                        <template #body="{ data, field }">
+                            {{ data[field] }}
+                        </template>
+                    </Column>
+                    <Column field="scope" header="Scope">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                                placeholder="Search by scope" />
+                        </template>
+                        <template #body="{ data, field }">
+                            {{ data[field] }}
+                        </template>
+                    </Column>
+                    <Column field="level" header="Level">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                                placeholder="Search by level" />
+                        </template>
+                        <template #body="{ data, field }">
+                            {{ data[field] }}
+                        </template>
+                    </Column>
+                    <Column field="primaryActorId" header="Actor">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <select class="p-inputtext p-component" v-model.trim="filterModel.value"
+                                @input="filterCallback()">
+                                <option value="" disabled>Select an Actor</option>
+                                <option v-for="role in roles" :key="role.id" :value="role.id">
+                                    {{ role.name }}
+                                </option>
+                            </select>
+                        </template>
+                        <template #body="{ data, field }">
+                            {{ roles?.find(r => r.id === data[field])?.name }}
+                        </template>
+                    </Column>
+                    <Column field="goalInContext" header="Goal in Context">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                                placeholder="Search by goal in context" />
+                        </template>
+                        <template #body="{ data, field }">
+                            {{ data[field] }}
+                        </template>
+                    </Column>
+                    <Column field="preconditionId" header="Precondition">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <select class="p-inputtext p-component" v-model.trim="filterModel.value"
+                                @input="filterCallback()">
+                                <option value="" disabled>Select a precondition</option>
+                                <option v-for="assumption in assumptions" :key="assumption.id" :value="assumption.id">
+                                    {{ assumption.name }}
+                                </option>
+                            </select>
+                        </template>
+                        <template #body="{ data, field }">
+                            {{ assumptions?.find(a => a.id === data[field])?.name }}
+                        </template>
+                    </Column>
+                    <Column field="triggerId" header="Trigger">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <select class="p-inputtext p-component" v-model.trim="filterModel.value"
+                                @input="filterCallback()">
+                                <option value="" disabled>Select a trigger</option>
+                                <option v-for="trigger in triggers" :key="trigger.id" :value="trigger.id">
+                                    {{ trigger.name }}
+                                </option>
+                            </select>
+                        </template>
+                        <template #body="{ data, field }">
+                            {{ effects?.find(e => e.id === data[field])?.name }}
+                        </template>
+                    </Column>
+                    <Column field="mainSuccessScenario" header="Main Success Scenario">
+                        <template #body="{ data, field }">
+                            {{ data[field] }}
+                        </template>
+                    </Column>
+                    <Column field="successGuaranteeId" header="Success Guarantee">
+                        <template #filter="{ filterModel, filterCallback }">
+                            <select class="p-inputtext p-component" v-model.trim="filterModel.value"
+                                @input="filterCallback()">
+                                <option value="" disabled>Select a success guarantee</option>
+                                <option v-for="effect in effects" :key="effect.id" :value="effect.id">
+                                    {{ effect.name }}
+                                </option>
+                            </select>
+                        </template>
+                        <template #body="{ data, field }">
+                            {{ effects?.find(e => e.id === data[field])?.name }}
+                        </template>
+                    </Column>
+                    <Column field="extensions" header="Extensions">
+                        <template #body="{ data, field }">
+                            {{ data[field] }}
+                        </template>
+                    </Column>
+                </template>
+                <template #createDialog="{ data } : { data: UseCaseViewModel }">
+                    <div class="field grid">
+                        <label for="name" class="required col-fixed w-7rem">Name</label>
+                        <InputText v-model.trim="data.name" name="name" required placeholder="Enter a name"
+                            class="col" />
+                    </div>
+                    <div class="field grid">
+                        <label for="scope" class="required col-fixed w-7rem">Scope</label>
+                        <InputText v-model.trim="data.scope" name="scope" required placeholder="Enter a scope"
+                            class="col" />
+                    </div>
+                    <div class="field grid">
+                        <label for="level" class="required col-fixed w-7rem">Level</label>
+                        <InputText v-model.trim="data.level" name="level" required placeholder="Enter a level"
+                            class="col" />
+                    </div>
+                    <div class="field grid">
+                        <label for="primaryActorId" class="required col-fixed w-7rem">Actor</label>
+                        <select class="p-inputtext p-component col" v-model.trim="data.primaryActorId"
+                            name="primaryActorId">
+                            <option value="" disabled>Select an Actor</option>
+                            <option v-for="role in roles" :key="role.id" :value="role.id">
+                                {{ role.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="field grid">
+                        <label for="goalInContext" class="required col-fixed w-7rem">Goal in Context</label>
+                        <InputText v-model.trim="data.goalInContext" name="goalInContext" required
+                            placeholder="Enter a goal in context" class="col" />
+                    </div>
+                    <div class="field grid">
+                        <label for="preconditionId" class="required col-fixed w-7rem">Pre-condition</label>
+                        <select class="p-inputtext p-component col" v-model.trim="data.preconditionId"
+                            name="preconditionId">
+                            <option value="" disabled>Select a pre-condition</option>
+                            <option v-for="assumption in assumptions" :key="assumption.id" :value="assumption.id">
+                                {{ assumption.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="field grid">
+                        <label for="triggerId" class="required col-fixed w-7rem">Trigger</label>
+                        <select class="p-inputtext p-component col" v-model.trim="data.triggerId" name="triggerId">
+                            <option value="" disabled>Select a trigger</option>
+                            <option v-for="trigger in triggers" :key="trigger.id" :value="trigger.id">
+                                {{ trigger.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="field grid">
+                        <label for="mainSuccessScenario" class="required col-fixed w-7rem">Main Success
+                            Scenario</label>
+                        <Textarea v-model.trim="data.mainSuccessScenario" name="mainSuccessScenario" required
+                            placeholder="Enter a main success scenario" rows="5" cols="30" class="col" />
+                    </div>
+                    <div class="field grid">
+                        <label for="successGuaranteeId" class="required col-fixed w-7rem">Success Guarantee</label>
+                        <select class="p-inputtext p-component col" v-model.trim="data.successGuaranteeId"
+                            name="successGuaranteeId">
+                            <option value="" disabled>Select a success guarantee</option>
+                            <option v-for="effect in effects" :key="effect.id" :value="effect.id">
+                                {{ effect.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="field grid">
+                        <label for="extensions" class="required col-fixed w-7rem">Extensions</label>
+                        <Textarea v-model.trim="data.extensions" name="extensions" required
+                            placeholder="Enter extensions" rows="5" cols="30" class="col" />
+                    </div>
+                </template>
+                <template #editDialog="{ data } : { data: UseCaseViewModel }">
+                    <input type="hidden" name="id" v-model.trim="data.id" />
+                    <div class="field grid">
+                        <label for="name" class="required col-fixed w-7rem">Name</label>
+                        <InputText v-model.trim="data.name" name="name" required placeholder="Enter a name"
+                            class="col" />
+                    </div>
+                    <div class="field grid">
+                        <label for="scope" class="required col-fixed w-7rem">Scope</label>
+                        <InputText v-model.trim="data.scope" name="scope" required placeholder="Enter a scope"
+                            class="col" />
+                    </div>
+                    <div class="field grid">
+                        <label for="level" class="required col-fixed w-7rem">Level</label>
+                        <InputText v-model.trim="data.level" name="level" required placeholder="Enter a level"
+                            class="col" />
+                    </div>
+                    <div class="field grid">
+                        <label for="primaryActorId" class="required col-fixed w-7rem">Actor</label>
+                        <select class="p-inputtext p-component col" v-model.trim="data.primaryActorId"
+                            name="primaryActorId">
+                            <option value="" disabled>Select an Actor</option>
+                            <option v-for="role in roles" :key="role.id" :value="role.id">
+                                {{ role.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="field grid">
+                        <label for="goalInContext" class="required col-fixed w-7rem">Goal in Context</label>
+                        <InputText v-model.trim="data.goalInContext" name="goalInContext" required
+                            placeholder="Enter a goal in context" class="col" />
+                    </div>
+                    <div class="field grid">
+                        <label for="preconditionId" class="required col-fixed w-7rem">Pre-condition</label>
+                        <select class="p-inputtext p-component col" v-model.trim="data.preconditionId"
+                            name="preconditionId">
+                            <option value="" disabled>Select a pre-condition</option>
+                            <option v-for="assumption in assumptions" :key="assumption.id" :value="assumption.id">
+                                {{ assumption.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="field grid">
+                        <label for="triggerId" class="required col-fixed w-7rem">Trigger</label>
+                        <select class="p-inputtext p-component col" v-model.trim="data.triggerId" name="triggerId">
+                            <option value="" disabled>Select a trigger</option>
+                            <option v-for="trigger in triggers" :key="trigger.id" :value="trigger.id">
+                                {{ trigger.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="field grid">
+                        <label for="mainSuccessScenario" class="required col-fixed w-7rem">Main Success
+                            Scenario</label>
+                        <Textarea v-model.trim="data.mainSuccessScenario" name="mainSuccessScenario" required
+                            placeholder="Enter a main success scenario" rows="5" cols="30" class="col" />
+                    </div>
+                    <div class="field grid">
+                        <label for="successGuaranteeId" class="required col-fixed w-7rem">Success Guarantee</label>
+                        <select class="p-inputtext p-component col" v-model.trim="data.successGuaranteeId"
+                            name="successGuaranteeId">
+                            <option value="" disabled>Select a success guarantee</option>
+                            <option v-for="effect in effects" :key="effect.id" :value="effect.id">
+                                {{ effect.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="field grid">
+                        <label for="extensions" class="required col-fixed w-7rem">Extensions</label>
+                        <Textarea v-model.trim="data.extensions" name="extensions" required
+                            placeholder="Enter extensions" rows="5" cols="30" class="col" />
+                    </div>
+                </template>
             </XDataTable>
         </TabPanel>
     </TabView>

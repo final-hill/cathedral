@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { FilterMatchMode } from 'primevue/api';
 import { NIL as emptyUuid } from 'uuid'
 import AppRole from '~/server/domain/application/AppRole';
 
@@ -44,15 +43,6 @@ const { data: users, status, refresh, error: getUserError } = await useFetch('/a
 
 if (getUserError.value)
     $eventBus.$emit('page-error', getUserError.value)
-
-const filters = ref({
-    'name': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'email': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'creationDate': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'lastLoginDate': { value: null, matchMode: FilterMatchMode.CONTAINS },
-    'isSystemAdmin': { value: null, matchMode: FilterMatchMode.EQUALS },
-    'role': { value: null, matchMode: FilterMatchMode.CONTAINS }
-});
 
 const emptyUser: UserViewModel = {
     id: emptyUuid,
@@ -112,54 +102,94 @@ const onUpdate = async (data: UserViewModel) => {
     <p>
         Use this page to manage the users of your organization.
     </p>
-    <XDataTable :datasource="users" :empty-record="emptyUser" :filters="filters" :on-create="onCreate"
-        btn-create-label="Invite existing user" :on-delete="onDelete" :on-update="onUpdate">
-        <Column field="name" header="Name" sortable>
-            <template #filter="{ filterModel, filterCallback }">
-                <InputText v-model.trim="filterModel.value" @input="filterCallback()" placeholder="Search by name" />
-            </template>
-            <template #body="{ data, field }">
-                {{ data[field] }}
-            </template>
-            <template #editor="{ data, field }">
-                <span v-if="data['id'] === emptyUuid">New User</span>
-                <span v-else>{{ data[field] }}</span>
-            </template>
-        </Column>
-        <Column field="email" header="Email" sortable>
-            <template #filter="{ filterModel, filterCallback }">
-                <InputText v-model.trim="filterModel.value" @input="filterCallback()" placeholder="Search by email" />
-            </template>
-            <template #body="{ data, field }">
-                <span>{{ data[field] }}</span>
-            </template>
-            <template #editor="{ data, field }">
-                <InputText v-if="data['id'] === emptyUuid" v-model.trim="data[field]" placeholder="Enter email" />
-                <span v-else>{{ data[field] }}</span>
-            </template>
-        </Column>
-        <Column field="creationDate" header="Creation Date" sortable>
-            <template #body="{ data, field }">
-                {{ data[field]?.toLocaleString() }}
-            </template>
-        </Column>
-        <Column field="lastLoginDate" header="Last Login Date" sortable>
-            <template #body="{ data, field }">
-                {{ data[field]?.toLocaleString() }}
-            </template>
-        </Column>
-        <Column field="isSystemAdmin" header="System Admin">
-            <template #body="{ data, field }">
-                <Checkbox v-model="data[field]" disabled />
-            </template>
-        </Column>
-        <Column field="role" header="Role">
-            <template #body="{ data, field }">
-                {{ data[field] }}
-            </template>
-            <template #editor="{ data, field }">
-                <Dropdown v-model="data[field]" :options="Object.values(AppRole)" />
-            </template>
-        </Column>
+    <XDataTable :datasource="users" :empty-record="emptyUser" :on-create="onCreate" :on-delete="onDelete"
+        :on-update="onUpdate" :loading="status === 'pending'">
+        <template #rows>
+            <Column field="name" header="Name" sortable>
+                <template #filter="{ filterModel, filterCallback }">
+                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                        placeholder="Search by name" />
+                </template>
+                <template #body="{ data, field }">
+                    {{ data[field] }}
+                </template>
+            </Column>
+            <Column field="email" header="Email" sortable>
+                <template #filter="{ filterModel, filterCallback }">
+                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
+                        placeholder="Search by email" />
+                </template>
+                <template #body="{ data, field }">
+                    <span>{{ data[field] }}</span>
+                </template>
+            </Column>
+            <Column field="creationDate" header="Creation Date" sortable>
+                <template #body="{ data, field }">
+                    {{ data[field]?.toLocaleString() }}
+                </template>
+            </Column>
+            <Column field="lastLoginDate" header="Last Login Date" sortable>
+                <template #body="{ data, field }">
+                    {{ data[field]?.toLocaleString() }}
+                </template>
+            </Column>
+            <Column field="isSystemAdmin" header="System Admin">
+                <template #body="{ data, field }">
+                    <Checkbox v-model="data[field]" disabled />
+                </template>
+            </Column>
+            <Column field="role" header="Role">
+                <template #body="{ data, field }">
+                    {{ data[field] }}
+                </template>
+            </Column>
+        </template>
+        <template #createDialog="{ data } : { data: UserViewModel }">
+            <span>Invite existing user</span>
+            <hr>
+            <div class="field grid">
+                <label for="email" class="required col-fixed w-7rem">Email</label>
+                <InputText v-model.trim="data.email" name="email" placeholder="Enter email" class="col" />
+            </div>
+            <div class="field grid">
+                <label for="role" class="required col-fixed w-7rem">Role</label>
+                <select class="p-inputtext p-component col" v-model="data.role" name="role">
+                    <option v-for="role in Object.values(AppRole)" :key="role" :value="role">
+                        {{ role }}
+                    </option>
+                </select>
+            </div>
+        </template>
+        <template #editDialog="{ data } : { data: UserViewModel }">
+            <input type="hidden" id="edit-id" v-model="data.id" name="id" />
+            <div class="field grid">
+                <label class="required col-fixed w-7rem">ID</label>
+                <span id="edit-id" class="col">{{ data.id }}</span>
+            </div>
+            <div class="field grid">
+                <label class="required col-fixed w-7rem">Email</label>
+                <span id="edit-email" class="col">{{ data.email }}</span>
+            </div>
+            <div class="field grid">
+                <label class="required col-fixed w-7rem">Creation Date</label>
+                <span id="creationDate" class="col">{{ data.creationDate }}</span>
+            </div>
+            <div class="field grid">
+                <label class="required col-fixed w-7rem">Last Login Date</label>
+                <span id="lastLoginDate" class="col">{{ data.lastLoginDate }}</span>
+            </div>
+            <div class="field grid">
+                <label for="isSystemAdmin" class="required col-fixed w-7rem">System Admin</label>
+                <Checkbox v-model="data.isSystemAdmin" name="isSystemAdmin" disabled class="col" />
+            </div>
+            <div class="field grid">
+                <label for="role" class="required col-fixed w-7rem">Role</label>
+                <select class="p-inputtext p-component col" v-model="data.role" name="role">
+                    <option v-for="role in Object.values(AppRole)" :key="role" :value="role">
+                        {{ role }}
+                    </option>
+                </select>
+            </div>
+        </template>
     </XDataTable>
 </template>
