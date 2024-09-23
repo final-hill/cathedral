@@ -26,8 +26,7 @@ export default defineEventHandler(async (event) => {
 
     // assign the roles to the appusers
     const appUsersWithRoles: AppUserRoles[] = appUserOrganizationRoles.map((a) => ({
-        // @ts-expect-error: The entity is actually in an 'entity' property. Is this an ORM bug?
-        ...a.appUser.entity,
+        ...a.appUser,
         role: a.role
     }))
 
