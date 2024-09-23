@@ -14,7 +14,10 @@ export default defineEventHandler(async (event) => {
         { solution } = await assertSolutionReader(event, solutionId),
         em = fork()
 
-    const results = await em.find(ParsedRequirements, { solution });
+    const results = await em.findAll(ParsedRequirements, {
+        where: { solution },
+        populate: ['submittedBy']
+    });
 
     return results ?? []
 })

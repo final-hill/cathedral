@@ -3,11 +3,9 @@ import type Dialog from 'primevue/dialog'
 import type DataTable from 'primevue/datatable'
 import { FilterMatchMode } from 'primevue/api';
 
-export type EmptyRecord = { id: string, name: string }
-
 const props = defineProps<{
     datasource: RowType[] | null,
-    emptyRecord: EmptyRecord,
+    emptyRecord: RowType,
     loading: boolean,
     onCreate: (data: RowType) => Promise<void>,
     onDelete: (id: string) => Promise<void>,
@@ -16,7 +14,7 @@ const props = defineProps<{
 
 const slots = defineSlots<{
     rows: { data: RowType }[],
-    createDialog: { data: EmptyRecord },
+    createDialog: { data: RowType },
     editDialog: { data: RowType }
 }>()
 
@@ -26,7 +24,7 @@ const dataTable = ref<DataTable>(),
     confirm = useConfirm(),
     createDialog = ref<Dialog>(),
     createDialogVisible = ref(false),
-    createDialogItem = ref<EmptyRecord>({ ...props.emptyRecord }),
+    createDialogItem = ref<RowType>({ ...props.emptyRecord }),
     editDialog = ref<Dialog>(),
     editDialogVisible = ref(false),
     editDialogItem = ref<RowType>()

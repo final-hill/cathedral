@@ -5,6 +5,7 @@ import { AzureOpenAI } from "openai";
 import zodToJsonSchema from "zod-to-json-schema";
 import { ParsedRequirements } from "~/server/domain/application/index";
 import { fork } from "~/server/data/orm";
+import { v7 as uuidv7 } from 'uuid';
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
@@ -54,17 +55,19 @@ export default defineEventHandler(async (event) => {
         response_format: zodResponseFormat(zodSchema, 'requirements')
     })
 
-    const result = completion.choices[0].message.parsed;
+    const result = (completion.choices[0].message.parsed?.requirements ?? [])
+        .map((req) => ({ ...req, id: uuidv7() })),
+        groupedResult = Object.groupBy(result, ({ type }) => type);
 
     const parsedRequirements = new ParsedRequirements({
         solution,
         statement,
         submittedBy: sessionUser,
         submittedAt: new Date(),
-        jsonResult: result
+        jsonResult: groupedResult
     })
 
     await em.persistAndFlush(parsedRequirements)
 
-    return result?.requirements.length ?? 0
+    return result.length ?? 0
 })

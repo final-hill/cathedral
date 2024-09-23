@@ -16,15 +16,16 @@ export class ParsedRequirements {
     statement!: string;
     submittedBy!: AppUser;
     submittedAt!: Date;
-    jsonResult!: { requirements: { type: string }[] } | null;
+    jsonResult!: { [type: string]: { id: string, type: string, name: string }[] };
 
     toJSON() {
+        const { id, email, name } = this.submittedBy
         return {
             id: this.id,
             solution: this.solution.id,
             statement: this.statement,
-            submittedBy: this.submittedBy.id,
-            submittedAt: this.submittedAt,
+            submittedBy: { id, email, name },
+            submittedAt: this.submittedAt.toJSON(),
             jsonResult: this.jsonResult
         }
     }
