@@ -118,32 +118,16 @@ const componentSortField = ref<string | undefined>('name')
         <template #rows>
             <Column expander />
             <Column field="name" header="Name" sortable>
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by name" />
-                </template>
 <template #body="{ data, field }">
                     {{ data[field] }}
                 </template>
 </Column>
 <Column field="statement" header="Description">
-    <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by description" />
-                </template>
     <template #body="{ data, field }">
                     {{ data[field] }}
                 </template>
 </Column>
 <Column field="parentId" header="Parent">
-    <template #filter="{ filterModel, filterCallback }">
-                    <select class="p-inputtext p-component"  v-model="filterModel.value" @change="filterCallback()">
-                        <option value="">Search by Component</option>
-                        <option v-for="component in components" :key="component.id" :value="component.id">
-                            {{ component.name }}
-                        </option>
-                    </select>
-                </template>
     <template #body="{ data, field }">
                     {{ components!
                         .filter(c => c.id !== emptyUuid)

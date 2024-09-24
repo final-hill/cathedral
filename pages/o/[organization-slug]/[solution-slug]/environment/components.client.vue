@@ -73,19 +73,11 @@ const onUpdate = async (data: EnvironmentComponentViewModel) => {
         :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'">
         <template #rows>
             <Column field="name" header="Name" sortable>
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by name" />
-                </template>
                 <template #body="{ data }">
                     {{ data.name }}
                 </template>
             </Column>
             <Column field="statement" header="Description">
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by description" />
-                </template>
                 <template #body="{ data }">
                     {{ data.statement }}
                 </template>

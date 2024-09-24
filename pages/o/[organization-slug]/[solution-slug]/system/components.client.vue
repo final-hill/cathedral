@@ -78,32 +78,16 @@ const onDelete = async (id: string) => {
         :onDelete="onDelete" :loading="status === 'pending'">
         <template #rows>
             <Column field="name" header="Name" sortable>
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by name" />
-                </template>
                 <template #body="{ data, field }">
                     {{ data[field] }}
                 </template>
             </Column>
             <Column field="statement" header="Description">
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by description" />
-                </template>
                 <template #body="{ data, field }">
                     {{ data[field] }}
                 </template>
             </Column>
             <Column field="parentComponentId" header="Parent">
-                <template #filter="{ filterModel, filterCallback }">
-                    <select class="p-inputtext p-component" v-model="filterModel.value" @change="filterCallback()">
-                        <option value="">Search by Component</option>
-                        <option v-for="component in systemComponents" :key="component.id" :value="component.id">
-                            {{ component.name }}
-                        </option>
-                    </select>
-                </template>
                 <template #body="{ data, field }">
                     {{ systemComponents?.find(c => c.id === data[field])?.name }}
                 </template>

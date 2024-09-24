@@ -106,19 +106,11 @@ const onUpdate = async (data: UserViewModel) => {
         :on-update="onUpdate" :loading="status === 'pending'">
         <template #rows>
             <Column field="name" header="Name" sortable>
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by name" />
-                </template>
                 <template #body="{ data, field }">
                     {{ data[field] }}
                 </template>
             </Column>
             <Column field="email" header="Email" sortable>
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by email" />
-                </template>
                 <template #body="{ data, field }">
                     <span>{{ data[field] }}</span>
                 </template>

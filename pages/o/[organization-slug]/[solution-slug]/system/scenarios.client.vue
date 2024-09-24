@@ -180,52 +180,21 @@ const onUseCaseDelete = async (id: string) => {
                 :onUpdate="onUserStoryUpdate" :onDelete="onUserStoryDelete" :loading="userStoryStatus === 'pending'">
                 <template #rows>
                     <Column field="name" header="Name" sortable>
-                        <template #filter="{ filterModel, filterCallback }">
-                            <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                                placeholder="Search by name" />
-                        </template>
                         <template #body="{ data, field }">
                             {{ data[field] }}
                         </template>
                     </Column>
                     <Column field="primaryActorId" header="Actor">
-                        <template #filter="{ filterModel, filterCallback }">
-                            <select class="p-inputtext p-component" v-model.trim="filterModel.value"
-                                @input="filterCallback()">
-                                <option value="" disabled>Select an Actor</option>
-                                <option v-for="role in roles" :key="role.id" :value="role.id">
-                                    {{ role.name }}
-                                </option>
-                            </select>
-                        </template>
                         <template #body="{ data, field }">
                             {{ roles?.find(r => r.id === data[field])?.name }}
                         </template>
                     </Column>
                     <Column field="functionalBehaviorId" header="Behavior">
-                        <template #filter="{ filterModel, filterCallback }">
-                            <select class="p-inputtext p-component" v-model.trim="filterModel.value"
-                                @input="filterCallback()">
-                                <option value="" disabled>Select a Behavior</option>
-                                <option v-for="behavior in functionalBehaviors" :key="behavior.id" :value="behavior.id">
-                                    {{ behavior.name }}
-                                </option>
-                            </select>
-                        </template>
                         <template #body="{ data, field }">
                             {{ functionalBehaviors?.find(b => b.id === data[field])?.name }}
                         </template>
                     </Column>
                     <Column field="outcomeId" header="Outcome">
-                        <template #filter="{ filterModel, filterCallback }">
-                            <select class="p-inputtext p-component" v-model.trim="filterModel.value"
-                                @input="filterCallback()">
-                                <option value="" disabled>Select an Outcome</option>
-                                <option v-for="outcome in outcomes" :key="outcome.id" :value="outcome.id">
-                                    {{ outcome.name }}
-                                </option>
-                            </select>
-                        </template>
                         <template #body="{ data, field }">
                             {{ outcomes?.find(o => o.id === data[field])?.name }}
                         </template>
@@ -315,79 +284,36 @@ const onUseCaseDelete = async (id: string) => {
                 :onUpdate="onUseCaseUpdate" :onDelete="onUseCaseDelete" :loading="useCaseStatus === 'pending'">
                 <template #rows>
                     <Column field="name" header="Name" sortable>
-                        <template #filter="{ filterModel, filterCallback }">
-                            <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                                placeholder="Search by name" />
-                        </template>
                         <template #body="{ data, field }">
                             {{ data[field] }}
                         </template>
                     </Column>
                     <Column field="scope" header="Scope">
-                        <template #filter="{ filterModel, filterCallback }">
-                            <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                                placeholder="Search by scope" />
-                        </template>
                         <template #body="{ data, field }">
                             {{ data[field] }}
                         </template>
                     </Column>
                     <Column field="level" header="Level">
-                        <template #filter="{ filterModel, filterCallback }">
-                            <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                                placeholder="Search by level" />
-                        </template>
                         <template #body="{ data, field }">
                             {{ data[field] }}
                         </template>
                     </Column>
                     <Column field="primaryActorId" header="Actor">
-                        <template #filter="{ filterModel, filterCallback }">
-                            <select class="p-inputtext p-component" v-model.trim="filterModel.value"
-                                @input="filterCallback()">
-                                <option value="" disabled>Select an Actor</option>
-                                <option v-for="role in roles" :key="role.id" :value="role.id">
-                                    {{ role.name }}
-                                </option>
-                            </select>
-                        </template>
                         <template #body="{ data, field }">
                             {{ roles?.find(r => r.id === data[field])?.name }}
                         </template>
                     </Column>
                     <Column field="goalInContext" header="Goal in Context">
-                        <template #filter="{ filterModel, filterCallback }">
-                            <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                                placeholder="Search by goal in context" />
-                        </template>
                         <template #body="{ data, field }">
                             {{ data[field] }}
                         </template>
                     </Column>
                     <Column field="preconditionId" header="Precondition">
-                        <template #filter="{ filterModel, filterCallback }">
-                            <select class="p-inputtext p-component" v-model.trim="filterModel.value"
-                                @input="filterCallback()">
-                                <option value="" disabled>Select a precondition</option>
-                                <option v-for="assumption in assumptions" :key="assumption.id" :value="assumption.id">
-                                    {{ assumption.name }}
-                                </option>
-                            </select>
-                        </template>
                         <template #body="{ data, field }">
                             {{ assumptions?.find(a => a.id === data[field])?.name }}
                         </template>
                     </Column>
                     <Column field="triggerId" header="Trigger">
-                        <template #filter="{ filterModel, filterCallback }">
-                            <select class="p-inputtext p-component" v-model.trim="filterModel.value"
-                                @input="filterCallback()">
-                                <option value="" disabled>Select a trigger</option>
-                                <option v-for="trigger in triggers" :key="trigger.id" :value="trigger.id">
-                                    {{ trigger.name }}
-                                </option>
-                            </select>
-                        </template>
                         <template #body="{ data, field }">
                             {{ effects?.find(e => e.id === data[field])?.name }}
                         </template>
@@ -398,15 +324,6 @@ const onUseCaseDelete = async (id: string) => {
                         </template>
                     </Column>
                     <Column field="successGuaranteeId" header="Success Guarantee">
-                        <template #filter="{ filterModel, filterCallback }">
-                            <select class="p-inputtext p-component" v-model.trim="filterModel.value"
-                                @input="filterCallback()">
-                                <option value="" disabled>Select a success guarantee</option>
-                                <option v-for="effect in effects" :key="effect.id" :value="effect.id">
-                                    {{ effect.name }}
-                                </option>
-                            </select>
-                        </template>
                         <template #body="{ data, field }">
                             {{ effects?.find(e => e.id === data[field])?.name }}
                         </template>

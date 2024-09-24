@@ -114,49 +114,21 @@ const onUserStoryDelete = async (id: string) => {
         :onUpdate="onUserStoryUpdate" :onDelete="onUserStoryDelete" :loading="status === 'pending'">
         <template #rows>
             <Column field="name" header="Name" sortable>
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by name" />
-                </template>
                 <template #body="{ data, field }">
                     {{ data[field] }}
                 </template>
             </Column>
             <Column field="primaryActorId" header="Stakeholder">
-                <template #filter="{ filterModel, filterCallback }">
-                    <select class="p-inputtext p-component" v-model.trim="filterModel.value" @input="filterCallback()">
-                        <option value="" disabled>Select a Stakeholder</option>
-                        <option v-for="role in roles" :key="role.id" :value="role.id">
-                            {{ role.name }}
-                        </option>
-                    </select>
-                </template>
                 <template #body="{ data, field }">
                     {{ roles?.find(r => r.id === data[field])?.name }}
                 </template>
             </Column>
             <Column field="functionalBehaviorId" header="Behavior">
-                <template #filter="{ filterModel, filterCallback }">
-                    <select class="p-inputtext p-component" v-model.trim="filterModel.value" @input="filterCallback()">
-                        <option value="" disabled>Select a Behavior</option>
-                        <option v-for="behavior in functionalBehaviors" :key="behavior.id" :value="behavior.id">
-                            {{ behavior.name }}
-                        </option>
-                    </select>
-                </template>
                 <template #body="{ data, field }">
                     {{ functionalBehaviors?.find(b => b.id === data[field])?.name }}
                 </template>
             </Column>
             <Column field="outcomeId" header="Outcome">
-                <template #filter="{ filterModel, filterCallback }">
-                    <select class="p-inputtext p-component" v-model.trim="filterModel.value" @input="filterCallback()">
-                        <option value="" disabled>Select an Outcome</option>
-                        <option v-for="outcome in outcomes" :key="outcome.id" :value="outcome.id">
-                            {{ outcome.name }}
-                        </option>
-                    </select>
-                </template>
                 <template #body="{ data, field }">
                     {{ outcomes?.find(o => o.id === data[field])?.name }}
                 </template>

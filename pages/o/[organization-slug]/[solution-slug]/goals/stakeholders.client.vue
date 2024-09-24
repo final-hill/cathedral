@@ -140,64 +140,31 @@ const onDelete = async (id: string) => {
                 :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'">
                 <template #rows>
                     <Column field="name" header="Name" sortable>
-                        <template #filter="{ filterModel, filterCallback }">
-                            <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                                placeholder="Search by name" />
-                        </template>
                         <template #body="{ data, field }">
                             {{ data[field] }}
                         </template>
                     </Column>
                     <Column field="statement" header="Description">
-                        <template #filter="{ filterModel, filterCallback }">
-                            <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                                placeholder="Search by description" />
-                        </template>
                         <template #body="{ data, field }">
                             {{ data[field] }}
                         </template>
                     </Column>
                     <Column field="availability" header="Availability" sortable>
-                        <template #filter="{ filterModel, filterCallback }">
-                            <InputNumber v-model.trim="filterModel.value" @input="filterCallback()"
-                                placeholder="(0-100)" />
-                        </template>
                         <template #body="{ data, field }">
                             {{ data[field] }}
                         </template>
                     </Column>
                     <Column field="influence" header="Influence" sortable>
-                        <template #filter="{ filterModel, filterCallback }">
-                            <InputNumber v-model.trim="filterModel.value" @input="filterCallback()"
-                                placeholder="(0-100)" />
-                        </template>
                         <template #body="{ data, field }">
                             {{ data[field] }}
                         </template>
                     </Column>
                     <Column field="category" header="Category" sortable>
-                        <template #filter="{ filterModel, filterCallback }">
-                            <select class="p-inputtext p-component" v-model="filterModel.value"
-                                @input="filterCallback()">
-                                <option v-for="category in categories" :key="category.id" :value="category.id">
-                                    {{ category.description }}
-                                </option>
-                            </select>
-                        </template>
                         <template #body="{ data, field }">
                             {{ categories.find(({ id }) => id === data[field])?.description }}
                         </template>
                     </Column>
                     <Column field="segmentation" header="Segmentation" sortable>
-                        <template #filter="{ filterModel, filterCallback }">
-                            <select class="p-inputtext p-component" v-model="filterModel.value"
-                                @input="filterCallback()">
-                                <option v-for="segmentation in segmentations" :key="segmentation.id"
-                                    :value="segmentation.id">
-                                    {{ segmentation.description }}
-                                </option>
-                            </select>
-                        </template>
                         <template #body="{ data, field }">
                             {{ segmentations.find(({ id }) => id === data[field])?.description }}
                         </template>

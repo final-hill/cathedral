@@ -75,19 +75,11 @@ const onDelete = async (id: string) => {
         :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'">
         <template #rows>
             <Column field="name" header="Term" sortable>
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by term" />
-                </template>
                 <template #body="{ data }">
                     {{ data.name }}
                 </template>
             </Column>
             <Column field="statement" header="Definition">
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by definition" />
-                </template>
                 <template #body="{ data }">
                     {{ data.statement }}
                 </template>
