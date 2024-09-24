@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NIL as emptyUuid } from 'uuid'
-import { AppRole } from '~/server/domain/application/index';
+import { AppRole } from '~/server/domain/application/AppRole'
 
 useHead({ title: 'Users' })
 definePageMeta({ name: 'Organization Users' })
