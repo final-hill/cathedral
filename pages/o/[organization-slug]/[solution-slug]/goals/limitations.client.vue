@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { NIL as emptyUuid } from 'uuid';
+import camelCaseToTitle from '~/utils/camelCaseToTitle';
 
 useHead({ title: 'Limitations' })
 definePageMeta({ name: 'Limitations' })
@@ -75,14 +76,11 @@ const onDelete = async (id: string) => {
     <XDataTable :datasource="limits" :empty-record="emptyLimit" :on-create="onCreate" :on-update="onUpdate"
         :on-delete="onDelete" :loading="status === 'pending'">
         <template #rows>
-            <Column field="name" header="Name" sortable>
-                <template #body="{ data }">
-                    {{ data.name }}
-                </template>
-            </Column>
-            <Column field="statement" header="Description">
-                <template #body="{ data }">
-                    {{ data.statement }}
+            <Column v-for="key in Object.keys(emptyLimit)" :key="key" :field="key" :header="camelCaseToTitle(key)">
+                <template #body="{ data, field }">
+                    <Checkbox v-if="typeof data[field] === 'boolean'" v-model="data[field]" disabled />
+                    <span v-else-if="data[field] instanceof Date">{{ data[field].toLocaleString() }}</span>
+                    <span v-else>{{ data[field] }}</span>
                 </template>
             </Column>
         </template>

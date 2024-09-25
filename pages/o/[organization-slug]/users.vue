@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NIL as emptyUuid } from 'uuid'
 import AppRole from '~/server/domain/application/AppRole';
+import camelCaseToTitle from '~/utils/camelCaseToTitle';
 
 useHead({ title: 'Users' })
 definePageMeta({ name: 'Organization Users' })
@@ -105,34 +106,11 @@ const onUpdate = async (data: UserViewModel) => {
     <XDataTable :datasource="users" :empty-record="emptyUser" :on-create="onCreate" :on-delete="onDelete"
         :on-update="onUpdate" :loading="status === 'pending'">
         <template #rows>
-            <Column field="name" header="Name" sortable>
+            <Column v-for="key in Object.keys(emptyUser)" :key="key" :field="key" :header="camelCaseToTitle(key)">
                 <template #body="{ data, field }">
-                    {{ data[field] }}
-                </template>
-            </Column>
-            <Column field="email" header="Email" sortable>
-                <template #body="{ data, field }">
-                    <span>{{ data[field] }}</span>
-                </template>
-            </Column>
-            <Column field="creationDate" header="Creation Date" sortable>
-                <template #body="{ data, field }">
-                    {{ data[field]?.toLocaleString() }}
-                </template>
-            </Column>
-            <Column field="lastLoginDate" header="Last Login Date" sortable>
-                <template #body="{ data, field }">
-                    {{ data[field]?.toLocaleString() }}
-                </template>
-            </Column>
-            <Column field="isSystemAdmin" header="System Admin">
-                <template #body="{ data, field }">
-                    <Checkbox v-model="data[field]" disabled />
-                </template>
-            </Column>
-            <Column field="role" header="Role">
-                <template #body="{ data, field }">
-                    {{ data[field] }}
+                    <Checkbox v-if="typeof data[field] === 'boolean'" v-model="data[field]" disabled />
+                    <span v-else-if="data[field] instanceof Date">{{ data[field].toLocaleString() }}</span>
+                    <span v-else>{{ data[field] }}</span>
                 </template>
             </Column>
         </template>
