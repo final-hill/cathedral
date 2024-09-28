@@ -8,8 +8,8 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string().min(1),
-    statement: z.string()
+    name: z.string().default("{Untitled Assumption}"),
+    statement: z.string().default("")
 })
 
 /**

@@ -1,5 +1,5 @@
 import { EntitySchema } from "@mikro-orm/core";
-import Organization from "../../domain/application/Organization.js";
+import Organization from "../../../domain/application/Organization.js";
 
 export default new EntitySchema<Organization>({
     class: Organization,

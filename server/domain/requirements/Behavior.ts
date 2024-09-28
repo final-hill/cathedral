@@ -13,5 +13,5 @@ export abstract class Behavior extends Requirement {
     /**
      * The priority of the behavior.
      */
-    priority: MoscowPriority;
+    priority?: MoscowPriority;
 }

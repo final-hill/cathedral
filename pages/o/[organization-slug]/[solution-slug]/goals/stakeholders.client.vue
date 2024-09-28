@@ -32,7 +32,7 @@ if (getStakeholdersError.value)
 
 // watch the stakeholders and re-render the chart
 watch(stakeholders, async () => {
-    const groupStakeholders = Object.groupBy(stakeholders.value!, ({ segmentation }) => segmentation),
+    const groupStakeholders = Object.groupBy(stakeholders.value!, ({ segmentation }) => segmentation ?? 'unknown'),
         clientGroup = groupStakeholders.Client ?? [],
         vendorGroup = groupStakeholders.Vendor ?? [];
 

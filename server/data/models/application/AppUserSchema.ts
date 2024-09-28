@@ -1,5 +1,5 @@
 import { EntitySchema } from "@mikro-orm/core";
-import AppUser from "../../domain/application/AppUser.js";
+import AppUser from "../../../domain/application/AppUser.js";
 
 export default new EntitySchema<AppUser>({
     class: AppUser,

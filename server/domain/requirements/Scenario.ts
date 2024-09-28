@@ -14,5 +14,5 @@ export abstract class Scenario extends Example {
     /**
      * Primary actor involved in the scenario
      */
-    primaryActor: Stakeholder;
+    primaryActor?: Stakeholder;
 }

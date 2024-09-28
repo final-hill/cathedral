@@ -8,8 +8,8 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string(),
-    statement: z.string()
+    name: z.string().default("{Untitled Limit}"),
+    statement: z.string().default("")
 })
 
 /**

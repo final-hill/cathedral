@@ -13,5 +13,5 @@ export class Constraint extends Requirement {
     /**
      * Category of the constraint
      */
-    category: ConstraintCategory;
+    category?: ConstraintCategory;
 }

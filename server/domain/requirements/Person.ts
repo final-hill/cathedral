@@ -13,5 +13,5 @@ export class Person extends Actor {
     /**
      * Email address of the person
      */
-    email: string;
+    email?: string;
 }

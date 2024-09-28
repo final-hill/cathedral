@@ -7,8 +7,8 @@ import { getServerSession } from '#auth'
 import AppUser from "~/server/domain/application/AppUser"
 
 const bodySchema = z.object({
-    name: z.string().min(1),
-    description: z.string()
+    name: z.string().default("{Untitled Organization}"),
+    description: z.string().default("")
 })
 
 /**

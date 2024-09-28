@@ -4,8 +4,8 @@ import { Invariant } from "~/server/domain/requirements/index.js"
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string().min(1),
-    statement: z.string()
+    name: z.string().default("{Untitled Invariant}"),
+    statement: z.string().default("")
 })
 
 /**

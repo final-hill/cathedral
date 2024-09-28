@@ -66,8 +66,7 @@ const onUpdate = async (data: EnvironmentComponent) => {
         Environment components are the EXTERNAL elements that the system interacts with.
         These external components expose interfaces that the system uses to communicate with.
     </p>
-    <XDataTable :viewModel="{ name: 'text', statement: 'text' }"
-        :createModel="{ name: 'text', statement: 'text' }"
+    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="environmentComponents"
         :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'">
     </XDataTable>

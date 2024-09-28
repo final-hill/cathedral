@@ -167,10 +167,10 @@ const onEditDialogCancel = () => {
             <div class="field grid"
                 v-for="key of Object.keys(props.createModel).filter(k => props.createModel[k as keyof RowType] !== 'hidden')"
                 :key="key" :field="key">
-                <label :for="key" class="required col-4">{{ camelCaseToTitle(key) }}</label>
+                <label :for="key" class="col-4">{{ camelCaseToTitle(key) }}</label>
 
                 <InputText v-if="props.createModel[key as keyof RowType] === 'text'" :name="key"
-                    v-model.trim="createDialogItem[key]" required class="col-8" />
+                    v-model.trim="createDialogItem[key]" class="col-8" />
                 <InputNumber v-else-if="
                     typeof props.createModel[key as keyof RowType] === 'object' &&
                     (props.createModel[key as keyof RowType] as any).type === 'number'
@@ -202,7 +202,7 @@ const onEditDialogCancel = () => {
                 </select>
 
                 <Textarea v-else-if="props.createModel[key as keyof RowType] === 'textarea'" :name="key"
-                    v-model.trim="createDialogItem[key]" required class="col-8" />
+                    v-model.trim="createDialogItem[key]" class="col-8" />
                 <span v-else>{{ createDialogItem[key] }}</span>
             </div>
         </form>
@@ -216,11 +216,11 @@ const onEditDialogCancel = () => {
         <template #header>Edit Item</template>
         <form id="editDialogForm" autocomplete="off" @submit.prevent="onEditDialogSave" @reset="onEditDialogCancel">
             <div class="field grid" v-for="key of Object.keys(props.editModel)" :key="key" :field="key">
-                <label v-if="props.editModel[key as keyof RowType] !== 'hidden'" :for="key" class="required col-4">{{
+                <label v-if="props.editModel[key as keyof RowType] !== 'hidden'" :for="key" class="col-4">{{
                     camelCaseToTitle(key) }}</label>
 
                 <InputText v-if="props.editModel[key as keyof RowType] === 'text'" :name="key"
-                    v-model.trim="editDialogItem[key]" required class="col-8" />
+                    v-model.trim="editDialogItem[key]" class="col-8" />
                 <input v-else-if="props.editModel[key as keyof RowType] === 'hidden'" type="hidden" :name="key"
                     v-model.trim="editDialogItem[key]" />
                 <InputNumber v-else-if="
@@ -253,7 +253,7 @@ const onEditDialogCancel = () => {
                     </option>
                 </select>
                 <Textarea v-else-if="props.editModel[key as keyof RowType] === 'textarea'" :name="key"
-                    v-model.trim="editDialogItem[key]" required class="col-8" />
+                    v-model.trim="editDialogItem[key]" class="col-8" />
                 <span v-else>{{ editDialogItem[key] }}</span>
             </div>
         </form>

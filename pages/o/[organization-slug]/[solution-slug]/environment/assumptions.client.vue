@@ -73,9 +73,8 @@ const onUpdate = async (data: Assumption) => {
         An example of an assumption would be: "Screen resolution will not change during
         the execution of the program".
     </p>
-    <XDataTable :viewModel="{ name: 'text', statement: 'text' }"
-        :createModel="{ name: 'text', statement: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="assumptions"
-        :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'">
+    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="assumptions" :on-create="onCreate"
+        :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'">
     </XDataTable>
 </template>
