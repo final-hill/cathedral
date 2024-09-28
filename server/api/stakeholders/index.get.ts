@@ -22,13 +22,16 @@ export default defineEventHandler(async (event) => {
 
     await assertSolutionReader(event, query.solutionId)
 
-    const results = await em.find(Stakeholder, Object.entries(query)
-        .filter(([_, value]) => value !== undefined)
-        .reduce((acc, [key, value]) => {
-            if (key.endsWith("Id"))
-                return { ...acc, [key.replace("Id", "")]: value };
-            return { ...acc, [key]: { $eq: value } };
-        }, {} as Record<string, any>));
+    const results = await em.findAll(Stakeholder, {
+        where: Object.entries(query)
+            .filter(([_, value]) => value !== undefined)
+            .reduce((acc, [key, value]) => {
+                if (key.endsWith("Id"))
+                    return { ...acc, [key.replace("Id", "")]: value };
+                return { ...acc, [key]: { $eq: value } };
+            }, {}),
+        populate: ['modifiedBy', 'solution']
+    });
 
     return results
 })

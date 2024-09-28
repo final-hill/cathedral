@@ -6,33 +6,37 @@ import { Component, StakeholderCategory, StakeholderSegmentation } from "./index
  */
 export class Stakeholder extends Component {
     constructor({ influence, availability, segmentation, category, parentComponent, ...rest }: Omit<Properties<Stakeholder>, 'id'>) {
-        super(rest)
+        super(rest);
 
-        this.influence = influence
-        this.availability = availability
-        this.segmentation = segmentation
-        this.category = category
-        this.parentComponent = parentComponent
+        this.influence = influence;
+        this.availability = availability;
+        this.segmentation = segmentation;
+        this.category = category;
+        this.parentComponent = parentComponent;
     }
 
-    parentComponent?: Stakeholder
+    /**
+     * The parent component of the stakeholder, if any.
+     */
+    parentComponent?: Stakeholder;
 
-    segmentation: StakeholderSegmentation
+    /**
+     * The segmentation of the stakeholder.
+     */
+    segmentation: StakeholderSegmentation;
 
-    category: StakeholderCategory
+    /**
+     * The category of the stakeholder.
+     */
+    category: StakeholderCategory;
 
-    availability: number
+    /**
+     * The availability of the stakeholder.
+     */
+    availability: number;
 
-    influence: number
-
-    override toJSON() {
-        return {
-            ...super.toJSON(),
-            parentComponentId: this.parentComponent?.id,
-            segmentation: this.segmentation,
-            category: this.category,
-            availability: this.availability,
-            influence: this.influence
-        }
-    }
+    /**
+     * The influence of the stakeholder.
+     */
+    influence: number;
 }

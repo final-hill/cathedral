@@ -8,40 +8,45 @@ import { Assumption, Effect, Scenario } from "./index.js";
  */
 export class UseCase extends Scenario {
     constructor(props: Omit<Properties<UseCase>, 'id'>) {
-        super(props)
-        this.scope = props.scope
-        this.level = props.level
-        this.goalInContext = props.goalInContext
-        this.precondition = props.precondition
-        this.triggerId = props.triggerId
-        this.mainSuccessScenario = props.mainSuccessScenario
-        this.successGuarantee = props.successGuarantee
-        this.extensions = props.extensions
-        // this.stakeHoldersAndInterests = props.stakeHoldersAndInterests
+        super(props);
+        this.scope = props.scope;
+        this.level = props.level;
+        this.goalInContext = props.goalInContext;
+        this.precondition = props.precondition;
+        this.triggerId = props.triggerId;
+        this.mainSuccessScenario = props.mainSuccessScenario;
+        this.successGuarantee = props.successGuarantee;
+        this.extensions = props.extensions;
+        // this.stakeHoldersAndInterests = props.stakeHoldersAndInterests;
     }
 
     /**
-     * TODO: <https://github.com/final-hill/cathedral/issues/154>
+     * The scope of the use case.
      */
-    scope: string
+    // TODO: <https://github.com/final-hill/cathedral/issues/154>
+    scope: string;
 
     /**
-     * TODO: <https://github.com/final-hill/cathedral/issues/154>
+     * The level of the use case.
      */
-    level: string
+    // TODO: <https://github.com/final-hill/cathedral/issues/154>
+    level: string;
 
     /**
-     * TODO: is this just the Goal.description?
+     * The goal in context of the use case.
      */
-    goalInContext: string
+    // TODO: is this just the Goal.description?
+    goalInContext: string;
 
     /**
      * The precondition is an Assumption that must be true before the use case can start.
      */
-    precondition: Assumption
+    precondition: Assumption;
 
-    // the action upon the system that starts the use case
-    triggerId: string = emptyUuid
+    /**
+     * The action upon the system that starts the use case.
+     */
+    triggerId: string = emptyUuid;
 
     /**
      * The main success scenario is the most common path through the system.
@@ -57,31 +62,14 @@ export class UseCase extends Scenario {
     /**
      * An Effect that is guaranteed to be true after the use case is completed.
      */
-    successGuarantee: Effect
+    successGuarantee: Effect;
 
     /**
-     *
+     * Extensions of the use case.
      */
     // extensions: [FunctionalRequirement | Constraint | Role | Responsibility][]
     extensions: string
 
-    /**
-     *
-     */
+    // TODO: <https://github.com/final-hill/cathedral/issues/154>
     // stakeHoldersAndInterests: string[] // Actor[]
-
-    override toJSON() {
-        return {
-            ...super.toJSON(),
-            scope: this.scope,
-            level: this.level,
-            goalInContext: this.goalInContext,
-            preconditionId: this.precondition.id,
-            triggerId: this.triggerId,
-            mainSuccessScenario: this.mainSuccessScenario,
-            successGuaranteeId: this.successGuarantee.id,
-            extensions: this.extensions
-            // stakeHoldersAndInterests: this.stakeHoldersAndInterests
-        }
-    }
 }

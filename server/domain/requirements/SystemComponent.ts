@@ -3,16 +3,12 @@ import { Component } from "./index.js"
 
 export class SystemComponent extends Component {
     constructor({ parentComponent, ...rest }: Omit<Properties<SystemComponent>, 'id'>) {
-        super(rest)
-        this.parentComponent = parentComponent
+        super(rest);
+        this.parentComponent = parentComponent;
     }
 
+    /**
+     * Parent component of the current system component
+     */
     parentComponent?: SystemComponent;
-
-    override toJSON() {
-        return {
-            ...super.toJSON(),
-            parentComponentId: this.parentComponent?.id
-        }
-    }
 }

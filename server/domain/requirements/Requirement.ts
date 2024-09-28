@@ -9,18 +9,17 @@ import AppUser from '../application/AppUser.js';
 export abstract class Requirement {
     constructor({ name, statement, solution, lastModified, modifiedBy }: Omit<Properties<Requirement>, 'id'>) {
         this.id = uuidv7();
-        this.name = name
-        this.statement = statement
-        this.solution = solution
-        this.lastModified = lastModified
-        this.modifiedBy = modifiedBy
+        this.name = name;
+        this.statement = statement;
+        this.solution = solution;
+        this.lastModified = lastModified;
+        this.modifiedBy = modifiedBy;
     }
 
     /**
      * The unique identifier of the Requirement
      */
-    id: string
-
+    id: string;
     /**
      * A property is a Predicate formalizing its associated statement.
      * TODO: represented as a datalog string?
@@ -30,36 +29,25 @@ export abstract class Requirement {
     /**
      * A short name for the requirement
      */
-    name: string
+    name: string;
 
     /**
      * A human-readable description of a property
      */
-    statement: string
+    statement: string;
 
     /**
      * The solution that owns this requirement
      */
-    solution: Solution
+    solution: Solution;
 
     /**
      * The date and time when the requirement was last modified
      */
-    lastModified: Date
+    lastModified: Date;
 
     /**
      * The user who last modified the requirement
      */
-    modifiedBy: AppUser
-
-    toJSON() {
-        return {
-            id: this.id,
-            name: this.name,
-            statement: this.statement,
-            solutionId: this.solution.id,
-            lastModified: this.lastModified.toISOString(),
-            modifiedById: this.modifiedBy.id
-        }
-    }
+    modifiedBy: AppUser;
 }

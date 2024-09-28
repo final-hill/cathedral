@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import { MoscowPriority } from '~/server/domain/requirements/index';
-import { NIL as emptyUuid } from 'uuid';
+import { FunctionalBehavior, MoscowPriority } from '~/server/domain/requirements/index';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Goals Functionality' })
@@ -18,27 +17,18 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-type FunctionalBehaviorViewModel = {
-    id: string;
-    name: string;
-    statement: string;
-    priority: MoscowPriority;
-}
-
-const { data: functionalBehaviors, refresh, status, error: getFunctionalBehaviorsError } = await useFetch(`/api/functional-behaviors`, {
-    query: { solutionId }
-}),
-    emptyFunctionalBehavior: FunctionalBehaviorViewModel = {
-        id: emptyUuid,
-        name: '',
-        statement: '',
-        priority: MoscowPriority.MUST
-    };
+const { data: functionalBehaviors, refresh, status, error: getFunctionalBehaviorsError } = await useFetch<FunctionalBehavior[]>(`/api/functional-behaviors`, {
+    query: { solutionId },
+    transform: (data) => data.map((item) => {
+        item.lastModified = new Date(item.lastModified)
+        return item
+    })
+})
 
 if (getFunctionalBehaviorsError.value)
     $eventBus.$emit('page-error', getFunctionalBehaviorsError.value);
 
-const onCreate = async (data: FunctionalBehaviorViewModel) => {
+const onCreate = async (data: FunctionalBehavior) => {
     await $fetch(`/api/functional-behaviors`, {
         method: 'POST',
         body: {
@@ -51,7 +41,7 @@ const onCreate = async (data: FunctionalBehaviorViewModel) => {
     refresh()
 }
 
-const onUpdate = async (data: FunctionalBehaviorViewModel) => {
+const onUpdate = async (data: FunctionalBehavior) => {
     await $fetch(`/api/functional-behaviors/${data.id}`, {
         method: 'PUT',
         body: {
@@ -81,48 +71,8 @@ const onDelete = async (id: string) => {
         They describe <strong>WHAT</strong> the solution must do and not how it does it.
     </p>
 
-    <XDataTable :datasource="functionalBehaviors" :empty-record="emptyFunctionalBehavior" :on-create="onCreate"
-        :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'">
-        <template #rows>
-            <Column field="name" header="Function" sortable>
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by function" />
-                </template>
-                <template #body="{ data }">
-                    {{ data.name }}
-                </template>
-            </Column>
-            <Column field="statement" header="Description">
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by Description" />
-                </template>
-                <template #body="{ data }">
-                    {{ data.statement }}
-                </template>
-            </Column>
-        </template>
-        <template #createDialog="{ data } : { data: FunctionalBehaviorViewModel }">
-            <div class="field grid">
-                <label for="name" class="required col-fixed w-7rem">Name</label>
-                <InputText v-model.trim="data.name" name="name" required class="col" />
-            </div>
-            <div class="field grid">
-                <label for="statement" class="required col-fixed w-7rem">Statement</label>
-                <InputText v-model.trim="data.statement" name="statement" required class="col" />
-            </div>
-        </template>
-        <template #editDialog="{ data } : { data: FunctionalBehaviorViewModel }">
-            <input type="hidden" v-model="data.id" name="id" />
-            <div class="field grid">
-                <label for="name" class="required col-fixed w-7rem">Name</label>
-                <InputText v-model.trim="data.name" name="name" required class="col" />
-            </div>
-            <div class="field grid">
-                <label for="statement" class="required col-fixed w-7rem">Statement</label>
-                <InputText v-model.trim="data.statement" name="statement" required class="col" />
-            </div>
-        </template>
+    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="functionalBehaviors"
+        :on-create="onCreate" :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'">
     </XDataTable>
 </template>

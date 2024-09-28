@@ -1,9 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
 import AppUserOrganizationRole from "~/server/domain/application/AppUserOrganizationRole"
-import { type Properties } from "~/server/domain/Properties"
 import AppUser from "~/server/domain/application/AppUser"
-import AppRole from "~/server/domain/application/AppRole"
 
 const querySchema = z.object({
     organizationId: z.string().uuid(),
@@ -22,13 +20,12 @@ export default defineEventHandler(async (event) => {
         populate: ['appUser']
     })
 
-    type AppUserRoles = Properties<AppUser> & { role: AppRole }
-
     // assign the roles to the appusers
-    const appUsersWithRoles: AppUserRoles[] = appUserOrganizationRoles.map((a) => ({
-        ...a.appUser,
-        role: a.role
-    }))
+    const appUsersWithRoles: AppUser[] = appUserOrganizationRoles.map((aur) => {
+        const appUser = aur.appUser as AppUser
+        appUser.role = aur.role
+        return appUser
+    })
 
     return appUsersWithRoles
 })

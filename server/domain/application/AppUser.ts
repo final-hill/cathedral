@@ -1,4 +1,5 @@
 import { type Properties } from "../Properties.js";
+import AppRole from "./AppRole.js";
 
 /**
  * An AppUser is a user of the application
@@ -11,12 +12,13 @@ export default class AppUser {
         this.lastLoginDate = properties.lastLoginDate;
         this.name = properties.name;
         this.email = properties.email;
+        this.role = properties.role;
     }
 
     /**
      * The unique identifier of the AppUser (uuid)
      */
-    id: string
+    id: string;
 
     /**
      * The name of the AppUser
@@ -26,7 +28,7 @@ export default class AppUser {
     /**
      * The email address of the AppUser
      */
-    email: string
+    email: string;
 
     /**
      * The date the AppUser was created
@@ -43,14 +45,10 @@ export default class AppUser {
      */
     isSystemAdmin: boolean;
 
-    toJSON() {
-        return {
-            id: this.id,
-            name: this.name,
-            email: this.email,
-            creationDate: this.creationDate.toISOString(),
-            lastLoginDate: this.lastLoginDate?.toISOString(),
-            isSystemAdmin: this.isSystemAdmin
-        }
-    }
+    /**
+     * The role of the AppUser.
+     * Note: this field is not mapped in the ORM. It is populated in the API layer.
+     * It's a design smell that needs to be addressed.
+     */
+    role: AppRole | undefined;
 }

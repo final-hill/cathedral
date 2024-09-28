@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { NIL as emptyUuid } from 'uuid';
+import { Person } from '~/server/domain/requirements';
 
 useHead({ title: 'Roles & Personnel' })
 definePageMeta({ name: 'Roles & Personnel' })
@@ -17,21 +17,18 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-type PersonViewModel = {
-    id: string;
-    name: string;
-    email: string;
-}
-
-const { data: personnel, refresh, status, error: getPersonnelError } = await useFetch(`/api/persons`, {
-    query: { solutionId }
-}),
-    emptyPerson: PersonViewModel = { id: emptyUuid, name: '', email: '' };
+const { data: personnel, refresh, status, error: getPersonnelError } = await useFetch<Person[]>(`/api/persons`, {
+    query: { solutionId },
+    transform: (data) => data.map((item) => {
+        item.lastModified = new Date(item.lastModified)
+        return item
+    })
+})
 
 if (getPersonnelError.value)
     $eventBus.$emit('page-error', getPersonnelError.value)
 
-const onCreate = async (data: PersonViewModel) => {
+const onCreate = async (data: Person) => {
     await $fetch(`/api/persons`, {
         method: 'POST',
         body: {
@@ -44,7 +41,7 @@ const onCreate = async (data: PersonViewModel) => {
     refresh();
 }
 
-const onUpdate = async (data: PersonViewModel) => {
+const onUpdate = async (data: Person) => {
     await $fetch(`/api/persons/${data.id}`, {
         method: 'PUT',
         body: {
@@ -71,48 +68,8 @@ const onDelete = async (id: string) => {
         along with their responsibilities, availability, and contact information.
     </p>
 
-    <XDataTable :datasource="personnel" :empty-record="emptyPerson" :on-create="onCreate" :on-update="onUpdate"
-        :on-delete="onDelete" :loading="status === 'pending'">
-        <template #rows>
-            <Column field="name" header="Name" sortable>
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by name" />
-                </template>
-                <template #body="{ data }">
-                    {{ data.name }}
-                </template>
-            </Column>
-            <Column field="email" header="Email" sortable>
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by name" />
-                </template>
-                <template #body="{ data, field }">
-                    {{ data[field] }}
-                </template>
-            </Column>
-        </template>
-        <template #createDialog="{ data } : { data: PersonViewModel }">
-            <div class="field grid">
-                <label for="name" class="required col-fixed w-7rem">Name</label>
-                <InputText name="name" v-model.trim="data.name" required placeholder="Name" class="col" />
-            </div>
-            <div class="field grid">
-                <label for="email" class="required col-fixed w-7rem">Email</label>
-                <InputText name="email" v-model.trim="data.email" required placeholder="Email" class="col" />
-            </div>
-        </template>
-        <template #editDialog="{ data } : { data: PersonViewModel }">
-            <input type="hidden" v-model="data.id" name="id" />
-            <div class="field grid">
-                <label for="name" class="required col-fixed w-7rem">Name</label>
-                <InputText v-model.trim="data.name" name="name" required placeholder="Name" class="col" />
-            </div>
-            <div class="field grid">
-                <label for="email" class="required col-fixed w-7rem">Email</label>
-                <InputText v-model.trim="data.email" name="email" required placeholder="Email" class="col" />
-            </div>
-        </template>
+    <XDataTable :viewModel="{ name: 'text', email: 'text' }" :createModel="{ name: 'text', email: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', email: 'text' }" :datasource="personnel" :on-create="onCreate"
+        :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'">
     </XDataTable>
 </template>

@@ -19,12 +19,12 @@ export default class Organization {
     /**
      * The unique identifier of the Organization
      */
-    id: string
+    id: string;
 
     /**
      * The description of the Organization
      */
-    description: string
+    description: string;
 
     /**
      * The name of the Organization
@@ -35,19 +35,10 @@ export default class Organization {
     /**
      * A slugified version of the name
      */
-    slug: string
+    slug: string;
 
     /**
      * The solutions that belong to this organization
      */
     solutions = new Collection<Solution>(this);
-
-    toJSON() {
-        return {
-            id: this.id,
-            description: this.description,
-            name: this.name,
-            slug: this.slug
-        }
-    }
 }

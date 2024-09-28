@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { NIL as emptyUuid } from 'uuid';
+import { Invariant } from '~/server/domain/requirements';
 
 useHead({ title: 'Invariants' })
 definePageMeta({ name: 'Invariants' })
@@ -17,21 +17,18 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-type InvariantViewModel = {
-    id: string;
-    name: string;
-    statement: string;
-}
-
-const { data: invariants, refresh, status, error: getInvariantsError } = await useFetch(`/api/invariants`, {
-    query: { solutionId }
-}),
-    emptyInvariant: InvariantViewModel = { id: emptyUuid, name: '', statement: '' };
+const { data: invariants, refresh, status, error: getInvariantsError } = await useFetch<Invariant[]>(`/api/invariants`, {
+    query: { solutionId },
+    transform: (data) => data.map((item) => {
+        item.lastModified = new Date(item.lastModified)
+        return item
+    })
+})
 
 if (getInvariantsError.value)
     $eventBus.$emit('page-error', getInvariantsError.value)
 
-const onCreate = async (data: InvariantViewModel) => {
+const onCreate = async (data: Invariant) => {
     await useFetch(`/api/invariants`, {
         method: 'POST',
         body: {
@@ -44,7 +41,7 @@ const onCreate = async (data: InvariantViewModel) => {
     refresh()
 }
 
-const onUpdate = async (data: InvariantViewModel) => {
+const onUpdate = async (data: Invariant) => {
     await useFetch(`/api/invariants/${data.id}`, {
         method: 'PUT', body: {
             id: data.id,
@@ -73,48 +70,8 @@ const onDelete = async (id: string) => {
         constrain the possible states of a system.
     </p>
 
-    <XDataTable :datasource="invariants" :empty-record="emptyInvariant" :on-create="onCreate" :on-update="onUpdate"
-        :on-delete="onDelete" :loading="status === 'pending'">
-        <template #rows>
-            <Column field="name" header="Name" sortable>
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by name" />
-                </template>
-                <template #body="{ data }">
-                    {{ data.name }}
-                </template>
-            </Column>
-            <Column field="statement" header="Description">
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by description" />
-                </template>
-                <template #body="{ data }">
-                    {{ data.statement }}
-                </template>
-            </Column>
-        </template>
-        <template #createDialog="{ data } : { data: InvariantViewModel }">
-            <div class="field grid">
-                <label for="name" class="required col-fixed w-7rem">Name</label>
-                <InputText v-model.trim="data.name" name="name" required class="col" />
-            </div>
-            <div class="field grid">
-                <label for="statement" class="required col-fixed w-7rem">Description</label>
-                <InputText v-model.trim="data.statement" name="statement" required class="col" />
-            </div>
-        </template>
-        <template #editDialog="{ data } : { data: InvariantViewModel }">
-            <input type="hidden" v-model="data.id" name="id" />
-            <div class="field grid">
-                <label for="name" class="required col-fixed w-7rem">Name</label>
-                <InputText v-model.trim="data.name" name="name" required class="col" />
-            </div>
-            <div class="field grid">
-                <label for="statement" class="required col-fixed w-7rem">Description</label>
-                <InputText v-model.trim="data.statement" name="statement" required class="col" />
-            </div>
-        </template>
+    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="invariants" :on-create="onCreate"
+        :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'">
     </XDataTable>
 </template>
