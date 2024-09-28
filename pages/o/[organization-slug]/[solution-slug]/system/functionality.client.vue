@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { MoscowPriority } from '~/server/domain/requirements/index';
-import { NIL as emptyUuid } from 'uuid';
+import { FunctionalBehavior, MoscowPriority, NonFunctionalBehavior, SystemComponent } from '~/server/domain/requirements/index';
+
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Functionality' })
@@ -19,36 +19,25 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-type BehaviorViewModel = {
-    id: string;
-    name: string;
-    statement: string;
-    solutionId: string;
-    priority: MoscowPriority;
-}
-
-const { data: components, status, refresh, error: getComponentsError } = await useFetch(`/api/system-components`, {
-    query: { solutionId }
+const { data: components, status, refresh, error: getComponentsError } = await useFetch<SystemComponent[]>(`/api/system-components`, {
+    query: { solutionId },
+    transform: (data) => data.map((item) => {
+        item.lastModified = new Date(item.lastModified)
+        return item
+    })
 }),
-    expandedRows = ref({}),
-    emptyBehavior = (componentid: string): BehaviorViewModel => ({
-        id: emptyUuid,
-        name: '',
-        statement: '',
-        solutionId,
-        priority: MoscowPriority.MUST
-    });
+    expandedRows = ref({})
 
 if (getComponentsError.value)
     $eventBus.$emit('page-error', getComponentsError.value)
 
 const fnFunctionalBehaviors = async (componentId: string) =>
-    await $fetch(`/api/functional-behaviors`, {
+    await $fetch<FunctionalBehavior[]>(`/api/functional-behaviors`, {
         query: { solutionId, componentId }
     }).catch((e) => $eventBus.$emit('page-error', e));
 
 const fnNonFunctionalBehaviors = async (componentId: string) =>
-    await $fetch(`/api/non-functional-behaviors`, {
+    await $fetch<NonFunctionalBehavior[]>(`/api/non-functional-behaviors`, {
         query: { solutionId, componentId }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -112,6 +101,7 @@ const componentSortField = ref<string | undefined>('name')
         It includes both functional and non-functional requirements of system components.
     </p>
 
+    <pre> { This section is disabled temporarily. } </pre>
     <!--
     <XDataTable :datasource="components" :sortField="componentSortField" :sortOrder="1"
         v-model:expandedRows="expandedRows">
@@ -127,7 +117,7 @@ const componentSortField = ref<string | undefined>('name')
                     {{ data[field] }}
                 </template>
 </Column>
-<Column field="parentId" header="Parent">
+<Column field="parent" header="Parent">
     <template #body="{ data, field }">
                     {{ components!
                         .filter(c => c.id !== emptyUuid)

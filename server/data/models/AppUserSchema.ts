@@ -10,6 +10,7 @@ export default new EntitySchema<AppUser>({
         lastLoginDate: { type: 'datetime', nullable: true },
         isSystemAdmin: { type: 'boolean', nullable: false },
         // email address: https://stackoverflow.com/a/574698
-        email: { type: 'character varying', nullable: false, length: 254 }
+        email: { type: 'character varying', nullable: false, length: 254 },
+        role: { entity: 'AppRole', persist: false }
     }
 })

@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import { NIL as emptyUuid } from 'uuid';
-import camelCaseToTitle from '~/utils/camelCaseToTitle';
+import { Outcome } from '~/server/domain/requirements';
 
 useHead({ title: 'Outcomes' })
 definePageMeta({ name: 'Outcomes' })
@@ -18,21 +17,18 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-type OutcomeViewModel = {
-    id: string;
-    name: string;
-    statement: string;
-}
-
-const { data: outcomes, refresh, status, error: getOutcomesError } = await useFetch(`/api/outcomes`, {
-    query: { solutionId }
-}),
-    emptyOutcome: OutcomeViewModel = { id: emptyUuid, name: '', statement: '' };
+const { data: outcomes, refresh, status, error: getOutcomesError } = await useFetch<Outcome[]>(`/api/outcomes`, {
+    query: { solutionId },
+    transform: (data) => data.map((item) => {
+        item.lastModified = new Date(item.lastModified)
+        return item
+    })
+})
 
 if (getOutcomesError.value)
     $eventBus.$emit('page-error', getOutcomesError.value);
 
-const onCreate = async (data: OutcomeViewModel) => {
+const onCreate = async (data: Outcome) => {
     await $fetch(`/api/outcomes`, {
         method: 'POST',
         body: {
@@ -45,7 +41,7 @@ const onCreate = async (data: OutcomeViewModel) => {
     refresh()
 }
 
-const onUpdate = async (data: OutcomeViewModel) => {
+const onUpdate = async (data: Outcome) => {
     await $fetch(`/api/outcomes/${data.id}`, {
         method: 'PUT',
         body: {
@@ -74,39 +70,8 @@ const onDelete = async (id: string) => {
         of the system that will be achieved by the associated project.
     </p>
 
-    <XDataTable :datasource="outcomes" :empty-record="emptyOutcome" :onCreate="onCreate" :onUpdate="onUpdate"
-        :onDelete="onDelete" :loading="status === 'pending'">
-        <template #rows>
-            <Column v-for="key in Object.keys(emptyOutcome)" :key="key" :field="key" :header="camelCaseToTitle(key)">
-                <template #body="{ data, field }">
-                    <Checkbox v-if="typeof data[field] === 'boolean'" v-model="data[field]" disabled />
-                    <span v-else-if="data[field] instanceof Date">{{ data[field].toLocaleString() }}</span>
-                    <span v-else>{{ data[field] }}</span>
-                </template>
-            </Column>
-        </template>
-        <template #createDialog="{ data } : { data: OutcomeViewModel }">
-            <div class="field grid">
-                <label for="name" class="required col-fixed w-7rem">Name</label>
-                <InputText name="name" v-model.trim="data.name" required placeholder="Enter name" class="col" />
-            </div>
-            <div class="field grid">
-                <label for="statement" class="required col-fixed w-7rem">Description</label>
-                <InputText name="statement" v-model.trim="data.statement" required placeholder="Enter description"
-                    class="col" />
-            </div>
-        </template>
-        <template #editDialog="{ data } : { data: OutcomeViewModel }">
-            <input type="hidden" v-model="data.id" />
-            <div class="field grid">
-                <label for="name" class="required col-fixed w-7rem">Name</label>
-                <InputText name="name" v-model.trim="data.name" required placeholder="Enter name" class="col" />
-            </div>
-            <div class="field grid">
-                <label for="statement" class="required col-fixed w-7rem">Description</label>
-                <InputText name="statement" v-model.trim="data.statement" required placeholder="Enter description"
-                    class="col" />
-            </div>
-        </template>
+    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="outcomes" :onCreate="onCreate"
+        :onUpdate="onUpdate" :onDelete="onDelete" :loading="status === 'pending'">
     </XDataTable>
 </template>

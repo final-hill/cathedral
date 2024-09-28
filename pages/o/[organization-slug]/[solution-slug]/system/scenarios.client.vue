@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import { MoscowPriority } from '~/server/domain/requirements/index';
-import { NIL as emptyUuid } from 'uuid';
+import { Assumption, Effect, FunctionalBehavior, MoscowPriority, Outcome, Stakeholder, UseCase, UserStory } from '~/server/domain/requirements/index';
 
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Scenarios' })
@@ -18,63 +17,25 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-type UserStoryViewModel = {
-    id: string;
-    name: string;
-    primaryActorId: string;
-    functionalBehaviorId: string;
-    outcomeId: string;
-    priority: MoscowPriority;
-}
-
-type UseCaseViewModel = {
-    id: string;
-    name: string;
-    primaryActorId: string;
-    extensions: string;
-    goalInContext: string;
-    level: string;
-    mainSuccessScenario: string;
-    preconditionId: string;
-    scope: string;
-    successGuaranteeId: string;
-    triggerId: string;
-    priority: MoscowPriority;
-}
-
-const { data: userStories, refresh: refreshUserStories, error: getUserStoriesError, status: userStoryStatus } = await useFetch(`/api/user-stories`, {
-    query: { solutionId }
+const { data: userStories, refresh: refreshUserStories, error: getUserStoriesError, status: userStoryStatus } = await useFetch<UserStory[]>(`/api/user-stories`, {
+    query: { solutionId },
+    transform: (data) => data.map((item) => {
+        item.lastModified = new Date(item.lastModified)
+        return item
+    })
 }),
-    { data: useCases, refresh: refreshUseCases, error: getUseCasesError, status: useCaseStatus } = await useFetch(`/api/use-cases`, {
-        query: { solutionId }
+    { data: useCases, refresh: refreshUseCases, error: getUseCasesError, status: useCaseStatus } = await useFetch<UseCase[]>(`/api/use-cases`, {
+        query: { solutionId },
+        transform: (data) => data.map((item) => {
+            item.lastModified = new Date(item.lastModified)
+            return item
+        })
     }),
-    emptyUserStory: UserStoryViewModel = {
-        id: emptyUuid,
-        name: '',
-        primaryActorId: emptyUuid,
-        functionalBehaviorId: emptyUuid,
-        outcomeId: emptyUuid,
-        priority: MoscowPriority.MUST
-    },
-    emptyUseCase: UseCaseViewModel = {
-        id: emptyUuid,
-        name: '',
-        primaryActorId: emptyUuid,
-        extensions: '',
-        goalInContext: '',
-        level: '',
-        mainSuccessScenario: '',
-        preconditionId: emptyUuid,
-        scope: '',
-        successGuaranteeId: emptyUuid,
-        triggerId: emptyUuid,
-        priority: MoscowPriority.MUST
-    },
-    { data: roles, error: getRolesError } = await useFetch(`/api/stakeholders`, { query: { solutionId } }),
-    { data: functionalBehaviors, error: getFunctionalBehaviorsError } = await useFetch(`/api/functional-behaviors`, { query: { solutionId } }),
-    { data: outcomes, error: getOutcomesError } = await useFetch(`/api/outcomes`, { query: { solutionId } }),
-    { data: assumptions, error: getAssumptionsError } = await useFetch(`/api/assumptions`, { query: { solutionId } }),
-    { data: effects, error: getEffectsError } = await useFetch(`/api/effects`, { query: { solutionId } }),
+    { data: roles, error: getRolesError } = await useFetch<Stakeholder[]>(`/api/stakeholders`, { query: { solutionId } }),
+    { data: functionalBehaviors, error: getFunctionalBehaviorsError } = await useFetch<FunctionalBehavior[]>(`/api/functional-behaviors`, { query: { solutionId } }),
+    { data: outcomes, error: getOutcomesError } = await useFetch<Outcome[]>(`/api/outcomes`, { query: { solutionId } }),
+    { data: assumptions, error: getAssumptionsError } = await useFetch<Assumption[]>(`/api/assumptions`, { query: { solutionId } }),
+    { data: effects, error: getEffectsError } = await useFetch<Effect[]>(`/api/effects`, { query: { solutionId } }),
     triggers = ref<{ id: string, name: string }[]>([])
 
 if (getUserStoriesError.value)
@@ -90,39 +51,31 @@ if (getAssumptionsError.value)
 if (getEffectsError.value)
     $eventBus.$emit('page-error', getEffectsError.value);
 
-const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
+const onUserStoryCreate = async (userStory: UserStory) => {
     await $fetch(`/api/user-stories`, {
         method: 'POST',
         body: {
-            ...userStory,
-            solutionId,
+            name: userStory.name,
             statement: '',
-            priority: MoscowPriority.MUST
+            primaryActorId: userStory.primaryActor,
+            priority: userStory.priority,
+            outcomeId: userStory.outcome,
+            functionalBehaviorId: userStory.functionalBehavior,
+            solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
 
     refreshUserStories();
 }
 
-const onUseCaseCreate = async (useCase: UseCaseViewModel) => {
-    await $fetch(`/api/use-cases`, {
-        method: 'POST',
-        body: {
-            ...useCase,
-            solutionId,
-            statement: '',
-            priority: MoscowPriority.MUST
-        }
-    }).catch((e) => $eventBus.$emit('page-error', e));
-
-    refreshUseCases();
-}
-
-const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
+const onUserStoryUpdate = async (userStory: UserStory) => {
     await $fetch(`/api/user-stories/${userStory.id}`, {
         method: 'PUT',
         body: {
-            ...userStory,
+            name: userStory.name,
+            primaryActorId: userStory.primaryActor,
+            outcomeId: userStory.outcome,
+            functionalBehaviorId: userStory.functionalBehavior,
             solutionId,
             statement: '',
             priority: userStory.priority
@@ -132,11 +85,43 @@ const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
     refreshUserStories();
 }
 
-const onUseCaseUpdate = async (useCase: UseCaseViewModel) => {
+const onUseCaseCreate = async (useCase: UseCase) => {
+    await $fetch(`/api/use-cases`, {
+        method: 'POST',
+        body: {
+            name: useCase.name,
+            scope: useCase.scope,
+            level: useCase.level,
+            primaryActorId: useCase.primaryActor,
+            goalInContext: useCase.goalInContext,
+            preconditionId: useCase.precondition,
+            triggerId: useCase.triggerId,
+            mainSuccessScenario: useCase.mainSuccessScenario,
+            successGuaranteeId: useCase.successGuarantee,
+            extensions: useCase.extensions,
+            solutionId,
+            statement: '',
+            priority: useCase.priority
+        }
+    }).catch((e) => $eventBus.$emit('page-error', e));
+
+    refreshUseCases();
+}
+
+const onUseCaseUpdate = async (useCase: UseCase) => {
     await $fetch(`/api/use-cases/${useCase.id}`, {
         method: 'PUT',
         body: {
-            ...useCase,
+            name: useCase.name,
+            scope: useCase.scope,
+            level: useCase.level,
+            primaryActorId: useCase.primaryActor,
+            goalInContext: useCase.goalInContext,
+            preconditionId: useCase.precondition,
+            triggerId: useCase.triggerId,
+            mainSuccessScenario: useCase.mainSuccessScenario,
+            successGuaranteeId: useCase.successGuarantee,
+            extensions: useCase.extensions,
             solutionId,
             statement: ''
         }
@@ -176,103 +161,27 @@ const onUseCaseDelete = async (id: string) => {
                 leveraging a particular behavior of the system.
             </p>
 
-            <XDataTable :datasource="userStories" :emptyRecord="emptyUserStory" :onCreate="onUserStoryCreate"
-                :onUpdate="onUserStoryUpdate" :onDelete="onUserStoryDelete" :loading="userStoryStatus === 'pending'">
-                <template #rows>
-                    <Column field="name" header="Name" sortable>
-                        <template #body="{ data, field }">
-                            {{ data[field] }}
-                        </template>
-                    </Column>
-                    <Column field="primaryActorId" header="Actor">
-                        <template #body="{ data, field }">
-                            {{ roles?.find(r => r.id === data[field])?.name }}
-                        </template>
-                    </Column>
-                    <Column field="functionalBehaviorId" header="Behavior">
-                        <template #body="{ data, field }">
-                            {{ functionalBehaviors?.find(b => b.id === data[field])?.name }}
-                        </template>
-                    </Column>
-                    <Column field="outcomeId" header="Outcome">
-                        <template #body="{ data, field }">
-                            {{ outcomes?.find(o => o.id === data[field])?.name }}
-                        </template>
-                    </Column>
-                </template>
-                <template #createDialog="{ data } : { data: UserStoryViewModel }">
-                    <div class="field grid">
-                        <label for="name" class="required col-fixed w-7rem">Name</label>
-                        <InputText v-model.trim="data.name" name="name" required placeholder="Enter a name"
-                            class="col" />
-                    </div>
-                    <div class="field grid">
-                        <label for="primaryActorId" class="required col-fixed w-7rem">Actor</label>
-                        <select class="p-inputtext p-component col" v-model.trim="data.primaryActorId"
-                            name="primaryActorId">
-                            <option value="" disabled>Select an Actor</option>
-                            <option v-for="role in roles" :key="role.id" :value="role.id">
-                                {{ role.name }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="field grid">
-                        <label for="functionalBehaviorId" class="required col-fixed w-7rem">Behavior</label>
-                        <select class="p-inputtext p-component col" v-model.trim="data.functionalBehaviorId"
-                            name="functionalBehaviorId">
-                            <option value="" disabled>Select a Behavior</option>
-                            <option v-for="behavior in functionalBehaviors" :key="behavior.id" :value="behavior.id">
-                                {{ behavior.name }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="field grid">
-                        <label for="outcomeId" class="required col-fixed w-7rem">Outcome</label>
-                        <select class="p-inputtext p-component col" v-model.trim="data.outcomeId" name="outcomeId">
-                            <option value="" disabled>Select an Outcome</option>
-                            <option v-for="outcome in outcomes" :key="outcome.id" :value="outcome.id">
-                                {{ outcome.name }}
-                            </option>
-                        </select>
-                    </div>
-                </template>
-                <template #editDialog="{ data } : { data: UserStoryViewModel }">
-                    <input type="hidden" name="id" v-model.trim="data.id" />
-                    <div class="field grid">
-                        <label for="name" class="required col-fixed w-7rem">Name</label>
-                        <InputText v-model.trim="data.name" name="name" required placeholder="Enter a name"
-                            class="col" />
-                    </div>
-                    <div class="field grid">
-                        <label for="primaryActorId" class="required col-fixed w-7rem">Actor</label>
-                        <select class="p-inputtext p-component col" v-model.trim="data.primaryActorId"
-                            name="primaryActorId">
-                            <option value="" disabled>Select an Actor</option>
-                            <option v-for="role in roles" :key="role.id" :value="role.id">
-                                {{ role.name }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="field grid">
-                        <label for="functionalBehaviorId" class="required col-fixed w-7rem">Behavior</label>
-                        <select class="p-inputtext p-component col" v-model.trim="data.functionalBehaviorId"
-                            name="functionalBehaviorId">
-                            <option value="" disabled>Select a Behavior</option>
-                            <option v-for="behavior in functionalBehaviors" :key="behavior.id" :value="behavior.id">
-                                {{ behavior.name }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="field grid">
-                        <label for="outcomeId" class="required col-fixed w-7rem">Outcome</label>
-                        <select class="p-inputtext p-component col" v-model.trim="data.outcomeId" name="outcomeId">
-                            <option value="" disabled>Select an Outcome</option>
-                            <option v-for="outcome in outcomes" :key="outcome.id" :value="outcome.id">
-                                {{ outcome.name }}
-                            </option>
-                        </select>
-                    </div>
-                </template>
+            <XDataTable :viewModel="{
+                name: 'text',
+                primaryActor: 'object',
+                functionalBehavior: 'object',
+                outcome: 'object',
+                priority: 'text'
+            }" :createModel="{
+                name: 'text',
+                primaryActor: { type: 'requirement', options: roles ?? [] },
+                functionalBehavior: { type: 'requirement', options: functionalBehaviors ?? [] },
+                outcome: { type: 'requirement', options: outcomes ?? [] },
+                priority: Object.values(MoscowPriority)
+            }" :editModel="{
+                id: 'hidden',
+                name: 'text',
+                primaryActor: { type: 'requirement', options: roles ?? [] },
+                functionalBehavior: { type: 'requirement', options: functionalBehaviors ?? [] },
+                outcome: { type: 'requirement', options: outcomes ?? [] },
+                priority: Object.values(MoscowPriority)
+            }" :datasource="userStories" :onCreate="onUserStoryCreate" :onUpdate="onUserStoryUpdate"
+                :onDelete="onUserStoryDelete" :loading="userStoryStatus === 'pending'">
             </XDataTable>
         </TabPanel>
         <TabPanel header="Use Cases">
@@ -280,205 +189,45 @@ const onUseCaseDelete = async (id: string) => {
                 A Use Case describes a complete interaction between an actor and the
                 system to achieve a goal.
             </p>
-            <XDataTable :datasource="useCases!" :emptyRecord="emptyUseCase" :onCreate="onUseCaseCreate"
-                :onUpdate="onUseCaseUpdate" :onDelete="onUseCaseDelete" :loading="useCaseStatus === 'pending'">
-                <template #rows>
-                    <Column field="name" header="Name" sortable>
-                        <template #body="{ data, field }">
-                            {{ data[field] }}
-                        </template>
-                    </Column>
-                    <Column field="scope" header="Scope">
-                        <template #body="{ data, field }">
-                            {{ data[field] }}
-                        </template>
-                    </Column>
-                    <Column field="level" header="Level">
-                        <template #body="{ data, field }">
-                            {{ data[field] }}
-                        </template>
-                    </Column>
-                    <Column field="primaryActorId" header="Actor">
-                        <template #body="{ data, field }">
-                            {{ roles?.find(r => r.id === data[field])?.name }}
-                        </template>
-                    </Column>
-                    <Column field="goalInContext" header="Goal in Context">
-                        <template #body="{ data, field }">
-                            {{ data[field] }}
-                        </template>
-                    </Column>
-                    <Column field="preconditionId" header="Precondition">
-                        <template #body="{ data, field }">
-                            {{ assumptions?.find(a => a.id === data[field])?.name }}
-                        </template>
-                    </Column>
-                    <Column field="triggerId" header="Trigger">
-                        <template #body="{ data, field }">
-                            {{ effects?.find(e => e.id === data[field])?.name }}
-                        </template>
-                    </Column>
-                    <Column field="mainSuccessScenario" header="Main Success Scenario">
-                        <template #body="{ data, field }">
-                            {{ data[field] }}
-                        </template>
-                    </Column>
-                    <Column field="successGuaranteeId" header="Success Guarantee">
-                        <template #body="{ data, field }">
-                            {{ effects?.find(e => e.id === data[field])?.name }}
-                        </template>
-                    </Column>
-                    <Column field="extensions" header="Extensions">
-                        <template #body="{ data, field }">
-                            {{ data[field] }}
-                        </template>
-                    </Column>
-                </template>
-                <template #createDialog="{ data } : { data: UseCaseViewModel }">
-                    <div class="field grid">
-                        <label for="name" class="required col-fixed w-7rem">Name</label>
-                        <InputText v-model.trim="data.name" name="name" required placeholder="Enter a name"
-                            class="col" />
-                    </div>
-                    <div class="field grid">
-                        <label for="scope" class="required col-fixed w-7rem">Scope</label>
-                        <InputText v-model.trim="data.scope" name="scope" required placeholder="Enter a scope"
-                            class="col" />
-                    </div>
-                    <div class="field grid">
-                        <label for="level" class="required col-fixed w-7rem">Level</label>
-                        <InputText v-model.trim="data.level" name="level" required placeholder="Enter a level"
-                            class="col" />
-                    </div>
-                    <div class="field grid">
-                        <label for="primaryActorId" class="required col-fixed w-7rem">Actor</label>
-                        <select class="p-inputtext p-component col" v-model.trim="data.primaryActorId"
-                            name="primaryActorId">
-                            <option value="" disabled>Select an Actor</option>
-                            <option v-for="role in roles" :key="role.id" :value="role.id">
-                                {{ role.name }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="field grid">
-                        <label for="goalInContext" class="required col-fixed w-7rem">Goal in Context</label>
-                        <InputText v-model.trim="data.goalInContext" name="goalInContext" required
-                            placeholder="Enter a goal in context" class="col" />
-                    </div>
-                    <div class="field grid">
-                        <label for="preconditionId" class="required col-fixed w-7rem">Pre-condition</label>
-                        <select class="p-inputtext p-component col" v-model.trim="data.preconditionId"
-                            name="preconditionId">
-                            <option value="" disabled>Select a pre-condition</option>
-                            <option v-for="assumption in assumptions" :key="assumption.id" :value="assumption.id">
-                                {{ assumption.name }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="field grid">
-                        <label for="triggerId" class="required col-fixed w-7rem">Trigger</label>
-                        <select class="p-inputtext p-component col" v-model.trim="data.triggerId" name="triggerId">
-                            <option value="" disabled>Select a trigger</option>
-                            <option v-for="trigger in triggers" :key="trigger.id" :value="trigger.id">
-                                {{ trigger.name }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="field grid">
-                        <label for="mainSuccessScenario" class="required col-fixed w-7rem">Main Success
-                            Scenario</label>
-                        <Textarea v-model.trim="data.mainSuccessScenario" name="mainSuccessScenario" required
-                            placeholder="Enter a main success scenario" rows="5" cols="30" class="col" />
-                    </div>
-                    <div class="field grid">
-                        <label for="successGuaranteeId" class="required col-fixed w-7rem">Success Guarantee</label>
-                        <select class="p-inputtext p-component col" v-model.trim="data.successGuaranteeId"
-                            name="successGuaranteeId">
-                            <option value="" disabled>Select a success guarantee</option>
-                            <option v-for="effect in effects" :key="effect.id" :value="effect.id">
-                                {{ effect.name }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="field grid">
-                        <label for="extensions" class="required col-fixed w-7rem">Extensions</label>
-                        <Textarea v-model.trim="data.extensions" name="extensions" required
-                            placeholder="Enter extensions" rows="5" cols="30" class="col" />
-                    </div>
-                </template>
-                <template #editDialog="{ data } : { data: UseCaseViewModel }">
-                    <input type="hidden" name="id" v-model.trim="data.id" />
-                    <div class="field grid">
-                        <label for="name" class="required col-fixed w-7rem">Name</label>
-                        <InputText v-model.trim="data.name" name="name" required placeholder="Enter a name"
-                            class="col" />
-                    </div>
-                    <div class="field grid">
-                        <label for="scope" class="required col-fixed w-7rem">Scope</label>
-                        <InputText v-model.trim="data.scope" name="scope" required placeholder="Enter a scope"
-                            class="col" />
-                    </div>
-                    <div class="field grid">
-                        <label for="level" class="required col-fixed w-7rem">Level</label>
-                        <InputText v-model.trim="data.level" name="level" required placeholder="Enter a level"
-                            class="col" />
-                    </div>
-                    <div class="field grid">
-                        <label for="primaryActorId" class="required col-fixed w-7rem">Actor</label>
-                        <select class="p-inputtext p-component col" v-model.trim="data.primaryActorId"
-                            name="primaryActorId">
-                            <option value="" disabled>Select an Actor</option>
-                            <option v-for="role in roles" :key="role.id" :value="role.id">
-                                {{ role.name }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="field grid">
-                        <label for="goalInContext" class="required col-fixed w-7rem">Goal in Context</label>
-                        <InputText v-model.trim="data.goalInContext" name="goalInContext" required
-                            placeholder="Enter a goal in context" class="col" />
-                    </div>
-                    <div class="field grid">
-                        <label for="preconditionId" class="required col-fixed w-7rem">Pre-condition</label>
-                        <select class="p-inputtext p-component col" v-model.trim="data.preconditionId"
-                            name="preconditionId">
-                            <option value="" disabled>Select a pre-condition</option>
-                            <option v-for="assumption in assumptions" :key="assumption.id" :value="assumption.id">
-                                {{ assumption.name }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="field grid">
-                        <label for="triggerId" class="required col-fixed w-7rem">Trigger</label>
-                        <select class="p-inputtext p-component col" v-model.trim="data.triggerId" name="triggerId">
-                            <option value="" disabled>Select a trigger</option>
-                            <option v-for="trigger in triggers" :key="trigger.id" :value="trigger.id">
-                                {{ trigger.name }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="field grid">
-                        <label for="mainSuccessScenario" class="required col-fixed w-7rem">Main Success
-                            Scenario</label>
-                        <Textarea v-model.trim="data.mainSuccessScenario" name="mainSuccessScenario" required
-                            placeholder="Enter a main success scenario" rows="5" cols="30" class="col" />
-                    </div>
-                    <div class="field grid">
-                        <label for="successGuaranteeId" class="required col-fixed w-7rem">Success Guarantee</label>
-                        <select class="p-inputtext p-component col" v-model.trim="data.successGuaranteeId"
-                            name="successGuaranteeId">
-                            <option value="" disabled>Select a success guarantee</option>
-                            <option v-for="effect in effects" :key="effect.id" :value="effect.id">
-                                {{ effect.name }}
-                            </option>
-                        </select>
-                    </div>
-                    <div class="field grid">
-                        <label for="extensions" class="required col-fixed w-7rem">Extensions</label>
-                        <Textarea v-model.trim="data.extensions" name="extensions" required
-                            placeholder="Enter extensions" rows="5" cols="30" class="col" />
-                    </div>
-                </template>
+            <XDataTable :viewModel="{
+                name: 'text',
+                scope: 'text',
+                level: 'text',
+                priority: 'text',
+                primaryActor: 'object',
+                goalInContext: 'text',
+                precondition: 'object',
+                triggerId: 'text',
+                mainSuccessScenario: 'text',
+                successGuarantee: 'object',
+                extensions: 'text'
+            }" :createModel="{
+                name: 'text',
+                scope: 'text',
+                level: 'text',
+                priority: Object.values(MoscowPriority),
+                primaryActor: { type: 'requirement', options: roles ?? [] },
+                goalInContext: 'text',
+                precondition: { type: 'requirement', options: assumptions ?? [] },
+                triggerId: 'text',
+                mainSuccessScenario: 'text',
+                successGuarantee: { type: 'requirement', options: effects ?? [] },
+                extensions: 'text'
+            }" :editModel="{
+                id: 'hidden',
+                name: 'text',
+                scope: 'text',
+                level: 'text',
+                priority: Object.values(MoscowPriority),
+                primaryActor: { type: 'requirement', options: roles ?? [] },
+                goalInContext: 'text',
+                precondition: { type: 'requirement', options: assumptions ?? [] },
+                triggerId: 'text',
+                mainSuccessScenario: 'text',
+                successGuarantee: { type: 'requirement', options: effects ?? [] },
+                extensions: 'text'
+            }" :datasource="useCases!" :onCreate="onUseCaseCreate" :onUpdate="onUseCaseUpdate"
+                :onDelete="onUseCaseDelete" :loading="useCaseStatus === 'pending'">
             </XDataTable>
         </TabPanel>
     </TabView>

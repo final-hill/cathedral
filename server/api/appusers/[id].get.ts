@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
         })
 
     return {
-        ...appUserRole.appUser.toJSON(),
+        ...appUserRole.appUser,
         role: appUserRole.role
     }
 })

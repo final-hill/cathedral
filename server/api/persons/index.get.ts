@@ -18,14 +18,16 @@ export default defineEventHandler(async (event) => {
 
     await assertSolutionReader(event, query.solutionId)
 
-    const results = await em.find(Person, Object.entries(query)
-        .filter(([_, value]) => value !== undefined)
-        .reduce((acc, [key, value]) => {
-            if (key.endsWith("Id"))
-                return { ...acc, [key.replace("Id", "")]: value };
-            return { ...acc, [key]: { $eq: value } };
-        }, {})
-    );
+    const results = await em.findAll(Person, {
+        where: Object.entries(query)
+            .filter(([_, value]) => value !== undefined)
+            .reduce((acc, [key, value]) => {
+                if (key.endsWith("Id"))
+                    return { ...acc, [key.replace("Id", "")]: value };
+                return { ...acc, [key]: { $eq: value } };
+            }, {}),
+        populate: ['solution', 'modifiedBy']
+    });
 
     return results
 })

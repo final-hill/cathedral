@@ -20,18 +20,10 @@ export class UserStory extends Scenario {
     /**
      * The action that the user wants to perform.
      */
-    functionalBehavior: FunctionalBehavior
+    functionalBehavior: FunctionalBehavior;
 
     /**
      * The outcome that the story is aiming to achieve.
      */
-    outcome: Outcome
-
-    override toJSON() {
-        return {
-            ...super.toJSON(),
-            functionalBehaviorId: this.functionalBehavior.id,
-            outcomeId: this.outcome.id
-        }
-    }
+    outcome: Outcome;
 }
