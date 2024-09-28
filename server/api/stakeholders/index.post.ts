@@ -4,13 +4,13 @@ import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from "~/ser
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string(),
-    statement: z.string(),
+    name: z.string().default("{Untitled Stakeholder}"),
+    statement: z.string().default(""),
     parentComponentId: z.string().uuid().optional(),
-    availability: z.number().min(0).max(100),
-    influence: z.number().min(0).max(100),
-    segmentation: z.nativeEnum(StakeholderSegmentation),
-    category: z.nativeEnum(StakeholderCategory)
+    availability: z.number().min(0).max(100).default(50),
+    influence: z.number().min(0).max(100).default(50),
+    segmentation: z.nativeEnum(StakeholderSegmentation).optional(),
+    category: z.nativeEnum(StakeholderCategory).optional()
 })
 
 /**

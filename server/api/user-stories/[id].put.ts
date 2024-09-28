@@ -8,12 +8,12 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string(),
-    statement: z.string(),
-    primaryActorId: z.string().uuid(),
-    priority: z.nativeEnum(MoscowPriority),
-    outcomeId: z.string().uuid(),
-    functionalBehaviorId: z.string().uuid()
+    name: z.string().default("{Untitled User Story}"),
+    statement: z.string().default(""),
+    primaryActorId: z.string().uuid().optional(),
+    priority: z.nativeEnum(MoscowPriority).optional(),
+    outcomeId: z.string().uuid().optional(),
+    functionalBehaviorId: z.string().uuid().optional()
 })
 
 /**
@@ -26,37 +26,22 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     const userStory = await em.findOne(UserStory, id),
-        primaryActor = await em.findOne(Stakeholder, body.primaryActorId),
-        outcome = await em.findOne(Outcome, body.outcomeId),
-        functionalBehavior = await em.findOne(FunctionalBehavior, body.functionalBehaviorId)
+        primaryActor = body.primaryActorId ? await em.findOne(Stakeholder, body.primaryActorId) : undefined,
+        outcome = body.outcomeId ? await em.findOne(Outcome, body.outcomeId) : undefined,
+        functionalBehavior = body.functionalBehaviorId ? await em.findOne(FunctionalBehavior, body.functionalBehaviorId) : undefined
 
     if (!userStory)
         throw createError({
             statusCode: 400,
             statusMessage: `Bad Request: No user story found with id: ${id}`
         })
-    if (!primaryActor)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No primary actor found with id: ${body.primaryActorId}`
-        })
-    if (!outcome)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No outcome found with id: ${body.outcomeId}`
-        })
-    if (!functionalBehavior)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No functional behavior found with id: ${body.functionalBehaviorId}`
-        })
 
     userStory.name = body.name
     userStory.statement = body.statement
-    userStory.primaryActor = primaryActor
+    userStory.primaryActor = primaryActor ?? undefined
     userStory.priority = body.priority
-    userStory.outcome = outcome
-    userStory.functionalBehavior = functionalBehavior
+    userStory.outcome = outcome ?? undefined
+    userStory.functionalBehavior = functionalBehavior ?? undefined
     userStory.modifiedBy = sessionUser
 
     await em.flush()

@@ -23,12 +23,12 @@ export class Stakeholder extends Component {
     /**
      * The segmentation of the stakeholder.
      */
-    segmentation: StakeholderSegmentation;
+    segmentation?: StakeholderSegmentation;
 
     /**
      * The category of the stakeholder.
      */
-    category: StakeholderCategory;
+    category?: StakeholderCategory;
 
     /**
      * The availability of the stakeholder.

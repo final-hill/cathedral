@@ -32,7 +32,8 @@ const onCreate = async (data: Person) => {
     await $fetch(`/api/persons`, {
         method: 'POST',
         body: {
-            ...data,
+            name: data.name ?? 'Anonymous',
+            email: data.email ?? 'anonymous@example.com',
             solutionId,
             statement: ''
         }
@@ -45,7 +46,8 @@ const onUpdate = async (data: Person) => {
     await $fetch(`/api/persons/${data.id}`, {
         method: 'PUT',
         body: {
-            ...data,
+            name: data.name ?? 'Anonymous',
+            email: data.email ?? 'anonymous@example.com',
             solutionId,
             statement: ''
         }

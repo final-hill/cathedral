@@ -1,6 +1,6 @@
 import { EntitySchema } from "@mikro-orm/core";
 import ScenarioSchema from "./ScenarioSchema.js";
-import { Scenario, UseCase } from "../../domain/requirements/index.js";
+import { Scenario, UseCase } from "../../../domain/requirements/index.js";
 
 export default new EntitySchema<UseCase, Scenario>({
     class: UseCase,
@@ -9,10 +9,10 @@ export default new EntitySchema<UseCase, Scenario>({
         scope: { type: 'string', nullable: false },
         level: { type: 'string', nullable: false },
         goalInContext: { type: 'string', nullable: false },
-        precondition: { kind: 'm:1', entity: 'Assumption', nullable: false },
-        triggerId: { type: 'uuid', nullable: false },
+        precondition: { kind: 'm:1', entity: 'Assumption', nullable: true },
+        triggerId: { type: 'uuid', nullable: true },
         mainSuccessScenario: { type: 'string', nullable: false },
-        successGuarantee: { kind: 'm:1', entity: 'Effect', nullable: false },
+        successGuarantee: { kind: 'm:1', entity: 'Effect', nullable: true },
         extensions: { type: 'string', nullable: false },
     }
 })

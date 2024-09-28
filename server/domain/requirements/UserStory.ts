@@ -20,10 +20,10 @@ export class UserStory extends Scenario {
     /**
      * The action that the user wants to perform.
      */
-    functionalBehavior: FunctionalBehavior;
+    functionalBehavior?: FunctionalBehavior;
 
     /**
      * The outcome that the story is aiming to achieve.
      */
-    outcome: Outcome;
+    outcome?: Outcome;
 }

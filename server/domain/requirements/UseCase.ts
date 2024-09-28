@@ -41,12 +41,12 @@ export class UseCase extends Scenario {
     /**
      * The precondition is an Assumption that must be true before the use case can start.
      */
-    precondition: Assumption;
+    precondition?: Assumption;
 
     /**
      * The action upon the system that starts the use case.
      */
-    triggerId: string = emptyUuid;
+    triggerId?: string;
 
     /**
      * The main success scenario is the most common path through the system.
@@ -62,7 +62,7 @@ export class UseCase extends Scenario {
     /**
      * An Effect that is guaranteed to be true after the use case is completed.
      */
-    successGuarantee: Effect;
+    successGuarantee?: Effect;
 
     /**
      * Extensions of the use case.

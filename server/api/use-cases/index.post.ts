@@ -27,39 +27,23 @@ export default defineEventHandler(async (event) => {
         { solution, sessionUser } = await assertSolutionContributor(event, body.solutionId),
         em = fork()
 
-    const primaryActor = await em.findOne(Stakeholder, body.primaryActorId),
-        precondition = await em.findOne(Assumption, body.preconditionId),
-        successGuarantee = await em.findOne(Effect, body.successGuaranteeId)
-
-    if (!primaryActor)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No primary actor found with id: ${body.primaryActorId}`
-        })
-    if (!precondition)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No precondition found with id: ${body.preconditionId}`
-        })
-    if (!successGuarantee)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No success guarantee found with id: ${body.successGuaranteeId}`
-        })
+    const primaryActor = body.primaryActorId ? await em.findOne(Stakeholder, body.primaryActorId) : undefined,
+        precondition = body.preconditionId ? await em.findOne(Assumption, body.preconditionId) : undefined,
+        successGuarantee = body.successGuaranteeId ? await em.findOne(Effect, body.successGuaranteeId) : undefined
 
     const newUseCase = new UseCase({
         name: body.name,
         statement: body.statement,
         solution,
-        primaryActor,
+        primaryActor: primaryActor ?? undefined,
         priority: body.priority,
         scope: body.scope,
         level: body.level,
         goalInContext: body.goalInContext,
-        precondition,
+        precondition: precondition ?? undefined,
         triggerId: body.triggerId,
         mainSuccessScenario: body.mainSuccessScenario,
-        successGuarantee,
+        successGuarantee: successGuarantee ?? undefined,
         extensions: body.extensions,
         lastModified: new Date(),
         modifiedBy: sessionUser

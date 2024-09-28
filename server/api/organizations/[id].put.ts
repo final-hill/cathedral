@@ -7,8 +7,8 @@ const paramSchema = z.object({
 })
 
 const bodySchema = z.object({
-    name: z.string().min(1),
-    description: z.string()
+    name: z.string().default("{Untitled Organization}"),
+    description: z.string().default("")
 })
 
 /**

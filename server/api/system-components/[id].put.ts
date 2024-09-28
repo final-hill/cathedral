@@ -8,8 +8,8 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string(),
-    statement: z.string(),
+    name: z.string().default("{Untitled Component}"),
+    statement: z.string().default(""),
     parentComponentId: z.string().uuid().optional()
 })
 
