@@ -4,12 +4,12 @@ import { fork } from "~/server/data/orm"
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string(),
-    statement: z.string(),
-    primaryActorId: z.string().uuid(),
-    priority: z.nativeEnum(MoscowPriority),
-    outcomeId: z.string().uuid(),
-    functionalBehaviorId: z.string().uuid()
+    name: z.string().default("{Untitled User Story}"),
+    statement: z.string().default(""),
+    primaryActorId: z.string().uuid().optional(),
+    priority: z.nativeEnum(MoscowPriority).optional(),
+    outcomeId: z.string().uuid().optional(),
+    functionalBehaviorId: z.string().uuid().optional()
 })
 
 /**
@@ -21,34 +21,18 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     const [primaryActor, outcome, functionalBehavior] = await Promise.all([
-        em.findOne(Stakeholder, body.primaryActorId),
-        em.findOne(Outcome, body.outcomeId),
-        em.findOne(FunctionalBehavior, body.functionalBehaviorId)
+        body.primaryActorId ? em.findOne(Stakeholder, body.primaryActorId) : undefined,
+        body.outcomeId ? em.findOne(Outcome, body.outcomeId) : undefined,
+        body.functionalBehaviorId ? em.findOne(FunctionalBehavior, body.functionalBehaviorId) : undefined
     ]);
 
-    if (!primaryActor)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No primary actor found with id: ${body.primaryActorId}`
-        })
-    if (!outcome)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No outcome found with id: ${body.outcomeId}`
-        })
-    if (!functionalBehavior)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No functional behavior found with id: ${body.functionalBehaviorId}`
-        })
-
     const newUserStory = new UserStory({
-        functionalBehavior,
-        outcome,
+        functionalBehavior: functionalBehavior ?? undefined,
+        outcome: outcome ?? undefined,
         name: body.name,
         statement: body.statement,
         solution,
-        primaryActor,
+        primaryActor: primaryActor ?? undefined,
         priority: body.priority,
         lastModified: new Date(),
         modifiedBy: sessionUser

@@ -1,5 +1,5 @@
 import { EntitySchema } from "@mikro-orm/core";
-import { AppRole, AppUserOrganizationRole } from "../../domain/application/index.js";
+import { AppRole, AppUserOrganizationRole } from "../../../domain/application/index.js"
 
 export default new EntitySchema<AppUserOrganizationRole>({
     class: AppUserOrganizationRole,

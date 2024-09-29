@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
 
     await assertSolutionReader(event, solutionId)
 
-    const result = await em.findOne(Justification, id)
+    const result = await em.findOne(Justification, id, { populate: ['modifiedBy', 'solution'] })
 
     if (!result)
         throw createError({

@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
 
     await assertSolutionReader(event, solutionId)
 
-    const result = await em.findOne(SystemComponent, id)
+    const result = await em.findOne(SystemComponent, id, { populate: ['modifiedBy', 'solution', 'parentComponent'] })
 
     if (!result)
         throw createError({

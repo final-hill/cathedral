@@ -4,8 +4,8 @@ import { MoscowPriority, FunctionalBehavior } from "~/server/domain/requirements
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string().min(1),
-    statement: z.string(),
+    name: z.string().default("{Untitled Functional Behavior}"),
+    statement: z.string().default(""),
     priority: z.nativeEnum(MoscowPriority)
 })
 

@@ -1,7 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
-import { AppUser, AppRole, AppUserOrganizationRole } from "~/server/domain/application/index"
-import { type Properties } from "~/server/domain/Properties"
+import { AppUser, AppUserOrganizationRole } from "~/server/domain/application/index"
 
 const querySchema = z.object({
     organizationId: z.string().uuid(),
@@ -20,14 +19,12 @@ export default defineEventHandler(async (event) => {
         populate: ['appUser']
     })
 
-    type AppUserRoles = Properties<AppUser> & { role: AppRole }
-
     // assign the roles to the appusers
-    const appUsersWithRoles: AppUserRoles[] = appUserOrganizationRoles.map((a) => ({
-        // @ts-expect-error: The entity is actually in an 'entity' property. Is this an ORM bug?
-        ...a.appUser.entity,
-        role: a.role
-    }))
+    const appUsersWithRoles: AppUser[] = appUserOrganizationRoles.map((aur) => {
+        const appUser = aur.appUser as AppUser
+        appUser.role = aur.role
+        return appUser
+    })
 
     return appUsersWithRoles
 })

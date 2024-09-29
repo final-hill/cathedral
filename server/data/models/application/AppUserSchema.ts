@@ -1,5 +1,5 @@
 import { EntitySchema } from "@mikro-orm/core";
-import { AppUser } from "../../domain/application/index.js";
+import { AppUser } from "../../../domain/application/AppUser.js";
 
 export default new EntitySchema<AppUser>({
     class: AppUser,
@@ -10,6 +10,7 @@ export default new EntitySchema<AppUser>({
         lastLoginDate: { type: 'datetime', nullable: true },
         isSystemAdmin: { type: 'boolean', nullable: false },
         // email address: https://stackoverflow.com/a/574698
-        email: { type: 'character varying', nullable: false, length: 254 }
+        email: { type: 'character varying', nullable: false, length: 254 },
+        role: { entity: 'AppRole', persist: false }
     }
 })

@@ -11,12 +11,8 @@ export abstract class Scenario extends Example {
         this.primaryActor = primaryActor;
     }
 
-    primaryActor: Stakeholder
-
-    override toJSON() {
-        return {
-            ...super.toJSON(),
-            primaryActorId: this.primaryActor.id
-        }
-    }
+    /**
+     * Primary actor involved in the scenario
+     */
+    primaryActor?: Stakeholder;
 }

@@ -1,6 +1,6 @@
 import { EntitySchema } from "@mikro-orm/core";
 import RequirementSchema from "./RequirementSchema.js";
-import { Component, SystemComponent } from "../../domain/requirements/index.js";
+import { Component, SystemComponent } from "../../../domain/requirements/index.js";
 
 export default new EntitySchema<SystemComponent, Component>({
     class: SystemComponent,

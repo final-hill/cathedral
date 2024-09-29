@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useFetch } from 'nuxt/app';
-import { ConstraintCategory } from '~/server/domain/requirements/index';
-import { NIL as emptyUuid } from 'uuid';
+import { Constraint } from '~/server/domain/requirements/Constraint';
+import { ConstraintCategory } from '~/server/domain/requirements/ConstraintCategory';
 
 useHead({ title: 'Constraints' })
 definePageMeta({ name: 'Constraints' })
@@ -16,8 +16,12 @@ const { $eventBus } = useNuxtApp(),
     }),
     solution = (solutions.value ?? [])[0],
     solutionId = solution.id,
-    { data: constraints, status, refresh, error: getConstraintsError } = await useFetch(`/api/constraints`, {
-        query: { solutionId }
+    { data: constraints, status, refresh, error: getConstraintsError } = await useFetch<Constraint[]>(`/api/constraints`, {
+        query: { solutionId },
+        transform: (data) => data.map((item) => {
+            item.lastModified = new Date(item.lastModified)
+            return item
+        })
     });
 
 if (getSolutionError.value)
@@ -26,19 +30,7 @@ if (getSolutionError.value)
 if (getConstraintsError.value)
     $eventBus.$emit('page-error', getConstraintsError.value)
 
-type ConstraintViewModel = {
-    id: string;
-    name: string;
-    statement: string;
-    category: ConstraintCategory;
-}
-
-const constraintCategories = ref<{ id: string, description: string }[]>(
-    Object.values(ConstraintCategory).map((value) => ({ id: value, description: value }))
-),
-    emptyConstraint: ConstraintViewModel = { id: emptyUuid, name: '', statement: '', category: ConstraintCategory.BUSINESS }
-
-const onCreate = async (data: ConstraintViewModel) => {
+const onCreate = async (data: Constraint) => {
     await $fetch(`/api/constraints`, {
         method: 'POST',
         body: {
@@ -60,7 +52,7 @@ const onDelete = async (id: string) => {
     refresh()
 }
 
-const onUpdate = async (data: ConstraintViewModel) => {
+const onUpdate = async (data: Constraint) => {
     await $fetch(`/api/constraints/${data.id}`, {
         method: 'PUT',
         body: {
@@ -79,76 +71,10 @@ const onUpdate = async (data: ConstraintViewModel) => {
         Environmental constraints are the limitations and obligations that
         the environment imposes on the project and system.
     </p>
-    <XDataTable :datasource="constraints" :empty-record="emptyConstraint" :on-create="onCreate" :on-delete="onDelete"
-        :on-update="onUpdate" :loading="status === 'pending'">
-        <template #rows>
-            <Column field="name" header="Name" sortable>
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by name" />
-                </template>
-                <template #body="{ data }">
-                    {{ data.name }}
-                </template>
-            </Column>
-            <Column field="category" header="Category" sortable>
-                <template #filter="{ filterModel, filterCallback }">
-                    <select class="p-inputtext p-component" v-model="filterModel.value" @change="filterCallback()">
-                        <option v-for="category in constraintCategories" :key="category.id" :value="category.id">
-                            {{ category.description }}
-                        </option>
-                    </select>
-                </template>
-                <template #body="{ data, field }">
-                    {{ constraintCategories.find(o => o.id === data[field])?.description }}
-                </template>
-            </Column>
-            <Column field="statement" header="Description">
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by description" />
-                </template>
-                <template #body="{ data }">
-                    {{ data.statement }}
-                </template>
-            </Column>
-        </template>
-        <template #createDialog="{ data } : { data: ConstraintViewModel }">
-            <div class="field grid">
-                <label for="name" class="required col-fixed w-7rem">Name</label>
-                <InputText name="name" v-model.trim="data.name" required class="col" />
-            </div>
-            <div class="field grid">
-                <label for="category" class="required col-fixed w-7rem">Category</label>
-                <select class="p-inputtext p-component col" name="category" v-model="data.category" required>
-                    <option v-for="category in constraintCategories" :key="category.id" :value="category.id">
-                        {{ category.description }}
-                    </option>
-                </select>
-            </div>
-            <div class="field grid">
-                <label for="statement" class="required col-fixed w-7rem">Description</label>
-                <InputText name="statement" v-model.trim="data.statement" required class="col" />
-            </div>
-        </template>
-        <template #editDialog="{ data } : { data: ConstraintViewModel }">
-            <input type="hidden" name="id" v-model.trim="data.id" />
-            <div class="field grid">
-                <label for="name" class="required col-fixed w-7rem">Name</label>
-                <InputText name="name" v-model.trim="data.name" required class="col" />
-            </div>
-            <div class="field grid">
-                <label for="category" class="required col-fixed w-7rem">Category</label>
-                <select class="p-inputtext p-component col" name="category" v-model="data.category" required>
-                    <option v-for="category in constraintCategories" :key="category.id" :value="category.id">
-                        {{ category.description }}
-                    </option>
-                </select>
-            </div>
-            <div class="field grid">
-                <label for="statement" class="required col-fixed w-7rem">Description</label>
-                <InputText name="statement" v-model.trim="data.statement" required class="col" />
-            </div>
-        </template>
+    <XDataTable :viewModel="{ name: 'text', category: 'text' }"
+        :createModel="{ name: 'text', category: Object.values(ConstraintCategory), statement: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', category: Object.values(ConstraintCategory), statement: 'text' }"
+        :datasource="constraints" :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate"
+        :loading="status === 'pending'">
     </XDataTable>
 </template>

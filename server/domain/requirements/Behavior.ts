@@ -6,19 +6,12 @@ import { Requirement, type MoscowPriority } from "./index.js";
  */
 export abstract class Behavior extends Requirement {
     constructor({ priority, ...rest }: Omit<Properties<Behavior>, 'id'>) {
-        super(rest)
-        this.priority = priority
+        super(rest);
+        this.priority = priority;
     }
 
     /**
      * The priority of the behavior.
      */
-    priority: MoscowPriority
-
-    override toJSON() {
-        return {
-            ...super.toJSON(),
-            priority: this.priority
-        }
-    }
+    priority?: MoscowPriority;
 }

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { NIL as emptyUuid } from 'uuid';
+import { Limit } from '~/server/domain/requirements/Limit';
 
 useHead({ title: 'Limitations' })
 definePageMeta({ name: 'Limitations' })
@@ -17,21 +17,18 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-type LimitViewModel = {
-    id: string;
-    name: string;
-    statement: string;
-}
-
-const { data: limits, status, refresh, error: getLimitsError } = await useFetch(`/api/limits`, {
-    query: { solutionId }
-}),
-    emptyLimit: LimitViewModel = { id: emptyUuid, name: '', statement: '' };
+const { data: limits, status, refresh, error: getLimitsError } = await useFetch<Limit[]>(`/api/limits`, {
+    query: { solutionId },
+    transform: (data) => data.map((item) => {
+        item.lastModified = new Date(item.lastModified)
+        return item
+    })
+})
 
 if (getLimitsError.value)
     $eventBus.$emit('page-error', getLimitsError.value)
 
-const onCreate = async (data: LimitViewModel) => {
+const onCreate = async (data: Limit) => {
     await $fetch(`/api/limits`, {
         method: 'POST',
         body: {
@@ -44,7 +41,7 @@ const onCreate = async (data: LimitViewModel) => {
     refresh()
 }
 
-const onUpdate = async (data: LimitViewModel) => {
+const onUpdate = async (data: Limit) => {
     await $fetch(`/api/limits/${data.id}`, {
         method: 'PUT', body: {
             solutionId,
@@ -72,48 +69,8 @@ const onDelete = async (id: string) => {
         Example: "Providing an interface to the user to change the color of the background is out-of-scope."
     </p>
 
-    <XDataTable :datasource="limits" :empty-record="emptyLimit" :on-create="onCreate" :on-update="onUpdate"
-        :on-delete="onDelete" :loading="status === 'pending'">
-        <template #rows>
-            <Column field="name" header="Name" sortable>
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by name" />
-                </template>
-                <template #body="{ data }">
-                    {{ data.name }}
-                </template>
-            </Column>
-            <Column field="statement" header="Description">
-                <template #filter="{ filterModel, filterCallback }">
-                    <InputText v-model.trim="filterModel.value" @input="filterCallback()"
-                        placeholder="Search by Description" />
-                </template>
-                <template #body="{ data }">
-                    {{ data.statement }}
-                </template>
-            </Column>
-        </template>
-        <template #createDialog="{ data } : { data: LimitViewModel }">
-            <div class="field grid">
-                <label for="name" class="required col-fixed w-7rem">Name</label>
-                <InputText v-model.trim="data.name" name="name" required class="col" />
-            </div>
-            <div class="field grid">
-                <label for="statement" class="col-fixed w-7rem">Description</label>
-                <InputText v-model.trim="data.statement" name="statement" class="col" />
-            </div>
-        </template>
-        <template #editDialog="{ data } : { data: LimitViewModel }">
-            <input type="hidden" v-model="data.id" name="id" />
-            <div class="field grid">
-                <label for="name" class="required col-fixed w-7rem">Name</label>
-                <InputText v-model.trim="data.name" name="name" required class="col" />
-            </div>
-            <div class="field grid">
-                <label for="statement" class="col-fixed w-7rem">Description</label>
-                <InputText v-model.trim="data.statement" name="statement" class="col" />
-            </div>
-        </template>
+    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="limits" :on-create="onCreate"
+        :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'">
     </XDataTable>
 </template>

@@ -8,9 +8,9 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string().min(1),
-    statement: z.string(),
-    priority: z.nativeEnum(MoscowPriority)
+    name: z.string().default("{Untitled Non-Functional Behavior}"),
+    statement: z.string().default(""),
+    priority: z.nativeEnum(MoscowPriority).optional()
 })
 
 /**

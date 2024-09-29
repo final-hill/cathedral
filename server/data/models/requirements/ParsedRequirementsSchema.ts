@@ -1,5 +1,5 @@
 import { EntitySchema } from "@mikro-orm/core";
-import { ParsedRequirements } from "../../domain/application/index.js";
+import { ParsedRequirements } from "../../../domain/application/index.js";
 
 export default new EntitySchema<ParsedRequirements>({
     class: ParsedRequirements,

@@ -7,16 +7,11 @@ import { Requirement, ConstraintCategory } from './index.js';
 export class Constraint extends Requirement {
     constructor({ category, ...rest }: Omit<Properties<Constraint>, 'id'>) {
         super(rest);
-
         this.category = category;
     }
 
-    category: ConstraintCategory;
-
-    override toJSON() {
-        return {
-            ...super.toJSON(),
-            category: this.category
-        };
-    }
+    /**
+     * Category of the constraint
+     */
+    category?: ConstraintCategory;
 }

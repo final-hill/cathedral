@@ -7,16 +7,11 @@ import { Actor } from "./index.js";
 export class Person extends Actor {
     constructor({ email, ...rest }: Omit<Properties<Person>, 'id'>) {
         super(rest);
-
         this.email = email;
     }
 
-    email: string;
-
-    override toJSON() {
-        return {
-            ...super.toJSON(),
-            email: this.email
-        };
-    }
+    /**
+     * Email address of the person
+     */
+    email?: string;
 }

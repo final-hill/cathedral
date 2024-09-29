@@ -1,7 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm"
 import { Assumption, Effect, MoscowPriority, Stakeholder, UseCase } from "~/server/domain/requirements/index.js"
-import { NIL as emptyUuid } from "uuid"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -9,18 +8,18 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string(),
-    statement: z.string(),
-    primaryActorId: z.string().uuid(),
-    priority: z.nativeEnum(MoscowPriority),
-    scope: z.string(),
-    level: z.string(),
-    goalInContext: z.string(),
-    preconditionId: z.string().uuid(),
-    triggerId: z.literal(emptyUuid),
-    mainSuccessScenario: z.string(),
-    successGuaranteeId: z.string().uuid(),
-    extensions: z.string()
+    name: z.string().default("{Untitled Use Case}"),
+    statement: z.string().default(""),
+    primaryActorId: z.string().uuid().optional(),
+    priority: z.nativeEnum(MoscowPriority).optional(),
+    scope: z.string().default(""),
+    level: z.string().default(""),
+    goalInContext: z.string().default(""),
+    preconditionId: z.string().uuid().optional(),
+    triggerId: z.string().uuid().optional(),
+    mainSuccessScenario: z.string().default(""),
+    successGuaranteeId: z.string().uuid().optional(),
+    extensions: z.string().default("")
 })
 
 /**
@@ -33,42 +32,27 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     const useCase = await em.findOne(UseCase, id),
-        primaryActor = await em.findOne(Stakeholder, body.primaryActorId),
-        precondition = await em.findOne(Assumption, body.preconditionId),
-        successGuarantee = await em.findOne(Effect, body.successGuaranteeId)
+        primaryActor = body.primaryActorId ? await em.findOne(Stakeholder, body.primaryActorId) : undefined,
+        precondition = body.preconditionId ? await em.findOne(Assumption, body.preconditionId) : undefined,
+        successGuarantee = body.successGuaranteeId ? await em.findOne(Effect, body.successGuaranteeId) : undefined
 
     if (!useCase)
         throw createError({
             statusCode: 400,
             statusMessage: `Bad Request: No use case found with id: ${id}`
         })
-    if (!primaryActor)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No primary actor found with id: ${body.primaryActorId}`
-        })
-    if (!precondition)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No precondition found with id: ${body.preconditionId}`
-        })
-    if (!successGuarantee)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No success guarantee found with id: ${body.successGuaranteeId}`
-        })
 
     useCase.name = body.name
     useCase.statement = body.statement
-    useCase.primaryActor = primaryActor
+    useCase.primaryActor = primaryActor ?? undefined
     useCase.priority = body.priority
     useCase.scope = body.scope
     useCase.level = body.level
     useCase.goalInContext = body.goalInContext
-    useCase.precondition = precondition
+    useCase.precondition = precondition ?? undefined
     useCase.triggerId = body.triggerId
     useCase.mainSuccessScenario = body.mainSuccessScenario
-    useCase.successGuarantee = successGuarantee
+    useCase.successGuarantee = successGuarantee ?? undefined
     useCase.extensions = body.extensions
     useCase.modifiedBy = sessionUser
 

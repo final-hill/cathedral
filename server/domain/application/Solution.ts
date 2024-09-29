@@ -21,11 +21,11 @@ export class Solution {
     constructor(properties: Omit<Properties<CollectionToArrayProps<Solution>>, 'slug' | 'id'>) {
         this.id = uuidv7();
         this.description = properties.description;
-        this.name = properties.name
+        this.name = properties.name;
         this.organization = properties.organization;
         this.slug = slugify(this.name);
 
-        //for each array property, assign to the corresponding collection property
+        // For each array property, assign to the corresponding collection property
         for (const key in properties) {
             const xs = Reflect.get(properties, key) as any[];
             if (Array.isArray(xs)) {
@@ -38,27 +38,27 @@ export class Solution {
     /**
      * The unique identifier of the Solution
      */
-    id: string
+    id: string;
 
     /**
      * The Organization that owns this Solution
      */
-    organization: Organization
+    organization: Organization;
 
     /**
      * The description of the Solution
      */
-    description: string
+    description: string;
 
     /**
      * The name of the Solution
      */
-    name: string
+    name: string;
 
     /**
      * A slugified version of the name
      */
-    slug: string
+    slug: string;
 
     /**
      * The assumptions for this solution
@@ -144,14 +144,4 @@ export class Solution {
      * The user stories for this solution
      */
     userStories = new Collection<UserStory>(this);
-
-    toJSON() {
-        return {
-            id: this.id,
-            description: this.description,
-            name: this.name,
-            slug: this.slug,
-            organizationId: this.organization
-        }
-    }
 }

@@ -8,9 +8,9 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string(),
-    statement: z.string(),
-    email: z.string().email()
+    name: z.string().default("{Untitled Person}"),
+    statement: z.string().default(""),
+    email: z.string().email().optional()
 })
 
 /**

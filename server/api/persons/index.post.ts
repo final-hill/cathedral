@@ -4,9 +4,9 @@ import { Person } from "~/server/domain/requirements/index.js"
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string(),
-    statement: z.string(),
-    email: z.string().email()
+    name: z.string().default("{Anonymous Person}"),
+    statement: z.string().default(""),
+    email: z.string().email().optional()
 })
 
 /**

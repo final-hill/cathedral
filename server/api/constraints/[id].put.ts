@@ -8,9 +8,9 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string().min(1),
-    statement: z.string(),
-    category: z.nativeEnum(ConstraintCategory)
+    name: z.string().default("{Untitled Constraint}"),
+    statement: z.string().default(""),
+    category: z.nativeEnum(ConstraintCategory).optional()
 })
 
 /**

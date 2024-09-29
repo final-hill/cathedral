@@ -498,7 +498,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "length": 255,
           "mappedType": "string"
         }
@@ -926,7 +926,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "enumItems": [
             "MUST",
             "SHOULD",
@@ -1593,7 +1593,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "enumItems": [
             "MUST",
             "SHOULD",
@@ -1945,7 +1945,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "enumItems": [
             "Business Rule",
             "Physical Law",
@@ -2187,7 +2187,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "enumItems": [
             "Client",
             "Vendor"
@@ -2200,7 +2200,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "enumItems": [
             "Key Stakeholder",
             "Shadow Influencer",
@@ -2469,7 +2469,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "enumItems": [
             "MUST",
             "SHOULD",
@@ -2484,7 +2484,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "mappedType": "uuid"
         },
         "scope": {
@@ -2523,7 +2523,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "mappedType": "uuid"
         },
         "trigger_id": {
@@ -2532,7 +2532,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "mappedType": "uuid"
         },
         "main_success_scenario": {
@@ -2551,7 +2551,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "mappedType": "uuid"
         },
         "extensions": {
@@ -2615,6 +2615,7 @@
             "id"
           ],
           "referencedTableName": "public.stakeholder",
+          "deleteRule": "set null",
           "updateRule": "cascade"
         },
         "use_case_precondition_id_foreign": {
@@ -2627,6 +2628,7 @@
             "id"
           ],
           "referencedTableName": "public.assumption",
+          "deleteRule": "set null",
           "updateRule": "cascade"
         },
         "use_case_success_guarantee_id_foreign": {
@@ -2639,6 +2641,7 @@
             "id"
           ],
           "referencedTableName": "public.effect",
+          "deleteRule": "set null",
           "updateRule": "cascade"
         }
       },
@@ -2711,7 +2714,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "enumItems": [
             "MUST",
             "SHOULD",
@@ -2726,7 +2729,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "mappedType": "uuid"
         },
         "functional_behavior_id": {
@@ -2735,7 +2738,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "mappedType": "uuid"
         },
         "outcome_id": {
@@ -2744,7 +2747,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "mappedType": "uuid"
         }
       },
@@ -2798,6 +2801,7 @@
             "id"
           ],
           "referencedTableName": "public.stakeholder",
+          "deleteRule": "set null",
           "updateRule": "cascade"
         },
         "user_story_functional_behavior_id_foreign": {
@@ -2810,6 +2814,7 @@
             "id"
           ],
           "referencedTableName": "public.functional_behavior",
+          "deleteRule": "set null",
           "updateRule": "cascade"
         },
         "user_story_outcome_id_foreign": {
@@ -2822,6 +2827,7 @@
             "id"
           ],
           "referencedTableName": "public.outcome",
+          "deleteRule": "set null",
           "updateRule": "cascade"
         }
       },
