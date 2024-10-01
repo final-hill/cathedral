@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { ParsedRequirement } from '~/server/domain/requirements';
+
 useHead({ title: 'Workbox' });
 definePageMeta({ name: 'Workbox' });
 
@@ -12,25 +14,22 @@ const { $eventBus } = useNuxtApp(),
     }),
     solution = solutions.value![0];
 
-const { data: parsedRequirements, error: parsedRequirementsError } = await useFetch('/api/parse-requirements', {
+const { data: parsedRequirements, error: parsedRequirementsError } = await useFetch<ParsedRequirement[]>('/api/parse-requirements', {
     method: 'get',
-    query: { solutionId: solution.id },
-    transform: (data) => data.map(item => ({
-        ...item,
-        submittedAt: (new Date(item.submittedAt)).toLocaleString()
-    }))
+    query: { solutionId: solution.id }
 });
 
-// counts the number of requirements in the grouped object
-const countRequirements = (groupedRequirements: { [type: string]: { type: string; }[]; }) =>
-    Object.values(groupedRequirements).reduce((acc, arr) => acc + arr.length, 0)
+// counts the number of requirements in the meta requirement
+const countRequirements = (parsedRequirement: ParsedRequirement) =>
+    Object.values(parsedRequirement)
+        .filter(Array.isArray)
+        .reduce((acc, val) => acc + val.length, 0);
 
 if (solutionError.value)
     $eventBus.$emit('page-error', solutionError.value);
 
 if (parsedRequirementsError.value)
     $eventBus.$emit('page-error', parsedRequirementsError.value);
-
 
 const onApprove = async (parentId: string, itemId: string) => {
     alert('Approve: Not implemented yet')
@@ -51,18 +50,17 @@ const onReject = async (parentId: string, itemId: string) => {
             <AccordionTab v-for="parsedRequirement in parsedRequirements" :key="parsedRequirement.id">
                 <template #header>
                     <span class="flex align-items-center gap-2 w-full">
-                        <InlineMessage severity="secondary">{{ parsedRequirement.submittedAt }}</InlineMessage>
+                        <InlineMessage severity="secondary">{{ parsedRequirement.lastModified }}</InlineMessage>
                         by
-                        <span class="font-bold white-space-nowrap">{{ parsedRequirement.submittedBy.name }}</span>
-                        <Badge :value="countRequirements(parsedRequirement.jsonResult)" class="ml-auto mr-2" />
-                        <Button icon="pi pi-refresh" rounded raised />
+                        <span class="font-bold white-space-nowrap">{{ parsedRequirement.modifiedBy.name }}</span>
+                        <Badge :value="countRequirements(parsedRequirement)" class="ml-auto mr-2" />
+                        <!-- <Button icon="pi pi-refresh" rounded raised /> -->
                     </span>
                 </template>
                 <h2>Statement</h2>
                 <p class="font-italic">{{ parsedRequirement.statement }}</p>
 
-                <WorkboxDataView :parsedRequirements="parsedRequirement" :on-reject="onReject"
-                    :on-approve="onApprove" />
+                <WorkboxDataView :parsedRequirement="parsedRequirement" :on-reject="onReject" :on-approve="onApprove" />
             </AccordionTab>
         </Accordion>
     </div>

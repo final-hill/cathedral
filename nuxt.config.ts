@@ -52,7 +52,7 @@ export default defineNuxtConfig({
     runtimeConfig: {
         // The private keys which are only available within server-side
 
-        // These values are overwritten by the associated NUXT_ environment variables
+        // These values are overwritten by the associated NUXT_ environment variables in the .env file
         authClientId: '',
         authClientSecret: '',
         authRedirectUri: '',
@@ -65,11 +65,16 @@ export default defineNuxtConfig({
         sessionPassword: '',
         origin: '',
         port: '',
+
         slackAppToken: '',
         slackSigningSecret: '',
         slackClientId: '',
         slackClientSecret: '',
         slackBotToken: '',
+
+        azureOpenaiApiKey: '',
+        azureOpenaiApiVersion: '',
+        azureOpenaiEndpoint: '',
 
         // The public keys which are available both client-side and server-side
         public: {}

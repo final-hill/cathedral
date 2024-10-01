@@ -6,14 +6,15 @@ const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Anonymous Person}"),
     statement: z.string().default(""),
-    email: z.string().email().optional()
+    email: z.string().email().optional(),
+    isSilence: z.boolean().default(false)
 })
 
 /**
  * Creates a new person and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const { email, name, statement, solutionId } = await validateEventBody(event, bodySchema),
+    const { email, name, statement, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
@@ -23,7 +24,8 @@ export default defineEventHandler(async (event) => {
         solution,
         email,
         modifiedBy: sessionUser,
-        lastModified: new Date()
+        lastModified: new Date(),
+        isSilence
     })
 
     await em.persistAndFlush(newPerson)

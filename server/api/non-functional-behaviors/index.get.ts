@@ -6,7 +6,8 @@ const querySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().optional(),
     statement: z.string().optional(),
-    priority: z.nativeEnum(MoscowPriority).optional()
+    priority: z.nativeEnum(MoscowPriority).optional(),
+    isSilence: z.boolean().optional()
 })
 
 /**

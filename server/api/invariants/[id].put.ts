@@ -9,7 +9,8 @@ const paramSchema = z.object({
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled Invariant}"),
-    statement: z.string().default("")
+    statement: z.string().default(""),
+    isSilence: z.boolean().optional()
 })
 
 /**
@@ -17,11 +18,10 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { name, statement, solutionId } = await validateEventBody(event, bodySchema),
+        { name, statement, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { sessionUser } = await assertSolutionContributor(event, solutionId),
-        em = fork()
-
-    const invariant = await em.findOne(Invariant, id)
+        em = fork(),
+        invariant = await em.findOne(Invariant, id)
 
     if (!invariant)
         throw createError({
@@ -29,9 +29,13 @@ export default defineEventHandler(async (event) => {
             statusMessage: `Bad Request: No effect found with id: ${id}`
         })
 
-    invariant.name = name
-    invariant.statement = statement
-    invariant.modifiedBy = sessionUser
+    Object.assign(invariant, {
+        name,
+        statement,
+        modifiedBy: sessionUser,
+        lastModified: new Date(),
+        ...(isSilence !== undefined && { isSilence })
+    })
 
     await em.flush()
 })

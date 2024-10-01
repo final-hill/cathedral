@@ -9,7 +9,8 @@ const bodySchema = z.object({
     primaryActorId: z.string().uuid().optional(),
     priority: z.nativeEnum(MoscowPriority).optional(),
     outcomeId: z.string().uuid().optional(),
-    functionalBehaviorId: z.string().uuid().optional()
+    functionalBehaviorId: z.string().uuid().optional(),
+    isSilence: z.boolean().default(false)
 })
 
 /**
@@ -20,22 +21,17 @@ export default defineEventHandler(async (event) => {
         { solution, sessionUser } = await assertSolutionContributor(event, body.solutionId),
         em = fork()
 
-    const [primaryActor, outcome, functionalBehavior] = await Promise.all([
-        body.primaryActorId ? em.findOne(Stakeholder, body.primaryActorId) : undefined,
-        body.outcomeId ? em.findOne(Outcome, body.outcomeId) : undefined,
-        body.functionalBehaviorId ? em.findOne(FunctionalBehavior, body.functionalBehaviorId) : undefined
-    ]);
-
     const newUserStory = new UserStory({
-        functionalBehavior: functionalBehavior ?? undefined,
-        outcome: outcome ?? undefined,
+        functionalBehavior: body.functionalBehaviorId ? em.getReference(FunctionalBehavior, body.functionalBehaviorId) : undefined,
+        outcome: body.outcomeId ? em.getReference(Outcome, body.outcomeId) : undefined,
         name: body.name,
         statement: body.statement,
         solution,
-        primaryActor: primaryActor ?? undefined,
+        primaryActor: body.primaryActorId ? em.getReference(Stakeholder, body.primaryActorId) : undefined,
         priority: body.priority,
         lastModified: new Date(),
-        modifiedBy: sessionUser
+        modifiedBy: sessionUser,
+        isSilence: body.isSilence
     })
 
     await em.persistAndFlush(newUserStory)

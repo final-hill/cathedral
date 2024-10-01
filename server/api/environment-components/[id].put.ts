@@ -10,7 +10,8 @@ const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled Environment Component}"),
     statement: z.string().default(""),
-    parentComponentId: z.string().uuid().optional()
+    parentComponentId: z.string().uuid().optional(),
+    isSilence: z.boolean().optional()
 })
 
 /**
@@ -18,12 +19,10 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { name, statement, parentComponentId, solutionId } = await validateEventBody(event, bodySchema),
+        { name, statement, parentComponentId, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { sessionUser } = await assertSolutionContributor(event, solutionId),
-        em = fork()
-
-    const environmentComponent = await em.findOne(EnvironmentComponent, id),
-        parentComponent = parentComponentId ? await em.findOne(EnvironmentComponent, parentComponentId) : null
+        em = fork(),
+        environmentComponent = await em.findOne(EnvironmentComponent, id)
 
     if (!environmentComponent)
         throw createError({
@@ -31,10 +30,16 @@ export default defineEventHandler(async (event) => {
             statusMessage: `Bad Request: No effect found with id: ${id}`
         })
 
-    environmentComponent.name = name
-    environmentComponent.statement = statement
-    environmentComponent.parentComponent = parentComponent ?? undefined
-    environmentComponent.modifiedBy = sessionUser
+    if (parentComponentId)
+        environmentComponent.parentComponent = em.getReference(EnvironmentComponent, parentComponentId)
+
+    Object.assign(environmentComponent, {
+        name,
+        statement,
+        modifiedBy: sessionUser,
+        lastModified: new Date(),
+        ...(isSilence !== undefined && { isSilence })
+    })
 
     await em.flush()
 })

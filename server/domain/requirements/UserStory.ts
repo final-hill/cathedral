@@ -1,4 +1,3 @@
-import type { Properties } from "../Properties.js";
 import { FunctionalBehavior, Outcome, Scenario } from "./index.js";
 
 /**
@@ -11,11 +10,17 @@ import { FunctionalBehavior, Outcome, Scenario } from "./index.js";
  * [goal] - outcomeId
  */
 export class UserStory extends Scenario {
-    constructor({ outcome, functionalBehavior, ...rest }: Omit<Properties<UserStory>, 'id'>) {
+    constructor({ outcome, functionalBehavior, follows, ...rest }: Omit<UserStory, 'id'>) {
         super(rest);
         this.outcome = outcome;
         this.functionalBehavior = functionalBehavior;
+        this.follows = follows;
     }
+
+    /**
+     * Requirement that this user story follows from
+     */
+    follows?: UserStory;
 
     /**
      * The action that the user wants to perform.

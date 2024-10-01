@@ -1,4 +1,3 @@
-import { type Properties } from "../Properties.js";
 import { Example, Stakeholder } from "./index.js";
 
 /**
@@ -6,7 +5,7 @@ import { Example, Stakeholder } from "./index.js";
  * of interaction between actors and the system.
  */
 export abstract class Scenario extends Example {
-    constructor({ primaryActor, ...rest }: Omit<Properties<Scenario>, 'id'>) {
+    constructor({ primaryActor, ...rest }: Omit<Scenario, 'id'>) {
         super(rest);
         this.primaryActor = primaryActor;
     }

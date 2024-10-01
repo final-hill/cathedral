@@ -9,7 +9,8 @@ const paramSchema = z.object({
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled Effect}"),
-    statement: z.string().default("")
+    statement: z.string().default(""),
+    isSilence: z.boolean().optional()
 })
 
 /**
@@ -17,11 +18,10 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { name, statement, solutionId } = await validateEventBody(event, bodySchema),
+        { name, statement, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { sessionUser } = await assertSolutionContributor(event, solutionId),
-        em = fork()
-
-    const effect = await em.findOne(Effect, id)
+        em = fork(),
+        effect = await em.findOne(Effect, id)
 
     if (!effect)
         throw createError({
@@ -29,9 +29,13 @@ export default defineEventHandler(async (event) => {
             statusMessage: `Bad Request: No effect found with id: ${id}`
         })
 
-    effect.name = name
-    effect.statement = statement
-    effect.modifiedBy = sessionUser
+    Object.assign(effect, {
+        name,
+        statement,
+        modifiedBy: sessionUser,
+        lastModified: new Date(),
+        ...(isSilence !== undefined && { isSilence })
+    })
 
     await em.flush()
 })

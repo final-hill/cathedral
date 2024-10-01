@@ -5,7 +5,8 @@ import { Obstacle } from "~/server/domain/requirements/index.js"
 const querySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().optional(),
-    statement: z.string().optional()
+    statement: z.string().optional(),
+    isSilence: z.boolean().optional()
 })
 
 /**

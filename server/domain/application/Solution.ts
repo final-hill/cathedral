@@ -1,24 +1,21 @@
 import { v7 as uuidv7 } from 'uuid';
-import { type Properties } from '../Properties.js';
+import { Collection } from '@mikro-orm/core';
+import { type CollectionToArrayProps } from '../types/index.js';
 import { Organization } from './index.js';
 import slugify from '../../../utils/slugify.js';
-import { Collection } from '@mikro-orm/core';
 import {
     type Assumption, type Constraint, type Effect, type Justification, type EnvironmentComponent,
-    type FunctionalBehavior, type GlossaryTerm, type Invariant, type Limit, type NonFunctionalBehavior,
-    type Obstacle, type Outcome, type Person, type Stakeholder, type SystemComponent, type UseCase,
-    type UserStory
-} from '../requirements/index.js';
+    type FunctionalBehavior, type GlossaryTerm, type Invariant, type Limit, type MetaRequirement,
+    type NonFunctionalBehavior, type Obstacle, type Outcome, type Person, type Stakeholder,
+    type SystemComponent, type UseCase, type UserStory,
 
-type CollectionToArrayProps<T> = {
-    [P in keyof T]: T[P] extends Collection<infer U> ? U[] : T[P];
-};
+} from '../requirements/index.js';
 
 /**
  * A Solution is the aggregation of a Project, Environment, Goals, and a System
  */
 export class Solution {
-    constructor(properties: Omit<Properties<CollectionToArrayProps<Solution>>, 'slug' | 'id'>) {
+    constructor(properties: Omit<CollectionToArrayProps<Solution>, 'slug' | 'id'>) {
         this.id = uuidv7();
         this.description = properties.description;
         this.name = properties.name;

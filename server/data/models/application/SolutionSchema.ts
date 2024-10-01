@@ -2,8 +2,8 @@ import { EntitySchema } from "@mikro-orm/core";
 import { Solution, Organization } from "../../../domain/application/index.js";
 import {
     Assumption, Constraint, Effect, EnvironmentComponent, FunctionalBehavior,
-    GlossaryTerm, Invariant, Justification, Limit, NonFunctionalBehavior, Obstacle,
-    Outcome, Person, Stakeholder, SystemComponent, UseCase, UserStory
+    GlossaryTerm, Invariant, Justification, Limit, MetaRequirement, NonFunctionalBehavior,
+    Obstacle, Outcome, Person, Stakeholder, SystemComponent, UseCase, UserStory
 } from "../../../domain/requirements/index.js";
 
 export default new EntitySchema<Solution>({

@@ -6,7 +6,8 @@ const querySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().optional(),
     statement: z.string().optional(),
-    email: z.string().email().optional()
+    email: z.string().email().optional(),
+    isSilence: z.boolean().optional()
 })
 
 /**

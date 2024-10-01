@@ -16,6 +16,7 @@ import OutcomeSchema from "./OutcomeSchema"
 import PersonSchema from "./PersonSchema"
 import SystemComponentSchema from "./SystemComponentSchema"
 import UserStorySchema from "./UserStorySchema"
+import UseCaseSchema from "./UseCaseSchema"
 
 export default z.object({
     requirements: z.array(z.union([
@@ -35,6 +36,7 @@ export default z.object({
         StakeholderSchema,
         SystemComponentSchema,
         SilenceSchema,
-        UserStorySchema
+        UserStorySchema,
+        UseCaseSchema
     ]))
 })

@@ -13,7 +13,8 @@ const bodySchema = z.object({
     primaryActorId: z.string().uuid().optional(),
     priority: z.nativeEnum(MoscowPriority).optional(),
     outcomeId: z.string().uuid().optional(),
-    functionalBehaviorId: z.string().uuid().optional()
+    functionalBehaviorId: z.string().uuid().optional(),
+    isSilence: z.boolean().optional()
 })
 
 /**
@@ -23,12 +24,8 @@ export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
         body = await validateEventBody(event, bodySchema),
         { sessionUser } = await assertSolutionContributor(event, body.solutionId),
-        em = fork()
-
-    const userStory = await em.findOne(UserStory, id),
-        primaryActor = body.primaryActorId ? await em.findOne(Stakeholder, body.primaryActorId) : undefined,
-        outcome = body.outcomeId ? await em.findOne(Outcome, body.outcomeId) : undefined,
-        functionalBehavior = body.functionalBehaviorId ? await em.findOne(FunctionalBehavior, body.functionalBehaviorId) : undefined
+        em = fork(),
+        userStory = await em.findOne(UserStory, id)
 
     if (!userStory)
         throw createError({
@@ -36,13 +33,21 @@ export default defineEventHandler(async (event) => {
             statusMessage: `Bad Request: No user story found with id: ${id}`
         })
 
-    userStory.name = body.name
-    userStory.statement = body.statement
-    userStory.primaryActor = primaryActor ?? undefined
-    userStory.priority = body.priority
-    userStory.outcome = outcome ?? undefined
-    userStory.functionalBehavior = functionalBehavior ?? undefined
-    userStory.modifiedBy = sessionUser
+    if (body.primaryActorId)
+        userStory.primaryActor = em.getReference(Stakeholder, body.primaryActorId)
+    if (body.outcomeId)
+        userStory.outcome = em.getReference(Outcome, body.outcomeId)
+    if (body.functionalBehaviorId)
+        userStory.functionalBehavior = em.getReference(FunctionalBehavior, body.functionalBehaviorId)
+
+    Object.assign(userStory, {
+        name: body.name,
+        statement: body.statement,
+        priority: body.priority,
+        modifiedBy: sessionUser,
+        lastModified: new Date(),
+        ...(body.isSilence !== undefined && { isSilence: body.isSilence })
+    })
 
     await em.flush()
 })

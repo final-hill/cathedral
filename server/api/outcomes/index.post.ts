@@ -5,14 +5,15 @@ import { Outcome } from "~/server/domain/requirements/index.js"
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled Outcome}"),
-    statement: z.string().default("")
+    statement: z.string().default(""),
+    isSilence: z.boolean().default(false)
 })
 
 /**
  * Creates a new obstacle and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const { name, statement, solutionId } = await validateEventBody(event, bodySchema),
+    const { name, statement, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
@@ -21,7 +22,8 @@ export default defineEventHandler(async (event) => {
         statement,
         solution,
         modifiedBy: sessionUser,
-        lastModified: new Date()
+        lastModified: new Date(),
+        isSilence
     })
 
     await em.persistAndFlush(newOutcome)

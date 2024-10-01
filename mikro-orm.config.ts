@@ -18,13 +18,14 @@ import LimitSchema from "./server/data/models/requirements/LimitSchema.js";
 import NonFunctionalBehaviorSchema from "./server/data/models/requirements/NonFunctionalBehaviorSchema.js";
 import ObstacleSchema from "./server/data/models/requirements/ObstacleSchema.js";
 import OutcomeSchema from "./server/data/models/requirements/OutcomeSchema.js";
-import ParsedRequirementsSchema from "./server/data/models/requirements/ParsedRequirementsSchema.js";
+import ParsedRequirementSchema from "./server/data/models/requirements/ParsedRequirementSchema.js";
 import PersonSchema from "./server/data/models/requirements/PersonSchema.js";
 import ProductSchema from "./server/data/models/requirements/ProductSchema.js";
 import SolutionSchema from "./server/data/models/application/SolutionSchema.js";
 import StakeholderSchema from "./server/data/models/requirements/StakeholderSchema.js";
 import UseCaseSchema from "./server/data/models/requirements/UseCaseSchema.js";
 import UserStorySchema from "./server/data/models/requirements/UserStorySchema.js";
+import SilenceSchema from "./server/data/models/requirements/SilenceSchema.js";
 import SystemComponentSchema from "./server/data/models/requirements/SystemComponentSchema.js";
 import OrganizationSchema from "./server/data/models/application/OrganizationSchema.js";
 import AppUserOrganizationRoleSchema from "./server/data/models/application/AppUserOrganizationRoleSchema.js";
@@ -46,12 +47,11 @@ const config: Options = {
         }
     },
     entities: [
-        AppUserSchema, AppUserOrganizationRoleSchema,
-        AssumptionSchema, ConstraintSchema, EffectSchema, EnvironmentComponentSchema,
-        FunctionalBehaviorSchema, GlossaryTermSchema, HintSchema, InvariantSchema,
-        JustificationSchema, LimitSchema, NonFunctionalBehaviorSchema, ObstacleSchema,
-        OrganizationSchema, OutcomeSchema, ParsedRequirementsSchema, PersonSchema,
-        ProductSchema, SolutionSchema, StakeholderSchema, SystemComponentSchema,
+        AppUserSchema, AppUserOrganizationRoleSchema, AssumptionSchema, ConstraintSchema,
+        EffectSchema, EnvironmentComponentSchema, FunctionalBehaviorSchema, GlossaryTermSchema,
+        HintSchema, InvariantSchema, JustificationSchema, LimitSchema, NonFunctionalBehaviorSchema,
+        ObstacleSchema, OrganizationSchema, OutcomeSchema, ParsedRequirementSchema, PersonSchema,
+        ProductSchema, SilenceSchema, SolutionSchema, StakeholderSchema, SystemComponentSchema,
         UseCaseSchema, UserStorySchema
     ],
     seeder: {},

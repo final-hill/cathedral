@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { fork } from "~/server/data/orm"
-import { ParsedRequirements } from "~/server/domain/application";
+import { ParsedRequirement } from "~/server/domain/requirements";
 
 const querySchema = z.object({
     solutionId: z.string().uuid()
@@ -14,9 +14,18 @@ export default defineEventHandler(async (event) => {
         { solution } = await assertSolutionReader(event, solutionId),
         em = fork()
 
-    const results = await em.findAll(ParsedRequirements, {
-        where: { solution },
-        populate: ['submittedBy']
+    const results = await em.findAll(ParsedRequirement, {
+        where: {
+            solution,
+            name: '{LLM Parsed Requirement}'
+        },
+        populate: [
+            'modifiedBy', 'assumptions', 'constraints',
+            'effects', 'environmentComponents', 'functionalBehaviors',
+            'glossaryTerms', 'invariants', 'justifications', 'limits',
+            'nonFunctionalBehaviors', 'obstacles', 'outcomes', 'persons',
+            'stakeholders', 'systemComponents', 'useCases', 'userStories'
+        ]
     });
 
     return results ?? []

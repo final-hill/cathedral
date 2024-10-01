@@ -40,6 +40,12 @@ param nuxtAuthTenantId string
 param nuxtAuthAuthorityDomain string
 @secure()
 param nuxtAuthPrimaryUserFlow string
+@secure()
+param nuxtAzureOpenaiApiKey string
+@secure()
+param nuxtAzureOpenaiApiVersion string
+@secure()
+param nuxtAzureOpenaiEndpoint string
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: toLower('plan-${name}')
@@ -178,6 +184,18 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'NUXT_AUTH_PRIMARY_USER_FLOW'
           value: nuxtAuthPrimaryUserFlow
+        }
+        {
+          name: 'NUXT_AZURE_OPENAI_API_KEY'
+          value: nuxtAzureOpenaiApiKey
+        }
+        {
+          name: 'NUXT_AZURE_OPENAI_API_VERSION'
+          value: nuxtAzureOpenaiApiVersion
+        }
+        {
+          name: 'NUXT_AZURE_OPENAI_ENDPOINT'
+          value: nuxtAzureOpenaiEndpoint
         }
       ]
     }

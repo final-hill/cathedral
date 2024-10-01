@@ -10,7 +10,8 @@ const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled Functional Behavior}"),
     statement: z.string().default(""),
-    priority: z.nativeEnum(MoscowPriority)
+    priority: z.nativeEnum(MoscowPriority),
+    isSilence: z.boolean().optional()
 })
 
 /**
@@ -18,11 +19,10 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { name, priority, statement, solutionId } = await validateEventBody(event, bodySchema),
+        { name, priority, statement, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { sessionUser } = await assertSolutionContributor(event, solutionId),
-        em = fork()
-
-    const functionalBehavior = await em.findOne(FunctionalBehavior, id)
+        em = fork(),
+        functionalBehavior = await em.findOne(FunctionalBehavior, id)
 
     if (!functionalBehavior)
         throw createError({
@@ -30,10 +30,14 @@ export default defineEventHandler(async (event) => {
             statusMessage: `Bad Request: No effect found with id: ${id}`
         })
 
-    functionalBehavior.name = name
-    functionalBehavior.statement = statement
-    functionalBehavior.priority = priority
-    functionalBehavior.modifiedBy = sessionUser
+    Object.assign(functionalBehavior, {
+        name,
+        statement,
+        priority,
+        modifiedBy: sessionUser,
+        lastModified: new Date(),
+        ...(isSilence !== undefined && { isSilence })
+    })
 
     await em.flush()
 })

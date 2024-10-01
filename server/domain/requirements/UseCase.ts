@@ -1,13 +1,11 @@
-import { NIL as emptyUuid } from "uuid";
-import type { Properties } from "../Properties.js";
-import { Assumption, Effect, Scenario } from "./index.js";
+import { Assumption, Effect, ParsedRequirement, Scenario } from "./index.js";
 
 /**
  * A Use Case specifies the scenario of a complete
  * interaction of a user through a system.
  */
 export class UseCase extends Scenario {
-    constructor(props: Omit<Properties<UseCase>, 'id'>) {
+    constructor(props: Omit<UseCase, 'id'>) {
         super(props);
         this.scope = props.scope;
         this.level = props.level;
@@ -18,7 +16,13 @@ export class UseCase extends Scenario {
         this.successGuarantee = props.successGuarantee;
         this.extensions = props.extensions;
         // this.stakeHoldersAndInterests = props.stakeHoldersAndInterests;
+        this.follows = props.follows;
     }
+
+    /**
+     * Requirement that this use case follows from
+     */
+    follows?: ParsedRequirement;
 
     /**
      * The scope of the use case.

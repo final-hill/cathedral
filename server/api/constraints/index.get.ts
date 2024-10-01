@@ -6,7 +6,8 @@ const querySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().optional(),
     statement: z.string().optional(),
-    category: z.nativeEnum(ConstraintCategory).optional()
+    category: z.nativeEnum(ConstraintCategory).optional(),
+    isSilence: z.boolean().optional()
 })
 
 /**

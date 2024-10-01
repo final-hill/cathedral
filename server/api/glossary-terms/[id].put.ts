@@ -9,7 +9,8 @@ const paramSchema = z.object({
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled Glossary Term}"),
-    statement: z.string().default("")
+    statement: z.string().default(""),
+    isSilence: z.boolean().optional()
 })
 
 /**
@@ -17,11 +18,10 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { name, statement, solutionId } = await validateEventBody(event, bodySchema),
+        { name, statement, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { sessionUser } = await assertSolutionContributor(event, solutionId),
-        em = fork()
-
-    const glossaryTerm = await em.findOne(GlossaryTerm, id)
+        em = fork(),
+        glossaryTerm = await em.findOne(GlossaryTerm, id)
 
     if (!glossaryTerm)
         throw createError({
@@ -29,11 +29,15 @@ export default defineEventHandler(async (event) => {
             statusMessage: `Bad Request: No effect found with id: ${id}`
         })
 
-    glossaryTerm.name = name
-    glossaryTerm.statement = statement
-    // TODO: future use as part of Topic Maps?
-    glossaryTerm.parentComponent = undefined
-    glossaryTerm.modifiedBy = sessionUser
+    Object.assign(glossaryTerm, {
+        name,
+        statement,
+        // TODO: future use as part of Topic Maps?
+        parentComponent: undefined,
+        modifiedBy: sessionUser,
+        lastModified: new Date(),
+        ...(isSilence !== undefined && { isSilence })
+    })
 
     await em.flush()
 })

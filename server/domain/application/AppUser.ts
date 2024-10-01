@@ -1,11 +1,10 @@
-import { type Properties } from "../Properties.js";
 import { AppRole } from "./AppRole.js";
 
 /**
  * An AppUser is a user of the application
  */
 export class AppUser {
-    constructor(properties: Properties<AppUser>) {
+    constructor(properties: AppUser) {
         this.id = properties.id;
         this.creationDate = properties.creationDate;
         this.isSystemAdmin = properties.isSystemAdmin;
@@ -50,5 +49,5 @@ export class AppUser {
      * Note: this field is not mapped in the ORM. It is populated in the API layer.
      * It's a design smell that needs to be addressed.
      */
-    role: AppRole | undefined;
+    role?: AppRole;
 }

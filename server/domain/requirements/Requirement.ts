@@ -1,28 +1,27 @@
 import { v7 as uuidv7 } from 'uuid';
-import type { Properties } from "../Properties.js";
 import { AppUser, Solution } from '../application/index.js';
 
 /**
  * A Requirement is a statement that specifies a property.
  */
 export abstract class Requirement {
-    constructor({ name, statement, solution, lastModified, modifiedBy }: Omit<Properties<Requirement>, 'id'>) {
+    constructor(props: Omit<Requirement, 'id'>) {
         this.id = uuidv7();
-        this.name = name;
-        this.statement = statement;
-        this.solution = solution;
-        this.lastModified = lastModified;
-        this.modifiedBy = modifiedBy;
+        this.name = props.name;
+        this.statement = props.statement;
+        this.solution = props.solution;
+        this.lastModified = props.lastModified;
+        this.modifiedBy = props.modifiedBy;
+        this.isSilence = props.isSilence;
     }
 
     /**
      * The unique identifier of the Requirement
      */
     id: string;
-    /**
-     * A property is a Predicate formalizing its associated statement.
-     * TODO: represented as a datalog string?
-     */
+
+    // A property is a Predicate formalizing its associated statement.
+    // see: https://github.com/final-hill/cathedral/issues/368
     // property!: string
 
     /**
@@ -49,4 +48,10 @@ export abstract class Requirement {
      * The user who last modified the requirement
      */
     modifiedBy: AppUser;
+
+    /**
+     * Whether the requirement is a silence requirement.
+     * (i.e. a requirement that is not included in the solution)
+     */
+    isSilence: boolean;
 }

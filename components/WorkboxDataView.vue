@@ -1,21 +1,18 @@
 <script lang="ts" setup>
+import type { Requirement } from '~/server/domain/requirements/Requirement';
+import type { ParsedRequirement } from '~/server/domain/requirements/ParsedRequirement.js';
 
 type RowType = { type: string; id: string; name: string; }
 
 const props = defineProps<{
-    parsedRequirements: {
-        id: string,
-        jsonResult: {
-            [type: string]: RowType[]
-        }
-    },
+    parsedRequirement: ParsedRequirement,
     onApprove: (parentId: string, itemId: string) => Promise<void>,
     onReject: (parentId: string, itemId: string) => Promise<void>
 }>()
 
 const confirm = useConfirm()
 
-const requirements = Object.values(props.parsedRequirements.jsonResult)
+const requirements: Requirement[][] = Object.values(props.parsedRequirement).filter(Array.isArray)
 
 const onReject = (parentId: string, item: RowType) => new Promise<void>((resolve, _reject) => {
     confirm.require({
@@ -45,12 +42,14 @@ const onReject = (parentId: string, item: RowType) => new Promise<void>((resolve
                     </template>
                     <Column v-for="col of Object.keys(requirements[0])" :key="col" :field="col" :header="col">
                     </Column>
+                    <!--
                     <Column header="Actions" frozen align-frozen="right">
                         <template #body="{ data }">
                             <Button icon="pi pi-eye" class="text rounded mr-2" />
                             <Button icon="pi pi-trash" text rounded severity="danger" />
                         </template>
                     </Column>
+                -->
                 </DataTable>
             </div>
         </template>

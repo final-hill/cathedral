@@ -45,28 +45,32 @@ export default defineEventHandler(async (event) => {
         solution: newSolution,
         statement: '',
         lastModified: new Date(),
-        modifiedBy: sessionUser
+        modifiedBy: sessionUser,
+        isSilence: false
     }))
     newSolution.justifications.add(new Justification({
         name: 'Mission',
         solution: newSolution,
         statement: '',
         lastModified: new Date(),
-        modifiedBy: sessionUser
+        modifiedBy: sessionUser,
+        isSilence: false
     }))
     newSolution.justifications.add(new Justification({
         name: 'Situation',
         solution: newSolution,
         statement: '',
         lastModified: new Date(),
-        modifiedBy: sessionUser
+        modifiedBy: sessionUser,
+        isSilence: false
     }))
     newSolution.justifications.add(new Justification({
         name: 'Objective',
         solution: newSolution,
         statement: '',
         lastModified: new Date(),
-        modifiedBy: sessionUser
+        modifiedBy: sessionUser,
+        isSilence: false
     }))
 
     await em.persistAndFlush(newSolution)

@@ -19,8 +19,10 @@ export default defineEventHandler(async (event) => {
         { solution } = await assertSolutionContributor(event, id),
         em = fork()
 
-    solution!.name = name
-    solution!.description = description
+    Object.assign(solution, {
+        name,
+        description
+    })
 
     await em.flush()
 })

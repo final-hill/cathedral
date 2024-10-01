@@ -16,7 +16,8 @@ const bodySchema = z.object({
     triggerId: z.literal(emptyUuid),
     mainSuccessScenario: z.string(),
     successGuaranteeId: z.string().uuid(),
-    extensions: z.string()
+    extensions: z.string(),
+    isSilence: z.boolean().default(false)
 })
 
 /**
@@ -27,26 +28,23 @@ export default defineEventHandler(async (event) => {
         { solution, sessionUser } = await assertSolutionContributor(event, body.solutionId),
         em = fork()
 
-    const primaryActor = body.primaryActorId ? await em.findOne(Stakeholder, body.primaryActorId) : undefined,
-        precondition = body.preconditionId ? await em.findOne(Assumption, body.preconditionId) : undefined,
-        successGuarantee = body.successGuaranteeId ? await em.findOne(Effect, body.successGuaranteeId) : undefined
-
     const newUseCase = new UseCase({
         name: body.name,
         statement: body.statement,
         solution,
-        primaryActor: primaryActor ?? undefined,
+        primaryActor: body.primaryActorId ? em.getReference(Stakeholder, body.primaryActorId) : undefined,
         priority: body.priority,
         scope: body.scope,
         level: body.level,
         goalInContext: body.goalInContext,
-        precondition: precondition ?? undefined,
+        precondition: body.preconditionId ? em.getReference(Assumption, body.preconditionId) : undefined,
         triggerId: body.triggerId,
         mainSuccessScenario: body.mainSuccessScenario,
-        successGuarantee: successGuarantee ?? undefined,
+        successGuarantee: body.successGuaranteeId ? em.getReference(Effect, body.successGuaranteeId) : undefined,
         extensions: body.extensions,
         lastModified: new Date(),
-        modifiedBy: sessionUser
+        modifiedBy: sessionUser,
+        isSilence: body.isSilence
     })
 
     await em.persistAndFlush(newUseCase)

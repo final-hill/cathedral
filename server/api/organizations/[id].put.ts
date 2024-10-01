@@ -20,9 +20,11 @@ export default defineEventHandler(async (event) => {
         { organization } = await assertOrgContributor(event, id),
         em = fork()
 
-    organization.name = name
-    organization.slug = slugify(name);
-    organization.description = description
+    Object.assign(organization, {
+        name,
+        description,
+        slug: slugify(name)
+    })
 
     await em.flush()
 })
