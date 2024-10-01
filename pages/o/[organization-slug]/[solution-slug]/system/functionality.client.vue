@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import { FunctionalBehavior, MoscowPriority, NonFunctionalBehavior, SystemComponent } from '~/server/domain/requirements/index';
-
+import { FunctionalBehavior } from '~/server/domain/requirements/FunctionalBehavior';
+import { NonFunctionalBehavior } from '~/server/domain/requirements/NonFunctionalBehavior';
+import { SystemComponent } from '~/server/domain/requirements/SystemComponent';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Functionality' })
@@ -44,7 +45,7 @@ const fnNonFunctionalBehaviors = async (componentId: string) =>
 const componentSortField = ref<string | undefined>('name')
 
 // const onCreate = async (newData: BehaviorViewModel) => {
-//     const b: Omit<Properties<Functionality>, 'id'> = {
+//     const b: Omit<Functionality, 'id'> = {
 //         name: newData.name,
 //         statement: newData.statement,
 //         solutionId,
@@ -61,7 +62,7 @@ const componentSortField = ref<string | undefined>('name')
 // }
 
 // const onUpdate = async (newData: BehaviorViewModel) => {
-//     const b: Properties<Functionality> = {
+//     const b: Functionality = {
 //         id: newData.id,
 //         name: newData.name,
 //         statement: newData.statement,

@@ -9,7 +9,8 @@ const querySchema = z.object({
     primaryActorId: z.string().uuid().optional(),
     priority: z.nativeEnum(MoscowPriority).optional(),
     outcomeId: z.string().uuid().optional(),
-    functionalBehaviorId: z.string().uuid().optional()
+    functionalBehaviorId: z.string().uuid().optional(),
+    isSilence: z.boolean().optional()
 })
 
 /**

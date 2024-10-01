@@ -10,33 +10,31 @@ const bodySchema = z.object({
     availability: z.number().min(0).max(100).default(50),
     influence: z.number().min(0).max(100).default(50),
     segmentation: z.nativeEnum(StakeholderSegmentation).optional(),
-    category: z.nativeEnum(StakeholderCategory).optional()
+    category: z.nativeEnum(StakeholderCategory).optional(),
+    isSilence: z.boolean().default(false)
 })
 
 /**
  * Creates a new stakeholder and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const { availability, category, influence, name, segmentation, statement, parentComponentId, solutionId }
+    const { availability, category, influence, name, segmentation, statement, parentComponentId, solutionId, isSilence }
         = await validateEventBody(event, bodySchema),
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
-
-    const parentStakeholder = parentComponentId ?
-        await em.findOne(Stakeholder, parentComponentId)
-        : undefined
 
     const newStakeholder = new Stakeholder({
         name,
         statement,
         solution,
-        parentComponent: parentStakeholder ?? undefined,
         availability,
         influence,
         segmentation,
         category,
         lastModified: new Date(),
-        modifiedBy: sessionUser
+        modifiedBy: sessionUser,
+        isSilence,
+        parentComponent: parentComponentId ? em.getReference(Stakeholder, parentComponentId) : undefined
     })
 
     await em.persistAndFlush(newStakeholder)

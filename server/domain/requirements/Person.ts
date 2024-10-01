@@ -1,17 +1,22 @@
-import { type Properties } from "../Properties.js";
-import { Actor } from "./index.js";
+import { Actor, ParsedRequirement } from "./index.js";
 
 /**
  * A person is a member of the Project staff
  */
 export class Person extends Actor {
-    constructor({ email, ...rest }: Omit<Properties<Person>, 'id'>) {
+    constructor({ email, follows, ...rest }: Omit<Person, 'id'>) {
         super(rest);
         this.email = email;
+        this.follows = follows;
     }
 
     /**
      * Email address of the person
      */
     email?: string;
+
+    /**
+     * Requirement that this person follows from
+     */
+    follows?: ParsedRequirement;
 }

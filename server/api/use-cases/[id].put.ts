@@ -19,7 +19,8 @@ const bodySchema = z.object({
     triggerId: z.string().uuid().optional(),
     mainSuccessScenario: z.string().default(""),
     successGuaranteeId: z.string().uuid().optional(),
-    extensions: z.string().default("")
+    extensions: z.string().default(""),
+    isSilence: z.boolean().optional()
 })
 
 /**
@@ -29,12 +30,8 @@ export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
         body = await validateEventBody(event, bodySchema),
         { sessionUser } = await assertSolutionContributor(event, body.solutionId),
-        em = fork()
-
-    const useCase = await em.findOne(UseCase, id),
-        primaryActor = body.primaryActorId ? await em.findOne(Stakeholder, body.primaryActorId) : undefined,
-        precondition = body.preconditionId ? await em.findOne(Assumption, body.preconditionId) : undefined,
-        successGuarantee = body.successGuaranteeId ? await em.findOne(Effect, body.successGuaranteeId) : undefined
+        em = fork(),
+        useCase = await em.findOne(UseCase, id)
 
     if (!useCase)
         throw createError({
@@ -42,19 +39,27 @@ export default defineEventHandler(async (event) => {
             statusMessage: `Bad Request: No use case found with id: ${id}`
         })
 
-    useCase.name = body.name
-    useCase.statement = body.statement
-    useCase.primaryActor = primaryActor ?? undefined
-    useCase.priority = body.priority
-    useCase.scope = body.scope
-    useCase.level = body.level
-    useCase.goalInContext = body.goalInContext
-    useCase.precondition = precondition ?? undefined
-    useCase.triggerId = body.triggerId
-    useCase.mainSuccessScenario = body.mainSuccessScenario
-    useCase.successGuarantee = successGuarantee ?? undefined
-    useCase.extensions = body.extensions
-    useCase.modifiedBy = sessionUser
+    if (body.primaryActorId)
+        useCase.primaryActor = em.getReference(Stakeholder, body.primaryActorId)
+    if (body.preconditionId)
+        useCase.precondition = em.getReference(Assumption, body.preconditionId)
+    if (body.successGuaranteeId)
+        useCase.successGuarantee = em.getReference(Effect, body.successGuaranteeId)
+
+    Object.assign(useCase, {
+        name: body.name,
+        statement: body.statement,
+        priority: body.priority,
+        scope: body.scope,
+        level: body.level,
+        goalInContext: body.goalInContext,
+        triggerId: body.triggerId,
+        mainSuccessScenario: body.mainSuccessScenario,
+        extensions: body.extensions,
+        modifiedBy: sessionUser,
+        lastModified: new Date(),
+        ...(body.isSilence !== undefined && { isSilence: body.isSilence })
+    })
 
     await em.flush()
 })

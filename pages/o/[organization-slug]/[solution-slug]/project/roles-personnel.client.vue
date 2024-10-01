@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Person } from '~/server/domain/requirements';
+import { Person } from '~/server/domain/requirements/Person';
 
 useHead({ title: 'Roles & Personnel' })
 definePageMeta({ name: 'Roles & Personnel' })

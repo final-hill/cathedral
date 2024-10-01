@@ -51,6 +51,10 @@ jobs:
             nuxtAuthTenantId="${{ secrets.NUXT_AUTH_TENANT_ID }}"
             nuxtAuthAuthorityDomain="${{ secrets.NUXT_AUTH_AUTHORITY_DOMAIN }}"
             nuxtAuthPrimaryUserFlow="${{ secrets.NUXT_AUTH_PRIMARY_USER_FLOW }}"
+            nuxtAzureOpenaiApiKey="${{ secrets.NUXT_AZURE_OPENAI_API_KEY }}"
+            nuxtAzureOpenaiApiVersion="${{ secrets.NUXT_AZURE_OPENAI_API_VERSION }}",
+            nuxtAzureOpenaiEndpoint="${{ secrets.NUXT_AZURE_OPENAI_ENDPOINT }}",
+            nuxtAzureOpenaiDeploymentId="${{ secrets.NUXT_AZURE_OPENAI_DEPLOYMENT_ID }}"
           scope: 'resourcegroup'
           deploymentMode: 'Incremental'
           failOnStdErr: false
@@ -99,6 +103,10 @@ jobs:
           echo "SLACK_ADMIN_MEMBER_ID=${{secrets.SLACK_ADMIN_MEMBER_ID}}" >> .env
           echo "SLACK_BOT_TOKEN=${{secrets.SLACK_BOT_TOKEN}}" >> .env
           echo "SLACK_SIGNING_SECRET=${{secrets.SLACK_SIGNING_SECRET}}" >> .env
+          echo "NUXT_AZURE_OPENAI_API_KEY=${{secrets.NUXT_AZURE_OPENAI_API_KEY}}" >> .env
+          echo "NUXT_AZURE_OPENAI_API_VERSION=${{secrets.NUXT_AZURE_OPENAI_API_VERSION}}" >> .env
+          echo "NUXT_AZURE_OPENAI_ENDPOINT=${{secrets.NUXT_AZURE_OPENAI_ENDPOINT}}" >> .env
+          echo "NUXT_AZURE_OPENAI_DEPLOYMENT_ID=${{secrets.NUXT_AZURE_OPENAI_DEPLOYMENT_ID}}" >> .env
       - name: Build Application
         run: npm run build
       - name: Generate PWA Assets
@@ -152,6 +160,10 @@ jobs:
             nuxtAuthTenantId="${{ secrets.NUXT_AUTH_TENANT_ID }}"
             nuxtAuthAuthorityDomain="${{ secrets.NUXT_AUTH_AUTHORITY_DOMAIN }}"
             nuxtAuthPrimaryUserFlow="${{ secrets.NUXT_AUTH_PRIMARY_USER_FLOW }}"
+            nuxtAzureOpenaiApiKey="${{ secrets.NUXT_AZURE_OPENAI_API_KEY }}"
+            nuxtAzureOpenaiApiVersion="${{ secrets.NUXT_AZURE_OPENAI_API_VERSION }}",
+            nuxtAzureOpenaiEndpoint="${{ secrets.NUXT_AZURE_OPENAI_ENDPOINT }}",
+            nuxtAzureOpenaiDeploymentId="${{ secrets.NUXT_AZURE_OPENAI_DEPLOYMENT_ID }}"
           scope: 'resourcegroup'
           failOnStdErr: false
       - name: logout
@@ -220,6 +232,10 @@ jobs:
           echo "SLACK_ADMIN_MEMBER_ID=${{secrets.SLACK_ADMIN_MEMBER_ID}}" >> .env
           echo "SLACK_BOT_TOKEN=${{secrets.SLACK_BOT_TOKEN}}" >> .env
           echo "SLACK_SIGNING_SECRET=${{secrets.SLACK_SIGNING_SECRET}}" >> .env
+          echo "NUXT_AZURE_OPENAI_API_KEY=${{secrets.NUXT_AZURE_OPENAI_API_KEY}}" >> .env
+          echo "NUXT_AZURE_OPENAI_API_VERSION=${{secrets.NUXT_AZURE_OPENAI_API_VERSION}}" >> .env
+          echo "NUXT_AZURE_OPENAI_ENDPOINT=${{secrets.NUXT_AZURE_OPENAI_ENDPOINT}}" >> .env
+          echo "NUXT_AZURE_OPENAI_DEPLOYMENT_ID=${{secrets.NUXT_AZURE_OPENAI_DEPLOYMENT_ID}}" >> .env
       - name: Login to Azure
         uses: azure/login@v2
         with:

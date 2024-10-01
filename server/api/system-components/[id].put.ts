@@ -10,7 +10,8 @@ const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled Component}"),
     statement: z.string().default(""),
-    parentComponentId: z.string().uuid().optional()
+    parentComponentId: z.string().uuid().optional(),
+    isSilence: z.boolean().optional()
 })
 
 /**
@@ -18,12 +19,10 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { name, statement, parentComponentId, solutionId } = await validateEventBody(event, bodySchema),
+        { name, statement, parentComponentId, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { sessionUser } = await assertSolutionContributor(event, solutionId),
-        em = fork()
-
-    const systemComponent = await em.findOne(SystemComponent, id),
-        parentComponent = parentComponentId ? await em.findOne(SystemComponent, parentComponentId) : undefined
+        em = fork(),
+        systemComponent = await em.findOne(SystemComponent, id)
 
     if (!systemComponent)
         throw createError({
@@ -31,10 +30,16 @@ export default defineEventHandler(async (event) => {
             statusMessage: `Bad Request: No assumption found with id: ${id}`
         })
 
-    systemComponent.name = name
-    systemComponent.statement = statement
-    systemComponent.parentComponent = parentComponent || undefined
-    systemComponent.modifiedBy = sessionUser
+    if (parentComponentId)
+        systemComponent.parentComponent = em.getReference(SystemComponent, parentComponentId)
+
+    Object.assign(systemComponent, {
+        name,
+        statement,
+        modifiedBy: sessionUser,
+        lastModified: new Date(),
+        ...(isSilence !== undefined && { isSilence })
+    })
 
     await em.flush()
 })

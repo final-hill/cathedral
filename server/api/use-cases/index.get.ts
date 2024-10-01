@@ -16,7 +16,8 @@ const querySchema = z.object({
     triggerId: z.literal(emptyUuid).optional(),
     mainSuccessScenario: z.string().optional(),
     successGuaranteeId: z.string().uuid().optional(),
-    extensions: z.string().optional()
+    extensions: z.string().optional(),
+    isSilence: z.boolean().optional()
 })
 
 /**

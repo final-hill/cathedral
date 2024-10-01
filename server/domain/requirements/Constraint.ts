@@ -1,17 +1,22 @@
-import { type Properties } from '../Properties.js';
-import { Requirement, ConstraintCategory } from './index.js';
+import { Requirement, ConstraintCategory, ParsedRequirement } from './index.js';
 
 /**
  * A Constraint is a property imposed by the environment
  */
 export class Constraint extends Requirement {
-    constructor({ category, ...rest }: Omit<Properties<Constraint>, 'id'>) {
+    constructor({ category, follows, ...rest }: Omit<Constraint, 'id'>) {
         super(rest);
         this.category = category;
+        this.follows = follows;
     }
 
     /**
      * Category of the constraint
      */
     category?: ConstraintCategory;
+
+    /**
+     * Requirement that this constraint follows from
+     */
+    follows?: ParsedRequirement;
 }

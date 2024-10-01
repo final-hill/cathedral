@@ -14,7 +14,8 @@ const bodySchema = z.object({
     availability: z.number().min(0).max(100).default(50),
     influence: z.number().min(0).max(100).default(50),
     segmentation: z.nativeEnum(StakeholderSegmentation).optional(),
-    category: z.nativeEnum(StakeholderCategory).optional()
+    category: z.nativeEnum(StakeholderCategory).optional(),
+    isSilence: z.boolean().optional()
 })
 
 /**
@@ -22,15 +23,11 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { availability, category, influence, name, segmentation, statement, parentComponentId, solutionId } =
+        { availability, category, influence, name, segmentation, statement, parentComponentId, solutionId, isSilence } =
             await validateEventBody(event, bodySchema),
         { sessionUser } = await assertSolutionContributor(event, solutionId),
-        em = fork()
-
-    const stakeholder = await em.findOne(Stakeholder, id),
-        parentStakeholder = parentComponentId ?
-            await em.findOne(Stakeholder, parentComponentId)
-            : undefined
+        em = fork(),
+        stakeholder = await em.findOne(Stakeholder, id);
 
     if (!stakeholder)
         throw createError({
@@ -38,14 +35,20 @@ export default defineEventHandler(async (event) => {
             statusMessage: `Bad Request: No stakeholder found with id: ${id}`
         })
 
-    stakeholder.name = name
-    stakeholder.statement = statement
-    stakeholder.availability = availability
-    stakeholder.influence = influence
-    stakeholder.segmentation = segmentation
-    stakeholder.category = category
-    stakeholder.parentComponent = parentStakeholder || undefined
-    stakeholder.modifiedBy = sessionUser
+    if (parentComponentId)
+        stakeholder.parentComponent = em.getReference(Stakeholder, parentComponentId)
+
+    Object.assign(stakeholder, {
+        name,
+        statement,
+        availability,
+        influence,
+        segmentation,
+        category,
+        modifiedBy: sessionUser,
+        lastModified: new Date(),
+        ...(isSilence !== undefined && { isSilence })
+    })
 
     await em.flush()
 })

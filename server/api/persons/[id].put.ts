@@ -10,7 +10,8 @@ const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled Person}"),
     statement: z.string().default(""),
-    email: z.string().email().optional()
+    email: z.string().email().optional(),
+    isSilence: z.boolean().optional()
 })
 
 /**
@@ -18,11 +19,10 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { email, name, statement, solutionId } = await validateEventBody(event, bodySchema),
+        { email, name, statement, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { sessionUser } = await assertSolutionContributor(event, solutionId),
-        em = fork()
-
-    const person = await em.findOne(Person, id)
+        em = fork(),
+        person = await em.findOne(Person, id)
 
     if (!person)
         throw createError({
@@ -30,10 +30,14 @@ export default defineEventHandler(async (event) => {
             statusMessage: `Bad Request: No assumption found with id: ${id}`
         })
 
-    person.name = name
-    person.statement = statement
-    person.email = email
-    person.modifiedBy = sessionUser
+    Object.assign(person, {
+        name,
+        statement,
+        modifiedBy: sessionUser,
+        lastModified: new Date(),
+        email,
+        ...(isSilence !== undefined && { isSilence })
+    })
 
     await em.flush()
 })

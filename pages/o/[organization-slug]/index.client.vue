@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import type { Properties } from '~/server/domain/Properties';
-
 useHead({ title: 'Organization' })
 definePageMeta({ name: 'Organization' })
 
@@ -54,7 +52,7 @@ const handleOrganizationUsers = () => {
     router.push({ name: 'Organization Users', params: { organizationslug: organization.slug } });
 }
 
-const handleSolutionDelete = async (solution: Properties<SolutionModel>) => {
+const handleSolutionDelete = async (solution: SolutionModel) => {
     confirm.require({
         message: `Are you sure you want to delete ${solution.name}?`,
         header: 'Delete Confirmation',

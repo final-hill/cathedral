@@ -43,6 +43,14 @@ param nuxtAuthTenantId string
 param nuxtAuthAuthorityDomain string
 @secure()
 param nuxtAuthPrimaryUserFlow string
+@secure()
+param nuxtAzureOpenaiApiKey string
+@secure()
+param nuxtAzureOpenaiApiVersion string
+@secure()
+param nuxtAzureOpenaiEndpoint string
+@secure()
+param nuxtAzureOpenaiDeploymentId string
 
 module appInsights './modules/appInsights.bicep' = {
   name: 'appInsights'
@@ -91,5 +99,9 @@ module appService './modules/appService.bicep' = {
     nuxtAuthTenantName: nuxtAuthTenantName
     nuxtOrigin: nuxtOrigin
     nuxtSessionPassword: nuxtSessionPassword
+    nuxtAzureOpenaiApiKey: nuxtAzureOpenaiApiKey
+    nuxtAzureOpenaiApiVersion: nuxtAzureOpenaiApiVersion
+    nuxtAzureOpenaiEndpoint: nuxtAzureOpenaiEndpoint
+    nuxtAzureOpenaiDeploymentId: nuxtAzureOpenaiDeploymentId
   }
 }

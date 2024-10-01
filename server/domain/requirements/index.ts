@@ -1,4 +1,6 @@
 export { Requirement } from './Requirement.js';
+export { MetaRequirement } from './MetaRequirement.js';
+export { ParsedRequirement } from './ParsedRequirement.js';
 export { Actor } from './Actor.js';
 export { Assumption } from './Assumption.js';
 export { Behavior } from './Behavior.js';
@@ -14,7 +16,6 @@ export { GlossaryTerm } from './GlossaryTerm.js';
 export { Goal } from './Goal.js';
 export { Invariant } from './Invariant.js';
 export { Limit } from './Limit.js';
-export { MetaRequirement } from './MetaRequirement.js';
 export { Justification } from './Justification.js';
 export { MoscowPriority } from './MoscowPriority.js';
 export { Noise } from './Noise.js';

@@ -6,7 +6,8 @@ const querySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().optional(),
     statement: z.string().optional(),
-    parentComponentId: z.string().uuid().optional()
+    parentComponentId: z.string().uuid().optional(),
+    isSilence: z.boolean().optional()
 })
 
 /**

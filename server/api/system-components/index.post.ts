@@ -6,25 +6,26 @@ const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled System Component}"),
     statement: z.string().default(""),
-    parentComponentId: z.string().uuid().optional()
+    parentComponentId: z.string().uuid().optional(),
+    isSilence: z.boolean().default(false)
 })
 
 /**
  * Creates a new system-component and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const { name, statement, parentComponentId, solutionId } = await validateEventBody(event, bodySchema),
+    const { name, statement, parentComponentId, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
-        em = fork(),
-        parentComponent = parentComponentId ? await em.findOne(SystemComponent, parentComponentId) : undefined
+        em = fork()
 
     const newSystemComponent = new SystemComponent({
         name,
         statement,
         solution,
-        parentComponent: parentComponent || undefined,
         lastModified: new Date(),
-        modifiedBy: sessionUser
+        modifiedBy: sessionUser,
+        isSilence,
+        parentComponent: parentComponentId ? em.getReference(SystemComponent, parentComponentId) : undefined
     })
 
     await em.persistAndFlush(newSystemComponent)

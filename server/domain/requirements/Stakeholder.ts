@@ -1,11 +1,18 @@
-import type { Properties } from "../Properties.js";
-import { Component, StakeholderCategory, StakeholderSegmentation } from "./index.js";
+import { Component, ParsedRequirement, StakeholderCategory, StakeholderSegmentation } from "./index.js";
+
+export interface IStakeholder {
+    influence: number
+    availability: number
+    segmentation: StakeholderSegmentation
+    category: StakeholderCategory
+    parentComponent: Stakeholder
+}
 
 /**
  * A human actor who may affect or be affected by a project or its associated system
  */
 export class Stakeholder extends Component {
-    constructor({ influence, availability, segmentation, category, parentComponent, ...rest }: Omit<Properties<Stakeholder>, 'id'>) {
+    constructor({ influence, availability, segmentation, category, parentComponent, follows, ...rest }: Omit<Stakeholder, 'id'>) {
         super(rest);
 
         this.influence = influence;
@@ -13,7 +20,13 @@ export class Stakeholder extends Component {
         this.segmentation = segmentation;
         this.category = category;
         this.parentComponent = parentComponent;
+        this.follows = follows;
     }
+
+    /**
+     * Requirement that this stakeholder follows from
+     */
+    follows?: ParsedRequirement;
 
     /**
      * The parent component of the stakeholder, if any.

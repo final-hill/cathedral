@@ -9,7 +9,8 @@ const paramSchema = z.object({
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled Limit}"),
-    statement: z.string().default("")
+    statement: z.string().default(""),
+    isSilence: z.boolean().optional()
 })
 
 /**
@@ -17,11 +18,10 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { name, statement, solutionId } = await validateEventBody(event, bodySchema),
+        { name, statement, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { sessionUser } = await assertSolutionContributor(event, solutionId),
-        em = fork()
-
-    const limit = await em.findOne(Limit, id)
+        em = fork(),
+        limit = await em.findOne(Limit, id)
 
     if (!limit)
         throw createError({
@@ -29,9 +29,13 @@ export default defineEventHandler(async (event) => {
             statusMessage: `Bad Request: No assumption found with id: ${id}`
         })
 
-    limit.name = name
-    limit.statement = statement
-    limit.modifiedBy = sessionUser
+    Object.assign(limit, {
+        name,
+        statement,
+        modifiedBy: sessionUser,
+        lastModified: new Date(),
+        ...(isSilence !== undefined && { isSilence })
+    })
 
     await em.flush()
 })

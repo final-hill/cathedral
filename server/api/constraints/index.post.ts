@@ -6,14 +6,15 @@ const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled Constraint}"),
     statement: z.string().default(""),
-    category: z.nativeEnum(ConstraintCategory).optional()
+    category: z.nativeEnum(ConstraintCategory).optional(),
+    isSilence: z.boolean().default(false)
 })
 
 /**
  * Creates a new constraint and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const { category, name, statement, solutionId } = await validateEventBody(event, bodySchema),
+    const { category, name, statement, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
@@ -23,7 +24,8 @@ export default defineEventHandler(async (event) => {
         solution,
         category,
         lastModified: new Date(),
-        modifiedBy: sessionUser
+        modifiedBy: sessionUser,
+        isSilence
     })
 
     await em.persistAndFlush(newConstraint)

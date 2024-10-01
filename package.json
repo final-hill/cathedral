@@ -35,6 +35,7 @@
     },
     "dependencies": {
         "@azure/monitor-opentelemetry": "^1.7.1",
+        "@azure/openai": "^2.0.0-beta.2",
         "@mikro-orm/core": "^6.3.10",
         "@mikro-orm/postgresql": "^6.3.10",
         "@mikro-orm/reflection": "^6.3.10",
@@ -48,13 +49,15 @@
         "nuxt-primevue": "^3.0.0",
         "nuxt-security": "^2.0.0-rc.9",
         "nuxt-typed-router": "^3.6.5",
+        "openai": "^4.58.2",
         "pg": "^8.13.0",
         "primeflex": "^3.3.1",
         "primeicons": "^7.0.0",
         "uuid": "^10.0.0",
         "vue": "^3.5.6",
         "vue-router": "^4.4.5",
-        "zod": "^3.23.8"
+        "zod": "^3.23.8",
+        "zod-to-json-schema": "^3.23.3"
     },
     "devDependencies": {
         "@mikro-orm/cli": "^6.3.10",

@@ -1,5 +1,12 @@
 <script lang="ts" setup>
-import { Assumption, Effect, FunctionalBehavior, MoscowPriority, Outcome, Stakeholder, UseCase, UserStory } from '~/server/domain/requirements/index';
+import { Assumption } from '~/server/domain/requirements/Assumption';
+import { Effect } from '~/server/domain/requirements/Effect';
+import { FunctionalBehavior } from '~/server/domain/requirements/FunctionalBehavior';
+import { MoscowPriority } from '~/server/domain/requirements/MoscowPriority';
+import { Outcome } from '~/server/domain/requirements/Outcome';
+import { Stakeholder } from '~/server/domain/requirements/Stakeholder';
+import { UseCase } from '~/server/domain/requirements/UseCase';
+import { UserStory } from '~/server/domain/requirements/UserStory';
 
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Scenarios' })

@@ -10,7 +10,8 @@ const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled Non-Functional Behavior}"),
     statement: z.string().default(""),
-    priority: z.nativeEnum(MoscowPriority).optional()
+    priority: z.nativeEnum(MoscowPriority).optional(),
+    isSilence: z.boolean().optional()
 })
 
 /**
@@ -18,11 +19,10 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { name, priority, statement, solutionId } = await validateEventBody(event, bodySchema),
+        { name, priority, statement, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { sessionUser } = await assertSolutionContributor(event, solutionId),
-        em = fork()
-
-    const nonFunctionalBehavior = await em.findOne(NonFunctionalBehavior, id)
+        em = fork(),
+        nonFunctionalBehavior = await em.findOne(NonFunctionalBehavior, id)
 
     if (!nonFunctionalBehavior)
         throw createError({
@@ -30,10 +30,14 @@ export default defineEventHandler(async (event) => {
             statusMessage: `Bad Request: No assumption found with id: ${id}`
         })
 
-    nonFunctionalBehavior.name = name
-    nonFunctionalBehavior.statement = statement
-    nonFunctionalBehavior.priority = priority
-    nonFunctionalBehavior.modifiedBy = sessionUser
+    Object.assign(nonFunctionalBehavior, {
+        name,
+        statement,
+        priority,
+        modifiedBy: sessionUser,
+        lastModified: new Date(),
+        ...(isSilence !== undefined && { isSilence })
+    })
 
     await em.flush()
 })

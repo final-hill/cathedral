@@ -10,7 +10,8 @@ const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled Constraint}"),
     statement: z.string().default(""),
-    category: z.nativeEnum(ConstraintCategory).optional()
+    category: z.nativeEnum(ConstraintCategory).optional(),
+    isSilence: z.boolean().optional()
 })
 
 /**
@@ -18,11 +19,10 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { category, name, statement, solutionId } = await validateEventBody(event, bodySchema),
+        { category, name, statement, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { sessionUser } = await assertSolutionContributor(event, solutionId),
-        em = fork()
-
-    const constraint = await em.findOne(Constraint, id)
+        em = fork(),
+        constraint = await em.findOne(Constraint, id)
 
     if (!constraint)
         throw createError({
@@ -30,10 +30,14 @@ export default defineEventHandler(async (event) => {
             statusMessage: `Bad Request: No constraint found with id: ${id}`
         })
 
-    constraint.name = name
-    constraint.statement = statement
-    constraint.category = category
-    constraint.modifiedBy = sessionUser
+    Object.assign(constraint, {
+        name,
+        statement,
+        category,
+        modifiedBy: sessionUser,
+        lastModified: new Date(),
+        ...(isSilence !== undefined && { isSilence })
+    })
 
     await em.flush()
 })

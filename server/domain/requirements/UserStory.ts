@@ -1,5 +1,4 @@
-import type { Properties } from "../Properties.js";
-import { FunctionalBehavior, Outcome, Scenario } from "./index.js";
+import { FunctionalBehavior, Outcome, ParsedRequirement, Scenario } from "./index.js";
 
 /**
  * A User Story specifies the handling of a specific user need.
@@ -11,11 +10,17 @@ import { FunctionalBehavior, Outcome, Scenario } from "./index.js";
  * [goal] - outcomeId
  */
 export class UserStory extends Scenario {
-    constructor({ outcome, functionalBehavior, ...rest }: Omit<Properties<UserStory>, 'id'>) {
+    constructor({ outcome, functionalBehavior, follows, ...rest }: Omit<UserStory, 'id'>) {
         super(rest);
         this.outcome = outcome;
         this.functionalBehavior = functionalBehavior;
+        this.follows = follows;
     }
+
+    /**
+     * Requirement that this user story follows from
+     */
+    follows?: ParsedRequirement;
 
     /**
      * The action that the user wants to perform.

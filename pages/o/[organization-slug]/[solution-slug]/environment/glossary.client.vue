@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { GlossaryTerm } from '~/server/domain/requirements';
+import { GlossaryTerm } from '~/server/domain/requirements/GlossaryTerm';
 
 useHead({ title: 'Glossary' })
 definePageMeta({ name: 'Glossary' })

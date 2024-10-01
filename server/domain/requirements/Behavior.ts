@@ -1,11 +1,10 @@
-import type { Properties } from "../Properties.js";
 import { Requirement, type MoscowPriority } from "./index.js";
 
 /**
  * Property of the operation of the system
  */
 export abstract class Behavior extends Requirement {
-    constructor({ priority, ...rest }: Omit<Properties<Behavior>, 'id'>) {
+    constructor({ priority, ...rest }: Omit<Behavior, 'id'>) {
         super(rest);
         this.priority = priority;
     }
@@ -13,5 +12,5 @@ export abstract class Behavior extends Requirement {
     /**
      * The priority of the behavior.
      */
-    priority?: MoscowPriority;
+    priority: MoscowPriority;
 }

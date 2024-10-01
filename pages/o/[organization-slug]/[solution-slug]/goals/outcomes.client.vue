@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Outcome } from '~/server/domain/requirements';
+import { Outcome } from '~/server/domain/requirements/Outcome';
 
 useHead({ title: 'Outcomes' })
 definePageMeta({ name: 'Outcomes' })

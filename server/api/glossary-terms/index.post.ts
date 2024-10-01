@@ -5,14 +5,15 @@ import { GlossaryTerm } from "~/server/domain/requirements/index.js"
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled Glossary Term}"),
-    statement: z.string().default("")
+    statement: z.string().default(""),
+    isSilence: z.boolean().default(false)
 })
 
 /**
  * Creates a new glossary term and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const { name, statement, solutionId } = await validateEventBody(event, bodySchema),
+    const { name, statement, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
@@ -22,7 +23,8 @@ export default defineEventHandler(async (event) => {
         solution,
         parentComponent: undefined,
         lastModified: new Date(),
-        modifiedBy: sessionUser
+        modifiedBy: sessionUser,
+        isSilence
     })
 
     await em.persistAndFlush(glossaryTerm)
