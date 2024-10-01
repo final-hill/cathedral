@@ -1,4 +1,4 @@
-import { FunctionalBehavior, Outcome, Scenario } from "./index.js";
+import { FunctionalBehavior, Outcome, ParsedRequirement, Scenario } from "./index.js";
 
 /**
  * A User Story specifies the handling of a specific user need.
@@ -20,7 +20,7 @@ export class UserStory extends Scenario {
     /**
      * Requirement that this user story follows from
      */
-    follows?: UserStory;
+    follows?: ParsedRequirement;
 
     /**
      * The action that the user wants to perform.

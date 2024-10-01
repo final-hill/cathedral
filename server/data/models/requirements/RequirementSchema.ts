@@ -8,7 +8,7 @@ export default new EntitySchema<Requirement>({
     properties: {
         id: { type: 'uuid', primary: true },
         name: { type: 'string', nullable: false },
-        statement: { type: 'string', nullable: false },
+        statement: { type: 'string', length: 1000, nullable: false },
         solution: { kind: 'm:1', entity: () => Solution },
         isSilence: { type: 'boolean', nullable: false, default: false },
         lastModified: {

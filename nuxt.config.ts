@@ -75,6 +75,7 @@ export default defineNuxtConfig({
         azureOpenaiApiKey: '',
         azureOpenaiApiVersion: '',
         azureOpenaiEndpoint: '',
+        azureOpenaiDeploymentId: '',
 
         // The public keys which are available both client-side and server-side
         public: {}

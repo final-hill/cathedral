@@ -6,7 +6,8 @@ export default z.object({
     role: z.string(),
     functionalBehavior: z.string(),
     outcome: z.string(),
-    moscowPriority: z.enum(['MUST', 'SHOULD', 'COULD', 'WONT']),
+    moscowPriority: z.enum(['MUST', 'SHOULD', 'COULD', 'WONT'])
+        .describe('The priority of the requirement, according to the MoSCoW method. Default is "MUST"'),
 }).describe(dedent(`
     A User Story specifies the handling of a specific user need.
     As a [stakeholder], I want [functionalBehavior], so that [outcome].

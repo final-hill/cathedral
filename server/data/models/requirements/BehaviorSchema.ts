@@ -7,6 +7,6 @@ export default new EntitySchema<Behavior, Requirement>({
     extends: RequirementSchema,
     abstract: true,
     properties: {
-        priority: { enum: true, items: () => MoscowPriority, nullable: true }
+        priority: { enum: true, items: () => MoscowPriority, nullable: false }
     }
 })

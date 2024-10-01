@@ -6,7 +6,7 @@ const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled Non-Functional Behavior}"),
     statement: z.string().default(""),
-    priority: z.nativeEnum(MoscowPriority).optional(),
+    priority: z.nativeEnum(MoscowPriority).default(MoscowPriority.MUST),
     isSilence: z.boolean().default(false)
 })
 

@@ -6,6 +6,7 @@ import { type Options, PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import { Migrator } from '@mikro-orm/migrations';
 import AssumptionSchema from "./server/data/models/requirements/AssumptionSchema.js";
+import BehaviorSchema from "./server/data/models/requirements/BehaviorSchema.js";
 import ConstraintSchema from "./server/data/models/requirements/ConstraintSchema.js";
 import EffectSchema from "./server/data/models/requirements/EffectSchema.js";
 import EnvironmentComponentSchema from "./server/data/models/requirements/EnvironmentComponentSchema.js";
@@ -30,6 +31,8 @@ import SystemComponentSchema from "./server/data/models/requirements/SystemCompo
 import OrganizationSchema from "./server/data/models/application/OrganizationSchema.js";
 import AppUserOrganizationRoleSchema from "./server/data/models/application/AppUserOrganizationRoleSchema.js";
 import AppUserSchema from "./server/data/models/application/AppUserSchema.js";
+import MetaRequirementSchema from "./server/data/models/requirements/MetaRequirementSchema.js";
+import NoiseSchema from "./server/data/models/requirements/NoiseSchema.js";
 
 dotenv.config();
 const config: Options = {
@@ -47,12 +50,12 @@ const config: Options = {
         }
     },
     entities: [
-        AppUserSchema, AppUserOrganizationRoleSchema, AssumptionSchema, ConstraintSchema,
+        AppUserSchema, AppUserOrganizationRoleSchema, AssumptionSchema, BehaviorSchema, ConstraintSchema,
         EffectSchema, EnvironmentComponentSchema, FunctionalBehaviorSchema, GlossaryTermSchema,
-        HintSchema, InvariantSchema, JustificationSchema, LimitSchema, NonFunctionalBehaviorSchema,
-        ObstacleSchema, OrganizationSchema, OutcomeSchema, ParsedRequirementSchema, PersonSchema,
-        ProductSchema, SilenceSchema, SolutionSchema, StakeholderSchema, SystemComponentSchema,
-        UseCaseSchema, UserStorySchema
+        HintSchema, InvariantSchema, JustificationSchema, LimitSchema, MetaRequirementSchema,
+        NoiseSchema, NonFunctionalBehaviorSchema, ObstacleSchema, OrganizationSchema, OutcomeSchema,
+        ParsedRequirementSchema, PersonSchema, ProductSchema, SilenceSchema, SolutionSchema, StakeholderSchema,
+        SystemComponentSchema, UseCaseSchema, UserStorySchema
     ],
     seeder: {},
     forceUtcTimezone: true,

@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
     // https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/structured-outputs?tabs=python-secure
     const completion = await aiClient.beta.chat.completions.parse({
         // temperature: 0,
-        model: process.env.AZURE_OPENAI_DEPLOYMENT_ID!,
+        model: config.azureOpenaiDeploymentId,
         messages: [
             {
                 role: "system",
@@ -146,7 +146,7 @@ export default defineEventHandler(async (event) => {
             name: item.name,
             solution,
             statement: item.statement,
-            priority: item.moscowPriority as MoscowPriority
+            priority: item.moscowPriority as MoscowPriority ?? MoscowPriority.MUST
         })),
         glossaryTerms: (groupedResult.GlossaryTerm ?? []).map((item) => em.create(GlossaryTerm, {
             follows: parsedRequirement,
@@ -193,7 +193,7 @@ export default defineEventHandler(async (event) => {
             name: item.name,
             solution,
             statement: item.statement,
-            priority: item.moscowPriority as MoscowPriority
+            priority: item.moscowPriority as MoscowPriority ?? MoscowPriority.MUST
         })),
         obstacles: (groupedResult.Obstacle ?? []).map((item) => em.create(Obstacle, {
             follows: parsedRequirement,
@@ -260,7 +260,7 @@ export default defineEventHandler(async (event) => {
             name: item.name,
             solution,
             statement: '',
-            priority: item.moscowPriority as MoscowPriority,
+            priority: item.moscowPriority as MoscowPriority ?? MoscowPriority.MUST,
             // triggerId: undefined,
             precondition: em.create(Assumption, {
                 follows: parsedRequirement,
@@ -298,6 +298,7 @@ export default defineEventHandler(async (event) => {
         userStories: (groupedResult.UserStory ?? []).map((item) => em.create(UserStory, {
             follows: parsedRequirement,
             isSilence: true,
+            priority: item.moscowPriority as MoscowPriority ?? MoscowPriority.MUST,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
@@ -306,6 +307,7 @@ export default defineEventHandler(async (event) => {
             functionalBehavior: em.create(FunctionalBehavior, {
                 follows: parsedRequirement,
                 isSilence: true,
+                priority: item.moscowPriority as MoscowPriority ?? MoscowPriority.MUST,
                 lastModified: new Date(),
                 modifiedBy: sessionUser,
                 name: item.functionalBehavior,
@@ -321,7 +323,6 @@ export default defineEventHandler(async (event) => {
                 solution,
                 statement: item.outcome
             }),
-            priority: item.moscowPriority as MoscowPriority,
             primaryActor: em.create(Stakeholder, {
                 follows: parsedRequirement,
                 isSilence: true,

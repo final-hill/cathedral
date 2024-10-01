@@ -349,12 +349,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -464,12 +464,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -579,12 +579,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -694,12 +694,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -841,12 +841,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -978,12 +978,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -1115,12 +1115,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -1169,7 +1169,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": true,
+          "nullable": false,
           "enumItems": [
             "MUST",
             "SHOULD",
@@ -1267,12 +1267,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -1382,12 +1382,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -1519,12 +1519,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -1656,12 +1656,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -1793,12 +1793,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -1908,12 +1908,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -2067,12 +2067,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -2121,7 +2121,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": true,
+          "nullable": false,
           "enumItems": [
             "MUST",
             "SHOULD",
@@ -2219,12 +2219,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -2378,12 +2378,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -2515,12 +2515,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -2666,12 +2666,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -2803,12 +2803,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -3008,12 +3008,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -3167,12 +3167,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -3221,7 +3221,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": true,
+          "nullable": false,
           "enumItems": [
             "MUST",
             "SHOULD",
@@ -3444,12 +3444,12 @@
         },
         "statement": {
           "name": "statement",
-          "type": "varchar(255)",
+          "type": "varchar(1000)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "length": 1000,
           "mappedType": "string"
         },
         "solution_id": {
@@ -3498,7 +3498,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": true,
+          "nullable": false,
           "enumItems": [
             "MUST",
             "SHOULD",

@@ -55,6 +55,7 @@ const parsingRequirements = ref(false),
     parsingError = ref('')
 const parseRawRequirement = async () => {
     parsingRequirements.value = true
+    parsingError.value = ''
     const response = await $fetch('/api/parse-requirements', {
         method: 'post',
         body: {

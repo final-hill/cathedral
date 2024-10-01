@@ -49,6 +49,8 @@ param nuxtAzureOpenaiApiKey string
 param nuxtAzureOpenaiApiVersion string
 @secure()
 param nuxtAzureOpenaiEndpoint string
+@secure()
+param nuxtAzureOpenaiDeploymentId string
 
 module appInsights './modules/appInsights.bicep' = {
   name: 'appInsights'
@@ -100,5 +102,6 @@ module appService './modules/appService.bicep' = {
     nuxtAzureOpenaiApiKey: nuxtAzureOpenaiApiKey
     nuxtAzureOpenaiApiVersion: nuxtAzureOpenaiApiVersion
     nuxtAzureOpenaiEndpoint: nuxtAzureOpenaiEndpoint
+    nuxtAzureOpenaiDeploymentId: nuxtAzureOpenaiDeploymentId
   }
 }

@@ -7,7 +7,7 @@ const bodySchema = z.object({
     name: z.string().default("{Untitled User Story}"),
     statement: z.string().default(""),
     primaryActorId: z.string().uuid().optional(),
-    priority: z.nativeEnum(MoscowPriority).optional(),
+    priority: z.nativeEnum(MoscowPriority).default(MoscowPriority.MUST),
     outcomeId: z.string().uuid().optional(),
     functionalBehaviorId: z.string().uuid().optional(),
     isSilence: z.boolean().default(false)

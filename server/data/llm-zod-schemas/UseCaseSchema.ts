@@ -11,7 +11,8 @@ export default z.object({
     mainSuccessScenario: z.string().describe('The main success scenario is the most common path through the system. It takes the form of a sequence of steps that describe the interaction. Use N/A if there is no main success scenario.'),
     successGuarantee: z.string().describe('The success guarantee is the guarantee that the system will provide to the user. Use N/A if there is no success guarantee.'),
     extensions: z.string().describe('The extensions are the possible paths that the user can take. Use N/A if there are no extensions.'),
-    moscowPriority: z.enum(['MUST', 'SHOULD', 'COULD', 'WONT']),
+    moscowPriority: z.enum(['MUST', 'SHOULD', 'COULD', 'WONT'])
+        .describe('The priority of the requirement, according to the MoSCoW method. Default is "MUST"'),
 }).describe(dedent(`
     A Use Case specifies the scenario of a complete
     interaction of a user through a system.

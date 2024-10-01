@@ -15,7 +15,7 @@ export default z.object({
         z.literal('Observer')
             .describe('Low availability and influence')
     ])
-        .describe('The level of influence and availability the stakeholder has over the project'),
+        .describe('The level of influence and availability the stakeholder has over the project. Default is "Observer"'),
     availability: z.number().int()
         .describe('The % of time the stakeholder is available to the project'),
     influence: z.number().int()

@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import type { Requirement } from '~/server/domain/requirements/Requirement';
-import type { ParsedRequirement } from '~/server/domain/requirements/ParsedRequirement.js';
+import type { ParsedRequirement } from '~/server/domain/requirements/ParsedRequirement';
 
-type RowType = { type: string; id: string; name: string; }
+type RowType = { id: string; name: string; }
 
 const props = defineProps<{
     parsedRequirement: ParsedRequirement,
@@ -12,7 +12,11 @@ const props = defineProps<{
 
 const confirm = useConfirm()
 
-const requirements: Requirement[][] = Object.values(props.parsedRequirement).filter(Array.isArray)
+type RequirementType = { type: string, items: Requirement[] }
+
+const requirements: RequirementType[] = Object.entries(props.parsedRequirement)
+    .filter(([_, value]) => Array.isArray(value) && value.length > 0)
+    .map(([key, value]) => ({ type: key, items: value as Requirement[] }))
 
 const onReject = (parentId: string, item: RowType) => new Promise<void>((resolve, _reject) => {
     confirm.require({
@@ -32,15 +36,15 @@ const onReject = (parentId: string, item: RowType) => new Promise<void>((resolve
 <template>
     <ConfirmDialog></ConfirmDialog>
     <DataView :value="requirements" :data-key="undefined">
-        <template #list="{ items }">
+        <template #list="{ items }: { items: RequirementType[] }">
             <div v-for="(requirements, index) in items" :key="index" :value="requirements">
-                <DataTable :value="requirements">
+                <DataTable :value="requirements.items">
                     <template #header>
                         <div class="flex flex-wrap align-items-center justify-content-between gap-2">
-                            <span class="text-xl text-900 font-bold">{{ requirements[0].type }}</span>
+                            <span class="text-xl text-900 font-bold">{{ requirements.type }}</span>
                         </div>
                     </template>
-                    <Column v-for="col of Object.keys(requirements[0])" :key="col" :field="col" :header="col">
+                    <Column v-for="col of Object.keys(requirements.items[0])" :key="col" :field="col" :header="col">
                     </Column>
                     <!--
                     <Column header="Actions" frozen align-frozen="right">
