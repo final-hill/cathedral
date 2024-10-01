@@ -52,8 +52,8 @@ jobs:
             nuxtAuthAuthorityDomain="${{ secrets.NUXT_AUTH_AUTHORITY_DOMAIN }}"
             nuxtAuthPrimaryUserFlow="${{ secrets.NUXT_AUTH_PRIMARY_USER_FLOW }}"
             nuxtAzureOpenaiApiKey="${{ secrets.NUXT_AZURE_OPENAI_API_KEY }}"
-            nuxtAzureOpenaiApiVersion="${{ secrets.NUXT_AZURE_OPENAI_API_VERSION }}",
-            nuxtAzureOpenaiEndpoint="${{ secrets.NUXT_AZURE_OPENAI_ENDPOINT }}",
+            nuxtAzureOpenaiApiVersion="${{ secrets.NUXT_AZURE_OPENAI_API_VERSION }}"
+            nuxtAzureOpenaiEndpoint="${{ secrets.NUXT_AZURE_OPENAI_ENDPOINT }}"
             nuxtAzureOpenaiDeploymentId="${{ secrets.NUXT_AZURE_OPENAI_DEPLOYMENT_ID }}"
           scope: 'resourcegroup'
           deploymentMode: 'Incremental'
@@ -161,8 +161,8 @@ jobs:
             nuxtAuthAuthorityDomain="${{ secrets.NUXT_AUTH_AUTHORITY_DOMAIN }}"
             nuxtAuthPrimaryUserFlow="${{ secrets.NUXT_AUTH_PRIMARY_USER_FLOW }}"
             nuxtAzureOpenaiApiKey="${{ secrets.NUXT_AZURE_OPENAI_API_KEY }}"
-            nuxtAzureOpenaiApiVersion="${{ secrets.NUXT_AZURE_OPENAI_API_VERSION }}",
-            nuxtAzureOpenaiEndpoint="${{ secrets.NUXT_AZURE_OPENAI_ENDPOINT }}",
+            nuxtAzureOpenaiApiVersion="${{ secrets.NUXT_AZURE_OPENAI_API_VERSION }}"
+            nuxtAzureOpenaiEndpoint="${{ secrets.NUXT_AZURE_OPENAI_ENDPOINT }}"
             nuxtAzureOpenaiDeploymentId="${{ secrets.NUXT_AZURE_OPENAI_DEPLOYMENT_ID }}"
           scope: 'resourcegroup'
           failOnStdErr: false
