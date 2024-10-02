@@ -17,7 +17,7 @@ const querySchema = z.object({
     mainSuccessScenario: z.string().optional(),
     successGuaranteeId: z.string().uuid().optional(),
     extensions: z.string().optional(),
-    isSilence: z.boolean().optional()
+    isSilence: z.boolean().optional().default(false)
 })
 
 /**
