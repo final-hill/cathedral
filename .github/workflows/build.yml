@@ -17,8 +17,6 @@ jobs:
         with:
           node-version: 22.x
           cache: "npm"
-      - name: Setup Pages
-        uses: actions/configure-pages@v3
       - name: Restore Cache
         uses: actions/cache@v4
         with:
