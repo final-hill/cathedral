@@ -7,7 +7,7 @@ const querySchema = z.object({
     name: z.string().optional(),
     statement: z.string().optional(),
     email: z.string().email().optional(),
-    isSilence: z.boolean().optional()
+    isSilence: z.boolean().optional().default(false)
 })
 
 /**

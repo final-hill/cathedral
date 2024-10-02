@@ -11,7 +11,7 @@ const querySchema = z.object({
     influence: z.number().min(0).max(100).optional(),
     segmentation: z.nativeEnum(StakeholderSegmentation).optional(),
     category: z.nativeEnum(StakeholderCategory).optional(),
-    isSilence: z.boolean().optional()
+    isSilence: z.boolean().optional().default(false)
 })
 
 /**

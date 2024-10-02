@@ -7,7 +7,7 @@ const querySchema = z.object({
     name: z.string().optional(),
     statement: z.string().optional(),
     category: z.nativeEnum(ConstraintCategory).optional(),
-    isSilence: z.boolean().optional()
+    isSilence: z.boolean().optional().default(false)
 })
 
 /**
