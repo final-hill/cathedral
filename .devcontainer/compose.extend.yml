@@ -29,6 +29,7 @@ services:
     ports:
       - 3000:3000
       - 443:3000
+      - 24678:24678
     networks:
       - app-network
     # puts the Dev Container on the same network as the database, so that it can access it on localhost
