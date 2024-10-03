@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { EnvironmentComponent } from '~/server/domain/requirements/EnvironmentComponent';
+import { EnvironmentComponent } from '~/server/domain/EnvironmentComponent.js';
 
 useHead({ title: 'Components' })
 definePageMeta({ name: 'Environment Components' })

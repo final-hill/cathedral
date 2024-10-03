@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useFetch } from 'nuxt/app';
-import { Constraint } from '~/server/domain/requirements/Constraint';
-import { ConstraintCategory } from '~/server/domain/requirements/ConstraintCategory';
+import { Constraint } from '~/server/domain/Constraint.js';
+import { ConstraintCategory } from '~/server/domain/ConstraintCategory.js';
 
 useHead({ title: 'Constraints' })
 definePageMeta({ name: 'Constraints' })

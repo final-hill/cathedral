@@ -2,15 +2,15 @@ import { z } from "zod"
 import { zodResponseFormat } from "openai/helpers/zod";
 import zodToJsonSchema from "zod-to-json-schema";
 import { AzureOpenAI } from "openai";
-import zodSchema from '../../data/llm-zod-schemas'
-import { fork } from "~/server/data/orm";
+import zodSchema from '../../data/llm-zod-schemas/index.js'
+import { fork } from "~/server/data/orm.js";
 import { v7 as uuidv7 } from 'uuid';
 import {
     Assumption, Constraint, ConstraintCategory, Effect, EnvironmentComponent, FunctionalBehavior,
     GlossaryTerm, Invariant, Justification, Limit, MoscowPriority, NonFunctionalBehavior, Obstacle,
     Outcome, ParsedRequirement, Person, Stakeholder, StakeholderCategory, StakeholderSegmentation,
     SystemComponent, UseCase, UserStory
-} from "~/server/domain/requirements";
+} from "~/server/domain/index.js";
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),

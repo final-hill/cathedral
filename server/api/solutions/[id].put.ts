@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { fork } from "~/server/data/orm"
+import { fork } from "~/server/data/orm.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()

@@ -1,8 +1,8 @@
-import { fork } from "~/server/data/orm"
+import { fork } from "~/server/data/orm.js"
 import { z } from "zod"
 import { Collection } from "@mikro-orm/core";
-import assertSolutionAdmin from "~/server/utils/assertSolutionAdmin";
-import { Requirement } from "~/server/domain/requirements";
+import assertSolutionAdmin from "~/server/utils/assertSolutionAdmin.js";
+import { Requirement } from "~/server/domain/index.js";
 
 const paramSchema = z.object({
     id: z.string().uuid()

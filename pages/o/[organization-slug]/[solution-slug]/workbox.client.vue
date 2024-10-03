@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import type { ParsedRequirement } from '~/server/domain/requirements';
+import type { ParsedRequirement } from '~/server/domain/index.js';
 
 useHead({ title: 'Workbox' });
 definePageMeta({ name: 'Workbox' });
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Workbox').params as { solutionslug: string, organizationslug: string },
+    { solutionslug, organizationslug } = useRoute('Workbox').params,
     { data: solutions, error: solutionError } = await useFetch('/api/solutions', {
         query: {
             organizationSlug: organizationslug,

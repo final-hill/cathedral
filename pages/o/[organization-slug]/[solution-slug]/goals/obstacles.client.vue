@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Obstacle } from '~/server/domain/requirements/Obstacle';
+import { Obstacle } from '~/server/domain/Obstacle.js';
 
 useHead({ title: 'Obstacles' })
 definePageMeta({ name: 'Obstacles' })

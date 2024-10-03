@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { FunctionalBehavior } from '~/server/domain/requirements/FunctionalBehavior';
-import { MoscowPriority } from '~/server/domain/requirements/MoscowPriority';
+import { FunctionalBehavior } from '~/server/domain/FunctionalBehavior.js';
+import { MoscowPriority } from '~/server/domain/MoscowPriority.js';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Goals Functionality' })

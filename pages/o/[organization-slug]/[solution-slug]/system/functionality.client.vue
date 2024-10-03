@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { FunctionalBehavior } from '~/server/domain/requirements/FunctionalBehavior';
-import { NonFunctionalBehavior } from '~/server/domain/requirements/NonFunctionalBehavior';
-import { SystemComponent } from '~/server/domain/requirements/SystemComponent';
+import { FunctionalBehavior } from '~/server/domain/FunctionalBehavior.js';
+import { NonFunctionalBehavior } from '~/server/domain/NonFunctionalBehavior.js';
+import { SystemComponent } from '~/server/domain/SystemComponent.js';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Functionality' })

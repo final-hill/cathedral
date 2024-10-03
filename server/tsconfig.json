@@ -1,5 +1,10 @@
 {
     "extends": "../.nuxt/tsconfig.server.json",
+    "compilerOptions": {
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "declaration": true
+    },
     "ts-node": {
         "esm": true,
         "transpileOnly": true

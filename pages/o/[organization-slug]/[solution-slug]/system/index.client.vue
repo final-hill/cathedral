@@ -1,15 +1,13 @@
 <script lang="ts" setup>
-import type { RoutesNamesList } from '#build/typed-router/__routes';
-
 useHead({ title: 'System' })
 definePageMeta({ name: 'System' })
 
 const { solutionslug, organizationslug } = useRoute('System').params
 
-const links: { name: RoutesNamesList, icon: string, label: string }[] = [
-    { name: 'System Components', icon: 'pi-sitemap', label: 'Components' },
-    { name: 'Scenarios', icon: 'pi-list', label: 'Scenarios' },
-    { name: 'Functionality', icon: 'pi-bolt', label: 'Functionality' }
+const links = [
+    { name: 'System Components' as const, icon: 'pi-sitemap', label: 'Components' },
+    { name: 'Scenarios' as const, icon: 'pi-list', label: 'Scenarios' },
+    { name: 'Functionality' as const, icon: 'pi-bolt', label: 'Functionality' }
 ]
 </script>
 

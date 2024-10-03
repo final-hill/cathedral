@@ -1,6 +1,6 @@
 import { z } from "zod"
-import { fork } from "~/server/data/orm"
-import { Invariant } from "~/server/domain/requirements/index.js"
+import { fork } from "~/server/data/orm.js"
+import { Invariant } from "~/server/domain/index.js"
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),

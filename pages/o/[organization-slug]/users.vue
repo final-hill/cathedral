@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { AppUser } from '~/server/domain/application/AppUser'
-import { AppRole } from '~/server/domain/application/AppRole'
+import { AppUser } from '~/server/domain/AppUser.js'
+import { AppRole } from '~/server/domain/AppRole.js'
 
 useHead({ title: 'Users' })
 definePageMeta({ name: 'Organization Users' })

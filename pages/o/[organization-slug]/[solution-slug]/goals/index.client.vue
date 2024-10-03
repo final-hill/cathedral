@@ -1,19 +1,17 @@
 <script lang="ts" setup>
-import type { RoutesNamesList } from '#build/typed-router/__routes';
-
 useHead({ title: 'Goals' })
 definePageMeta({ name: 'Goals' })
 
 const { solutionslug, organizationslug } = useRoute('Goals').params
 
-const links: { name: RoutesNamesList, icon: string, label: string }[] = [
-    { name: 'Rationale', icon: 'pi-book', label: 'Rationale' },
-    { name: 'Outcomes', icon: 'pi-check-circle', label: 'Outcomes' },
-    { name: 'Stakeholders', icon: 'pi-users', label: 'Stakeholders' },
-    { name: 'Goal Scenarios', icon: 'pi-briefcase', label: 'Scenarios' },
-    { name: 'Goals Functionality', icon: 'pi-cog', label: 'Functionality' },
-    { name: 'Obstacles', icon: ' pi-exclamation-triangle', label: 'Obstacles' },
-    { name: 'Limitations', icon: 'pi-exclamation-circle', label: 'Limitations' }
+const links = [
+    { name: 'Rationale' as const, icon: 'pi-book', label: 'Rationale' },
+    { name: 'Outcomes' as const, icon: 'pi-check-circle', label: 'Outcomes' },
+    { name: 'Stakeholders' as const, icon: 'pi-users', label: 'Stakeholders' },
+    { name: 'Goal Scenarios' as const, icon: 'pi-briefcase', label: 'Scenarios' },
+    { name: 'Goals Functionality' as const, icon: 'pi-cog', label: 'Functionality' },
+    { name: 'Obstacles' as const, icon: ' pi-exclamation-triangle', label: 'Obstacles' },
+    { name: 'Limitations' as const, icon: 'pi-exclamation-circle', label: 'Limitations' }
 ]
 </script>
 

@@ -10,6 +10,9 @@ export default defineNuxtConfig({
             cert: './cert/localhost.crt'
         }
     },
+    experimental: {
+        typedPages: true
+    },
     sourcemap: process.env.NODE_ENV === 'development',
     css: [
         '~/assets/css/main.css',
@@ -46,7 +49,6 @@ export default defineNuxtConfig({
         "nuxt-primevue",
         "@vite-pwa/nuxt",
         "nuxt-security",
-        "nuxt-typed-router",
         "@sidebase/nuxt-auth"
     ],
     runtimeConfig: {
@@ -115,7 +117,16 @@ export default defineNuxtConfig({
     nitro: {
         esbuild: {
             options: {
-                target: 'esnext'
+                target: "esnext",
+                // https://github.com/vitejs/vite/issues/13736
+                tsconfigRaw: {
+                    compilerOptions: {
+                        experimentalDecorators: true,
+                        // @ts-expect-error: Is this even doing anything?
+                        emitDecoratorMetadata: true,
+                        declaration: true
+                    }
+                }
             }
         },
         experimental: {
@@ -138,16 +149,10 @@ export default defineNuxtConfig({
         }
         */
     },
-    primevue: {
-
-    },
-    pwa: {
-
-    },
+    primevue: {},
+    pwa: {},
     typescript: {
         typeCheck: true
     },
-    vite: {
-
-    }
+    vite: {}
 })

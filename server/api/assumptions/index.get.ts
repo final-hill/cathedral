@@ -1,6 +1,6 @@
 import { z } from "zod"
-import { Assumption } from "~/server/domain/requirements/index.js"
-import { fork } from "~/server/data/orm"
+import { Assumption } from "~/server/domain/index.js"
+import { fork } from "~/server/data/orm.js"
 
 const querySchema = z.object({
     solutionId: z.string().uuid(),

@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { fork } from "~/server/data/orm"
-import { ParsedRequirement } from "~/server/domain/requirements";
+import { fork } from "~/server/data/orm.js"
+import { ParsedRequirement } from "~/server/domain/index.js";
 
 const querySchema = z.object({
     solutionId: z.string().uuid()
