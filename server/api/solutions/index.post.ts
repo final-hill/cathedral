@@ -1,7 +1,7 @@
 import { z } from "zod"
-import { fork } from "~/server/data/orm"
-import { Solution } from "~/server/domain/application/index"
-import { Justification } from "~/server/domain/requirements/index"
+import { fork } from "~/server/data/orm.js"
+import { Solution } from "~/server/domain/index.js"
+import { Justification } from "~/server/domain/index.js"
 
 const bodySchema = z.object({
     name: z.string().min(1).max(100),

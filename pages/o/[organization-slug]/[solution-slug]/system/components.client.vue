@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { SystemComponent } from '~/server/domain/requirements/SystemComponent';
+import { SystemComponent } from '~/server/domain/SystemComponent.js';
 
 useHead({ title: 'Components' })
 definePageMeta({ name: 'System Components' })

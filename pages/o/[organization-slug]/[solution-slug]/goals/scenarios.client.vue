@@ -1,15 +1,15 @@
 <script lang="ts" setup>
-import { FunctionalBehavior } from '~/server/domain/requirements/FunctionalBehavior'
-import { MoscowPriority } from '~/server/domain/requirements/MoscowPriority'
-import { Outcome } from '~/server/domain/requirements/Outcome'
-import { Stakeholder } from '~/server/domain/requirements/Stakeholder'
-import { UserStory } from '~/server/domain/requirements/UserStory';
+import { FunctionalBehavior } from '~/server/domain/FunctionalBehavior.js'
+import { MoscowPriority } from '~/server/domain/MoscowPriority.js'
+import { Outcome } from '~/server/domain/Outcome.js'
+import { Stakeholder } from '~/server/domain/Stakeholder.js'
+import { UserStory } from '~/server/domain/UserStory.js';
 
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Goal Scenarios' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Scenarios').params as { solutionslug: string, organizationslug: string },
+    { solutionslug, organizationslug } = useRoute('Scenarios').params,
     { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
         query: {
             slug: solutionslug,

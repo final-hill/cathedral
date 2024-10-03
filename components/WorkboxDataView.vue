@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import type { Requirement } from '~/server/domain/requirements/Requirement';
-import type { ParsedRequirement } from '~/server/domain/requirements/ParsedRequirement';
+import type { Requirement } from '~/server/domain/Requirement.js';
+import type { ParsedRequirement } from '~/server/domain/ParsedRequirement.js';
 
 type RowType = { id: string; name: string; }
 

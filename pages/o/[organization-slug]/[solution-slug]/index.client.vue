@@ -1,11 +1,9 @@
 <script lang="ts" setup>
-import type { RoutesNamesList } from '#build/typed-router/__routes';
-
 useHead({ title: 'Solution' })
 definePageMeta({ name: 'Solution' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Solution').params as { solutionslug: string, organizationslug: string },
+    { solutionslug, organizationslug } = useRoute('Solution').params,
     router = useRouter(),
     { data: solutions, error: solutionError } = await useFetch('/api/solutions', {
         query: {
@@ -23,11 +21,11 @@ const rawRequirement = ref(''),
 if (solutionError.value)
     $eventBus.$emit('page-error', solutionError.value)
 
-const links: { name: RoutesNamesList, icon: string, label: string }[] = [
-    { name: 'Project', icon: 'pi-box', label: 'Project' },
-    { name: 'Environment', icon: 'pi-cloud', label: 'Environment' },
-    { name: 'Goals', icon: 'pi-bullseye', label: 'Goals' },
-    { name: 'System', icon: 'pi-sitemap', label: 'System' }
+const links = [
+    { name: 'Project' as const, icon: 'pi-box', label: 'Project' },
+    { name: 'Environment' as const, icon: 'pi-cloud', label: 'Environment' },
+    { name: 'Goals' as const, icon: 'pi-bullseye', label: 'Goals' },
+    { name: 'System' as const, icon: 'pi-sitemap', label: 'System' }
 ]
 
 const handleSolutionDelete = async () => {

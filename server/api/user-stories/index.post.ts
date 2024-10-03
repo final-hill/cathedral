@@ -1,6 +1,6 @@
 import { z } from "zod"
-import { MoscowPriority, Outcome, Stakeholder, FunctionalBehavior, UserStory } from "~/server/domain/requirements/index.js"
-import { fork } from "~/server/data/orm"
+import { MoscowPriority, Outcome, Stakeholder, FunctionalBehavior, UserStory } from "~/server/domain/index.js"
+import { fork } from "~/server/data/orm.js"
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),

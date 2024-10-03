@@ -1,6 +1,6 @@
 import { z } from "zod"
-import { fork } from "~/server/data/orm"
-import { AppUserOrganizationRole, Organization } from "~/server/domain/application/index"
+import { fork } from "~/server/data/orm.js"
+import { AppUserOrganizationRole, Organization } from "~/server/domain/index.js"
 import { getServerSession } from '#auth'
 
 const querySchema = z.object({

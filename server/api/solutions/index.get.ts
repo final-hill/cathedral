@@ -1,6 +1,6 @@
-import { fork } from "~/server/data/orm"
+import { fork } from "~/server/data/orm.js"
 import { z } from "zod"
-import { Organization } from "~/server/domain/application/index"
+import { Organization } from "~/server/domain/index.js"
 
 const querySchema = z.object({
     name: z.string().max(100).optional(),

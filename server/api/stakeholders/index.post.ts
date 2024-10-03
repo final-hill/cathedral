@@ -1,6 +1,6 @@
 import { z } from "zod"
-import { fork } from "~/server/data/orm"
-import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from "~/server/domain/requirements/index.js"
+import { fork } from "~/server/data/orm.js"
+import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from "~/server/domain/index.js"
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),

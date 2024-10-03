@@ -1,6 +1,6 @@
 import { z } from "zod"
-import { fork } from "~/server/data/orm"
-import { AppUserOrganizationRole } from "~/server/domain/application/index"
+import { fork } from "~/server/data/orm.js"
+import { AppUser, AppUserOrganizationRole } from "~/server/domain/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -33,5 +33,5 @@ export default defineEventHandler(async (event) => {
     return {
         ...appUserRole.appUser,
         role: appUserRole.role
-    }
+    } as AppUser
 })

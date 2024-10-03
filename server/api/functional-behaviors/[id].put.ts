@@ -1,6 +1,6 @@
 import { z } from "zod"
-import { FunctionalBehavior, MoscowPriority } from "~/server/domain/requirements/index.js"
-import { fork } from "~/server/data/orm"
+import { FunctionalBehavior, MoscowPriority } from "~/server/domain/index.js"
+import { fork } from "~/server/data/orm.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()

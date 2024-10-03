@@ -3,23 +3,26 @@
  * Check if the organization exists. If not redirect to the home page.
  */
 export default defineNuxtRouteMiddleware(async (to, from) => {
-    if (to.params.organizationslug) {
+    // @ts-expect-error : For some reason the typed params are not being recognized
+    const { organizationslug, solutionslug } = to.params
+
+    if (organizationslug) {
         const organizations = await $fetch('/api/organizations', {
-            query: { slug: to.params.organizationslug }
+            query: { slug: organizationslug }
         })
 
         if (!(organizations ?? []).length) {
             return navigateTo('/')
-        } else if (to.params.solutionslug) {
+        } else if (solutionslug) {
             const solutions = await $fetch('/api/solutions', {
                 query: {
-                    organizationSlug: to.params.organizationslug,
-                    slug: to.params.solutionslug
+                    organizationSlug: organizationslug,
+                    slug: solutionslug
                 }
             })
 
             if (!(solutions ?? []).length)
-                return navigateTo(`/o/${to.params.organizationslug}`)
+                return navigateTo(`/o/${organizationslug}`)
         }
     }
 })

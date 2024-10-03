@@ -1,7 +1,7 @@
 import type { H3Event, EventHandlerRequest } from 'h3'
 import { getServerSession } from '#auth'
-import { fork } from "~/server/data/orm"
-import { AppRole, AppUser, AppUserOrganizationRole, Solution } from '../domain/application/index'
+import { fork } from "~/server/data/orm.js"
+import { AppRole, AppUser, AppUserOrganizationRole, Solution } from '../domain/index.js'
 
 /**
  * Asserts that the user is an admin of the organization that owns the solution or is a system admin
