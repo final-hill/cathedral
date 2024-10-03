@@ -46,10 +46,13 @@ export default defineNuxtConfig({
     // https://primeflex.org/
     // https://sidebase.io/nuxt-auth/getting-started
     modules: [
+        // The latest version (^1.5.0) is needed due to https://github.com/nuxt/devtools/issues/723
+        // It looks like this won't be integrated into Nuxt until after 3.14.0
+        '@nuxt/devtools',
         "nuxt-primevue",
         "@vite-pwa/nuxt",
-        "nuxt-security",
-        "@sidebase/nuxt-auth"
+        "@sidebase/nuxt-auth",
+        "nuxt-security"
     ],
     runtimeConfig: {
         // The private keys which are only available within server-side
@@ -154,5 +157,12 @@ export default defineNuxtConfig({
     typescript: {
         typeCheck: true
     },
-    vite: {}
+    vite: {
+        server: {
+            hmr: {
+                protocol: 'wss',
+                host: '0.0.0.0'
+            }
+        }
+    }
 })

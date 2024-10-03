@@ -61,6 +61,7 @@
     "devDependencies": {
         "@mikro-orm/cli": "^6.3.12",
         "@mikro-orm/migrations": "^6.3.12",
+        "@nuxt/devtools": "^1.5.2",
         "@types/node": "^22.7.4",
         "@types/pg": "^8.11.10",
         "@types/uuid": "^10.0.0",
