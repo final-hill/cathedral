@@ -7,7 +7,7 @@ import { Assumption, Effect, ParsedRequirement, Scenario } from "./index.js";
  */
 @Entity()
 class UseCase extends Scenario {
-    constructor(props: Omit<UseCase, 'id'>) {
+    constructor(props: Omit<UseCase, 'id' | 'sysPeriod'>) {
         super(props);
         this.scope = props.scope;
         this.level = props.level;

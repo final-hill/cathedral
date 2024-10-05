@@ -6,7 +6,7 @@ import { ParsedRequirement, Requirement } from "./index.js";
  */
 @Entity()
 class Effect extends Requirement {
-    constructor({ follows, ...rest }: Omit<Effect, 'id'>) {
+    constructor({ follows, ...rest }: Omit<Effect, 'id' | 'sysPeriod'>) {
         super(rest);
         this.follows = follows;
     }

@@ -6,7 +6,7 @@ import { Goal, ParsedRequirement } from "./index.js";
  */
 @Entity()
 class Obstacle extends Goal {
-    constructor({ follows, ...rest }: Omit<Obstacle, 'id'>) {
+    constructor({ follows, ...rest }: Omit<Obstacle, 'id' | 'sysPeriod'>) {
         super(rest);
         this.follows = follows;
     }

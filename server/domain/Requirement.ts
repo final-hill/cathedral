@@ -7,7 +7,7 @@ import { Solution, AppUser } from './index.js';
  */
 @Entity({ abstract: true })
 abstract class Requirement {
-    constructor(props: Omit<Requirement, 'id'>) {
+    constructor(props: Omit<Requirement, 'id' | 'sysPeriod'>) {
         this.id = uuidv7();
         this.name = props.name;
         this.statement = props.statement;
@@ -15,6 +15,7 @@ abstract class Requirement {
         this.lastModified = props.lastModified;
         this.modifiedBy = props.modifiedBy;
         this.isSilence = props.isSilence;
+        this.sysPeriod = undefined
     }
 
     /**
@@ -66,6 +67,9 @@ abstract class Requirement {
      */
     @Property({ type: 'boolean', nullable: false, default: false })
     isSilence: boolean;
+
+    @Property({ type: 'tstzrange', nullable: false, defaultRaw: 'tstzrange(current_timestamp, null)' })
+    sysPeriod: unknown
 }
 
 export { Requirement };

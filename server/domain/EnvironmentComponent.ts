@@ -6,7 +6,7 @@ import { Component, ParsedRequirement } from "./index.js";
  */
 @Entity()
 class EnvironmentComponent extends Component {
-    constructor({ parentComponent, follows, ...rest }: Omit<EnvironmentComponent, 'id'>) {
+    constructor({ parentComponent, follows, ...rest }: Omit<EnvironmentComponent, 'id' | 'sysPeriod'>) {
         super(rest);
         this.parentComponent = parentComponent;
         this.follows = follows;

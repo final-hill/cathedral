@@ -6,7 +6,7 @@ import { ParsedRequirement, Requirement } from "./index.js";
  */
 @Entity()
 class Limit extends Requirement {
-    constructor({ follows, ...rest }: Omit<Limit, 'id'>) {
+    constructor({ follows, ...rest }: Omit<Limit, 'id' | 'sysPeriod'>) {
         super(rest);
         this.follows = follows;
     }

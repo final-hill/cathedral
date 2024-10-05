@@ -6,7 +6,7 @@ import { MetaRequirement, ParsedRequirement } from "./index.js";
  */
 @Entity()
 class Justification extends MetaRequirement {
-    constructor({ follows, ...rest }: Omit<Justification, 'id'>) {
+    constructor({ follows, ...rest }: Omit<Justification, 'id' | 'sysPeriod'>) {
         super(rest);
         this.follows = follows;
     }

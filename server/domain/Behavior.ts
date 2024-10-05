@@ -6,7 +6,7 @@ import { Requirement, MoscowPriority } from "./index.js";
  */
 @Entity({ abstract: true })
 abstract class Behavior extends Requirement {
-    constructor({ priority, ...rest }: Omit<Behavior, 'id'>) {
+    constructor({ priority, ...rest }: Omit<Behavior, 'id' | 'sysPeriod'>) {
         super(rest);
         this.priority = priority;
     }

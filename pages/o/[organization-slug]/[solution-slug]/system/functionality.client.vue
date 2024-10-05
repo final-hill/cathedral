@@ -45,7 +45,7 @@ const fnNonFunctionalBehaviors = async (componentId: string) =>
 const componentSortField = ref<string | undefined>('name')
 
 // const onCreate = async (newData: BehaviorViewModel) => {
-//     const b: Omit<Functionality, 'id'> = {
+//     const b: Omit<Functionality, 'id' | 'sysPeriod'> = {
 //         name: newData.name,
 //         statement: newData.statement,
 //         solutionId,

@@ -6,7 +6,7 @@ import { ParsedRequirement, Requirement } from "./index.js";
  */
 @Entity()
 class Assumption extends Requirement {
-    constructor({ follows, ...rest }: Omit<Assumption, 'id'>) {
+    constructor({ follows, ...rest }: Omit<Assumption, 'id' | 'sysPeriod'>) {
         super(rest);
         this.follows = follows;
     }

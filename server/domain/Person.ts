@@ -6,7 +6,7 @@ import { Actor, ParsedRequirement } from "./index.js";
  */
 @Entity()
 class Person extends Actor {
-    constructor({ email, follows, ...rest }: Omit<Person, 'id'>) {
+    constructor({ email, follows, ...rest }: Omit<Person, 'id' | 'sysPeriod'>) {
         super(rest);
         this.email = email;
         this.follows = follows;

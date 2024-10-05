@@ -6,7 +6,7 @@ import { Component, ParsedRequirement, StakeholderCategory, StakeholderSegmentat
  */
 @Entity()
 class Stakeholder extends Component {
-    constructor({ influence, availability, segmentation, category, parentComponent, follows, ...rest }: Omit<Stakeholder, 'id'>) {
+    constructor({ influence, availability, segmentation, category, parentComponent, follows, ...rest }: Omit<Stakeholder, 'id' | 'sysPeriod'>) {
         super(rest);
 
         this.influence = influence;

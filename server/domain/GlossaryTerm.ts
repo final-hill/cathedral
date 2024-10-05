@@ -6,7 +6,7 @@ import { Component, ParsedRequirement } from "./index.js";
  */
 @Entity()
 class GlossaryTerm extends Component {
-    constructor({ parentComponent, follows, ...rest }: Omit<GlossaryTerm, 'id'>) {
+    constructor({ parentComponent, follows, ...rest }: Omit<GlossaryTerm, 'id' | 'sysPeriod'>) {
         super(rest);
         this.parentComponent = parentComponent;
         this.follows = follows;

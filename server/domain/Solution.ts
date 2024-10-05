@@ -4,7 +4,7 @@ import { type CollectionToArrayProps } from './types/index.js';
 import slugify from '../../utils/slugify.js';
 import {
     Assumption, Constraint, Effect, EnvironmentComponent, FunctionalBehavior, GlossaryTerm, Invariant, Justification,
-    Limit, NonFunctionalBehavior, Obstacle, Organization, Outcome, Person, Stakeholder, SystemComponent, UseCase, UserStory, type MetaRequirement,
+    Limit, NonFunctionalBehavior, Obstacle, Organization, Outcome, Person, Stakeholder, SystemComponent, UseCase, UserStory
 } from './index.js';
 
 /**

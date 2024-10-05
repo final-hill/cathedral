@@ -8,7 +8,7 @@ import { Functionality, ParsedRequirement } from "./index.js";
  */
 @Entity()
 class NonFunctionalBehavior extends Functionality {
-    constructor({ follows, ...rest }: Omit<NonFunctionalBehavior, 'id'>) {
+    constructor({ follows, ...rest }: Omit<NonFunctionalBehavior, 'id' | 'sysPeriod'>) {
         super(rest);
         this.follows = follows;
     }

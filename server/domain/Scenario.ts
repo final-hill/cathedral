@@ -7,7 +7,7 @@ import { Example, Stakeholder } from "./index.js";
  */
 @Entity({ abstract: true })
 abstract class Scenario extends Example {
-    constructor({ primaryActor, ...rest }: Omit<Scenario, 'id'>) {
+    constructor({ primaryActor, ...rest }: Omit<Scenario, 'id' | 'sysPeriod'>) {
         super(rest);
         this.primaryActor = primaryActor;
     }

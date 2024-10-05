@@ -6,7 +6,7 @@ import { Requirement, ConstraintCategory, ParsedRequirement } from './index.js';
  */
 @Entity()
 class Constraint extends Requirement {
-    constructor({ category, follows, ...rest }: Omit<Constraint, 'id'>) {
+    constructor({ category, follows, ...rest }: Omit<Constraint, 'id' | 'sysPeriod'>) {
         super(rest);
         this.category = category;
         this.follows = follows;

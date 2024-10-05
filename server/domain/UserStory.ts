@@ -12,7 +12,7 @@ import { FunctionalBehavior, Outcome, ParsedRequirement, Scenario } from "./inde
  */
 @Entity()
 class UserStory extends Scenario {
-    constructor({ outcome, functionalBehavior, follows, ...rest }: Omit<UserStory, 'id'>) {
+    constructor({ outcome, functionalBehavior, follows, ...rest }: Omit<UserStory, 'id' | 'sysPeriod'>) {
         super(rest);
         this.outcome = outcome;
         this.functionalBehavior = functionalBehavior;

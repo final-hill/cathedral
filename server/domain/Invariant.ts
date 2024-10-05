@@ -8,7 +8,7 @@ import { ParsedRequirement, Requirement } from "./index.js";
  */
 @Entity()
 class Invariant extends Requirement {
-    constructor({ follows, ...rest }: Omit<Invariant, 'id'>) {
+    constructor({ follows, ...rest }: Omit<Invariant, 'id' | 'sysPeriod'>) {
         super(rest);
         this.follows = follows;
     }
