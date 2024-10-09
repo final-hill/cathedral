@@ -353,7 +353,7 @@ export default defineEventHandler(async (event) => {
         }))
     })
 
-    await em.flush()
+    await em.persistAndFlush(parsedRequirement)
 
     return result.length ?? 0
 })

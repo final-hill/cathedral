@@ -47,12 +47,13 @@ The application is built using the following primary technologies:
   - [Zod](https://zod.dev/)
 - [@azure/msal-node](https://www.npmjs.com/package/@azure/msal-node)
 - [Node.js](http://nodejs.org/)
-- [MikroORM](https://mikro-orm.io/)
 - [PostgreSQL](https://www.postgresql.org/)
+  - [MikroORM](https://mikro-orm.io/)
+- [Docker](https://www.docker.com/)
 
 ## Application Architecture
 
-The application is a monolith following a layers architecture. The application is split into the following layers:
+The application is a [monolith](https://martinfowler.com/bliki/MonolithFirst.html) following a layered architecture. The application is split into the following layers:
 
 ### Server
 

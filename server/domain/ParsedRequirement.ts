@@ -1,17 +1,17 @@
 import { Collection, Entity, OneToMany } from '@mikro-orm/core';
 import { type CollectionToArrayProps } from './types/index.js';
+import { MetaRequirement } from './MetaRequirement.js';
 import {
-    Assumption, Constraint, Effect, EnvironmentComponent,
-    FunctionalBehavior, GlossaryTerm, Invariant, Justification, Limit, MetaRequirement,
-    NonFunctionalBehavior, Obstacle, Outcome, Person, Stakeholder,
-    SystemComponent, UseCase, UserStory
+    Assumption, Constraint, Effect, EnvironmentComponent, FunctionalBehavior, GlossaryTerm,
+    Invariant, Justification, Limit, NonFunctionalBehavior, Obstacle, Outcome, Person,
+    Stakeholder, SystemComponent, UseCase, UserStory
 } from './index.js';
 
 /**
  * A requirement that has been parsed from natural language text
  */
 @Entity()
-class ParsedRequirement extends MetaRequirement {
+export class ParsedRequirement extends MetaRequirement {
     constructor(properties: Omit<CollectionToArrayProps<ParsedRequirement>, 'id'>) {
         super(properties);
 
@@ -76,5 +76,3 @@ class ParsedRequirement extends MetaRequirement {
     @OneToMany({ entity: () => UserStory, mappedBy: 'follows' })
     userStories = new Collection<UserStory>(this);
 }
-
-export { ParsedRequirement };

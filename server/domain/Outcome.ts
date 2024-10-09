@@ -1,12 +1,13 @@
 import { Entity, ManyToOne } from "@mikro-orm/core";
-import { Goal, ParsedRequirement } from "./index.js";
+import { Goal } from "./Goal.js";
+import { ParsedRequirement } from "./ParsedRequirement.js";
 
 /**
  * A result desired by an organization
  */
 @Entity()
-class Outcome extends Goal {
-    constructor({ follows, ...rest }: Omit<Outcome, 'id' | 'sysPeriod'>) {
+export class Outcome extends Goal {
+    constructor({ follows, ...rest }: Omit<Outcome, 'id'>) {
         super(rest);
         this.follows = follows;
     }
@@ -17,5 +18,3 @@ class Outcome extends Goal {
     @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
     follows?: ParsedRequirement;
 }
-
-export { Outcome };

@@ -1,12 +1,13 @@
 import { Entity, ManyToOne, Property } from "@mikro-orm/core";
-import { Actor, ParsedRequirement } from "./index.js";
+import { Actor } from "./Actor.js";
+import { ParsedRequirement } from "./ParsedRequirement.js";
 
 /**
  * A person is a member of the Project staff
  */
 @Entity()
-class Person extends Actor {
-    constructor({ email, follows, ...rest }: Omit<Person, 'id' | 'sysPeriod'>) {
+export class Person extends Actor {
+    constructor({ email, follows, ...rest }: Omit<Person, 'id'>) {
         super(rest);
         this.email = email;
         this.follows = follows;
@@ -25,5 +26,3 @@ class Person extends Actor {
     @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
     follows?: ParsedRequirement;
 }
-
-export { Person };

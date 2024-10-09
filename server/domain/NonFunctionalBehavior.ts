@@ -1,5 +1,6 @@
 import { Entity, ManyToOne } from "@mikro-orm/core";
-import { Functionality, ParsedRequirement } from "./index.js";
+import { Functionality } from "./Functionality.js";
+import { ParsedRequirement } from "./ParsedRequirement.js";
 
 /**
  * NonFunctionalBehavior is a type of Behavior that is not directly related to the functionality of a system.
@@ -7,8 +8,8 @@ import { Functionality, ParsedRequirement } from "./index.js";
  * Generally expressed in the form "system shall be <requirement>."
  */
 @Entity()
-class NonFunctionalBehavior extends Functionality {
-    constructor({ follows, ...rest }: Omit<NonFunctionalBehavior, 'id' | 'sysPeriod'>) {
+export class NonFunctionalBehavior extends Functionality {
+    constructor({ follows, ...rest }: Omit<NonFunctionalBehavior, 'id'>) {
         super(rest);
         this.follows = follows;
     }
@@ -19,5 +20,3 @@ class NonFunctionalBehavior extends Functionality {
     @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
     follows?: ParsedRequirement;
 }
-
-export { NonFunctionalBehavior };

@@ -1,12 +1,13 @@
 import { Entity, ManyToOne } from "@mikro-orm/core";
-import { ParsedRequirement, Requirement } from "./index.js";
+import { Requirement } from "./Requirement.js";
+import { ParsedRequirement } from "./ParsedRequirement.js";
 
 /**
  * Environment property affected by the system
  */
 @Entity()
-class Effect extends Requirement {
-    constructor({ follows, ...rest }: Omit<Effect, 'id' | 'sysPeriod'>) {
+export class Effect extends Requirement {
+    constructor({ follows, ...rest }: Omit<Effect, 'id'>) {
         super(rest);
         this.follows = follows;
     }
@@ -17,5 +18,3 @@ class Effect extends Requirement {
     @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
     follows?: ParsedRequirement;
 }
-
-export { Effect };

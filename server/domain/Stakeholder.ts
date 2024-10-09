@@ -1,12 +1,15 @@
 import { Entity, Enum, ManyToOne, Property } from "@mikro-orm/core";
-import { Component, ParsedRequirement, StakeholderCategory, StakeholderSegmentation } from "./index.js";
+import { Component } from "./Component.js";
+import { ParsedRequirement } from "./ParsedRequirement.js";
+import { StakeholderCategory } from "./StakeholderCategory.js";
+import { StakeholderSegmentation } from "./StakeholderSegmentation.js";
 
 /**
  * A human actor who may affect or be affected by a project or its associated system
  */
 @Entity()
-class Stakeholder extends Component {
-    constructor({ influence, availability, segmentation, category, parentComponent, follows, ...rest }: Omit<Stakeholder, 'id' | 'sysPeriod'>) {
+export class Stakeholder extends Component {
+    constructor({ influence, availability, segmentation, category, parentComponent, follows, ...rest }: Omit<Stakeholder, 'id'>) {
         super(rest);
 
         this.influence = influence;
@@ -53,5 +56,3 @@ class Stakeholder extends Component {
     @Property({ type: 'number', nullable: false, check: 'influence >= 0 AND influence <= 100' })
     influence: number;
 }
-
-export { Stakeholder };

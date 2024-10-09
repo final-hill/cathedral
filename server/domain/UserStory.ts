@@ -1,5 +1,8 @@
 import { Entity, ManyToOne } from "@mikro-orm/core";
-import { FunctionalBehavior, Outcome, ParsedRequirement, Scenario } from "./index.js";
+import { FunctionalBehavior } from "./FunctionalBehavior.js";
+import { Outcome } from "./Outcome.js";
+import { ParsedRequirement } from "./ParsedRequirement.js";
+import { Scenario } from "./Scenario.js";
 
 /**
  * A User Story specifies the handling of a specific user need.
@@ -11,8 +14,8 @@ import { FunctionalBehavior, Outcome, ParsedRequirement, Scenario } from "./inde
  * [goal] - outcomeId
  */
 @Entity()
-class UserStory extends Scenario {
-    constructor({ outcome, functionalBehavior, follows, ...rest }: Omit<UserStory, 'id' | 'sysPeriod'>) {
+export class UserStory extends Scenario {
+    constructor({ outcome, functionalBehavior, follows, ...rest }: Omit<UserStory, 'id'>) {
         super(rest);
         this.outcome = outcome;
         this.functionalBehavior = functionalBehavior;
@@ -37,5 +40,3 @@ class UserStory extends Scenario {
     @ManyToOne({ entity: () => Outcome, nullable: true })
     outcome?: Outcome;
 }
-
-export { UserStory };

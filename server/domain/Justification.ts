@@ -1,12 +1,13 @@
 import { Entity, ManyToOne } from "@mikro-orm/core";
-import { MetaRequirement, ParsedRequirement } from "./index.js";
+import { MetaRequirement } from "./MetaRequirement.js";
+import { ParsedRequirement } from "./ParsedRequirement.js";
 
 /**
  * Explanation of a project or system property in reference to a goal or environment property
  */
 @Entity()
-class Justification extends MetaRequirement {
-    constructor({ follows, ...rest }: Omit<Justification, 'id' | 'sysPeriod'>) {
+export class Justification extends MetaRequirement {
+    constructor({ follows, ...rest }: Omit<Justification, 'id'>) {
         super(rest);
         this.follows = follows;
     }
@@ -17,5 +18,3 @@ class Justification extends MetaRequirement {
     @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
     follows?: ParsedRequirement;
 }
-
-export { Justification };

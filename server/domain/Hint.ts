@@ -1,10 +1,8 @@
 import { Entity } from "@mikro-orm/core";
-import { Noise } from "./index.js";
+import { Noise } from "./Noise.js";
 
 /**
  * Design or implementation suggestion
  */
 @Entity()
-class Hint extends Noise { }
-
-export { Hint };
+export class Hint extends Noise { }

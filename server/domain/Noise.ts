@@ -1,10 +1,8 @@
 import { Entity } from "@mikro-orm/core";
-import { Requirement } from "./index.js";
+import { Requirement } from "./Requirement.js";
 
 /**
  * Property that is in requirements but should not be
  */
 @Entity()
-class Noise extends Requirement { }
-
-export { Noise };
+export class Noise extends Requirement { }

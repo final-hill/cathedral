@@ -5,7 +5,7 @@ import { AppRole } from "./AppRole.js";
  * An AppUser is a user of the application
  */
 @Entity()
-class AppUser {
+export class AppUser {
     constructor(properties: AppUser) {
         this.id = properties.id;
         this.creationDate = properties.creationDate;
@@ -61,5 +61,3 @@ class AppUser {
     @Enum({ items: () => AppRole, persist: false })
     role?: AppRole;
 }
-
-export { AppUser };

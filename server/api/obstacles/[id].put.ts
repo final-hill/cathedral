@@ -37,5 +37,5 @@ export default defineEventHandler(async (event) => {
         ...(isSilence !== undefined && { isSilence })
     })
 
-    await em.flush()
+    await em.persistAndFlush(obstacle)
 })

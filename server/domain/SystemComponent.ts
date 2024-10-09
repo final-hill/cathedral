@@ -1,12 +1,13 @@
 import { Entity, ManyToOne } from "@mikro-orm/core";
-import { Component, ParsedRequirement } from "./index.js"
+import { Component } from "./Component.js";
+import { ParsedRequirement } from "./ParsedRequirement.js";
 
 /**
  * A component of a system
  */
 @Entity()
-class SystemComponent extends Component {
-    constructor({ parentComponent, follows, ...rest }: Omit<SystemComponent, 'id' | 'sysPeriod'>) {
+export class SystemComponent extends Component {
+    constructor({ parentComponent, follows, ...rest }: Omit<SystemComponent, 'id'>) {
         super(rest);
         this.parentComponent = parentComponent;
         this.follows = follows;
@@ -24,5 +25,3 @@ class SystemComponent extends Component {
     @ManyToOne({ entity: () => SystemComponent, nullable: true })
     parentComponent?: SystemComponent;
 }
-
-export { SystemComponent };

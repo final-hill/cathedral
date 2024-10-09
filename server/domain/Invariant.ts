@@ -1,5 +1,6 @@
 import { Entity, ManyToOne } from "@mikro-orm/core";
-import { ParsedRequirement, Requirement } from "./index.js";
+import { Requirement } from "./Requirement.js";
+import { ParsedRequirement } from "./ParsedRequirement.js";
 
 /**
  * Environment property that must be maintained.
@@ -7,8 +8,8 @@ import { ParsedRequirement, Requirement } from "./index.js";
  * (precondition and postcondition)
  */
 @Entity()
-class Invariant extends Requirement {
-    constructor({ follows, ...rest }: Omit<Invariant, 'id' | 'sysPeriod'>) {
+export class Invariant extends Requirement {
+    constructor({ follows, ...rest }: Omit<Invariant, 'id'>) {
         super(rest);
         this.follows = follows;
     }
@@ -19,5 +20,3 @@ class Invariant extends Requirement {
     @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
     follows?: ParsedRequirement;
 }
-
-export { Invariant };
