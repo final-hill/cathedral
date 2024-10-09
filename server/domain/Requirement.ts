@@ -1,12 +1,13 @@
 import { v7 as uuidv7 } from 'uuid';
 import { Entity, ManyToOne, Property } from '@mikro-orm/core';
-import { Solution, AppUser } from './index.js';
+import { AppUser } from './AppUser.js';
+import { Solution } from './Solution.js';
 
 /**
  * A Requirement is a statement that specifies a property.
  */
 @Entity({ abstract: true })
-abstract class Requirement {
+export abstract class Requirement {
     constructor(props: Omit<Requirement, 'id'>) {
         this.id = uuidv7();
         this.name = props.name;
@@ -67,5 +68,3 @@ abstract class Requirement {
     @Property({ type: 'boolean', nullable: false, default: false })
     isSilence: boolean;
 }
-
-export { Requirement };

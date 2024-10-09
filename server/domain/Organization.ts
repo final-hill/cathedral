@@ -1,13 +1,13 @@
 import { Collection, Entity, OneToMany, Property } from "@mikro-orm/core";
 import slugify from "../../utils/slugify.js";
 import { v7 as uuidv7 } from 'uuid';
-import { Solution } from "./index.js";
+import { Solution } from "./Solution.js";
 
 /**
  * An Organization is a collection of people and solutions
  */
 @Entity()
-class Organization {
+export class Organization {
     constructor(properties: Omit<Organization, 'id' | 'slug' | 'solutions'> & { solutions: Solution[] }) {
         this.id = uuidv7();
         this.name = properties.name;
@@ -47,5 +47,3 @@ class Organization {
     @OneToMany({ entity: () => Solution, mappedBy: 'organization', orphanRemoval: true })
     solutions = new Collection<Solution>(this);
 }
-
-export { Organization };

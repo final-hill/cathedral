@@ -1,11 +1,13 @@
 import { Entity, Enum, ManyToOne } from "@mikro-orm/core";
-import { AppRole, AppUser, Organization } from "./index.js";
+import { AppRole } from "./AppRole.js";
+import { AppUser } from "./AppUser.js";
+import { Organization } from "./Organization.js";
 
 /**
  * An AppUserOrganizationRole is a mapping between an AppUser, an Organization, and a Role
  */
 @Entity()
-class AppUserOrganizationRole {
+export class AppUserOrganizationRole {
     constructor({ appUser, organization, role }: AppUserOrganizationRole) {
         this.appUser = appUser;
         this.organization = organization;
@@ -30,5 +32,3 @@ class AppUserOrganizationRole {
     @Enum({ items: () => AppRole, primary: true })
     role: AppRole = AppRole.ORGANIZATION_READER;
 }
-
-export { AppUserOrganizationRole };

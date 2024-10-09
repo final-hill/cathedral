@@ -16,7 +16,7 @@ export class AppUserSeeder extends Seeder {
 
             if (sysAdminUser) {
                 sysAdminUser.isSystemAdmin = true
-                await em.flush()
+                await em.persistAndFlush(sysAdminUser)
             }
         }
     }

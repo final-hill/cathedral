@@ -1,11 +1,12 @@
 import { Entity, ManyToOne } from "@mikro-orm/core";
-import { ParsedRequirement, Requirement } from "./index.js";
+import { Requirement } from "./Requirement.js";
+import { ParsedRequirement } from "./ParsedRequirement.js";
 
 /**
  * An Exclusion from the scope of requirements
  */
 @Entity()
-class Limit extends Requirement {
+export class Limit extends Requirement {
     constructor({ follows, ...rest }: Omit<Limit, 'id'>) {
         super(rest);
         this.follows = follows;
@@ -17,5 +18,3 @@ class Limit extends Requirement {
     @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
     follows?: ParsedRequirement;
 }
-
-export { Limit };

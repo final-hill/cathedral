@@ -2,16 +2,18 @@ import { v7 as uuidv7 } from 'uuid';
 import { Collection, Entity, ManyToOne, OneToMany, Property } from '@mikro-orm/core';
 import { type CollectionToArrayProps } from './types/index.js';
 import slugify from '../../utils/slugify.js';
+import { Organization } from './Organization.js';
 import {
-    Assumption, Constraint, Effect, EnvironmentComponent, FunctionalBehavior, GlossaryTerm, Invariant, Justification,
-    Limit, NonFunctionalBehavior, Obstacle, Organization, Outcome, Person, Stakeholder, SystemComponent, UseCase, UserStory, type MetaRequirement,
+    Assumption, Constraint, Effect, EnvironmentComponent, FunctionalBehavior, GlossaryTerm,
+    Invariant, Justification, Limit, NonFunctionalBehavior, Obstacle, Outcome, Person,
+    Stakeholder, SystemComponent, UseCase, UserStory
 } from './index.js';
 
 /**
  * A Solution is the aggregation of a Project, Environment, Goals, and a System
  */
 @Entity()
-class Solution {
+export class Solution {
     constructor(properties: Omit<CollectionToArrayProps<Solution>, 'slug' | 'id'>) {
         this.id = uuidv7();
         this.description = properties.description;
@@ -162,5 +164,3 @@ class Solution {
     @OneToMany({ entity: () => UserStory, mappedBy: 'solution', orphanRemoval: true })
     userStories = new Collection<UserStory>(this);
 }
-
-export { Solution };

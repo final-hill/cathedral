@@ -26,5 +26,5 @@ export default defineEventHandler(async (event) => {
         slug: slugify(name)
     })
 
-    await em.flush()
+    await em.persistAndFlush(organization)
 })

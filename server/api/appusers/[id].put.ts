@@ -47,5 +47,5 @@ export default defineEventHandler(async (event) => {
         })
 
     appUserRole.role = role
-    await em.flush()
+    await em.persistAndFlush(appUserRole)
 })

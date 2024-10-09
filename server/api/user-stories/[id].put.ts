@@ -49,5 +49,5 @@ export default defineEventHandler(async (event) => {
         ...(body.isSilence !== undefined && { isSilence: body.isSilence })
     })
 
-    await em.flush()
+    await em.persistAndFlush(userStory)
 })

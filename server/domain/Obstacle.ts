@@ -1,11 +1,12 @@
 import { Entity, ManyToOne } from "@mikro-orm/core";
-import { Goal, ParsedRequirement } from "./index.js";
+import { Goal } from "./Goal.js";
+import { ParsedRequirement } from "./ParsedRequirement.js";
 
 /**
  * Obstacles are the challenges that prevent the goals from being achieved.
  */
 @Entity()
-class Obstacle extends Goal {
+export class Obstacle extends Goal {
     constructor({ follows, ...rest }: Omit<Obstacle, 'id'>) {
         super(rest);
         this.follows = follows;
@@ -17,5 +18,3 @@ class Obstacle extends Goal {
     @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
     follows?: ParsedRequirement;
 }
-
-export { Obstacle };

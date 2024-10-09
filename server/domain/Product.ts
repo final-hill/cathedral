@@ -1,10 +1,8 @@
 import { Entity } from "@mikro-orm/core";
-import { Requirement } from "./index.js";
+import { Requirement } from "./Requirement.js";
 
 /**
  * Artifact needed or produced by a task
  */
 @Entity()
-class Product extends Requirement { }
-
-export { Product };
+export class Product extends Requirement { }

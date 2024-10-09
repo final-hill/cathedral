@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { Justification } from '~/server/domain/Justification.js'
+
 useHead({ title: 'Rationale' })
 definePageMeta({ name: 'Rationale' })
 
@@ -15,22 +17,16 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-type JustificationModel = {
-    id: string;
-    name: string;
-    statement: string;
-}
-
 const [
     { data: visionJustifications, error: getVisionError },
     { data: missionJustifications, error: getMissionError },
     { data: situationJustifications, error: getSituationError },
     { data: objectiveJustifications, error: getObjectiveError }
 ] = await Promise.all([
-    useFetch(`/api/justifications`, { query: { name: 'Vision', solutionId } }),
-    useFetch(`/api/justifications`, { query: { name: 'Mission', solutionId } }),
-    useFetch(`/api/justifications`, { query: { name: 'Situation', solutionId } }),
-    useFetch(`/api/justifications`, { query: { name: 'Objective', solutionId } })
+    useFetch<Justification[]>(`/api/justifications`, { query: { name: 'Vision', solutionId } }),
+    useFetch<Justification[]>(`/api/justifications`, { query: { name: 'Mission', solutionId } }),
+    useFetch<Justification[]>(`/api/justifications`, { query: { name: 'Situation', solutionId } }),
+    useFetch<Justification[]>(`/api/justifications`, { query: { name: 'Objective', solutionId } })
 ]);
 
 if (getVisionError.value)
@@ -47,7 +43,7 @@ const visionStatement = ref(visionJustifications.value?.[0].statement!),
     situationStatement = ref(situationJustifications.value?.[0].statement!),
     objectiveStatement = ref(objectiveJustifications.value?.[0].statement!);
 
-const fieldTriple: [Ref<string>, JustificationModel, string][] = [
+const fieldTriple: [Ref<string>, Justification, string][] = [
     [visionStatement, visionJustifications.value![0], 'Vision'],
     [missionStatement, missionJustifications.value![0], 'Mission'],
     [situationStatement, situationJustifications.value![0], 'Situation'],

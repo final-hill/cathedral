@@ -1,5 +1,6 @@
 import { Entity, ManyToOne } from "@mikro-orm/core";
-import { Functionality, ParsedRequirement } from "./index.js";
+import { Functionality } from "./Functionality.js";
+import { ParsedRequirement } from "./ParsedRequirement.js";
 
 /**
  * FunctionalBehavior specifies **what** behavior the system should exhibit, i.e.,
@@ -7,7 +8,7 @@ import { Functionality, ParsedRequirement } from "./index.js";
  * Generally expressed in the form "system must do <requirement>"
  */
 @Entity()
-class FunctionalBehavior extends Functionality {
+export class FunctionalBehavior extends Functionality {
     constructor({ follows, ...rest }: Omit<FunctionalBehavior, 'id'>) {
         super(rest);
         this.follows = follows;
@@ -19,5 +20,3 @@ class FunctionalBehavior extends Functionality {
     @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
     follows?: ParsedRequirement;
 }
-
-export { FunctionalBehavior };

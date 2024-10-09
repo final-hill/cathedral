@@ -1,12 +1,15 @@
 import { Entity, ManyToOne, Property } from "@mikro-orm/core";
-import { Assumption, Effect, ParsedRequirement, Scenario } from "./index.js";
+import { Assumption } from "./Assumption.js";
+import { Effect } from "./Effect.js";
+import { ParsedRequirement } from "./ParsedRequirement.js";
+import { Scenario } from "./Scenario.js";
 
 /**
  * A Use Case specifies the scenario of a complete
  * interaction of a user through a system.
  */
 @Entity()
-class UseCase extends Scenario {
+export class UseCase extends Scenario {
     constructor(props: Omit<UseCase, 'id'>) {
         super(props);
         this.scope = props.scope;
@@ -88,5 +91,3 @@ class UseCase extends Scenario {
     // TODO: <https://github.com/final-hill/cathedral/issues/154>
     // stakeHoldersAndInterests: string[] // Actor[]
 }
-
-export { UseCase };

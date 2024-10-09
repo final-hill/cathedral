@@ -1,11 +1,12 @@
 import { Entity, ManyToOne } from "@mikro-orm/core";
-import { Component, ParsedRequirement } from "./index.js";
+import { Component } from "./Component.js";
+import { ParsedRequirement } from "./ParsedRequirement.js";
 
 /**
  * Represents a component that is part of an environment.
  */
 @Entity()
-class EnvironmentComponent extends Component {
+export class EnvironmentComponent extends Component {
     constructor({ parentComponent, follows, ...rest }: Omit<EnvironmentComponent, 'id'>) {
         super(rest);
         this.parentComponent = parentComponent;
@@ -24,5 +25,3 @@ class EnvironmentComponent extends Component {
     @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
     follows?: ParsedRequirement;
 }
-
-export { EnvironmentComponent };

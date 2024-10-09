@@ -1,11 +1,13 @@
 import { Entity, Enum, ManyToOne } from '@mikro-orm/core';
-import { Requirement, ConstraintCategory, ParsedRequirement } from './index.js';
+import { Requirement } from './Requirement.js';
+import { ConstraintCategory } from './ConstraintCategory.js';
+import { ParsedRequirement } from './ParsedRequirement.js';
 
 /**
  * A Constraint is a property imposed by the environment
  */
 @Entity()
-class Constraint extends Requirement {
+export class Constraint extends Requirement {
     constructor({ category, follows, ...rest }: Omit<Constraint, 'id'>) {
         super(rest);
         this.category = category;
@@ -24,5 +26,3 @@ class Constraint extends Requirement {
     @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
     follows?: ParsedRequirement;
 }
-
-export { Constraint };

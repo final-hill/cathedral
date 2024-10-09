@@ -24,5 +24,5 @@ export default defineEventHandler(async (event) => {
         description
     })
 
-    await em.flush()
+    await em.persistAndFlush(solution)
 })
