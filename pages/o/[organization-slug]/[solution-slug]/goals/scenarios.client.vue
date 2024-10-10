@@ -119,7 +119,7 @@ const onUserStoryDelete = async (id: string) => {
         functionalBehavior: { type: 'requirement', options: functionalBehaviors ?? [] },
         outcome: { type: 'requirement', options: outcomes ?? [] }
     }" :datasource="userStories" :onCreate="onUserStoryCreate" :onUpdate="onUserStoryUpdate"
-        :onDelete="onUserStoryDelete" :loading="status === 'pending'" :show-history="true"
-        :organizationSlug="organizationslug">
+        :onDelete="onUserStoryDelete" :loading="status === 'pending'" :organizationSlug="organizationslug"
+        entityName="UserStory" :showRecycleBin="true">
     </XDataTable>
 </template>

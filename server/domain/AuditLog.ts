@@ -11,7 +11,7 @@ export class AuditLog {
         this.type = props.type;
         this.entity = props.entity;
         this.entityId = props.entityId;
-        this.solution = props.solution;
+        this.entityName = props.entityName;
     }
 
     /**
@@ -21,16 +21,16 @@ export class AuditLog {
     id: string = uuidv7();
 
     /**
-     * The solution that owns this AuditLog
-     */
-    @ManyToOne({ entity: () => Solution, nullable: false })
-    solution: Solution;
-
-    /**
      * The unique identifier of the entity that was changed
      */
     @Property({ type: 'uuid' })
     entityId: string
+
+    /**
+     * The name of the entity that was changed
+     */
+    @Property({ type: 'string' })
+    entityName: string
 
     /**
      * The type of change that was made

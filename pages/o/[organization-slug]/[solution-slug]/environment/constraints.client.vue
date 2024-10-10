@@ -75,6 +75,7 @@ const onUpdate = async (data: Constraint) => {
         :createModel="{ name: 'text', category: Object.values(ConstraintCategory), statement: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', category: Object.values(ConstraintCategory), statement: 'text' }"
         :datasource="constraints" :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate"
-        :loading="status === 'pending'" :show-history="true" :organizationSlug="organizationslug">
+        :loading="status === 'pending'" :organizationSlug="organizationslug" entityName="Constraint"
+        :showRecycleBin="true">
     </XDataTable>
 </template>

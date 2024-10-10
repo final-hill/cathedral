@@ -95,6 +95,7 @@ const onUpdate = async (data: AppUser) => {
         role: Object.values(AppRole),
         isSystemAdmin: 'boolean'
     }" :datasource="users" :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate"
-        :loading="status === 'pending'" :show-history="true" :organizationSlug="organizationslug">
+        :loading="status === 'pending'" :organizationSlug="organizationslug" entityName="AppUser"
+        :showRecycleBin="false">
     </XDataTable>
 </template>
