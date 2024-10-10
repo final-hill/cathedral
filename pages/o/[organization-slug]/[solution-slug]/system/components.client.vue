@@ -83,6 +83,7 @@ const onDelete = async (id: string) => {
         statement: 'text',
         parentComponent: { type: 'requirement', options: systemComponents ?? [] }
     }" :datasource="systemComponents" :onCreate="onCreate" :onUpdate="onUpdate" :onDelete="onDelete"
-        :loading="status === 'pending'" :show-history="true" :organizationSlug="organizationslug">
+        :loading="status === 'pending'" :organizationSlug="organizationslug" entityName="SystemComponent"
+        :showRecycleBin="true">
     </XDataTable>
 </template>

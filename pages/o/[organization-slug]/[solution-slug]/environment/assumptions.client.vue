@@ -75,7 +75,7 @@ const onUpdate = async (data: Assumption) => {
     </p>
     <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="assumptions" :on-create="onCreate"
-        :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'" :show-history="true"
-        :organizationSlug="organizationslug">
+        :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'" :organizationSlug="organizationslug"
+        entityName="Assumption" :showRecycleBin="true">
     </XDataTable>
 </template>

@@ -1,4 +1,4 @@
-import { type EventSubscriber, type FlushEventArgs } from "@mikro-orm/core";
+import { ChangeSetType, type EventArgs, type EventSubscriber, type FlushEventArgs } from "@mikro-orm/core";
 import { AuditLog } from "../../domain/AuditLog.js";
 
 /**
@@ -17,7 +17,7 @@ export default class AuditSubscriber implements EventSubscriber {
                     const auditLog = new AuditLog({
                         type: changeSet.type,
                         entityId: changeSet.entity.id,
-                        solution: changeSet.entity.solution,
+                        entityName: changeSet.name,
                         entity: JSON.stringify(changeSet.entity)
                     });
 

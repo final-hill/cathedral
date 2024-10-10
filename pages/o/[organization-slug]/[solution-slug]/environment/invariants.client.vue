@@ -72,7 +72,7 @@ const onDelete = async (id: string) => {
 
     <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="invariants" :on-create="onCreate"
-        :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :show-history="true"
-        :organizationSlug="organizationslug">
+        :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationslug"
+        entityName="Invariant" :showRecycleBin="true">
     </XDataTable>
 </template>
