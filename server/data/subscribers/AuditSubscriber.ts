@@ -16,6 +16,8 @@ export default class AuditSubscriber implements EventSubscriber {
                 .map(async (changeSet) => {
                     const auditLog = new AuditLog({
                         type: changeSet.type,
+                        entityId: changeSet.entity.id,
+                        solution: changeSet.entity.solution,
                         entity: JSON.stringify(changeSet.entity)
                     });
 

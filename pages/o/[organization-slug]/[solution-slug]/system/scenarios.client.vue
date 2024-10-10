@@ -188,7 +188,8 @@ const onUseCaseDelete = async (id: string) => {
                 outcome: { type: 'requirement', options: outcomes ?? [] },
                 priority: Object.values(MoscowPriority)
             }" :datasource="userStories" :onCreate="onUserStoryCreate" :onUpdate="onUserStoryUpdate"
-                :onDelete="onUserStoryDelete" :loading="userStoryStatus === 'pending'">
+                :onDelete="onUserStoryDelete" :loading="userStoryStatus === 'pending'" :show-history="true"
+                :organizationSlug="organizationslug">
             </XDataTable>
         </TabPanel>
         <TabPanel header="Use Cases">
@@ -234,7 +235,8 @@ const onUseCaseDelete = async (id: string) => {
                 successGuarantee: { type: 'requirement', options: effects ?? [] },
                 extensions: 'text'
             }" :datasource="useCases!" :onCreate="onUseCaseCreate" :onUpdate="onUseCaseUpdate"
-                :onDelete="onUseCaseDelete" :loading="useCaseStatus === 'pending'">
+                :onDelete="onUseCaseDelete" :loading="useCaseStatus === 'pending'" :show-history="true"
+                :organizationSlug="organizationslug">
             </XDataTable>
         </TabPanel>
     </TabView>

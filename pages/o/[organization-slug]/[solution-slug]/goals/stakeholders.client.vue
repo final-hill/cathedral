@@ -139,7 +139,7 @@ const onDelete = async (id: string) => {
                 category: Object.values(StakeholderCategory),
                 segmentation: Object.values(StakeholderSegmentation)
             }" :datasource="stakeholders" :on-create="onCreate" :on-update="onUpdate" :on-delete="onDelete"
-                :loading="status === 'pending'">
+                :loading="status === 'pending'" :show-history="true" :organizationSlug="organizationslug">
             </XDataTable>
         </TabPanel>
         <TabPanel header="Stakeholder Map">

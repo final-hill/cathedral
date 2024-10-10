@@ -105,7 +105,7 @@ const componentSortField = ref<string | undefined>('name')
     <pre> { This section is disabled temporarily. } </pre>
     <!--
     <XDataTable :datasource="components" :sortField="componentSortField" :sortOrder="1"
-        v-model:expandedRows="expandedRows">
+        v-model:expandedRows="expandedRows" :show-history="true" :organizationId="organization.id">
         <template #rows>
             <Column expander />
             <Column field="name" header="Name" sortable>
