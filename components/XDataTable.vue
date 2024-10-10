@@ -3,6 +3,7 @@ import type Dialog from 'primevue/dialog'
 import type DataTable from 'primevue/datatable'
 import { FilterMatchMode } from 'primevue/api';
 import camelCaseToTitle from '~/utils/camelCaseToTitle.js';
+import { AuditLog } from '~/server/domain';
 
 export type ViewFieldType = 'text' | 'textarea' | 'number' | 'date' | 'boolean' | 'hidden' | 'object'
 
@@ -15,6 +16,8 @@ const props = defineProps<{
     createModel: { [K in keyof RowType]?: FormFieldType },
     editModel: { [K in keyof RowType]?: FormFieldType },
     loading: boolean,
+    showHistory: boolean,
+    organizationSlug: string,
     onCreate: (data: RowType) => Promise<void>,
     onDelete: (id: string) => Promise<void>,
     onUpdate: (data: RowType) => Promise<void>
@@ -35,7 +38,12 @@ const dataTable = ref<DataTable>(),
     createDialogItem = ref<RowType>(Object.create(null)),
     editDialog = ref<Dialog>(),
     editDialogVisible = ref(false),
-    editDialogItem = ref<RowType>(Object.create(null))
+    editDialogItem = ref<RowType>(Object.create(null)),
+    historyDialog = ref<Dialog>(),
+    historyDialogVisible = ref(false),
+    historyItems = ref<{ date: string, entity: Record<string, any> }[]>([]),
+    selectedHistoryItem = ref<{ date: string, entity: Record<string, any> }>({ date: '', entity: {} }),
+    historyDialogLoading = ref(false)
 
 const filters = ref<Record<string, { value: any, matchMode: string }>>({
     'global': { value: null, matchMode: FilterMatchMode.CONTAINS }
@@ -47,6 +55,34 @@ const openEditDialog = (item: RowType) => {
     const firstInput = document.querySelector('#editDialogForm [name]:not([type="hidden"])') as HTMLInputElement
     if (firstInput) firstInput.focus()
     editDialogItem.value = { ...item }
+}
+
+const openHistoryDialog = async (item: RowType) => {
+    historyDialogLoading.value = true
+    historyDialogVisible.value = true
+    const auditLog = await $fetch<AuditLog[]>(`/api/audit-log`, {
+        method: 'GET',
+        query: {
+            entityId: item.id,
+            organizationSlug: props.organizationSlug
+        }
+    })
+
+    historyItems.value = [
+        { date: 'Current', entity: item },
+        ...auditLog.map(log => ({
+            date: new Date(log.createdAt).toLocaleString(),
+            entity: JSON.parse(log.entity)
+        }))
+    ]
+
+    selectedHistoryItem.value = historyItems.value[0]
+    historyDialogLoading.value = false
+}
+
+const onHistoryChange = (e: Event) => {
+    const select = e.target as HTMLSelectElement
+    selectedHistoryItem.value = historyItems.value[select.selectedIndex]
 }
 
 const onDelete = (item: RowType) => new Promise<void>((resolve, _reject) => {
@@ -151,8 +187,10 @@ const onEditDialogCancel = () => {
             </Column>
             <Column frozen align-frozen="right">
                 <template #body="{ data }">
-                    <Button icon="pi pi-pencil" text rounded @click="openEditDialog(data)" />
-                    <Button icon="pi pi-trash" text rounded severity="danger" @click="onDelete(data)" />
+                    <Button icon="pi pi-pencil" text rounded @click="openEditDialog(data)" title="Edit" />
+                    <Button v-if="props.showHistory" icon="pi pi-clock" text rounded @click="openHistoryDialog(data)"
+                        title="History" />
+                    <Button icon="pi pi-trash" text rounded severity="danger" @click="onDelete(data)" title="Delete" />
                 </template>
             </Column>
             <template #empty>No data found</template>
@@ -262,4 +300,39 @@ const onEditDialogCancel = () => {
             <Button label="Cancel" type="reset" form="editDialogForm" icon="pi pi-times" class="p-button-text" />
         </template>
     </Dialog>
+
+    <Dialog ref="historyDialog" v-model:visible="historyDialogVisible" :modal="true" class="p-fluid">
+        <template #header>
+            <div class="flex flex-row gap-5 w-full">
+                <span class="flex align-items-center justify-content-center">History</span>
+                <select class="p-component p-inputtext flex align-items-center justify-content-center w-14rem"
+                    @change="onHistoryChange">
+                    <option v-for="item in historyItems" :key="item.date">{{ item.date }}</option>
+                </select>
+                <ProgressSpinner v-if="historyDialogLoading"
+                    class="flex align-items-center justify-content-center w-2rem" style="width: 50px; height: 50px" />
+            </div>
+        </template>
+        <section>
+            <div class="field grid" v-for="key of Object.keys(selectedHistoryItem.entity)" :key="key">
+                <label :for="key" class="col-4">{{ camelCaseToTitle(key) }}:</label>
+                <span class="col-8" v-if="selectedHistoryItem.entity[key] instanceof Date">
+                    {{ selectedHistoryItem.entity[key].toLocaleString() }}
+                </span>
+                <span class="col-8" v-else-if="typeof selectedHistoryItem.entity[key] === 'object'">
+                    {{ selectedHistoryItem.entity[key]?.name ?? JSON.stringify(selectedHistoryItem.entity[key]) }}
+                </span>
+                <span class="col-8" v-else>{{ selectedHistoryItem.entity[key] }}</span>
+            </div>
+        </section>
+        <template #footer>
+            <Button label="Close" icon="pi pi-times" class="p-button-text" @click="historyDialogVisible = false" />
+        </template>
+    </Dialog>
 </template>
+
+<style scoped>
+select {
+    appearance: auto;
+}
+</style>

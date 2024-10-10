@@ -68,6 +68,7 @@ const onUpdate = async (data: EnvironmentComponent) => {
     </p>
     <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="environmentComponents"
-        :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'">
+        :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'"
+        :show-history="true" :organizationSlug="organizationslug">
     </XDataTable>
 </template>
