@@ -21,7 +21,7 @@ const config = useAppConfig(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: stakeholders, refresh, status, error: getStakeholdersError } = await useFetch<Stakeholder[]>(`/api/stakeholders`, {
+const { data: stakeholders, refresh: refreshStakeholders, status, error: getStakeholdersError } = await useFetch<Stakeholder[]>(`/api/stakeholders`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -31,20 +31,6 @@ const { data: stakeholders, refresh, status, error: getStakeholdersError } = awa
 
 if (getStakeholdersError.value)
     $eventBus.$emit('page-error', getStakeholdersError.value);
-
-// watch the stakeholders and re-render the chart
-watch(stakeholders, async () => {
-    const groupStakeholders = Object.groupBy(stakeholders.value!, ({ segmentation }) => segmentation ?? 'unknown'),
-        clientGroup = groupStakeholders.Client ?? [],
-        vendorGroup = groupStakeholders.Vendor ?? [];
-
-    clientMap.value!.textContent = chartDefinition(clientGroup, StakeholderSegmentation.CLIENT)
-    vendorMap.value!.textContent = chartDefinition(vendorGroup, StakeholderSegmentation.VENDOR)
-
-    await mermaid.run({
-        nodes: [clientMap.value!, vendorMap.value!]
-    })
-});
 
 enum themeMap {
     light = 'default',
@@ -73,6 +59,21 @@ const chartDefinition = (stakeholders: Stakeholder[], category: StakeholderSegme
 const clientMap = ref<HTMLElement>(),
     vendorMap = ref<HTMLElement>();
 
+const renderChart = async () => {
+    const groupStakeholders = Object.groupBy(stakeholders.value!, ({ segmentation }) => segmentation ?? 'unknown'),
+        clientGroup = groupStakeholders.Client ?? [],
+        vendorGroup = groupStakeholders.Vendor ?? [];
+
+    clientMap.value!.textContent = chartDefinition(clientGroup, StakeholderSegmentation.CLIENT)
+    vendorMap.value!.textContent = chartDefinition(vendorGroup, StakeholderSegmentation.VENDOR)
+
+    await mermaid.run({
+        nodes: [clientMap.value!, vendorMap.value!]
+    })
+}
+
+watch(stakeholders, renderChart);
+
 const onCreate = async (data: Stakeholder) => {
     await $fetch(`/api/stakeholders`, {
         method: 'POST',
@@ -82,7 +83,7 @@ const onCreate = async (data: Stakeholder) => {
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
-    refresh()
+    refreshStakeholders()
 }
 
 const onUpdate = async (data: Stakeholder) => {
@@ -94,7 +95,7 @@ const onUpdate = async (data: Stakeholder) => {
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
-    refresh()
+    refreshStakeholders()
 }
 
 const onDelete = async (id: string) => {
@@ -103,7 +104,7 @@ const onDelete = async (id: string) => {
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
-    refresh()
+    refreshStakeholders()
 }
 </script>
 
@@ -114,7 +115,7 @@ const onDelete = async (id: string) => {
         groups or roles. Example: instead of "Jane Doe", use "Project Manager".
     </p>
 
-    <TabView>
+    <TabView @tab-change="(e) => refreshStakeholders()">
         <TabPanel header="Stakeholders">
             <XDataTable :viewModel="{
                 name: 'text',
