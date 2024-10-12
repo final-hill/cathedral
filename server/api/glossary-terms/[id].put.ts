@@ -8,8 +8,8 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string().default("{Untitled Glossary Term}"),
-    statement: z.string().default(""),
+    name: z.string().optional(),
+    statement: z.string().optional(),
     isSilence: z.boolean().optional()
 })
 
@@ -30,13 +30,13 @@ export default defineEventHandler(async (event) => {
         })
 
     Object.assign(glossaryTerm, {
-        name,
-        statement,
+        name: name ?? glossaryTerm.name,
+        statement: statement ?? glossaryTerm.statement,
+        isSilence: isSilence ?? glossaryTerm.isSilence,
         // TODO: future use as part of Topic Maps?
         parentComponent: undefined,
         modifiedBy: sessionUser,
-        lastModified: new Date(),
-        ...(isSilence !== undefined && { isSilence })
+        lastModified: new Date()
     })
 
     await em.persistAndFlush(glossaryTerm)

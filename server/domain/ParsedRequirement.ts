@@ -7,6 +7,12 @@ import {
     Stakeholder, SystemComponent, UseCase, UserStory
 } from './index.js';
 
+export type ParsedReqColType = 'assumptions' | 'constraints' |
+    'effects' | 'environmentComponents' | 'functionalBehaviors' |
+    'glossaryTerms' | 'invariants' | 'justifications' | 'limits' |
+    'nonFunctionalBehaviors' | 'obstacles' | 'outcomes' | 'persons' |
+    'stakeholders' | 'systemComponents' | 'useCases' | 'userStories'
+
 /**
  * A requirement that has been parsed from natural language text
  */

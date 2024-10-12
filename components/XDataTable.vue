@@ -24,12 +24,6 @@ const props = defineProps<{
     onUpdate: (data: RowType) => Promise<void>
 }>()
 
-const slots = defineSlots<{
-    rows: { data: RowType }[],
-    createDialog: { data: RowType },
-    editDialog: { data: RowType }
-}>()
-
 const dataTable = ref<DataTable>(),
     createDisabled = ref(false),
     sortField = ref<string | undefined>('name'),

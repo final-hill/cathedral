@@ -8,8 +8,8 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string().default("{Untitled Environment Component}"),
-    statement: z.string().default(""),
+    name: z.string().optional(),
+    statement: z.string().optional(),
     parentComponentId: z.string().uuid().optional(),
     isSilence: z.boolean().optional()
 })
@@ -34,11 +34,11 @@ export default defineEventHandler(async (event) => {
         environmentComponent.parentComponent = em.getReference(EnvironmentComponent, parentComponentId)
 
     Object.assign(environmentComponent, {
-        name,
-        statement,
+        name: name ?? environmentComponent.name,
+        statement: statement ?? environmentComponent.statement,
+        isSilence: isSilence ?? environmentComponent.isSilence,
         modifiedBy: sessionUser,
         lastModified: new Date(),
-        ...(isSilence !== undefined && { isSilence })
     })
 
     await em.persistAndFlush(environmentComponent)

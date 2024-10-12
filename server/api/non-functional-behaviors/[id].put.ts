@@ -8,8 +8,8 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string().default("{Untitled Non-Functional Behavior}"),
-    statement: z.string().default(""),
+    name: z.string().optional(),
+    statement: z.string().optional(),
     priority: z.nativeEnum(MoscowPriority).optional(),
     isSilence: z.boolean().optional()
 })
@@ -31,12 +31,12 @@ export default defineEventHandler(async (event) => {
         })
 
     Object.assign(nonFunctionalBehavior, {
-        name,
-        statement,
-        priority,
+        name: name ?? nonFunctionalBehavior.name,
+        statement: statement ?? nonFunctionalBehavior.statement,
+        priority: priority ?? nonFunctionalBehavior.priority,
+        isSilence: isSilence ?? nonFunctionalBehavior.isSilence,
         modifiedBy: sessionUser,
         lastModified: new Date(),
-        ...(isSilence !== undefined && { isSilence })
     })
 
     await em.persistAndFlush(nonFunctionalBehavior)

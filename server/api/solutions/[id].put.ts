@@ -6,8 +6,8 @@ const paramSchema = z.object({
 })
 
 const bodySchema = z.object({
-    name: z.string().min(1).max(100),
-    description: z.string()
+    name: z.string().min(1).max(100).optional(),
+    description: z.string().optional()
 })
 
 /**
@@ -20,8 +20,8 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     Object.assign(solution, {
-        name,
-        description
+        name: name ?? solution.name,
+        description: description ?? solution.description
     })
 
     await em.persistAndFlush(solution)

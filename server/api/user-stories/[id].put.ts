@@ -8,8 +8,8 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string().default("{Untitled User Story}"),
-    statement: z.string().default(""),
+    name: z.string().optional(),
+    statement: z.string().optional(),
     primaryActorId: z.string().uuid().optional(),
     priority: z.nativeEnum(MoscowPriority).optional(),
     outcomeId: z.string().uuid().optional(),
@@ -41,12 +41,12 @@ export default defineEventHandler(async (event) => {
         userStory.functionalBehavior = em.getReference(FunctionalBehavior, body.functionalBehaviorId)
 
     Object.assign(userStory, {
-        name: body.name,
-        statement: body.statement,
-        priority: body.priority,
+        name: body.name ?? userStory.name,
+        statement: body.statement ?? userStory.statement,
+        priority: body.priority ?? userStory.priority,
+        isSilence: body.isSilence ?? userStory.isSilence,
         modifiedBy: sessionUser,
-        lastModified: new Date(),
-        ...(body.isSilence !== undefined && { isSilence: body.isSilence })
+        lastModified: new Date()
     })
 
     await em.persistAndFlush(userStory)
