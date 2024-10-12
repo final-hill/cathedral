@@ -8,8 +8,8 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string().default("{Untitled Person}"),
-    statement: z.string().default(""),
+    name: z.string().optional(),
+    statement: z.string().optional(),
     email: z.string().email().optional(),
     isSilence: z.boolean().optional()
 })
@@ -31,12 +31,12 @@ export default defineEventHandler(async (event) => {
         })
 
     Object.assign(person, {
-        name,
-        statement,
+        name: name ?? person.name,
+        statement: statement ?? person.statement,
+        email: email ?? person.email,
+        isSilence: isSilence ?? person.isSilence,
         modifiedBy: sessionUser,
-        lastModified: new Date(),
-        email,
-        ...(isSilence !== undefined && { isSilence })
+        lastModified: new Date()
     })
 
     await em.persistAndFlush(person)

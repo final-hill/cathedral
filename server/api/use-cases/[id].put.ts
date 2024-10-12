@@ -8,18 +8,18 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string().default("{Untitled Use Case}"),
-    statement: z.string().default(""),
+    name: z.string().optional(),
+    statement: z.string().optional(),
     primaryActorId: z.string().uuid().optional(),
     priority: z.nativeEnum(MoscowPriority).optional(),
-    scope: z.string().default(""),
-    level: z.string().default(""),
-    goalInContext: z.string().default(""),
+    scope: z.string().optional(),
+    level: z.string().optional(),
+    goalInContext: z.string().optional(),
     preconditionId: z.string().uuid().optional(),
     triggerId: z.string().uuid().optional(),
-    mainSuccessScenario: z.string().default(""),
+    mainSuccessScenario: z.string().optional(),
     successGuaranteeId: z.string().uuid().optional(),
-    extensions: z.string().default(""),
+    extensions: z.string().optional(),
     isSilence: z.boolean().optional()
 })
 
@@ -47,18 +47,18 @@ export default defineEventHandler(async (event) => {
         useCase.successGuarantee = em.getReference(Effect, body.successGuaranteeId)
 
     Object.assign(useCase, {
-        name: body.name,
-        statement: body.statement,
-        priority: body.priority,
-        scope: body.scope,
-        level: body.level,
-        goalInContext: body.goalInContext,
-        triggerId: body.triggerId,
-        mainSuccessScenario: body.mainSuccessScenario,
-        extensions: body.extensions,
+        name: body.name ?? useCase.name,
+        statement: body.statement ?? useCase.statement,
+        priority: body.priority ?? useCase.priority,
+        scope: body.scope ?? useCase.scope,
+        level: body.level ?? useCase.level,
+        goalInContext: body.goalInContext ?? useCase.goalInContext,
+        triggerId: body.triggerId ?? useCase.triggerId,
+        mainSuccessScenario: body.mainSuccessScenario ?? useCase.mainSuccessScenario,
+        extensions: body.extensions ?? useCase.extensions,
+        isSilence: body.isSilence ?? useCase.isSilence,
         modifiedBy: sessionUser,
-        lastModified: new Date(),
-        ...(body.isSilence !== undefined && { isSilence: body.isSilence })
+        lastModified: new Date()
     })
 
     await em.persistAndFlush(useCase)

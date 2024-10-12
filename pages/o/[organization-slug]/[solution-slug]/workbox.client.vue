@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-import type { ParsedRequirement } from '~/server/domain/index.js';
+import type { ParsedRequirement, Requirement, ParsedReqColType } from '~/server/domain/index.js';
 
 useHead({ title: 'Workbox' });
 definePageMeta({ name: 'Workbox' });
 
 const { $eventBus } = useNuxtApp(),
+    router = useRouter(),
     { solutionslug, organizationslug } = useRoute('Workbox').params,
     { data: solutions, error: solutionError } = await useFetch('/api/solutions', {
         query: {
@@ -14,16 +15,14 @@ const { $eventBus } = useNuxtApp(),
     }),
     solution = solutions.value![0];
 
-const { data: parsedRequirements, error: parsedRequirementsError } = await useFetch<ParsedRequirement[]>('/api/parse-requirements', {
+const { data: parsedRequirements, error: parsedRequirementsError, refresh } = await useFetch<ParsedRequirement[]>('/api/parse-requirements', {
     method: 'get',
-    query: { solutionId: solution.id }
+    query: { solutionId: solution.id },
+    transform: (data: ParsedRequirement[]) => data.map((parsedRequirement) => {
+        parsedRequirement.lastModified = new Date(parsedRequirement.lastModified)
+        return parsedRequirement;
+    })
 });
-
-// counts the number of requirements in the meta requirement
-const countRequirements = (parsedRequirement: ParsedRequirement) =>
-    Object.values(parsedRequirement)
-        .filter(Array.isArray)
-        .reduce((acc, val) => acc + val.length, 0);
 
 if (solutionError.value)
     $eventBus.$emit('page-error', solutionError.value);
@@ -31,12 +30,32 @@ if (solutionError.value)
 if (parsedRequirementsError.value)
     $eventBus.$emit('page-error', parsedRequirementsError.value);
 
-const onApprove = async (parentId: string, itemId: string) => {
-    alert('Approve: Not implemented yet')
+const renderParsedRequirements = ref(true);
+
+const onItemApprove = async (type: ParsedReqColType, itemId: string) => {
+    await $fetch(`/api/${camelCaseToSlug(type)}/${itemId}`, {
+        // @ts-ignore: method not recognized
+        method: 'put',
+        body: { solutionId: solution.id, isSilence: false }
+    });
+    renderParsedRequirements.value = false;
+    await refresh();
+    renderParsedRequirements.value = true;
 }
 
-const onReject = async (parentId: string, itemId: string) => {
-    alert('Reject: Not implemented yet')
+const onItemDelete = async (type: ParsedReqColType, itemId: string) => {
+    await $fetch(`/api/${camelCaseToSlug(type)}/${itemId}`, {
+        // @ts-ignore: method not recognized
+        method: 'delete',
+        body: { solutionId: solution.id }
+    });
+    renderParsedRequirements.value = false;
+    await refresh();
+    renderParsedRequirements.value = true;
+}
+
+const onItemUpdate = async (type: ParsedReqColType, data: Requirement) => {
+    alert(`UPDATE ${type} not implemented`)
 }
 </script>
 
@@ -46,21 +65,19 @@ const onReject = async (parentId: string, itemId: string) => {
         <InlineMessage v-if="!parsedRequirements?.length" severity="info">
             The Workbox is empty.
         </InlineMessage>
-        <Accordion v-if="parsedRequirements">
+        <Accordion v-if="renderParsedRequirements">
             <AccordionTab v-for="parsedRequirement in parsedRequirements" :key="parsedRequirement.id">
                 <template #header>
-                    <span class="flex align-items-center gap-2 w-full">
-                        <InlineMessage severity="secondary">{{ parsedRequirement.lastModified }}</InlineMessage>
-                        by
-                        <span class="font-bold white-space-nowrap">{{ parsedRequirement.modifiedBy.name }}</span>
-                        <Badge :value="countRequirements(parsedRequirement)" class="ml-auto mr-2" />
-                        <!-- <Button icon="pi pi-refresh" rounded raised /> -->
-                    </span>
+                    <div class="grid w-11">
+                        <InlineMessage class="col-fixed" severity="secondary">{{
+                            parsedRequirement.lastModified.toLocaleString() }}
+                        </InlineMessage>
+                        <span class="col-fixed font-bold">by {{ parsedRequirement.modifiedBy.name }}</span>
+                        <span class="col font-italic">{{ parsedRequirement.statement }}</span>
+                    </div>
                 </template>
-                <h2>Statement</h2>
-                <p class="font-italic">{{ parsedRequirement.statement }}</p>
-
-                <WorkboxDataView :parsedRequirement="parsedRequirement" :on-reject="onReject" :on-approve="onApprove" />
+                <WorkboxDataView :parsedRequirement="parsedRequirement" :on-item-delete="onItemDelete"
+                    :on-item-approve="onItemApprove" :on-item-update="onItemUpdate" />
             </AccordionTab>
         </Accordion>
     </div>

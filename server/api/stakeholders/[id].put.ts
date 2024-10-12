@@ -8,11 +8,11 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string().default("{Untitled Stakeholder}"),
-    statement: z.string().default(""),
+    name: z.string().optional(),
+    statement: z.string().optional(),
     parentComponentId: z.string().uuid().optional(),
-    availability: z.number().min(0).max(100).default(50),
-    influence: z.number().min(0).max(100).default(50),
+    availability: z.number().min(0).max(100).optional(),
+    influence: z.number().min(0).max(100).optional(),
     segmentation: z.nativeEnum(StakeholderSegmentation).optional(),
     category: z.nativeEnum(StakeholderCategory).optional(),
     isSilence: z.boolean().optional()
@@ -39,15 +39,15 @@ export default defineEventHandler(async (event) => {
         stakeholder.parentComponent = em.getReference(Stakeholder, parentComponentId)
 
     Object.assign(stakeholder, {
-        name,
-        statement,
-        availability,
-        influence,
-        segmentation,
-        category,
+        name: name ?? stakeholder.name,
+        statement: statement ?? stakeholder.statement,
+        availability: availability ?? stakeholder.availability,
+        influence: influence ?? stakeholder.influence,
+        segmentation: segmentation ?? stakeholder.segmentation,
+        category: category ?? stakeholder.category,
+        isSilence: isSilence ?? stakeholder.isSilence,
         modifiedBy: sessionUser,
-        lastModified: new Date(),
-        ...(isSilence !== undefined && { isSilence })
+        lastModified: new Date()
     })
 
     await em.persistAndFlush(stakeholder)

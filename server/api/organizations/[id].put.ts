@@ -7,8 +7,8 @@ const paramSchema = z.object({
 })
 
 const bodySchema = z.object({
-    name: z.string().default("{Untitled Organization}"),
-    description: z.string().default("")
+    name: z.string().optional(),
+    description: z.string().optional()
 })
 
 /**
@@ -21,9 +21,9 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     Object.assign(organization, {
-        name,
-        description,
-        slug: slugify(name)
+        name: name ?? organization.name,
+        description: description ?? organization.description,
+        slug: name ? slugify(name) : organization.slug
     })
 
     await em.persistAndFlush(organization)

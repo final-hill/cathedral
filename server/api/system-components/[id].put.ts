@@ -8,8 +8,8 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string().default("{Untitled Component}"),
-    statement: z.string().default(""),
+    name: z.string().optional(),
+    statement: z.string().optional(),
     parentComponentId: z.string().uuid().optional(),
     isSilence: z.boolean().optional()
 })
@@ -34,11 +34,11 @@ export default defineEventHandler(async (event) => {
         systemComponent.parentComponent = em.getReference(SystemComponent, parentComponentId)
 
     Object.assign(systemComponent, {
-        name,
-        statement,
+        name: name ?? systemComponent.name,
+        statement: statement ?? systemComponent.statement,
+        isSilence: isSilence ?? systemComponent.isSilence,
         modifiedBy: sessionUser,
-        lastModified: new Date(),
-        ...(isSilence !== undefined && { isSilence })
+        lastModified: new Date()
     })
 
     await em.persistAndFlush(systemComponent)

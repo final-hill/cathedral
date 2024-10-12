@@ -8,8 +8,8 @@ const paramSchema = z.object({
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string().default("{Untitled Constraint}"),
-    statement: z.string().default(""),
+    name: z.string().optional(),
+    statement: z.string().optional(),
     category: z.nativeEnum(ConstraintCategory).optional(),
     isSilence: z.boolean().optional()
 })
@@ -31,12 +31,12 @@ export default defineEventHandler(async (event) => {
         })
 
     Object.assign(constraint, {
-        name,
-        statement,
-        category,
+        name: name ?? constraint.name,
+        statement: statement ?? constraint.statement,
+        category: category ?? constraint.category,
+        isSilence: isSilence ?? constraint.isSilence,
         modifiedBy: sessionUser,
-        lastModified: new Date(),
-        ...(isSilence !== undefined && { isSilence })
+        lastModified: new Date()
     })
 
     await em.persistAndFlush(constraint)
