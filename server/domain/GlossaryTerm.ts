@@ -16,12 +16,12 @@ export class GlossaryTerm extends Component {
     /**
      * The parent term of the glossary term, if any.
      */
-    @ManyToOne({ entity: () => GlossaryTerm, nullable: true })
+    @ManyToOne({ entity: () => GlossaryTerm })
     parentComponent?: GlossaryTerm;
 
     /**
      * Requirement that this glossary term follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement;
 }

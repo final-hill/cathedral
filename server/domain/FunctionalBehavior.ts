@@ -17,6 +17,6 @@ export class FunctionalBehavior extends Functionality {
     /**
      * Requirement that this functional behavior follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement;
 }

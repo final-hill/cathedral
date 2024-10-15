@@ -25,18 +25,18 @@ export class UserStory extends Scenario {
     /**
      * Requirement that this user story follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement;
 
     /**
      * The action that the user wants to perform.
      */
-    @ManyToOne({ entity: () => FunctionalBehavior, nullable: true })
+    @ManyToOne({ entity: () => FunctionalBehavior })
     functionalBehavior?: FunctionalBehavior;
 
     /**
      * The outcome that the story is aiming to achieve.
      */
-    @ManyToOne({ entity: () => Outcome, nullable: true })
+    @ManyToOne({ entity: () => Outcome })
     outcome?: Outcome;
 }

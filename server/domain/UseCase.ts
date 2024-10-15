@@ -27,40 +27,40 @@ export class UseCase extends Scenario {
     /**
      * Requirement that this use case follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement;
 
     /**
      * The scope of the use case.
      */
     // TODO: <https://github.com/final-hill/cathedral/issues/154>
-    @Property({ type: 'string', nullable: false })
+    @Property({ type: 'string' })
     scope: string;
 
     /**
      * The level of the use case.
      */
     // TODO: <https://github.com/final-hill/cathedral/issues/154>
-    @Property({ type: 'string', nullable: false })
+    @Property({ type: 'string' })
     level: string;
 
     /**
      * The goal in context of the use case.
      */
     // TODO: is this just the Goal.description?
-    @Property({ type: 'string', nullable: false })
+    @Property({ type: 'string' })
     goalInContext: string;
 
     /**
      * The precondition is an Assumption that must be true before the use case can start.
      */
-    @ManyToOne({ entity: () => Assumption, nullable: true })
+    @ManyToOne({ entity: () => Assumption })
     precondition?: Assumption;
 
     /**
      * The action upon the system that starts the use case.
      */
-    @Property({ type: 'uuid', nullable: true })
+    @Property({ type: 'uuid' })
     triggerId?: string;
 
     /**
@@ -72,20 +72,20 @@ export class UseCase extends Scenario {
      * ...
      */
     //mainSuccessScenario: [FunctionalRequirement | Constraint | Role | Responsibility][]
-    @Property({ type: 'string', nullable: false })
+    @Property({ type: 'string' })
     mainSuccessScenario: string
 
     /**
      * An Effect that is guaranteed to be true after the use case is completed.
      */
-    @ManyToOne({ entity: () => Effect, nullable: true })
+    @ManyToOne({ entity: () => Effect })
     successGuarantee?: Effect;
 
     /**
      * Extensions of the use case.
      */
     // extensions: [FunctionalRequirement | Constraint | Role | Responsibility][]
-    @Property({ type: 'string', nullable: false })
+    @Property({ type: 'string' })
     extensions: string
 
     // TODO: <https://github.com/final-hill/cathedral/issues/154>

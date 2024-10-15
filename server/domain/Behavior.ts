@@ -15,6 +15,6 @@ export abstract class Behavior extends Requirement {
     /**
      * The priority of the behavior.
      */
-    @Enum({ items: () => MoscowPriority, nullable: false })
+    @Enum({ items: () => MoscowPriority })
     priority: MoscowPriority;
 }

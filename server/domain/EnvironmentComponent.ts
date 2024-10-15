@@ -16,12 +16,12 @@ export class EnvironmentComponent extends Component {
     /**
      * The parent component of the current environment component if any
      */
-    @ManyToOne({ entity: () => EnvironmentComponent, nullable: true })
+    @ManyToOne({ entity: () => EnvironmentComponent })
     parentComponent?: EnvironmentComponent;
 
     /**
      * Requirement that this environment component follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement;
 }

@@ -1,6 +1,5 @@
 import { v7 as uuidv7 } from 'uuid';
-import { ChangeSetType, Entity, Enum, ManyToOne, Property } from "@mikro-orm/core";
-import { Solution } from './Solution.js';
+import { ChangeSetType, Entity, Enum, Property } from "@mikro-orm/core";
 
 /**
  * The AuditLog class is responsible for tracking changes to entities in the database.
@@ -41,7 +40,7 @@ export class AuditLog {
     /**
      * The entity that was changed
      */
-    @Property({ type: 'json', nullable: true })
+    @Property({ type: 'json' })
     entity: string
 
     /**

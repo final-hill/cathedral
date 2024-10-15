@@ -23,36 +23,36 @@ export class Stakeholder extends Component {
     /**
      * Requirement that this stakeholder follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement;
 
     /**
      * The parent component of the stakeholder, if any.
      */
-    @ManyToOne({ entity: () => Stakeholder, nullable: true })
+    @ManyToOne({ entity: () => Stakeholder })
     parentComponent?: Stakeholder;
 
     /**
      * The segmentation of the stakeholder.
      */
-    @Enum({ items: () => StakeholderSegmentation, nullable: true })
+    @Enum({ items: () => StakeholderSegmentation })
     segmentation?: StakeholderSegmentation;
 
     /**
      * The category of the stakeholder.
      */
-    @Enum({ items: () => StakeholderCategory, nullable: true })
+    @Enum({ items: () => StakeholderCategory })
     category?: StakeholderCategory;
 
     /**
      * The availability of the stakeholder.
      */
-    @Property({ type: 'number', nullable: false, check: 'availability >= 0 AND availability <= 100' })
+    @Property({ type: 'number', check: 'availability >= 0 AND availability <= 100' })
     availability: number;
 
     /**
      * The influence of the stakeholder.
      */
-    @Property({ type: 'number', nullable: false, check: 'influence >= 0 AND influence <= 100' })
+    @Property({ type: 'number', check: 'influence >= 0 AND influence <= 100' })
     influence: number;
 }

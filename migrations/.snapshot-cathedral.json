@@ -135,7 +135,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": true,
+          "nullable": false,
           "mappedType": "json"
         },
         "created_at": {
@@ -479,581 +479,68 @@
           "nullable": false,
           "default": "false",
           "mappedType": "boolean"
-        }
-      },
-      "name": "silence",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "silence_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "silence_solution_id_foreign": {
-          "constraintName": "silence_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.silence",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
         },
-        "silence_modified_by_id_foreign": {
-          "constraintName": "silence_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
+        "req_type": {
+          "name": "req_type",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "enumItems": [
+            "assumption",
+            "constraint",
+            "effect",
+            "environment_component",
+            "functional_behavior",
+            "glossary_term",
+            "hint",
+            "invariant",
+            "justification",
+            "limit",
+            "meta_requirement",
+            "noise",
+            "non_functional_behavior",
+            "obstacle",
+            "outcome",
+            "parsed_requirement",
+            "person",
+            "product",
+            "responsibility",
+            "role",
+            "silence",
+            "stakeholder",
+            "system_component",
+            "task",
+            "test_case",
+            "use_case",
+            "user_story"
           ],
-          "localTableName": "public.silence",
-          "referencedColumnNames": [
-            "id"
+          "mappedType": "enum"
+        },
+        "priority": {
+          "name": "priority",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "enumItems": [
+            "MUST",
+            "SHOULD",
+            "COULD",
+            "WONT"
           ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
+          "mappedType": "enum"
+        },
+        "parent_component_id": {
+          "name": "parent_component_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        }
-      },
-      "name": "role",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "role_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "role_solution_id_foreign": {
-          "constraintName": "role_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.role",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "role_modified_by_id_foreign": {
-          "constraintName": "role_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.role",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        }
-      },
-      "name": "responsibility",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "responsibility_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "responsibility_solution_id_foreign": {
-          "constraintName": "responsibility_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.responsibility",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "responsibility_modified_by_id_foreign": {
-          "constraintName": "responsibility_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.responsibility",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        }
-      },
-      "name": "product",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "product_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "product_solution_id_foreign": {
-          "constraintName": "product_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.product",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "product_modified_by_id_foreign": {
-          "constraintName": "product_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.product",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        }
-      },
-      "name": "parsed_requirement",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "parsed_requirement_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "parsed_requirement_solution_id_foreign": {
-          "constraintName": "parsed_requirement_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.parsed_requirement",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "parsed_requirement_modified_by_id_foreign": {
-          "constraintName": "parsed_requirement_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.parsed_requirement",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
         },
         "email": {
           "name": "email",
@@ -1065,2116 +552,8 @@
           "length": 254,
           "mappedType": "string"
         },
-        "follows_id": {
-          "name": "follows_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "person",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "person_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "person_solution_id_foreign": {
-          "constraintName": "person_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.person",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "person_modified_by_id_foreign": {
-          "constraintName": "person_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.person",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "person_follows_id_foreign": {
-          "constraintName": "person_follows_id_foreign",
-          "columnNames": [
-            "follows_id"
-          ],
-          "localTableName": "public.person",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.parsed_requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "follows_id": {
-          "name": "follows_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "outcome",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "outcome_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "outcome_solution_id_foreign": {
-          "constraintName": "outcome_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.outcome",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "outcome_modified_by_id_foreign": {
-          "constraintName": "outcome_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.outcome",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "outcome_follows_id_foreign": {
-          "constraintName": "outcome_follows_id_foreign",
-          "columnNames": [
-            "follows_id"
-          ],
-          "localTableName": "public.outcome",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.parsed_requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "follows_id": {
-          "name": "follows_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "obstacle",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "obstacle_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "obstacle_solution_id_foreign": {
-          "constraintName": "obstacle_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.obstacle",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "obstacle_modified_by_id_foreign": {
-          "constraintName": "obstacle_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.obstacle",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "obstacle_follows_id_foreign": {
-          "constraintName": "obstacle_follows_id_foreign",
-          "columnNames": [
-            "follows_id"
-          ],
-          "localTableName": "public.obstacle",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.parsed_requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "priority": {
-          "name": "priority",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "enumItems": [
-            "MUST",
-            "SHOULD",
-            "COULD",
-            "WONT"
-          ],
-          "mappedType": "enum"
-        },
-        "follows_id": {
-          "name": "follows_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "non_functional_behavior",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "non_functional_behavior_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "non_functional_behavior_solution_id_foreign": {
-          "constraintName": "non_functional_behavior_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.non_functional_behavior",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "non_functional_behavior_modified_by_id_foreign": {
-          "constraintName": "non_functional_behavior_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.non_functional_behavior",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "non_functional_behavior_follows_id_foreign": {
-          "constraintName": "non_functional_behavior_follows_id_foreign",
-          "columnNames": [
-            "follows_id"
-          ],
-          "localTableName": "public.non_functional_behavior",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.parsed_requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        }
-      },
-      "name": "noise",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "noise_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "noise_solution_id_foreign": {
-          "constraintName": "noise_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.noise",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "noise_modified_by_id_foreign": {
-          "constraintName": "noise_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.noise",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "follows_id": {
-          "name": "follows_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "limit",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "limit_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "limit_solution_id_foreign": {
-          "constraintName": "limit_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.limit",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "limit_modified_by_id_foreign": {
-          "constraintName": "limit_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.limit",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "limit_follows_id_foreign": {
-          "constraintName": "limit_follows_id_foreign",
-          "columnNames": [
-            "follows_id"
-          ],
-          "localTableName": "public.limit",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.parsed_requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "follows_id": {
-          "name": "follows_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "justification",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "justification_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "justification_solution_id_foreign": {
-          "constraintName": "justification_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.justification",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "justification_modified_by_id_foreign": {
-          "constraintName": "justification_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.justification",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "justification_follows_id_foreign": {
-          "constraintName": "justification_follows_id_foreign",
-          "columnNames": [
-            "follows_id"
-          ],
-          "localTableName": "public.justification",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.parsed_requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "follows_id": {
-          "name": "follows_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "invariant",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "invariant_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "invariant_solution_id_foreign": {
-          "constraintName": "invariant_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.invariant",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "invariant_modified_by_id_foreign": {
-          "constraintName": "invariant_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.invariant",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "invariant_follows_id_foreign": {
-          "constraintName": "invariant_follows_id_foreign",
-          "columnNames": [
-            "follows_id"
-          ],
-          "localTableName": "public.invariant",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.parsed_requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        }
-      },
-      "name": "hint",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "hint_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "hint_solution_id_foreign": {
-          "constraintName": "hint_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.hint",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "hint_modified_by_id_foreign": {
-          "constraintName": "hint_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.hint",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "parent_component_id": {
-          "name": "parent_component_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        },
-        "follows_id": {
-          "name": "follows_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "glossary_term",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "glossary_term_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "glossary_term_solution_id_foreign": {
-          "constraintName": "glossary_term_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.glossary_term",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "glossary_term_modified_by_id_foreign": {
-          "constraintName": "glossary_term_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.glossary_term",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "glossary_term_parent_component_id_foreign": {
-          "constraintName": "glossary_term_parent_component_id_foreign",
-          "columnNames": [
-            "parent_component_id"
-          ],
-          "localTableName": "public.glossary_term",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.glossary_term",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "glossary_term_follows_id_foreign": {
-          "constraintName": "glossary_term_follows_id_foreign",
-          "columnNames": [
-            "follows_id"
-          ],
-          "localTableName": "public.glossary_term",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.parsed_requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "priority": {
-          "name": "priority",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "enumItems": [
-            "MUST",
-            "SHOULD",
-            "COULD",
-            "WONT"
-          ],
-          "mappedType": "enum"
-        },
-        "follows_id": {
-          "name": "follows_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "functional_behavior",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "functional_behavior_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "functional_behavior_solution_id_foreign": {
-          "constraintName": "functional_behavior_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.functional_behavior",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "functional_behavior_modified_by_id_foreign": {
-          "constraintName": "functional_behavior_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.functional_behavior",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "functional_behavior_follows_id_foreign": {
-          "constraintName": "functional_behavior_follows_id_foreign",
-          "columnNames": [
-            "follows_id"
-          ],
-          "localTableName": "public.functional_behavior",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.parsed_requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "parent_component_id": {
-          "name": "parent_component_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        },
-        "follows_id": {
-          "name": "follows_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "environment_component",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "environment_component_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "environment_component_solution_id_foreign": {
-          "constraintName": "environment_component_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.environment_component",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "environment_component_modified_by_id_foreign": {
-          "constraintName": "environment_component_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.environment_component",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "environment_component_parent_component_id_foreign": {
-          "constraintName": "environment_component_parent_component_id_foreign",
-          "columnNames": [
-            "parent_component_id"
-          ],
-          "localTableName": "public.environment_component",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.environment_component",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "environment_component_follows_id_foreign": {
-          "constraintName": "environment_component_follows_id_foreign",
-          "columnNames": [
-            "follows_id"
-          ],
-          "localTableName": "public.environment_component",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.parsed_requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "follows_id": {
-          "name": "follows_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "effect",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "effect_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "effect_solution_id_foreign": {
-          "constraintName": "effect_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.effect",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "effect_modified_by_id_foreign": {
-          "constraintName": "effect_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.effect",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "effect_follows_id_foreign": {
-          "constraintName": "effect_follows_id_foreign",
-          "columnNames": [
-            "follows_id"
-          ],
-          "localTableName": "public.effect",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.parsed_requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "category": {
-          "name": "category",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "enumItems": [
-            "Business Rule",
-            "Physical Law",
-            "Engineering Decision"
-          ],
-          "mappedType": "enum"
-        },
-        "follows_id": {
-          "name": "follows_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "constraint",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "constraint_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "constraint_solution_id_foreign": {
-          "constraintName": "constraint_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.constraint",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "constraint_modified_by_id_foreign": {
-          "constraintName": "constraint_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.constraint",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "constraint_follows_id_foreign": {
-          "constraintName": "constraint_follows_id_foreign",
-          "columnNames": [
-            "follows_id"
-          ],
-          "localTableName": "public.constraint",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.parsed_requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "follows_id": {
-          "name": "follows_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "assumption",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "assumption_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "assumption_solution_id_foreign": {
-          "constraintName": "assumption_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.assumption",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "assumption_modified_by_id_foreign": {
-          "constraintName": "assumption_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.assumption",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "assumption_follows_id_foreign": {
-          "constraintName": "assumption_follows_id_foreign",
-          "columnNames": [
-            "follows_id"
-          ],
-          "localTableName": "public.assumption",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.parsed_requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "follows_id": {
-          "name": "follows_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        },
-        "parent_component_id": {
-          "name": "parent_component_id",
+        "primary_actor_id": {
+          "name": "primary_actor_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
@@ -3203,6 +582,9 @@
           "primary": false,
           "nullable": true,
           "enumItems": [
+            "Business Rule",
+            "Physical Law",
+            "Engineering Decision",
             "Key Stakeholder",
             "Shadow Influencer",
             "Fellow Traveler",
@@ -3216,7 +598,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "mappedType": "integer"
         },
         "influence": {
@@ -3225,593 +607,11 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "mappedType": "integer"
-        }
-      },
-      "name": "stakeholder",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "stakeholder_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [
-        {
-          "name": "stakeholder_availability_check",
-          "expression": "availability >= 0 AND availability <= 100",
-          "definition": "check ((availability >= 0 AND availability <= 100))",
-          "columnName": "availability"
         },
-        {
-          "name": "stakeholder_influence_check",
-          "expression": "influence >= 0 AND influence <= 100",
-          "definition": "check ((influence >= 0 AND influence <= 100))",
-          "columnName": "influence"
-        }
-      ],
-      "foreignKeys": {
-        "stakeholder_solution_id_foreign": {
-          "constraintName": "stakeholder_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.stakeholder",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "stakeholder_modified_by_id_foreign": {
-          "constraintName": "stakeholder_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.stakeholder",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "stakeholder_follows_id_foreign": {
-          "constraintName": "stakeholder_follows_id_foreign",
-          "columnNames": [
-            "follows_id"
-          ],
-          "localTableName": "public.stakeholder",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.parsed_requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "stakeholder_parent_component_id_foreign": {
-          "constraintName": "stakeholder_parent_component_id_foreign",
-          "columnNames": [
-            "parent_component_id"
-          ],
-          "localTableName": "public.stakeholder",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.stakeholder",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "follows_id": {
-          "name": "follows_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        },
-        "parent_component_id": {
-          "name": "parent_component_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "system_component",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "system_component_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "system_component_solution_id_foreign": {
-          "constraintName": "system_component_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.system_component",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "system_component_modified_by_id_foreign": {
-          "constraintName": "system_component_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.system_component",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "system_component_follows_id_foreign": {
-          "constraintName": "system_component_follows_id_foreign",
-          "columnNames": [
-            "follows_id"
-          ],
-          "localTableName": "public.system_component",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.parsed_requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "system_component_parent_component_id_foreign": {
-          "constraintName": "system_component_parent_component_id_foreign",
-          "columnNames": [
-            "parent_component_id"
-          ],
-          "localTableName": "public.system_component",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.system_component",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        }
-      },
-      "name": "task",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "task_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "task_solution_id_foreign": {
-          "constraintName": "task_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.task",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "task_modified_by_id_foreign": {
-          "constraintName": "task_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.task",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "priority": {
-          "name": "priority",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "enumItems": [
-            "MUST",
-            "SHOULD",
-            "COULD",
-            "WONT"
-          ],
-          "mappedType": "enum"
-        }
-      },
-      "name": "test_case",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "test_case_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "test_case_solution_id_foreign": {
-          "constraintName": "test_case_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.test_case",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "test_case_modified_by_id_foreign": {
-          "constraintName": "test_case_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.test_case",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "priority": {
-          "name": "priority",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "enumItems": [
-            "MUST",
-            "SHOULD",
-            "COULD",
-            "WONT"
-          ],
-          "mappedType": "enum"
-        },
-        "primary_actor_id": {
-          "name": "primary_actor_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        },
-        "follows_id": {
-          "name": "follows_id",
+        "parent_component_1_id": {
+          "name": "parent_component_1_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
@@ -3825,7 +625,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "length": 255,
           "mappedType": "string"
         },
@@ -3835,7 +635,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "length": 255,
           "mappedType": "string"
         },
@@ -3845,7 +645,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "length": 255,
           "mappedType": "string"
         },
@@ -3873,7 +673,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "length": 255,
           "mappedType": "string"
         },
@@ -3892,200 +692,9 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        }
-      },
-      "name": "use_case",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "use_case_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "use_case_solution_id_foreign": {
-          "constraintName": "use_case_solution_id_foreign",
-          "columnNames": [
-            "solution_id"
-          ],
-          "localTableName": "public.use_case",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.solution",
-          "updateRule": "cascade"
-        },
-        "use_case_modified_by_id_foreign": {
-          "constraintName": "use_case_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.use_case",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "use_case_primary_actor_id_foreign": {
-          "constraintName": "use_case_primary_actor_id_foreign",
-          "columnNames": [
-            "primary_actor_id"
-          ],
-          "localTableName": "public.use_case",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.stakeholder",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "use_case_follows_id_foreign": {
-          "constraintName": "use_case_follows_id_foreign",
-          "columnNames": [
-            "follows_id"
-          ],
-          "localTableName": "public.use_case",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.parsed_requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "use_case_precondition_id_foreign": {
-          "constraintName": "use_case_precondition_id_foreign",
-          "columnNames": [
-            "precondition_id"
-          ],
-          "localTableName": "public.use_case",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.assumption",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "use_case_success_guarantee_id_foreign": {
-          "constraintName": "use_case_success_guarantee_id_foreign",
-          "columnNames": [
-            "success_guarantee_id"
-          ],
-          "localTableName": "public.use_case",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.effect",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "statement": {
-          "name": "statement",
-          "type": "varchar(1000)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
-        },
-        "solution_id": {
-          "name": "solution_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
-          "mappedType": "uuid"
-        },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
-        "priority": {
-          "name": "priority",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "enumItems": [
-            "MUST",
-            "SHOULD",
-            "COULD",
-            "WONT"
-          ],
-          "mappedType": "enum"
-        },
-        "primary_actor_id": {
-          "name": "primary_actor_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
           "nullable": true,
-          "mappedType": "uuid"
+          "length": 255,
+          "mappedType": "string"
         },
         "follows_id": {
           "name": "follows_id",
@@ -4115,11 +724,21 @@
           "mappedType": "uuid"
         }
       },
-      "name": "user_story",
+      "name": "requirement",
       "schema": "public",
       "indexes": [
         {
-          "keyName": "user_story_pkey",
+          "columnNames": [
+            "req_type"
+          ],
+          "composite": false,
+          "keyName": "requirement_req_type_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "requirement_pkey",
           "columnNames": [
             "id"
           ],
@@ -4131,79 +750,290 @@
       ],
       "checks": [],
       "foreignKeys": {
-        "user_story_solution_id_foreign": {
-          "constraintName": "user_story_solution_id_foreign",
+        "requirement_solution_id_foreign": {
+          "constraintName": "requirement_solution_id_foreign",
           "columnNames": [
             "solution_id"
           ],
-          "localTableName": "public.user_story",
+          "localTableName": "public.requirement",
           "referencedColumnNames": [
             "id"
           ],
           "referencedTableName": "public.solution",
           "updateRule": "cascade"
         },
-        "user_story_modified_by_id_foreign": {
-          "constraintName": "user_story_modified_by_id_foreign",
+        "requirement_modified_by_id_foreign": {
+          "constraintName": "requirement_modified_by_id_foreign",
           "columnNames": [
             "modified_by_id"
           ],
-          "localTableName": "public.user_story",
+          "localTableName": "public.requirement",
           "referencedColumnNames": [
             "id"
           ],
           "referencedTableName": "public.app_user",
           "updateRule": "cascade"
         },
-        "user_story_primary_actor_id_foreign": {
-          "constraintName": "user_story_primary_actor_id_foreign",
+        "requirement_parent_component_id_foreign": {
+          "constraintName": "requirement_parent_component_id_foreign",
+          "columnNames": [
+            "parent_component_id"
+          ],
+          "localTableName": "public.requirement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_primary_actor_id_foreign": {
+          "constraintName": "requirement_primary_actor_id_foreign",
           "columnNames": [
             "primary_actor_id"
           ],
-          "localTableName": "public.user_story",
+          "localTableName": "public.requirement",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.stakeholder",
+          "referencedTableName": "public.requirement",
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
-        "user_story_follows_id_foreign": {
-          "constraintName": "user_story_follows_id_foreign",
+        "requirement_parent_component_1_id_foreign": {
+          "constraintName": "requirement_parent_component_1_id_foreign",
+          "columnNames": [
+            "parent_component_1_id"
+          ],
+          "localTableName": "public.requirement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_precondition_id_foreign": {
+          "constraintName": "requirement_precondition_id_foreign",
+          "columnNames": [
+            "precondition_id"
+          ],
+          "localTableName": "public.requirement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_success_guarantee_id_foreign": {
+          "constraintName": "requirement_success_guarantee_id_foreign",
+          "columnNames": [
+            "success_guarantee_id"
+          ],
+          "localTableName": "public.requirement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_follows_id_foreign": {
+          "constraintName": "requirement_follows_id_foreign",
           "columnNames": [
             "follows_id"
           ],
-          "localTableName": "public.user_story",
+          "localTableName": "public.requirement",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.parsed_requirement",
+          "referencedTableName": "public.requirement",
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
-        "user_story_functional_behavior_id_foreign": {
-          "constraintName": "user_story_functional_behavior_id_foreign",
+        "requirement_functional_behavior_id_foreign": {
+          "constraintName": "requirement_functional_behavior_id_foreign",
           "columnNames": [
             "functional_behavior_id"
           ],
-          "localTableName": "public.user_story",
+          "localTableName": "public.requirement",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.functional_behavior",
+          "referencedTableName": "public.requirement",
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
-        "user_story_outcome_id_foreign": {
-          "constraintName": "user_story_outcome_id_foreign",
+        "requirement_outcome_id_foreign": {
+          "constraintName": "requirement_outcome_id_foreign",
           "columnNames": [
             "outcome_id"
           ],
-          "localTableName": "public.user_story",
+          "localTableName": "public.requirement",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.outcome",
+          "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "left_id": {
+          "name": "left_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "right_id": {
+          "name": "right_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "rel_type": {
+          "name": "rel_type",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "enumItems": [
+            "belongs",
+            "characterizes",
+            "constrains",
+            "contradicts",
+            "details",
+            "disjoins",
+            "duplicates",
+            "excepts",
+            "explains",
+            "extends",
+            "follows",
+            "repeats",
+            "shares"
+          ],
+          "mappedType": "enum"
+        },
+        "left_1_id": {
+          "name": "left_1_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        }
+      },
+      "name": "requirement_relation",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "left_id"
+          ],
+          "composite": false,
+          "keyName": "requirement_relation_left_id_unique",
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "right_id"
+          ],
+          "composite": false,
+          "keyName": "requirement_relation_right_id_unique",
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "rel_type"
+          ],
+          "composite": false,
+          "keyName": "requirement_relation_rel_type_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "left_1_id"
+          ],
+          "composite": false,
+          "keyName": "requirement_relation_left_1_id_unique",
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "requirement_relation_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "requirement_relation_left_id_foreign": {
+          "constraintName": "requirement_relation_left_id_foreign",
+          "columnNames": [
+            "left_id"
+          ],
+          "localTableName": "public.requirement_relation",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "updateRule": "cascade"
+        },
+        "requirement_relation_right_id_foreign": {
+          "constraintName": "requirement_relation_right_id_foreign",
+          "columnNames": [
+            "right_id"
+          ],
+          "localTableName": "public.requirement_relation",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "updateRule": "cascade"
+        },
+        "requirement_relation_left_1_id_foreign": {
+          "constraintName": "requirement_relation_left_1_id_foreign",
+          "columnNames": [
+            "left_1_id"
+          ],
+          "localTableName": "public.requirement_relation",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
           "deleteRule": "set null",
           "updateRule": "cascade"
         }

@@ -15,6 +15,6 @@ export class Assumption extends Requirement {
     /**
      * Requirement that this assumption follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement
 }

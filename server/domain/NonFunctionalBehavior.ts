@@ -17,6 +17,6 @@ export class NonFunctionalBehavior extends Functionality {
     /**
      * Requirement that this non-functional behavior follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement;
 }

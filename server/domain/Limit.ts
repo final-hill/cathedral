@@ -15,6 +15,6 @@ export class Limit extends Requirement {
     /**
      * Requirement that this limit follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement;
 }

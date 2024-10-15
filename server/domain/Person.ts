@@ -17,12 +17,12 @@ export class Person extends Actor {
      * Email address of the person
      */
     // email address: https://stackoverflow.com/a/574698
-    @Property({ type: 'string', length: 254, nullable: true })
+    @Property({ type: 'string', length: 254 })
     email?: string;
 
     /**
      * Requirement that this person follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement;
 }

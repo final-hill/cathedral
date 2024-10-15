@@ -17,12 +17,12 @@ export class Constraint extends Requirement {
     /**
      * Category of the constraint
      */
-    @Enum({ items: () => ConstraintCategory, nullable: true })
+    @Enum({ items: () => ConstraintCategory })
     category?: ConstraintCategory;
 
     /**
      * Requirement that this constraint follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement;
 }
