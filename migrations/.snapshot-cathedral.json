@@ -498,6 +498,7 @@
             "invariant",
             "justification",
             "limit",
+            "meta_requirement",
             "noise",
             "non_functional_behavior",
             "obstacle",
@@ -870,6 +871,165 @@
             "outcome_id"
           ],
           "localTableName": "public.requirement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "left_id": {
+          "name": "left_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "right_id": {
+          "name": "right_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "rel_type": {
+          "name": "rel_type",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "enumItems": [
+            "belongs",
+            "characterizes",
+            "constrains",
+            "contradicts",
+            "details",
+            "disjoins",
+            "duplicates",
+            "excepts",
+            "explains",
+            "extends",
+            "follows",
+            "repeats",
+            "shares"
+          ],
+          "mappedType": "enum"
+        },
+        "left_1_id": {
+          "name": "left_1_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        }
+      },
+      "name": "requirement_relation",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "left_id"
+          ],
+          "composite": false,
+          "keyName": "requirement_relation_left_id_unique",
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "right_id"
+          ],
+          "composite": false,
+          "keyName": "requirement_relation_right_id_unique",
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "rel_type"
+          ],
+          "composite": false,
+          "keyName": "requirement_relation_rel_type_index",
+          "constraint": false,
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "left_1_id"
+          ],
+          "composite": false,
+          "keyName": "requirement_relation_left_1_id_unique",
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "requirement_relation_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "requirement_relation_left_id_foreign": {
+          "constraintName": "requirement_relation_left_id_foreign",
+          "columnNames": [
+            "left_id"
+          ],
+          "localTableName": "public.requirement_relation",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "updateRule": "cascade"
+        },
+        "requirement_relation_right_id_foreign": {
+          "constraintName": "requirement_relation_right_id_foreign",
+          "columnNames": [
+            "right_id"
+          ],
+          "localTableName": "public.requirement_relation",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "updateRule": "cascade"
+        },
+        "requirement_relation_left_1_id_foreign": {
+          "constraintName": "requirement_relation_left_1_id_foreign",
+          "columnNames": [
+            "left_1_id"
+          ],
+          "localTableName": "public.requirement_relation",
           "referencedColumnNames": [
             "id"
           ],
