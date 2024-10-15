@@ -16,6 +16,6 @@ export abstract class Scenario extends Example {
     /**
      * Primary actor involved in the scenario
      */
-    @ManyToOne({ entity: () => Stakeholder, nullable: true })
+    @ManyToOne({ entity: () => Stakeholder })
     primaryActor?: Stakeholder;
 }

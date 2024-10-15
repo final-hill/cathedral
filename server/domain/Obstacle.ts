@@ -15,6 +15,6 @@ export class Obstacle extends Goal {
     /**
      * Requirement that this obstacle follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement;
 }

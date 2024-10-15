@@ -15,6 +15,6 @@ export class Effect extends Requirement {
     /**
      * Requirement that this effect follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement;
 }

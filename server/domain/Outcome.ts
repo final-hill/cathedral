@@ -15,6 +15,6 @@ export class Outcome extends Goal {
     /**
      * Requirement that this outcome follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement;
 }

@@ -16,12 +16,12 @@ export class SystemComponent extends Component {
     /**
      * Requirement that this system component follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement;
 
     /**
      * Parent component of the current system component
      */
-    @ManyToOne({ entity: () => SystemComponent, nullable: true })
+    @ManyToOne({ entity: () => SystemComponent })
     parentComponent?: SystemComponent;
 }

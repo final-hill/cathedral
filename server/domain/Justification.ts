@@ -15,6 +15,6 @@ export class Justification extends MetaRequirement {
     /**
      * Requirement that this justification follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement;
 }

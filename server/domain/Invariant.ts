@@ -17,6 +17,6 @@ export class Invariant extends Requirement {
     /**
      * Requirement that this invariant follows from
      */
-    @ManyToOne({ entity: () => ParsedRequirement, nullable: true })
+    @ManyToOne({ entity: () => ParsedRequirement })
     follows?: ParsedRequirement;
 }
