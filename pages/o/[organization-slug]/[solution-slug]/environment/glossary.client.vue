@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { GlossaryTerm } from '~/server/domain/GlossaryTerm.js';
+import { GlossaryTerm } from '~/server/domain/requirements/GlossaryTerm.js';
 
 useHead({ title: 'Glossary' })
 definePageMeta({ name: 'Glossary' })
@@ -33,7 +33,7 @@ const onCreate = async (data: GlossaryTerm) => {
         method: 'POST',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -47,7 +47,7 @@ const onUpdate = async (data: GlossaryTerm) => {
         body: {
             id: data.id,
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -68,9 +68,9 @@ const onDelete = async (id: string) => {
     <p>
         A Glossary is a list of terms in a particular domain of knowledge with the definitions for those terms.
     </p>
-    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="glossaryTerms" :on-create="onCreate"
-        :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'" :organizationSlug="organizationslug"
-        entityName="GlossaryTerm" :showRecycleBin="true">
+    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="glossaryTerms"
+        :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'"
+        :organizationSlug="organizationslug" entityName="GlossaryTerm" :showRecycleBin="true">
     </XDataTable>
 </template>

@@ -1,11 +1,11 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { EnvironmentComponent } from "~/server/domain/index.js"
+import { EnvironmentComponent, ReqType } from "~/server/domain/requirements/index.js"
 
 const querySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().optional(),
-    statement: z.string().optional(),
+    description: z.string().optional(),
     parentComponentId: z.string().uuid().optional(),
     isSilence: z.boolean().optional().default(false)
 })
@@ -19,16 +19,5 @@ export default defineEventHandler(async (event) => {
 
     await assertSolutionReader(event, query.solutionId)
 
-    const results = await em.findAll(EnvironmentComponent, {
-        where: Object.entries(query)
-            .filter(([_, value]) => value !== undefined)
-            .reduce((acc, [key, value]) => {
-                if (key.endsWith("Id"))
-                    return { ...acc, [key.replace("Id", "")]: value };
-                return { ...acc, [key]: { $eq: value } };
-            }, {}),
-        populate: ['modifiedBy', 'solution']
-    })
-
-    return results
+    return await findAllSolutionRequirements<EnvironmentComponent>(ReqType.ENVIRONMENT_COMPONENT, em, query)
 })

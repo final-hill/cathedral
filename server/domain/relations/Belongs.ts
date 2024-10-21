@@ -3,8 +3,8 @@ import { RequirementRelation } from "./RequirementRelation.js";
 
 /**
  * X ⊆ Y
- * X is a sub-requirement of Y
- * X is textually included in Y
+ *
+ * X is a sub-requirement of Y; textually included
  */
 @Entity()
 export class Belongs extends RequirementRelation { }

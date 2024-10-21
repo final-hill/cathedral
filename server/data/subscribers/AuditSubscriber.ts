@@ -1,5 +1,5 @@
-import { ChangeSetType, type EventArgs, type EventSubscriber, type FlushEventArgs } from "@mikro-orm/core";
-import { AuditLog } from "../../domain/AuditLog.js";
+import { type EventSubscriber, type FlushEventArgs } from "@mikro-orm/core";
+import { AuditLog } from "../../domain/application/AuditLog.js";
 
 /**
  * The AuditSubscriber class is responsible for

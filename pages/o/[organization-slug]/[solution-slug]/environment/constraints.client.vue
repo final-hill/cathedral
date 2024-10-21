@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useFetch } from 'nuxt/app';
-import { Constraint } from '~/server/domain/Constraint.js';
-import { ConstraintCategory } from '~/server/domain/ConstraintCategory.js';
+import { Constraint } from '~/server/domain/requirements/Constraint.js';
+import { ConstraintCategory } from '~/server/domain/requirements/ConstraintCategory.js';
 
 useHead({ title: 'Constraints' })
 definePageMeta({ name: 'Constraints' })
@@ -35,7 +35,7 @@ const onCreate = async (data: Constraint) => {
         method: 'POST',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             category: data.category,
             solutionId
         }
@@ -57,7 +57,7 @@ const onUpdate = async (data: Constraint) => {
         method: 'PUT',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             category: data.category,
             solutionId
         }
@@ -72,8 +72,8 @@ const onUpdate = async (data: Constraint) => {
         the environment imposes on the project and system.
     </p>
     <XDataTable :viewModel="{ name: 'text', category: 'text' }"
-        :createModel="{ name: 'text', category: Object.values(ConstraintCategory), statement: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', category: Object.values(ConstraintCategory), statement: 'text' }"
+        :createModel="{ name: 'text', category: Object.values(ConstraintCategory), description: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', category: Object.values(ConstraintCategory), description: 'text' }"
         :datasource="constraints" :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate"
         :loading="status === 'pending'" :organizationSlug="organizationslug" entityName="Constraint"
         :showRecycleBin="true">

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { Justification } from '~/server/domain/Justification.js'
+import type { Justification } from '~/server/domain/requirements/Justification.js'
 
 useHead({ title: 'Rationale' })
 definePageMeta({ name: 'Rationale' })
@@ -38,27 +38,27 @@ if (getSituationError.value)
 if (getObjectiveError.value)
     $eventBus.$emit('page-error', getObjectiveError.value);
 
-const visionStatement = ref(visionJustifications.value?.[0].statement!),
-    missionStatement = ref(missionJustifications.value?.[0].statement!),
-    situationStatement = ref(situationJustifications.value?.[0].statement!),
-    objectiveStatement = ref(objectiveJustifications.value?.[0].statement!);
+const visionDescription = ref(visionJustifications.value?.[0].description!),
+    missionDescription = ref(missionJustifications.value?.[0].description!),
+    situationDescription = ref(situationJustifications.value?.[0].description!),
+    objectiveDescription = ref(objectiveJustifications.value?.[0].description!);
 
 const fieldTriple: [Ref<string>, Justification, string][] = [
-    [visionStatement, visionJustifications.value![0], 'Vision'],
-    [missionStatement, missionJustifications.value![0], 'Mission'],
-    [situationStatement, situationJustifications.value![0], 'Situation'],
-    [objectiveStatement, objectiveJustifications.value![0], 'Objective']
+    [visionDescription, visionJustifications.value![0], 'Vision'],
+    [missionDescription, missionJustifications.value![0], 'Mission'],
+    [situationDescription, situationJustifications.value![0], 'Situation'],
+    [objectiveDescription, objectiveJustifications.value![0], 'Objective']
 ];
 
-fieldTriple.forEach(([goalStatement, justification, _name]) => {
-    watch(goalStatement, debounce(() => {
-        justification.statement = goalStatement.value;
+fieldTriple.forEach(([goalDescription, justification, _name]) => {
+    watch(goalDescription, debounce(() => {
+        justification.description = goalDescription.value;
         $fetch(`/api/justifications/${justification.id}`, {
             method: 'PUT',
             body: {
                 solutionId,
                 name: justification.name,
-                statement: justification.statement
+                description: justification.description
             }
         }).catch((e) => $eventBus.$emit('page-error', e));
     }, 500));
@@ -73,15 +73,15 @@ fieldTriple.forEach(([goalStatement, justification, _name]) => {
                 A vision is a view of how the world should be and what your place
                 is in it. It is not a wish, but a goal.
             </p>
-            <Textarea name="vision" id="vision" class="w-full h-10rem" v-model.trim.lazy="visionStatement" />
+            <Textarea name="vision" id="vision" class="w-full h-10rem" v-model.trim.lazy="visionDescription" />
         </div>
         <div class="field">
             <h3>Mission</h3>
             <p>
-                The mission is informed by the vision and is a statement of what you
+                The mission is informed by the vision and is a description of what you
                 are doing to achieve the vision.
             </p>
-            <Textarea name="mission" id="mission" class="w-full h-10rem" v-model.trim.lazy="missionStatement" />
+            <Textarea name="mission" id="mission" class="w-full h-10rem" v-model.trim.lazy="missionDescription" />
         </div>
         <div class="field">
             <h3>Situation</h3>
@@ -89,7 +89,7 @@ fieldTriple.forEach(([goalStatement, justification, _name]) => {
                 The situation is the current state of affairs that need to be
                 addressed by the system created by a project.
             </p>
-            <Textarea name="situation" id="situation" class="w-full h-10rem" v-model.trim.lazy="situationStatement" />
+            <Textarea name="situation" id="situation" class="w-full h-10rem" v-model.trim.lazy="situationDescription" />
         </div>
         <div class="field">
             <h3>Objective</h3>
@@ -97,7 +97,7 @@ fieldTriple.forEach(([goalStatement, justification, _name]) => {
                 The objective is the reason for building a system and the organization
                 context in which it will be used.
             </p>
-            <Textarea name="objective" id="objective" class="w-full h-10rem" v-model.trim.lazy="objectiveStatement" />
+            <Textarea name="objective" id="objective" class="w-full h-10rem" v-model.trim.lazy="objectiveDescription" />
         </div>
     </form>
 </template>

@@ -1,12 +1,13 @@
 import { NIL as emptyUuid } from "uuid"
 import { z } from "zod"
-import { MoscowPriority, Stakeholder, Assumption, Effect, UseCase } from "~/server/domain/index.js"
+import { MoscowPriority, Stakeholder, Assumption, Effect, UseCase } from "~/server/domain/requirements/index.js"
 import { fork } from "~/server/data/orm.js"
+import { Belongs } from "~/server/domain/relations"
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string(),
-    statement: z.string(),
+    description: z.string(),
     primaryActorId: z.string().uuid(),
     priority: z.nativeEnum(MoscowPriority),
     scope: z.string(),
@@ -30,8 +31,7 @@ export default defineEventHandler(async (event) => {
 
     const newUseCase = new UseCase({
         name: body.name,
-        statement: body.statement,
-        solution,
+        description: body.description,
         primaryActor: body.primaryActorId ? em.getReference(Stakeholder, body.primaryActorId) : undefined,
         priority: body.priority,
         scope: body.scope,
@@ -47,7 +47,9 @@ export default defineEventHandler(async (event) => {
         isSilence: body.isSilence
     })
 
-    await em.persistAndFlush(newUseCase)
+    em.create(Belongs, { left: newUseCase, right: solution })
+
+    await em.flush()
 
     return newUseCase.id
 })

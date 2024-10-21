@@ -1,11 +1,12 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from "~/server/domain/index.js"
+import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from "~/server/domain/requirements/index.js"
+import { Belongs } from "~/server/domain/relations"
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled Stakeholder}"),
-    statement: z.string().default(""),
+    description: z.string().default(""),
     parentComponentId: z.string().uuid().optional(),
     availability: z.number().min(0).max(100).default(50),
     influence: z.number().min(0).max(100).default(50),
@@ -18,15 +19,14 @@ const bodySchema = z.object({
  * Creates a new stakeholder and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const { availability, category, influence, name, segmentation, statement, parentComponentId, solutionId, isSilence }
+    const { availability, category, influence, name, segmentation, description, parentComponentId, solutionId, isSilence }
         = await validateEventBody(event, bodySchema),
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    const newStakeholder = new Stakeholder({
+    const newStakeholder = em.create(Stakeholder, {
         name,
-        statement,
-        solution,
+        description,
         availability,
         influence,
         segmentation,
@@ -37,7 +37,9 @@ export default defineEventHandler(async (event) => {
         parentComponent: parentComponentId ? em.getReference(Stakeholder, parentComponentId) : undefined
     })
 
-    await em.persistAndFlush(newStakeholder)
+    em.create(Belongs, { left: newStakeholder, right: solution })
+
+    await em.flush()
 
     return newStakeholder.id
 })

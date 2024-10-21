@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { FunctionalBehavior } from '~/server/domain/FunctionalBehavior.js';
-import { NonFunctionalBehavior } from '~/server/domain/NonFunctionalBehavior.js';
-import { SystemComponent } from '~/server/domain/SystemComponent.js';
+import { FunctionalBehavior } from '~/server/domain/requirements/FunctionalBehavior.js';
+import { NonFunctionalBehavior } from '~/server/domain/requirements/NonFunctionalBehavior.js';
+import { SystemComponent } from '~/server/domain/requirements/SystemComponent.js';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Functionality' })
@@ -47,7 +47,7 @@ const componentSortField = ref<string | undefined>('name')
 // const onCreate = async (newData: BehaviorViewModel) => {
 //     const b: Omit<Functionality, 'id'> = {
 //         name: newData.name,
-//         statement: newData.statement,
+//         description: newData.description,
 //         solutionId,
 //         componentId: newData.componentId,
 //         priority: 'MUST'
@@ -65,7 +65,7 @@ const componentSortField = ref<string | undefined>('name')
 //     const b: Functionality = {
 //         id: newData.id,
 //         name: newData.name,
-//         statement: newData.statement,
+//         description: newData.description,
 //         solutionId,
 //         componentId: newData.componentId,
 //         priority: newData.priority
@@ -113,7 +113,7 @@ const componentSortField = ref<string | undefined>('name')
                     {{ data[field] }}
                 </template>
 </Column>
-<Column field="statement" header="Description">
+<Column field="description" header="Description">
     <template #body="{ data, field }">
                     {{ data[field] }}
                 </template>

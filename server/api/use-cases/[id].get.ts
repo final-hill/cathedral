@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { UseCase } from "~/server/domain/index.js"
+import { UseCase } from "~/server/domain/requirements/index.js"
+import { Belongs } from "~/server/domain/relations"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -16,17 +17,9 @@ const querySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
         { solutionId } = await validateEventQuery(event, querySchema),
-        em = fork()
+        { solution } = await assertSolutionReader(event, solutionId),
+        em = fork(),
+        useCase = await assertReqBelongsToSolution(em, UseCase, id, solution)
 
-    await assertSolutionReader(event, solutionId)
-
-    const result = await em.findOne(UseCase, id, { populate: ['modifiedBy', 'solution', 'precondition', 'successGuarantee'] })
-
-    if (!result)
-        throw createError({
-            statusCode: 404,
-            statusMessage: `Item not found with the given id: ${id}`
-        })
-
-    return result
+    return useCase
 })

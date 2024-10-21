@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { GlossaryTerm } from "~/server/domain/index.js"
+import { GlossaryTerm } from "~/server/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -9,7 +9,7 @@ const paramSchema = z.object({
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().optional(),
-    statement: z.string().optional(),
+    description: z.string().optional(),
     isSilence: z.boolean().optional()
 })
 
@@ -18,26 +18,20 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { name, statement, solutionId, isSilence } = await validateEventBody(event, bodySchema),
-        { sessionUser } = await assertSolutionContributor(event, solutionId),
+        { name, description, solutionId, isSilence } = await validateEventBody(event, bodySchema),
+        { sessionUser, solution } = await assertSolutionContributor(event, solutionId),
         em = fork(),
-        glossaryTerm = await em.findOne(GlossaryTerm, id)
+        glossaryTerm = await assertReqBelongsToSolution(em, GlossaryTerm, id, solution)
 
-    if (!glossaryTerm)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No effect found with id: ${id}`
-        })
-
-    Object.assign(glossaryTerm, {
+    glossaryTerm.assign({
         name: name ?? glossaryTerm.name,
-        statement: statement ?? glossaryTerm.statement,
+        description: description ?? glossaryTerm.description,
         isSilence: isSilence ?? glossaryTerm.isSilence,
-        // TODO: future use as part of Topic Maps?
-        parentComponent: undefined,
+        // TODO: future use as part of Topic Maps? make sure the parentComponent belongs to the same solution
+        // parentComponent: undefined,
         modifiedBy: sessionUser,
         lastModified: new Date()
     })
 
-    await em.persistAndFlush(glossaryTerm)
+    await em.flush()
 })

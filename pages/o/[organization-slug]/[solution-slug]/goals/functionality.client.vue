@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { FunctionalBehavior } from '~/server/domain/FunctionalBehavior.js';
-import { MoscowPriority } from '~/server/domain/MoscowPriority.js';
+import { FunctionalBehavior } from '~/server/domain/requirements/FunctionalBehavior.js';
+import { MoscowPriority } from '~/server/domain/requirements/MoscowPriority.js';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Goals Functionality' })
@@ -72,8 +72,8 @@ const onDelete = async (id: string) => {
         They describe <strong>WHAT</strong> the solution must do and not how it does it.
     </p>
 
-    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="functionalBehaviors"
+    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="functionalBehaviors"
         :on-create="onCreate" :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'"
         :organizationSlug="organizationslug" entityName="FunctionalBehavior" :showRecycleBin="true">
     </XDataTable>

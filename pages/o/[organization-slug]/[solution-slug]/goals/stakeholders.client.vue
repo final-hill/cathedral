@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import mermaid from 'mermaid';
-import { Stakeholder } from '~/server/domain/Stakeholder.js';
-import { StakeholderCategory } from '~/server/domain/StakeholderCategory.js';
-import { StakeholderSegmentation } from '~/server/domain/StakeholderSegmentation.js';
+import { Stakeholder } from '~/server/domain/requirements/Stakeholder.js';
+import { StakeholderCategory } from '~/server/domain/requirements/StakeholderCategory.js';
+import { StakeholderSegmentation } from '~/server/domain/requirements/StakeholderSegmentation.js';
 
 useHead({ title: 'Stakeholders' })
 definePageMeta({ name: 'Stakeholders' })
@@ -119,14 +119,14 @@ const onDelete = async (id: string) => {
         <TabPanel header="Stakeholders">
             <XDataTable :viewModel="{
                 name: 'text',
-                statement: 'text',
+                description: 'text',
                 availability: 'number',
                 influence: 'number',
                 category: 'text',
                 segmentation: 'text'
             }" :createModel="{
                 name: 'text',
-                statement: 'text',
+                description: 'text',
                 availability: { type: 'number', max: 100, min: 0 },
                 influence: { type: 'number', max: 100, min: 0 },
                 category: Object.values(StakeholderCategory),
@@ -134,7 +134,7 @@ const onDelete = async (id: string) => {
             }" :editModel="{
                 id: 'hidden',
                 name: 'text',
-                statement: 'text',
+                description: 'text',
                 availability: { type: 'number', max: 100, min: 0 },
                 influence: { type: 'number', max: 100, min: 0 },
                 category: Object.values(StakeholderCategory),

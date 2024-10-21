@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { FunctionalBehavior, MoscowPriority } from "~/server/domain/index.js"
+import { FunctionalBehavior, MoscowPriority } from "~/server/domain/requirements/index.js"
 import { fork } from "~/server/data/orm.js"
 
 const paramSchema = z.object({
@@ -9,7 +9,7 @@ const paramSchema = z.object({
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().optional(),
-    statement: z.string().optional(),
+    description: z.string().optional(),
     priority: z.nativeEnum(MoscowPriority).optional(),
     isSilence: z.boolean().optional()
 })
@@ -19,25 +19,19 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { name, priority, statement, solutionId, isSilence } = await validateEventBody(event, bodySchema),
-        { sessionUser } = await assertSolutionContributor(event, solutionId),
+        { name, priority, description, solutionId, isSilence } = await validateEventBody(event, bodySchema),
+        { sessionUser, solution } = await assertSolutionContributor(event, solutionId),
         em = fork(),
-        functionalBehavior = await em.findOne(FunctionalBehavior, id)
+        functionalBehavior = await assertReqBelongsToSolution(em, FunctionalBehavior, id, solution)
 
-    if (!functionalBehavior)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No effect found with id: ${id}`
-        })
-
-    Object.assign(functionalBehavior, {
+    functionalBehavior.assign({
         name: name ?? functionalBehavior.name,
-        statement: statement ?? functionalBehavior.statement,
+        description: description ?? functionalBehavior.description,
         priority: priority ?? functionalBehavior.priority,
         modifiedBy: sessionUser,
         lastModified: new Date(),
         ...(isSilence !== undefined && { isSilence })
     })
 
-    await em.persistAndFlush(functionalBehavior)
+    await em.flush()
 })

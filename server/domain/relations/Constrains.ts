@@ -3,6 +3,7 @@ import { RequirementRelation } from "./RequirementRelation.js";
 
 /**
  * X ▸ Y
+ *
  * Constraint X applies to Y
  */
 @Entity()

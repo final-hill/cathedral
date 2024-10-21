@@ -1,11 +1,12 @@
 import { z } from "zod"
-import { MoscowPriority, Outcome, Stakeholder, FunctionalBehavior, UserStory } from "~/server/domain/index.js"
+import { MoscowPriority, Outcome, Stakeholder, FunctionalBehavior, UserStory } from "~/server/domain/requirements/index.js"
 import { fork } from "~/server/data/orm.js"
+import { Belongs } from "~/server/domain/relations"
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled User Story}"),
-    statement: z.string().default(""),
+    description: z.string().default(""),
     primaryActorId: z.string().uuid().optional(),
     priority: z.nativeEnum(MoscowPriority).default(MoscowPriority.MUST),
     outcomeId: z.string().uuid().optional(),
@@ -25,8 +26,7 @@ export default defineEventHandler(async (event) => {
         functionalBehavior: body.functionalBehaviorId ? em.getReference(FunctionalBehavior, body.functionalBehaviorId) : undefined,
         outcome: body.outcomeId ? em.getReference(Outcome, body.outcomeId) : undefined,
         name: body.name,
-        statement: body.statement,
-        solution,
+        description: body.description,
         primaryActor: body.primaryActorId ? em.getReference(Stakeholder, body.primaryActorId) : undefined,
         priority: body.priority,
         lastModified: new Date(),
@@ -34,7 +34,9 @@ export default defineEventHandler(async (event) => {
         isSilence: body.isSilence
     })
 
-    await em.persistAndFlush(newUserStory)
+    em.create(Belongs, { left: newUserStory, right: solution })
+
+    await em.flush()
 
     return newUserStory.id
 })

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { SystemComponent } from '~/server/domain/SystemComponent.js';
+import { SystemComponent } from '~/server/domain/requirements/SystemComponent.js';
 
 useHead({ title: 'Components' })
 definePageMeta({ name: 'System Components' })
@@ -33,7 +33,7 @@ const onCreate = async (data: SystemComponent) => {
         method: 'POST',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             parentComponentId: data.parentComponent,
             solutionId
         }
@@ -47,7 +47,7 @@ const onUpdate = async (data: SystemComponent) => {
         method: 'PUT',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             parentComponentId: data.parentComponent,
             solutionId
         }
@@ -71,16 +71,16 @@ const onDelete = async (id: string) => {
     </p>
     <XDataTable :viewModel="{
         name: 'text',
-        statement: 'text',
+        description: 'text',
         parentComponent: 'object'
     }" :createModel="{
         name: 'text',
-        statement: 'text',
+        description: 'text',
         parentComponent: { type: 'requirement', options: systemComponents ?? [] }
     }" :editModel="{
         id: 'hidden',
         name: 'text',
-        statement: 'text',
+        description: 'text',
         parentComponent: { type: 'requirement', options: systemComponents ?? [] }
     }" :datasource="systemComponents" :onCreate="onCreate" :onUpdate="onUpdate" :onDelete="onDelete"
         :loading="status === 'pending'" :organizationSlug="organizationslug" entityName="SystemComponent"

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { EnvironmentComponent } from '~/server/domain/EnvironmentComponent.js';
+import { EnvironmentComponent } from '~/server/domain/requirements/EnvironmentComponent.js';
 
 useHead({ title: 'Components' })
 definePageMeta({ name: 'Environment Components' })
@@ -32,7 +32,7 @@ const onCreate = async (data: EnvironmentComponent) => {
         method: 'POST',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -53,7 +53,7 @@ const onUpdate = async (data: EnvironmentComponent) => {
         method: 'PUT',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -66,8 +66,8 @@ const onUpdate = async (data: EnvironmentComponent) => {
         Environment components are the EXTERNAL elements that the system interacts with.
         These external components expose interfaces that the system uses to communicate with.
     </p>
-    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="environmentComponents"
+    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="environmentComponents"
         :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'"
         :organizationSlug="organizationslug" entityName="EnvironmentComponent" :showRecycleBin="true">
     </XDataTable>

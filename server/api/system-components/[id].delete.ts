@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { SystemComponent } from "~/server/domain/index.js"
+import { SystemComponent } from "~/server/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -16,10 +16,9 @@ const bodySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
         { solutionId } = await validateEventBody(event, bodySchema),
-        em = fork()
+        { solution } = await assertSolutionContributor(event, solutionId),
+        em = fork(),
+        systemComponent = await assertReqBelongsToSolution(em, SystemComponent, id, solution)
 
-    await assertSolutionContributor(event, solutionId)
-
-    em.remove(em.getReference(SystemComponent, id))
-    await em.flush()
+    await em.removeAndFlush(systemComponent)
 })

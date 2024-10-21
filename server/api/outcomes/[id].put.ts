@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Outcome } from "~/server/domain/index.js"
+import { Outcome } from "~/server/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -9,7 +9,7 @@ const paramSchema = z.object({
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().optional(),
-    statement: z.string().optional(),
+    description: z.string().optional(),
     isSilence: z.boolean().optional()
 })
 
@@ -18,24 +18,18 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { name, statement, solutionId, isSilence } = await validateEventBody(event, bodySchema),
-        { sessionUser } = await assertSolutionContributor(event, solutionId),
+        { name, description, solutionId, isSilence } = await validateEventBody(event, bodySchema),
+        { sessionUser, solution } = await assertSolutionContributor(event, solutionId),
         em = fork(),
-        outcome = await em.findOne(Outcome, id)
+        outcome = await assertReqBelongsToSolution(em, Outcome, id, solution)
 
-    if (!outcome)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No assumption found with id: ${id}`
-        })
-
-    Object.assign(outcome, {
+    outcome.assign({
         name: name ?? outcome.name,
-        statement: statement ?? outcome.statement,
+        description: description ?? outcome.description,
         isSilence: isSilence ?? outcome.isSilence,
         modifiedBy: sessionUser,
         lastModified: new Date()
     })
 
-    await em.persistAndFlush(outcome)
+    await em.flush()
 })

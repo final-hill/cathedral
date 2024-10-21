@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Person } from '~/server/domain/Person.js';
+import { Person } from '~/server/domain/requirements/Person.js';
 
 useHead({ title: 'Roles & Personnel' })
 definePageMeta({ name: 'Roles & Personnel' })
@@ -35,7 +35,7 @@ const onCreate = async (data: Person) => {
             name: data.name ?? 'Anonymous',
             email: data.email ?? 'anonymous@example.com',
             solutionId,
-            statement: ''
+            description: ''
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -49,7 +49,7 @@ const onUpdate = async (data: Person) => {
             name: data.name ?? 'Anonymous',
             email: data.email ?? 'anonymous@example.com',
             solutionId,
-            statement: ''
+            description: ''
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 

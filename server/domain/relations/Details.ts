@@ -3,6 +3,7 @@ import { Extends } from "./Extends.js";
 
 /**
  * X » Y
+ *
  * X adds detail to properties of Y
  */
 @Entity()

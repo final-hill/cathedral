@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Outcome } from '~/server/domain/Outcome.js';
+import { Outcome } from '~/server/domain/requirements/Outcome.js';
 
 useHead({ title: 'Outcomes' })
 definePageMeta({ name: 'Outcomes' })
@@ -34,7 +34,7 @@ const onCreate = async (data: Outcome) => {
         body: {
             solutionId,
             name: data.name,
-            statement: data.statement
+            description: data.description
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -47,7 +47,7 @@ const onUpdate = async (data: Outcome) => {
         body: {
             solutionId,
             name: data.name,
-            statement: data.statement
+            description: data.description
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -70,8 +70,8 @@ const onDelete = async (id: string) => {
         of the system that will be achieved by the associated project.
     </p>
 
-    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="outcomes" :onCreate="onCreate"
+    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="outcomes" :onCreate="onCreate"
         :onUpdate="onUpdate" :onDelete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationslug"
         entityName="Outcome" :showRecycleBin="true">
     </XDataTable>

@@ -1,8 +1,7 @@
-import { ChangeSetType, QueryOrder } from "@mikro-orm/core"
-import { QueryBuilder } from "@mikro-orm/postgresql"
+import { ChangeSetType } from "@mikro-orm/core"
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { AuditLog, Organization } from "~/server/domain"
+import { Organization } from "~/server/domain/requirements/index.js"
 
 const querySchema = z.object({
     entityName: z.string(),

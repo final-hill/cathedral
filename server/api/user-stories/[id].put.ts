@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { FunctionalBehavior, MoscowPriority, Outcome, Stakeholder, UserStory } from "~/server/domain/index.js"
+import { FunctionalBehavior, MoscowPriority, Outcome, Stakeholder, UserStory } from "~/server/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -9,7 +9,7 @@ const paramSchema = z.object({
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().optional(),
-    statement: z.string().optional(),
+    description: z.string().optional(),
     primaryActorId: z.string().uuid().optional(),
     priority: z.nativeEnum(MoscowPriority).optional(),
     outcomeId: z.string().uuid().optional(),
@@ -23,31 +23,25 @@ const bodySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
         body = await validateEventBody(event, bodySchema),
-        { sessionUser } = await assertSolutionContributor(event, body.solutionId),
+        { sessionUser, solution } = await assertSolutionContributor(event, body.solutionId),
         em = fork(),
-        userStory = await em.findOne(UserStory, id)
-
-    if (!userStory)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No user story found with id: ${id}`
-        })
+        userStory = await assertReqBelongsToSolution(em, UserStory, id, solution)
 
     if (body.primaryActorId)
-        userStory.primaryActor = em.getReference(Stakeholder, body.primaryActorId)
+        userStory.primaryActor = await assertReqBelongsToSolution(em, Stakeholder, body.primaryActorId, solution)
     if (body.outcomeId)
-        userStory.outcome = em.getReference(Outcome, body.outcomeId)
+        userStory.outcome = await assertReqBelongsToSolution(em, Outcome, body.outcomeId, solution)
     if (body.functionalBehaviorId)
-        userStory.functionalBehavior = em.getReference(FunctionalBehavior, body.functionalBehaviorId)
+        userStory.functionalBehavior = await assertReqBelongsToSolution(em, FunctionalBehavior, body.functionalBehaviorId, solution)
 
-    Object.assign(userStory, {
+    userStory.assign({
         name: body.name ?? userStory.name,
-        statement: body.statement ?? userStory.statement,
+        description: body.description ?? userStory.description,
         priority: body.priority ?? userStory.priority,
         isSilence: body.isSilence ?? userStory.isSilence,
         modifiedBy: sessionUser,
         lastModified: new Date()
     })
 
-    await em.persistAndFlush(userStory)
+    await em.flush()
 })

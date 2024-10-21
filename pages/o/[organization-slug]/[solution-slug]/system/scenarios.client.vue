@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import { Assumption } from '~/server/domain/Assumption.js';
-import { Effect } from '~/server/domain/Effect.js';
-import { FunctionalBehavior } from '~/server/domain/FunctionalBehavior.js';
-import { MoscowPriority } from '~/server/domain/MoscowPriority.js';
-import { Outcome } from '~/server/domain/Outcome.js';
-import { Stakeholder } from '~/server/domain/Stakeholder.js';
-import { UseCase } from '~/server/domain/UseCase.js';
-import { UserStory } from '~/server/domain/UserStory.js';
+import { Assumption } from '~/server/domain/requirements/Assumption.js';
+import { Effect } from '~/server/domain/requirements/Effect.js';
+import { FunctionalBehavior } from '~/server/domain/requirements/FunctionalBehavior.js';
+import { MoscowPriority } from '~/server/domain/requirements/MoscowPriority.js';
+import { Outcome } from '~/server/domain/requirements/Outcome.js';
+import { Stakeholder } from '~/server/domain/requirements/Stakeholder.js';
+import { UseCase } from '~/server/domain/requirements/UseCase.js';
+import { UserStory } from '~/server/domain/requirements/UserStory.js';
 
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Scenarios' })
@@ -63,7 +63,7 @@ const onUserStoryCreate = async (userStory: UserStory) => {
         method: 'POST',
         body: {
             name: userStory.name,
-            statement: '',
+            description: '',
             primaryActorId: userStory.primaryActor,
             priority: userStory.priority,
             outcomeId: userStory.outcome,
@@ -84,7 +84,7 @@ const onUserStoryUpdate = async (userStory: UserStory) => {
             outcomeId: userStory.outcome,
             functionalBehaviorId: userStory.functionalBehavior,
             solutionId,
-            statement: '',
+            description: '',
             priority: userStory.priority
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
@@ -107,7 +107,7 @@ const onUseCaseCreate = async (useCase: UseCase) => {
             successGuaranteeId: useCase.successGuarantee,
             extensions: useCase.extensions,
             solutionId,
-            statement: '',
+            description: '',
             priority: useCase.priority
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
@@ -130,7 +130,7 @@ const onUseCaseUpdate = async (useCase: UseCase) => {
             successGuaranteeId: useCase.successGuarantee,
             extensions: useCase.extensions,
             solutionId,
-            statement: ''
+            description: ''
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
 

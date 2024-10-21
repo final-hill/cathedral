@@ -1,7 +1,8 @@
 import { QueryOrder } from "@mikro-orm/core"
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { AuditLog, Organization } from "~/server/domain/index.js"
+import { AuditLog } from "~/server/domain/application/index.js"
+import { Organization } from "~/server/domain/requirements/index.js"
 
 const querySchema = z.object({
     entityId: z.string().uuid(),

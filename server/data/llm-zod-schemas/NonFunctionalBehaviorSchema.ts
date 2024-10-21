@@ -3,7 +3,7 @@ import { z } from "zod";
 export default z.object({
     type: z.literal('NonFunctionalBehavior'),
     name: z.string(),
-    statement: z.string(),
+    description: z.string(),
     moscowPriority: z.enum(['MUST', 'SHOULD', 'COULD', 'WONT'])
         .describe('The priority of the requirement, according to the MoSCoW method. Default is "MUST"'),
 }).describe(dedent(`

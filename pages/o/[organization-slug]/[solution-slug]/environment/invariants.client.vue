@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Invariant } from '~/server/domain/Invariant.js';
+import { Invariant } from '~/server/domain/requirements/Invariant.js';
 
 useHead({ title: 'Invariants' })
 definePageMeta({ name: 'Invariants' })
@@ -33,7 +33,7 @@ const onCreate = async (data: Invariant) => {
         method: 'POST',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -46,7 +46,7 @@ const onUpdate = async (data: Invariant) => {
         method: 'PUT', body: {
             id: data.id,
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -70,8 +70,8 @@ const onDelete = async (id: string) => {
         constrain the possible states of a system.
     </p>
 
-    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="invariants" :on-create="onCreate"
+    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="invariants" :on-create="onCreate"
         :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationslug"
         entityName="Invariant" :showRecycleBin="true">
     </XDataTable>

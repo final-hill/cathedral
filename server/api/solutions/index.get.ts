@@ -1,6 +1,7 @@
 import { fork } from "~/server/data/orm.js"
 import { z } from "zod"
-import { Organization } from "~/server/domain/index.js"
+import { ReqType, Solution } from "~/server/domain/requirements/index.js"
+import { Belongs } from "~/server/domain/relations";
 
 const querySchema = z.object({
     name: z.string().max(100).optional(),
@@ -17,19 +18,22 @@ const querySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { description, name, organizationId, organizationSlug, slug } = await validateEventQuery(event, querySchema),
-        em = fork()
+        em = fork(),
+        solsBelongsToOrgs = await em.find(Belongs, {
+            left: {
+                req_type: ReqType.SOLUTION,
+                ...(name ? { name } : {}),
+                ...(description ? { description } : {}),
+                ...(slug ? { slug } : {}),
+            },
+            right: {
+                req_type: ReqType.ORGANIZATION,
+                ...(organizationId ? { id: organizationId } : {}),
+                ...(organizationSlug ? { slug: organizationSlug } : {}),
+            }
+        }, { populate: ['left', 'right'] })
 
-    const organization = await em.findOne(Organization, {
-        ...(organizationId ? { id: organizationId } : {}),
-        ...(organizationSlug ? { slug: organizationSlug } : {}),
-    }, { populate: ['solutions'] })
+    await assertOrgReader(event, solsBelongsToOrgs[0].right.id)
 
-    await assertOrgReader(event, organization!.id)
-
-    return organization!.solutions
-        .filter((sol) =>
-            name ? sol.name === name : true &&
-                description ? sol.description === description : true &&
-                    slug ? sol.slug === slug : true
-        )
+    return solsBelongsToOrgs.map((sol) => sol.left as Solution)
 })

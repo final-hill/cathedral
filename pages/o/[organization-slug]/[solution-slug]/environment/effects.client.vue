@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Effect } from '~/server/domain/Effect.js';
+import { Effect } from '~/server/domain/requirements/Effect.js';
 
 useHead({ title: 'Effects' })
 definePageMeta({ name: 'Effects' })
@@ -33,7 +33,7 @@ const onCreate = async (data: Effect) => {
         method: 'POST',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -45,7 +45,7 @@ const onUpdate = async (data: Effect) => {
         method: 'PUT',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -68,8 +68,8 @@ const onDelete = async (id: string) => {
         An Effect is an environment property affected by a System.
         Example: "The running system will cause the temperature of the room to increase."
     </p>
-    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="effects" :on-create="onCreate"
+    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="effects" :on-create="onCreate"
         :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'" :organizationSlug="organizationslug"
         entityName="Effect" :showRecycleBin="true">
     </XDataTable>

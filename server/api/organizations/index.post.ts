@@ -1,7 +1,9 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { AppRole, AppUserOrganizationRole, AppUser, Organization } from "~/server/domain/index.js"
+import { AppRole, AppUserOrganizationRole, AppUser } from "~/server/domain/application/index.js"
+import { Organization } from "~/server/domain/requirements/index.js"
 import { getServerSession } from '#auth'
+import slugify from "~/utils/slugify"
 
 const bodySchema = z.object({
     name: z.string().default("{Untitled Organization}"),
@@ -18,20 +20,23 @@ export default defineEventHandler(async (event) => {
 
     const sessionUser = em.getReference(AppUser, session.id)
 
-    const newOrg = new Organization({
+    const newOrg = em.create(Organization, {
         name,
         description,
-        solutions: []
+        slug: slugify(name),
+        lastModified: new Date(),
+        modifiedBy: sessionUser,
+        isSilence: false
     })
 
     // add the current user as an admin of the new organization
-    const newAppUserOrgRole = new AppUserOrganizationRole({
+    em.create(AppUserOrganizationRole, {
         appUser: sessionUser,
         organization: newOrg,
         role: AppRole.ORGANIZATION_ADMIN
     })
 
-    await em.persistAndFlush([newOrg, newAppUserOrgRole])
+    await em.flush()
 
     return newOrg.id
 })

@@ -1,6 +1,8 @@
+import { m } from "@vite-pwa/assets-generator/dist/shared/assets-generator.5e51fd40.mjs"
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { EnvironmentComponent } from "~/server/domain/index.js"
+import { EnvironmentComponent } from "~/server/domain/requirements/index.js"
+import { Belongs } from "~/server/domain/relations"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -16,17 +18,9 @@ const querySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
         { solutionId } = await validateEventQuery(event, querySchema),
-        em = fork()
+        { solution } = await assertSolutionReader(event, solutionId),
+        em = fork(),
+        environmentComponent = await assertReqBelongsToSolution(em, EnvironmentComponent, id, solution)
 
-    await assertSolutionReader(event, solutionId)
-
-    const result = await em.findOne(EnvironmentComponent, id, { populate: ['modifiedBy', 'solution'] })
-
-    if (!result)
-        throw createError({
-            statusCode: 404,
-            statusMessage: `Item not found with the given id: ${id}`
-        })
-
-    return result
+    return environmentComponent
 })

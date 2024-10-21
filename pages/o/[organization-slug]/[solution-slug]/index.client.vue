@@ -58,7 +58,7 @@ const parseRawRequirement = async () => {
         method: 'post',
         body: {
             solutionId: solution.id,
-            statement: rawRequirement.value
+            description: rawRequirement.value
         }
     }).catch((e) => {
         $eventBus.$emit('page-error', e)

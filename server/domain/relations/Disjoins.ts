@@ -3,6 +3,7 @@ import { RequirementRelation } from "./RequirementRelation.js";
 
 /**
  * X || Y
+ *
  * X and Y are unrelated
  */
 @Entity()

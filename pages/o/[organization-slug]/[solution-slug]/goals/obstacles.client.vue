@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Obstacle } from '~/server/domain/Obstacle.js';
+import { Obstacle } from '~/server/domain/requirements/Obstacle.js';
 
 useHead({ title: 'Obstacles' })
 definePageMeta({ name: 'Obstacles' })
@@ -31,7 +31,7 @@ const onCreate = async (data: Obstacle) => {
         body: {
             solutionId,
             name: data.name,
-            statement: data.statement
+            description: data.description
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -44,7 +44,7 @@ const onUpdate = async (data: Obstacle) => {
         body: {
             solutionId,
             name: data.name,
-            statement: data.statement
+            description: data.description
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -66,8 +66,8 @@ const onDelete = async (id: string) => {
         Obstacles are the challenges that prevent the goals from being achieved.
     </p>
 
-    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="obstacles" :on-create="onCreate"
+    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="obstacles" :on-create="onCreate"
         :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationslug"
         entityName="Obstacle" :showRecycleBin="true">
     </XDataTable>

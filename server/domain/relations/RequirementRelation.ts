@@ -1,13 +1,15 @@
 import { v7 as uuidv7 } from 'uuid';
-import { Entity, OneToOne, Property } from "@mikro-orm/core";
-import { Requirement } from '../Requirement.js'
+import { BaseEntity, Entity, ManyToOne, Property } from "@mikro-orm/core";
+import { Requirement } from '../requirements/Requirement.js'
+import { type Properties } from '../types/index.js';
 
 /**
- * Abstract class for relations between requirements
+ * Relations between requirements
  */
 @Entity({ abstract: true, discriminatorColumn: 'rel_type' })
-export abstract class RequirementRelation {
-    constructor(props: Omit<RequirementRelation, 'id'>) {
+export abstract class RequirementRelation extends BaseEntity {
+    constructor(props: Properties<Omit<RequirementRelation, 'id'>>) {
+        super()
         this.id = uuidv7();
         this.left = props.left;
         this.right = props.right;
@@ -19,9 +21,9 @@ export abstract class RequirementRelation {
     @Property({ type: 'uuid', primary: true })
     id: string;
 
-    @OneToOne({ entity: () => Requirement })
+    @ManyToOne({ entity: () => Requirement })
     left: Requirement
 
-    @OneToOne({ entity: () => Requirement })
+    @ManyToOne({ entity: () => Requirement })
     right: Requirement
 }

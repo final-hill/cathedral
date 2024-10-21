@@ -1,11 +1,12 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { MoscowPriority, NonFunctionalBehavior } from "~/server/domain/index.js"
+import { MoscowPriority, NonFunctionalBehavior } from "~/server/domain/requirements/index.js"
+import { Belongs } from "~/server/domain/relations"
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().default("{Untitled Non-Functional Behavior}"),
-    statement: z.string().default(""),
+    description: z.string().default(""),
     priority: z.nativeEnum(MoscowPriority).default(MoscowPriority.MUST),
     isSilence: z.boolean().default(false)
 })
@@ -14,21 +15,22 @@ const bodySchema = z.object({
  * Creates a new non functional behavior and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const { name, priority, statement, solutionId, isSilence } = await validateEventBody(event, bodySchema),
+    const { name, priority, description, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    const newNonFunctionalBehavior = new NonFunctionalBehavior({
+    const newNonFunctionalBehavior = em.create(NonFunctionalBehavior, {
         name,
-        statement,
-        solution,
+        description,
         priority,
         lastModified: new Date(),
         modifiedBy: sessionUser,
         isSilence
     })
 
-    await em.persistAndFlush(newNonFunctionalBehavior)
+    em.create(Belongs, { left: newNonFunctionalBehavior, right: solution })
+
+    await em.flush()
 
     return newNonFunctionalBehavior.id
 })

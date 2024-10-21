@@ -10,7 +10,9 @@ import {
     GlossaryTerm, Invariant, Justification, Limit, MoscowPriority, NonFunctionalBehavior, Obstacle,
     Outcome, ParsedRequirement, Person, Stakeholder, StakeholderCategory, StakeholderSegmentation,
     SystemComponent, UseCase, UserStory
-} from "~/server/domain/index.js";
+} from "~/server/domain/requirements/index.js";
+import { Belongs } from "~/server/domain/relations/Belongs.js";
+import { Follows } from "~/server/domain/relations/Follows.js";
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
@@ -88,180 +90,193 @@ export default defineEventHandler(async (event) => {
 
     const parsedRequirement = em.create(ParsedRequirement, {
         name: '{LLM Parsed Requirement}',
-        solution,
-        statement,
+        description: statement,
         modifiedBy: sessionUser,
         lastModified: new Date(),
-        isSilence: true,
-        assumptions: [],
-        constraints: [],
-        effects: [],
-        environmentComponents: [],
-        functionalBehaviors: [],
-        glossaryTerms: [],
-        invariants: [],
-        justifications: [],
-        limits: [],
-        nonFunctionalBehaviors: [],
-        obstacles: [],
-        outcomes: [],
-        persons: [],
-        stakeholders: [],
-        systemComponents: [],
-        useCases: [],
-        userStories: []
+        isSilence: true
     })
 
-    Object.assign(parsedRequirement, {
-        assumptions: (groupedResult.Assumption ?? []).map((item) => em.create(Assumption, {
-            follows: parsedRequirement,
+    em.create(Belongs, { left: parsedRequirement, right: solution });
+
+    (groupedResult.Assumption ?? []).forEach((item) => {
+        const assumption = em.create(Assumption, {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
-            solution,
-            statement: item.statement
-        })),
-        constraints: (groupedResult.Constraint ?? []).map((item) => em.create(Constraint, {
-            follows: parsedRequirement,
+            description: item.description
+        })
+        em.create(Belongs, { left: assumption, right: solution });
+        em.create(Follows, { left: assumption, right: parsedRequirement });
+    });
+    (groupedResult.Constraint ?? []).forEach((item) => {
+        const constraint = em.create(Constraint, {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
-            solution,
-            statement: item.statement,
+            description: item.description,
             category: item.category as ConstraintCategory
-        })),
-        effects: (groupedResult.Effect ?? []).map((item) => em.create(Effect, {
-            follows: parsedRequirement,
+        })
+        em.create(Belongs, { left: constraint, right: solution });
+        em.create(Follows, { left: constraint, right: parsedRequirement });
+    });
+    (groupedResult.Effect ?? []).forEach((item) => {
+        const effect = em.create(Effect, {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
-            solution,
-            statement: item.statement
-        })),
-        environmentComponents: (groupedResult.EnvironmentComponent ?? []).map((item) => em.create(EnvironmentComponent, {
-            follows: parsedRequirement,
+            description: item.description
+        })
+        em.create(Belongs, { left: effect, right: solution });
+        em.create(Follows, { left: effect, right: parsedRequirement });
+    });
+    (groupedResult.EnvironmentComponent ?? []).forEach((item) => {
+        const environmentComponent = em.create(EnvironmentComponent, {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
-            solution,
-            statement: item.statement,
+            description: item.description,
             parentComponent: undefined
-        })),
-        functionalBehaviors: (groupedResult.FunctionalBehavior ?? []).map((item) => em.create(FunctionalBehavior, {
-            follows: parsedRequirement,
+        })
+        em.create(Belongs, { left: environmentComponent, right: solution });
+        em.create(Follows, { left: environmentComponent, right: parsedRequirement });
+    });
+    (groupedResult.FunctionalBehavior ?? []).forEach((item) => {
+        const functionalBehavior = em.create(FunctionalBehavior, {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
-            solution,
-            statement: item.statement,
+            description: item.description,
             priority: item.moscowPriority as MoscowPriority ?? MoscowPriority.MUST
-        })),
-        glossaryTerms: (groupedResult.GlossaryTerm ?? []).map((item) => em.create(GlossaryTerm, {
-            follows: parsedRequirement,
+        })
+        em.create(Belongs, { left: functionalBehavior, right: solution });
+        em.create(Follows, { left: functionalBehavior, right: parsedRequirement });
+    });
+    (groupedResult.GlossaryTerm ?? []).forEach((item) => {
+        const glossaryTerm = em.create(GlossaryTerm, {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
-            solution,
-            statement: item.description,
+            description: item.description,
             parentComponent: undefined
-        })),
-        invariants: (groupedResult.Invariant ?? []).map((item) => em.create(Invariant, {
-            follows: parsedRequirement,
+        })
+        em.create(Belongs, { left: glossaryTerm, right: solution });
+        em.create(Follows, { left: glossaryTerm, right: parsedRequirement });
+    });
+    (groupedResult.Invariant ?? []).forEach((item) => {
+        const invariant = em.create(Invariant, {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
-            solution,
-            statement: item.statement
-        })),
-        justifications: (groupedResult.Justification ?? []).map((item) => em.create(Justification, {
-            follows: parsedRequirement,
+            description: item.description
+        })
+        em.create(Belongs, { left: invariant, right: solution });
+        em.create(Follows, { left: invariant, right: parsedRequirement });
+    });
+    (groupedResult.Justification ?? []).forEach((item) => {
+        const justifications = em.create(Justification, {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
-            solution,
-            statement: item.statement
-        })),
-        limits: (groupedResult.Limit ?? []).map((item) => em.create(Limit, {
-            follows: parsedRequirement,
+            description: item.description
+        })
+        em.create(Belongs, { left: justifications, right: solution });
+        em.create(Follows, { left: justifications, right: parsedRequirement });
+    });
+    (groupedResult.Limit ?? []).forEach((item) => {
+        const limit = em.create(Limit, {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
-            solution,
-            statement: item.statement
-        })),
-        nonFunctionalBehaviors: (groupedResult.NonFunctionalBehavior ?? []).map((item) => em.create(NonFunctionalBehavior, {
-            follows: parsedRequirement,
+            description: item.description
+        })
+        em.create(Belongs, { left: limit, right: solution });
+        em.create(Follows, { left: limit, right: parsedRequirement });
+    });
+    (groupedResult.NonFunctionalBehavior ?? []).forEach((item) => {
+        const nonFunctionalBehavior = em.create(NonFunctionalBehavior, {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
-            solution,
-            statement: item.statement,
+            description: item.description,
             priority: item.moscowPriority as MoscowPriority ?? MoscowPriority.MUST
-        })),
-        obstacles: (groupedResult.Obstacle ?? []).map((item) => em.create(Obstacle, {
-            follows: parsedRequirement,
+        })
+        em.create(Belongs, { left: nonFunctionalBehavior, right: solution });
+        em.create(Follows, { left: nonFunctionalBehavior, right: parsedRequirement });
+    });
+    (groupedResult.Obstacle ?? []).forEach((item) => {
+        const obstacle = em.create(Obstacle, {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
-            solution,
-            statement: item.statement
-        })),
-        outcomes: (groupedResult.Outcome ?? []).map((item) => em.create(Outcome, {
-            follows: parsedRequirement,
+            description: item.description
+        })
+        em.create(Belongs, { left: obstacle, right: solution });
+        em.create(Follows, { left: obstacle, right: parsedRequirement });
+    });
+    (groupedResult.Outcome ?? []).forEach((item) => {
+        const outcome = em.create(Outcome, {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
-            solution,
-            statement: item.statement
-        })),
-        persons: (groupedResult.Person ?? []).map((item) => em.create(Person, {
-            follows: parsedRequirement,
+            description: item.description
+        })
+        em.create(Belongs, { left: outcome, right: solution });
+        em.create(Follows, { left: outcome, right: parsedRequirement });
+    });
+    (groupedResult.Person ?? []).forEach((item) => {
+        const person = em.create(Person, {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
-            solution,
-            statement: item.statement,
+            description: item.description,
             email: item.email
-        })),
-        stakeholders: (groupedResult.Stakeholder ?? []).map((item) => em.create(Stakeholder, {
-            follows: parsedRequirement,
+        })
+        em.create(Belongs, { left: person, right: solution });
+        em.create(Follows, { left: person, right: parsedRequirement });
+    });
+    (groupedResult.Stakeholder ?? []).forEach((item) => {
+        const stakeholder = em.create(Stakeholder, {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
             availability: item.availability,
             influence: item.influence,
-            statement: '',
+            description: '',
             category: item.category as StakeholderCategory,
             parentComponent: undefined,
-            segmentation: item.segmentation as StakeholderSegmentation,
-            solution
-        })),
-        systemComponents: (groupedResult.SystemComponent ?? []).map((item) => em.create(SystemComponent, {
-            follows: parsedRequirement,
+            segmentation: item.segmentation as StakeholderSegmentation
+        })
+        em.create(Belongs, { left: stakeholder, right: solution });
+        em.create(Follows, { left: stakeholder, right: parsedRequirement });
+    });
+    (groupedResult.SystemComponent ?? []).forEach((item) => {
+        const systemComponent = em.create(SystemComponent, {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
-            solution,
-            statement: item.statement,
+            description: item.description,
             parentComponent: undefined
-        })),
-        useCases: (groupedResult.UseCase ?? []).map((item) => em.create(UseCase, {
-            follows: parsedRequirement,
+        })
+        em.create(Belongs, { left: systemComponent, right: solution });
+        em.create(Follows, { left: systemComponent, right: parsedRequirement });
+    });
+    (groupedResult.UseCase ?? []).forEach((item) => {
+        const useCase = em.create(UseCase, {
             isSilence: true,
             extensions: item.extensions,
             goalInContext: item.goalInContext,
@@ -271,89 +286,87 @@ export default defineEventHandler(async (event) => {
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
-            solution,
-            statement: '',
+            description: '',
             priority: item.moscowPriority as MoscowPriority ?? MoscowPriority.MUST,
             // triggerId: undefined,
             precondition: em.create(Assumption, {
-                follows: parsedRequirement,
                 isSilence: true,
                 lastModified: new Date(),
                 modifiedBy: sessionUser,
                 name: item.name,
-                solution,
-                statement: item.precondition
+                description: item.precondition
             }),
             successGuarantee: em.create(Effect, {
-                follows: parsedRequirement,
                 isSilence: true,
                 lastModified: new Date(),
                 modifiedBy: sessionUser,
                 name: item.name,
-                solution,
-                statement: item.successGuarantee
+                description: item.successGuarantee
             }),
             primaryActor: em.create(Stakeholder, {
-                follows: parsedRequirement,
                 isSilence: true,
                 lastModified: new Date(),
                 modifiedBy: sessionUser,
                 name: item.primaryActor,
                 availability: 50,
                 influence: 50,
-                statement: '',
+                description: '',
                 category: StakeholderCategory.KEY_STAKEHOLDER,
                 parentComponent: undefined,
                 segmentation: StakeholderSegmentation.VENDOR,
-                solution
             })
-        })),
-        userStories: (groupedResult.UserStory ?? []).map((item) => em.create(UserStory, {
-            follows: parsedRequirement,
+        })
+        em.create(Belongs, { left: useCase, right: solution });
+        em.create(Follows, { left: useCase, right: parsedRequirement });
+
+        em.create(Belongs, { left: useCase.precondition!, right: solution });
+        em.create(Belongs, { left: useCase.successGuarantee!, right: solution });
+        em.create(Belongs, { left: useCase.primaryActor!, right: solution });
+    });
+    (groupedResult.UserStory ?? []).forEach((item) => {
+        const userStory = em.create(UserStory, {
             isSilence: true,
             priority: item.moscowPriority as MoscowPriority ?? MoscowPriority.MUST,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             name: item.name,
-            solution,
-            statement: '',
+            description: '',
             functionalBehavior: em.create(FunctionalBehavior, {
-                follows: parsedRequirement,
                 isSilence: true,
                 priority: item.moscowPriority as MoscowPriority ?? MoscowPriority.MUST,
                 lastModified: new Date(),
                 modifiedBy: sessionUser,
                 name: item.functionalBehavior,
-                solution,
-                statement: item.functionalBehavior
+                description: item.functionalBehavior
             }),
             outcome: em.create(Outcome, {
-                follows: parsedRequirement,
                 isSilence: true,
                 lastModified: new Date(),
                 modifiedBy: sessionUser,
                 name: item.outcome,
-                solution,
-                statement: item.outcome
+                description: item.outcome
             }),
             primaryActor: em.create(Stakeholder, {
-                follows: parsedRequirement,
                 isSilence: true,
                 lastModified: new Date(),
                 modifiedBy: sessionUser,
                 name: item.role,
                 availability: 50,
                 influence: 50,
-                statement: '',
+                description: '',
                 category: StakeholderCategory.KEY_STAKEHOLDER,
                 parentComponent: undefined,
-                segmentation: StakeholderSegmentation.VENDOR,
-                solution
+                segmentation: StakeholderSegmentation.VENDOR
             })
-        }))
-    })
+        })
+        em.create(Belongs, { left: userStory, right: solution });
+        em.create(Follows, { left: userStory, right: parsedRequirement });
+        em.create(Belongs, { left: userStory.functionalBehavior!, right: solution });
+        em.create(Belongs, { left: userStory.outcome!, right: solution });
+        em.create(Belongs, { left: userStory.primaryActor!, right: solution });
+    });
 
-    await em.persistAndFlush(parsedRequirement)
+    await em.flush()
 
     return result.length ?? 0
 })

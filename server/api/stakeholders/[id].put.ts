@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Stakeholder, StakeholderSegmentation, StakeholderCategory } from "~/server/domain/index.js"
+import { Stakeholder, StakeholderSegmentation, StakeholderCategory } from "~/server/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -9,7 +9,7 @@ const paramSchema = z.object({
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().optional(),
-    statement: z.string().optional(),
+    description: z.string().optional(),
     parentComponentId: z.string().uuid().optional(),
     availability: z.number().min(0).max(100).optional(),
     influence: z.number().min(0).max(100).optional(),
@@ -23,24 +23,19 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { availability, category, influence, name, segmentation, statement, parentComponentId, solutionId, isSilence } =
+        { availability, category, influence, name, segmentation, description, parentComponentId, solutionId, isSilence } =
             await validateEventBody(event, bodySchema),
-        { sessionUser } = await assertSolutionContributor(event, solutionId),
+        { sessionUser, solution } = await assertSolutionContributor(event, solutionId),
         em = fork(),
-        stakeholder = await em.findOne(Stakeholder, id);
+        stakeholder = await assertReqBelongsToSolution(em, Stakeholder, id, solution)
 
-    if (!stakeholder)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No stakeholder found with id: ${id}`
-        })
 
     if (parentComponentId)
-        stakeholder.parentComponent = em.getReference(Stakeholder, parentComponentId)
+        stakeholder.parentComponent = await assertReqBelongsToSolution(em, Stakeholder, parentComponentId, solution)
 
-    Object.assign(stakeholder, {
+    stakeholder.assign({
         name: name ?? stakeholder.name,
-        statement: statement ?? stakeholder.statement,
+        description: description ?? stakeholder.description,
         availability: availability ?? stakeholder.availability,
         influence: influence ?? stakeholder.influence,
         segmentation: segmentation ?? stakeholder.segmentation,
@@ -50,5 +45,5 @@ export default defineEventHandler(async (event) => {
         lastModified: new Date()
     })
 
-    await em.persistAndFlush(stakeholder)
+    await em.flush()
 })

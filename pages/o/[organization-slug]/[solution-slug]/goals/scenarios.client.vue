@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { FunctionalBehavior } from '~/server/domain/FunctionalBehavior.js'
-import { MoscowPriority } from '~/server/domain/MoscowPriority.js'
-import { Outcome } from '~/server/domain/Outcome.js'
-import { Stakeholder } from '~/server/domain/Stakeholder.js'
-import { UserStory } from '~/server/domain/UserStory.js';
+import { FunctionalBehavior } from '~/server/domain/requirements/FunctionalBehavior.js'
+import { MoscowPriority } from '~/server/domain/requirements/MoscowPriority.js'
+import { Outcome } from '~/server/domain/requirements/Outcome.js'
+import { Stakeholder } from '~/server/domain/requirements/Stakeholder.js'
+import { UserStory } from '~/server/domain/requirements/UserStory.js';
 
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Goal Scenarios' })
@@ -54,7 +54,7 @@ const onUserStoryCreate = async (userStory: UserStory) => {
         body: {
             ...userStory,
             solutionId,
-            statement: '',
+            description: '',
             priority: MoscowPriority.MUST
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
@@ -68,7 +68,7 @@ const onUserStoryUpdate = async (userStory: UserStory) => {
         body: {
             ...userStory,
             solutionId,
-            statement: '',
+            description: '',
             priority: MoscowPriority.MUST
         }
     }).catch((e) => $eventBus.$emit('page-error', e));

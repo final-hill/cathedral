@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Limit } from '~/server/domain/Limit.js';
+import { Limit } from '~/server/domain/requirements/Limit.js';
 
 useHead({ title: 'Limitations' })
 definePageMeta({ name: 'Limitations' })
@@ -34,7 +34,7 @@ const onCreate = async (data: Limit) => {
         body: {
             solutionId,
             name: data.name,
-            statement: data.statement
+            description: data.description
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -47,7 +47,7 @@ const onUpdate = async (data: Limit) => {
             solutionId,
             id: data.id,
             name: data.name,
-            statement: data.statement
+            description: data.description
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -69,8 +69,8 @@ const onDelete = async (id: string) => {
         Example: "Providing an interface to the user to change the color of the background is out-of-scope."
     </p>
 
-    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="limits" :on-create="onCreate"
+    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="limits" :on-create="onCreate"
         :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationslug"
         entityName="Limit" :showRecycleBin="true">
     </XDataTable>

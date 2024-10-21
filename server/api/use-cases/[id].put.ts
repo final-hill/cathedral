@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Assumption, Effect, MoscowPriority, Stakeholder, UseCase } from "~/server/domain/index.js"
+import { Assumption, Effect, MoscowPriority, Stakeholder, UseCase } from "~/server/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -9,7 +9,7 @@ const paramSchema = z.object({
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().optional(),
-    statement: z.string().optional(),
+    description: z.string().optional(),
     primaryActorId: z.string().uuid().optional(),
     priority: z.nativeEnum(MoscowPriority).optional(),
     scope: z.string().optional(),
@@ -29,26 +29,20 @@ const bodySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
         body = await validateEventBody(event, bodySchema),
-        { sessionUser } = await assertSolutionContributor(event, body.solutionId),
+        { sessionUser, solution } = await assertSolutionContributor(event, body.solutionId),
         em = fork(),
-        useCase = await em.findOne(UseCase, id)
-
-    if (!useCase)
-        throw createError({
-            statusCode: 400,
-            statusMessage: `Bad Request: No use case found with id: ${id}`
-        })
+        useCase = await assertReqBelongsToSolution(em, UseCase, id, solution)
 
     if (body.primaryActorId)
-        useCase.primaryActor = em.getReference(Stakeholder, body.primaryActorId)
+        useCase.primaryActor = await assertReqBelongsToSolution(em, Stakeholder, body.primaryActorId, solution)
     if (body.preconditionId)
-        useCase.precondition = em.getReference(Assumption, body.preconditionId)
+        useCase.precondition = await assertReqBelongsToSolution(em, Assumption, body.preconditionId, solution)
     if (body.successGuaranteeId)
-        useCase.successGuarantee = em.getReference(Effect, body.successGuaranteeId)
+        useCase.successGuarantee = await assertReqBelongsToSolution(em, Effect, body.successGuaranteeId, solution)
 
-    Object.assign(useCase, {
+    useCase.assign({
         name: body.name ?? useCase.name,
-        statement: body.statement ?? useCase.statement,
+        description: body.description ?? useCase.description,
         priority: body.priority ?? useCase.priority,
         scope: body.scope ?? useCase.scope,
         level: body.level ?? useCase.level,
@@ -61,5 +55,5 @@ export default defineEventHandler(async (event) => {
         lastModified: new Date()
     })
 
-    await em.persistAndFlush(useCase)
+    await em.flush()
 })
