@@ -6,7 +6,7 @@ definePageMeta({ name: 'Invariants' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Invariants').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -17,7 +17,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: invariants, refresh, status, error: getInvariantsError } = await useFetch<Invariant[]>(`/api/invariants`, {
+const { data: invariants, refresh, status, error: getInvariantsError } = await useFetch<Invariant[]>(`/api/invariant`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -29,7 +29,7 @@ if (getInvariantsError.value)
     $eventBus.$emit('page-error', getInvariantsError.value)
 
 const onCreate = async (data: Invariant) => {
-    await useFetch(`/api/invariants`, {
+    await useFetch(`/api/invariant`, {
         method: 'POST',
         body: {
             name: data.name,
@@ -42,7 +42,7 @@ const onCreate = async (data: Invariant) => {
 }
 
 const onUpdate = async (data: Invariant) => {
-    await useFetch(`/api/invariants/${data.id}`, {
+    await useFetch(`/api/invariant/${data.id}`, {
         method: 'PUT', body: {
             id: data.id,
             name: data.name,
@@ -55,7 +55,7 @@ const onUpdate = async (data: Invariant) => {
 }
 
 const onDelete = async (id: string) => {
-    await useFetch(`/api/invariants/${id}`, {
+    await useFetch(`/api/invariant/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e))

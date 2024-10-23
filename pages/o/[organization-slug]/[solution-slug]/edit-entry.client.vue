@@ -6,7 +6,7 @@ const route = useRoute('Edit Solution'),
     { $eventBus } = useNuxtApp(),
     { organizationslug, solutionslug } = route.params,
     router = useRouter(),
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions/`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution/`, {
         query: {
             organizationSlug: organizationslug,
             slug: solutionslug
@@ -19,7 +19,7 @@ if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
 const updateSolution = async () => {
-    await $fetch(`/api/solutions/${solution.value.id}`, {
+    await $fetch(`/api/solution/${solution.value.id}`, {
         method: 'PUT',
         body: {
             name: solution.value.name,

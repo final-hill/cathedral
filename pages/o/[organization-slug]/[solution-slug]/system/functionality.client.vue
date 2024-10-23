@@ -8,7 +8,7 @@ definePageMeta({ name: 'Functionality' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Functionality').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -20,7 +20,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: components, status, refresh, error: getComponentsError } = await useFetch<SystemComponent[]>(`/api/system-components`, {
+const { data: components, status, refresh, error: getComponentsError } = await useFetch<SystemComponent[]>(`/api/system-component`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -33,12 +33,12 @@ if (getComponentsError.value)
     $eventBus.$emit('page-error', getComponentsError.value)
 
 const fnFunctionalBehaviors = async (componentId: string) =>
-    await $fetch<FunctionalBehavior[]>(`/api/functional-behaviors`, {
+    await $fetch<FunctionalBehavior[]>(`/api/functional-behavior`, {
         query: { solutionId, componentId }
     }).catch((e) => $eventBus.$emit('page-error', e));
 
 const fnNonFunctionalBehaviors = async (componentId: string) =>
-    await $fetch<NonFunctionalBehavior[]>(`/api/non-functional-behaviors`, {
+    await $fetch<NonFunctionalBehavior[]>(`/api/non-functional-behavior`, {
         query: { solutionId, componentId }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -49,7 +49,7 @@ const componentSortField = ref<string | undefined>('name')
 //         name: newData.name,
 //         description: newData.description,
 //         solutionId,
-//         componentId: newData.componentId,
+//         component: newData.component,
 //         priority: 'MUST'
 //     }
 
@@ -67,7 +67,7 @@ const componentSortField = ref<string | undefined>('name')
 //         name: newData.name,
 //         description: newData.description,
 //         solutionId,
-//         componentId: newData.componentId,
+//         component: newData.component,
 //         priority: newData.priority
 //     }
 

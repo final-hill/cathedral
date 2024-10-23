@@ -43,6 +43,5 @@ export default defineEventHandler(async (event) => {
         })
 
     // Removing the relationship to the organization and NOT the appuser itself
-    em.remove(appUserRole)
-    await em.flush()
+    await em.remove(appUserRole).flush()
 })

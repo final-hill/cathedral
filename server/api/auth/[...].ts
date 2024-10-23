@@ -50,7 +50,7 @@ export default NuxtAuthHandler({
                     appUser.lastLoginDate = new Date()
                 }
 
-                await em.flush()
+                await em.persistAndFlush(appUser)
 
                 Object.assign(token, {
                     id: p.oid,

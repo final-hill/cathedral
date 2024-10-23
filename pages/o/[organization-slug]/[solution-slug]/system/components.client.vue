@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import { SystemComponent } from '~/server/domain/requirements/SystemComponent.js';
+import { type ReqRelModel } from '~/server/domain/types/index.js'
 
 useHead({ title: 'Components' })
 definePageMeta({ name: 'System Components' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('System Components').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -17,7 +18,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: systemComponents, refresh, status, error: getSystemComponentsError } = await useFetch<SystemComponent[]>(`/api/system-components`, {
+const { data: systemComponents, refresh, status, error: getSystemComponentsError } = await useFetch<ReqRelModel<SystemComponent>[]>(`/api/system-component`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -28,13 +29,13 @@ const { data: systemComponents, refresh, status, error: getSystemComponentsError
 if (getSystemComponentsError.value)
     $eventBus.$emit('page-error', getSystemComponentsError.value);
 
-const onCreate = async (data: SystemComponent) => {
-    await $fetch(`/api/system-components`, {
+const onCreate = async (data: ReqRelModel<SystemComponent>) => {
+    await $fetch(`/api/system-component`, {
         method: 'POST',
         body: {
             name: data.name,
             description: data.description,
-            parentComponentId: data.parentComponent,
+            parentComponent: data.parentComponent,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -42,13 +43,13 @@ const onCreate = async (data: SystemComponent) => {
     refresh()
 }
 
-const onUpdate = async (data: SystemComponent) => {
-    await $fetch(`/api/system-components/${data.id}`, {
+const onUpdate = async (data: ReqRelModel<SystemComponent>) => {
+    await $fetch(`/api/system-component/${data.id}`, {
         method: 'PUT',
         body: {
             name: data.name,
             description: data.description,
-            parentComponentId: data.parentComponent,
+            parentComponent: data.parentComponent,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -57,7 +58,7 @@ const onUpdate = async (data: SystemComponent) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/system-components/${id}`, {
+    await $fetch(`/api/system-component/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e))

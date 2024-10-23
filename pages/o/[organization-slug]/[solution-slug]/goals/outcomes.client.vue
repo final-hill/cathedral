@@ -6,7 +6,7 @@ definePageMeta({ name: 'Outcomes' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Outcomes').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -17,7 +17,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: outcomes, refresh, status, error: getOutcomesError } = await useFetch<Outcome[]>(`/api/outcomes`, {
+const { data: outcomes, refresh, status, error: getOutcomesError } = await useFetch<Outcome[]>(`/api/outcome`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -29,7 +29,7 @@ if (getOutcomesError.value)
     $eventBus.$emit('page-error', getOutcomesError.value);
 
 const onCreate = async (data: Outcome) => {
-    await $fetch(`/api/outcomes`, {
+    await $fetch(`/api/outcome`, {
         method: 'POST',
         body: {
             solutionId,
@@ -42,7 +42,7 @@ const onCreate = async (data: Outcome) => {
 }
 
 const onUpdate = async (data: Outcome) => {
-    await $fetch(`/api/outcomes/${data.id}`, {
+    await $fetch(`/api/outcome/${data.id}`, {
         method: 'PUT',
         body: {
             solutionId,
@@ -55,7 +55,7 @@ const onUpdate = async (data: Outcome) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/outcomes/${id}`, {
+    await $fetch(`/api/outcome/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e))

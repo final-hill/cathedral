@@ -7,7 +7,7 @@ definePageMeta({ name: 'Goals Functionality' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Functionality').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -18,7 +18,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: functionalBehaviors, refresh, status, error: getFunctionalBehaviorsError } = await useFetch<FunctionalBehavior[]>(`/api/functional-behaviors`, {
+const { data: functionalBehaviors, refresh, status, error: getFunctionalBehaviorsError } = await useFetch<FunctionalBehavior[]>(`/api/functional-behavior`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -30,7 +30,7 @@ if (getFunctionalBehaviorsError.value)
     $eventBus.$emit('page-error', getFunctionalBehaviorsError.value);
 
 const onCreate = async (data: FunctionalBehavior) => {
-    await $fetch(`/api/functional-behaviors`, {
+    await $fetch(`/api/functional-behavior`, {
         method: 'POST',
         body: {
             ...data,
@@ -43,7 +43,7 @@ const onCreate = async (data: FunctionalBehavior) => {
 }
 
 const onUpdate = async (data: FunctionalBehavior) => {
-    await $fetch(`/api/functional-behaviors/${data.id}`, {
+    await $fetch(`/api/functional-behavior/${data.id}`, {
         method: 'PUT',
         body: {
             ...data,
@@ -56,7 +56,7 @@ const onUpdate = async (data: FunctionalBehavior) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/functional-behaviors/${id}`, {
+    await $fetch(`/api/functional-behavior/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e))

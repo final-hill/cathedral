@@ -6,7 +6,7 @@ definePageMeta({ name: 'Limitations' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Limitations').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -17,7 +17,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: limits, status, refresh, error: getLimitsError } = await useFetch<Limit[]>(`/api/limits`, {
+const { data: limits, status, refresh, error: getLimitsError } = await useFetch<Limit[]>(`/api/limit`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -29,7 +29,7 @@ if (getLimitsError.value)
     $eventBus.$emit('page-error', getLimitsError.value)
 
 const onCreate = async (data: Limit) => {
-    await $fetch(`/api/limits`, {
+    await $fetch(`/api/limit`, {
         method: 'POST',
         body: {
             solutionId,
@@ -42,7 +42,7 @@ const onCreate = async (data: Limit) => {
 }
 
 const onUpdate = async (data: Limit) => {
-    await $fetch(`/api/limits/${data.id}`, {
+    await $fetch(`/api/limit/${data.id}`, {
         method: 'PUT', body: {
             solutionId,
             id: data.id,
@@ -55,7 +55,7 @@ const onUpdate = async (data: Limit) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/limits/${id}`, {
+    await $fetch(`/api/limit/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e))

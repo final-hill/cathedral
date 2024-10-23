@@ -1,5 +1,5 @@
 import { v7 as uuidv7 } from 'uuid';
-import { BaseEntity, Entity, ManyToOne, Property } from "@mikro-orm/core";
+import { BaseEntity, Cascade, Entity, ManyToOne, Property } from "@mikro-orm/core";
 import { Requirement } from '../requirements/Requirement.js'
 import { type Properties } from '../types/index.js';
 
@@ -21,9 +21,9 @@ export abstract class RequirementRelation extends BaseEntity {
     @Property({ type: 'uuid', primary: true })
     id: string;
 
-    @ManyToOne({ entity: () => Requirement })
+    @ManyToOne({ entity: () => Requirement, cascade: [Cascade.REMOVE] })
     left: Requirement
 
-    @ManyToOne({ entity: () => Requirement })
+    @ManyToOne({ entity: () => Requirement, cascade: [Cascade.REMOVE] })
     right: Requirement
 }

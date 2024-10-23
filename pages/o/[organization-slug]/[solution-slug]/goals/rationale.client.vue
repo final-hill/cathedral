@@ -6,7 +6,7 @@ definePageMeta({ name: 'Rationale' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Rationale').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -23,10 +23,10 @@ const [
     { data: situationJustifications, error: getSituationError },
     { data: objectiveJustifications, error: getObjectiveError }
 ] = await Promise.all([
-    useFetch<Justification[]>(`/api/justifications`, { query: { name: 'Vision', solutionId } }),
-    useFetch<Justification[]>(`/api/justifications`, { query: { name: 'Mission', solutionId } }),
-    useFetch<Justification[]>(`/api/justifications`, { query: { name: 'Situation', solutionId } }),
-    useFetch<Justification[]>(`/api/justifications`, { query: { name: 'Objective', solutionId } })
+    useFetch<Justification[]>(`/api/justification`, { query: { name: 'Vision', solutionId } }),
+    useFetch<Justification[]>(`/api/justification`, { query: { name: 'Mission', solutionId } }),
+    useFetch<Justification[]>(`/api/justification`, { query: { name: 'Situation', solutionId } }),
+    useFetch<Justification[]>(`/api/justification`, { query: { name: 'Objective', solutionId } })
 ]);
 
 if (getVisionError.value)
@@ -53,7 +53,7 @@ const fieldTriple: [Ref<string>, Justification, string][] = [
 fieldTriple.forEach(([goalDescription, justification, _name]) => {
     watch(goalDescription, debounce(() => {
         justification.description = goalDescription.value;
-        $fetch(`/api/justifications/${justification.id}`, {
+        $fetch(`/api/justification/${justification.id}`, {
             method: 'PUT',
             body: {
                 solutionId,

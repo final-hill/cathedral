@@ -1,4 +1,3 @@
-
 export * from './RequirementRelation.js'
 export * from './Belongs.js'
 export * from './Characterizes.js'

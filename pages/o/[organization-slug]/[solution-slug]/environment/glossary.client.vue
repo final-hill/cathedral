@@ -6,7 +6,7 @@ definePageMeta({ name: 'Glossary' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Glossary').params,
-    { data: solutions, error: getSolutionError } = await useFetch('/api/solutions', {
+    { data: solutions, error: getSolutionError } = await useFetch('/api/solution', {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -17,7 +17,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = await useFetch<GlossaryTerm[]>(`/api/glossary-terms`, {
+const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = await useFetch<GlossaryTerm[]>(`/api/glossary-term`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -29,7 +29,7 @@ if (getGlossaryTermsError.value)
     $eventBus.$emit('page-error', getGlossaryTermsError.value)
 
 const onCreate = async (data: GlossaryTerm) => {
-    await $fetch(`/api/glossary-terms`, {
+    await $fetch(`/api/glossary-term`, {
         method: 'POST',
         body: {
             name: data.name,
@@ -42,7 +42,7 @@ const onCreate = async (data: GlossaryTerm) => {
 }
 
 const onUpdate = async (data: GlossaryTerm) => {
-    await $fetch(`/api/glossary-terms/${data.id}`, {
+    await $fetch(`/api/glossary-term/${data.id}`, {
         method: 'PUT',
         body: {
             id: data.id,
@@ -56,7 +56,7 @@ const onUpdate = async (data: GlossaryTerm) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/glossary-terms/${id}`, {
+    await $fetch(`/api/glossary-term/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e))

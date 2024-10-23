@@ -13,7 +13,7 @@ definePageMeta({ name: 'Scenarios' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Scenarios').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -24,26 +24,26 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: userStories, refresh: refreshUserStories, error: getUserStoriesError, status: userStoryStatus } = await useFetch<UserStory[]>(`/api/user-stories`, {
+const { data: userStories, refresh: refreshUserStories, error: getUserStoriesError, status: userStoryStatus } = await useFetch<UserStory[]>(`/api/user-story`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
         return item
     })
 }),
-    { data: useCases, refresh: refreshUseCases, error: getUseCasesError, status: useCaseStatus } = await useFetch<UseCase[]>(`/api/use-cases`, {
+    { data: useCases, refresh: refreshUseCases, error: getUseCasesError, status: useCaseStatus } = await useFetch<UseCase[]>(`/api/use-case`, {
         query: { solutionId },
         transform: (data) => data.map((item) => {
             item.lastModified = new Date(item.lastModified)
             return item
         })
     }),
-    { data: roles, error: getRolesError } = await useFetch<Stakeholder[]>(`/api/stakeholders`, { query: { solutionId } }),
-    { data: functionalBehaviors, error: getFunctionalBehaviorsError } = await useFetch<FunctionalBehavior[]>(`/api/functional-behaviors`, { query: { solutionId } }),
-    { data: outcomes, error: getOutcomesError } = await useFetch<Outcome[]>(`/api/outcomes`, { query: { solutionId } }),
-    { data: assumptions, error: getAssumptionsError } = await useFetch<Assumption[]>(`/api/assumptions`, { query: { solutionId } }),
-    { data: effects, error: getEffectsError } = await useFetch<Effect[]>(`/api/effects`, { query: { solutionId } }),
-    triggers = ref<{ id: string, name: string }[]>([])
+    { data: roles, error: getRolesError } = await useFetch<Stakeholder[]>(`/api/stakeholder`, { query: { solutionId } }),
+    { data: functionalBehaviors, error: getFunctionalBehaviorsError } = await useFetch<FunctionalBehavior[]>(`/api/functional-behavior`, { query: { solutionId } }),
+    { data: outcomes, error: getOutcomesError } = await useFetch<Outcome[]>(`/api/outcome`, { query: { solutionId } }),
+    { data: assumptions, error: getAssumptionsError } = await useFetch<Assumption[]>(`/api/assumption`, { query: { solutionId } }),
+    { data: effects, error: getEffectsError } = await useFetch<Effect[]>(`/api/effect`, { query: { solutionId } }),
+    triggerIds = ref<{ id: string, name: string }[]>([])
 
 if (getUserStoriesError.value)
     $eventBus.$emit('page-error', getUserStoriesError.value);
@@ -59,15 +59,15 @@ if (getEffectsError.value)
     $eventBus.$emit('page-error', getEffectsError.value);
 
 const onUserStoryCreate = async (userStory: UserStory) => {
-    await $fetch(`/api/user-stories`, {
+    await $fetch(`/api/user-story`, {
         method: 'POST',
         body: {
             name: userStory.name,
             description: '',
-            primaryActorId: userStory.primaryActor,
+            primaryActor: userStory.primaryActor,
             priority: userStory.priority,
-            outcomeId: userStory.outcome,
-            functionalBehaviorId: userStory.functionalBehavior,
+            outcome: userStory.outcome,
+            functionalBehavior: userStory.functionalBehavior,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
@@ -76,13 +76,13 @@ const onUserStoryCreate = async (userStory: UserStory) => {
 }
 
 const onUserStoryUpdate = async (userStory: UserStory) => {
-    await $fetch(`/api/user-stories/${userStory.id}`, {
+    await $fetch(`/api/user-story/${userStory.id}`, {
         method: 'PUT',
         body: {
             name: userStory.name,
-            primaryActorId: userStory.primaryActor,
-            outcomeId: userStory.outcome,
-            functionalBehaviorId: userStory.functionalBehavior,
+            primaryActor: userStory.primaryActor,
+            outcome: userStory.outcome,
+            functionalBehavior: userStory.functionalBehavior,
             solutionId,
             description: '',
             priority: userStory.priority
@@ -93,18 +93,18 @@ const onUserStoryUpdate = async (userStory: UserStory) => {
 }
 
 const onUseCaseCreate = async (useCase: UseCase) => {
-    await $fetch(`/api/use-cases`, {
+    await $fetch(`/api/use-case`, {
         method: 'POST',
         body: {
             name: useCase.name,
             scope: useCase.scope,
             level: useCase.level,
-            primaryActorId: useCase.primaryActor,
+            primaryActor: useCase.primaryActor,
             goalInContext: useCase.goalInContext,
-            preconditionId: useCase.precondition,
+            precondition: useCase.precondition,
             triggerId: useCase.triggerId,
             mainSuccessScenario: useCase.mainSuccessScenario,
-            successGuaranteeId: useCase.successGuarantee,
+            successGuarantee: useCase.successGuarantee,
             extensions: useCase.extensions,
             solutionId,
             description: '',
@@ -116,18 +116,18 @@ const onUseCaseCreate = async (useCase: UseCase) => {
 }
 
 const onUseCaseUpdate = async (useCase: UseCase) => {
-    await $fetch(`/api/use-cases/${useCase.id}`, {
+    await $fetch(`/api/use-case/${useCase.id}`, {
         method: 'PUT',
         body: {
             name: useCase.name,
             scope: useCase.scope,
             level: useCase.level,
-            primaryActorId: useCase.primaryActor,
+            primaryActor: useCase.primaryActor,
             goalInContext: useCase.goalInContext,
-            preconditionId: useCase.precondition,
+            precondition: useCase.precondition,
             triggerId: useCase.triggerId,
             mainSuccessScenario: useCase.mainSuccessScenario,
-            successGuaranteeId: useCase.successGuarantee,
+            successGuarantee: useCase.successGuarantee,
             extensions: useCase.extensions,
             solutionId,
             description: ''
@@ -138,7 +138,7 @@ const onUseCaseUpdate = async (useCase: UseCase) => {
 }
 
 const onUserStoryDelete = async (id: string) => {
-    await $fetch(`/api/user-stories/${id}`, {
+    await $fetch(`/api/user-story/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e));
@@ -147,7 +147,7 @@ const onUserStoryDelete = async (id: string) => {
 }
 
 const onUseCaseDelete = async (id: string) => {
-    await $fetch(`/api/use-cases/${id}`, {
+    await $fetch(`/api/use-case/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e));

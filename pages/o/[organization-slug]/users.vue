@@ -8,7 +8,7 @@ definePageMeta({ name: 'Organization Users' })
 const { $eventBus } = useNuxtApp()
 
 const { organizationslug } = useRoute('Organization Users').params,
-    { data: organizations, error: getOrgError } = await useFetch<Organization[]>(`/api/organizations/`, {
+    { data: organizations, error: getOrgError } = await useFetch<Organization[]>(`/api/organization/`, {
         query: { slug: organizationslug }
     }),
     organization = ref(organizations.value?.[0]!)

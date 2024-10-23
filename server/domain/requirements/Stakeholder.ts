@@ -17,14 +17,7 @@ export class Stakeholder extends Component {
         this.availability = props.availability;
         this.segmentation = props.segmentation;
         this.category = props.category;
-        this.parentComponent = props.parentComponent;
     }
-
-    /**
-     * The parent component of the stakeholder, if any.
-     */
-    @ManyToOne({ entity: () => Stakeholder })
-    parentComponent?: Stakeholder;
 
     /**
      * The segmentation of the stakeholder.

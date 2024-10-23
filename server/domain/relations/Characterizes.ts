@@ -1,4 +1,4 @@
-import { Entity, ManyToOne } from "@mikro-orm/core";
+import { Entity } from "@mikro-orm/core";
 import { RequirementRelation } from "./RequirementRelation.js";
 import { MetaRequirement } from "../requirements/MetaRequirement.js";
 import { type Properties } from "../types/index.js";

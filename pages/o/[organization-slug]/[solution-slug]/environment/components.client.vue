@@ -6,14 +6,14 @@ definePageMeta({ name: 'Environment Components' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Environment Components').params,
-    { data: solutions, error: getSolutionError } = await useFetch('/api/solutions', {
+    { data: solutions, error: getSolutionError } = await useFetch('/api/solution', {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
         }
     }),
     solutionId = solutions.value?.[0].id,
-    { data: environmentComponents, status, refresh, error: getEnvironmentComponentsError } = await useFetch<EnvironmentComponent[]>(`/api/environment-components`, {
+    { data: environmentComponents, status, refresh, error: getEnvironmentComponentsError } = await useFetch<EnvironmentComponent[]>(`/api/environment-component`, {
         query: { solutionId },
         transform: (data) => data.map((item) => {
             item.lastModified = new Date(item.lastModified)
@@ -28,7 +28,7 @@ if (getEnvironmentComponentsError.value)
     $eventBus.$emit('page-error', getEnvironmentComponentsError.value)
 
 const onCreate = async (data: EnvironmentComponent) => {
-    await $fetch(`/api/environment-components`, {
+    await $fetch(`/api/environment-component`, {
         method: 'POST',
         body: {
             name: data.name,
@@ -41,7 +41,7 @@ const onCreate = async (data: EnvironmentComponent) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/environment-components/${id}`, {
+    await $fetch(`/api/environment-component/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -49,7 +49,7 @@ const onDelete = async (id: string) => {
 }
 
 const onUpdate = async (data: EnvironmentComponent) => {
-    await $fetch(`/api/environment-components/${data.id}`, {
+    await $fetch(`/api/environment-component/${data.id}`, {
         method: 'PUT',
         body: {
             name: data.name,

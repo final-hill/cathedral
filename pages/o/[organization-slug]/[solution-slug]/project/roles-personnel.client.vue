@@ -6,7 +6,7 @@ definePageMeta({ name: 'Roles & Personnel' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Roles & Personnel').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -17,7 +17,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: personnel, refresh, status, error: getPersonnelError } = await useFetch<Person[]>(`/api/persons`, {
+const { data: personnel, refresh, status, error: getPersonnelError } = await useFetch<Person[]>(`/api/person`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -29,7 +29,7 @@ if (getPersonnelError.value)
     $eventBus.$emit('page-error', getPersonnelError.value)
 
 const onCreate = async (data: Person) => {
-    await $fetch(`/api/persons`, {
+    await $fetch(`/api/person`, {
         method: 'POST',
         body: {
             name: data.name ?? 'Anonymous',
@@ -43,7 +43,7 @@ const onCreate = async (data: Person) => {
 }
 
 const onUpdate = async (data: Person) => {
-    await $fetch(`/api/persons/${data.id}`, {
+    await $fetch(`/api/person/${data.id}`, {
         method: 'PUT',
         body: {
             name: data.name ?? 'Anonymous',
@@ -57,7 +57,7 @@ const onUpdate = async (data: Person) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/persons/${id}`, {
+    await $fetch(`/api/person/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e))

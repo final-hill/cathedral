@@ -8,15 +8,8 @@ import { ReqType } from "./ReqType.js";
  */
 @Entity({ discriminatorValue: ReqType.GLOSSARY_TERM })
 export class GlossaryTerm extends Component {
-    constructor({ parentComponent, ...rest }: Properties<Omit<GlossaryTerm, 'id' | 'req_type'>>) {
-        super(rest);
-        this.parentComponent = parentComponent;
+    constructor(props: Properties<Omit<GlossaryTerm, 'id' | 'req_type'>>) {
+        super(props);
         this.req_type = ReqType.GLOSSARY_TERM;
     }
-
-    /**
-     * The parent term of the glossary term, if any.
-     */
-    @ManyToOne({ entity: () => GlossaryTerm })
-    parentComponent?: GlossaryTerm;
 }

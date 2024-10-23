@@ -1,13 +1,7 @@
 import { Entity } from '@mikro-orm/core';
-import type { Properties } from '../types/index.js';
+import { type Properties } from '../types/index.js';
 import { MetaRequirement } from './MetaRequirement.js';
 import { ReqType } from './ReqType.js';
-
-export type ParsedReqColType = 'assumptions' | 'constraints' |
-    'effects' | 'environmentComponents' | 'functionalBehaviors' |
-    'glossaryTerms' | 'invariants' | 'justifications' | 'limits' |
-    'nonFunctionalBehaviors' | 'obstacles' | 'outcomes' | 'persons' |
-    'stakeholders' | 'systemComponents' | 'useCases' | 'userStories'
 
 /**
  * A requirement that has been parsed from natural language text

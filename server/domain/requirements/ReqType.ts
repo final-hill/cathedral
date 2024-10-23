@@ -1,3 +1,7 @@
+// Note: it is assumed that api endpoints are snakeCaseToSlug(requirement.req_type)
+// see the workbox view for a couple example usages
+// TODO: update the architecture to encode this assumption somehow.
+// Nuxt may limit the ability to do this, but it is worth investigating.
 export enum ReqType {
     ACTOR = 'actor',
     ASSUMPTION = 'assumption',

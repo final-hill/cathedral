@@ -11,12 +11,5 @@ export class SystemComponent extends Component {
     constructor(props: Properties<Omit<SystemComponent, 'id' | 'req_type'>>) {
         super(props);
         this.req_type = ReqType.SYSTEM_COMPONENT;
-        this.parentComponent = props.parentComponent;
     }
-
-    /**
-     * Parent component of the current system component
-     */
-    @ManyToOne({ entity: () => SystemComponent })
-    parentComponent?: SystemComponent;
 }

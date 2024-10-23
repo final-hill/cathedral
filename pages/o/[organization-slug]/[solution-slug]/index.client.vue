@@ -5,7 +5,7 @@ definePageMeta({ name: 'Solution' })
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Solution').params,
     router = useRouter(),
-    { data: solutions, error: solutionError } = await useFetch('/api/solutions', {
+    { data: solutions, error: solutionError } = await useFetch('/api/solution', {
         query: {
             organizationSlug: organizationslug,
             slug: solutionslug
@@ -36,7 +36,7 @@ const handleSolutionDelete = async () => {
         rejectLabel: 'Cancel',
         acceptLabel: 'Delete',
         accept: async () => {
-            await $fetch(`/api/solutions/${solution.id}`, {
+            await $fetch(`/api/solution/${solution.id}`, {
                 method: 'delete'
             }).catch((e) => $eventBus.$emit('page-error', e))
             router.push({ name: 'Organization', params: { organizationslug } })
@@ -54,7 +54,7 @@ const parsingRequirements = ref(false),
 const parseRawRequirement = async () => {
     parsingRequirements.value = true
     parsingError.value = ''
-    const response = await $fetch('/api/parse-requirements', {
+    const response = await $fetch('/api/parse-requirement', {
         method: 'post',
         body: {
             solutionId: solution.id,

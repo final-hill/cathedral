@@ -1,13 +1,15 @@
 <script lang="ts" setup>
-import type { ParsedRequirement, Requirement, ParsedReqColType } from '~/server/domain/index.js';
+import snakeCaseToTitle from '~/utils/snakeCaseToTitle.js';
+import camelCaseToTitle from '~/utils/camelCaseToTitle.js';
+import type { DataTableRowExpandEvent, DataTableRowCollapseEvent, DataTableExpandedRows } from 'primevue/datatable';
+import type { ParsedRequirement, Requirement, ReqType } from '~/server/domain/requirements/index.js';
 
 useHead({ title: 'Workbox' });
 definePageMeta({ name: 'Workbox' });
 
 const { $eventBus } = useNuxtApp(),
-    router = useRouter(),
     { solutionslug, organizationslug } = useRoute('Workbox').params,
-    { data: solutions, error: solutionError } = await useFetch('/api/solutions', {
+    { data: solutions, error: solutionError } = await useFetch('/api/solution', {
         query: {
             organizationSlug: organizationslug,
             slug: solutionslug
@@ -15,7 +17,7 @@ const { $eventBus } = useNuxtApp(),
     }),
     solution = solutions.value![0];
 
-const { data: parsedRequirements, error: parsedRequirementsError, refresh } = await useFetch<ParsedRequirement[]>('/api/parse-requirements', {
+const { data: parsedRequirements, error: parsedRequirementsError, refresh } = await useFetch<ParsedRequirement[]>('/api/parse-requirement', {
     method: 'get',
     query: { solutionId: solution.id },
     transform: (data: ParsedRequirement[]) => data.map((parsedRequirement) => {
@@ -30,33 +32,50 @@ if (solutionError.value)
 if (parsedRequirementsError.value)
     $eventBus.$emit('page-error', parsedRequirementsError.value);
 
-const renderParsedRequirements = ref(true);
+type DataRows = Record<string, { isLoading: boolean, data: Partial<Record<ReqType, Requirement[]>> }>
 
-const onItemApprove = async (type: ParsedReqColType, itemId: string) => {
-    await $fetch(`/api/${camelCaseToSlug(type)}/${itemId}`, {
+const expandedRows = ref<DataTableExpandedRows>({}),
+    dataRows = ref<DataRows>({})
+
+const onItemApprove = async (item: Requirement) => {
+    await $fetch(`/api/${snakeCaseToSlug(item.req_type)}/${item.id}`, {
         // @ts-ignore: method not recognized
         method: 'put',
         body: { solutionId: solution.id, isSilence: false }
     });
-    renderParsedRequirements.value = false;
     await refresh();
-    renderParsedRequirements.value = true;
 }
 
-const onItemDelete = async (type: ParsedReqColType, itemId: string) => {
-    await $fetch(`/api/${camelCaseToSlug(type)}/${itemId}`, {
+const onItemDelete = async (item: Requirement) => {
+    if (!confirm(`Are you sure you want to delete "${item.name}"?`))
+        return
+    await $fetch(`/api/${snakeCaseToSlug(item.req_type)}/${item.id}`, {
         // @ts-ignore: method not recognized
         method: 'delete',
         body: { solutionId: solution.id }
     });
-    renderParsedRequirements.value = false;
     await refresh();
-    renderParsedRequirements.value = true;
 }
 
-const onItemUpdate = async (type: ParsedReqColType, data: Requirement) => {
-    alert(`UPDATE ${type} not implemented`)
+const onItemUpdate = async (item: Requirement) => {
+    alert(`UPDATE ${item.req_type} not implemented`)
 }
+
+const onRowExpand = async ({ data }: DataTableRowExpandEvent) => {
+    dataRows.value[data.id] = { isLoading: true, data: {} };
+    dataRows.value[data.id].data = await $fetch<DataRows>(`/api/parse-requirement/follows`, {
+        query: { id: data.id, solutionId: solution.id }
+    })
+    dataRows.value[data.id].isLoading = false;
+}
+
+const onRowCollapse = async ({ data }: DataTableRowCollapseEvent) => {
+    dataRows.value[data.id] = { isLoading: false, data: {} };
+}
+
+const reqKeys = (req: object = {}) => Object.keys(req)
+    .filter(key => !['id', 'lastModified', 'modifiedBy', 'follows', 'solution', 'req_type', 'isSilence'].includes(key))
+
 </script>
 
 <template>
@@ -65,26 +84,45 @@ const onItemUpdate = async (type: ParsedReqColType, data: Requirement) => {
         <InlineMessage v-if="!parsedRequirements?.length" severity="info">
             The Workbox is empty.
         </InlineMessage>
-        <Accordion v-if="renderParsedRequirements">
-            <AccordionTab v-for="parsedRequirement in parsedRequirements" :key="parsedRequirement.id">
-                <template #header>
-                    <div class="grid w-11">
-                        <InlineMessage class="col-fixed" severity="secondary">{{
-                            parsedRequirement.lastModified.toLocaleString() }}
-                        </InlineMessage>
-                        <span class="col-fixed font-bold">by {{ parsedRequirement.modifiedBy.name }}</span>
-                        <span class="col font-italic">{{ parsedRequirement.statement }}</span>
-                    </div>
+        <DataTable v-model:expandedRows="expandedRows" dataKey="id" :value="parsedRequirements" @rowExpand="onRowExpand"
+            @rowCollapse="onRowCollapse" stripedRows>
+            <Column expander style="width: 5rem" />
+            <Column field="lastModified" header="Date" sortable>
+                <template #body="{ data }">
+                    <time :datetime="data.lastModified.toISOString()">{{ data.lastModified.toLocaleString() }}</time>
                 </template>
-                <WorkboxDataView :parsedRequirement="parsedRequirement" :on-item-delete="onItemDelete"
-                    :on-item-approve="onItemApprove" :on-item-update="onItemUpdate" />
-            </AccordionTab>
-        </Accordion>
+            </Column>
+            <Column field="modifiedBy" header="Modified By" sortable>
+                <template #body="{ data }">
+                    {{ data.modifiedBy.name }}
+                </template>
+            </Column>
+            <Column field="description" header="Statement" sortable></Column>
+            <template #expansion="{ data }">
+                <DataTable v-for="reqType of reqKeys(dataRows[data.id]?.data)"
+                    :value="dataRows[data.id].data[reqType as ReqType]" :loading="dataRows[data.id].isLoading"
+                    stripedRows>
+                    <template #header>
+                        <h4>{{ snakeCaseToTitle(reqType) }}</h4>
+                    </template>
+                    <Column v-for="col of reqKeys(dataRows[data.id]?.data[reqType as ReqType]?.[0])" :key="col"
+                        :field="col" :header="camelCaseToTitle(col)" sortable />
+                    <Column header="Actions" frozen align-frozen="right">
+                        <template #body="{ data }">
+                            <Button icon="pi pi-check" text rounded class="mr-2" severity="success" title="Approve"
+                                @click="onItemApprove(data)" />
+                            <!--
+                                TODO: implement. Field types are wanted for generating the form.
+                                see: https://github.com/final-hill/cathedral/issues/164
+                                -->
+                            <!-- <Button icon="pi pi-pencil" text rounded class="mr-2" title="Edit"
+                                @click="openEditDialog(requirements.type, data)" /> -->
+                            <Button icon="pi pi-trash" text rounded severity="danger" title="Delete"
+                                @click="onItemDelete(data)" />
+                        </template>
+                    </Column>
+                </DataTable>
+            </template>
+        </DataTable>
     </div>
 </template>
-
-<style lang="css" scoped>
-:deep(.p-accordion-content) {
-    padding: 1rem;
-}
-</style>

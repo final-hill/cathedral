@@ -7,19 +7,21 @@ import { type Properties } from '../types/index.js';
  */
 @Entity()
 export class AuditLog extends BaseEntity {
-    constructor(props: Properties<Omit<AuditLog, 'id' | 'createdAt'>>) {
+    constructor(props: Properties<Omit<AuditLog, 'id' | 'createdAt'>> & { id?: string, createdAt?: Date }) {
         super()
         this.type = props.type;
         this.entity = props.entity;
         this.entityId = props.entityId;
         this.entityName = props.entityName;
+        this.createdAt = props.createdAt || new Date();
+        this.id = props.id || uuidv7();
     }
 
     /**
      * The unique identifier of the AuditLog
      */
     @Property({ type: 'uuid', primary: true })
-    id: string = uuidv7();
+    id: string
 
     /**
      * The unique identifier of the entity that was changed
@@ -49,5 +51,5 @@ export class AuditLog extends BaseEntity {
      * The date and time when the AuditLog was created
      */
     @Property({ type: 'datetime' })
-    createdAt: Date = new Date();
+    createdAt: Date
 }

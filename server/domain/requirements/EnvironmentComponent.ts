@@ -8,15 +8,8 @@ import { ReqType } from "./ReqType.js";
  */
 @Entity({ discriminatorValue: ReqType.ENVIRONMENT_COMPONENT })
 export class EnvironmentComponent extends Component {
-    constructor({ parentComponent, ...rest }: Properties<Omit<EnvironmentComponent, 'id' | 'req_type'>>) {
-        super(rest);
-        this.parentComponent = parentComponent;
+    constructor(props: Properties<Omit<EnvironmentComponent, 'id' | 'req_type'>>) {
+        super(props);
         this.req_type = ReqType.ENVIRONMENT_COMPONENT;
     }
-
-    /**
-     * The parent component of the current environment component if any
-     */
-    @ManyToOne({ entity: () => EnvironmentComponent })
-    parentComponent?: EnvironmentComponent;
 }
