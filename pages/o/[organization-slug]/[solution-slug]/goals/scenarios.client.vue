@@ -1,16 +1,16 @@
 <script lang="ts" setup>
-import { FunctionalBehavior } from '~/server/domain/FunctionalBehavior.js'
-import { MoscowPriority } from '~/server/domain/MoscowPriority.js'
-import { Outcome } from '~/server/domain/Outcome.js'
-import { Stakeholder } from '~/server/domain/Stakeholder.js'
-import { UserStory } from '~/server/domain/UserStory.js';
+import { FunctionalBehavior } from '~/domain/requirements/FunctionalBehavior.js'
+import { MoscowPriority } from '~/domain/requirements/MoscowPriority.js'
+import { Outcome } from '~/domain/requirements/Outcome.js'
+import { Stakeholder } from '~/domain/requirements/Stakeholder.js'
+import { UserStory } from '~/domain/requirements/UserStory.js';
 
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Goal Scenarios' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Scenarios').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -27,16 +27,16 @@ const [
     { data: functionalBehaviors, error: getFunctionalBehaviorsError },
     { data: outcomes, error: getOutcomesError },
 ] = await Promise.all([
-    useFetch<UserStory[]>(`/api/user-stories`, {
+    useFetch<UserStory[]>(`/api/user-story`, {
         query: { solutionId },
         transform: (data) => data.map((item) => {
             item.lastModified = new Date(item.lastModified)
             return item
         })
     }),
-    useFetch<Stakeholder[]>(`/api/stakeholders`, { query: { solutionId } }),
-    useFetch<FunctionalBehavior[]>(`/api/functional-behaviors`, { query: { solutionId } }),
-    useFetch<Outcome[]>(`/api/outcomes`, { query: { solutionId } })
+    useFetch<Stakeholder[]>(`/api/stakeholder`, { query: { solutionId } }),
+    useFetch<FunctionalBehavior[]>(`/api/functional-behavior`, { query: { solutionId } }),
+    useFetch<Outcome[]>(`/api/outcome`, { query: { solutionId } })
 ])
 
 if (getUserStoriesError.value)
@@ -49,12 +49,12 @@ if (getOutcomesError.value)
     $eventBus.$emit('page-error', getOutcomesError.value);
 
 const onUserStoryCreate = async (userStory: UserStory) => {
-    await $fetch(`/api/user-stories`, {
+    await $fetch(`/api/user-story`, {
         method: 'POST',
         body: {
             ...userStory,
             solutionId,
-            statement: '',
+            description: '',
             priority: MoscowPriority.MUST
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
@@ -63,12 +63,12 @@ const onUserStoryCreate = async (userStory: UserStory) => {
 }
 
 const onUserStoryUpdate = async (userStory: UserStory) => {
-    await $fetch(`/api/user-stories/${userStory.id}`, {
+    await $fetch(`/api/user-story/${userStory.id}`, {
         method: 'PUT',
         body: {
             ...userStory,
             solutionId,
-            statement: '',
+            description: '',
             priority: MoscowPriority.MUST
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
@@ -77,7 +77,7 @@ const onUserStoryUpdate = async (userStory: UserStory) => {
 }
 
 const onUserStoryDelete = async (id: string) => {
-    await $fetch(`/api/user-stories/${id}`, {
+    await $fetch(`/api/user-story/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e));

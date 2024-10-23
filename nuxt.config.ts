@@ -122,6 +122,7 @@ export default defineNuxtConfig({
             options: {
                 target: "esnext",
                 // https://github.com/vitejs/vite/issues/13736
+                // https://github.com/nuxt/nuxt/issues/29279#issuecomment-2395293514
                 tsconfigRaw: {
                     compilerOptions: {
                         experimentalDecorators: true,
@@ -158,6 +159,18 @@ export default defineNuxtConfig({
         typeCheck: true
     },
     vite: {
+        esbuild: {
+            // https://github.com/vitejs/vite/issues/13736
+            // https://github.com/nuxt/nuxt/issues/29279#issuecomment-2395293514
+            tsconfigRaw: {
+                compilerOptions: {
+                    experimentalDecorators: true,
+                    // @ts-expect-error: Is this even doing anything?
+                    emitDecoratorMetadata: true,
+                    declaration: true
+                }
+            }
+        },
         server: {
             hmr: {
                 protocol: 'wss',

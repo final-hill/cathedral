@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import { useFetch } from 'nuxt/app';
-import { Constraint } from '~/server/domain/Constraint.js';
-import { ConstraintCategory } from '~/server/domain/ConstraintCategory.js';
+import { Constraint } from '~/domain/requirements/Constraint.js';
+import { ConstraintCategory } from '~/domain/requirements/ConstraintCategory.js';
 
 useHead({ title: 'Constraints' })
 definePageMeta({ name: 'Constraints' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Constraints').params,
-    { data: solutions, error: getSolutionError } = await useFetch('/api/solutions', {
+    { data: solutions, error: getSolutionError } = await useFetch('/api/solution', {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -16,7 +16,7 @@ const { $eventBus } = useNuxtApp(),
     }),
     solution = (solutions.value ?? [])[0],
     solutionId = solution.id,
-    { data: constraints, status, refresh, error: getConstraintsError } = await useFetch<Constraint[]>(`/api/constraints`, {
+    { data: constraints, status, refresh, error: getConstraintsError } = await useFetch<Constraint[]>(`/api/constraint`, {
         query: { solutionId },
         transform: (data) => data.map((item) => {
             item.lastModified = new Date(item.lastModified)
@@ -31,11 +31,11 @@ if (getConstraintsError.value)
     $eventBus.$emit('page-error', getConstraintsError.value)
 
 const onCreate = async (data: Constraint) => {
-    await $fetch(`/api/constraints`, {
+    await $fetch(`/api/constraint`, {
         method: 'POST',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             category: data.category,
             solutionId
         }
@@ -45,7 +45,7 @@ const onCreate = async (data: Constraint) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/constraints/${id}`, {
+    await $fetch(`/api/constraint/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -53,11 +53,11 @@ const onDelete = async (id: string) => {
 }
 
 const onUpdate = async (data: Constraint) => {
-    await $fetch(`/api/constraints/${data.id}`, {
+    await $fetch(`/api/constraint/${data.id}`, {
         method: 'PUT',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             category: data.category,
             solutionId
         }
@@ -71,9 +71,9 @@ const onUpdate = async (data: Constraint) => {
         Environmental constraints are the limitations and obligations that
         the environment imposes on the project and system.
     </p>
-    <XDataTable :viewModel="{ name: 'text', category: 'text' }"
-        :createModel="{ name: 'text', category: Object.values(ConstraintCategory), statement: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', category: Object.values(ConstraintCategory), statement: 'text' }"
+    <XDataTable :viewModel="{ name: 'text', category: 'text', description: 'text' }"
+        :createModel="{ name: 'text', category: Object.values(ConstraintCategory), description: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', category: Object.values(ConstraintCategory), description: 'text' }"
         :datasource="constraints" :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate"
         :loading="status === 'pending'" :organizationSlug="organizationslug" entityName="Constraint"
         :showRecycleBin="true">

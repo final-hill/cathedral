@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { AppUser } from '~/server/domain/AppUser.js'
-import { AppRole } from '~/server/domain/AppRole.js'
-import { Organization } from '~/server/domain';
+import { AppUser, AppRole } from '~/domain/application/index.js'
+import { Organization } from '~/domain/requirements';
 
 useHead({ title: 'Users' })
 definePageMeta({ name: 'Organization Users' })
@@ -9,7 +8,7 @@ definePageMeta({ name: 'Organization Users' })
 const { $eventBus } = useNuxtApp()
 
 const { organizationslug } = useRoute('Organization Users').params,
-    { data: organizations, error: getOrgError } = await useFetch<Organization[]>(`/api/organizations/`, {
+    { data: organizations, error: getOrgError } = await useFetch<Organization[]>(`/api/organization/`, {
         query: { slug: organizationslug }
     }),
     organization = ref(organizations.value?.[0]!)

@@ -2,7 +2,7 @@
 definePageMeta({ name: 'Home' })
 
 const router = useRouter(),
-    { status, data: organizations, refresh, error: getOrgError } = await useFetch('/api/organizations'),
+    { status, data: organizations, refresh, error: getOrgError } = await useFetch('/api/organization'),
     confirm = useConfirm(),
     { $eventBus } = useNuxtApp()
 
@@ -17,7 +17,7 @@ const handleDelete = async (organization: { id: string, name: string }) => {
         rejectLabel: 'Cancel',
         acceptLabel: 'Delete',
         accept: async () => {
-            await $fetch(`/api/organizations/${organization.id}`, {
+            await $fetch(`/api/organization/${organization.id}`, {
                 method: 'delete'
             }).catch((e) => $eventBus.$emit('page-error', e))
             refresh()

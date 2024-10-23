@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-import { FunctionalBehavior } from '~/server/domain/FunctionalBehavior.js';
-import { NonFunctionalBehavior } from '~/server/domain/NonFunctionalBehavior.js';
-import { SystemComponent } from '~/server/domain/SystemComponent.js';
+import { FunctionalBehavior } from '~/domain/requirements/FunctionalBehavior.js';
+import { NonFunctionalBehavior } from '~/domain/requirements/NonFunctionalBehavior.js';
+import { SystemComponent } from '~/domain/requirements/SystemComponent.js';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Functionality' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Functionality').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -20,7 +20,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: components, status, refresh, error: getComponentsError } = await useFetch<SystemComponent[]>(`/api/system-components`, {
+const { data: components, status, refresh, error: getComponentsError } = await useFetch<SystemComponent[]>(`/api/system-component`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -33,12 +33,12 @@ if (getComponentsError.value)
     $eventBus.$emit('page-error', getComponentsError.value)
 
 const fnFunctionalBehaviors = async (componentId: string) =>
-    await $fetch<FunctionalBehavior[]>(`/api/functional-behaviors`, {
+    await $fetch<FunctionalBehavior[]>(`/api/functional-behavior`, {
         query: { solutionId, componentId }
     }).catch((e) => $eventBus.$emit('page-error', e));
 
 const fnNonFunctionalBehaviors = async (componentId: string) =>
-    await $fetch<NonFunctionalBehavior[]>(`/api/non-functional-behaviors`, {
+    await $fetch<NonFunctionalBehavior[]>(`/api/non-functional-behavior`, {
         query: { solutionId, componentId }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -47,9 +47,9 @@ const componentSortField = ref<string | undefined>('name')
 // const onCreate = async (newData: BehaviorViewModel) => {
 //     const b: Omit<Functionality, 'id'> = {
 //         name: newData.name,
-//         statement: newData.statement,
+//         description: newData.description,
 //         solutionId,
-//         componentId: newData.componentId,
+//         component: newData.component,
 //         priority: 'MUST'
 //     }
 
@@ -65,9 +65,9 @@ const componentSortField = ref<string | undefined>('name')
 //     const b: Functionality = {
 //         id: newData.id,
 //         name: newData.name,
-//         statement: newData.statement,
+//         description: newData.description,
 //         solutionId,
-//         componentId: newData.componentId,
+//         component: newData.component,
 //         priority: newData.priority
 //     }
 
@@ -113,7 +113,7 @@ const componentSortField = ref<string | undefined>('name')
                     {{ data[field] }}
                 </template>
 </Column>
-<Column field="statement" header="Description">
+<Column field="description" header="Description">
     <template #body="{ data, field }">
                     {{ data[field] }}
                 </template>

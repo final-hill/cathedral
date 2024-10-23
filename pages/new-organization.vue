@@ -10,7 +10,7 @@ const router = useRouter(),
 
 const createOrganization = async () => {
     try {
-        const organizationId = (await $fetch('/api/organizations', {
+        const organizationId = (await $fetch('/api/organization', {
             method: 'post',
             body: {
                 name: name.value,
@@ -19,7 +19,7 @@ const createOrganization = async () => {
         }).catch((e) => $eventBus.$emit('page-error', e)));
 
         if (organizationId) {
-            const newOrganization = (await $fetch(`/api/organizations/${organizationId}`));
+            const newOrganization = (await $fetch(`/api/organization/${organizationId}`));
             router.push({ name: 'Organization', params: { organizationslug: newOrganization?.slug } });
         } else {
             $eventBus.$emit('page-error', 'Failed to create organization. No organization ID returned.');

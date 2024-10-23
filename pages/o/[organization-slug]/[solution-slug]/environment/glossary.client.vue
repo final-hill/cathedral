@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import { GlossaryTerm } from '~/server/domain/GlossaryTerm.js';
+import { GlossaryTerm } from '~/domain/requirements/GlossaryTerm.js';
 
 useHead({ title: 'Glossary' })
 definePageMeta({ name: 'Glossary' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Glossary').params,
-    { data: solutions, error: getSolutionError } = await useFetch('/api/solutions', {
+    { data: solutions, error: getSolutionError } = await useFetch('/api/solution', {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -17,7 +17,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = await useFetch<GlossaryTerm[]>(`/api/glossary-terms`, {
+const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = await useFetch<GlossaryTerm[]>(`/api/glossary-term`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -29,11 +29,11 @@ if (getGlossaryTermsError.value)
     $eventBus.$emit('page-error', getGlossaryTermsError.value)
 
 const onCreate = async (data: GlossaryTerm) => {
-    await $fetch(`/api/glossary-terms`, {
+    await $fetch(`/api/glossary-term`, {
         method: 'POST',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -42,12 +42,12 @@ const onCreate = async (data: GlossaryTerm) => {
 }
 
 const onUpdate = async (data: GlossaryTerm) => {
-    await $fetch(`/api/glossary-terms/${data.id}`, {
+    await $fetch(`/api/glossary-term/${data.id}`, {
         method: 'PUT',
         body: {
             id: data.id,
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -56,7 +56,7 @@ const onUpdate = async (data: GlossaryTerm) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/glossary-terms/${id}`, {
+    await $fetch(`/api/glossary-term/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -68,9 +68,9 @@ const onDelete = async (id: string) => {
     <p>
         A Glossary is a list of terms in a particular domain of knowledge with the definitions for those terms.
     </p>
-    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="glossaryTerms" :on-create="onCreate"
-        :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'" :organizationSlug="organizationslug"
-        entityName="GlossaryTerm" :showRecycleBin="true">
+    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="glossaryTerms"
+        :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'"
+        :organizationSlug="organizationslug" entityName="GlossaryTerm" :showRecycleBin="true">
     </XDataTable>
 </template>

@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import { Obstacle } from '~/server/domain/Obstacle.js';
+import { Obstacle } from '~/domain/requirements/Obstacle.js';
 
 useHead({ title: 'Obstacles' })
 definePageMeta({ name: 'Obstacles' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Obstacles').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -17,7 +17,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: obstacles, refresh, status, error: getObstaclesError } = await useFetch<Obstacle[]>(`/api/obstacles`, {
+const { data: obstacles, refresh, status, error: getObstaclesError } = await useFetch<Obstacle[]>(`/api/obstacle`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -26,12 +26,12 @@ const { data: obstacles, refresh, status, error: getObstaclesError } = await use
 })
 
 const onCreate = async (data: Obstacle) => {
-    await $fetch(`/api/obstacles`, {
+    await $fetch(`/api/obstacle`, {
         method: 'POST',
         body: {
             solutionId,
             name: data.name,
-            statement: data.statement
+            description: data.description
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -39,12 +39,12 @@ const onCreate = async (data: Obstacle) => {
 }
 
 const onUpdate = async (data: Obstacle) => {
-    await $fetch(`/api/obstacles/${data.id}`, {
+    await $fetch(`/api/obstacle/${data.id}`, {
         method: 'PUT',
         body: {
             solutionId,
             name: data.name,
-            statement: data.statement
+            description: data.description
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -52,7 +52,7 @@ const onUpdate = async (data: Obstacle) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/obstacles/${id}`, {
+    await $fetch(`/api/obstacle/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -66,8 +66,8 @@ const onDelete = async (id: string) => {
         Obstacles are the challenges that prevent the goals from being achieved.
     </p>
 
-    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="obstacles" :on-create="onCreate"
+    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="obstacles" :on-create="onCreate"
         :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationslug"
         entityName="Obstacle" :showRecycleBin="true">
     </XDataTable>

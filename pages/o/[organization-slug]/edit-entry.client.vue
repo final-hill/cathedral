@@ -5,7 +5,7 @@ definePageMeta({ name: 'Edit Organization' })
 const router = useRouter(),
     { $eventBus } = useNuxtApp(),
     { organizationslug } = useRoute('Edit Organization').params,
-    { data: organizations, error: getOrgError } = await useFetch(`/api/organizations/`, { query: { slug: organizationslug } }),
+    { data: organizations, error: getOrgError } = await useFetch(`/api/organization/`, { query: { slug: organizationslug } }),
     organization = ref(organizations.value![0]),
     newSlug = ref(organization.value.slug);
 
@@ -13,7 +13,7 @@ if (getOrgError.value)
     $eventBus.$emit('page-error', getOrgError.value);
 
 const updateOrganization = async () => {
-    await $fetch(`/api/organizations/${organization.value.id}`, {
+    await $fetch(`/api/organization/${organization.value.id}`, {
         method: 'PUT',
         body: {
             name: organization.value.name,

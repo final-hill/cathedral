@@ -1,8 +1,8 @@
-import { ChangeSetType, QueryOrder } from "@mikro-orm/core"
-import { QueryBuilder } from "@mikro-orm/postgresql"
+import { ChangeSetType } from "@mikro-orm/core"
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { AuditLog, Organization } from "~/server/domain"
+import { AuditLog } from "~/domain/application"
+import { Organization } from "~/domain/requirements/index.js"
 
 const querySchema = z.object({
     entityName: z.string(),
@@ -52,7 +52,7 @@ export default defineEventHandler(async (event) => {
             WHERE d.type = 'delete'
             AND a.entity_name = ?;
     `, [entityName]),
-        auditLogs = res.map((row) => ({
+        auditLogs = res.map((row) => new AuditLog({
             id: row.id,
             createdAt: new Date(row.created_at),
             type: row.type,

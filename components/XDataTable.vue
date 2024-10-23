@@ -3,7 +3,7 @@ import type Dialog from 'primevue/dialog'
 import type DataTable from 'primevue/datatable'
 import { FilterMatchMode } from 'primevue/api';
 import camelCaseToTitle from '~/utils/camelCaseToTitle.js';
-import { AuditLog } from '~/server/domain';
+import { AuditLog } from '~/domain/application/index.js';
 
 export type ViewFieldType = 'text' | 'textarea' | 'number' | 'date' | 'boolean' | 'hidden' | 'object'
 
@@ -183,7 +183,7 @@ const onEditDialogCancel = () => {
         </Toolbar>
         <DataTable ref="dataTable" :value="props.datasource as unknown as any[]" dataKey="id" v-model:filters="filters"
             :globalFilterFields="Object.keys(props.datasource?.[0] ?? {})" :sortField="sortField" :sortOrder="1"
-            :loading="props.loading">
+            :loading="props.loading" stripedRows>
             <Column
                 v-for="key of Object.keys(props.viewModel).filter(k => props.viewModel[k as keyof RowType] !== 'hidden')"
                 :key="key" :field="key" :header="camelCaseToTitle(key)" sortable>

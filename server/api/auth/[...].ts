@@ -1,7 +1,7 @@
 import { NuxtAuthHandler } from '#auth'
 import AzureADB2CProvider, { type AzureB2CProfile } from "next-auth/providers/azure-ad-b2c";
 import { fork } from '~/server/data/orm.js'
-import { AppUser } from '~/server/domain/index.js';
+import { AppUser } from '~/domain/application/index.js';
 
 const config = useRuntimeConfig()
 
@@ -50,7 +50,7 @@ export default NuxtAuthHandler({
                     appUser.lastLoginDate = new Date()
                 }
 
-                await em.flush()
+                await em.persistAndFlush(appUser)
 
                 Object.assign(token, {
                     id: p.oid,

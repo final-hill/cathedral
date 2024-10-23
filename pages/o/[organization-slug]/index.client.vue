@@ -5,11 +5,11 @@ definePageMeta({ name: 'Organization' })
 const { $eventBus } = useNuxtApp(),
     { organizationslug } = useRoute('Organization').params,
     router = useRouter(),
-    { data: organizations, error: getOrgError } = await useFetch('/api/organizations', {
+    { data: organizations, error: getOrgError } = await useFetch('/api/organization', {
         query: { slug: organizationslug }
     }),
     organization = organizations.value![0],
-    { refresh: refreshSolutions, status, data: solutions, error: getSolutionError } = await useFetch('/api/solutions', {
+    { refresh: refreshSolutions, status, data: solutions, error: getSolutionError } = await useFetch('/api/solution', {
         query: { organizationSlug: organizationslug }
     }),
     confirm = useConfirm()
@@ -35,7 +35,7 @@ const handleOrganizationDelete = async () => {
         rejectLabel: 'Cancel',
         acceptLabel: 'Delete',
         accept: async () => {
-            await $fetch(`/api/organizations/${organization.id}`, {
+            await $fetch(`/api/organization/${organization.id}`, {
                 method: 'delete'
             }).catch((e) => $eventBus.$emit('page-error', e))
             router.push({ name: 'Home' })
@@ -60,7 +60,7 @@ const handleSolutionDelete = async (solution: SolutionModel) => {
         rejectLabel: 'Cancel',
         acceptLabel: 'Delete',
         accept: async () => {
-            await $fetch(`/api/solutions/${solution.id}`, {
+            await $fetch(`/api/solution/${solution.id}`, {
                 method: 'delete'
             }).catch((e) => $eventBus.$emit('page-error', e))
             await refreshSolutions()

@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import { Effect } from '~/server/domain/Effect.js';
+import { Effect } from '~/domain/requirements/Effect.js';
 
 useHead({ title: 'Effects' })
 definePageMeta({ name: 'Effects' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Effects').params,
-    { data: solutions, error: getSolutionError } = await useFetch('/api/solutions', {
+    { data: solutions, error: getSolutionError } = await useFetch('/api/solution', {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -17,7 +17,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: effects, refresh, status, error: getEffectsError } = await useFetch<Effect[]>(`/api/effects`, {
+const { data: effects, refresh, status, error: getEffectsError } = await useFetch<Effect[]>(`/api/effect`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -29,11 +29,11 @@ if (getEffectsError.value)
     $eventBus.$emit('page-error', getEffectsError.value)
 
 const onCreate = async (data: Effect) => {
-    await $fetch(`/api/effects`, {
+    await $fetch(`/api/effect`, {
         method: 'POST',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -41,11 +41,11 @@ const onCreate = async (data: Effect) => {
 }
 
 const onUpdate = async (data: Effect) => {
-    await $fetch(`/api/effects/${data.id}`, {
+    await $fetch(`/api/effect/${data.id}`, {
         method: 'PUT',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -54,7 +54,7 @@ const onUpdate = async (data: Effect) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/effects/${id}`, {
+    await $fetch(`/api/effect/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -68,8 +68,8 @@ const onDelete = async (id: string) => {
         An Effect is an environment property affected by a System.
         Example: "The running system will cause the temperature of the room to increase."
     </p>
-    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="effects" :on-create="onCreate"
+    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="effects" :on-create="onCreate"
         :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'" :organizationSlug="organizationslug"
         entityName="Effect" :showRecycleBin="true">
     </XDataTable>

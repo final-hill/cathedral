@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import mermaid from 'mermaid';
-import { Stakeholder } from '~/server/domain/Stakeholder.js';
-import { StakeholderCategory } from '~/server/domain/StakeholderCategory.js';
-import { StakeholderSegmentation } from '~/server/domain/StakeholderSegmentation.js';
+import { Stakeholder } from '~/domain/requirements/Stakeholder.js';
+import { StakeholderCategory } from '~/domain/requirements/StakeholderCategory.js';
+import { StakeholderSegmentation } from '~/domain/requirements/StakeholderSegmentation.js';
 
 useHead({ title: 'Stakeholders' })
 definePageMeta({ name: 'Stakeholders' })
@@ -10,7 +10,7 @@ definePageMeta({ name: 'Stakeholders' })
 const config = useAppConfig(),
     { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Stakeholders').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
         query: {
             slug: solutionslug,
             organizationSlug: organizationslug
@@ -21,7 +21,7 @@ const config = useAppConfig(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: stakeholders, refresh: refreshStakeholders, status, error: getStakeholdersError } = await useFetch<Stakeholder[]>(`/api/stakeholders`, {
+const { data: stakeholders, refresh: refreshStakeholders, status, error: getStakeholdersError } = await useFetch<Stakeholder[]>(`/api/stakeholder`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -75,10 +75,15 @@ const renderChart = async () => {
 watch(stakeholders, renderChart);
 
 const onCreate = async (data: Stakeholder) => {
-    await $fetch(`/api/stakeholders`, {
+    await $fetch(`/api/stakeholder`, {
         method: 'POST',
         body: {
-            ...data,
+            name: data.name,
+            description: data.description,
+            category: data.category,
+            segmentation: data.segmentation,
+            availability: Number(data.availability),
+            influence: Number(data.influence),
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -87,10 +92,15 @@ const onCreate = async (data: Stakeholder) => {
 }
 
 const onUpdate = async (data: Stakeholder) => {
-    await $fetch(`/api/stakeholders/${data.id}`, {
+    await $fetch(`/api/stakeholder/${data.id}`, {
         method: 'PUT',
         body: {
-            ...data,
+            name: data.name,
+            description: data.description,
+            category: data.category,
+            segmentation: data.segmentation,
+            availability: Number(data.availability),
+            influence: Number(data.influence),
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -99,7 +109,7 @@ const onUpdate = async (data: Stakeholder) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/stakeholders/${id}`, {
+    await $fetch(`/api/stakeholder/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -119,14 +129,14 @@ const onDelete = async (id: string) => {
         <TabPanel header="Stakeholders">
             <XDataTable :viewModel="{
                 name: 'text',
-                statement: 'text',
+                description: 'text',
                 availability: 'number',
                 influence: 'number',
                 category: 'text',
                 segmentation: 'text'
             }" :createModel="{
                 name: 'text',
-                statement: 'text',
+                description: 'text',
                 availability: { type: 'number', max: 100, min: 0 },
                 influence: { type: 'number', max: 100, min: 0 },
                 category: Object.values(StakeholderCategory),
@@ -134,7 +144,7 @@ const onDelete = async (id: string) => {
             }" :editModel="{
                 id: 'hidden',
                 name: 'text',
-                statement: 'text',
+                description: 'text',
                 availability: { type: 'number', max: 100, min: 0 },
                 influence: { type: 'number', max: 100, min: 0 },
                 category: Object.values(StakeholderCategory),

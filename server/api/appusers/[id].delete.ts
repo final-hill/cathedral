@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { AppRole, AppUserOrganizationRole } from "~/server/domain/index.js"
+import { AppRole, AppUserOrganizationRole } from "~/domain/application/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -43,6 +43,5 @@ export default defineEventHandler(async (event) => {
         })
 
     // Removing the relationship to the organization and NOT the appuser itself
-    em.remove(appUserRole)
-    await em.flush()
+    await em.remove(appUserRole).flush()
 })

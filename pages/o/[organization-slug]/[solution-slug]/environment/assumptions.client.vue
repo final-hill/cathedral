@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import { useFetch } from 'nuxt/app';
-import { Assumption } from '~/server/domain/Assumption.js';
+import { Assumption } from '~/domain/requirements/Assumption.js';
 
 useHead({ title: 'Assumptions' })
 definePageMeta({ name: 'Assumptions' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Assumptions').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solutions`, {
+    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
         query: {
             organizationSlug: organizationslug,
             slug: solutionslug
@@ -18,7 +18,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: assumptions, refresh, status, error: getAssumptionsError } = await useFetch<Assumption[]>(`/api/assumptions`, {
+const { data: assumptions, refresh, status, error: getAssumptionsError } = await useFetch<Assumption[]>(`/api/assumption`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -30,11 +30,11 @@ if (getAssumptionsError.value)
     $eventBus.$emit('page-error', getAssumptionsError.value);
 
 const onCreate = async (data: Assumption) => {
-    await $fetch(`/api/assumptions`, {
+    await $fetch(`/api/assumption`, {
         method: 'post',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -43,7 +43,7 @@ const onCreate = async (data: Assumption) => {
 }
 
 const onDelete = async (id: string) => {
-    await $fetch(`/api/assumptions/${id}`, {
+    await $fetch(`/api/assumption/${id}`, {
         method: 'delete',
         body: { solutionId }
     })
@@ -53,11 +53,11 @@ const onDelete = async (id: string) => {
 }
 
 const onUpdate = async (data: Assumption) => {
-    await $fetch(`/api/assumptions/${data.id}`, {
+    await $fetch(`/api/assumption/${data.id}`, {
         method: 'put',
         body: {
             name: data.name,
-            statement: data.statement,
+            description: data.description,
             solutionId
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -73,8 +73,8 @@ const onUpdate = async (data: Assumption) => {
         An example of an assumption would be: "Screen resolution will not change during
         the execution of the program".
     </p>
-    <XDataTable :viewModel="{ name: 'text', statement: 'text' }" :createModel="{ name: 'text', statement: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', statement: 'text' }" :datasource="assumptions" :on-create="onCreate"
+    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="assumptions" :on-create="onCreate"
         :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'" :organizationSlug="organizationslug"
         entityName="Assumption" :showRecycleBin="true">
     </XDataTable>

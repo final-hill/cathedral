@@ -9,7 +9,7 @@ const { $eventBus } = useNuxtApp(),
     slug = ref(''),
     description = ref('')
 
-const { data: organizations, error: getOrgError } = await useFetch('/api/organizations', {
+const { data: organizations, error: getOrgError } = await useFetch('/api/organization', {
     query: { slug: organizationslug }
 }),
     organization = organizations.value![0],
@@ -20,7 +20,7 @@ if (getOrgError.value)
 
 const createSolution = async () => {
     try {
-        const solutionId = (await $fetch('/api/solutions', {
+        const solutionId = (await $fetch('/api/solution', {
             method: 'post',
             body: {
                 name: name.value,
@@ -30,7 +30,7 @@ const createSolution = async () => {
         }).catch((e) => $eventBus.$emit('page-error', e)));
 
         if (solutionId) {
-            const newSolution = (await $fetch(`/api/solutions/${solutionId}`));
+            const newSolution = (await $fetch(`/api/solution/${solutionId}`));
             router.push({ name: 'Solution', params: { organizationslug, solutionslug: newSolution.slug } });
         } else {
             $eventBus.$emit('page-error', 'Failed to create solution. No solution ID returned.');
