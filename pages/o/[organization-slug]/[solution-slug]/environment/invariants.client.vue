@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Invariant } from '~/server/domain/requirements/Invariant.js';
+import { Invariant } from '~/domain/requirements/Invariant.js';
 
 useHead({ title: 'Invariants' })
 definePageMeta({ name: 'Invariants' })

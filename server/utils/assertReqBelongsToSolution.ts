@@ -1,6 +1,6 @@
 import { PostgreSqlDriver, SqlEntityManager } from "@mikro-orm/postgresql"
-import { Requirement, Solution } from "../domain/requirements";
-import { Belongs } from "../domain/relations";
+import { Requirement, Solution } from "../../domain/requirements";
+import { Belongs } from "../../domain/relations";
 
 export default async function assertReqBelongsToSolution<R extends typeof Requirement>(
     em: SqlEntityManager<PostgreSqlDriver>,

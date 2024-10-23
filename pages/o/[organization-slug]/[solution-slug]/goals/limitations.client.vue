@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Limit } from '~/server/domain/requirements/Limit.js';
+import { Limit } from '~/domain/requirements/Limit.js';
 
 useHead({ title: 'Limitations' })
 definePageMeta({ name: 'Limitations' })

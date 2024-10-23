@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import { Assumption } from '~/server/domain/requirements/Assumption.js';
-import { Effect } from '~/server/domain/requirements/Effect.js';
-import { FunctionalBehavior } from '~/server/domain/requirements/FunctionalBehavior.js';
-import { MoscowPriority } from '~/server/domain/requirements/MoscowPriority.js';
-import { Outcome } from '~/server/domain/requirements/Outcome.js';
-import { Stakeholder } from '~/server/domain/requirements/Stakeholder.js';
-import { UseCase } from '~/server/domain/requirements/UseCase.js';
-import { UserStory } from '~/server/domain/requirements/UserStory.js';
+import { Assumption } from '~/domain/requirements/Assumption.js';
+import { Effect } from '~/domain/requirements/Effect.js';
+import { FunctionalBehavior } from '~/domain/requirements/FunctionalBehavior.js';
+import { MoscowPriority } from '~/domain/requirements/MoscowPriority.js';
+import { Outcome } from '~/domain/requirements/Outcome.js';
+import { Stakeholder } from '~/domain/requirements/Stakeholder.js';
+import { UseCase } from '~/domain/requirements/UseCase.js';
+import { UserStory } from '~/domain/requirements/UserStory.js';
 
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Scenarios' })

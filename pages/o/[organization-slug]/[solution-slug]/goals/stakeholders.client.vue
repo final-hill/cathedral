@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import mermaid from 'mermaid';
-import { Stakeholder } from '~/server/domain/requirements/Stakeholder.js';
-import { StakeholderCategory } from '~/server/domain/requirements/StakeholderCategory.js';
-import { StakeholderSegmentation } from '~/server/domain/requirements/StakeholderSegmentation.js';
+import { Stakeholder } from '~/domain/requirements/Stakeholder.js';
+import { StakeholderCategory } from '~/domain/requirements/StakeholderCategory.js';
+import { StakeholderSegmentation } from '~/domain/requirements/StakeholderSegmentation.js';
 
 useHead({ title: 'Stakeholders' })
 definePageMeta({ name: 'Stakeholders' })

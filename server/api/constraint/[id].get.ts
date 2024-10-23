@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Constraint } from "~/server/domain/requirements/Constraint.js"
+import { Constraint } from "~/domain/requirements/Constraint.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()

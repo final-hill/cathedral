@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { ParsedRequirement, Requirement } from "~/server/domain/requirements/index.js"
-import { Follows } from "~/server/domain/relations/index.js"
+import { ParsedRequirement, Requirement } from "~/domain/requirements/index.js"
+import { Follows } from "~/domain/relations/index.js"
 
 const querySchema = z.object({
     solutionId: z.string().uuid(),

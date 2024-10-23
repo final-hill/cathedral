@@ -1,7 +1,7 @@
 import { fork } from "~/server/data/orm.js"
 import { z } from "zod"
-import { ReqType, Solution } from "~/server/domain/requirements/index.js"
-import { Belongs } from "~/server/domain/relations";
+import { ReqType, Solution } from "~/domain/requirements/index.js"
+import { Belongs } from "~/domain/relations";
 
 const querySchema = z.object({
     name: z.string().max(100).optional(),

@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { MoscowPriority, NonFunctionalBehavior, ReqType } from "~/server/domain/requirements/index.js"
+import { MoscowPriority, NonFunctionalBehavior, ReqType } from "~/domain/requirements/index.js"
 
 const querySchema = z.object({
     solutionId: z.string().uuid(),

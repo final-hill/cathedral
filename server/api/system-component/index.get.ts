@@ -1,8 +1,8 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Belongs } from "~/server/domain/relations"
-import { ReqType, SystemComponent } from "~/server/domain/requirements/index.js"
-import { type ReqRelModel } from "~/server/domain/types"
+import { Belongs } from "~/domain/relations"
+import { ReqType, SystemComponent } from "~/domain/requirements/index.js"
+import { type ReqRelModel } from "~/domain/types"
 
 const querySchema = z.object({
     solutionId: z.string().uuid(),

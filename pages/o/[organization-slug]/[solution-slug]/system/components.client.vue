@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { SystemComponent } from '~/server/domain/requirements/SystemComponent.js';
-import { type ReqRelModel } from '~/server/domain/types/index.js'
+import { SystemComponent } from '~/domain/requirements/SystemComponent.js';
+import { type ReqRelModel } from '~/domain/types/index.js'
 
 useHead({ title: 'Components' })
 definePageMeta({ name: 'System Components' })

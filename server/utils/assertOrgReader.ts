@@ -1,7 +1,7 @@
 import type { H3Event, EventHandlerRequest } from 'h3'
 import { getServerSession } from '#auth'
-import { AppRole, AppUser, AppUserOrganizationRole } from "~/server/domain/application/index.js"
-import { Organization } from "~/server/domain/requirements/index.js"
+import { AppRole, AppUser, AppUserOrganizationRole } from "~/domain/application/index.js"
+import { Organization } from "~/domain/requirements/index.js"
 import { fork } from "~/server/data/orm.js"
 
 /**

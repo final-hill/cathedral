@@ -2,7 +2,7 @@
 import snakeCaseToTitle from '~/utils/snakeCaseToTitle.js';
 import camelCaseToTitle from '~/utils/camelCaseToTitle.js';
 import type { DataTableRowExpandEvent, DataTableRowCollapseEvent, DataTableExpandedRows } from 'primevue/datatable';
-import type { ParsedRequirement, Requirement, ReqType } from '~/server/domain/requirements/index.js';
+import type { ParsedRequirement, Requirement, ReqType } from '~/domain/requirements/index.js';
 
 useHead({ title: 'Workbox' });
 definePageMeta({ name: 'Workbox' });

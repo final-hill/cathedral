@@ -1,8 +1,8 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Solution } from "~/server/domain/requirements/index.js"
-import { Justification } from "~/server/domain/requirements/index.js"
-import { Belongs } from "~/server/domain/relations"
+import { Solution } from "~/domain/requirements/index.js"
+import { Justification } from "~/domain/requirements/index.js"
+import { Belongs } from "~/domain/relations"
 import slugify from "~/utils/slugify"
 
 const bodySchema = z.object({

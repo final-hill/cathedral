@@ -10,9 +10,9 @@ import {
     GlossaryTerm, Invariant, Justification, Limit, MoscowPriority, NonFunctionalBehavior, Obstacle,
     Outcome, ParsedRequirement, Person, Stakeholder, StakeholderCategory, StakeholderSegmentation,
     SystemComponent, UseCase, UserStory
-} from "~/server/domain/requirements/index.js";
-import { Belongs } from "~/server/domain/relations/Belongs.js";
-import { Follows } from "~/server/domain/relations/Follows.js";
+} from "~/domain/requirements/index.js";
+import { Belongs } from "~/domain/relations/Belongs.js";
+import { Follows } from "~/domain/relations/Follows.js";
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),

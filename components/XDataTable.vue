@@ -3,7 +3,7 @@ import type Dialog from 'primevue/dialog'
 import type DataTable from 'primevue/datatable'
 import { FilterMatchMode } from 'primevue/api';
 import camelCaseToTitle from '~/utils/camelCaseToTitle.js';
-import { AuditLog } from '~/server/domain/application/index.js';
+import { AuditLog } from '~/domain/application/index.js';
 
 export type ViewFieldType = 'text' | 'textarea' | 'number' | 'date' | 'boolean' | 'hidden' | 'object'
 

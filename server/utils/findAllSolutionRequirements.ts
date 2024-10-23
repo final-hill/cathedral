@@ -1,8 +1,8 @@
 import { PostgreSqlDriver, SqlEntityManager } from "@mikro-orm/postgresql"
-import { Requirement } from "../domain/requirements/Requirement.js"
-import { Belongs } from "../domain/relations/index.js"
-import { ReqType } from "../domain/requirements/ReqType.js"
-import { type ReqRelModel } from "../domain/types/index.js"
+import { Requirement } from "../../domain/requirements/Requirement.js"
+import { Belongs } from "../../domain/relations/index.js"
+import { ReqType } from "../../domain/requirements/ReqType.js"
+import { type ReqRelModel } from "../../domain/types/index.js"
 
 /**
  *

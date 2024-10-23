@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { Assumption, ReqType } from "~/server/domain/requirements/index.js"
+import { Assumption, ReqType } from "~/domain/requirements/index.js"
 import { fork } from "~/server/data/orm.js"
 
 const querySchema = z.object({

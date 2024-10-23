@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { EnvironmentComponent } from "~/server/domain/requirements/index.js"
+import { EnvironmentComponent } from "~/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()

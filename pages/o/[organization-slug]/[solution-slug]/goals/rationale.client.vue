@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { Justification } from '~/server/domain/requirements/Justification.js'
+import type { Justification } from '~/domain/requirements/Justification.js'
 
 useHead({ title: 'Rationale' })
 definePageMeta({ name: 'Rationale' })

@@ -1,8 +1,8 @@
 import { NIL as emptyUuid } from "uuid"
 import { z } from "zod"
-import { MoscowPriority, Stakeholder, Assumption, Effect, UseCase } from "~/server/domain/requirements/index.js"
+import { MoscowPriority, Stakeholder, Assumption, Effect, UseCase } from "~/domain/requirements/index.js"
 import { fork } from "~/server/data/orm.js"
-import { Belongs } from "~/server/domain/relations"
+import { Belongs } from "~/domain/relations"
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),

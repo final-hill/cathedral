@@ -1,9 +1,9 @@
 import type { H3Event, EventHandlerRequest } from 'h3'
 import { getServerSession } from '#auth'
-import { AppRole, AppUser, AppUserOrganizationRole } from "~/server/domain/application/index.js"
-import { ReqType, Solution } from "~/server/domain/requirements/index.js"
+import { AppRole, AppUser, AppUserOrganizationRole } from "~/domain/application/index.js"
+import { ReqType, Solution } from "~/domain/requirements/index.js"
 import { fork } from "~/server/data/orm.js"
-import { Belongs } from '../domain/relations'
+import { Belongs } from '../../domain/relations'
 
 /**
  * Asserts that the user is a member of the organization that owns the solution or is a system admin

@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Belongs } from "~/server/domain/relations"
-import { SystemComponent } from "~/server/domain/requirements/index.js"
+import { Belongs } from "~/domain/relations"
+import { SystemComponent } from "~/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()

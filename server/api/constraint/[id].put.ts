@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { Constraint, ConstraintCategory } from "~/server/domain/requirements/index.js"
+import { Constraint, ConstraintCategory } from "~/domain/requirements/index.js"
 import { fork } from "~/server/data/orm.js"
 
 const paramSchema = z.object({

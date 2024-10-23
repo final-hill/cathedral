@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { NonFunctionalBehavior, MoscowPriority } from "~/server/domain/requirements/index.js"
+import { NonFunctionalBehavior, MoscowPriority } from "~/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()

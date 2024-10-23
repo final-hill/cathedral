@@ -2,7 +2,6 @@ import { BaseEntity, Entity, Enum, Property } from "@mikro-orm/core";
 import { AppRole } from "./AppRole.js";
 import { type Properties } from "../types/index.js";
 
-
 /**
  * An AppUser is a user of the application
  */

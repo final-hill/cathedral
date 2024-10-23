@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Assumption } from "~/server/domain/requirements"
+import { Assumption } from "~/domain/requirements"
 
 const paramSchema = z.object({
     id: z.string().uuid()

@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Obstacle } from "~/server/domain/requirements/index.js"
-import { Belongs } from "~/server/domain/relations"
+import { Obstacle } from "~/domain/requirements/index.js"
+import { Belongs } from "~/domain/relations"
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),

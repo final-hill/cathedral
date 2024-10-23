@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Constraint, ConstraintCategory, ReqType } from "~/server/domain/requirements/index.js"
+import { Constraint, ConstraintCategory, ReqType } from "~/domain/requirements/index.js"
 
 const querySchema = z.object({
     solutionId: z.string().uuid(),

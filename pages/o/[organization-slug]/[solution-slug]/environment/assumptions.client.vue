@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useFetch } from 'nuxt/app';
-import { Assumption } from '~/server/domain/requirements/Assumption.js';
+import { Assumption } from '~/domain/requirements/Assumption.js';
 
 useHead({ title: 'Assumptions' })
 definePageMeta({ name: 'Assumptions' })

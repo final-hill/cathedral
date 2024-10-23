@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Effect } from '~/server/domain/requirements/Effect.js';
+import { Effect } from '~/domain/requirements/Effect.js';
 
 useHead({ title: 'Effects' })
 definePageMeta({ name: 'Effects' })
