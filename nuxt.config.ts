@@ -49,10 +49,11 @@ export default defineNuxtConfig({
         // The latest version (^1.5.0) is needed due to https://github.com/nuxt/devtools/issues/723
         // It looks like this won't be integrated into Nuxt until after 3.14.0
         '@nuxt/devtools',
-        "nuxt-primevue",
-        "@vite-pwa/nuxt",
-        "@sidebase/nuxt-auth",
-        "nuxt-security"
+        'nuxt-primevue',
+        '@vite-pwa/nuxt',
+        '@sidebase/nuxt-auth',
+        'nuxt-security',
+        '@nuxt/test-utils/module',
     ],
     runtimeConfig: {
         // The private keys which are only available within server-side
