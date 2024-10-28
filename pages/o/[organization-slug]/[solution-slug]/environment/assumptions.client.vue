@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { useFetch } from 'nuxt/app';
-import { Assumption } from '~/domain/requirements/Assumption.js';
 
 useHead({ title: 'Assumptions' })
 definePageMeta({ name: 'Assumptions' })
@@ -18,18 +17,25 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: assumptions, refresh, status, error: getAssumptionsError } = await useFetch<Assumption[]>(`/api/assumption`, {
+interface AssumptionViewModel {
+    id: string,
+    name: string,
+    description: string,
+    lastModified: Date
+};
+
+const { data: assumptions, refresh, status, error: getAssumptionsError } = await useFetch<AssumptionViewModel[]>(`/api/assumption`, {
     query: { solutionId },
-    transform: (data) => data.map((item) => {
-        item.lastModified = new Date(item.lastModified)
-        return item
-    })
+    transform: (data) => data.map((item) => ({
+        ...item,
+        lastModified: new Date(item.lastModified)
+    }))
 })
 
 if (getAssumptionsError.value)
     $eventBus.$emit('page-error', getAssumptionsError.value);
 
-const onCreate = async (data: Assumption) => {
+const onCreate = async (data: AssumptionViewModel) => {
     await $fetch(`/api/assumption`, {
         method: 'post',
         body: {
@@ -52,7 +58,7 @@ const onDelete = async (id: string) => {
     refresh()
 }
 
-const onUpdate = async (data: Assumption) => {
+const onUpdate = async (data: AssumptionViewModel) => {
     await $fetch(`/api/assumption/${data.id}`, {
         method: 'put',
         body: {

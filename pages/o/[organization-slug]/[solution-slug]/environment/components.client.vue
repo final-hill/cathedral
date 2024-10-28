@@ -1,8 +1,15 @@
 <script lang="ts" setup>
-import { EnvironmentComponent } from '~/domain/requirements/EnvironmentComponent.js';
+import { useHead, useRoute, useNuxtApp, useFetch } from '#imports';
 
 useHead({ title: 'Components' })
 definePageMeta({ name: 'Environment Components' })
+
+interface EnvironmentComponentViewModel {
+    id: string;
+    name: string;
+    description: string;
+    lastModified: Date;
+}
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Environment Components').params,
@@ -13,7 +20,7 @@ const { $eventBus } = useNuxtApp(),
         }
     }),
     solutionId = solutions.value?.[0].id,
-    { data: environmentComponents, status, refresh, error: getEnvironmentComponentsError } = await useFetch<EnvironmentComponent[]>(`/api/environment-component`, {
+    { data: environmentComponents, status, refresh, error: getEnvironmentComponentsError } = await useFetch<EnvironmentComponentViewModel[]>(`/api/environment-component`, {
         query: { solutionId },
         transform: (data) => data.map((item) => {
             item.lastModified = new Date(item.lastModified)
@@ -27,7 +34,7 @@ if (getSolutionError.value)
 if (getEnvironmentComponentsError.value)
     $eventBus.$emit('page-error', getEnvironmentComponentsError.value)
 
-const onCreate = async (data: EnvironmentComponent) => {
+const onCreate = async (data: EnvironmentComponentViewModel) => {
     await $fetch(`/api/environment-component`, {
         method: 'POST',
         body: {
@@ -48,7 +55,7 @@ const onDelete = async (id: string) => {
     refresh()
 }
 
-const onUpdate = async (data: EnvironmentComponent) => {
+const onUpdate = async (data: EnvironmentComponentViewModel) => {
     await $fetch(`/api/environment-component/${data.id}`, {
         method: 'PUT',
         body: {

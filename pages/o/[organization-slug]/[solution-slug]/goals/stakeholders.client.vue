@@ -1,8 +1,18 @@
 <script lang="ts" setup>
 import mermaid from 'mermaid';
-import { Stakeholder } from '~/domain/requirements/Stakeholder.js';
 import { StakeholderCategory } from '~/domain/requirements/StakeholderCategory.js';
 import { StakeholderSegmentation } from '~/domain/requirements/StakeholderSegmentation.js';
+
+interface StakeholderViewModel {
+    id: string;
+    name: string;
+    description: string;
+    category: string;
+    segmentation: string;
+    availability: number;
+    influence: number;
+    lastModified: Date;
+}
 
 useHead({ title: 'Stakeholders' })
 definePageMeta({ name: 'Stakeholders' })
@@ -21,7 +31,7 @@ const config = useAppConfig(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: stakeholders, refresh: refreshStakeholders, status, error: getStakeholdersError } = await useFetch<Stakeholder[]>(`/api/stakeholder`, {
+const { data: stakeholders, refresh: refreshStakeholders, status, error: getStakeholdersError } = await useFetch<StakeholderViewModel[]>(`/api/stakeholder`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -42,7 +52,7 @@ mermaid.initialize({
     theme: themeMap[config.darkMode]
 });
 
-const chartDefinition = (stakeholders: Stakeholder[], category: StakeholderSegmentation) => `
+const chartDefinition = (stakeholders: StakeholderViewModel[], category: StakeholderSegmentation) => `
     quadrantChart
     title ${category}
     x-axis Low Availability --> High Availability
@@ -74,7 +84,7 @@ const renderChart = async () => {
 
 watch(stakeholders, renderChart);
 
-const onCreate = async (data: Stakeholder) => {
+const onCreate = async (data: StakeholderViewModel) => {
     await $fetch(`/api/stakeholder`, {
         method: 'POST',
         body: {
@@ -91,7 +101,7 @@ const onCreate = async (data: Stakeholder) => {
     refreshStakeholders()
 }
 
-const onUpdate = async (data: Stakeholder) => {
+const onUpdate = async (data: StakeholderViewModel) => {
     await $fetch(`/api/stakeholder/${data.id}`, {
         method: 'PUT',
         body: {

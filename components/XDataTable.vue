@@ -3,12 +3,20 @@ import type Dialog from 'primevue/dialog'
 import type DataTable from 'primevue/datatable'
 import { FilterMatchMode } from 'primevue/api';
 import camelCaseToTitle from '~/utils/camelCaseToTitle.js';
-import { AuditLog } from '~/domain/application/index.js';
 
 export type ViewFieldType = 'text' | 'textarea' | 'number' | 'date' | 'boolean' | 'hidden' | 'object'
 
 export type FormFieldType = 'text' | 'textarea' | { type: 'number', min: number, max: number } | 'date' | 'boolean' | 'hidden' | string[]
     | { type: 'requirement', options: { id: string, name: string }[] }
+
+interface AuditLogViewModel {
+    id: string;
+    entityId: string;
+    entityName: string;
+    entity: string;
+    organizationSlug: string;
+    createdAt: Date;
+}
 
 const props = defineProps<{
     datasource: RowType[] | null,
@@ -60,7 +68,7 @@ const openEditDialog = (item: RowType) => {
 const openRecycleDialog = async () => {
     recycleDialogLoading.value = true
     recycleDialogVisible.value = true
-    const recycleBinItems = (await $fetch<AuditLog[]>(`/api/audit-log/deleted`, {
+    const recycleBinItems = (await $fetch<AuditLogViewModel[]>(`/api/audit-log/deleted`, {
         method: 'GET',
         query: {
             entityName: props.entityName,
@@ -78,7 +86,7 @@ const openRecycleDialog = async () => {
 const openHistoryDialog = async (item: RowType) => {
     historyDialogLoading.value = true
     historyDialogVisible.value = true
-    const auditLog = (await $fetch<AuditLog[]>(`/api/audit-log`, {
+    const auditLog = (await $fetch<AuditLogViewModel[]>(`/api/audit-log`, {
         method: 'GET',
         query: {
             entityId: item.id,

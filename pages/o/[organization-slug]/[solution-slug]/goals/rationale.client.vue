@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-import type { Justification } from '~/domain/requirements/Justification.js'
+type JustificationViewModel = {
+    id: string;
+    name: string;
+    description: string;
+};
 
 useHead({ title: 'Rationale' })
 definePageMeta({ name: 'Rationale' })
@@ -23,10 +27,10 @@ const [
     { data: situationJustifications, error: getSituationError },
     { data: objectiveJustifications, error: getObjectiveError }
 ] = await Promise.all([
-    useFetch<Justification[]>(`/api/justification`, { query: { name: 'Vision', solutionId } }),
-    useFetch<Justification[]>(`/api/justification`, { query: { name: 'Mission', solutionId } }),
-    useFetch<Justification[]>(`/api/justification`, { query: { name: 'Situation', solutionId } }),
-    useFetch<Justification[]>(`/api/justification`, { query: { name: 'Objective', solutionId } })
+    useFetch<JustificationViewModel[]>(`/api/justification`, { query: { name: 'Vision', solutionId } }),
+    useFetch<JustificationViewModel[]>(`/api/justification`, { query: { name: 'Mission', solutionId } }),
+    useFetch<JustificationViewModel[]>(`/api/justification`, { query: { name: 'Situation', solutionId } }),
+    useFetch<JustificationViewModel[]>(`/api/justification`, { query: { name: 'Objective', solutionId } })
 ]);
 
 if (getVisionError.value)
@@ -43,7 +47,7 @@ const visionDescription = ref(visionJustifications.value?.[0].description!),
     situationDescription = ref(situationJustifications.value?.[0].description!),
     objectiveDescription = ref(objectiveJustifications.value?.[0].description!);
 
-const fieldTriple: [Ref<string>, Justification, string][] = [
+const fieldTriple: [Ref<string>, JustificationViewModel, string][] = [
     [visionDescription, visionJustifications.value![0], 'Vision'],
     [missionDescription, missionJustifications.value![0], 'Mission'],
     [situationDescription, situationJustifications.value![0], 'Situation'],

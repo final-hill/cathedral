@@ -2,7 +2,21 @@
 import snakeCaseToTitle from '~/utils/snakeCaseToTitle.js';
 import camelCaseToTitle from '~/utils/camelCaseToTitle.js';
 import type { DataTableRowExpandEvent, DataTableRowCollapseEvent, DataTableExpandedRows } from 'primevue/datatable';
-import type { ParsedRequirement, Requirement, ReqType } from '~/domain/requirements/index.js';
+import type { ReqType } from '~/domain/requirements/ReqType.js';
+
+interface RequirementViewModel {
+    id: number;
+    name: string;
+    description: string;
+    lastModified: Date;
+    modifiedBy: { name: string };
+    follows: RequirementViewModel[];
+    solution: { id: number };
+    req_type: ReqType;
+    isSilence: boolean;
+}
+
+interface ParsedRequirementViewModel extends RequirementViewModel { }
 
 useHead({ title: 'Workbox' });
 definePageMeta({ name: 'Workbox' });
@@ -17,10 +31,10 @@ const { $eventBus } = useNuxtApp(),
     }),
     solution = solutions.value![0];
 
-const { data: parsedRequirements, error: parsedRequirementsError, refresh } = await useFetch<ParsedRequirement[]>('/api/parse-requirement', {
+const { data: parsedRequirements, error: parsedRequirementsError, refresh } = await useFetch<ParsedRequirementViewModel[]>('/api/parse-requirement', {
     method: 'get',
     query: { solutionId: solution.id },
-    transform: (data: ParsedRequirement[]) => data.map((parsedRequirement) => {
+    transform: (data: ParsedRequirementViewModel[]) => data.map((parsedRequirement) => {
         parsedRequirement.lastModified = new Date(parsedRequirement.lastModified)
         return parsedRequirement;
     })
@@ -32,12 +46,12 @@ if (solutionError.value)
 if (parsedRequirementsError.value)
     $eventBus.$emit('page-error', parsedRequirementsError.value);
 
-type DataRows = Record<string, { isLoading: boolean, data: Partial<Record<ReqType, Requirement[]>> }>
+type DataRows = Record<string, { isLoading: boolean, data: Partial<Record<ReqType, RequirementViewModel[]>> }>
 
 const expandedRows = ref<DataTableExpandedRows>({}),
     dataRows = ref<DataRows>({})
 
-const onItemApprove = async (item: Requirement) => {
+const onItemApprove = async (item: RequirementViewModel) => {
     await $fetch(`/api/${snakeCaseToSlug(item.req_type)}/${item.id}`, {
         // @ts-ignore: method not recognized
         method: 'put',
@@ -46,7 +60,7 @@ const onItemApprove = async (item: Requirement) => {
     await refresh();
 }
 
-const onItemDelete = async (item: Requirement) => {
+const onItemDelete = async (item: RequirementViewModel) => {
     if (!confirm(`Are you sure you want to delete "${item.name}"?`))
         return
     await $fetch(`/api/${snakeCaseToSlug(item.req_type)}/${item.id}`, {
@@ -57,7 +71,7 @@ const onItemDelete = async (item: Requirement) => {
     await refresh();
 }
 
-const onItemUpdate = async (item: Requirement) => {
+const onItemUpdate = async (item: RequirementViewModel) => {
     alert(`UPDATE ${item.req_type} not implemented`)
 }
 

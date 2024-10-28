@@ -1,5 +1,11 @@
 <script lang="ts" setup>
-import { Effect } from '~/domain/requirements/Effect.js';
+
+interface EffectViewModel {
+    id: string;
+    name: string;
+    description: string;
+    lastModified: Date;
+};
 
 useHead({ title: 'Effects' })
 definePageMeta({ name: 'Effects' })
@@ -17,18 +23,18 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: effects, refresh, status, error: getEffectsError } = await useFetch<Effect[]>(`/api/effect`, {
+const { data: effects, refresh, status, error: getEffectsError } = await useFetch<EffectViewModel[]>(`/api/effect`, {
     query: { solutionId },
-    transform: (data) => data.map((item) => {
-        item.lastModified = new Date(item.lastModified)
-        return item
-    })
+    transform: (data) => data.map((item) => ({
+        ...item,
+        lastModified: new Date(item.lastModified)
+    }))
 })
 
 if (getEffectsError.value)
     $eventBus.$emit('page-error', getEffectsError.value)
 
-const onCreate = async (data: Effect) => {
+const onCreate = async (data: EffectViewModel) => {
     await $fetch(`/api/effect`, {
         method: 'POST',
         body: {
@@ -40,7 +46,7 @@ const onCreate = async (data: Effect) => {
     refresh()
 }
 
-const onUpdate = async (data: Effect) => {
+const onUpdate = async (data: EffectViewModel) => {
     await $fetch(`/api/effect/${data.id}`, {
         method: 'PUT',
         body: {
