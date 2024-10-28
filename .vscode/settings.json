@@ -3,7 +3,7 @@
     "git.pruneOnFetch": true,
     "explorer.fileNesting.enabled": true,
     "explorer.fileNesting.patterns": {
-        "*.test.ts": "${capture}.ts",
+        "*.ts": "${capture}.test.ts",
         "*.vue": "${capture}.test.ts"
     }
 }

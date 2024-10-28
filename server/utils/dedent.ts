@@ -7,6 +7,7 @@ export default (str: string) => {
     if (!match)
         return str
 
+    // Find the smallest indentation
     const indent = Math.min(...match.map(x => x.length))
     const re = new RegExp(`^[ \\t]{${indent}}`, 'gm')
 

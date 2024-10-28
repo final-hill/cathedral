@@ -32,5 +32,5 @@ jobs:
         run: npm run build
       - name: Generate PWA Assets
         run: npm run generate-pwa-assets
-      # - name: Run Unit Tests
-      #   run: npm run test
+      - name: Run Unit Tests
+        run: npm run test

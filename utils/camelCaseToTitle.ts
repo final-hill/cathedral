@@ -4,5 +4,6 @@
  * camelCaseToTitle('camelCaseString'); // 'Camel Case String'
  */
 export default (str: string) =>
-    str.replace(/([a-z\d])([A-Z])/g, '$1 $2')
-        .replace(/\b\w/g, char => char.toUpperCase());
+    str.trim() // Remove leading and trailing whitespace
+        .replace(/([A-Z])/g, ' $1') // Add space before uppercase letters
+        .replace(/^./, str => str.toUpperCase()) // Capitalize the first letter

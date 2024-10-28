@@ -7,8 +7,6 @@ export default function (func: Function, delay: number) {
     return function (...args: any[]) {
         if (timeoutId)
             clearTimeout(timeoutId);
-        timeoutId = self.setTimeout(() => {
-            func(...args);
-        }, delay);
+        timeoutId = setTimeout(() => { func(...args); }, delay);
     };
 }
