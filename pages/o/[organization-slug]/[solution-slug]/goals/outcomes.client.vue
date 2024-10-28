@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { Outcome } from '~/domain/requirements/Outcome.js';
-
 useHead({ title: 'Outcomes' })
 definePageMeta({ name: 'Outcomes' })
 
@@ -17,7 +15,14 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: outcomes, refresh, status, error: getOutcomesError } = await useFetch<Outcome[]>(`/api/outcome`, {
+interface OutcomeViewModel {
+    id: string;
+    name: string;
+    description: string;
+    lastModified: Date;
+}
+
+const { data: outcomes, refresh, status, error: getOutcomesError } = await useFetch<OutcomeViewModel[]>(`/api/outcome`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -28,7 +33,7 @@ const { data: outcomes, refresh, status, error: getOutcomesError } = await useFe
 if (getOutcomesError.value)
     $eventBus.$emit('page-error', getOutcomesError.value);
 
-const onCreate = async (data: Outcome) => {
+const onCreate = async (data: OutcomeViewModel) => {
     await $fetch(`/api/outcome`, {
         method: 'POST',
         body: {
@@ -41,7 +46,7 @@ const onCreate = async (data: Outcome) => {
     refresh()
 }
 
-const onUpdate = async (data: Outcome) => {
+const onUpdate = async (data: OutcomeViewModel) => {
     await $fetch(`/api/outcome/${data.id}`, {
         method: 'PUT',
         body: {

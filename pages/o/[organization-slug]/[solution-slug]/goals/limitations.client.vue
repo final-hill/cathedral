@@ -1,5 +1,10 @@
 <script lang="ts" setup>
-import { Limit } from '~/domain/requirements/Limit.js';
+type LimitViewModel = {
+    id: string;
+    name: string;
+    description: string;
+    lastModified: Date;
+};
 
 useHead({ title: 'Limitations' })
 definePageMeta({ name: 'Limitations' })
@@ -17,7 +22,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: limits, status, refresh, error: getLimitsError } = await useFetch<Limit[]>(`/api/limit`, {
+const { data: limits, status, refresh, error: getLimitsError } = await useFetch<LimitViewModel[]>(`/api/limit`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -28,7 +33,7 @@ const { data: limits, status, refresh, error: getLimitsError } = await useFetch<
 if (getLimitsError.value)
     $eventBus.$emit('page-error', getLimitsError.value)
 
-const onCreate = async (data: Limit) => {
+const onCreate = async (data: LimitViewModel) => {
     await $fetch(`/api/limit`, {
         method: 'POST',
         body: {
@@ -41,7 +46,7 @@ const onCreate = async (data: Limit) => {
     refresh()
 }
 
-const onUpdate = async (data: Limit) => {
+const onUpdate = async (data: LimitViewModel) => {
     await $fetch(`/api/limit/${data.id}`, {
         method: 'PUT', body: {
             solutionId,

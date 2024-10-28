@@ -1,5 +1,10 @@
 <script lang="ts" setup>
-import { Invariant } from '~/domain/requirements/Invariant.js';
+interface InvariantViewModel {
+    id: string;
+    name: string;
+    description: string;
+    lastModified: Date;
+}
 
 useHead({ title: 'Invariants' })
 definePageMeta({ name: 'Invariants' })
@@ -17,7 +22,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: invariants, refresh, status, error: getInvariantsError } = await useFetch<Invariant[]>(`/api/invariant`, {
+const { data: invariants, refresh, status, error: getInvariantsError } = await useFetch<InvariantViewModel[]>(`/api/invariant`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -28,7 +33,7 @@ const { data: invariants, refresh, status, error: getInvariantsError } = await u
 if (getInvariantsError.value)
     $eventBus.$emit('page-error', getInvariantsError.value)
 
-const onCreate = async (data: Invariant) => {
+const onCreate = async (data: InvariantViewModel) => {
     await useFetch(`/api/invariant`, {
         method: 'POST',
         body: {
@@ -41,7 +46,7 @@ const onCreate = async (data: Invariant) => {
     refresh()
 }
 
-const onUpdate = async (data: Invariant) => {
+const onUpdate = async (data: InvariantViewModel) => {
     await useFetch(`/api/invariant/${data.id}`, {
         method: 'PUT', body: {
             id: data.id,

@@ -1,6 +1,21 @@
 <script setup lang="ts">
-import { AppUser, AppRole } from '~/domain/application/index.js'
-import { Organization } from '~/domain/requirements';
+import { AppRole } from '~/domain/application/AppRole.js'
+
+interface OrganizationViewModel {
+    id: string;
+    name: string;
+    slug: string;
+}
+
+interface AppUserViewModel {
+    id: string;
+    name: string
+    email: string;
+    role: AppRole;
+    isSystemAdmin: boolean;
+    creationDate: Date;
+    lastLoginDate?: Date;
+}
 
 useHead({ title: 'Users' })
 definePageMeta({ name: 'Organization Users' })
@@ -8,7 +23,7 @@ definePageMeta({ name: 'Organization Users' })
 const { $eventBus } = useNuxtApp()
 
 const { organizationslug } = useRoute('Organization Users').params,
-    { data: organizations, error: getOrgError } = await useFetch<Organization[]>(`/api/organization/`, {
+    { data: organizations, error: getOrgError } = await useFetch<OrganizationViewModel[]>(`/api/organization/`, {
         query: { slug: organizationslug }
     }),
     organization = ref(organizations.value?.[0]!)
@@ -16,11 +31,11 @@ const { organizationslug } = useRoute('Organization Users').params,
 if (getOrgError.value)
     $eventBus.$emit('page-error', getOrgError.value)
 
-const { data: users, status, refresh, error: getUserError } = await useFetch<(AppUser)[]>('/api/appusers', {
+const { data: users, status, refresh, error: getUserError } = await useFetch<AppUserViewModel[]>('/api/appusers', {
     query: {
         organizationId: organization.value?.id
     },
-    transform: (data: any[]) => data.map<AppUser>((user) => {
+    transform: (data: any[]) => data.map<AppUserViewModel>((user) => {
         user.creationDate = new Date(user.creationDate)
         user.lastLoginDate = user.lastLoginDate ? new Date(user.lastLoginDate) : undefined
         return user
@@ -30,7 +45,7 @@ const { data: users, status, refresh, error: getUserError } = await useFetch<(Ap
 if (getUserError.value)
     $eventBus.$emit('page-error', getUserError.value)
 
-const onCreate = async (data: AppUser) => {
+const onCreate = async (data: AppUserViewModel) => {
     await $fetch(`/api/appusers/`, {
         method: 'POST',
         body: {
@@ -58,7 +73,7 @@ const onDelete = async (id: string) => {
     refresh()
 }
 
-const onUpdate = async (data: AppUser) => {
+const onUpdate = async (data: AppUserViewModel) => {
     await $fetch(`/api/appusers/${data.id}`, {
         method: 'PUT',
         body: {

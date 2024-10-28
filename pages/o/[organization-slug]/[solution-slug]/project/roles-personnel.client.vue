@@ -1,5 +1,10 @@
 <script lang="ts" setup>
-import { Person } from '~/domain/requirements/Person.js';
+type PersonViewModel = {
+    id: string;
+    name: string;
+    email: string;
+    lastModified: Date;
+};
 
 useHead({ title: 'Roles & Personnel' })
 definePageMeta({ name: 'Roles & Personnel' })
@@ -17,7 +22,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: personnel, refresh, status, error: getPersonnelError } = await useFetch<Person[]>(`/api/person`, {
+const { data: personnel, refresh, status, error: getPersonnelError } = await useFetch<PersonViewModel[]>(`/api/person`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -28,7 +33,7 @@ const { data: personnel, refresh, status, error: getPersonnelError } = await use
 if (getPersonnelError.value)
     $eventBus.$emit('page-error', getPersonnelError.value)
 
-const onCreate = async (data: Person) => {
+const onCreate = async (data: PersonViewModel) => {
     await $fetch(`/api/person`, {
         method: 'POST',
         body: {
@@ -42,7 +47,7 @@ const onCreate = async (data: Person) => {
     refresh();
 }
 
-const onUpdate = async (data: Person) => {
+const onUpdate = async (data: PersonViewModel) => {
     await $fetch(`/api/person/${data.id}`, {
         method: 'PUT',
         body: {

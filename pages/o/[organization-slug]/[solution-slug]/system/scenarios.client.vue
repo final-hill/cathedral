@@ -1,12 +1,67 @@
 <script lang="ts" setup>
-import { Assumption } from '~/domain/requirements/Assumption.js';
-import { Effect } from '~/domain/requirements/Effect.js';
-import { FunctionalBehavior } from '~/domain/requirements/FunctionalBehavior.js';
 import { MoscowPriority } from '~/domain/requirements/MoscowPriority.js';
-import { Outcome } from '~/domain/requirements/Outcome.js';
-import { Stakeholder } from '~/domain/requirements/Stakeholder.js';
-import { UseCase } from '~/domain/requirements/UseCase.js';
-import { UserStory } from '~/domain/requirements/UserStory.js';
+
+type AssumptionViewModel = {
+    id: string;
+    name: string;
+    description: string;
+    lastModified: Date;
+};
+
+type EffectViewModel = {
+    id: string;
+    name: string;
+    description: string;
+    lastModified: Date;
+};
+
+type FunctionalBehaviorViewModel = {
+    id: string;
+    name: string;
+    description: string;
+    lastModified: Date;
+};
+
+type OutcomeViewModel = {
+    id: string;
+    name: string;
+    description: string;
+    lastModified: Date;
+};
+
+type StakeholderViewModel = {
+    id: string;
+    name: string;
+    description: string;
+    lastModified: Date;
+};
+
+type UseCaseViewModel = {
+    id: string;
+    name: string;
+    priority: MoscowPriority;
+    scope: string;
+    level: string;
+    primaryActor: string;
+    goalInContext: string;
+    precondition: string;
+    triggerId: string;
+    mainSuccessScenario: string;
+    successGuarantee: string;
+    extensions: string;
+    lastModified: Date;
+};
+
+type UserStoryViewModel = {
+    id: string;
+    name: string;
+    primaryActor: string;
+    functionalBehavior: string;
+    outcome: string;
+    priority: string;
+    lastModified: Date;
+};
+
 
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Scenarios' })
@@ -24,25 +79,25 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: userStories, refresh: refreshUserStories, error: getUserStoriesError, status: userStoryStatus } = await useFetch<UserStory[]>(`/api/user-story`, {
+const { data: userStories, refresh: refreshUserStories, error: getUserStoriesError, status: userStoryStatus } = await useFetch<UserStoryViewModel[]>(`/api/user-story`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
         return item
     })
 }),
-    { data: useCases, refresh: refreshUseCases, error: getUseCasesError, status: useCaseStatus } = await useFetch<UseCase[]>(`/api/use-case`, {
+    { data: useCases, refresh: refreshUseCases, error: getUseCasesError, status: useCaseStatus } = await useFetch<UseCaseViewModel[]>(`/api/use-case`, {
         query: { solutionId },
         transform: (data) => data.map((item) => {
             item.lastModified = new Date(item.lastModified)
             return item
         })
     }),
-    { data: roles, error: getRolesError } = await useFetch<Stakeholder[]>(`/api/stakeholder`, { query: { solutionId } }),
-    { data: functionalBehaviors, error: getFunctionalBehaviorsError } = await useFetch<FunctionalBehavior[]>(`/api/functional-behavior`, { query: { solutionId } }),
-    { data: outcomes, error: getOutcomesError } = await useFetch<Outcome[]>(`/api/outcome`, { query: { solutionId } }),
-    { data: assumptions, error: getAssumptionsError } = await useFetch<Assumption[]>(`/api/assumption`, { query: { solutionId } }),
-    { data: effects, error: getEffectsError } = await useFetch<Effect[]>(`/api/effect`, { query: { solutionId } }),
+    { data: roles, error: getRolesError } = await useFetch<StakeholderViewModel[]>(`/api/stakeholder`, { query: { solutionId } }),
+    { data: functionalBehaviors, error: getFunctionalBehaviorsError } = await useFetch<FunctionalBehaviorViewModel[]>(`/api/functional-behavior`, { query: { solutionId } }),
+    { data: outcomes, error: getOutcomesError } = await useFetch<OutcomeViewModel[]>(`/api/outcome`, { query: { solutionId } }),
+    { data: assumptions, error: getAssumptionsError } = await useFetch<AssumptionViewModel[]>(`/api/assumption`, { query: { solutionId } }),
+    { data: effects, error: getEffectsError } = await useFetch<EffectViewModel[]>(`/api/effect`, { query: { solutionId } }),
     triggerIds = ref<{ id: string, name: string }[]>([])
 
 if (getUserStoriesError.value)
@@ -58,7 +113,7 @@ if (getAssumptionsError.value)
 if (getEffectsError.value)
     $eventBus.$emit('page-error', getEffectsError.value);
 
-const onUserStoryCreate = async (userStory: UserStory) => {
+const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
     await $fetch(`/api/user-story`, {
         method: 'POST',
         body: {
@@ -75,7 +130,7 @@ const onUserStoryCreate = async (userStory: UserStory) => {
     refreshUserStories();
 }
 
-const onUserStoryUpdate = async (userStory: UserStory) => {
+const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
     await $fetch(`/api/user-story/${userStory.id}`, {
         method: 'PUT',
         body: {
@@ -92,7 +147,7 @@ const onUserStoryUpdate = async (userStory: UserStory) => {
     refreshUserStories();
 }
 
-const onUseCaseCreate = async (useCase: UseCase) => {
+const onUseCaseCreate = async (useCase: UseCaseViewModel) => {
     await $fetch(`/api/use-case`, {
         method: 'POST',
         body: {
@@ -115,7 +170,7 @@ const onUseCaseCreate = async (useCase: UseCase) => {
     refreshUseCases();
 }
 
-const onUseCaseUpdate = async (useCase: UseCase) => {
+const onUseCaseUpdate = async (useCase: UseCaseViewModel) => {
     await $fetch(`/api/use-case/${useCase.id}`, {
         method: 'PUT',
         body: {

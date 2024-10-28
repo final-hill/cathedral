@@ -1,7 +1,31 @@
 <script lang="ts" setup>
-import { FunctionalBehavior } from '~/domain/requirements/FunctionalBehavior.js';
-import { NonFunctionalBehavior } from '~/domain/requirements/NonFunctionalBehavior.js';
-import { SystemComponent } from '~/domain/requirements/SystemComponent.js';
+type FunctionalBehaviorViewModel = {
+    id: string;
+    name: string;
+    description: string;
+    solutionId: string;
+    componentId: string;
+    priority: string;
+    lastModified: Date;
+};
+
+type NonFunctionalBehaviorViewModel = {
+    id: string;
+    name: string;
+    description: string;
+    solutionId: string;
+    componentId: string;
+    priority: string;
+    lastModified: Date;
+};
+
+type SystemComponentViewModel = {
+    id: string;
+    name: string;
+    description: string;
+    parent: string | null;
+    lastModified: Date;
+};
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Functionality' })
@@ -20,7 +44,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: components, status, refresh, error: getComponentsError } = await useFetch<SystemComponent[]>(`/api/system-component`, {
+const { data: components, status, refresh, error: getComponentsError } = await useFetch<SystemComponentViewModel[]>(`/api/system-component`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -33,12 +57,12 @@ if (getComponentsError.value)
     $eventBus.$emit('page-error', getComponentsError.value)
 
 const fnFunctionalBehaviors = async (componentId: string) =>
-    await $fetch<FunctionalBehavior[]>(`/api/functional-behavior`, {
+    await $fetch<FunctionalBehaviorViewModel[]>(`/api/functional-behavior`, {
         query: { solutionId, componentId }
     }).catch((e) => $eventBus.$emit('page-error', e));
 
 const fnNonFunctionalBehaviors = async (componentId: string) =>
-    await $fetch<NonFunctionalBehavior[]>(`/api/non-functional-behavior`, {
+    await $fetch<NonFunctionalBehaviorViewModel[]>(`/api/non-functional-behavior`, {
         query: { solutionId, componentId }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
