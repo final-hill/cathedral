@@ -1,4 +1,9 @@
 {
     "editor.formatOnSave": true,
-    "git.pruneOnFetch": true
+    "git.pruneOnFetch": true,
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+        "*.test.ts": "${capture}.ts",
+        "*.vue": "${capture}.test.ts"
+    }
 }

@@ -31,7 +31,8 @@
         "orm-list-executed-migrations": "mikro-orm-esm migration:list",
         "orm-run-pending-migrations": "mikro-orm-esm migration:up",
         "orm-rollback-migration": "mikro-orm-esm migration:down",
-        "orm-seed-users": "mikro-orm-esm seeder:run -c AppUserSeeder"
+        "orm-seed-users": "mikro-orm-esm seeder:run -c AppUserSeeder",
+        "test": "vitest"
     },
     "dependencies": {
         "@azure/monitor-opentelemetry": "^1.8.0",
@@ -62,13 +63,18 @@
         "@mikro-orm/cli": "^6.3.13",
         "@mikro-orm/migrations": "^6.3.13",
         "@nuxt/devtools": "^1.6.0",
+        "@nuxt/test-utils": "^3.14.4",
         "@types/node": "^22.8.1",
         "@types/pg": "^8.11.10",
         "@types/uuid": "^10.0.0",
         "@vite-pwa/assets-generator": "^0.2.6",
+        "@vue/test-utils": "^2.4.6",
+        "happy-dom": "^15.7.4",
+        "playwright-core": "^1.48.2",
         "ts-node": "^10.9.2",
         "tsx": "^4.19.2",
         "typescript": "^5.6.3",
+        "vitest": "^2.1.4",
         "vue-tsc": "^2.1.8"
     }
 }
