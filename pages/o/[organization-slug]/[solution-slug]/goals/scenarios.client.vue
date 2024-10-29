@@ -1,9 +1,5 @@
 <script lang="ts" setup>
-import { FunctionalBehavior } from '~/domain/requirements/FunctionalBehavior.js'
 import { MoscowPriority } from '~/domain/requirements/MoscowPriority.js'
-import { Outcome } from '~/domain/requirements/Outcome.js'
-import { Stakeholder } from '~/domain/requirements/Stakeholder.js'
-import { UserStory } from '~/domain/requirements/UserStory.js';
 
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Goal Scenarios' })
@@ -21,22 +17,46 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
+interface UserStoryViewModel {
+    id: string;
+    name: string;
+    primaryActor: StakeholderViewModel;
+    functionalBehavior: FunctionalBehaviorViewModel;
+    outcome: OutcomeViewModel;
+    lastModified: Date;
+}
+
+interface StakeholderViewModel {
+    id: string;
+    name: string;
+}
+
+interface FunctionalBehaviorViewModel {
+    id: string;
+    name: string;
+}
+
+interface OutcomeViewModel {
+    id: string;
+    name: string;
+}
+
 const [
     { data: userStories, refresh, status, error: getUserStoriesError },
     { data: roles, error: getRolesError },
     { data: functionalBehaviors, error: getFunctionalBehaviorsError },
     { data: outcomes, error: getOutcomesError },
 ] = await Promise.all([
-    useFetch<UserStory[]>(`/api/user-story`, {
+    useFetch<UserStoryViewModel[]>(`/api/user-story`, {
         query: { solutionId },
         transform: (data) => data.map((item) => {
             item.lastModified = new Date(item.lastModified)
             return item
         })
     }),
-    useFetch<Stakeholder[]>(`/api/stakeholder`, { query: { solutionId } }),
-    useFetch<FunctionalBehavior[]>(`/api/functional-behavior`, { query: { solutionId } }),
-    useFetch<Outcome[]>(`/api/outcome`, { query: { solutionId } })
+    useFetch<StakeholderViewModel[]>(`/api/stakeholder`, { query: { solutionId } }),
+    useFetch<FunctionalBehaviorViewModel[]>(`/api/functional-behavior`, { query: { solutionId } }),
+    useFetch<OutcomeViewModel[]>(`/api/outcome`, { query: { solutionId } })
 ])
 
 if (getUserStoriesError.value)
@@ -48,7 +68,7 @@ if (getFunctionalBehaviorsError.value)
 if (getOutcomesError.value)
     $eventBus.$emit('page-error', getOutcomesError.value);
 
-const onUserStoryCreate = async (userStory: UserStory) => {
+const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
     await $fetch(`/api/user-story`, {
         method: 'POST',
         body: {
@@ -62,7 +82,7 @@ const onUserStoryCreate = async (userStory: UserStory) => {
     refresh();
 }
 
-const onUserStoryUpdate = async (userStory: UserStory) => {
+const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
     await $fetch(`/api/user-story/${userStory.id}`, {
         method: 'PUT',
         body: {

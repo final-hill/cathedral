@@ -1,10 +1,17 @@
 <script lang="ts" setup>
 import { useFetch } from 'nuxt/app';
-import { Constraint } from '~/domain/requirements/Constraint.js';
 import { ConstraintCategory } from '~/domain/requirements/ConstraintCategory.js';
 
 useHead({ title: 'Constraints' })
 definePageMeta({ name: 'Constraints' })
+
+interface ConstraintViewModel {
+    id: string;
+    name: string;
+    description: string;
+    category: ConstraintCategory;
+    lastModified: Date;
+}
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Constraints').params,
@@ -16,7 +23,7 @@ const { $eventBus } = useNuxtApp(),
     }),
     solution = (solutions.value ?? [])[0],
     solutionId = solution.id,
-    { data: constraints, status, refresh, error: getConstraintsError } = await useFetch<Constraint[]>(`/api/constraint`, {
+    { data: constraints, status, refresh, error: getConstraintsError } = await useFetch<ConstraintViewModel[]>(`/api/constraint`, {
         query: { solutionId },
         transform: (data) => data.map((item) => {
             item.lastModified = new Date(item.lastModified)
@@ -30,7 +37,7 @@ if (getSolutionError.value)
 if (getConstraintsError.value)
     $eventBus.$emit('page-error', getConstraintsError.value)
 
-const onCreate = async (data: Constraint) => {
+const onCreate = async (data: ConstraintViewModel) => {
     await $fetch(`/api/constraint`, {
         method: 'POST',
         body: {
@@ -52,7 +59,7 @@ const onDelete = async (id: string) => {
     refresh()
 }
 
-const onUpdate = async (data: Constraint) => {
+const onUpdate = async (data: ConstraintViewModel) => {
     await $fetch(`/api/constraint/${data.id}`, {
         method: 'PUT',
         body: {

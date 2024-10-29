@@ -1,9 +1,15 @@
 <script lang="ts" setup>
-import { FunctionalBehavior } from '~/domain/requirements/FunctionalBehavior.js';
 import { MoscowPriority } from '~/domain/requirements/MoscowPriority.js';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Goals Functionality' })
+
+interface FunctionalBehaviorViewModel {
+    id: string;
+    name: string;
+    description: string;
+    lastModified: Date;
+}
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('Functionality').params,
@@ -18,7 +24,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: functionalBehaviors, refresh, status, error: getFunctionalBehaviorsError } = await useFetch<FunctionalBehavior[]>(`/api/functional-behavior`, {
+const { data: functionalBehaviors, refresh, status, error: getFunctionalBehaviorsError } = await useFetch<FunctionalBehaviorViewModel[]>(`/api/functional-behavior`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -29,7 +35,7 @@ const { data: functionalBehaviors, refresh, status, error: getFunctionalBehavior
 if (getFunctionalBehaviorsError.value)
     $eventBus.$emit('page-error', getFunctionalBehaviorsError.value);
 
-const onCreate = async (data: FunctionalBehavior) => {
+const onCreate = async (data: FunctionalBehaviorViewModel) => {
     await $fetch(`/api/functional-behavior`, {
         method: 'POST',
         body: {
@@ -42,7 +48,7 @@ const onCreate = async (data: FunctionalBehavior) => {
     refresh()
 }
 
-const onUpdate = async (data: FunctionalBehavior) => {
+const onUpdate = async (data: FunctionalBehaviorViewModel) => {
     await $fetch(`/api/functional-behavior/${data.id}`, {
         method: 'PUT',
         body: {

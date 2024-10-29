@@ -1,5 +1,10 @@
 <script lang="ts" setup>
-import { GlossaryTerm } from '~/domain/requirements/GlossaryTerm.js';
+type GlossaryTermViewModel = {
+    id: string;
+    name: string;
+    description: string;
+    lastModified: Date;
+};
 
 useHead({ title: 'Glossary' })
 definePageMeta({ name: 'Glossary' })
@@ -17,7 +22,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = await useFetch<GlossaryTerm[]>(`/api/glossary-term`, {
+const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = await useFetch<GlossaryTermViewModel[]>(`/api/glossary-term`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -28,7 +33,7 @@ const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = a
 if (getGlossaryTermsError.value)
     $eventBus.$emit('page-error', getGlossaryTermsError.value)
 
-const onCreate = async (data: GlossaryTerm) => {
+const onCreate = async (data: GlossaryTermViewModel) => {
     await $fetch(`/api/glossary-term`, {
         method: 'POST',
         body: {
@@ -41,7 +46,7 @@ const onCreate = async (data: GlossaryTerm) => {
     refresh()
 }
 
-const onUpdate = async (data: GlossaryTerm) => {
+const onUpdate = async (data: GlossaryTermViewModel) => {
     await $fetch(`/api/glossary-term/${data.id}`, {
         method: 'PUT',
         body: {

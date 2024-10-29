@@ -32,7 +32,9 @@
                 "ms-azuretools.vscode-bicep",
                 "bierner.markdown-mermaid",
                 "bpruitt-goddard.mermaid-markdown-syntax-highlighting",
-                "hediet.vscode-drawio"
+                "hediet.vscode-drawio",
+                "vitest.explorer",
+                "kingwl.vscode-vitest-runner"
             ]
         }
     }

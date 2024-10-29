@@ -1,9 +1,15 @@
 <script lang="ts" setup>
-import { SystemComponent } from '~/domain/requirements/SystemComponent.js';
-import { type ReqRelModel } from '~/domain/types/index.js'
-
 useHead({ title: 'Components' })
 definePageMeta({ name: 'System Components' })
+
+interface SystemComponentViewModel {
+    id: string;
+    name: string;
+    description: string;
+    parentComponent?: string;
+    solutionId: string;
+    lastModified: Date;
+}
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug, organizationslug } = useRoute('System Components').params,
@@ -18,7 +24,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: systemComponents, refresh, status, error: getSystemComponentsError } = await useFetch<ReqRelModel<SystemComponent>[]>(`/api/system-component`, {
+const { data: systemComponents, refresh, status, error: getSystemComponentsError } = await useFetch<SystemComponentViewModel[]>(`/api/system-component`, {
     query: { solutionId },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
@@ -29,7 +35,7 @@ const { data: systemComponents, refresh, status, error: getSystemComponentsError
 if (getSystemComponentsError.value)
     $eventBus.$emit('page-error', getSystemComponentsError.value);
 
-const onCreate = async (data: ReqRelModel<SystemComponent>) => {
+const onCreate = async (data: SystemComponentViewModel) => {
     await $fetch(`/api/system-component`, {
         method: 'POST',
         body: {
@@ -43,7 +49,7 @@ const onCreate = async (data: ReqRelModel<SystemComponent>) => {
     refresh()
 }
 
-const onUpdate = async (data: ReqRelModel<SystemComponent>) => {
+const onUpdate = async (data: SystemComponentViewModel) => {
     await $fetch(`/api/system-component/${data.id}`, {
         method: 'PUT',
         body: {

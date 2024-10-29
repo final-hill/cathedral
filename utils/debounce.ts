@@ -3,12 +3,10 @@
  * after the delay has passed without any other calls to the function.
  */
 export default function (func: Function, delay: number) {
-    let timeoutId: number;
+    let timeoutId: any
     return function (...args: any[]) {
         if (timeoutId)
             clearTimeout(timeoutId);
-        timeoutId = self.setTimeout(() => {
-            func(...args);
-        }, delay);
+        timeoutId = setTimeout(() => { func(...args); }, delay);
     };
 }
