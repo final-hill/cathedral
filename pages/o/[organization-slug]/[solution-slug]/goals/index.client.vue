@@ -5,7 +5,8 @@ definePageMeta({ name: 'Goals' })
 const { solutionslug, organizationslug } = useRoute('Goals').params
 
 const links = [
-    { name: 'Rationale' as const, icon: 'pi-book', label: 'Rationale' },
+    { name: 'Context and Objective' as const, icon: 'pi-bullseye', label: 'Context and Objective' },
+    { name: 'Situation' as const, icon: 'pi-search', label: 'Situation' },
     { name: 'Outcomes' as const, icon: 'pi-check-circle', label: 'Outcomes' },
     { name: 'Stakeholders' as const, icon: 'pi-users', label: 'Stakeholders' },
     { name: 'Goal Scenarios' as const, icon: 'pi-briefcase', label: 'Scenarios' },
