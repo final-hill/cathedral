@@ -5,6 +5,7 @@ import { StakeholderSegmentation } from '~/domain/requirements/StakeholderSegmen
 
 interface StakeholderViewModel {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     category: string;
@@ -138,6 +139,7 @@ const onDelete = async (id: string) => {
     <TabView @tab-change="(e) => refreshStakeholders()">
         <TabPanel header="Stakeholders">
             <XDataTable :viewModel="{
+                reqId: 'text',
                 name: 'text',
                 description: 'text',
                 availability: 'number',

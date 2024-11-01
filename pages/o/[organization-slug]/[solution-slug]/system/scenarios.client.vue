@@ -3,6 +3,7 @@ import { MoscowPriority } from '~/domain/requirements/MoscowPriority.js';
 
 type AssumptionViewModel = {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     lastModified: Date;
@@ -10,6 +11,7 @@ type AssumptionViewModel = {
 
 type EffectViewModel = {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     lastModified: Date;
@@ -17,6 +19,7 @@ type EffectViewModel = {
 
 type FunctionalBehaviorViewModel = {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     lastModified: Date;
@@ -24,6 +27,7 @@ type FunctionalBehaviorViewModel = {
 
 type OutcomeViewModel = {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     lastModified: Date;
@@ -31,6 +35,7 @@ type OutcomeViewModel = {
 
 type StakeholderViewModel = {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     lastModified: Date;
@@ -38,12 +43,13 @@ type StakeholderViewModel = {
 
 type UseCaseViewModel = {
     id: string;
+    reqId: string;
     name: string;
     priority: MoscowPriority;
     scope: string;
     level: string;
     primaryActor: string;
-    goalInContext: string;
+    outcome: string;
     precondition: string;
     triggerId: string;
     mainSuccessScenario: string;
@@ -54,6 +60,7 @@ type UseCaseViewModel = {
 
 type UserStoryViewModel = {
     id: string;
+    reqId: string;
     name: string;
     primaryActor: string;
     functionalBehavior: string;
@@ -61,7 +68,6 @@ type UserStoryViewModel = {
     priority: string;
     lastModified: Date;
 };
-
 
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Scenarios' })
@@ -155,7 +161,7 @@ const onUseCaseCreate = async (useCase: UseCaseViewModel) => {
             scope: useCase.scope,
             level: useCase.level,
             primaryActor: useCase.primaryActor,
-            goalInContext: useCase.goalInContext,
+            outcome: useCase.outcome,
             precondition: useCase.precondition,
             triggerId: useCase.triggerId,
             mainSuccessScenario: useCase.mainSuccessScenario,
@@ -178,7 +184,7 @@ const onUseCaseUpdate = async (useCase: UseCaseViewModel) => {
             scope: useCase.scope,
             level: useCase.level,
             primaryActor: useCase.primaryActor,
-            goalInContext: useCase.goalInContext,
+            outcome: useCase.outcome,
             precondition: useCase.precondition,
             triggerId: useCase.triggerId,
             mainSuccessScenario: useCase.mainSuccessScenario,
@@ -224,6 +230,7 @@ const onUseCaseDelete = async (id: string) => {
             </p>
 
             <XDataTable :viewModel="{
+                reqId: 'text',
                 name: 'text',
                 primaryActor: 'object',
                 functionalBehavior: 'object',
@@ -253,12 +260,13 @@ const onUseCaseDelete = async (id: string) => {
                 system to achieve a goal.
             </p>
             <XDataTable :viewModel="{
+                reqId: 'text',
                 name: 'text',
                 scope: 'text',
                 level: 'text',
                 priority: 'text',
                 primaryActor: 'object',
-                goalInContext: 'text',
+                outcome: 'object',
                 precondition: 'object',
                 triggerId: 'text',
                 mainSuccessScenario: 'text',
@@ -270,7 +278,7 @@ const onUseCaseDelete = async (id: string) => {
                 level: 'text',
                 priority: Object.values(MoscowPriority),
                 primaryActor: { type: 'requirement', options: roles ?? [] },
-                goalInContext: 'text',
+                outcome: { type: 'requirement', options: outcomes ?? [] },
                 precondition: { type: 'requirement', options: assumptions ?? [] },
                 triggerId: 'text',
                 mainSuccessScenario: 'text',
@@ -283,7 +291,7 @@ const onUseCaseDelete = async (id: string) => {
                 level: 'text',
                 priority: Object.values(MoscowPriority),
                 primaryActor: { type: 'requirement', options: roles ?? [] },
-                goalInContext: 'text',
+                outcome: { type: 'requirement', options: outcomes ?? [] },
                 precondition: { type: 'requirement', options: assumptions ?? [] },
                 triggerId: 'text',
                 mainSuccessScenario: 'text',

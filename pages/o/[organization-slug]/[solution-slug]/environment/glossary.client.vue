@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 type GlossaryTermViewModel = {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     lastModified: Date;
@@ -73,7 +74,8 @@ const onDelete = async (id: string) => {
     <p>
         A Glossary is a list of terms in a particular domain of knowledge with the definitions for those terms.
     </p>
-    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
+        :createModel="{ name: 'text', description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="glossaryTerms"
         :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'"
         :organizationSlug="organizationslug" entityName="GlossaryTerm" :showRecycleBin="true">

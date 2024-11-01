@@ -19,6 +19,7 @@ if (getSolutionError.value)
 
 interface AssumptionViewModel {
     id: string,
+    reqId: string,
     name: string,
     description: string,
     lastModified: Date
@@ -52,8 +53,7 @@ const onDelete = async (id: string) => {
     await $fetch(`/api/assumption/${id}`, {
         method: 'delete',
         body: { solutionId }
-    })
-        .catch((e) => $eventBus.$emit('page-error', e))
+    }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
@@ -79,7 +79,8 @@ const onUpdate = async (data: AssumptionViewModel) => {
         An example of an assumption would be: "Screen resolution will not change during
         the execution of the program".
     </p>
-    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
+        :createModel="{ name: 'text', description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="assumptions" :on-create="onCreate"
         :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'" :organizationSlug="organizationslug"
         entityName="Assumption" :showRecycleBin="true">

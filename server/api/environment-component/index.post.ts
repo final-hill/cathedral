@@ -19,20 +19,28 @@ export default defineEventHandler(async (event) => {
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    const newEnvironmentComponent = em.create(EnvironmentComponent, {
-        name,
-        description,
-        lastModified: new Date(),
-        modifiedBy: sessionUser,
-        isSilence
+    const newId = await em.transactional(async (em) => {
+        const newEnvironmentComponent = em.create(EnvironmentComponent, {
+            reqId: await getNextReqId('E.2.', em, solution) as EnvironmentComponent['reqId'],
+            name,
+            description,
+            lastModified: new Date(),
+            modifiedBy: sessionUser,
+            isSilence
+        })
+
+        em.create(Belongs, {
+            left: newEnvironmentComponent,
+            right: solution
+        })
+
+        if (parentComponentId)
+            em.create(Belongs, { left: newEnvironmentComponent, right: parentComponentId })
+
+        await em.flush()
+
+        return newEnvironmentComponent.id
     })
 
-    em.create(Belongs, { left: newEnvironmentComponent, right: solution })
-
-    if (parentComponentId)
-        em.create(Belongs, { left: newEnvironmentComponent, right: parentComponentId })
-
-    await em.flush()
-
-    return newEnvironmentComponent.id
+    return newId
 })

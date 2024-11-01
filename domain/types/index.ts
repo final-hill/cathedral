@@ -10,6 +10,8 @@ export type Properties<T> = Pick<T, {
 /**
  * Represents a requirement model with relations
  */
+// TODO: move to a base DTO object
+// possibly related to the following work: https://github.com/final-hill/cathedral/issues/164#issuecomment-2381004280
 export type ReqRelModel<R extends Requirement> = R & {
     parentComponent?: string,
     solutionId: string

@@ -19,20 +19,28 @@ export default defineEventHandler(async (event) => {
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    const newSystemComponent = new SystemComponent({
-        name,
-        description,
-        lastModified: new Date(),
-        modifiedBy: sessionUser,
-        isSilence
+    const newId = await em.transactional(async (em) => {
+        const newSystemComponent = new SystemComponent({
+            reqId: await getNextReqId('S.1.', em, solution) as SystemComponent['reqId'],
+            name,
+            description,
+            lastModified: new Date(),
+            modifiedBy: sessionUser,
+            isSilence
+        })
+
+        em.create(Belongs, {
+            left: newSystemComponent,
+            right: solution
+        })
+
+        if (parentComponent)
+            em.create(Belongs, { left: newSystemComponent, right: parentComponent })
+
+        await em.flush()
+
+        return newSystemComponent.id
     })
 
-    em.create(Belongs, { left: newSystemComponent, right: solution })
-
-    if (parentComponent)
-        em.create(Belongs, { left: newSystemComponent, right: parentComponent })
-
-    await em.flush()
-
-    return newSystemComponent.id
+    return newId
 })

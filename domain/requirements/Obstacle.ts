@@ -3,6 +3,9 @@ import { Goal } from "./Goal.js";
 import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
 
+export const obstacleReqIdPrefix = 'G.2.' as const;
+export type ObstacleReqId = `${typeof obstacleReqIdPrefix}${number}`;
+
 /**
  * Obstacles are the challenges that prevent the goals from being achieved.
  */
@@ -12,4 +15,7 @@ export class Obstacle extends Goal {
         super(props);
         this.req_type = ReqType.OBSTACLE;
     }
+
+    override get reqId(): ObstacleReqId | undefined { return super.reqId as ObstacleReqId | undefined }
+    override set reqId(value: ObstacleReqId | undefined) { super.reqId = value }
 }

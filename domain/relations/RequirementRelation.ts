@@ -21,9 +21,15 @@ export abstract class RequirementRelation extends BaseEntity {
     @Property({ type: 'uuid', primary: true })
     id: string;
 
+    /**
+     * The left-hand side of the relation
+     */
     @ManyToOne({ entity: () => Requirement, cascade: [Cascade.REMOVE] })
     left: Requirement
 
+    /**
+     * The right-hand side of the relation
+     */
     @ManyToOne({ entity: () => Requirement, cascade: [Cascade.REMOVE] })
     right: Requirement
 }

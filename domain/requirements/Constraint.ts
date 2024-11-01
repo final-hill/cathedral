@@ -4,6 +4,9 @@ import { ConstraintCategory } from './ConstraintCategory.js';
 import { type Properties } from '../types/index.js';
 import { ReqType } from './ReqType.js';
 
+export const constraintReqIdPrefix = 'E.3.' as const;
+export type ConstraintReqId = `${typeof constraintReqIdPrefix}${number}`;
+
 /**
  * A Constraint is a property imposed by the environment
  */
@@ -14,6 +17,9 @@ export class Constraint extends Requirement {
         this.category = category;
         this.req_type = ReqType.CONSTRAINT;
     }
+
+    override get reqId(): ConstraintReqId | undefined { return super.reqId as ConstraintReqId | undefined }
+    override set reqId(value: ConstraintReqId | undefined) { super.reqId = value }
 
     /**
      * Category of the constraint

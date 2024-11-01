@@ -1,8 +1,10 @@
 <script lang="ts" setup>
 type ObstacleViewModel = {
     id: string;
+    reqId: string;
     name: string;
     description: string;
+    lastModified: Date;
 };
 
 useHead({ title: 'Situation' })
@@ -40,6 +42,49 @@ watch(situationDescription, debounce(() => {
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
 }, 500));
+
+const { data: obstacles, refresh, status, error: getObstaclesError } = await useFetch<ObstacleViewModel[]>(`/api/obstacle`, {
+    query: { solutionId },
+    transform: (data) => data.map((item) => {
+        item.lastModified = new Date(item.lastModified)
+        return item
+    }).filter((item) => item.reqId !== 'G.2.0')
+})
+
+const onCreate = async (data: ObstacleViewModel) => {
+    await $fetch(`/api/obstacle`, {
+        method: 'POST',
+        body: {
+            solutionId,
+            name: data.name,
+            description: data.description
+        }
+    }).catch((e) => $eventBus.$emit('page-error', e))
+
+    refresh()
+}
+
+const onUpdate = async (data: ObstacleViewModel) => {
+    await $fetch(`/api/obstacle/${data.id}`, {
+        method: 'PUT',
+        body: {
+            solutionId,
+            name: data.name,
+            description: data.description
+        }
+    }).catch((e) => $eventBus.$emit('page-error', e))
+
+    refresh()
+}
+
+const onDelete = async (id: string) => {
+    await $fetch(`/api/obstacle/${id}`, {
+        method: 'DELETE',
+        body: { solutionId }
+    }).catch((e) => $eventBus.$emit('page-error', e))
+
+    refresh()
+}
 </script>
 
 <template>
@@ -53,4 +98,15 @@ watch(situationDescription, debounce(() => {
             <Textarea name="situation" id="situation" class="w-full h-10rem" v-model.trim.lazy="situationDescription" />
         </div>
     </form>
+
+    <h2>Obstacles</h2>
+    <p>
+        Obstacles are the challenges that prevent the goals from being achieved.
+    </p>
+    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
+        :createModel="{ name: 'text', description: 'text' }"
+        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="obstacles" :on-create="onCreate"
+        :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationslug"
+        entityName="Obstacle" :showRecycleBin="true">
+    </XDataTable>
 </template>

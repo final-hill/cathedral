@@ -1,6 +1,6 @@
 import { fork } from "~/server/data/orm.js"
 import { z } from "zod"
-import { Effect, effectReqIdPrefix } from "~/domain/requirements/index.js"
+import { Epic, epicReqIdPrefix, MoscowPriority } from "~/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -9,32 +9,34 @@ const paramSchema = z.object({
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
     name: z.string().optional(),
+    priority: z.nativeEnum(MoscowPriority).optional(),
     description: z.string().optional(),
     isSilence: z.boolean().optional()
 })
 
 /**
- * Updates an effect by id.
+ * Updates an epic by id.
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { name, description, solutionId, isSilence } = await validateEventBody(event, bodySchema),
+        { name, description, solutionId, isSilence, priority } = await validateEventBody(event, bodySchema),
         { sessionUser, solution } = await assertSolutionContributor(event, solutionId),
         em = fork(),
-        effect = await assertReqBelongsToSolution(em, Effect, id, solution)
+        epic = await assertReqBelongsToSolution(em, Epic, id, solution)
 
-    effect.assign({
-        name: name ?? effect.name,
-        isSilence: isSilence ?? effect.isSilence,
-        description: description ?? effect.description,
+    epic.assign({
+        name: name ?? epic.name,
+        isSilence: isSilence ?? epic.isSilence,
+        description: description ?? epic.description,
+        priority: priority ?? epic.priority,
         modifiedBy: sessionUser,
         lastModified: new Date(),
     })
 
     // If the entity is no longer silent and has no reqId, assume
     // that it is a new requirement from the workbox
-    if (isSilence !== undefined && isSilence == false && !effect.reqId)
-        effect.reqId = await getNextReqId(effectReqIdPrefix, em, solution) as Effect['reqId']
+    if (isSilence !== undefined && isSilence == false && !epic.reqId)
+        epic.reqId = await getNextReqId(epicReqIdPrefix, em, solution) as Epic['reqId']
 
-    await em.persistAndFlush(effect)
+    await em.persistAndFlush(epic)
 })

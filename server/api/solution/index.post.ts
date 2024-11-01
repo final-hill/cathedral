@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Obstacle, Solution, Goal } from "~/domain/requirements/index.js"
+import { Obstacle, Solution, Outcome } from "~/domain/requirements/index.js"
 import { Belongs } from "~/domain/relations"
 import slugify from "~/utils/slugify"
 
@@ -29,8 +29,9 @@ export default defineEventHandler(async (event) => {
 
     em.create(Belongs, { left: newSolution, right: organization });
 
-    [[Goal, 'G.1'] as const, [Obstacle, 'G.2'] as const].forEach(([Entity, name]) => {
+    [[Outcome, 'G.1'] as const, [Obstacle, 'G.2'] as const].forEach(([Entity, name]) => {
         const entity = em.create(Entity, {
+            reqId: `${name}.1` as any,
             name,
             description: '',
             lastModified: new Date(),
@@ -38,7 +39,10 @@ export default defineEventHandler(async (event) => {
             isSilence: false
         })
 
-        em.create(Belongs, { left: entity, right: newSolution })
+        em.create(Belongs, {
+            left: entity,
+            right: newSolution
+        })
     })
 
     await em.flush()

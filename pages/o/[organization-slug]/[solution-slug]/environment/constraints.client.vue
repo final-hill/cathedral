@@ -7,6 +7,7 @@ definePageMeta({ name: 'Constraints' })
 
 interface ConstraintViewModel {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     category: ConstraintCategory;
@@ -78,7 +79,7 @@ const onUpdate = async (data: ConstraintViewModel) => {
         Environmental constraints are the limitations and obligations that
         the environment imposes on the project and system.
     </p>
-    <XDataTable :viewModel="{ name: 'text', category: 'text', description: 'text' }"
+    <XDataTable :viewModel="{ reqId: 'text', name: 'text', category: 'text', description: 'text' }"
         :createModel="{ name: 'text', category: Object.values(ConstraintCategory), description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', category: Object.values(ConstraintCategory), description: 'text' }"
         :datasource="constraints" :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate"

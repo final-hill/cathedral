@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 type PersonViewModel = {
     id: string;
+    reqId: string;
     name: string;
     email: string;
     lastModified: Date;
@@ -75,9 +76,9 @@ const onDelete = async (id: string) => {
         along with their responsibilities, availability, and contact information.
     </p>
 
-    <XDataTable :viewModel="{ name: 'text', email: 'text' }" :createModel="{ name: 'text', email: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', email: 'text' }" :datasource="personnel" :on-create="onCreate"
-        :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationslug"
-        entityName="Person" :showRecycleBin="true">
+    <XDataTable :viewModel="{ reqId: 'text', name: 'text', email: 'text' }"
+        :createModel="{ name: 'text', email: 'text' }" :editModel="{ id: 'hidden', name: 'text', email: 'text' }"
+        :datasource="personnel" :on-create="onCreate" :on-update="onUpdate" :on-delete="onDelete"
+        :loading="status === 'pending'" :organizationSlug="organizationslug" entityName="Person" :showRecycleBin="true">
     </XDataTable>
 </template>

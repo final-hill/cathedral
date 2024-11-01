@@ -3,6 +3,9 @@ import { Requirement } from "./Requirement.js";
 import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
 
+export const assumptionReqIdPrefix = 'E.4.' as const;
+export type AssumptionReqId = `${typeof assumptionReqIdPrefix}${number}`;
+
 /**
  * Posited property of the environment
  */
@@ -12,4 +15,7 @@ export class Assumption extends Requirement {
         super(props);
         this.req_type = ReqType.ASSUMPTION;
     }
+
+    override get reqId(): AssumptionReqId | undefined { return super.reqId as AssumptionReqId | undefined }
+    override set reqId(value: AssumptionReqId | undefined) { super.reqId = value }
 }

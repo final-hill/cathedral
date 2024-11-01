@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Goal, ReqType } from "~/domain/requirements/index.js"
+import { Epic, ReqType } from "~/domain/requirements/index.js"
 
 const querySchema = z.object({
     solutionId: z.string().uuid(),
@@ -10,7 +10,7 @@ const querySchema = z.object({
 })
 
 /**
- * Returns all goals that match the query parameters
+ * Returns all epics that match the query parameters
  */
 export default defineEventHandler(async (event) => {
     const query = await validateEventQuery(event, querySchema),
@@ -18,5 +18,7 @@ export default defineEventHandler(async (event) => {
 
     await assertSolutionReader(event, query.solutionId)
 
-    return await findAllSolutionRequirements<Goal>(ReqType.GOAL, em, query)
+    return await findAllSolutionRequirements<Epic>(ReqType.EPIC, em, query)
 })
+
+

@@ -19,6 +19,7 @@ export default defineEventHandler(async (event) => {
         em = fork()
 
     const newJustification = em.create(Justification, {
+        reqId: undefined, // Should there be a Documentation category (D)?
         name,
         description,
         modifiedBy: sessionUser,
@@ -26,7 +27,10 @@ export default defineEventHandler(async (event) => {
         isSilence
     })
 
-    em.create(Belongs, { left: newJustification, right: solution })
+    em.create(Belongs, {
+        left: newJustification,
+        right: solution
+    })
 
     await em.flush()
 

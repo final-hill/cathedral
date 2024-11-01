@@ -6,6 +6,7 @@ definePageMeta({ name: 'Environment Components' })
 
 interface EnvironmentComponentViewModel {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     lastModified: Date;
@@ -73,7 +74,8 @@ const onUpdate = async (data: EnvironmentComponentViewModel) => {
         Environment components are the EXTERNAL elements that the system interacts with.
         These external components expose interfaces that the system uses to communicate with.
     </p>
-    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
+        :createModel="{ name: 'text', description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="environmentComponents"
         :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'"
         :organizationSlug="organizationslug" entityName="EnvironmentComponent" :showRecycleBin="true">

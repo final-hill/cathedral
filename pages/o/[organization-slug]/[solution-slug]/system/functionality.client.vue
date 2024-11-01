@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 type FunctionalBehaviorViewModel = {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     solutionId: string;
@@ -11,6 +12,7 @@ type FunctionalBehaviorViewModel = {
 
 type NonFunctionalBehaviorViewModel = {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     solutionId: string;

@@ -19,18 +19,26 @@ export default defineEventHandler(async (event) => {
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    const newConstraint = em.create(Constraint, {
-        name,
-        description,
-        category,
-        lastModified: new Date(),
-        modifiedBy: sessionUser,
-        isSilence
+    const newId = await em.transactional(async (em) => {
+        const newConstraint = em.create(Constraint, {
+            reqId: await getNextReqId('E.3.', em, solution) as Constraint['reqId'],
+            name,
+            description,
+            category,
+            lastModified: new Date(),
+            modifiedBy: sessionUser,
+            isSilence
+        })
+
+        em.create(Belongs, {
+            left: newConstraint,
+            right: solution
+        })
+
+        await em.flush()
+
+        return newConstraint.id
     })
 
-    em.create(Belongs, { left: newConstraint, right: solution })
-
-    await em.flush()
-
-    return newConstraint.id
+    return newId
 })

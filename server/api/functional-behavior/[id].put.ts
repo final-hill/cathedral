@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { FunctionalBehavior, MoscowPriority } from "~/domain/requirements/index.js"
+import { FunctionalBehavior, functionalBehaviorReqIdPrefix, MoscowPriority } from "~/domain/requirements/index.js"
 import { fork } from "~/server/data/orm.js"
 
 const paramSchema = z.object({
@@ -32,6 +32,11 @@ export default defineEventHandler(async (event) => {
         lastModified: new Date(),
         ...(isSilence !== undefined && { isSilence })
     })
+
+    // If the entity is no longer silent and has no reqId, assume
+    // that it is a new requirement from the workbox
+    if (isSilence !== undefined && isSilence == false && !functionalBehavior.reqId)
+        functionalBehavior.reqId = await getNextReqId(functionalBehaviorReqIdPrefix, em, solution) as FunctionalBehavior['reqId']
 
     await em.persistAndFlush(functionalBehavior)
 })

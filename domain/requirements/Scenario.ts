@@ -3,6 +3,7 @@ import { Example } from "./Example.js";
 import { Stakeholder } from "./Stakeholder.js";
 import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
+import { Outcome } from "./Outcome.js";
 
 /**
  * A Scenario specifies system behavior by describing paths
@@ -10,9 +11,10 @@ import { ReqType } from "./ReqType.js";
  */
 @Entity({ abstract: true, discriminatorValue: ReqType.SCENARIO })
 export abstract class Scenario extends Example {
-    constructor({ primaryActor, ...rest }: Properties<Omit<Scenario, 'id' | 'req_type'>>) {
+    constructor({ primaryActor, outcome, ...rest }: Properties<Omit<Scenario, 'id' | 'req_type'>>) {
         super(rest);
         this.primaryActor = primaryActor;
+        this.outcome = outcome;
         this.req_type = ReqType.SCENARIO;
     }
 
@@ -21,4 +23,10 @@ export abstract class Scenario extends Example {
      */
     @ManyToOne({ entity: () => Stakeholder })
     primaryActor?: Stakeholder;
+
+    /**
+     * The outcome (goal) that the scenario is aiming to achieve.
+     */
+    @ManyToOne({ entity: () => Outcome })
+    outcome?: Outcome;
 }

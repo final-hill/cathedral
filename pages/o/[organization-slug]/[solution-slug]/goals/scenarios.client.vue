@@ -17,8 +17,9 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-interface UserStoryViewModel {
+interface EpicViewModel {
     id: string;
+    reqId: string;
     name: string;
     primaryActor: StakeholderViewModel;
     functionalBehavior: FunctionalBehaviorViewModel;
@@ -42,12 +43,12 @@ interface OutcomeViewModel {
 }
 
 const [
-    { data: userStories, refresh, status, error: getUserStoriesError },
+    { data: epics, refresh, status, error: getEpicsError },
     { data: roles, error: getRolesError },
     { data: functionalBehaviors, error: getFunctionalBehaviorsError },
     { data: outcomes, error: getOutcomesError },
 ] = await Promise.all([
-    useFetch<UserStoryViewModel[]>(`/api/user-story`, {
+    useFetch<EpicViewModel[]>(`/api/epic`, {
         query: { solutionId },
         transform: (data) => data.map((item) => {
             item.lastModified = new Date(item.lastModified)
@@ -59,8 +60,8 @@ const [
     useFetch<OutcomeViewModel[]>(`/api/outcome`, { query: { solutionId } })
 ])
 
-if (getUserStoriesError.value)
-    $eventBus.$emit('page-error', getUserStoriesError.value);
+if (getEpicsError.value)
+    $eventBus.$emit('page-error', getEpicsError.value);
 if (getRolesError.value)
     $eventBus.$emit('page-error', getRolesError.value);
 if (getFunctionalBehaviorsError.value)
@@ -68,11 +69,11 @@ if (getFunctionalBehaviorsError.value)
 if (getOutcomesError.value)
     $eventBus.$emit('page-error', getOutcomesError.value);
 
-const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
-    await $fetch(`/api/user-story`, {
+const onEpicCreate = async (epic: EpicViewModel) => {
+    await $fetch(`/api/epic`, {
         method: 'POST',
         body: {
-            ...userStory,
+            ...epic,
             solutionId,
             description: '',
             priority: MoscowPriority.MUST
@@ -82,11 +83,11 @@ const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
     refresh();
 }
 
-const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
-    await $fetch(`/api/user-story/${userStory.id}`, {
+const onEpicUpdate = async (epic: EpicViewModel) => {
+    await $fetch(`/api/epic/${epic.id}`, {
         method: 'PUT',
         body: {
-            ...userStory,
+            ...epic,
             solutionId,
             description: '',
             priority: MoscowPriority.MUST
@@ -96,8 +97,8 @@ const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
     refresh();
 }
 
-const onUserStoryDelete = async (id: string) => {
-    await $fetch(`/api/user-story/${id}`, {
+const onEpicDelete = async (id: string) => {
+    await $fetch(`/api/epic/${id}`, {
         method: 'DELETE',
         body: { solutionId }
     }).catch((e) => $eventBus.$emit('page-error', e));
@@ -123,6 +124,7 @@ const onUserStoryDelete = async (id: string) => {
     </p>
 
     <XDataTable :viewModel="{
+        reqId: 'text',
         name: 'text',
         primaryActor: 'object',
         functionalBehavior: 'object',
@@ -138,8 +140,8 @@ const onUserStoryDelete = async (id: string) => {
         primaryActor: { type: 'requirement', options: roles ?? [] },
         functionalBehavior: { type: 'requirement', options: functionalBehaviors ?? [] },
         outcome: { type: 'requirement', options: outcomes ?? [] }
-    }" :datasource="userStories" :onCreate="onUserStoryCreate" :onUpdate="onUserStoryUpdate"
-        :onDelete="onUserStoryDelete" :loading="status === 'pending'" :organizationSlug="organizationslug"
-        entityName="UserStory" :showRecycleBin="true">
+    }" :datasource="epics" :onCreate="onEpicCreate" :onUpdate="onEpicUpdate" :onDelete="onEpicDelete"
+        :loading="status === 'pending'" :organizationSlug="organizationslug" entityName="UserStory"
+        :showRecycleBin="true">
     </XDataTable>
 </template>

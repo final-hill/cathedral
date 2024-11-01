@@ -1,6 +1,6 @@
 import { fork } from "~/server/data/orm.js"
 import { z } from "zod"
-import { Assumption } from "~/domain/requirements/index.js"
+import { Assumption, assumptionReqIdPrefix } from "~/domain/requirements/index.js"
 import { Belongs } from "~/domain/relations"
 
 const bodySchema = z.object({
@@ -18,17 +18,25 @@ export default defineEventHandler(async (event) => {
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    const newAssumption = em.create(Assumption, {
-        name,
-        description,
-        modifiedBy: sessionUser,
-        lastModified: new Date(),
-        isSilence
+    const newId = await em.transactional(async (em) => {
+        const newAssumption = em.create(Assumption, {
+            reqId: await getNextReqId(assumptionReqIdPrefix, em, solution) as Assumption['reqId'],
+            name,
+            description,
+            modifiedBy: sessionUser,
+            lastModified: new Date(),
+            isSilence
+        })
+
+        em.create(Belongs, {
+            left: newAssumption,
+            right: solution
+        })
+
+        await em.flush()
+
+        return newAssumption.id
     })
 
-    em.create(Belongs, { left: newAssumption, right: solution })
-
-    await em.flush()
-
-    return newAssumption.id
+    return newId
 })

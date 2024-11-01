@@ -20,5 +20,5 @@ export default defineEventHandler(async (event) => {
         em = fork(),
         obstacle = await assertReqBelongsToSolution(em, Obstacle, id, solution)
 
-    await em.removeAndFlush(obstacle)
+    await deleteSolutionRequirement(em, obstacle, solution)
 })

@@ -4,6 +4,9 @@ import { type Properties } from '../types/index.js';
 import { ReqType } from './ReqType.js';
 import { AppUser } from '../application/AppUser.js';
 
+export type ReqIdPrefix = `${'P' | 'E' | 'G' | 'S'}.${number}.`
+export type ReqId = `${ReqIdPrefix}${number}`
+
 /**
  * A Requirement is a statement that specifies a property.
  */
@@ -32,6 +35,16 @@ export abstract class Requirement extends BaseEntity {
      */
     @Property({ type: 'uuid', primary: true })
     id: string;
+
+    private _reqId?: ReqId
+
+    /**
+     * The user-friendly identifier of the requirement that is unique within its parent
+     */
+    // This is nullable because MetaRequirements, Silence, and Noise do not have a reqId
+    @Property({ type: 'text', nullable: true })
+    get reqId(): ReqId | undefined { return this._reqId }
+    set reqId(value: ReqId | undefined) { this._reqId = value }
 
     // A property is a Predicate formalizing its associated statement.
     // see: https://github.com/final-hill/cathedral/issues/368
