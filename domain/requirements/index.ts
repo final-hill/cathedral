@@ -34,6 +34,7 @@ export * from './Responsibility.js';
 export * from './ReqType.js';
 export * from './Role.js';
 export * from './Scenario.js';
+export * from './Epic.js';
 export * from './Silence.js';
 export * from './SystemComponent.js';
 export * from './Task.js';

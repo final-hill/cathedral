@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Invariant } from "~/domain/requirements/index.js"
+import { Invariant, invariantReqIdPrefix } from "~/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -30,6 +30,11 @@ export default defineEventHandler(async (event) => {
         modifiedBy: sessionUser,
         lastModified: new Date()
     })
+
+    // If the entity is no longer silent and has no reqId, assume
+    // that it is a new requirement from the workbox
+    if (isSilence !== undefined && isSilence == false && !invariant.reqId)
+        invariant.reqId = await getNextReqId(invariantReqIdPrefix, em, solution) as Invariant['reqId']
 
     await em.persistAndFlush(invariant)
 })

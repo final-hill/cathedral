@@ -6,6 +6,7 @@ definePageMeta({ name: 'Goals Functionality' })
 
 interface FunctionalBehaviorViewModel {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     lastModified: Date;
@@ -78,7 +79,8 @@ const onDelete = async (id: string) => {
         They describe <strong>WHAT</strong> the solution must do and not how it does it.
     </p>
 
-    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
+        :createModel="{ name: 'text', description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="functionalBehaviors"
         :on-create="onCreate" :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'"
         :organizationSlug="organizationslug" entityName="FunctionalBehavior" :showRecycleBin="true">

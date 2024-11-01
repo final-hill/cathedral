@@ -2,6 +2,7 @@
 
 interface EffectViewModel {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     lastModified: Date;
@@ -74,7 +75,8 @@ const onDelete = async (id: string) => {
         An Effect is an environment property affected by a System.
         Example: "The running system will cause the temperature of the room to increase."
     </p>
-    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
+        :createModel="{ name: 'text', description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="effects" :on-create="onCreate"
         :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'" :organizationSlug="organizationslug"
         entityName="Effect" :showRecycleBin="true">

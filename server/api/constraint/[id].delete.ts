@@ -20,5 +20,5 @@ export default defineEventHandler(async (event) => {
         em = fork(),
         constraint = await assertReqBelongsToSolution(em, Constraint, id, solution)
 
-    await em.removeAndFlush(constraint)
+    await deleteSolutionRequirement(em, constraint, solution)
 })

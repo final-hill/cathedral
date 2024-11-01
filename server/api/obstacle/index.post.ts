@@ -18,17 +18,25 @@ export default defineEventHandler(async (event) => {
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    const newObstacle = em.create(Obstacle, {
-        name,
-        description,
-        modifiedBy: sessionUser,
-        lastModified: new Date(),
-        isSilence
+    const newId = await em.transactional(async (em) => {
+        const newObstacle = em.create(Obstacle, {
+            reqId: await getNextReqId('G.2.', em, solution) as Obstacle['reqId'],
+            name,
+            description,
+            modifiedBy: sessionUser,
+            lastModified: new Date(),
+            isSilence
+        })
+
+        em.create(Belongs, {
+            left: newObstacle,
+            right: solution
+        })
+
+        await em.flush()
+
+        return newObstacle.id
     })
 
-    em.create(Belongs, { left: newObstacle, right: solution })
-
-    await em.flush()
-
-    return newObstacle.id
+    return newId
 })

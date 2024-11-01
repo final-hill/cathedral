@@ -1,0 +1,12 @@
+/*
+  TODO: Implement testing
+
+  Identification Principle:
+  Every element appearing in requirements must have a unique number or key allowing unambiguous identification.
+
+  This is currently accomplished by assigning a reqId property to the `belongs` relationship
+  with a uniqueness constraint on (reqId, right) in the database.
+
+  THis should enforce uniqueness of reqId within a solution.
+
+*/

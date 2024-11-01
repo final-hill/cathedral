@@ -17,6 +17,7 @@ if (getSolutionError.value)
 
 interface OutcomeViewModel {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     lastModified: Date;
@@ -27,7 +28,7 @@ const { data: outcomes, refresh, status, error: getOutcomesError } = await useFe
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
         return item
-    })
+    }).filter((item) => item.reqId !== 'G.1.0')
 })
 
 if (getOutcomesError.value)
@@ -75,7 +76,8 @@ const onDelete = async (id: string) => {
         of the system that will be achieved by the associated project.
     </p>
 
-    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
+        :createModel="{ name: 'text', description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="outcomes" :onCreate="onCreate"
         :onUpdate="onUpdate" :onDelete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationslug"
         entityName="Outcome" :showRecycleBin="true">

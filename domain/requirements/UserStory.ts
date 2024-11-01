@@ -1,9 +1,11 @@
 import { Entity, ManyToOne } from "@mikro-orm/core";
 import { FunctionalBehavior } from "./FunctionalBehavior.js";
-import { Outcome } from "./Outcome.js";
 import { Scenario } from "./Scenario.js";
 import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
+
+export const userStoryReqIdPrefix = 'S.4.' as const;
+export type UserStoryReqId = `${typeof userStoryReqIdPrefix}${number}`;
 
 /**
  * A User Story specifies the handling of a specific user need.
@@ -19,19 +21,15 @@ export class UserStory extends Scenario {
     constructor(props: Properties<Omit<UserStory, 'id' | 'req_type'>>) {
         super(props);
         this.req_type = ReqType.USER_STORY;
-        this.outcome = props.outcome;
         this.functionalBehavior = props.functionalBehavior;
     }
+
+    override get reqId(): UserStoryReqId | undefined { return super.reqId as UserStoryReqId | undefined }
+    override set reqId(value: UserStoryReqId | undefined) { super.reqId = value }
 
     /**
      * The action that the user wants to perform.
      */
     @ManyToOne({ entity: () => FunctionalBehavior })
     functionalBehavior?: FunctionalBehavior;
-
-    /**
-     * The outcome that the story is aiming to achieve.
-     */
-    @ManyToOne({ entity: () => Outcome })
-    outcome?: Outcome;
 }

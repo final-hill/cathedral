@@ -4,6 +4,7 @@ definePageMeta({ name: 'System Components' })
 
 interface SystemComponentViewModel {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     parentComponent?: string;
@@ -77,6 +78,7 @@ const onDelete = async (id: string) => {
         Components describe the structure of the system as a list or hierarchy.
     </p>
     <XDataTable :viewModel="{
+        reqId: 'text',
         name: 'text',
         description: 'text',
         parentComponent: 'object'

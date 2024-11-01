@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 interface InvariantViewModel {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     lastModified: Date;
@@ -75,7 +76,8 @@ const onDelete = async (id: string) => {
         constrain the possible states of a system.
     </p>
 
-    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
+        :createModel="{ name: 'text', description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="invariants" :on-create="onCreate"
         :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationslug"
         entityName="Invariant" :showRecycleBin="true">

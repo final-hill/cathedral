@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Limit } from "~/domain/requirements/index.js"
+import { Limit, limitReqIdPrefix } from "~/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -30,6 +30,11 @@ export default defineEventHandler(async (event) => {
         modifiedBy: sessionUser,
         lastModified: new Date()
     })
+
+    // If the entity is no longer silent and has no reqId, assume
+    // that it is a new requirement from the workbox
+    if (isSilence !== undefined && isSilence == false && !limit.reqId)
+        limit.reqId = await getNextReqId(limitReqIdPrefix, em, solution) as Limit['reqId']
 
     await em.persistAndFlush(limit)
 })

@@ -20,5 +20,5 @@ export default defineEventHandler(async (event) => {
         em = fork(),
         systemComponent = await assertReqBelongsToSolution(em, SystemComponent, id, solution)
 
-    await em.removeAndFlush(systemComponent)
+    await deleteSolutionRequirement(em, systemComponent, solution)
 })

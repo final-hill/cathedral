@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Assumption, Effect, MoscowPriority, Stakeholder, UseCase } from "~/domain/requirements/index.js"
+import { Assumption, Effect, MoscowPriority, Outcome, Stakeholder, UseCase, useCaseReqIdPrefix } from "~/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -14,7 +14,7 @@ const bodySchema = z.object({
     priority: z.nativeEnum(MoscowPriority).optional(),
     scope: z.string().optional(),
     level: z.string().optional(),
-    goalInContext: z.string().optional(),
+    outcome: z.string().uuid().optional(),
     precondition: z.string().uuid().optional(),
     triggerId: z.string().uuid().optional(),
     mainSuccessScenario: z.string().optional(),
@@ -39,6 +39,8 @@ export default defineEventHandler(async (event) => {
         useCase.precondition = await assertReqBelongsToSolution(em, Assumption, body.precondition, solution)
     if (body.successGuarantee)
         useCase.successGuarantee = await assertReqBelongsToSolution(em, Effect, body.successGuarantee, solution)
+    if (body.outcome)
+        useCase.outcome = await assertReqBelongsToSolution(em, Outcome, body.outcome, solution)
 
     useCase.assign({
         name: body.name ?? useCase.name,
@@ -46,7 +48,7 @@ export default defineEventHandler(async (event) => {
         priority: body.priority ?? useCase.priority,
         scope: body.scope ?? useCase.scope,
         level: body.level ?? useCase.level,
-        goalInContext: body.goalInContext ?? useCase.goalInContext,
+        outcome: body.outcome ?? useCase.outcome,
         triggerId: body.triggerId ?? useCase.triggerId,
         mainSuccessScenario: body.mainSuccessScenario ?? useCase.mainSuccessScenario,
         extensions: body.extensions ?? useCase.extensions,
@@ -54,6 +56,11 @@ export default defineEventHandler(async (event) => {
         modifiedBy: sessionUser,
         lastModified: new Date()
     })
+
+    // If the entity is no longer silent and has no reqId, assume
+    // that it is a new requirement from the workbox
+    if (body.isSilence !== undefined && body.isSilence == false && !useCase.reqId)
+        useCase.reqId = await getNextReqId(useCaseReqIdPrefix, em, solution) as UseCase['reqId']
 
     await em.persistAndFlush(useCase)
 })

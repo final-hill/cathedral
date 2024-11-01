@@ -19,20 +19,28 @@ export default defineEventHandler(async (event) => {
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    const glossaryTerm = em.create(GlossaryTerm, {
-        name,
-        description,
-        lastModified: new Date(),
-        modifiedBy: sessionUser,
-        isSilence
+    const newId = await em.transactional(async (em) => {
+        const glossaryTerm = em.create(GlossaryTerm, {
+            reqId: await getNextReqId('E.1.', em, solution) as GlossaryTerm['reqId'],
+            name,
+            description,
+            lastModified: new Date(),
+            modifiedBy: sessionUser,
+            isSilence
+        })
+
+        em.create(Belongs, {
+            left: glossaryTerm,
+            right: solution
+        })
+
+        if (parentComponentId)
+            em.create(Belongs, { left: glossaryTerm, right: parentComponentId })
+
+        await em.flush()
+
+        return glossaryTerm.id
     })
 
-    em.create(Belongs, { left: glossaryTerm, right: solution })
-
-    if (parentComponentId)
-        em.create(Belongs, { left: glossaryTerm, right: parentComponentId })
-
-    await em.flush()
-
-    return glossaryTerm.id
+    return newId
 })

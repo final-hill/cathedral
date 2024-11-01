@@ -19,18 +19,26 @@ export default defineEventHandler(async (event) => {
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    const newNonFunctionalBehavior = em.create(NonFunctionalBehavior, {
-        name,
-        description,
-        priority,
-        lastModified: new Date(),
-        modifiedBy: sessionUser,
-        isSilence
+    const newId = await em.transactional(async (em) => {
+        const newNonFunctionalBehavior = em.create(NonFunctionalBehavior, {
+            reqId: await getNextReqId('S.2.', em, solution) as NonFunctionalBehavior['reqId'],
+            name,
+            description,
+            priority,
+            lastModified: new Date(),
+            modifiedBy: sessionUser,
+            isSilence
+        })
+
+        em.create(Belongs, {
+            left: newNonFunctionalBehavior,
+            right: solution
+        })
+
+        await em.flush()
+
+        return newNonFunctionalBehavior.id
     })
 
-    em.create(Belongs, { left: newNonFunctionalBehavior, right: solution })
-
-    await em.flush()
-
-    return newNonFunctionalBehavior.id
+    return newId
 })

@@ -18,17 +18,25 @@ export default defineEventHandler(async (event) => {
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    const invariant = em.create(Invariant, {
-        name,
-        description,
-        modifiedBy: sessionUser,
-        lastModified: new Date(),
-        isSilence
+    const newId = await em.transactional(async (em) => {
+        const newInvariant = em.create(Invariant, {
+            reqId: await getNextReqId('E.6.', em, solution) as Invariant['reqId'],
+            name,
+            description,
+            modifiedBy: sessionUser,
+            lastModified: new Date(),
+            isSilence
+        })
+
+        em.create(Belongs, {
+            left: newInvariant,
+            right: solution
+        })
+
+        await em.flush()
+
+        return newInvariant.id
     })
 
-    em.create(Belongs, { left: invariant, right: solution })
-
-    await em.flush()
-
-    return invariant.id
+    return newId
 })

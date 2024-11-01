@@ -10,6 +10,7 @@ export enum ReqType {
     CONSTRAINT = 'constraint',
     EFFECT = 'effect',
     ENVIRONMENT_COMPONENT = 'environment_component',
+    EPIC = 'epic',
     EXAMPLE = 'example',
     FUNCTIONAL_BEHAVIOR = 'functional_behavior',
     FUNCTIONALITY = 'functionality',

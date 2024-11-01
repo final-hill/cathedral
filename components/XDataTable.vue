@@ -34,7 +34,6 @@ const props = defineProps<{
 
 const dataTable = ref<DataTable>(),
     createDisabled = ref(false),
-    sortField = ref<string | undefined>('name'),
     confirm = useConfirm(),
     createDialog = ref<Dialog>(),
     createDialogVisible = ref(false),
@@ -190,8 +189,7 @@ const onEditDialogCancel = () => {
             </template>
         </Toolbar>
         <DataTable ref="dataTable" :value="props.datasource as unknown as any[]" dataKey="id" v-model:filters="filters"
-            :globalFilterFields="Object.keys(props.datasource?.[0] ?? {})" :sortField="sortField" :sortOrder="1"
-            :loading="props.loading" stripedRows>
+            :globalFilterFields="Object.keys(props.datasource?.[0] ?? {})" :loading="props.loading" stripedRows>
             <Column
                 v-for="key of Object.keys(props.viewModel).filter(k => props.viewModel[k as keyof RowType] !== 'hidden')"
                 :key="key" :field="key" :header="camelCaseToTitle(key)" sortable>

@@ -1,41 +1,43 @@
-import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Limit } from "~/domain/requirements/index.js"
+import { z } from "zod"
+import { Epic, MoscowPriority, ReqType } from "~/domain/requirements/index.js"
 import { Belongs } from "~/domain/relations"
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
-    name: z.string().default("{Untitled Limit}"),
+    name: z.string().default("{Untitled Epic}"),
+    priority: z.nativeEnum(MoscowPriority).default(MoscowPriority.MUST),
     description: z.string().default(""),
     isSilence: z.boolean().default(false)
 })
 
 /**
- * Creates a new limit and returns its id
+ * Creates a new epic and returns its id
  */
 export default defineEventHandler(async (event) => {
-    const { name, description, solutionId, isSilence } = await validateEventBody(event, bodySchema),
+    const { name, description, solutionId, isSilence, priority } = await validateEventBody(event, bodySchema),
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
     const newId = await em.transactional(async (em) => {
-        const newLimit = em.create(Limit, {
-            reqId: await getNextReqId('G.6.', em, solution) as Limit['reqId'],
+        const newEpic = em.create(Epic, {
+            reqId: await getNextReqId('G.5.', em, solution) as Epic['reqId'],
             name,
             description,
             modifiedBy: sessionUser,
             lastModified: new Date(),
+            priority,
             isSilence
         })
 
         em.create(Belongs, {
-            left: newLimit,
+            left: newEpic,
             right: solution
         })
 
         await em.flush()
 
-        return newLimit.id
+        return newEpic.id
     })
 
     return newId

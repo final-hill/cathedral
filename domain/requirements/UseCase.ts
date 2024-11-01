@@ -5,6 +5,9 @@ import { Scenario } from "./Scenario.js";
 import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
 
+export const useCaseReqIdPrefix = 'S.4.' as const;
+export type UseCaseReqId = `${typeof useCaseReqIdPrefix}${number}`;
+
 /**
  * A Use Case specifies the scenario of a complete
  * interaction of a user through a system.
@@ -16,7 +19,6 @@ export class UseCase extends Scenario {
         this.req_type = ReqType.USE_CASE;
         this.scope = props.scope;
         this.level = props.level;
-        this.goalInContext = props.goalInContext;
         this.precondition = props.precondition;
         this.triggerId = props.triggerId;
         this.mainSuccessScenario = props.mainSuccessScenario;
@@ -24,6 +26,9 @@ export class UseCase extends Scenario {
         this.extensions = props.extensions;
         // this.stakeHoldersAndInterests = props.stakeHoldersAndInterests;
     }
+
+    override get reqId(): UseCaseReqId | undefined { return super.reqId as UseCaseReqId | undefined }
+    override set reqId(value: UseCaseReqId | undefined) { super.reqId = value }
 
     /**
      * The scope of the use case.
@@ -38,13 +43,6 @@ export class UseCase extends Scenario {
     // TODO: <https://github.com/final-hill/cathedral/issues/154>
     @Property({ type: 'string' })
     level: string;
-
-    /**
-     * The goal in context of the use case.
-     */
-    // TODO: is this just the Goal.description?
-    @Property({ type: 'string' })
-    goalInContext: string;
 
     /**
      * The precondition is an Assumption that must be true before the use case can start.

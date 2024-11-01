@@ -22,21 +22,29 @@ export default defineEventHandler(async (event) => {
         { solution, sessionUser } = await assertSolutionContributor(event, body.solutionId),
         em = fork()
 
-    const newUserStory = new UserStory({
-        functionalBehavior: body.functionalBehavior ? em.getReference(FunctionalBehavior, body.functionalBehavior) : undefined,
-        outcome: body.outcome ? em.getReference(Outcome, body.outcome) : undefined,
-        name: body.name,
-        description: body.description,
-        primaryActor: body.primaryActor ? em.getReference(Stakeholder, body.primaryActor) : undefined,
-        priority: body.priority,
-        lastModified: new Date(),
-        modifiedBy: sessionUser,
-        isSilence: body.isSilence
+    const newId = await em.transactional(async (em) => {
+        const newUserStory = new UserStory({
+            reqId: await getNextReqId('S.4.', em, solution) as UserStory['reqId'],
+            functionalBehavior: body.functionalBehavior ? em.getReference(FunctionalBehavior, body.functionalBehavior) : undefined,
+            outcome: body.outcome ? em.getReference(Outcome, body.outcome) : undefined,
+            name: body.name,
+            description: body.description,
+            primaryActor: body.primaryActor ? em.getReference(Stakeholder, body.primaryActor) : undefined,
+            priority: body.priority,
+            lastModified: new Date(),
+            modifiedBy: sessionUser,
+            isSilence: body.isSilence
+        })
+
+        em.create(Belongs, {
+            left: newUserStory,
+            right: solution
+        })
+
+        await em.flush()
+
+        return newUserStory.id
     })
 
-    em.create(Belongs, { left: newUserStory, right: solution })
-
-    await em.flush()
-
-    return newUserStory.id
+    return newId
 })

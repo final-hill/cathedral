@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-type GoalViewModel = {
+type OutcomeViewModel = {
     id: string;
+    reqId: string;
     name: string;
     description: string;
 };
@@ -21,17 +22,17 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: goals, error: getGoalsError } = await useFetch<GoalViewModel[]>(`/api/goal`, { query: { name: 'G.1', solutionId } });
+const { data: outcomes, error: getOutcomesError } = await useFetch<OutcomeViewModel[]>(`/api/outcome`, { query: { name: 'G.1', solutionId } });
 
-if (getGoalsError.value)
-    $eventBus.$emit('page-error', getGoalsError.value);
+if (getOutcomesError.value)
+    $eventBus.$emit('page-error', getOutcomesError.value);
 
-const contextObjectiveDescription = ref(goals.value?.[0].description!),
-    contextObjective = goals.value![0]
+const contextObjectiveDescription = ref(outcomes.value?.[0].description!),
+    contextObjective = outcomes.value![0]
 
 watch(contextObjectiveDescription, debounce(() => {
     contextObjective.description = contextObjectiveDescription.value;
-    $fetch(`/api/goal/${contextObjective.id}`, {
+    $fetch(`/api/outcome/${contextObjective.id}`, {
         method: 'PUT',
         body: {
             solutionId,

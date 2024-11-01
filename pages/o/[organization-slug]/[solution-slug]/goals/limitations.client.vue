@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 type LimitViewModel = {
     id: string;
+    reqId: string;
     name: string;
     description: string;
     lastModified: Date;
@@ -74,7 +75,8 @@ const onDelete = async (id: string) => {
         Example: "Providing an interface to the user to change the color of the background is out-of-scope."
     </p>
 
-    <XDataTable :viewModel="{ name: 'text', description: 'text' }" :createModel="{ name: 'text', description: 'text' }"
+    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
+        :createModel="{ name: 'text', description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="limits" :on-create="onCreate"
         :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationslug"
         entityName="Limit" :showRecycleBin="true">

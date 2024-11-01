@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
 import { Belongs } from "~/domain/relations"
-import { EnvironmentComponent } from "~/domain/requirements/index.js"
+import { EnvironmentComponent, environmentComponentReqIdPrefix } from "~/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -49,6 +49,11 @@ export default defineEventHandler(async (event) => {
     } else {
         // Do nothing
     }
+
+    // If the entity is no longer silent and has no reqId, assume
+    // that it is a new requirement from the workbox
+    if (isSilence !== undefined && isSilence == false && !environmentComponent.reqId)
+        environmentComponent.reqId = await getNextReqId(environmentComponentReqIdPrefix, em, solution) as EnvironmentComponent['reqId']
 
     await em.persistAndFlush(environmentComponent)
 })

@@ -193,6 +193,7 @@
             "constraint",
             "effect",
             "environment_component",
+            "epic",
             "example",
             "functional_behavior",
             "functionality",
@@ -225,6 +226,15 @@
             "user_story"
           ],
           "mappedType": "enum"
+        },
+        "req_id": {
+          "name": "req_id",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "text"
         },
         "name": {
           "name": "name",
@@ -311,6 +321,15 @@
           "nullable": true,
           "mappedType": "uuid"
         },
+        "outcome_id": {
+          "name": "outcome_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
         "slug": {
           "name": "slug",
           "type": "varchar(255)",
@@ -390,16 +409,6 @@
           "length": 255,
           "mappedType": "string"
         },
-        "goal_in_context": {
-          "name": "goal_in_context",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 255,
-          "mappedType": "string"
-        },
         "precondition_id": {
           "name": "precondition_id",
           "type": "uuid",
@@ -449,15 +458,6 @@
         },
         "functional_behavior_id": {
           "name": "functional_behavior_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        },
-        "outcome_id": {
-          "name": "outcome_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
@@ -527,6 +527,19 @@
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
+        "requirement_outcome_id_foreign": {
+          "constraintName": "requirement_outcome_id_foreign",
+          "columnNames": [
+            "outcome_id"
+          ],
+          "localTableName": "public.requirement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
         "requirement_precondition_id_foreign": {
           "constraintName": "requirement_precondition_id_foreign",
           "columnNames": [
@@ -557,19 +570,6 @@
           "constraintName": "requirement_functional_behavior_id_foreign",
           "columnNames": [
             "functional_behavior_id"
-          ],
-          "localTableName": "public.requirement",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "requirement_outcome_id_foreign": {
-          "constraintName": "requirement_outcome_id_foreign",
-          "columnNames": [
-            "outcome_id"
           ],
           "localTableName": "public.requirement",
           "referencedColumnNames": [

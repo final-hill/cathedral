@@ -262,7 +262,13 @@ export default defineEventHandler(async (event) => {
         const useCase = em.create(UseCase, {
             isSilence: true,
             extensions: item.extensions,
-            goalInContext: item.goalInContext,
+            outcome: em.create(Outcome, {
+                isSilence: true,
+                lastModified: new Date(),
+                modifiedBy: sessionUser,
+                name: item.name,
+                description: item.outcome
+            }),
             level: item.level,
             mainSuccessScenario: item.mainSuccessScenario,
             scope: item.scope,

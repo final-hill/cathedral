@@ -24,24 +24,32 @@ export default defineEventHandler(async (event) => {
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
         em = fork()
 
-    const newStakeholder = em.create(Stakeholder, {
-        name,
-        description,
-        availability,
-        influence,
-        segmentation,
-        category,
-        lastModified: new Date(),
-        modifiedBy: sessionUser,
-        isSilence
+    const newId = await em.transactional(async (em) => {
+        const newStakeholder = em.create(Stakeholder, {
+            reqId: await getNextReqId('G.7.', em, solution) as Stakeholder['reqId'],
+            name,
+            description,
+            availability,
+            influence,
+            segmentation,
+            category,
+            lastModified: new Date(),
+            modifiedBy: sessionUser,
+            isSilence
+        })
+
+        em.create(Belongs, {
+            left: newStakeholder,
+            right: solution
+        })
+
+        if (parentComponentId)
+            em.create(Belongs, { left: newStakeholder, right: parentComponentId })
+
+        await em.flush()
+
+        return newStakeholder.id
     })
 
-    em.create(Belongs, { left: newStakeholder, right: solution })
-
-    if (parentComponentId)
-        em.create(Belongs, { left: newStakeholder, right: parentComponentId })
-
-    await em.flush()
-
-    return newStakeholder.id
+    return newId
 })

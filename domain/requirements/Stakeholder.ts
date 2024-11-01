@@ -1,9 +1,12 @@
-import { Entity, Enum, ManyToOne, Property } from "@mikro-orm/core";
+import { Entity, Enum, Property } from "@mikro-orm/core";
 import { Component } from "./Component.js";
 import { StakeholderCategory } from "./StakeholderCategory.js";
 import { StakeholderSegmentation } from "./StakeholderSegmentation.js";
 import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
+
+export const stakeholderReqIdPrefix = 'G.7.' as const;
+export type StakeholderReqId = `${typeof stakeholderReqIdPrefix}${number}`;
 
 /**
  * A human actor who may affect or be affected by a project or its associated system
@@ -18,6 +21,9 @@ export class Stakeholder extends Component {
         this.segmentation = props.segmentation;
         this.category = props.category;
     }
+
+    override get reqId(): StakeholderReqId | undefined { return super.reqId as StakeholderReqId | undefined }
+    override set reqId(value: StakeholderReqId | undefined) { super.reqId = value }
 
     /**
      * The segmentation of the stakeholder.

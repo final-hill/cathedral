@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { NonFunctionalBehavior, MoscowPriority } from "~/domain/requirements/index.js"
+import { NonFunctionalBehavior, MoscowPriority, nonFunctionalBehaviorReqIdPrefix } from "~/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -32,6 +32,11 @@ export default defineEventHandler(async (event) => {
         modifiedBy: sessionUser,
         lastModified: new Date()
     })
+
+    // If the entity is no longer silent and has no reqId, assume
+    // that it is a new requirement from the workbox
+    if (isSilence !== undefined && isSilence == false && !nonFunctionalBehavior.reqId)
+        nonFunctionalBehavior.reqId = await getNextReqId(nonFunctionalBehaviorReqIdPrefix, em, solution) as NonFunctionalBehavior['reqId']
 
     await em.persistAndFlush(nonFunctionalBehavior)
 })
