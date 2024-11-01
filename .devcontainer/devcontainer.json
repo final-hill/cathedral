@@ -30,6 +30,9 @@
                 "github.vscode-github-actions",
                 "AlexShen.classdiagram-ts",
                 "ms-azuretools.vscode-bicep",
+                "bierner.markdown-mermaid",
+                "bpruitt-goddard.mermaid-markdown-syntax-highlighting",
+                "hediet.vscode-drawio",
                 "vitest.explorer",
                 "kingwl.vscode-vitest-runner"
             ]
