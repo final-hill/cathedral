@@ -23,6 +23,7 @@ export default defineEventHandler(async (event) => {
             reqId: await getNextReqId('E.5.', em, solution) as Effect['reqId'],
             name,
             description,
+            createdBy: sessionUser,
             modifiedBy: sessionUser,
             lastModified: new Date(),
             isSilence

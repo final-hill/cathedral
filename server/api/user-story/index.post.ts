@@ -32,6 +32,7 @@ export default defineEventHandler(async (event) => {
             primaryActor: body.primaryActor ? em.getReference(Stakeholder, body.primaryActor) : undefined,
             priority: body.priority,
             lastModified: new Date(),
+            createdBy: sessionUser,
             modifiedBy: sessionUser,
             isSilence: body.isSilence
         })

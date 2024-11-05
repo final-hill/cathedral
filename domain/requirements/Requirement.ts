@@ -21,6 +21,7 @@ export abstract class Requirement extends BaseEntity {
         this.lastModified = props.lastModified;
         this.modifiedBy = props.modifiedBy;
         this.isSilence = props.isSilence;
+        this.createdBy = props.createdBy;
     }
 
     // This fixes the issue with em.create not honoring the constructor signature
@@ -73,10 +74,14 @@ export abstract class Requirement extends BaseEntity {
     /**
      * The user who last modified the requirement
      */
-    // System Admin is the default user for the initial migration
-    // This can be removed in v0.14.0 or later
-    @ManyToOne({ entity: () => AppUser, default: 'ac594919-50e3-438a-b9bc-efb8a8654243' })
+    @ManyToOne({ entity: () => AppUser })
     modifiedBy!: AppUser;
+
+    /**
+     * The user who created the requirement
+     */
+    @ManyToOne({ entity: () => AppUser })
+    createdBy!: AppUser;
 
     /**
      * Whether the requirement is a silence requirement.

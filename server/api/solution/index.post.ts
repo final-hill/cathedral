@@ -22,6 +22,7 @@ export default defineEventHandler(async (event) => {
         name,
         description,
         lastModified: new Date(),
+        createdBy: sessionUser,
         modifiedBy: sessionUser,
         isSilence: false,
         slug: slugify(name)
@@ -36,6 +37,7 @@ export default defineEventHandler(async (event) => {
             description: '',
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             isSilence: false
         })
 

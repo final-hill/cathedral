@@ -22,6 +22,7 @@ export default defineEventHandler(async (event) => {
         reqId: undefined, // Should there be a Documentation category (D)?
         name,
         description,
+        createdBy: sessionUser,
         modifiedBy: sessionUser,
         lastModified: new Date(),
         isSilence

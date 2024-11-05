@@ -44,6 +44,7 @@ export default defineEventHandler(async (event) => {
             mainSuccessScenario: body.mainSuccessScenario,
             successGuarantee: body.successGuarantee ? em.getReference(Effect, body.successGuarantee) : undefined,
             extensions: body.extensions,
+            createdBy: sessionUser,
             lastModified: new Date(),
             modifiedBy: sessionUser,
             isSilence: body.isSilence

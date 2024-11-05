@@ -23,6 +23,7 @@ export default defineEventHandler(async (event) => {
             reqId: await getNextReqId(assumptionReqIdPrefix, em, solution) as Assumption['reqId'],
             name,
             description,
+            createdBy: sessionUser,
             modifiedBy: sessionUser,
             lastModified: new Date(),
             isSilence

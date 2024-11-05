@@ -25,6 +25,7 @@ export default defineEventHandler(async (event) => {
         description,
         slug: slugify(name),
         lastModified: new Date(),
+        createdBy: sessionUser,
         modifiedBy: sessionUser,
         isSilence: false
     })

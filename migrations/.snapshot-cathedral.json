@@ -274,7 +274,15 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "default": "'ac594919-50e3-438a-b9bc-efb8a8654243'",
+          "mappedType": "uuid"
+        },
+        "created_by_id": {
+          "name": "created_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
           "mappedType": "uuid"
         },
         "is_silence": {
@@ -506,6 +514,18 @@
           "constraintName": "requirement_modified_by_id_foreign",
           "columnNames": [
             "modified_by_id"
+          ],
+          "localTableName": "public.requirement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.app_user",
+          "updateRule": "cascade"
+        },
+        "requirement_created_by_id_foreign": {
+          "constraintName": "requirement_created_by_id_foreign",
+          "columnNames": [
+            "created_by_id"
           ],
           "localTableName": "public.requirement",
           "referencedColumnNames": [

@@ -26,6 +26,7 @@ export default defineEventHandler(async (event) => {
             description,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             isSilence
         })
 
