@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import deSlugify from '#shared/deSlugify.js';
+
 const { data, signIn, signOut } = useAuth(),
     router = useRouter()
 

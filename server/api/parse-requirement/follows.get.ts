@@ -2,6 +2,7 @@ import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
 import { ParsedRequirement, Requirement } from "~/domain/requirements/index.js"
 import { Follows } from "~/domain/relations/index.js"
+import groupBy from "#shared/groupBy.js"
 
 const querySchema = z.object({
     solutionId: z.string().uuid(),

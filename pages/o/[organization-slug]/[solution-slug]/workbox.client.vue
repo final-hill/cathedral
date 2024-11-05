@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import snakeCaseToTitle from '~/utils/snakeCaseToTitle.js';
-import camelCaseToTitle from '~/utils/camelCaseToTitle.js';
+import snakeCaseToTitle from '#shared/snakeCaseToTitle.js';
+import camelCaseToTitle from '#shared/camelCaseToTitle.js';
+import snakeCaseToSlug from '#shared/snakeCaseToSlug.js';
 import type { DataTableRowExpandEvent, DataTableRowCollapseEvent, DataTableExpandedRows } from 'primevue/datatable';
 import type { ReqType } from '~/domain/requirements/ReqType.js';
 

@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import slugify from '#shared/slugify.js';
+
 useHead({ title: 'New Solution' })
 definePageMeta({ name: 'New Solution' })
 

@@ -3,7 +3,7 @@ import { fork } from "~/server/data/orm.js"
 import { AppRole, AppUserOrganizationRole, AppUser } from "~/domain/application/index.js"
 import { Organization } from "~/domain/requirements/index.js"
 import { getServerSession } from '#auth'
-import slugify from "~/utils/slugify"
+import slugify from "~/shared/slugify"
 
 const bodySchema = z.object({
     name: z.string().default("{Untitled Organization}"),

@@ -2,7 +2,7 @@ import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
 import { Obstacle, Solution, Outcome } from "~/domain/requirements/index.js"
 import { Belongs } from "~/domain/relations"
-import slugify from "~/utils/slugify"
+import slugify from "~/shared/slugify"
 
 const bodySchema = z.object({
     name: z.string().min(1).max(100),

@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import debounce from '#shared/debounce';
+
 type OutcomeViewModel = {
     id: string;
     reqId: string;
