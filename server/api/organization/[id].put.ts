@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import slugify from "~/utils/slugify.js"
+import slugify from "~/shared/slugify.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()

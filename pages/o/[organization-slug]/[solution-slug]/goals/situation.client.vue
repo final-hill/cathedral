@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import debounce from '#shared/debounce';
+
 type ObstacleViewModel = {
     id: string;
     reqId: string;

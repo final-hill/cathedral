@@ -3,7 +3,6 @@
  * @example
  * camelCaseToSlug('camelCase') // 'camel-case'
  */
-
 export default (input: string): string =>
     input.trim()                                     // Remove leading and trailing whitespace
         .replace(/[^a-zA-Z0-9]+/g, '-')              // Replace non-alphanumeric characters with hyphens
