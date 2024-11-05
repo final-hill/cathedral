@@ -78,6 +78,7 @@ export default defineEventHandler(async (event) => {
     const parsedRequirement = em.create(ParsedRequirement, {
         name: '{LLM Parsed Requirement}',
         description: statement,
+        createdBy: sessionUser,
         modifiedBy: sessionUser,
         lastModified: new Date(),
         isSilence: true
@@ -90,6 +91,7 @@ export default defineEventHandler(async (event) => {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             description: item.description
         })
@@ -101,6 +103,7 @@ export default defineEventHandler(async (event) => {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             description: item.description,
             category: item.category as ConstraintCategory
@@ -113,6 +116,7 @@ export default defineEventHandler(async (event) => {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             description: item.description
         })
@@ -124,6 +128,7 @@ export default defineEventHandler(async (event) => {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             description: item.description
         })
@@ -135,6 +140,7 @@ export default defineEventHandler(async (event) => {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             description: item.description,
             priority: item.moscowPriority as MoscowPriority ?? MoscowPriority.MUST
@@ -147,6 +153,7 @@ export default defineEventHandler(async (event) => {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             description: item.description
         })
@@ -158,6 +165,7 @@ export default defineEventHandler(async (event) => {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             description: item.description
         })
@@ -169,6 +177,7 @@ export default defineEventHandler(async (event) => {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             description: item.description
         })
@@ -180,6 +189,7 @@ export default defineEventHandler(async (event) => {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             description: item.description
         })
@@ -191,6 +201,7 @@ export default defineEventHandler(async (event) => {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             description: item.description,
             priority: item.moscowPriority as MoscowPriority ?? MoscowPriority.MUST
@@ -203,6 +214,7 @@ export default defineEventHandler(async (event) => {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             description: item.description
         })
@@ -214,6 +226,7 @@ export default defineEventHandler(async (event) => {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             description: item.description
         })
@@ -225,6 +238,7 @@ export default defineEventHandler(async (event) => {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             description: item.description,
             email: item.email
@@ -237,6 +251,7 @@ export default defineEventHandler(async (event) => {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             availability: item.availability,
             influence: item.influence,
@@ -252,6 +267,7 @@ export default defineEventHandler(async (event) => {
             isSilence: true,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             description: item.description
         })
@@ -266,6 +282,7 @@ export default defineEventHandler(async (event) => {
                 isSilence: true,
                 lastModified: new Date(),
                 modifiedBy: sessionUser,
+                createdBy: sessionUser,
                 name: item.name,
                 description: item.outcome
             }),
@@ -274,6 +291,7 @@ export default defineEventHandler(async (event) => {
             scope: item.scope,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             description: '',
             priority: item.moscowPriority as MoscowPriority ?? MoscowPriority.MUST,
@@ -282,6 +300,7 @@ export default defineEventHandler(async (event) => {
                 isSilence: true,
                 lastModified: new Date(),
                 modifiedBy: sessionUser,
+                createdBy: sessionUser,
                 name: item.name,
                 description: item.precondition
             }),
@@ -289,6 +308,7 @@ export default defineEventHandler(async (event) => {
                 isSilence: true,
                 lastModified: new Date(),
                 modifiedBy: sessionUser,
+                createdBy: sessionUser,
                 name: item.name,
                 description: item.successGuarantee
             }),
@@ -296,6 +316,7 @@ export default defineEventHandler(async (event) => {
                 isSilence: true,
                 lastModified: new Date(),
                 modifiedBy: sessionUser,
+                createdBy: sessionUser,
                 name: item.primaryActor,
                 availability: 50,
                 influence: 50,
@@ -317,6 +338,7 @@ export default defineEventHandler(async (event) => {
             priority: item.moscowPriority as MoscowPriority ?? MoscowPriority.MUST,
             lastModified: new Date(),
             modifiedBy: sessionUser,
+            createdBy: sessionUser,
             name: item.name,
             description: '',
             functionalBehavior: em.create(FunctionalBehavior, {
@@ -324,6 +346,7 @@ export default defineEventHandler(async (event) => {
                 priority: item.moscowPriority as MoscowPriority ?? MoscowPriority.MUST,
                 lastModified: new Date(),
                 modifiedBy: sessionUser,
+                createdBy: sessionUser,
                 name: item.functionalBehavior,
                 description: item.functionalBehavior
             }),
@@ -331,6 +354,7 @@ export default defineEventHandler(async (event) => {
                 isSilence: true,
                 lastModified: new Date(),
                 modifiedBy: sessionUser,
+                createdBy: sessionUser,
                 name: item.outcome,
                 description: item.outcome
             }),
@@ -338,6 +362,7 @@ export default defineEventHandler(async (event) => {
                 isSilence: true,
                 lastModified: new Date(),
                 modifiedBy: sessionUser,
+                createdBy: sessionUser,
                 name: item.role,
                 availability: 50,
                 influence: 50,

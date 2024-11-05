@@ -34,6 +34,7 @@ export default defineEventHandler(async (event) => {
             segmentation,
             category,
             lastModified: new Date(),
+            createdBy: sessionUser,
             modifiedBy: sessionUser,
             isSilence
         })

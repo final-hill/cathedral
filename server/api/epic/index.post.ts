@@ -24,6 +24,7 @@ export default defineEventHandler(async (event) => {
             reqId: await getNextReqId('G.5.', em, solution) as Epic['reqId'],
             name,
             description,
+            createdBy: sessionUser,
             modifiedBy: sessionUser,
             lastModified: new Date(),
             priority,
