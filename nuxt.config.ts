@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
     compatibilityDate: '2024-11-05',
     devtools: {
-        enabled: process.env.NODE_ENV === 'development'
+        enabled: ['development', 'test'].includes(process.env.NODE_ENV)
     },
     devServer: {
         https: {
@@ -13,7 +13,7 @@ export default defineNuxtConfig({
     experimental: {
         typedPages: true
     },
-    sourcemap: process.env.NODE_ENV === 'development',
+    sourcemap: ['development', 'test'].includes(process.env.NODE_ENV),
     css: [
         '~/assets/css/main.css',
         'primeflex/primeflex.css',
@@ -105,7 +105,7 @@ export default defineNuxtConfig({
     // https://nuxt.com/modules/security
     security: {
         headers: {
-            crossOriginEmbedderPolicy: process.env.NODE_ENV === 'development' ? 'unsafe-none' : 'require-corp',
+            crossOriginEmbedderPolicy: ['development', 'test'].includes(process.env.NODE_ENV) ? 'unsafe-none' : 'require-corp',
             contentSecurityPolicy: {
                 'img-src': ["'self'", 'data:', 'blob:', 'https://avatars.githubusercontent.com'],
             }
