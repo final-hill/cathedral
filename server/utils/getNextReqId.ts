@@ -1,6 +1,6 @@
 import { SqlEntityManager } from "@mikro-orm/postgresql"
 import { Belongs } from "~/domain/relations"
-import { type ReqId, type ReqIdPrefix, Solution } from "~/domain/requirements"
+import { Requirement, Solution } from "~/domain/requirements"
 
 /**
  * Gets the next requirement id for the given solution and requirement type
@@ -9,7 +9,7 @@ import { type ReqId, type ReqIdPrefix, Solution } from "~/domain/requirements"
  * @param em - The entity manager
  * @param solution - The owning solution of the requirement
  */
-const getNextReqId = async <T extends ReqIdPrefix, U extends ReqId>(prefix: T, em: SqlEntityManager, solution: Solution): Promise<U> => {
+const getNextReqId = async <T extends typeof Requirement.reqIdPrefix, U extends Requirement['reqId']>(prefix: T, em: SqlEntityManager, solution: Solution): Promise<U> => {
     const entityCount = await em.count(Belongs, {
         left: {
             reqId: { $like: `${prefix}%` },

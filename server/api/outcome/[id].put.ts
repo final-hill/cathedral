@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Outcome, outcomeReqIdPrefix } from "~/domain/requirements/index.js"
+import { Outcome } from "~/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
     // If the entity is no longer silent and has no reqId, assume
     // that it is a new requirement from the workbox
     if (isSilence !== undefined && isSilence == false && !outcome.reqId)
-        outcome.reqId = await getNextReqId(outcomeReqIdPrefix, em, solution) as Outcome['reqId']
+        outcome.reqId = await getNextReqId(Outcome.reqIdPrefix, em, solution) as Outcome['reqId']
 
     await em.persistAndFlush(outcome)
 })

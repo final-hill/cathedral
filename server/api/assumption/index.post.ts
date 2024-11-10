@@ -1,7 +1,9 @@
 import { fork } from "~/server/data/orm.js"
 import { z } from "zod"
-import { Assumption, assumptionReqIdPrefix } from "~/domain/requirements/index.js"
+import { Assumption, Solution } from "~/domain/requirements/index.js"
+import AssumptionInteractor from "~/application/AssumptionInteractor"
 import { Belongs } from "~/domain/relations"
+import SolutionInteractor from "~/application/SolutionInteractor"
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
@@ -16,28 +18,21 @@ const bodySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { name, description, solutionId, isSilence } = await validateEventBody(event, bodySchema),
         { solution, sessionUser } = await assertSolutionContributor(event, solutionId),
-        em = fork()
+        em = fork(),
+        assumptionInteractor = new AssumptionInteractor({ repository: em.getRepository(Assumption) }),
+        solutionInteractor = new SolutionInteractor({ repository: em.getRepository(Solution) })
 
-    const newId = await em.transactional(async (em) => {
-        const newAssumption = em.create(Assumption, {
-            reqId: await getNextReqId(assumptionReqIdPrefix, em, solution) as Assumption['reqId'],
-            name,
-            description,
-            createdBy: sessionUser,
-            modifiedBy: sessionUser,
-            lastModified: new Date(),
-            isSilence
-        })
-
-        em.create(Belongs, {
-            left: newAssumption,
-            right: solution
-        })
-
-        await em.flush()
-
-        return newAssumption.id
+    const newAssumption = await assumptionInteractor.createAssumption({
+        name,
+        description,
+        createdBy: sessionUser,
+        modifiedBy: sessionUser,
+        lastModified: new Date(),
+        isSilence,
+        reqId: await solutionInteractor.getNextReqId<typeof Assumption>(Assumption.reqIdPrefix, solution)
     })
 
-    return newId
+    await solutionInteractor.addRequirement(solutionId, newAssumption)
+
+    return newAssumption.id
 })

@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { Constraint, ConstraintCategory, constraintReqIdPrefix } from "~/domain/requirements/index.js"
+import { Constraint, ConstraintCategory } from "~/domain/requirements/index.js"
 import { fork } from "~/server/data/orm.js"
 
 const paramSchema = z.object({
@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
     // If the entity is no longer silent and has no reqId, assume
     // that it is a new requirement from the workbox
     if (isSilence !== undefined && isSilence == false && !constraint.reqId)
-        constraint.reqId = await getNextReqId(constraintReqIdPrefix, em, solution) as Constraint['reqId']
+        constraint.reqId = await getNextReqId(Constraint.reqIdPrefix, em, solution) as Constraint['reqId']
 
     await em.persistAndFlush(constraint)
 })

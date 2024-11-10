@@ -1,6 +1,6 @@
 import { fork } from "~/server/data/orm.js"
 import { z } from "zod"
-import { Epic, epicReqIdPrefix, MoscowPriority } from "~/domain/requirements/index.js"
+import { Epic, MoscowPriority } from "~/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
     // If the entity is no longer silent and has no reqId, assume
     // that it is a new requirement from the workbox
     if (isSilence !== undefined && isSilence == false && !epic.reqId)
-        epic.reqId = await getNextReqId(epicReqIdPrefix, em, solution) as Epic['reqId']
+        epic.reqId = await getNextReqId(Epic.reqIdPrefix, em, solution) as Epic['reqId']
 
     await em.persistAndFlush(epic)
 })

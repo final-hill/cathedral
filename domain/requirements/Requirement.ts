@@ -4,14 +4,13 @@ import { type Properties } from '../types/index.js';
 import { ReqType } from './ReqType.js';
 import { AppUser } from '../application/AppUser.js';
 
-export type ReqIdPrefix = `${'P' | 'E' | 'G' | 'S'}.${number}.`
-export type ReqId = `${ReqIdPrefix}${number}`
-
 /**
  * A Requirement is a statement that specifies a property.
  */
 @Entity({ abstract: true, discriminatorColumn: 'req_type' })
 export abstract class Requirement extends BaseEntity {
+    static reqIdPrefix: `${'P' | 'E' | 'G' | 'S' | '0'}.${number}.` = '0.0.';
+
     constructor(props: Properties<Omit<Requirement, 'id' | 'req_type'>>) {
         super()
         this.id = uuidv7();
@@ -22,6 +21,7 @@ export abstract class Requirement extends BaseEntity {
         this.modifiedBy = props.modifiedBy;
         this.isSilence = props.isSilence;
         this.createdBy = props.createdBy;
+        this._reqId = props.reqId;
     }
 
     // This fixes the issue with em.create not honoring the constructor signature
@@ -37,15 +37,16 @@ export abstract class Requirement extends BaseEntity {
     @Property({ type: 'uuid', primary: true })
     id: string;
 
-    private _reqId?: ReqId
+    // This is nullable because MetaRequirements, Silence, and Noise do not have a reqId
+    // It may also be undefined if the requirement has not been added to a solution
+    private _reqId?: `${typeof Requirement['reqIdPrefix']}${number}`
 
     /**
      * The user-friendly identifier of the requirement that is unique within its parent
      */
-    // This is nullable because MetaRequirements, Silence, and Noise do not have a reqId
     @Property({ type: 'text', nullable: true })
-    get reqId(): ReqId | undefined { return this._reqId }
-    set reqId(value: ReqId | undefined) { this._reqId = value }
+    get reqId() { return this._reqId }
+    set reqId(value) { this._reqId = value }
 
     // A property is a Predicate formalizing its associated statement.
     // see: https://github.com/final-hill/cathedral/issues/368

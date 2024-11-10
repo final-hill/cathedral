@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { Assumption, Effect, MoscowPriority, Outcome, Stakeholder, UseCase, useCaseReqIdPrefix } from "~/domain/requirements/index.js"
+import { Assumption, Effect, MoscowPriority, Outcome, Stakeholder, UseCase } from "~/domain/requirements/index.js"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
     // If the entity is no longer silent and has no reqId, assume
     // that it is a new requirement from the workbox
     if (body.isSilence !== undefined && body.isSilence == false && !useCase.reqId)
-        useCase.reqId = await getNextReqId(useCaseReqIdPrefix, em, solution) as UseCase['reqId']
+        useCase.reqId = await getNextReqId(UseCase.reqIdPrefix, em, solution) as UseCase['reqId']
 
     await em.persistAndFlush(useCase)
 })
