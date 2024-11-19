@@ -1,8 +1,7 @@
-import { QueryOrder } from "@mikro-orm/core"
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { AuditLog } from "~/domain/application/index.js"
-import { Organization } from "~/domain/requirements/index.js"
+import { getServerSession } from '#auth'
+import { OrganizationInteractor } from "~/application"
 
 const querySchema = z.object({
     entityId: z.string().uuid(),
@@ -14,22 +13,12 @@ const querySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { entityId, organizationSlug } = await validateEventQuery(event, querySchema),
-        em = fork()
-
-    const organization = await em.findOne(Organization, { slug: organizationSlug })
-
-    if (!organization)
-        throw createError({
-            statusCode: 404,
-            statusMessage: `Organization not found with the given slug: ${organizationSlug}`
+        session = (await getServerSession(event))!,
+        organizationInteractor = new OrganizationInteractor({
+            userId: session.id,
+            entityManager: fork(),
+            organizationSlug
         })
 
-    await assertOrgReader(event, organization.id)
-
-    const results = await em.findAll(AuditLog, {
-        where: { entityId },
-        orderBy: { createdAt: QueryOrder.DESC }
-    })
-
-    return results
+    return await organizationInteractor.getAuditLogHistory(entityId)
 })

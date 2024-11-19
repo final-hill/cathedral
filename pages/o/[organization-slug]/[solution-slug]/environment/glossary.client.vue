@@ -1,30 +1,21 @@
 <script lang="ts" setup>
-type GlossaryTermViewModel = {
-    id: string;
-    reqId: string;
-    name: string;
-    description: string;
-    lastModified: Date;
-};
+import type { GlossaryTermViewModel, SolutionViewModel } from '~/shared/models'
 
 useHead({ title: 'Glossary' })
 definePageMeta({ name: 'Glossary' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Glossary').params,
-    { data: solutions, error: getSolutionError } = await useFetch('/api/solution', {
-        query: {
-            slug: solutionslug,
-            organizationSlug: organizationslug
-        }
+    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Glossary').params,
+    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+        query: { organizationSlug }
     }),
-    solutionId = solutions.value?.[0].id;
+    solutionId = solution.value?.id;
 
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
 const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = await useFetch<GlossaryTermViewModel[]>(`/api/glossary-term`, {
-    query: { solutionId },
+    query: { solutionId, organizationSlug },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
         return item
@@ -40,7 +31,8 @@ const onCreate = async (data: GlossaryTermViewModel) => {
         body: {
             name: data.name,
             description: data.description,
-            solutionId
+            solutionId,
+            organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -54,7 +46,8 @@ const onUpdate = async (data: GlossaryTermViewModel) => {
             id: data.id,
             name: data.name,
             description: data.description,
-            solutionId
+            solutionId,
+            organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -64,7 +57,7 @@ const onUpdate = async (data: GlossaryTermViewModel) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/glossary-term/${id}`, {
         method: 'DELETE',
-        body: { solutionId }
+        body: { solutionId, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
     refresh()
 }
@@ -78,6 +71,6 @@ const onDelete = async (id: string) => {
         :createModel="{ name: 'text', description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="glossaryTerms"
         :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'"
-        :organizationSlug="organizationslug" entityName="GlossaryTerm" :showRecycleBin="true">
+        :organizationSlug="organizationSlug" entityName="GlossaryTerm" :showRecycleBin="true">
     </XDataTable>
 </template>

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import dedent from "#shared/dedent";
+import dedent from "~/shared/dedent";
 
 export default z.object({
     type: z.literal('UserStory'),

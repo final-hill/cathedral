@@ -1,20 +1,24 @@
 import { z } from "zod";
 import { fork } from "~/server/data/orm.js"
-import { ParsedRequirement, ReqType } from "~/domain/requirements/index.js";
+import { getServerSession } from '#auth'
+import { OrganizationInteractor } from "~/application";
 
 const querySchema = z.object({
-    solutionId: z.string().uuid()
+    solutionId: z.string().uuid(),
+    organizationSlug: z.string()
 })
 
 /**
- * Return all pending ParsedRequirements for a Solution.
+ * Return all ParsedRequirements for a Solution.
  */
 export default defineEventHandler(async (event) => {
-    const query = await validateEventQuery(event, querySchema),
-        { } = await assertSolutionReader(event, query.solutionId),
-        em = fork()
+    const { organizationSlug, solutionId } = await validateEventQuery(event, querySchema),
+        session = (await getServerSession(event))!,
+        organizationInteractor = new OrganizationInteractor({
+            userId: session.id,
+            organizationSlug,
+            entityManager: fork()
+        })
 
-    await assertSolutionReader(event, query.solutionId)
-
-    return await findAllSolutionRequirements<ParsedRequirement>(ReqType.PARSED_REQUIREMENT, em, query)
+    return organizationInteractor.getParsedRequirements(solutionId)
 })

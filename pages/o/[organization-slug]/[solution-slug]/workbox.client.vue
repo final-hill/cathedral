@@ -1,51 +1,38 @@
 <script lang="ts" setup>
-import snakeCaseToTitle from '#shared/snakeCaseToTitle.js';
-import camelCaseToTitle from '#shared/camelCaseToTitle.js';
-import snakeCaseToSlug from '#shared/snakeCaseToSlug.js';
+import snakeCaseToTitle from '~/shared/snakeCaseToTitle.js';
+import camelCaseToTitle from '~/shared/camelCaseToTitle.js';
+import snakeCaseToSlug from '~/shared/snakeCaseToSlug.js';
 import type { DataTableRowExpandEvent, DataTableRowCollapseEvent, DataTableExpandedRows } from 'primevue/datatable';
-import type { ReqType } from '~/domain/requirements/ReqType.js';
-
-interface RequirementViewModel {
-    id: number;
-    name: string;
-    description: string;
-    lastModified: Date;
-    modifiedBy: { name: string };
-    follows: RequirementViewModel[];
-    solution: { id: number };
-    req_type: ReqType;
-    isSilence: boolean;
-}
-
-interface ParsedRequirementViewModel extends RequirementViewModel { }
+import type { ParsedRequirementViewModel, RequirementViewModel, SolutionViewModel } from '~/shared/models';
+import type { ReqType } from '~/domain/requirements/ReqType';
 
 useHead({ title: 'Workbox' });
 definePageMeta({ name: 'Workbox' });
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Workbox').params,
-    { data: solutions, error: solutionError } = await useFetch('/api/solution', {
-        query: {
-            organizationSlug: organizationslug,
-            slug: solutionslug
-        }
-    }),
-    solution = solutions.value![0];
+    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Workbox').params,
+    { data: solution, error: solutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+        query: { organizationSlug }
+    })
+
+if (!solution.value) {
+    $eventBus.$emit('page-error', solutionError.value);
+    throw new Error('Solution not found');
+}
 
 const { data: parsedRequirements, error: parsedRequirementsError, refresh } = await useFetch<ParsedRequirementViewModel[]>('/api/parse-requirement', {
     method: 'get',
-    query: { solutionId: solution.id },
+    query: { solutionId: solution.value.id, organizationSlug },
     transform: (data: ParsedRequirementViewModel[]) => data.map((parsedRequirement) => {
         parsedRequirement.lastModified = new Date(parsedRequirement.lastModified)
         return parsedRequirement;
     })
 });
 
-if (solutionError.value)
-    $eventBus.$emit('page-error', solutionError.value);
-
-if (parsedRequirementsError.value)
+if (!parsedRequirements.value) {
     $eventBus.$emit('page-error', parsedRequirementsError.value);
+    throw new Error('Parsed requirements not found');
+}
 
 type DataRows = Record<string, { isLoading: boolean, data: Partial<Record<ReqType, RequirementViewModel[]>> }>
 
@@ -56,7 +43,7 @@ const onItemApprove = async (item: RequirementViewModel) => {
     await $fetch(`/api/${snakeCaseToSlug(item.req_type)}/${item.id}`, {
         // @ts-ignore: method not recognized
         method: 'put',
-        body: { solutionId: solution.id, isSilence: false }
+        body: { solutionId: solution.value!.id, organizationSlug, isSilence: false }
     });
     await refresh();
 }
@@ -67,7 +54,7 @@ const onItemDelete = async (item: RequirementViewModel) => {
     await $fetch(`/api/${snakeCaseToSlug(item.req_type)}/${item.id}`, {
         // @ts-ignore: method not recognized
         method: 'delete',
-        body: { solutionId: solution.id }
+        body: { solutionId: solution.value!.id, organizationSlug }
     });
     await refresh();
 }
@@ -79,7 +66,7 @@ const onItemUpdate = async (item: RequirementViewModel) => {
 const onRowExpand = async ({ data }: DataTableRowExpandEvent) => {
     dataRows.value[data.id] = { isLoading: true, data: {} };
     dataRows.value[data.id].data = await $fetch<DataRows>(`/api/parse-requirement/follows`, {
-        query: { id: data.id, solutionId: solution.id }
+        query: { id: data.id, solutionId: solution.value!.id, organizationSlug }
     })
     dataRows.value[data.id].isLoading = false;
 }

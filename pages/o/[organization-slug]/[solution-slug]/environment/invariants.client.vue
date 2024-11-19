@@ -1,30 +1,21 @@
 <script lang="ts" setup>
-interface InvariantViewModel {
-    id: string;
-    reqId: string;
-    name: string;
-    description: string;
-    lastModified: Date;
-}
+import type { InvariantViewModel, SolutionViewModel } from '~/shared/models'
 
 useHead({ title: 'Invariants' })
 definePageMeta({ name: 'Invariants' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Invariants').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
-        query: {
-            slug: solutionslug,
-            organizationSlug: organizationslug
-        }
+    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Invariants').params,
+    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+        query: { organizationSlug }
     }),
-    solutionId = solutions.value?.[0].id
+    solutionId = solution.value?.id
 
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
 const { data: invariants, refresh, status, error: getInvariantsError } = await useFetch<InvariantViewModel[]>(`/api/invariant`, {
-    query: { solutionId },
+    query: { solutionId, organizationSlug },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
         return item
@@ -40,7 +31,8 @@ const onCreate = async (data: InvariantViewModel) => {
         body: {
             name: data.name,
             description: data.description,
-            solutionId
+            solutionId,
+            organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -53,7 +45,8 @@ const onUpdate = async (data: InvariantViewModel) => {
             id: data.id,
             name: data.name,
             description: data.description,
-            solutionId
+            solutionId,
+            organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -63,7 +56,7 @@ const onUpdate = async (data: InvariantViewModel) => {
 const onDelete = async (id: string) => {
     await useFetch(`/api/invariant/${id}`, {
         method: 'DELETE',
-        body: { solutionId }
+        body: { solutionId, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
@@ -79,7 +72,7 @@ const onDelete = async (id: string) => {
     <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
         :createModel="{ name: 'text', description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="invariants" :on-create="onCreate"
-        :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationslug"
+        :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationSlug"
         entityName="Invariant" :showRecycleBin="true">
     </XDataTable>
 </template>

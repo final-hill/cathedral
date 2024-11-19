@@ -9,10 +9,11 @@ import { ReqType } from "./ReqType.js";
  */
 @Entity({ abstract: true, discriminatorValue: ReqType.BEHAVIOR })
 export class Behavior extends Requirement {
+    static override req_type: ReqType = ReqType.BEHAVIOR;
+
     constructor({ priority, ...rest }: Properties<Omit<Behavior, 'id' | 'req_type'>>) {
         super(rest);
         this.priority = priority;
-        this.req_type = ReqType.BEHAVIOR;
     }
 
     /**

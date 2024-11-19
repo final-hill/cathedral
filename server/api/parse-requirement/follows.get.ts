@@ -1,10 +1,10 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { ParsedRequirement, Requirement } from "~/domain/requirements/index.js"
-import { Follows } from "~/domain/relations/index.js"
-import groupBy from "#shared/groupBy.js"
+import { getServerSession } from '#auth'
+import { OrganizationInteractor } from "~/application"
 
 const querySchema = z.object({
+    organizationSlug: z.string(),
     solutionId: z.string().uuid(),
     id: z.string().uuid()
 })
@@ -13,19 +13,13 @@ const querySchema = z.object({
  * Get all unapproved requirements that follow from the specified parsed requirement
  */
 export default defineEventHandler(async (event) => {
-    const { solutionId, id } = await validateEventQuery(event, querySchema),
-        { solution } = await assertSolutionReader(event, solutionId),
-        em = fork(),
-        parsedRequirement = await assertReqBelongsToSolution(em, ParsedRequirement, id, solution),
-        follows = await em.find(Follows, {
-            right: parsedRequirement,
-            left: { isSilence: true }
-        }, { populate: ['left'] })
+    const { solutionId, id, organizationSlug } = await validateEventQuery(event, querySchema),
+        session = (await getServerSession(event))!,
+        organizationInteractor = new OrganizationInteractor({
+            userId: session.id,
+            organizationSlug,
+            entityManager: fork()
+        })
 
-    const groupedResult = groupBy(
-        follows.map(f => f.left) as Requirement[],
-        ({ req_type }) => req_type
-    )
-
-    return groupedResult
+    return organizationInteractor.getFollowingParsedSilenceRequirements({ solutionId, id })
 })

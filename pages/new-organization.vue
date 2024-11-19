@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import slugify from '#shared/slugify.js';
+import slugify from '~/shared/slugify.js';
 
 useHead({ title: 'New Organization' })
 definePageMeta({ name: 'New Organization' })
@@ -12,7 +12,7 @@ const router = useRouter(),
 
 const createOrganization = async () => {
     try {
-        const organizationId = (await $fetch('/api/organization', {
+        const newSlug = (await $fetch('/api/organization', {
             method: 'post',
             body: {
                 name: name.value,
@@ -20,9 +20,8 @@ const createOrganization = async () => {
             }
         }).catch((e) => $eventBus.$emit('page-error', e)));
 
-        if (organizationId) {
-            const newOrganization = (await $fetch(`/api/organization/${organizationId}`));
-            router.push({ name: 'Organization', params: { organizationslug: newOrganization?.slug } });
+        if (newSlug) {
+            router.push({ name: 'Organization', params: { organizationslug: newSlug } });
         } else {
             $eventBus.$emit('page-error', 'Failed to create organization. No organization ID returned.');
         }

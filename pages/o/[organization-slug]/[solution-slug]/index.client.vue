@@ -1,17 +1,15 @@
 <script lang="ts" setup>
+import type { SolutionViewModel } from '~/shared/models'
+
 useHead({ title: 'Solution' })
 definePageMeta({ name: 'Solution' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Solution').params,
+    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Solution').params,
     router = useRouter(),
-    { data: solutions, error: solutionError } = await useFetch('/api/solution', {
-        query: {
-            organizationSlug: organizationslug,
-            slug: solutionslug
-        }
+    { data: solution, error: solutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+        query: { organizationSlug }
     }),
-    solution = solutions.value![0],
     confirm = useConfirm()
 
 const rawRequirement = ref(''),
@@ -30,23 +28,24 @@ const links = [
 
 const handleSolutionDelete = async () => {
     confirm.require({
-        message: `Are you sure you want to delete ${solution.name}?`,
+        message: `Are you sure you want to delete ${solution.value?.name}?`,
         header: 'Delete Confirmation',
         icon: 'pi pi-exclamation-triangle',
         rejectLabel: 'Cancel',
         acceptLabel: 'Delete',
         accept: async () => {
-            await $fetch(`/api/solution/${solution.id}`, {
-                method: 'delete'
+            await $fetch(`/api/solution/${slug}`, {
+                method: 'delete',
+                body: { organizationSlug }
             }).catch((e) => $eventBus.$emit('page-error', e))
-            router.push({ name: 'Organization', params: { organizationslug } })
+            router.push({ name: 'Organization', params: { organizationslug: organizationSlug } })
         },
         reject: () => { }
     })
 }
 
 const handleSolutionEdit = () => {
-    router.push({ name: 'Edit Solution', params: { solutionslug, organizationslug } })
+    router.push({ name: 'Edit Solution', params: { solutionslug: slug, organizationslug: organizationSlug } })
 }
 
 const parsingRequirements = ref(false),
@@ -57,7 +56,8 @@ const parseRawRequirement = async () => {
     const response = await $fetch('/api/parse-requirement', {
         method: 'post',
         body: {
-            solutionId: solution.id,
+            solutionId: solution.value?.id,
+            organizationSlug,
             description: rawRequirement.value
         }
     }).catch((e) => {
@@ -79,7 +79,8 @@ const resetRawRequirement = () => {
 <template>
     <Toolbar class="mb-6">
         <template #start>
-            <NuxtLink :to="{ name: 'Workbox', params: { solutionslug, organizationslug } }" class="col-fixed w-2 mr-4">
+            <NuxtLink :to="{ name: 'Workbox', params: { solutionslug: slug, organizationslug: organizationSlug } }"
+                class="col-fixed w-2 mr-4">
                 <Button label="Workbox" :icon="`pi pi-briefcase text-3xl`" severity="help" />
             </NuxtLink>
         </template>
@@ -94,8 +95,8 @@ const resetRawRequirement = () => {
         <TabPanel header="Overview">
             <div class="grid">
                 <NuxtLink v-for="link in links" :key="link.name"
-                    :to="{ name: link.name, params: { solutionslug, organizationslug } }" class="col-fixed w-2 mr-4"
-                    v-badge="link.reqId">
+                    :to="{ name: link.name, params: { solutionslug: slug, organizationslug: organizationSlug } }"
+                    class="col-fixed w-2 mr-4" v-badge="link.reqId">
                     <Button :label="link.label" class="w-full h-5rem text-1xl" :icon="`pi ${link.icon} text-3xl`"
                         iconPos="top" severity="secondary" />
                 </NuxtLink>

@@ -1,15 +1,17 @@
 <script lang="ts" setup>
+import type { OrganizationViewModel } from '~/shared/models'
+
 definePageMeta({ name: 'Home' })
 
 const router = useRouter(),
-    { status, data: organizations, refresh, error: getOrgError } = await useFetch('/api/organization'),
+    { status, data: organizations, refresh, error: getOrgError } = await useFetch<OrganizationViewModel[]>('/api/organization'),
     confirm = useConfirm(),
     { $eventBus } = useNuxtApp()
 
 if (getOrgError.value)
     $eventBus.$emit('page-error', getOrgError.value)
 
-const handleDelete = async (organization: { id: string, name: string }) => {
+const handleDelete = async (organization: OrganizationViewModel) => {
     confirm.require({
         message: `Are you sure you want to delete ${organization.name}? This will also delete all associated solutions.`,
         header: 'Delete Confirmation',
@@ -17,7 +19,7 @@ const handleDelete = async (organization: { id: string, name: string }) => {
         rejectLabel: 'Cancel',
         acceptLabel: 'Delete',
         accept: async () => {
-            await $fetch(`/api/organization/${organization.id}`, {
+            await $fetch(`/api/organization/${organization.slug}`, {
                 method: 'delete'
             }).catch((e) => $eventBus.$emit('page-error', e))
             refresh()

@@ -1,53 +1,21 @@
 <script lang="ts" setup>
-type FunctionalBehaviorViewModel = {
-    id: string;
-    reqId: string;
-    name: string;
-    description: string;
-    solutionId: string;
-    componentId: string;
-    priority: string;
-    lastModified: Date;
-};
-
-type NonFunctionalBehaviorViewModel = {
-    id: string;
-    reqId: string;
-    name: string;
-    description: string;
-    solutionId: string;
-    componentId: string;
-    priority: string;
-    lastModified: Date;
-};
-
-type SystemComponentViewModel = {
-    id: string;
-    name: string;
-    description: string;
-    parent: string | null;
-    lastModified: Date;
-};
+import type { FunctionalBehaviorViewModel, NonFunctionalBehaviorViewModel, SystemComponentViewModel, SolutionViewModel } from '~/shared/models';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Functionality' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Functionality').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
-        query: {
-            slug: solutionslug,
-            organizationSlug: organizationslug
-        }
+    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Functionality').params,
+    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+        query: { organizationSlug }
     }),
-    solution = solutions.value?.[0]!,
-    solutionId = solution.id;
+    solutionId = solution.value?.id;
 
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
 const { data: components, status, refresh, error: getComponentsError } = await useFetch<SystemComponentViewModel[]>(`/api/system-component`, {
-    query: { solutionId },
+    query: { solutionId, organizationSlug },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
         return item
@@ -60,12 +28,12 @@ if (getComponentsError.value)
 
 const fnFunctionalBehaviors = async (componentId: string) =>
     await $fetch<FunctionalBehaviorViewModel[]>(`/api/functional-behavior`, {
-        query: { solutionId, componentId }
+        query: { solutionId, componentId, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e));
 
 const fnNonFunctionalBehaviors = async (componentId: string) =>
     await $fetch<NonFunctionalBehaviorViewModel[]>(`/api/non-functional-behavior`, {
-        query: { solutionId, componentId }
+        query: { solutionId, componentId, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
 const componentSortField = ref<string | undefined>('name')

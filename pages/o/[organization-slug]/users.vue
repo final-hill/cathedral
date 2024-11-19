@@ -1,46 +1,20 @@
 <script setup lang="ts">
-import { AppRole } from '~/domain/application/AppRole.js'
-
-interface OrganizationViewModel {
-    id: string;
-    name: string;
-    slug: string;
-}
-
-interface AppUserViewModel {
-    id: string;
-    name: string
-    email: string;
-    role: AppRole;
-    isSystemAdmin: boolean;
-    creationDate: Date;
-    lastLoginDate?: Date;
-}
+import { AppRole } from '~/domain/application/AppRole'
+import type { AppUserViewModel, OrganizationViewModel } from '~/shared/models'
 
 useHead({ title: 'Users' })
 definePageMeta({ name: 'Organization Users' })
 
-const { $eventBus } = useNuxtApp()
-
-const { organizationslug } = useRoute('Organization Users').params,
-    { data: organizations, error: getOrgError } = await useFetch<OrganizationViewModel[]>(`/api/organization/`, {
-        query: { slug: organizationslug }
-    }),
-    organization = ref(organizations.value?.[0]!)
-
-if (getOrgError.value)
-    $eventBus.$emit('page-error', getOrgError.value)
-
-const { data: users, status, refresh, error: getUserError } = await useFetch<AppUserViewModel[]>('/api/appusers', {
-    query: {
-        organizationId: organization.value?.id
-    },
-    transform: (data: any[]) => data.map<AppUserViewModel>((user) => {
-        user.creationDate = new Date(user.creationDate)
-        user.lastLoginDate = user.lastLoginDate ? new Date(user.lastLoginDate) : undefined
-        return user
+const { $eventBus } = useNuxtApp(),
+    { organizationslug: organizationSlug } = useRoute('Organization Users').params,
+    { data: users, status, refresh, error: getUserError } = await useFetch<AppUserViewModel[]>('/api/appusers', {
+        query: { organizationSlug },
+        transform: (data: any[]) => data.map<AppUserViewModel>((user) => {
+            user.creationDate = new Date(user.creationDate)
+            user.lastLoginDate = user.lastLoginDate ? new Date(user.lastLoginDate) : undefined
+            return user
+        })
     })
-})
 
 if (getUserError.value)
     $eventBus.$emit('page-error', getUserError.value)
@@ -50,7 +24,7 @@ const onCreate = async (data: AppUserViewModel) => {
         method: 'POST',
         body: {
             email: data.email,
-            organizationId: organization.value?.id,
+            organizationSlug,
             role: data.role
         }
     }).catch((error) => {
@@ -63,9 +37,7 @@ const onCreate = async (data: AppUserViewModel) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/appusers/${id}`, {
         method: 'DELETE',
-        body: {
-            organizationId: organization.value?.id
-        }
+        body: { organizationSlug }
     }).catch((error) => {
         $eventBus.$emit('page-error', error)
     })
@@ -77,7 +49,7 @@ const onUpdate = async (data: AppUserViewModel) => {
     await $fetch(`/api/appusers/${data.id}`, {
         method: 'PUT',
         body: {
-            organizationId: organization.value?.id,
+            organizationSlug,
             role: data.role
         }
     }).catch((error) => {
@@ -109,7 +81,7 @@ const onUpdate = async (data: AppUserViewModel) => {
         role: Object.values(AppRole),
         isSystemAdmin: 'boolean'
     }" :datasource="users" :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate"
-        :loading="status === 'pending'" :organizationSlug="organizationslug" entityName="AppUser"
+        :loading="status === 'pending'" :organizationSlug="organizationSlug" entityName="AppUser"
         :showRecycleBin="false">
     </XDataTable>
 </template>

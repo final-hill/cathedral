@@ -5,18 +5,17 @@ import { Scenario } from "./Scenario.js";
 import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
 
-export const useCaseReqIdPrefix = 'S.4.' as const;
-export type UseCaseReqId = `${typeof useCaseReqIdPrefix}${number}`;
-
 /**
  * A Use Case specifies the scenario of a complete
  * interaction of a user through a system.
  */
 @Entity({ discriminatorValue: ReqType.USE_CASE })
 export class UseCase extends Scenario {
+    static override reqIdPrefix = 'S.4.' as const;
+    static override req_type = ReqType.USE_CASE;
+
     constructor(props: Properties<Omit<UseCase, 'id' | 'req_type'>>) {
         super(props);
-        this.req_type = ReqType.USE_CASE;
         this.scope = props.scope;
         this.level = props.level;
         this.precondition = props.precondition;
@@ -27,8 +26,8 @@ export class UseCase extends Scenario {
         // this.stakeHoldersAndInterests = props.stakeHoldersAndInterests;
     }
 
-    override get reqId(): UseCaseReqId | undefined { return super.reqId as UseCaseReqId | undefined }
-    override set reqId(value: UseCaseReqId | undefined) { super.reqId = value }
+    override get reqId() { return super.reqId as `${typeof UseCase.reqIdPrefix}${number}` | undefined }
+    override set reqId(value) { super.reqId = value }
 
     /**
      * The scope of the use case.

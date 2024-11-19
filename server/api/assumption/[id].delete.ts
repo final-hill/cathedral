@@ -1,24 +1,6 @@
-import { z } from "zod"
-import { fork } from "~/server/data/orm.js"
-import { Assumption } from "~/domain/requirements/index.js"
-
-const paramSchema = z.object({
-    id: z.string().uuid()
-})
-
-const bodySchema = z.object({
-    solutionId: z.string().uuid()
-})
+import { Assumption } from '~/domain/requirements'
 
 /**
  * Delete an assumption associated with a solution
  */
-export default defineEventHandler(async (event) => {
-    const { id } = await validateEventParams(event, paramSchema),
-        { solutionId } = await validateEventBody(event, bodySchema),
-        { solution } = await assertSolutionContributor(event, solutionId),
-        em = fork(),
-        assumption = await assertReqBelongsToSolution(em, Assumption, id, solution)
-
-    await deleteSolutionRequirement(em, assumption, solution)
-})
+export default deleteRequirementHttpHandler(Assumption)

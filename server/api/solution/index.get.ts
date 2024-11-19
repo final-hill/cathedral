@@ -1,7 +1,7 @@
+import { getServerSession } from '#auth'
 import { fork } from "~/server/data/orm.js"
 import { z } from "zod"
-import { ReqType, Solution } from "~/domain/requirements/index.js"
-import { Belongs } from "~/domain/relations";
+import { OrganizationInteractor } from "~/application"
 
 const querySchema = z.object({
     name: z.string().max(100).optional(),
@@ -18,22 +18,13 @@ const querySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { description, name, organizationId, organizationSlug, slug } = await validateEventQuery(event, querySchema),
-        em = fork(),
-        solsBelongsToOrgs = await em.find(Belongs, {
-            left: {
-                req_type: ReqType.SOLUTION,
-                ...(name ? { name } : {}),
-                ...(description ? { description } : {}),
-                ...(slug ? { slug } : {}),
-            },
-            right: {
-                req_type: ReqType.ORGANIZATION,
-                ...(organizationId ? { id: organizationId } : {}),
-                ...(organizationSlug ? { slug: organizationSlug } : {}),
-            }
-        }, { populate: ['left', 'right'] })
+        session = (await getServerSession(event))!,
+        organizationInteractor = new OrganizationInteractor({
+            userId: session.id,
+            entityManager: fork(),
+            organizationId,
+            organizationSlug
+        })
 
-    await assertOrgReader(event, solsBelongsToOrgs[0].right.id)
-
-    return solsBelongsToOrgs.map((sol) => sol.left as Solution)
+    return await organizationInteractor.findSolutions({ description, name, slug })
 })

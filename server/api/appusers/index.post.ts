@@ -1,40 +1,30 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { AppRole, AppUser, AppUserOrganizationRole } from "~/domain/application/index.js"
+import { getServerSession } from '#auth'
+import { AppRole, } from "~/domain/application/index.js"
+import { OrganizationInteractor } from "~/application"
 
 const bodySchema = z.object({
     email: z.string(),
-    organizationId: z.string().uuid(),
+    organizationId: z.string().uuid().optional(),
+    organizationSlug: z.string().max(100).optional(),
     role: z.nativeEnum(AppRole)
-})
+}).refine((value) => {
+    return value.organizationId !== undefined || value.organizationSlug !== undefined;
+}, "At least one of organizationId or organizationSlug should be provided");
 
 /**
  * Invite an appuser to an organization with a role
  */
 export default defineEventHandler(async (event) => {
-    const { email, organizationId, role } = await validateEventBody(event, bodySchema),
-        { organization } = await assertOrgAdmin(event, organizationId),
-        em = fork(),
-        appUser = await em.findOne(AppUser, { email: email }),
-        existingOrgAppUserRole = await em.findOne(AppUserOrganizationRole, {
-            appUser: appUser,
-            organization: organizationId
+    const { email, organizationId, organizationSlug, role } = await validateEventBody(event, bodySchema),
+        session = (await getServerSession(event))!,
+        organizationInteractor = new OrganizationInteractor({
+            userId: session.id,
+            entityManager: fork(),
+            organizationId,
+            organizationSlug
         })
 
-    if (!appUser)
-        throw createError({
-            statusCode: 404,
-            statusMessage: "Not Found",
-            message: "The appuser with the given email does not exist."
-        })
-    if (existingOrgAppUserRole)
-        throw createError({
-            statusCode: 409,
-            statusMessage: "Conflict",
-            message: "The appuser is already associated with the organization."
-        })
-
-    em.create(AppUserOrganizationRole, { appUser, organization, role })
-
-    await em.flush()
+    return await organizationInteractor.addAppUserToOrganization({ email, role })
 })

@@ -1,10 +1,6 @@
 import { Entity } from "@mikro-orm/core";
 import { Functionality } from "./Functionality.js";
-import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
-
-export const functionalBehaviorReqIdPrefix = 'S.2.' as const;
-export type FunctionalBehaviorReqId = `${typeof functionalBehaviorReqIdPrefix}${number}`;
 
 /**
  * FunctionalBehavior specifies **what** behavior the system should exhibit, i.e.,
@@ -13,11 +9,9 @@ export type FunctionalBehaviorReqId = `${typeof functionalBehaviorReqIdPrefix}${
  */
 @Entity({ discriminatorValue: ReqType.FUNCTIONAL_BEHAVIOR })
 export class FunctionalBehavior extends Functionality {
-    constructor(props: Properties<Omit<FunctionalBehavior, 'id' | 'req_type'>>) {
-        super(props);
-        this.req_type = ReqType.FUNCTIONAL_BEHAVIOR;
-    }
+    static override reqIdPrefix = 'S.2.' as const;
+    static override req_type = ReqType.FUNCTIONAL_BEHAVIOR;
 
-    override get reqId(): FunctionalBehaviorReqId | undefined { return super.reqId as FunctionalBehaviorReqId | undefined }
-    override set reqId(value: FunctionalBehaviorReqId | undefined) { super.reqId = value }
+    override get reqId() { return super.reqId as `${typeof FunctionalBehavior.reqIdPrefix}${number}` | undefined }
+    override set reqId(value) { super.reqId = value }
 }

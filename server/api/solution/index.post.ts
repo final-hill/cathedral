@@ -1,53 +1,30 @@
-import { z } from "zod"
+import { getServerSession } from '#auth'
 import { fork } from "~/server/data/orm.js"
-import { Obstacle, Solution, Outcome } from "~/domain/requirements/index.js"
-import { Belongs } from "~/domain/relations"
-import slugify from "~/shared/slugify"
+import { z } from "zod"
+import { OrganizationInteractor } from "~/application"
 
 const bodySchema = z.object({
     name: z.string().min(1).max(100),
     description: z.string(),
-    organizationId: z.string().uuid()
-})
+    organizationId: z.string().uuid().optional(),
+    organizationSlug: z.string().max(100).optional(),
+}).refine((value) => {
+    return value.organizationId !== undefined || value.organizationSlug !== undefined;
+}, "At least one of organizationId or organizationSlug should be provided");
 
 /**
- * Creates a new solution and returns its id
+ * Creates a new solution and returns its slug
  */
 export default defineEventHandler(async (event) => {
-    const { description, name, organizationId } = await validateEventBody(event, bodySchema),
-        { organization, sessionUser } = await assertOrgAdmin(event, organizationId),
-        em = fork()
+    const { description, name, organizationId, organizationSlug } = await validateEventBody(event, bodySchema),
+        session = (await getServerSession(event))!,
+        organizationInteractor = new OrganizationInteractor({
+            userId: session.id,
+            entityManager: fork(),
+            organizationId,
+            organizationSlug
+        }),
+        newSolution = await organizationInteractor.addSolution({ name, description })
 
-    const newSolution = em.create(Solution, {
-        name,
-        description,
-        lastModified: new Date(),
-        createdBy: sessionUser,
-        modifiedBy: sessionUser,
-        isSilence: false,
-        slug: slugify(name)
-    });
-
-    em.create(Belongs, { left: newSolution, right: organization });
-
-    [[Outcome, 'G.1'] as const, [Obstacle, 'G.2'] as const].forEach(([Entity, name]) => {
-        const entity = em.create(Entity, {
-            reqId: `${name}.1` as any,
-            name,
-            description: '',
-            lastModified: new Date(),
-            modifiedBy: sessionUser,
-            createdBy: sessionUser,
-            isSilence: false
-        })
-
-        em.create(Belongs, {
-            left: entity,
-            right: newSolution
-        })
-    })
-
-    await em.flush()
-
-    return newSolution.id
+    return newSolution.slug
 })

@@ -1,40 +1,14 @@
 import { z } from "zod"
-import { fork } from "~/server/data/orm.js"
-import { Limit, limitReqIdPrefix } from "~/domain/requirements/index.js"
-
-const paramSchema = z.object({
-    id: z.string().uuid()
-})
-
-const bodySchema = z.object({
-    solutionId: z.string().uuid(),
-    name: z.string().optional(),
-    description: z.string().optional(),
-    isSilence: z.boolean().optional()
-})
+import { Limit } from "~/domain/requirements/index.js"
 
 /**
  * Updates a limit by id.
  */
-export default defineEventHandler(async (event) => {
-    const { id } = await validateEventParams(event, paramSchema),
-        { name, description, solutionId, isSilence } = await validateEventBody(event, bodySchema),
-        { sessionUser, solution } = await assertSolutionContributor(event, solutionId),
-        em = fork(),
-        limit = await assertReqBelongsToSolution(em, Limit, id, solution)
-
-    limit.assign({
-        name: name ?? limit.name,
-        description: description ?? limit.description,
-        isSilence: isSilence ?? limit.isSilence,
-        modifiedBy: sessionUser,
-        lastModified: new Date()
+export default putRequirementHttpHandler({
+    ReqClass: Limit,
+    bodySchema: z.object({
+        name: z.string().optional(),
+        description: z.string().optional(),
+        isSilence: z.boolean().optional()
     })
-
-    // If the entity is no longer silent and has no reqId, assume
-    // that it is a new requirement from the workbox
-    if (isSilence !== undefined && isSilence == false && !limit.reqId)
-        limit.reqId = await getNextReqId(limitReqIdPrefix, em, solution) as Limit['reqId']
-
-    await em.persistAndFlush(limit)
 })

@@ -1,31 +1,19 @@
 <script lang="ts" setup>
 import { useFetch } from 'nuxt/app';
-import { ConstraintCategory } from '~/domain/requirements/ConstraintCategory.js';
+import type { ConstraintViewModel, SolutionViewModel } from '~/shared/models'
+import { ConstraintCategory } from '~/domain/requirements/ConstraintCategory';
 
 useHead({ title: 'Constraints' })
 definePageMeta({ name: 'Constraints' })
 
-interface ConstraintViewModel {
-    id: string;
-    reqId: string;
-    name: string;
-    description: string;
-    category: ConstraintCategory;
-    lastModified: Date;
-}
-
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Constraints').params,
-    { data: solutions, error: getSolutionError } = await useFetch('/api/solution', {
-        query: {
-            slug: solutionslug,
-            organizationSlug: organizationslug
-        }
+    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Constraints').params,
+    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+        query: { organizationSlug }
     }),
-    solution = (solutions.value ?? [])[0],
-    solutionId = solution.id,
+    solutionId = solution.value?.id,
     { data: constraints, status, refresh, error: getConstraintsError } = await useFetch<ConstraintViewModel[]>(`/api/constraint`, {
-        query: { solutionId },
+        query: { solutionId, organizationSlug },
         transform: (data) => data.map((item) => {
             item.lastModified = new Date(item.lastModified)
             return item
@@ -45,7 +33,8 @@ const onCreate = async (data: ConstraintViewModel) => {
             name: data.name,
             description: data.description,
             category: data.category,
-            solutionId
+            solutionId,
+            organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -55,7 +44,7 @@ const onCreate = async (data: ConstraintViewModel) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/constraint/${id}`, {
         method: 'DELETE',
-        body: { solutionId }
+        body: { solutionId, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
     refresh()
 }
@@ -67,7 +56,8 @@ const onUpdate = async (data: ConstraintViewModel) => {
             name: data.name,
             description: data.description,
             category: data.category,
-            solutionId
+            solutionId,
+            organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
     refresh()
@@ -83,7 +73,7 @@ const onUpdate = async (data: ConstraintViewModel) => {
         :createModel="{ name: 'text', category: Object.values(ConstraintCategory), description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', category: Object.values(ConstraintCategory), description: 'text' }"
         :datasource="constraints" :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate"
-        :loading="status === 'pending'" :organizationSlug="organizationslug" entityName="Constraint"
+        :loading="status === 'pending'" :organizationSlug="organizationSlug" entityName="Constraint"
         :showRecycleBin="true">
     </XDataTable>
 </template>

@@ -5,25 +5,24 @@ import { StakeholderSegmentation } from "./StakeholderSegmentation.js";
 import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
 
-export const stakeholderReqIdPrefix = 'G.7.' as const;
-export type StakeholderReqId = `${typeof stakeholderReqIdPrefix}${number}`;
-
 /**
  * A human actor who may affect or be affected by a project or its associated system
  */
 @Entity({ discriminatorValue: ReqType.STAKEHOLDER })
 export class Stakeholder extends Component {
+    static override reqIdPrefix = 'G.7.' as const;
+    static override req_type: ReqType = ReqType.STAKEHOLDER;
+
     constructor(props: Properties<Omit<Stakeholder, 'id' | 'req_type'>>) {
         super(props);
-        this.req_type = ReqType.STAKEHOLDER;
         this.influence = props.influence;
         this.availability = props.availability;
         this.segmentation = props.segmentation;
         this.category = props.category;
     }
 
-    override get reqId(): StakeholderReqId | undefined { return super.reqId as StakeholderReqId | undefined }
-    override set reqId(value: StakeholderReqId | undefined) { super.reqId = value }
+    override get reqId() { return super.reqId as `${typeof Stakeholder.reqIdPrefix}${number}` | undefined }
+    override set reqId(value) { super.reqId = value }
 
     /**
      * The segmentation of the stakeholder.

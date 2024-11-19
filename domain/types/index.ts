@@ -1,5 +1,7 @@
 import { Requirement } from "../requirements/Requirement.js";
 
+export type Constructor<T> = (new (...args: any[]) => T) | (abstract new (...args: any[]) => T);
+
 /**
  * A type that represents all the members of a type T that are not functions
  */
