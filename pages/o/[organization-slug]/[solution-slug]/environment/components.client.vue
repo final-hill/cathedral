@@ -1,28 +1,18 @@
 <script lang="ts" setup>
 import { useHead, useRoute, useNuxtApp, useFetch } from '#imports';
+import type { EnvironmentComponentViewModel, SolutionViewModel } from '~/shared/models';
 
 useHead({ title: 'Components' })
 definePageMeta({ name: 'Environment Components' })
 
-interface EnvironmentComponentViewModel {
-    id: string;
-    reqId: string;
-    name: string;
-    description: string;
-    lastModified: Date;
-}
-
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Environment Components').params,
-    { data: solutions, error: getSolutionError } = await useFetch('/api/solution', {
-        query: {
-            slug: solutionslug,
-            organizationSlug: organizationslug
-        }
+    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Environment Components').params,
+    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+        query: { organizationSlug }
     }),
-    solutionId = solutions.value?.[0].id,
+    solutionId = solution.value?.id,
     { data: environmentComponents, status, refresh, error: getEnvironmentComponentsError } = await useFetch<EnvironmentComponentViewModel[]>(`/api/environment-component`, {
-        query: { solutionId },
+        query: { solutionId, organizationSlug },
         transform: (data) => data.map((item) => {
             item.lastModified = new Date(item.lastModified)
             return item
@@ -41,7 +31,8 @@ const onCreate = async (data: EnvironmentComponentViewModel) => {
         body: {
             name: data.name,
             description: data.description,
-            solutionId
+            solutionId,
+            organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -51,7 +42,7 @@ const onCreate = async (data: EnvironmentComponentViewModel) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/environment-component/${id}`, {
         method: 'DELETE',
-        body: { solutionId }
+        body: { solutionId, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
     refresh()
 }
@@ -62,7 +53,8 @@ const onUpdate = async (data: EnvironmentComponentViewModel) => {
         body: {
             name: data.name,
             description: data.description,
-            solutionId
+            solutionId,
+            organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
     refresh()
@@ -78,6 +70,6 @@ const onUpdate = async (data: EnvironmentComponentViewModel) => {
         :createModel="{ name: 'text', description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="environmentComponents"
         :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'"
-        :organizationSlug="organizationslug" entityName="EnvironmentComponent" :showRecycleBin="true">
+        :organizationSlug="organizationSlug" entityName="EnvironmentComponent" :showRecycleBin="true">
     </XDataTable>
 </template>

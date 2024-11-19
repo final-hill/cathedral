@@ -1,6 +1,5 @@
 import { Entity } from "@mikro-orm/core";
 import { MetaRequirement } from "./MetaRequirement.js";
-import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
 
 /**
@@ -9,8 +8,5 @@ import { ReqType } from "./ReqType.js";
  */
 @Entity({ discriminatorValue: ReqType.JUSTIFICATION })
 export class Justification extends MetaRequirement {
-    constructor(props: Properties<Omit<Justification, 'id' | 'req_type'>>) {
-        super(props);
-        this.req_type = ReqType.JUSTIFICATION;
-    }
+    static override req_type: ReqType = ReqType.JUSTIFICATION;
 }

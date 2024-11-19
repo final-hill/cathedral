@@ -16,19 +16,22 @@ import { ReqType } from "./ReqType.js";
 @Entity({ discriminatorValue: ReqType.USER_STORY })
 export class UserStory extends Scenario {
     static override reqIdPrefix = 'S.4.' as const;
+    static override req_type = ReqType.USER_STORY;
 
     constructor(props: Properties<Omit<UserStory, 'id' | 'req_type'>>) {
         super(props);
-        this.req_type = ReqType.USER_STORY;
         this.functionalBehavior = props.functionalBehavior;
     }
 
-    override get reqId() { return super.reqId as `${typeof UserStory.reqIdPrefix}${number}` | undefined }
-    override set reqId(value) { super.reqId = value }
+    override get reqId() { return super.reqId as `${typeof UserStory.reqIdPrefix}${number}` | undefined; }
+    override set reqId(value) { super.reqId = value; }
+
+    private _functionalBehavior?: FunctionalBehavior;
 
     /**
      * The action that the user wants to perform.
      */
     @ManyToOne({ entity: () => FunctionalBehavior })
-    functionalBehavior?: FunctionalBehavior;
+    get functionalBehavior(): FunctionalBehavior | undefined { return this._functionalBehavior; }
+    set functionalBehavior(value: FunctionalBehavior | undefined) { this._functionalBehavior = value; }
 }

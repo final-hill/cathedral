@@ -1,32 +1,22 @@
 <script lang="ts" setup>
 import { MoscowPriority } from '~/domain/requirements/MoscowPriority.js';
+import type { FunctionalBehaviorViewModel, SolutionViewModel } from '~/shared/models';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Goals Functionality' })
 
-interface FunctionalBehaviorViewModel {
-    id: string;
-    reqId: string;
-    name: string;
-    description: string;
-    lastModified: Date;
-}
-
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Functionality').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
-        query: {
-            slug: solutionslug,
-            organizationSlug: organizationslug
-        }
+    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Functionality').params,
+    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+        query: { organizationSlug }
     }),
-    solutionId = solutions.value?.[0].id
+    solutionId = solution.value?.id
 
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
 const { data: functionalBehaviors, refresh, status, error: getFunctionalBehaviorsError } = await useFetch<FunctionalBehaviorViewModel[]>(`/api/functional-behavior`, {
-    query: { solutionId },
+    query: { solutionId, organizationSlug },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
         return item
@@ -42,6 +32,7 @@ const onCreate = async (data: FunctionalBehaviorViewModel) => {
         body: {
             ...data,
             solutionId,
+            organizationSlug,
             priority: MoscowPriority.MUST
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -55,6 +46,7 @@ const onUpdate = async (data: FunctionalBehaviorViewModel) => {
         body: {
             ...data,
             solutionId,
+            organizationSlug,
             priority: MoscowPriority.MUST
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -65,7 +57,7 @@ const onUpdate = async (data: FunctionalBehaviorViewModel) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/functional-behavior/${id}`, {
         method: 'DELETE',
-        body: { solutionId }
+        body: { solutionId, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
@@ -83,6 +75,6 @@ const onDelete = async (id: string) => {
         :createModel="{ name: 'text', description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="functionalBehaviors"
         :on-create="onCreate" :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'"
-        :organizationSlug="organizationslug" entityName="FunctionalBehavior" :showRecycleBin="true">
+        :organizationSlug="organizationSlug" entityName="FunctionalBehavior" :showRecycleBin="true">
     </XDataTable>
 </template>

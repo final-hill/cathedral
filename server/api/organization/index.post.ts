@@ -1,43 +1,25 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { AppRole, AppUserOrganizationRole, AppUser } from "~/domain/application/index.js"
-import { Organization } from "~/domain/requirements/index.js"
 import { getServerSession } from '#auth'
-import slugify from "~/shared/slugify"
+import { OrganizationInteractor } from "~/application/index"
 
 const bodySchema = z.object({
-    name: z.string().default("{Untitled Organization}"),
+    name: z.string(),
     description: z.string().default("")
 })
 
 /**
- * Creates a new organization and returns its id
+ * Creates a new organization and returns its slug
  */
 export default defineEventHandler(async (event) => {
     const { name, description } = await validateEventBody(event, bodySchema),
         session = (await getServerSession(event))!,
-        em = fork()
+        organizationInteractor = new OrganizationInteractor({
+            entityManager: fork(),
+            userId: session.id
+        })
 
-    const sessionUser = em.getReference(AppUser, session.id)
+    const newOrg = await organizationInteractor.addOrganization({ name, description })
 
-    const newOrg = em.create(Organization, {
-        name,
-        description,
-        slug: slugify(name),
-        lastModified: new Date(),
-        createdBy: sessionUser,
-        modifiedBy: sessionUser,
-        isSilence: false
-    })
-
-    // add the current user as an admin of the new organization
-    em.create(AppUserOrganizationRole, {
-        appUser: sessionUser,
-        organization: newOrg,
-        role: AppRole.ORGANIZATION_ADMIN
-    })
-
-    await em.flush()
-
-    return newOrg.id
+    return newOrg.slug
 })

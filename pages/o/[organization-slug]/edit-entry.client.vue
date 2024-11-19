@@ -1,42 +1,50 @@
 <script lang="ts" setup>
-import slugify from '#shared/slugify.js';
+import slugify from '~/shared/slugify.js';
+import type { OrganizationViewModel } from '~/shared/models';
 
 useHead({ title: 'Edit Organization' })
 definePageMeta({ name: 'Edit Organization' })
 
 const router = useRouter(),
     { $eventBus } = useNuxtApp(),
-    { organizationslug } = useRoute('Edit Organization').params,
-    { data: organizations, error: getOrgError } = await useFetch(`/api/organization/`, { query: { slug: organizationslug } }),
-    organization = ref(organizations.value![0]),
+    { organizationslug: organizationSlug } = useRoute('Edit Organization').params,
+    { data: organization, error: getOrgError } = await useFetch<OrganizationViewModel>(`/api/organization/${organizationSlug}`)
+
+if (!organization.value) {
+    $eventBus.$emit('page-error', getOrgError.value)
+    throw new Error('Organization not found');
+}
+
+const oldSlug = organization.value.slug,
     newSlug = ref(organization.value.slug);
 
-if (getOrgError.value)
-    $eventBus.$emit('page-error', getOrgError.value);
-
 const updateOrganization = async () => {
-    await $fetch(`/api/organization/${organization.value.id}`, {
-        method: 'PUT',
-        body: {
-            name: organization.value.name,
-            description: organization.value.description
-        }
-    }).catch((e) => $eventBus.$emit('page-error', e));
+    try {
+        await $fetch(`/api/organization/${oldSlug}`, {
+            method: 'PUT',
+            body: {
+                name: organization.value!.name,
+                description: organization.value!.description
+            }
+        })
 
-    router.push({ name: 'Organization', params: { organizationslug: newSlug.value } });
+        router.push({ name: 'Organization', params: { organizationslug: newSlug.value } });
+    } catch (error) {
+        $eventBus.$emit('page-error', error);
+    }
 }
 
 const cancel = () => {
-    router.push({ name: 'Organization', params: { organizationslug: newSlug.value } });
+    router.push({ name: 'Organization', params: { organizationslug: oldSlug } });
 }
 
-watch(() => organization.value.name, (newName) => {
+watch(() => organization.value!.name, (newName) => {
     newSlug.value = slugify(newName);
 });
 </script>
 
 <template>
-    <form autocomplete="off" @submit.prevent="updateOrganization" @reset="cancel">
+    <form v-if="organization" autocomplete="off" @submit.prevent="updateOrganization" @reset="cancel">
         <div class="field grid">
             <label for="name" class="required col-fixed w-7rem">Name</label>
             <InputText v-model.trim="organization.name" name="name" class="w-23rem col"

@@ -1,34 +1,25 @@
 <script lang="ts" setup>
+import type { OutcomeViewModel, SolutionViewModel } from '~/shared/models'
+
 useHead({ title: 'Outcomes' })
 definePageMeta({ name: 'Outcomes' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Outcomes').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
-        query: {
-            slug: solutionslug,
-            organizationSlug: organizationslug
-        }
+    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Outcomes').params,
+    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+        query: { organizationSlug }
     }),
-    solutionId = solutions.value?.[0].id;
+    solutionId = solution.value?.id;
 
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-interface OutcomeViewModel {
-    id: string;
-    reqId: string;
-    name: string;
-    description: string;
-    lastModified: Date;
-}
-
 const { data: outcomes, refresh, status, error: getOutcomesError } = await useFetch<OutcomeViewModel[]>(`/api/outcome`, {
-    query: { solutionId },
+    query: { solutionId, organizationSlug },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
         return item
-    }).filter((item) => item.reqId !== 'G.1.0')
+    }).filter((item) => item.reqId !== 'G.3.1') // FIXME: Filter out the default outcome (Context and Objective)
 })
 
 if (getOutcomesError.value)
@@ -39,6 +30,7 @@ const onCreate = async (data: OutcomeViewModel) => {
         method: 'POST',
         body: {
             solutionId,
+            organizationSlug,
             name: data.name,
             description: data.description
         }
@@ -52,6 +44,7 @@ const onUpdate = async (data: OutcomeViewModel) => {
         method: 'PUT',
         body: {
             solutionId,
+            organizationSlug,
             name: data.name,
             description: data.description
         }
@@ -63,7 +56,7 @@ const onUpdate = async (data: OutcomeViewModel) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/outcome/${id}`, {
         method: 'DELETE',
-        body: { solutionId }
+        body: { solutionId, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
@@ -79,7 +72,7 @@ const onDelete = async (id: string) => {
     <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
         :createModel="{ name: 'text', description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="outcomes" :onCreate="onCreate"
-        :onUpdate="onUpdate" :onDelete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationslug"
+        :onUpdate="onUpdate" :onDelete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationSlug"
         entityName="Outcome" :showRecycleBin="true">
     </XDataTable>
 </template>

@@ -1,41 +1,39 @@
 <script lang="ts" setup>
-import slugify from '#shared/slugify.js';
+import slugify from '~/shared/slugify.js';
+import type { OrganizationViewModel } from '~/shared/models'
 
 useHead({ title: 'New Solution' })
 definePageMeta({ name: 'New Solution' })
 
 const { $eventBus } = useNuxtApp(),
-    { organizationslug } = useRoute('New Solution').params,
+    { organizationslug: organizationSlug } = useRoute('New Solution').params,
     router = useRouter(),
     name = ref(''),
     slug = ref(''),
     description = ref('')
 
-const { data: organizations, error: getOrgError } = await useFetch('/api/organization', {
-    query: { slug: organizationslug }
-}),
-    organization = organizations.value![0],
-    organizationId = organization.id
+const { data: organization, error: getOrgError } = await useFetch<OrganizationViewModel[]>(`/api/organization/${organizationSlug}`)
 
-if (getOrgError.value)
+if (!organization.value) {
     $eventBus.$emit('page-error', getOrgError.value)
+    throw new Error('Organization not found')
+}
 
 const createSolution = async () => {
     try {
-        const solutionId = (await $fetch('/api/solution', {
+        const newSolutionSlug = (await $fetch('/api/solution', {
             method: 'post',
             body: {
                 name: name.value,
                 description: description.value,
-                organizationId
+                organizationSlug
             }
         }).catch((e) => $eventBus.$emit('page-error', e)));
 
-        if (solutionId) {
-            const newSolution = (await $fetch(`/api/solution/${solutionId}`));
-            router.push({ name: 'Solution', params: { organizationslug, solutionslug: newSolution.slug } });
+        if (newSolutionSlug) {
+            router.push({ name: 'Solution', params: { organizationslug: organizationSlug, solutionslug: newSolutionSlug } });
         } else {
-            $eventBus.$emit('page-error', 'Failed to create solution. No solution ID returned.');
+            $eventBus.$emit('page-error', 'Failed to create solution. No solution slug returned.');
         }
     } catch (error) {
         console.error(error)
@@ -43,7 +41,7 @@ const createSolution = async () => {
 }
 
 const cancel = () => {
-    router.push({ name: 'Organization', params: { organizationslug } });
+    router.push({ name: 'Organization', params: { organizationslug: organizationSlug } });
 }
 
 watch(() => name.value, (newName) => {

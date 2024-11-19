@@ -9,12 +9,13 @@ import { AppUser } from '../application/AppUser.js';
  */
 @Entity({ abstract: true, discriminatorColumn: 'req_type' })
 export abstract class Requirement extends BaseEntity {
+    static req_type: ReqType = ReqType.REQUIREMENT;
     static reqIdPrefix: `${'P' | 'E' | 'G' | 'S' | '0'}.${number}.` = '0.0.';
 
     constructor(props: Properties<Omit<Requirement, 'id' | 'req_type'>>) {
         super()
         this.id = uuidv7();
-        this.req_type = ReqType.REQUIREMENT;
+        this.req_type = (this.constructor as typeof Requirement).req_type;
         this.name = props.name;
         this.description = props.description;
         this.lastModified = props.lastModified;
@@ -26,10 +27,12 @@ export abstract class Requirement extends BaseEntity {
 
     // This fixes the issue with em.create not honoring the constructor signature
     // see: https://mikro-orm.io/docs/property-validation#properties-with-default-value
-    [OptionalProps]?: 'req_type'
+    [OptionalProps]?: 'req_type' | 'slug'
 
+    private _req_type!: ReqType;
     @Enum(() => ReqType)
-    req_type: ReqType
+    get req_type(): ReqType { return this._req_type }
+    set req_type(value: ReqType) { this._req_type = value }
 
     /**
      * The unique identifier of the Requirement
@@ -52,42 +55,52 @@ export abstract class Requirement extends BaseEntity {
     // see: https://github.com/final-hill/cathedral/issues/368
     // property!: string
 
+    private _name!: string;
     /**
      * A short name for the requirement
      * @throws {Error} if the name is longer than 100 characters
      */
     @Property({ type: 'string', length: 100 })
-    name!: string;
+    get name(): string { return this._name }
+    set name(value: string) {
+        if (value.length > 100) throw new Error('Name must be less than 100 characters')
+        this._name = value
+    }
 
+    private _description!: string;
     /**
      * A human-readable explanation of a property
      * @throws {Error} if the description is longer than 1000 characters
      */
     @Property({ type: 'string', length: 1000 })
-    description!: string;
+    get description(): string { return this._description }
+    set description(value: string) {
+        if (value.length > 1000) throw new Error('Description must be less than 1000 characters')
+        this._description = value
+    }
 
     /**
      * The date and time when the requirement was last modified
      */
     @Property({ type: 'datetime', onCreate: () => new Date(), onUpdate: () => new Date(), defaultRaw: 'now()' })
-    lastModified!: Date;
+    lastModified: Date;
 
     /**
      * The user who last modified the requirement
      */
     @ManyToOne({ entity: () => AppUser })
-    modifiedBy!: AppUser;
+    modifiedBy: AppUser;
 
     /**
      * The user who created the requirement
      */
     @ManyToOne({ entity: () => AppUser })
-    createdBy!: AppUser;
+    createdBy: AppUser;
 
     /**
      * Whether the requirement is a silence requirement.
      * (i.e. a requirement that is not included in the solution)
      */
     @Property({ type: 'boolean', default: false })
-    isSilence!: boolean;
+    isSilence: boolean;
 }

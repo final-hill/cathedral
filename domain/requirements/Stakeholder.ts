@@ -11,10 +11,10 @@ import { ReqType } from "./ReqType.js";
 @Entity({ discriminatorValue: ReqType.STAKEHOLDER })
 export class Stakeholder extends Component {
     static override reqIdPrefix = 'G.7.' as const;
+    static override req_type: ReqType = ReqType.STAKEHOLDER;
 
     constructor(props: Properties<Omit<Stakeholder, 'id' | 'req_type'>>) {
         super(props);
-        this.req_type = ReqType.STAKEHOLDER;
         this.influence = props.influence;
         this.availability = props.availability;
         this.segmentation = props.segmentation;

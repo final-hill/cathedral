@@ -1,30 +1,27 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { AppUser, AppUserOrganizationRole } from "~/domain/application/index.js"
+import { getServerSession } from '#auth'
+import { OrganizationInteractor } from "~/application"
 
 const querySchema = z.object({
-    organizationId: z.string().uuid(),
-})
+    organizationId: z.string().uuid().optional(),
+    organizationSlug: z.string().max(100).optional()
+}).refine((value) => {
+    return value.organizationId !== undefined || value.organizationSlug !== undefined;
+}, "At least one of organizationId or organizationSlug should be provided");
 
 /**
  * Returns all appusers for the organization with their associated roles
  */
 export default defineEventHandler(async (event) => {
-    const { organizationId } = await validateEventQuery(event, querySchema),
-        em = fork(),
-        { organization } = await assertOrgAdmin(event, organizationId)
+    const { organizationId, organizationSlug } = await validateEventQuery(event, querySchema),
+        session = (await getServerSession(event))!,
+        organizationInteractor = new OrganizationInteractor({
+            userId: session.id,
+            entityManager: fork(),
+            organizationId,
+            organizationSlug
+        })
 
-    const appUserOrganizationRoles = await em.findAll(AppUserOrganizationRole, {
-        where: { organization },
-        populate: ['appUser']
-    })
-
-    // assign the roles to the appusers
-    const appUsersWithRoles: AppUser[] = appUserOrganizationRoles.map((aur) => {
-        const appUser = aur.appUser as AppUser
-        appUser.role = aur.role
-        return appUser
-    })
-
-    return appUsersWithRoles
+    return await organizationInteractor.getOrganizationAppUsers()
 })

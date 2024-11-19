@@ -1,30 +1,23 @@
 <script lang="ts" setup>
-import debounce from '#shared/debounce';
-
-type OutcomeViewModel = {
-    id: string;
-    reqId: string;
-    name: string;
-    description: string;
-};
+import debounce from '~/shared/debounce';
+import type { OutcomeViewModel, SolutionViewModel } from '~/shared/models';
 
 useHead({ title: 'Context and Objective' })
 definePageMeta({ name: 'Context and Objective' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Context and Objective').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
-        query: {
-            slug: solutionslug,
-            organizationSlug: organizationslug
-        }
+    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Context and Objective').params,
+    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+        query: { organizationSlug }
     }),
-    solutionId = solutions.value?.[0].id;
+    solutionId = solution.value?.id;
 
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: outcomes, error: getOutcomesError } = await useFetch<OutcomeViewModel[]>(`/api/outcome`, { query: { name: 'G.1', solutionId } });
+const { data: outcomes, error: getOutcomesError } = await useFetch<OutcomeViewModel[]>(`/api/outcome`, {
+    query: { name: 'G.1', solutionId, organizationSlug }
+});
 
 if (getOutcomesError.value)
     $eventBus.$emit('page-error', getOutcomesError.value);
@@ -38,6 +31,7 @@ watch(contextObjectiveDescription, debounce(() => {
         method: 'PUT',
         body: {
             solutionId,
+            organizationSlug,
             name: contextObjective.name,
             description: contextObjective.description
         }

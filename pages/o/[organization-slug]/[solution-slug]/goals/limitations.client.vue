@@ -1,30 +1,21 @@
 <script lang="ts" setup>
-type LimitViewModel = {
-    id: string;
-    reqId: string;
-    name: string;
-    description: string;
-    lastModified: Date;
-};
+import type { LimitViewModel, SolutionViewModel } from '~/shared/models'
 
 useHead({ title: 'Limitations' })
 definePageMeta({ name: 'Limitations' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Limitations').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
-        query: {
-            slug: solutionslug,
-            organizationSlug: organizationslug
-        }
+    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Limitations').params,
+    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+        query: { organizationSlug }
     }),
-    solutionId = solutions.value?.[0].id
+    solutionId = solution.value?.id
 
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
 const { data: limits, status, refresh, error: getLimitsError } = await useFetch<LimitViewModel[]>(`/api/limit`, {
-    query: { solutionId },
+    query: { solutionId, organizationSlug },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
         return item
@@ -39,6 +30,7 @@ const onCreate = async (data: LimitViewModel) => {
         method: 'POST',
         body: {
             solutionId,
+            organizationSlug,
             name: data.name,
             description: data.description
         }
@@ -51,6 +43,7 @@ const onUpdate = async (data: LimitViewModel) => {
     await $fetch(`/api/limit/${data.id}`, {
         method: 'PUT', body: {
             solutionId,
+            organizationSlug,
             id: data.id,
             name: data.name,
             description: data.description
@@ -63,7 +56,7 @@ const onUpdate = async (data: LimitViewModel) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/limit/${id}`, {
         method: 'DELETE',
-        body: { solutionId }
+        body: { solutionId, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
@@ -78,7 +71,7 @@ const onDelete = async (id: string) => {
     <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
         :createModel="{ name: 'text', description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="limits" :on-create="onCreate"
-        :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationslug"
+        :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationSlug"
         entityName="Limit" :showRecycleBin="true">
     </XDataTable>
 </template>

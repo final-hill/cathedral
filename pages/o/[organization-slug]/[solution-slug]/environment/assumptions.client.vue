@@ -1,32 +1,22 @@
 <script lang="ts" setup>
 import { useFetch } from 'nuxt/app';
+import type { AssumptionViewModel, SolutionViewModel } from '~/shared/models';
 
 useHead({ title: 'Assumptions' })
 definePageMeta({ name: 'Assumptions' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Assumptions').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
-        query: {
-            organizationSlug: organizationslug,
-            slug: solutionslug
-        }
+    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Assumptions').params,
+    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+        query: { organizationSlug }
     }),
-    solutionId = solutions.value?.at(0)?.id;
+    solutionId = solution.value?.id
 
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-interface AssumptionViewModel {
-    id: string,
-    reqId: string,
-    name: string,
-    description: string,
-    lastModified: Date
-};
-
 const { data: assumptions, refresh, status, error: getAssumptionsError } = await useFetch<AssumptionViewModel[]>(`/api/assumption`, {
-    query: { solutionId },
+    query: { solutionId, organizationSlug },
     transform: (data) => data.map((item) => ({
         ...item,
         lastModified: new Date(item.lastModified)
@@ -42,7 +32,8 @@ const onCreate = async (data: AssumptionViewModel) => {
         body: {
             name: data.name,
             description: data.description,
-            solutionId
+            solutionId,
+            organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -52,7 +43,7 @@ const onCreate = async (data: AssumptionViewModel) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/assumption/${id}`, {
         method: 'delete',
-        body: { solutionId }
+        body: { solutionId, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
@@ -64,7 +55,8 @@ const onUpdate = async (data: AssumptionViewModel) => {
         body: {
             name: data.name,
             description: data.description,
-            solutionId
+            solutionId,
+            organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -82,7 +74,7 @@ const onUpdate = async (data: AssumptionViewModel) => {
     <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
         :createModel="{ name: 'text', description: 'text' }"
         :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="assumptions" :on-create="onCreate"
-        :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'" :organizationSlug="organizationslug"
+        :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'" :organizationSlug="organizationSlug"
         entityName="Assumption" :showRecycleBin="true">
     </XDataTable>
 </template>

@@ -1,30 +1,21 @@
 <script lang="ts" setup>
-type PersonViewModel = {
-    id: string;
-    reqId: string;
-    name: string;
-    email: string;
-    lastModified: Date;
-};
+import type { PersonViewModel, SolutionViewModel } from '~/shared/models'
 
 useHead({ title: 'Roles & Personnel' })
 definePageMeta({ name: 'Roles & Personnel' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Roles & Personnel').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
-        query: {
-            slug: solutionslug,
-            organizationSlug: organizationslug
-        }
+    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Roles & Personnel').params,
+    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+        query: { organizationSlug }
     }),
-    solutionId = solutions.value?.[0].id
+    solutionId = solution.value?.id
 
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
 const { data: personnel, refresh, status, error: getPersonnelError } = await useFetch<PersonViewModel[]>(`/api/person`, {
-    query: { solutionId },
+    query: { solutionId, organizationSlug },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
         return item
@@ -41,6 +32,7 @@ const onCreate = async (data: PersonViewModel) => {
             name: data.name ?? 'Anonymous',
             email: data.email ?? 'anonymous@example.com',
             solutionId,
+            organizationSlug,
             description: ''
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -55,6 +47,7 @@ const onUpdate = async (data: PersonViewModel) => {
             name: data.name ?? 'Anonymous',
             email: data.email ?? 'anonymous@example.com',
             solutionId,
+            organizationSlug,
             description: ''
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -65,7 +58,7 @@ const onUpdate = async (data: PersonViewModel) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/person/${id}`, {
         method: 'DELETE',
-        body: { solutionId }
+        body: { solutionId, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
     refresh();
 }
@@ -79,6 +72,6 @@ const onDelete = async (id: string) => {
     <XDataTable :viewModel="{ reqId: 'text', name: 'text', email: 'text' }"
         :createModel="{ name: 'text', email: 'text' }" :editModel="{ id: 'hidden', name: 'text', email: 'text' }"
         :datasource="personnel" :on-create="onCreate" :on-update="onUpdate" :on-delete="onDelete"
-        :loading="status === 'pending'" :organizationSlug="organizationslug" entityName="Person" :showRecycleBin="true">
+        :loading="status === 'pending'" :organizationSlug="organizationSlug" entityName="Person" :showRecycleBin="true">
     </XDataTable>
 </template>

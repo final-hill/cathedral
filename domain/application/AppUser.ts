@@ -57,9 +57,9 @@ export class AppUser extends BaseEntity {
 
     /**
      * The role of the AppUser.
-     * Note: this field is not mapped in the ORM. It is populated in the API layer.
-     * It's a design smell that needs to be addressed.
      */
+    // FIXME: this field is not mapped in the ORM. It is populated in the API layer.
+    // It's a design smell that needs to be addressed.
     @Enum({ items: () => AppRole, persist: false })
     role?: AppRole;
 }

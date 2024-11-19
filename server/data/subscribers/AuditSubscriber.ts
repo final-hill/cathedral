@@ -13,6 +13,10 @@ export default class AuditSubscriber implements EventSubscriber {
             args.uow.getChangeSets()
                 // Don't log the log...
                 .filter(cs => !(cs.entity instanceof AuditLog))
+                // Ignore entities that don't have an id
+                // This is not a perfect solution, but it's good enough for now since
+                //   the AuditLog concept is going away soon.
+                .filter(cs => cs.entity.id)
                 .map(async (changeSet) => {
                     const auditLog = new AuditLog({
                         type: changeSet.type,

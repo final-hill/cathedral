@@ -8,11 +8,11 @@ import { ReqType } from "./ReqType.js";
  */
 @Entity({ discriminatorValue: ReqType.PERSON })
 export class Person extends Actor {
+    static override req_type: ReqType = ReqType.PERSON;
     static override reqIdPrefix = 'P.1.' as const;
 
     constructor({ email, ...rest }: Properties<Omit<Person, 'id' | 'req_type'>>) {
         super(rest);
-        this.req_type = ReqType.PERSON;
         this.email = email;
     }
 

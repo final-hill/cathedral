@@ -2,38 +2,24 @@
 import mermaid from 'mermaid';
 import { StakeholderCategory } from '~/domain/requirements/StakeholderCategory.js';
 import { StakeholderSegmentation } from '~/domain/requirements/StakeholderSegmentation.js';
-
-interface StakeholderViewModel {
-    id: string;
-    reqId: string;
-    name: string;
-    description: string;
-    category: string;
-    segmentation: string;
-    availability: number;
-    influence: number;
-    lastModified: Date;
-}
+import type { StakeholderViewModel, SolutionViewModel } from '~/shared/models';
 
 useHead({ title: 'Stakeholders' })
 definePageMeta({ name: 'Stakeholders' })
 
 const config = useAppConfig(),
     { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Stakeholders').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
-        query: {
-            slug: solutionslug,
-            organizationSlug: organizationslug
-        }
+    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Stakeholders').params,
+    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+        query: { organizationSlug }
     }),
-    solutionId = solutions.value?.[0].id;
+    solutionId = solution.value?.id;
 
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
 const { data: stakeholders, refresh: refreshStakeholders, status, error: getStakeholdersError } = await useFetch<StakeholderViewModel[]>(`/api/stakeholder`, {
-    query: { solutionId },
+    query: { solutionId, organizationSlug },
     transform: (data) => data.map((item) => {
         item.lastModified = new Date(item.lastModified)
         return item
@@ -95,7 +81,8 @@ const onCreate = async (data: StakeholderViewModel) => {
             segmentation: data.segmentation,
             availability: Number(data.availability),
             influence: Number(data.influence),
-            solutionId
+            solutionId,
+            organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -112,7 +99,8 @@ const onUpdate = async (data: StakeholderViewModel) => {
             segmentation: data.segmentation,
             availability: Number(data.availability),
             influence: Number(data.influence),
-            solutionId
+            solutionId,
+            organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
@@ -122,7 +110,7 @@ const onUpdate = async (data: StakeholderViewModel) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/stakeholder/${id}`, {
         method: 'DELETE',
-        body: { solutionId }
+        body: { solutionId, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refreshStakeholders()
@@ -162,7 +150,7 @@ const onDelete = async (id: string) => {
                 category: Object.values(StakeholderCategory),
                 segmentation: Object.values(StakeholderSegmentation)
             }" :datasource="stakeholders" :on-create="onCreate" :on-update="onUpdate" :on-delete="onDelete"
-                :loading="status === 'pending'" :organizationSlug="organizationslug" entityName="Stakeholder"
+                :loading="status === 'pending'" :organizationSlug="organizationSlug" entityName="Stakeholder"
                 :showRecycleBin="true">
             </XDataTable>
         </TabPanel>

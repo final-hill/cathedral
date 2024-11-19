@@ -1,8 +1,7 @@
-import { ChangeSetType } from "@mikro-orm/core"
 import { z } from "zod"
+import { getServerSession } from '#auth'
 import { fork } from "~/server/data/orm.js"
-import { AuditLog } from "~/domain/application"
-import { Organization } from "~/domain/requirements/index.js"
+import { OrganizationInteractor } from "~/application"
 
 const querySchema = z.object({
     entityName: z.string(),
@@ -15,51 +14,12 @@ const querySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { entityName, organizationSlug } = await validateEventQuery(event, querySchema),
-        em = fork()
-
-    const organization = await em.findOne(Organization, { slug: organizationSlug })
-
-    if (!organization)
-        throw createError({
-            statusCode: 404,
-            statusMessage: `Organization not found with the given slug: ${organizationSlug}`
+        session = (await getServerSession(event))!,
+        organizationInteractor = new OrganizationInteractor({
+            userId: session.id,
+            entityManager: fork(),
+            organizationSlug
         })
 
-    await assertOrgReader(event, organization.id)
-
-    type RowType = {
-        id: string,
-        type: ChangeSetType,
-        created_at: string,
-        entity_id: string,
-        entity_name: string,
-        entity: string
-    }
-
-    const conn = em.getConnection(),
-        res: RowType[] = await conn.execute(`
-            SELECT d.id, d.type, d.created_at, a.entity_id, a.entity_name, a.entity
-            FROM audit_log AS d
-            JOIN audit_log AS a
-                ON a.entity_id = d.entity_id
-                AND a.created_at = (
-                    SELECT MAX(a2.created_at)
-                    FROM audit_log AS a2
-                    WHERE a2.entity_id = d.entity_id
-                    AND a2.type IN ('create', 'update')
-                    AND a2.created_at < d.created_at
-                )
-            WHERE d.type = 'delete'
-            AND a.entity_name = ?;
-    `, [entityName]),
-        auditLogs = res.map((row) => new AuditLog({
-            id: row.id,
-            createdAt: new Date(row.created_at),
-            type: row.type,
-            entityId: row.entity_id,
-            entityName: row.entity_name,
-            entity: row.entity
-        }))
-
-    return auditLogs
+    return organizationInteractor.getAuditLogDeleteHistory(entityName)
 })

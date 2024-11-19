@@ -10,11 +10,11 @@ import { ReqType } from './ReqType.js';
 @Entity({ discriminatorValue: ReqType.CONSTRAINT })
 export class Constraint extends Requirement {
     static override reqIdPrefix = 'E.3.' as const;
+    static override req_type = ReqType.CONSTRAINT;
 
     constructor({ category, ...rest }: Properties<Omit<Constraint, 'id' | 'req_type'>>) {
         super(rest);
         this.category = category;
-        this.req_type = ReqType.CONSTRAINT;
     }
 
     override get reqId() { return super.reqId as `${typeof Constraint.reqIdPrefix}${number}` | undefined }

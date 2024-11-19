@@ -1,46 +1,19 @@
 <script lang="ts" setup>
 import { MoscowPriority } from '~/domain/requirements/MoscowPriority.js'
+import type { EpicViewModel, StakeholderViewModel, FunctionalBehaviorViewModel, OutcomeViewModel, SolutionViewModel } from '~/shared/models'
 
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Goal Scenarios' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug, organizationslug } = useRoute('Scenarios').params,
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution`, {
-        query: {
-            slug: solutionslug,
-            organizationSlug: organizationslug
-        }
+    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Scenarios').params,
+    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+        query: { organizationSlug }
     }),
-    solutionId = solutions.value?.[0].id;
+    solutionId = solution.value?.id;
 
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
-
-interface EpicViewModel {
-    id: string;
-    reqId: string;
-    name: string;
-    primaryActor: StakeholderViewModel;
-    functionalBehavior: FunctionalBehaviorViewModel;
-    outcome: OutcomeViewModel;
-    lastModified: Date;
-}
-
-interface StakeholderViewModel {
-    id: string;
-    name: string;
-}
-
-interface FunctionalBehaviorViewModel {
-    id: string;
-    name: string;
-}
-
-interface OutcomeViewModel {
-    id: string;
-    name: string;
-}
 
 const [
     { data: epics, refresh, status, error: getEpicsError },
@@ -49,15 +22,15 @@ const [
     { data: outcomes, error: getOutcomesError },
 ] = await Promise.all([
     useFetch<EpicViewModel[]>(`/api/epic`, {
-        query: { solutionId },
+        query: { solutionId, organizationSlug },
         transform: (data) => data.map((item) => {
             item.lastModified = new Date(item.lastModified)
             return item
         })
     }),
-    useFetch<StakeholderViewModel[]>(`/api/stakeholder`, { query: { solutionId } }),
-    useFetch<FunctionalBehaviorViewModel[]>(`/api/functional-behavior`, { query: { solutionId } }),
-    useFetch<OutcomeViewModel[]>(`/api/outcome`, { query: { solutionId } })
+    useFetch<StakeholderViewModel[]>(`/api/stakeholder`, { query: { solutionId, organizationSlug } }),
+    useFetch<FunctionalBehaviorViewModel[]>(`/api/functional-behavior`, { query: { solutionId, organizationSlug } }),
+    useFetch<OutcomeViewModel[]>(`/api/outcome`, { query: { solutionId, organizationSlug } })
 ])
 
 if (getEpicsError.value)
@@ -75,6 +48,7 @@ const onEpicCreate = async (epic: EpicViewModel) => {
         body: {
             ...epic,
             solutionId,
+            organizationSlug,
             description: '',
             priority: MoscowPriority.MUST
         }
@@ -89,6 +63,7 @@ const onEpicUpdate = async (epic: EpicViewModel) => {
         body: {
             ...epic,
             solutionId,
+            organizationSlug,
             description: '',
             priority: MoscowPriority.MUST
         }
@@ -100,7 +75,7 @@ const onEpicUpdate = async (epic: EpicViewModel) => {
 const onEpicDelete = async (id: string) => {
     await $fetch(`/api/epic/${id}`, {
         method: 'DELETE',
-        body: { solutionId }
+        body: { solutionId, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e));
     refresh();
 }
@@ -114,11 +89,14 @@ const onEpicDelete = async (id: string) => {
     </p>
     <p>
         Before you can begin, you must define one or more
-        <NuxtLink class="underline" :to="{ name: 'Stakeholders', params: { solutionslug, organizationslug } }">
+        <NuxtLink class="underline"
+            :to="{ name: 'Stakeholders', params: { solutionslug: slug, organizationslug: organizationSlug } }">
             Stakeholders</NuxtLink>,
-        <NuxtLink class="underline" :to="{ name: 'Goals Functionality', params: { solutionslug, organizationslug } }"
+        <NuxtLink class="underline"
+            :to="{ name: 'Goals Functionality', params: { solutionslug: slug, organizationslug: organizationSlug } }"
             v-text="'Functional Behaviors'" />,
-        and <NuxtLink class="underline" :to="{ name: 'Outcomes', params: { solutionslug, organizationslug } }">Outcomes
+        and <NuxtLink class="underline"
+            :to="{ name: 'Outcomes', params: { solutionslug: slug, organizationslug: organizationSlug } }">Outcomes
         </NuxtLink>
         for the solution.
     </p>
@@ -126,9 +104,9 @@ const onEpicDelete = async (id: string) => {
     <XDataTable :viewModel="{
         reqId: 'text',
         name: 'text',
-        primaryActor: 'object',
-        functionalBehavior: 'object',
-        outcome: 'object'
+        primaryActor: { type: 'requirement', options: roles ?? [] },
+        functionalBehavior: { type: 'requirement', options: functionalBehaviors ?? [] },
+        outcome: { type: 'requirement', options: outcomes ?? [] }
     }" :createModel="{
         name: 'text',
         primaryActor: { type: 'requirement', options: roles ?? [] },
@@ -141,7 +119,7 @@ const onEpicDelete = async (id: string) => {
         functionalBehavior: { type: 'requirement', options: functionalBehaviors ?? [] },
         outcome: { type: 'requirement', options: outcomes ?? [] }
     }" :datasource="epics" :onCreate="onEpicCreate" :onUpdate="onEpicUpdate" :onDelete="onEpicDelete"
-        :loading="status === 'pending'" :organizationSlug="organizationslug" entityName="UserStory"
+        :loading="status === 'pending'" :organizationSlug="organizationSlug" entityName="UserStory"
         :showRecycleBin="true">
     </XDataTable>
 </template>

@@ -1,51 +1,34 @@
 import { z } from "zod"
 import { fork } from "~/server/data/orm.js"
-import { AppRole, AppUserOrganizationRole } from "~/domain/application/index.js"
+import { getServerSession } from '#auth'
+import { AppRole } from "~/domain/application/index.js"
+import { OrganizationInteractor } from "~/application"
 
 const paramSchema = z.object({
     id: z.string().uuid()
 })
 
 const bodySchema = z.object({
-    organizationId: z.string().uuid(),
+    organizationId: z.string().uuid().optional(),
+    organizationSlug: z.string().max(100).optional(),
     role: z.nativeEnum(AppRole)
-})
+}).refine((value) => {
+    return value.organizationId !== undefined || value.organizationSlug !== undefined;
+}, "At least one of organizationId or organizationSlug should be provided");
 
 /**
  * Update an appuser by id in a given organization to have a new role
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { organizationId, role } = await validateEventBody(event, bodySchema),
-        em = fork(),
-        { } = await assertOrgAdmin(event, organizationId),
-        [appUserRole, orgAdminCount] = await Promise.all([
-            em.findOne(AppUserOrganizationRole, {
-                appUser: id,
-                organization: organizationId
-            }, { populate: ['appUser'] }),
-            em.count(AppUserOrganizationRole, {
-                organization: organizationId,
-                role: AppRole.ORGANIZATION_ADMIN
-            })
-        ])
-
-    if (!appUserRole)
-        throw createError({
-            statusCode: 404,
-            statusMessage: "Not Found",
-            message: "AppUser not found for the given ID and organization."
-        })
-    // you can't remove the last organization admin
-    if (appUserRole.role === AppRole.ORGANIZATION_ADMIN && orgAdminCount === 1
-        && role !== AppRole.ORGANIZATION_ADMIN
-    )
-        throw createError({
-            statusCode: 403,
-            statusMessage: "Forbidden",
-            message: "You can't remove the last organization admin."
+        { organizationId, organizationSlug, role } = await validateEventBody(event, bodySchema),
+        session = (await getServerSession(event))!,
+        organizationInteractor = new OrganizationInteractor({
+            userId: session.id,
+            entityManager: fork(),
+            organizationId,
+            organizationSlug
         })
 
-    appUserRole.role = role
-    await em.persistAndFlush(appUserRole)
+    await organizationInteractor.updateAppUserRole(id, role)
 })

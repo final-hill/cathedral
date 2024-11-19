@@ -1,6 +1,5 @@
 import { Entity } from "@mikro-orm/core";
 import { Functionality } from "./Functionality.js";
-import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
 
 /**
@@ -11,11 +10,7 @@ import { ReqType } from "./ReqType.js";
 @Entity({ discriminatorValue: ReqType.NON_FUNCTIONAL_BEHAVIOR })
 export class NonFunctionalBehavior extends Functionality {
     static override reqIdPrefix = 'S.2.' as const;
-
-    constructor(props: Properties<Omit<NonFunctionalBehavior, 'id' | 'req_type'>>) {
-        super(props);
-        this.req_type = ReqType.NON_FUNCTIONAL_BEHAVIOR;
-    }
+    static override req_type = ReqType.NON_FUNCTIONAL_BEHAVIOR;
 
     override get reqId() { return super.reqId as `${typeof NonFunctionalBehavior.reqIdPrefix}${number}` | undefined }
     override set reqId(value) { super.reqId = value }

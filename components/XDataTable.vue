@@ -2,21 +2,15 @@
 import type Dialog from 'primevue/dialog'
 import type DataTable from 'primevue/datatable'
 import { FilterMatchMode } from 'primevue/api';
-import camelCaseToTitle from '#shared/camelCaseToTitle.js';
+import camelCaseToTitle from '~/shared/camelCaseToTitle.js';
+import type { AuditLogViewModel } from '~/shared/models';
 
-export type ViewFieldType = 'text' | 'textarea' | 'number' | 'date' | 'boolean' | 'hidden' | 'object'
+export type RequirementFieldType = { type: 'requirement', options: { id: string, name: string }[] }
+
+export type ViewFieldType = 'text' | 'textarea' | 'number' | 'date' | 'boolean' | 'hidden' | 'object' | RequirementFieldType
 
 export type FormFieldType = 'text' | 'textarea' | { type: 'number', min: number, max: number } | 'date' | 'boolean' | 'hidden' | string[]
-    | { type: 'requirement', options: { id: string, name: string }[] }
-
-interface AuditLogViewModel {
-    id: string;
-    entityId: string;
-    entityName: string;
-    entity: string;
-    organizationSlug: string;
-    createdAt: Date;
-}
+    | RequirementFieldType
 
 const props = defineProps<{
     datasource: RowType[] | null,
@@ -206,6 +200,11 @@ const onEditDialogCancel = () => {
                         disabled />
                     <span v-else-if="props.viewModel[field as keyof RowType] === 'object'">
                         {{ data[field]?.name ?? JSON.stringify(data[field]) }}
+                    </span>
+                    <span
+                        v-else-if="(props.viewModel[key as keyof RowType] as RequirementFieldType).type === 'requirement'">
+                        {{ (props.viewModel[key as keyof RowType] as RequirementFieldType).options.find(o => o.id ===
+                            data[key])?.name }}
                     </span>
                     <span v-else-if="props.viewModel[field as keyof RowType] === 'textarea'">{{ data[field] }}</span>
                     <span v-else>{{ data[field] }}</span>

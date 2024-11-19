@@ -11,11 +11,12 @@ import { Outcome } from "./Outcome.js";
  */
 @Entity({ abstract: true, discriminatorValue: ReqType.SCENARIO })
 export abstract class Scenario extends Example {
+    static override req_type: ReqType = ReqType.SCENARIO;
+
     constructor({ primaryActor, outcome, ...rest }: Properties<Omit<Scenario, 'id' | 'req_type'>>) {
         super(rest);
         this.primaryActor = primaryActor;
         this.outcome = outcome;
-        this.req_type = ReqType.SCENARIO;
     }
 
     /**

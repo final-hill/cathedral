@@ -12,10 +12,10 @@ import { ReqType } from "./ReqType.js";
 @Entity({ discriminatorValue: ReqType.USE_CASE })
 export class UseCase extends Scenario {
     static override reqIdPrefix = 'S.4.' as const;
+    static override req_type = ReqType.USE_CASE;
 
     constructor(props: Properties<Omit<UseCase, 'id' | 'req_type'>>) {
         super(props);
-        this.req_type = ReqType.USE_CASE;
         this.scope = props.scope;
         this.level = props.level;
         this.precondition = props.precondition;

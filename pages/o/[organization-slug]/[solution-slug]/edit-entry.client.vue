@@ -1,42 +1,44 @@
 <script lang="ts" setup>
-import slugify from '#shared/slugify.js';
+import slugify from '~/shared/slugify.js';
+import type { SolutionViewModel } from '~/shared/models'
 
 useHead({ title: 'Edit Solution' })
 definePageMeta({ name: 'Edit Solution' })
 
 const route = useRoute('Edit Solution'),
     { $eventBus } = useNuxtApp(),
-    { organizationslug, solutionslug } = route.params,
+    { organizationslug: organizationSlug, solutionslug: slug } = route.params,
     router = useRouter(),
-    { data: solutions, error: getSolutionError } = await useFetch(`/api/solution/`, {
-        query: {
-            organizationSlug: organizationslug,
-            slug: solutionslug
-        }
-    }),
-    solution = ref(solutions.value![0]),
+    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+        query: { organizationSlug }
+    })
+
+if (!solution.value) {
+    $eventBus.$emit('page-error', getSolutionError.value);
+    throw new Error('Solution not found');
+}
+
+const oldSlug = solution.value.slug,
     newSlug = ref(solution.value.slug);
 
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value);
-
 const updateSolution = async () => {
-    await $fetch(`/api/solution/${solution.value.id}`, {
+    await $fetch(`/api/solution/${oldSlug}`, {
         method: 'PUT',
         body: {
-            name: solution.value.name,
-            description: solution.value.description
+            organizationSlug,
+            name: solution.value!.name,
+            description: solution.value!.description
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
 
-    router.push({ name: 'Organization', params: { organizationslug } });
+    router.push({ name: 'Organization', params: { organizationslug: organizationSlug } });
 }
 
 const cancel = () => {
-    router.push({ name: 'Solution', params: { organizationslug, solutionslug } });
+    router.push({ name: 'Solution', params: { organizationslug: organizationSlug, solutionslug: slug } });
 }
 
-watch(() => solution.value.name, (newName) => {
+watch(() => solution.value!.name, (newName) => {
     newSlug.value = slugify(newName);
 });
 </script>
@@ -45,7 +47,7 @@ watch(() => solution.value.name, (newName) => {
     <form autocomplete="off" @submit.prevent="updateSolution" @reset="cancel">
         <div class="field grid">
             <label for="name" class="required col-fixed w-7rem">Name</label>
-            <InputText v-model.trim="solution.name" name="name" class="w-23rem col" placeholder="Sample Solution"
+            <InputText v-model.trim="solution!.name" name="name" class="w-23rem col" placeholder="Sample Solution"
                 :maxlength="100" />
         </div>
 
@@ -57,7 +59,7 @@ watch(() => solution.value.name, (newName) => {
         <div class="field grid">
             <label for="description" class="col-fixed w-7rem">Description</label>
             <InputText name="description" placeholder="A description of the solution" class="w-23rem col"
-                v-model.trim="solution.description" />
+                v-model.trim="solution!.description" />
         </div>
 
         <Toolbar class="w-30rem">

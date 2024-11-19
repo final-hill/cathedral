@@ -11,6 +11,7 @@ import { ReqType } from "./ReqType.js";
 @Entity({ discriminatorValue: ReqType.INVARIANT })
 export class Invariant extends Requirement {
     static override reqIdPrefix = 'E.6.' as const;
+    static override req_type: ReqType = ReqType.INVARIANT;
 
     constructor(props: Properties<Omit<Invariant, 'id' | 'req_type'>>) {
         super(props);
