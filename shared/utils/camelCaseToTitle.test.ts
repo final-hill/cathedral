@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import camelCaseToTitle from './camelCaseToTitle';
+import { camelCaseToTitle } from './camelCaseToTitle';
 
 describe('camelCaseToTitle', () => {
     it('should convert camelCase to Title Case', () => {

@@ -1,10 +1,9 @@
 import { AzureOpenAI } from "openai";
-import groupBy from "~/shared/groupBy";
-import dedent from '~/shared/dedent.js'
 import { v7 as uuidv7 } from 'uuid';
 import zodToJsonSchema from "zod-to-json-schema";
 import zodSchema from '../llm-zod-schemas/index.js'
 import { zodResponseFormat } from "openai/helpers/zod";
+import { dedent, groupBy } from "#shared/utils";
 
 type LLMResponseType = typeof zodSchema['_type']['requirements']
 type ArrayToUnion<T> = T extends (infer U)[] ? U : never

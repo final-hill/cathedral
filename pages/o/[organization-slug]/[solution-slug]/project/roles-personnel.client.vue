@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { PersonViewModel, SolutionViewModel } from '~/shared/models'
+import type { PersonViewModel, SolutionViewModel } from '#shared/models'
 
 useHead({ title: 'Roles & Personnel' })
 definePageMeta({ name: 'Roles & Personnel' })

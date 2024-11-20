@@ -4,9 +4,8 @@ import { AppUserOrganizationRole, AppRole, AppUser, AuditLog } from "~/domain/ap
 import { Belongs } from "~/domain/relations/Belongs.js";
 import { validate } from 'uuid'
 import { Follows } from "~/domain/relations";
-import groupBy from "~/shared/groupBy";
 import type NaturalLanguageToRequirementService from "~/server/data/services/NaturalLanguageToRequirementService";
-import slugify from "~/shared/slugify";
+import { groupBy, slugify } from "#shared/utils";
 
 type OrganizationInteractorConstructor = {
     entityManager: EntityManager,

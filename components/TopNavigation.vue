@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import deSlugify from '~/shared/deSlugify.js';
+import { deSlugify } from '#shared/utils';
 
 const { data, signIn, signOut } = useAuth(),
     router = useRouter()

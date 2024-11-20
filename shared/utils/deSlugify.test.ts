@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import deSlugify from './deSlugify';
+import { deSlugify } from './deSlugify';
 
 describe('deSlugify', () => {
     it('should replace hyphens with spaces', () => {

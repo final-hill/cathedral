@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import slugify from '~/shared/slugify.js';
-import type { OrganizationViewModel } from '~/shared/models';
+import type { OrganizationViewModel } from '#shared/models';
+import { slugify } from '#shared/utils';
 
 useHead({ title: 'Edit Organization' })
 definePageMeta({ name: 'Edit Organization' })

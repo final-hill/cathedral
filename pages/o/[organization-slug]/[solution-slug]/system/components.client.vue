@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { SystemComponentViewModel, SolutionViewModel } from '~/shared/models';
+import type { SystemComponentViewModel, SolutionViewModel } from '#shared/models';
 
 useHead({ title: 'Components' })
 definePageMeta({ name: 'System Components' })

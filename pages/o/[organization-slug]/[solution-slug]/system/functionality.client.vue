@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { FunctionalBehaviorViewModel, NonFunctionalBehaviorViewModel, SystemComponentViewModel, SolutionViewModel } from '~/shared/models';
+import type { FunctionalBehaviorViewModel, NonFunctionalBehaviorViewModel, SystemComponentViewModel, SolutionViewModel } from '#shared/models';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Functionality' })

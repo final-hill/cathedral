@@ -1,7 +1,7 @@
 /**
  * Dedent a string
  */
-export default (str: string) => {
+const dedent = (str: string) => {
     const match = str.match(/^[ \t]*(?=\S)/gm)
 
     if (!match)
@@ -13,3 +13,5 @@ export default (str: string) => {
 
     return indent > 0 ? str.replace(re, '') : str
 }
+
+export { dedent }

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import debounce from '~/shared/debounce';
-import type { OutcomeViewModel, SolutionViewModel } from '~/shared/models';
+import type { OutcomeViewModel, SolutionViewModel } from '#shared/models';
+import { debounce } from '~/shared/utils';
 
 useHead({ title: 'Context and Objective' })
 definePageMeta({ name: 'Context and Objective' })

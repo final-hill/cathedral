@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import camelCaseToSlug from './camelCaseToSlug';
+import { camelCaseToSlug } from './camelCaseToSlug';
 
 describe('camelCaseToSlug', () => {
     it('should convert single camelCase word to slug', () => {

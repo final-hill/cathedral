@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { GlossaryTermViewModel, SolutionViewModel } from '~/shared/models'
+import type { GlossaryTermViewModel, SolutionViewModel } from '#shared/models'
 
 useHead({ title: 'Glossary' })
 definePageMeta({ name: 'Glossary' })

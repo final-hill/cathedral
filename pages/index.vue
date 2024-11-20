@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { OrganizationViewModel } from '~/shared/models'
+import type { OrganizationViewModel } from '#shared/models'
 
 definePageMeta({ name: 'Home' })
 

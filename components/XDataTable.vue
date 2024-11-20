@@ -2,8 +2,8 @@
 import type Dialog from 'primevue/dialog'
 import type DataTable from 'primevue/datatable'
 import { FilterMatchMode } from 'primevue/api';
-import camelCaseToTitle from '~/shared/camelCaseToTitle.js';
-import type { AuditLogViewModel } from '~/shared/models';
+import type { AuditLogViewModel } from '#shared/models';
+import { camelCaseToTitle } from '#shared/utils';
 
 export type RequirementFieldType = { type: 'requirement', options: { id: string, name: string }[] }
 
