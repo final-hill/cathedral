@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import slugify from '~/shared/slugify.js';
-import type { SolutionViewModel } from '~/shared/models'
+import type { SolutionViewModel } from '#shared/models'
+import { slugify } from '#shared/utils';
 
 useHead({ title: 'Edit Solution' })
 definePageMeta({ name: 'Edit Solution' })

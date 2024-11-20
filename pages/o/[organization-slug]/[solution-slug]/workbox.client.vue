@@ -1,10 +1,8 @@
 <script lang="ts" setup>
-import snakeCaseToTitle from '~/shared/snakeCaseToTitle.js';
-import camelCaseToTitle from '~/shared/camelCaseToTitle.js';
-import snakeCaseToSlug from '~/shared/snakeCaseToSlug.js';
 import type { DataTableRowExpandEvent, DataTableRowCollapseEvent, DataTableExpandedRows } from 'primevue/datatable';
-import type { ParsedRequirementViewModel, RequirementViewModel, SolutionViewModel } from '~/shared/models';
+import type { ParsedRequirementViewModel, RequirementViewModel, SolutionViewModel } from '#shared/models';
 import type { ReqType } from '~/domain/requirements/ReqType';
+import { camelCaseToTitle, snakeCaseToSlug, snakeCaseToTitle } from '~/shared/utils';
 
 useHead({ title: 'Workbox' });
 definePageMeta({ name: 'Workbox' });

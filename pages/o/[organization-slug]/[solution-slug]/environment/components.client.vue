@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useHead, useRoute, useNuxtApp, useFetch } from '#imports';
-import type { EnvironmentComponentViewModel, SolutionViewModel } from '~/shared/models';
+import type { EnvironmentComponentViewModel, SolutionViewModel } from '#shared/models';
 
 useHead({ title: 'Components' })
 definePageMeta({ name: 'Environment Components' })

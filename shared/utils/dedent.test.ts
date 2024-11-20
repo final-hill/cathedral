@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import dedent from './dedent';
+import { dedent } from './dedent';
 
 describe('dedent', () => {
     it('should remove leading spaces from each line', () => {

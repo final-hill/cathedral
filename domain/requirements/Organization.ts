@@ -1,5 +1,5 @@
 import { Entity, Property } from "@mikro-orm/core";
-import slugify from "../../shared/slugify.js";
+import { slugify } from "../../shared/utils/slugify.js";
 import { Requirement } from "./Requirement.js";
 import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";

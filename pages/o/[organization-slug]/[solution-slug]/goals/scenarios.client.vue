@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { MoscowPriority } from '~/domain/requirements/MoscowPriority.js'
-import type { EpicViewModel, StakeholderViewModel, FunctionalBehaviorViewModel, OutcomeViewModel, SolutionViewModel } from '~/shared/models'
+import type { EpicViewModel, StakeholderViewModel, FunctionalBehaviorViewModel, OutcomeViewModel, SolutionViewModel } from '#shared/models'
 
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Goal Scenarios' })

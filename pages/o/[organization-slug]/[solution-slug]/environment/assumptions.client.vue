@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useFetch } from 'nuxt/app';
-import type { AssumptionViewModel, SolutionViewModel } from '~/shared/models';
+import type { AssumptionViewModel, SolutionViewModel } from '#shared/models';
 
 useHead({ title: 'Assumptions' })
 definePageMeta({ name: 'Assumptions' })

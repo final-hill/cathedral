@@ -2,7 +2,7 @@
 import mermaid from 'mermaid';
 import { StakeholderCategory } from '~/domain/requirements/StakeholderCategory.js';
 import { StakeholderSegmentation } from '~/domain/requirements/StakeholderSegmentation.js';
-import type { StakeholderViewModel, SolutionViewModel } from '~/shared/models';
+import type { StakeholderViewModel, SolutionViewModel } from '#shared/models';
 
 useHead({ title: 'Stakeholders' })
 definePageMeta({ name: 'Stakeholders' })

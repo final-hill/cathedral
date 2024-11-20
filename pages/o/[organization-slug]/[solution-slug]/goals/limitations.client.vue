@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { LimitViewModel, SolutionViewModel } from '~/shared/models'
+import type { LimitViewModel, SolutionViewModel } from '#shared/models'
 
 useHead({ title: 'Limitations' })
 definePageMeta({ name: 'Limitations' })

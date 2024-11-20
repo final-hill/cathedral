@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { InvariantViewModel, SolutionViewModel } from '~/shared/models'
+import type { InvariantViewModel, SolutionViewModel } from '#shared/models'
 
 useHead({ title: 'Invariants' })
 definePageMeta({ name: 'Invariants' })

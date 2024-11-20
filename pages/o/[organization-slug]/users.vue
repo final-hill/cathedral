@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { AppRole } from '~/domain/application/AppRole'
-import type { AppUserViewModel, OrganizationViewModel } from '~/shared/models'
+import type { AppUserViewModel, OrganizationViewModel } from '#shared/models'
 
 useHead({ title: 'Users' })
 definePageMeta({ name: 'Organization Users' })

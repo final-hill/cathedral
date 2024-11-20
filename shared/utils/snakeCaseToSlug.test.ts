@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import snakeCaseToSlug from './snakeCaseToSlug';
+import { snakeCaseToSlug } from './snakeCaseToSlug';
 
 describe('snakeCaseToSlug', () => {
     it('should convert snake_case to slug', () => {

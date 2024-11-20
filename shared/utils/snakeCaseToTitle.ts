@@ -3,6 +3,8 @@
  * @example
  * snakeCaseToTitle('snake_case_string'); // 'Snake Case String'
  */
-export default (str: string) =>
+const snakeCaseToTitle = (str: string) =>
     str.replace(/_/g, ' ')
         .replace(/\b\w/g, char => char.toUpperCase());
+
+export { snakeCaseToTitle }

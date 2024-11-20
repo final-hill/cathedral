@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { OutcomeViewModel, SolutionViewModel } from '~/shared/models'
+import type { OutcomeViewModel, SolutionViewModel } from '#shared/models'
 
 useHead({ title: 'Outcomes' })
 definePageMeta({ name: 'Outcomes' })

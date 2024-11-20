@@ -3,5 +3,7 @@
  * @example
  * snakeCaseToSlug('snake_case_string'); // 'snake-case-string'
  */
-export default (str: string) =>
+const snakeCaseToSlug = (str: string) =>
     str.replace(/_/g, '-');
+
+export { snakeCaseToSlug }

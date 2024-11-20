@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useFetch } from 'nuxt/app';
-import type { ConstraintViewModel, SolutionViewModel } from '~/shared/models'
+import type { ConstraintViewModel, SolutionViewModel } from '#shared/models'
 import { ConstraintCategory } from '~/domain/requirements/ConstraintCategory';
 
 useHead({ title: 'Constraints' })

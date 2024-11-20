@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import snakeCaseToTitle from './snakeCaseToTitle';
+import { snakeCaseToTitle } from './snakeCaseToTitle';
 
 describe('snakeCaseToTitle', () => {
     it('should convert snake_case to Title Case', () => {

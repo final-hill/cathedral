@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { MoscowPriority } from '~/domain/requirements/MoscowPriority.js';
-import type { FunctionalBehaviorViewModel, SolutionViewModel } from '~/shared/models';
+import type { FunctionalBehaviorViewModel, SolutionViewModel } from '#shared/models';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Goals Functionality' })
