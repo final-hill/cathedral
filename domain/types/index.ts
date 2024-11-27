@@ -1,4 +1,4 @@
-import { Requirement } from "../requirements/Requirement.js";
+import type { Collection } from "@mikro-orm/core";
 
 export type Constructor<T> = (new (...args: any[]) => T) | (abstract new (...args: any[]) => T);
 
@@ -9,12 +9,10 @@ export type Properties<T> = Pick<T, {
     [K in keyof T]: T[K] extends (...args: any[]) => any ? never : K
 }[keyof T]>;
 
+
 /**
- * Represents a requirement model with relations
+ * A type that converts all the Collection properties of a type T to optional array properties
  */
-// TODO: move to a base DTO object
-// possibly related to the following work: https://github.com/final-hill/cathedral/issues/164#issuecomment-2381004280
-export type ReqRelModel<R extends Requirement> = R & {
-    parentComponent?: string,
-    solutionId: string
+export type CollectionPropsToOptionalArrays<T> = {
+    [K in keyof T]: T[K] extends Collection<infer U> ? U[] | undefined : T[K]
 }

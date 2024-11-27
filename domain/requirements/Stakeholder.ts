@@ -2,7 +2,6 @@ import { Entity, Enum, Property } from "@mikro-orm/core";
 import { Component } from "./Component.js";
 import { StakeholderCategory } from "./StakeholderCategory.js";
 import { StakeholderSegmentation } from "./StakeholderSegmentation.js";
-import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
 
 /**
@@ -13,7 +12,7 @@ export class Stakeholder extends Component {
     static override reqIdPrefix = 'G.7.' as const;
     static override req_type: ReqType = ReqType.STAKEHOLDER;
 
-    constructor(props: Properties<Omit<Stakeholder, 'id' | 'req_type'>>) {
+    constructor(props: ConstructorParameters<typeof Component>[0] & Pick<Stakeholder, 'influence' | 'availability' | 'segmentation' | 'category'>) {
         super(props);
         this.influence = props.influence;
         this.availability = props.availability;

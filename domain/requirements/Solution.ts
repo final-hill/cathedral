@@ -1,5 +1,4 @@
 import { Entity, Property } from '@mikro-orm/core';
-import { type Properties } from '../types/index.js';
 import { slugify } from '../../shared/utils/slugify.js';
 import { Requirement } from './Requirement.js';
 import { ReqType } from './ReqType.js';
@@ -11,7 +10,7 @@ import { ReqType } from './ReqType.js';
 export class Solution extends Requirement {
     static override req_type: ReqType = ReqType.SOLUTION;
 
-    constructor(props: Properties<Omit<Solution, 'slug' | 'id' | 'req_type'>>) {
+    constructor(props: ConstructorParameters<typeof Requirement>[0]) {
         super(props);
         this._slug = slugify(props.name);
     }

@@ -1,7 +1,6 @@
 import { Entity, ManyToOne } from "@mikro-orm/core";
 import { Scenario } from "./Scenario.js";
 import { ReqType } from "./ReqType.js";
-import type { Properties } from "../types/index.js";
 import { FunctionalBehavior } from "./FunctionalBehavior.js";
 
 /**
@@ -13,7 +12,7 @@ export class Epic extends Scenario {
     static override reqIdPrefix = 'G.5.' as const;
     static override req_type = ReqType.EPIC;
 
-    constructor(props: Properties<Omit<Epic, 'id' | 'req_type'>>) {
+    constructor(props: ConstructorParameters<typeof Scenario>[0] & Pick<Epic, 'functionalBehavior'>) {
         super(props);
         this.functionalBehavior = props.functionalBehavior;
     }
