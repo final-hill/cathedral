@@ -235,10 +235,10 @@ export abstract class Requirement extends BaseEntity {
     exceptedBy = new Collection<Requirement>(this);
 
     /**
-     * X ≅ Y
+     * this ≅ other
      *
-     * X ⇔ Y, and X has a different type from Y.
-     * In other words, Y introduces no new property but helps understand X better.
+     * this ⇔ other, and this has a different type from other.
+     * In other words, other introduces no new property but helps understand this better.
      * Same properties, different type (notation-wise)
      */
     @ManyToMany({ entity: () => Requirement, pivotEntity: () => Explains, inversedBy: (r) => r.explainedBy })
@@ -251,11 +251,11 @@ export abstract class Requirement extends BaseEntity {
     explainedBy = new Collection<Requirement>(this);
 
     /**
-     * X > Y
+     * this > other
      *
      * aka "refines".
-     * X assumes Y and specifies a property that Y does not.
-     * X adds to properties of Y
+     * this assumes other and specifies a property that other does not.
+     * this adds to properties of other
      */
     @ManyToMany({ entity: () => Requirement, pivotEntity: () => Extends, inversedBy: (r) => r.extendedBy })
     extends = new Collection<Requirement>(this);
@@ -267,9 +267,9 @@ export abstract class Requirement extends BaseEntity {
     extendedBy = new Collection<Requirement>(this);
 
     /**
-     * X ⊣ Y
+     * this ⊣ other
      *
-     * X is a consequence of the property specified by Y
+     * this is a consequence of the property specified by other
      */
     @ManyToMany({ entity: () => Requirement, pivotEntity: () => Follows, inversedBy: (r) => r.followedBy })
     follows = new Collection<Requirement>(this);
@@ -281,9 +281,9 @@ export abstract class Requirement extends BaseEntity {
     followedBy = new Collection<Requirement>(this);
 
     /**
-     * X ⇔ Y
+     * this ⇔ other
      *
-     * X specifies the same property as Y
+     * this specifies the same property as other
      */
     @ManyToMany({ entity: () => Requirement, pivotEntity: () => Repeats, inversedBy: (r) => r.repeatedBy })
     repeats = new Collection<Requirement>(this);
@@ -295,11 +295,11 @@ export abstract class Requirement extends BaseEntity {
     repeatedBy = new Collection<Requirement>(this);
 
     /**
-     * X ∩ Y
+     * this ∩ other
      *
-     * X' ⇔ Y' for some sub-requirements X' and Y' of X and Y.
+     * this' ⇔ other' for some sub-requirements this' and other' of this and other.
      * (Involve Repeats).
-     * Some subrequirement is in common between X and Y.
+     * Some subrequirement is in common between this and other.
      */
     @ManyToMany({ entity: () => Requirement, pivotEntity: () => Shares, inversedBy: (r) => r.sharedBy })
     shares = new Collection<Requirement>(this);
