@@ -15,12 +15,12 @@ export abstract class RequirementRelation extends BaseEntity {
     /**
      * The left-hand side of the relation
      */
-    @ManyToOne({ primary: true })
+    @ManyToOne({ primary: true, entity: () => Requirement })
     left: Requirement
 
     /**
      * The right-hand side of the relation
      */
-    @ManyToOne({ primary: true })
+    @ManyToOne({ primary: true, entity: () => Requirement })
     right: Requirement
 }

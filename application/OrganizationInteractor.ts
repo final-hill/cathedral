@@ -1,9 +1,10 @@
 import { Assumption, Constraint, Effect, EnvironmentComponent, FunctionalBehavior, GlossaryTerm, Invariant, Justification, Limit, MoscowPriority, NonFunctionalBehavior, Obstacle, Organization, Outcome, ParsedRequirement, Person, ReqType, Requirement, Solution, Stakeholder, StakeholderCategory, StakeholderSegmentation, SystemComponent, UseCase, UserStory } from "~/domain/requirements";
-import { QueryOrder, type ChangeSetType, type EntityManager } from "@mikro-orm/core";
+import { Collection, QueryOrder, type ChangeSetType, type EntityManager } from "@mikro-orm/core";
 import { AppUserOrganizationRole, AppRole, AppUser, AuditLog } from "~/domain/application";
 import { validate } from 'uuid'
 import type NaturalLanguageToRequirementService from "~/server/data/services/NaturalLanguageToRequirementService";
 import { groupBy, slugify } from "#shared/utils";
+import { Belongs, Follows } from "~/domain/relations";
 
 type OrganizationInteractorConstructor = {
     entityManager: EntityManager,
@@ -91,10 +92,7 @@ export class OrganizationInteractor {
         if (!this.isOrganizationContributor())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        const organization = await this.getOrganization(),
-            solution = (await organization.contains.loadItems<Solution>({
-                where: { id: solutionId, req_type: ReqType.SOLUTION }
-            }))[0]
+        const solution = await this.getSolutionById(solutionId)
 
         if (!solution)
             throw new Error('Not Found: The solution does not exist.')
@@ -119,9 +117,10 @@ export class OrganizationInteractor {
             reqId,
             lastModified: new Date(),
             createdBy: appUser,
-            modifiedBy: appUser,
-            belongs: [solution]
+            modifiedBy: appUser
         }) as InstanceType<RCons>
+
+        em.create(Belongs, { left: newRequirement, right: solution })
 
         await em.flush()
 
@@ -155,6 +154,14 @@ export class OrganizationInteractor {
 
         if (!requirement)
             throw new Error('Not Found: The requirement does not exist.')
+
+        // remove all relationships to the requirement
+        const conn = this.getEntityManager().getConnection()
+        await conn.execute(`
+            DELETE
+            FROM requirement_relation
+            WHERE left_id = ? OR right_id = ?;
+        `, [requirement.id, requirement.id])
 
         // TODO: decrement the reqId of all requirements that have a reqId greater than the deleted requirement
 
@@ -540,9 +547,10 @@ export class OrganizationInteractor {
                 lastModified: new Date(),
                 createdBy,
                 modifiedBy: createdBy,
-                isSilence: false,
-                belongs: [organization]
+                isSilence: false
             });
+
+        em.create(Belongs, { left: newSolution, right: organization })
 
         await em.flush()
 
@@ -650,10 +658,7 @@ export class OrganizationInteractor {
             throw new Error('Forbidden: You do not have permission to perform this action')
 
         const em = this.getEntityManager(),
-            organization = await this.getOrganization(),
-            solution = (await organization.contains.loadItems<Solution>({
-                where: { slug, req_type: ReqType.SOLUTION }
-            }))[0]
+            solution = await this.getSolutionBySlug(slug)
 
         if (!solution)
             throw new Error('Not Found: The solution does not exist.')
@@ -675,10 +680,7 @@ export class OrganizationInteractor {
             throw new Error('Forbidden: You do not have permission to perform this action')
 
         const em = this.getEntityManager(),
-            organization = await this.getOrganization(),
-            solution = (await organization.contains.loadItems<Solution>({
-                where: { slug, req_type: ReqType.SOLUTION }
-            }))[0]
+            solution = await this.getSolutionBySlug(slug)
 
         if (!solution)
             throw new Error('Not Found: The solution does not exist.')
@@ -832,7 +834,7 @@ export class OrganizationInteractor {
             entity: string
         }
 
-        const conn = this._entityManager.getConnection(),
+        const conn = this.getEntityManager().getConnection(),
             res: RowType[] = await conn.execute(`
                 SELECT d.id, d.type, d.created_at, a.entity_id, a.entity_name, a.entity
                 FROM audit_log AS d
@@ -918,9 +920,10 @@ export class OrganizationInteractor {
             createdBy: appUser,
             modifiedBy: appUser,
             lastModified: new Date(),
-            isSilence: true,
-            belongs: [solution]
+            isSilence: true
         })
+
+        em.create(Belongs, { left: parsedRequirement, right: solution })
 
         // FIXME: need a better type than 'any'
         const addSolReq = (ReqClass: typeof Requirement, props: any) => {
@@ -929,9 +932,10 @@ export class OrganizationInteractor {
                 isSilence: true,
                 lastModified: new Date(),
                 modifiedBy: appUser,
-                createdBy: appUser,
-                belongs: [solution]
+                createdBy: appUser
             })
+
+            em.create(Belongs, { left: req, right: solution })
 
             return req
         }
@@ -939,7 +943,8 @@ export class OrganizationInteractor {
         // FIXME: need a better type than 'any'
         const addParsedReq = (ReqClass: typeof Requirement, props: any) => {
             const req = addSolReq(ReqClass, props)
-            req.follows.add(parsedRequirement)
+            em.create(Follows, { left: req, right: parsedRequirement })
+
             return req
         };
 
