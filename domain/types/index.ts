@@ -1,20 +1,12 @@
-import { Requirement } from "../requirements/Requirement.js";
+import type { Collection } from "@mikro-orm/core";
 
 export type Constructor<T> = (new (...args: any[]) => T) | (abstract new (...args: any[]) => T);
 
 /**
  * A type that represents all the members of a type T that are not functions
+ * and are not collections
  */
 export type Properties<T> = Pick<T, {
-    [K in keyof T]: T[K] extends (...args: any[]) => any ? never : K
+    [K in keyof T]: T[K] extends (...args: any[]) => any ? never :
+    T[K] extends Collection<any> ? never : K
 }[keyof T]>;
-
-/**
- * Represents a requirement model with relations
- */
-// TODO: move to a base DTO object
-// possibly related to the following work: https://github.com/final-hill/cathedral/issues/164#issuecomment-2381004280
-export type ReqRelModel<R extends Requirement> = R & {
-    parentComponent?: string,
-    solutionId: string
-}

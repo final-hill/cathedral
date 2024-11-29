@@ -1,7 +1,6 @@
 import { Entity, ManyToOne } from "@mikro-orm/core";
 import { FunctionalBehavior } from "./FunctionalBehavior.js";
 import { Scenario } from "./Scenario.js";
-import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
 
 /**
@@ -18,9 +17,9 @@ export class UserStory extends Scenario {
     static override reqIdPrefix = 'S.4.' as const;
     static override req_type = ReqType.USER_STORY;
 
-    constructor(props: Properties<Omit<UserStory, 'id' | 'req_type'>>) {
-        super(props);
-        this.functionalBehavior = props.functionalBehavior;
+    constructor({ functionalBehavior, ...rest }: ConstructorParameters<typeof Scenario>[0] & Pick<UserStory, 'functionalBehavior'>) {
+        super(rest);
+        this.functionalBehavior = functionalBehavior;
     }
 
     override get reqId() { return super.reqId as `${typeof UserStory.reqIdPrefix}${number}` | undefined; }

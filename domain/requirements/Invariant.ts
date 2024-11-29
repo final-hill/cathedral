@@ -1,6 +1,5 @@
 import { Entity } from "@mikro-orm/core";
 import { Requirement } from "./Requirement.js";
-import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
 
 /**
@@ -13,7 +12,7 @@ export class Invariant extends Requirement {
     static override reqIdPrefix = 'E.6.' as const;
     static override req_type: ReqType = ReqType.INVARIANT;
 
-    constructor(props: Properties<Omit<Invariant, 'id' | 'req_type'>>) {
+    constructor(props: ConstructorParameters<typeof Requirement>[0]) {
         super(props);
         this.req_type = ReqType.INVARIANT;
     }

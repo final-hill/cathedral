@@ -1,11 +1,10 @@
 import { Assumption, Constraint, Effect, EnvironmentComponent, FunctionalBehavior, GlossaryTerm, Invariant, Justification, Limit, MoscowPriority, NonFunctionalBehavior, Obstacle, Organization, Outcome, ParsedRequirement, Person, ReqType, Requirement, Solution, Stakeholder, StakeholderCategory, StakeholderSegmentation, SystemComponent, UseCase, UserStory } from "~/domain/requirements";
-import { QueryOrder, type ChangeSetType, type EntityManager } from "@mikro-orm/core";
+import { Collection, QueryOrder, type ChangeSetType, type EntityManager } from "@mikro-orm/core";
 import { AppUserOrganizationRole, AppRole, AppUser, AuditLog } from "~/domain/application";
-import { Belongs } from "~/domain/relations/Belongs.js";
 import { validate } from 'uuid'
-import { Follows } from "~/domain/relations";
 import type NaturalLanguageToRequirementService from "~/server/data/services/NaturalLanguageToRequirementService";
 import { groupBy, slugify } from "#shared/utils";
+import { Belongs, Follows } from "~/domain/relations";
 
 type OrganizationInteractorConstructor = {
     entityManager: EntityManager,
@@ -53,17 +52,16 @@ export class OrganizationInteractor {
      * @param prefix - The prefix for the requirement id. Ex: 'P.1.'
      */
     private async _getNextReqId<R extends typeof Requirement>(solution: Solution, prefix: R['reqIdPrefix']): Promise<InstanceType<R>['reqId']> {
-        const em = this.getEntityManager(),
-            entityCount = await em.count(Belongs, {
-                left: { reqId: { $like: `${prefix}%` } },
-                right: solution
-            })
+        const entityCount = await solution.contains.loadCount({
+            where: { reqId: { $like: `${prefix}%` } }
+        });
 
         return `${prefix}${entityCount + 1}`
     }
 
     /**
      * Create a new entity manager fork
+     *
      * @returns The entity manager
      */
     // TODO: this will likely be moved into a Repository class in the future
@@ -78,8 +76,8 @@ export class OrganizationInteractor {
      * @param props.ReqClass - The Constructor of the requirement to add
      * @param props.reqProps - The requirement data to add
      * @returns The id of the new requirement
+     * @throws {Error} If the organization does not exist
      * @throws {Error} If the solution does not exist
-     * @throws {Error} If the solution does not belong to the organization
      * @throws {Error} If the user is not a reader of the organization or better
      * @throws {Error} If the user is not a contributor of the solution or better
      * @throws {Error} If a referenced requirement does not belong to the solution
@@ -94,23 +92,25 @@ export class OrganizationInteractor {
         if (!this.isOrganizationContributor())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
+        const solution = await this.getSolutionById(solutionId)
+
+        if (!solution)
+            throw new Error('Not Found: The solution does not exist.')
+
         const em = this.getEntityManager(),
             appUser = await this._user,
-            { left: solution } = await em.findOneOrFail(Belongs, {
-                left: { id: solutionId, req_type: ReqType.SOLUTION },
-                right: await this._organization
-            }) as unknown as { left: Solution },
             // If the entity is silent, do not assign a reqId
             reqId = reqProps.isSilence ? undefined :
                 await this._getNextReqId(solution, ReqClass.reqIdPrefix);
 
         // if a property is a uuid, assert that it belongs to the solution
-        for (const [key, value] of Object.entries(reqProps)) {
-            if (validate(value) && !['id', 'createdBy', 'modifiedBy'].includes(key))
-                await em.findOneOrFail(Belongs, { left: value, right: solution })
+        for (const [key, value] of Object.entries(reqProps) as [keyof typeof reqProps, string][]) {
+            if (validate(value) && !['id', 'createdBy', 'modifiedBy'].includes(key as string)) {
+                const reqExists = await solution.contains.loadCount({ where: { id: value } })
+                if (reqExists === 0)
+                    throw new Error(`Not Found: The referenced requirement with id ${value} does not exist in the solution.`)
+            }
         }
-
-        console.log('reqProps', reqProps)
 
         const newRequirement = em.create(ReqClass, {
             ...reqProps,
@@ -148,13 +148,20 @@ export class OrganizationInteractor {
 
         const em = this.getEntityManager(),
             solution = await this.getSolutionById(props.solutionId),
-            { left: requirement } = await em.findOneOrFail(Belongs, {
-                left: {
-                    id: props.id,
-                    req_type: props.ReqClass.req_type
-                },
-                right: solution
-            }, { populate: ['left'] }) as unknown as { left: InstanceType<RCons> }
+            requirement = (await solution.contains.loadItems<Requirement>({
+                where: { id: props.id, req_type: props.ReqClass.req_type }
+            }))[0]
+
+        if (!requirement)
+            throw new Error('Not Found: The requirement does not exist.')
+
+        // remove all relationships to the requirement
+        const conn = this.getEntityManager().getConnection()
+        await conn.execute(`
+            DELETE
+            FROM requirement_relation
+            WHERE left_id = ? OR right_id = ?;
+        `, [requirement.id, requirement.id])
 
         // TODO: decrement the reqId of all requirements that have a reqId greater than the deleted requirement
 
@@ -181,12 +188,13 @@ export class OrganizationInteractor {
         if (!this.isOrganizationReader())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        const em = this.getEntityManager(),
-            solution = await this.getSolutionById(props.solutionId),
-            { left: requirement } = await em.findOneOrFail(Belongs, {
-                left: { id: props.id, req_type: props.ReqClass.req_type },
-                right: solution
-            }, { populate: ['left'] }) as unknown as { left: InstanceType<RCons> }
+        const solution = await this.getSolutionById(props.solutionId),
+            requirement = (await solution.contains.loadItems<Requirement>({
+                where: { id: props.id, req_type: props.ReqClass.req_type }
+            }))[0] as InstanceType<RCons>
+
+        if (!requirement)
+            throw new Error('Not Found: The requirement does not exist.')
 
         return requirement
     }
@@ -208,15 +216,13 @@ export class OrganizationInteractor {
         if (!this.isOrganizationReader())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        const em = this.getEntityManager(),
-            solution = await this.getSolutionById(props.solutionId),
-            requirements = (await em.find(Belongs, {
-                left: {
+        const solution = await this.getSolutionById(props.solutionId),
+            requirements = (await solution.contains.loadItems<InstanceType<RCons>>({
+                where: {
                     req_type: props.ReqClass.req_type,
                     ...props.query
-                },
-                right: solution
-            }, { populate: ['left'] })).map((req) => req.left as InstanceType<RCons>)
+                }
+            })) as InstanceType<RCons>[]
 
         return requirements
     }
@@ -247,9 +253,12 @@ export class OrganizationInteractor {
 
         const em = this.getEntityManager(),
             solution = await this.getSolutionById(props.solutionId),
-            { left: requirement } = await em.findOneOrFail(Belongs, {
-                left: props.id, right: solution
-            }, { populate: ['left'] }) as unknown as { left: InstanceType<RCons> }
+            requirement = (await solution.contains.loadItems<Requirement>({
+                where: { id: props.id, req_type: props.ReqClass.req_type }
+            }))[0] as InstanceType<RCons>
+
+        if (!requirement)
+            throw new Error('Not Found: The requirement does not exist.')
 
         // if a property is a uuid, assert that it belongs to the solution
         requirement.assign({
@@ -282,13 +291,10 @@ export class OrganizationInteractor {
 
         const em = this.getEntityManager(),
             appUser = await em.findOne(AppUser, { email }),
-            organization = await this._organization
+            organization = await this.getOrganization()
 
         if (!appUser)
             throw new Error('Not Found: The app user with the given email does not exist.')
-
-        if (!organization)
-            throw new Error('Not Found: The organization does not exist.')
 
         const existingOrgAppUserRole = await em.findOne(AppUserOrganizationRole, {
             appUser,
@@ -313,7 +319,7 @@ export class OrganizationInteractor {
      * @throws {Error} If the user is trying to get an app user that is not in the same organization
      */
     async getAppUserById(id: AppUser['id']): Promise<AppUser> {
-        const organization = await this._organization,
+        const organization = await this.getOrganization(),
             em = this.getEntityManager(),
             { appUser, role } = (await em.findOneOrFail(AppUserOrganizationRole, {
                 appUser: id,
@@ -339,7 +345,7 @@ export class OrganizationInteractor {
      */
     async deleteAppUser(id: AppUser['id']): Promise<unknown> {
         const em = this.getEntityManager(),
-            organization = await this._organization,
+            organization = await this.getOrganization(),
             appUser = await this._user,
             [targetAppUserRole, orgAdminCount] = await Promise.all([
                 em.findOne(AppUserOrganizationRole, {
@@ -377,7 +383,7 @@ export class OrganizationInteractor {
      */
     async updateAppUserRole(id: AppUser['id'], role: AppRole): Promise<void> {
         const em = this.getEntityManager(),
-            organization = await this._organization,
+            organization = await this.getOrganization(),
             appUser = await this._user,
             [targetAppUserRole, orgAdminCount] = await Promise.all([
                 em.findOne(AppUserOrganizationRole, {
@@ -419,7 +425,7 @@ export class OrganizationInteractor {
             throw new Error('Forbidden: You do not have permission to perform this action')
 
         const em = this.getEntityManager(),
-            organization = await this._organization,
+            organization = await this.getOrganization(),
             appUserOrganizationRoles = await em.findAll(AppUserOrganizationRole, {
                 where: { organization },
                 populate: ['appUser']
@@ -440,7 +446,7 @@ export class OrganizationInteractor {
      */
     async isOrganizationAdmin(): Promise<boolean> {
         const appUser = await this._user,
-            organization = await this._organization
+            organization = await this.getOrganization()
 
         if (appUser.isSystemAdmin) return true
 
@@ -458,7 +464,7 @@ export class OrganizationInteractor {
      */
     async isOrganizationContributor(): Promise<boolean> {
         const appUser = await this._user,
-            organization = await this._organization
+            organization = await this.getOrganization()
 
         if (appUser.isSystemAdmin) return true
 
@@ -475,7 +481,7 @@ export class OrganizationInteractor {
      * Check if the current user is a reader of the organization or a system admin
      */
     async isOrganizationReader(): Promise<boolean> {
-        const organization = await this._organization,
+        const organization = await this.getOrganization(),
             appUser = await this._user
 
         if (appUser.isSystemAdmin) return true
@@ -528,11 +534,8 @@ export class OrganizationInteractor {
      * @throws {Error} If the organization does not exist
      */
     async addSolution({ name, description }: Pick<Solution, 'name' | 'description'>): Promise<Solution> {
-        const organization = await this._organization,
+        const organization = await this.getOrganization(),
             createdBy = await this._user
-
-        if (!organization)
-            throw new Error('Not Found: The organization does not exist.')
 
         if (!await this.isOrganizationAdmin())
             throw new Error('Forbidden: You do not have permission to perform this action')
@@ -554,13 +557,13 @@ export class OrganizationInteractor {
         await this.addRequirement({
             solutionId: newSolution.id,
             ReqClass: Outcome,
-            reqProps: { name: 'G.1', description: 'Context and Objective', isSilence: false }
+            reqProps: { name: 'G.1', description: 'Context and Objective', isSilence: false } as ConstructorParameters<typeof Outcome>[0]
         })
 
         await this.addRequirement({
             solutionId: newSolution.id,
             ReqClass: Obstacle,
-            reqProps: { name: 'G.2', description: 'Situation', isSilence: false }
+            reqProps: { name: 'G.2', description: 'Situation', isSilence: false } as ConstructorParameters<typeof Obstacle>[0]
         })
 
         return newSolution
@@ -575,29 +578,21 @@ export class OrganizationInteractor {
      * @throws {Error} If the organization does not exist
      */
     async findSolutions(query: Partial<Solution> = {}): Promise<Solution[]> {
-        const organization = await this._organization
-
-        if (!organization)
-            throw new Error('Not Found: The organization does not exist.')
+        const organization = await this.getOrganization()
 
         if (!await this.isOrganizationReader())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        const em = this.getEntityManager(),
-            solutions = (await em.find(Belongs, {
-                left: {
-                    req_type: ReqType.SOLUTION,
-                    // remove null entries from the query
-                    ...Object.entries(query).reduce((acc, [key, value]) => {
-                        if (value != null && value != undefined) acc[key] = value
-                        return acc
-                    }, {} as Record<string, any>)
-                },
-                right: { id: organization.id }
-            }, { populate: ['left'] })).map((sol) => sol.left as Solution)
-
-        if (solutions.length === 0)
-            return []
+        const solutions = await organization.contains.loadItems<Solution>({
+            where: {
+                // remove null entries from the query
+                ...Object.entries(query).reduce((acc, [key, value]) => {
+                    if (value !== null && value !== undefined) acc[key] = value
+                    return acc
+                }, {} as Record<string, any>),
+                req_type: ReqType.SOLUTION
+            }
+        })
 
         return solutions
     }
@@ -615,11 +610,13 @@ export class OrganizationInteractor {
         if (!await this.isOrganizationReader())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        const em = this.getEntityManager(),
-            { left: solution } = await em.findOneOrFail(Belongs, {
-                left: { id: solutionId, req_type: ReqType.SOLUTION },
-                right: await this._organization
-            }, { populate: ['left'] }) as unknown as { left: Solution }
+        const organization = await this.getOrganization(),
+            solution = (await organization.contains.loadItems<Solution>({
+                where: { id: solutionId, req_type: ReqType.SOLUTION }
+            }))[0]
+
+        if (!solution)
+            throw new Error('Not Found: The solution does not exist.')
 
         return solution
     }
@@ -637,11 +634,13 @@ export class OrganizationInteractor {
         if (!await this.isOrganizationReader())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        const em = this.getEntityManager(),
-            { left: solution } = await em.findOneOrFail(Belongs, {
-                left: { slug, req_type: ReqType.SOLUTION } as Solution,
-                right: await this._organization
-            }, { populate: ['left'] }) as unknown as { left: Solution }
+        const organization = await this.getOrganization(),
+            solution = (await organization.contains.loadItems<Solution>({
+                where: { slug, req_type: ReqType.SOLUTION }
+            }))[0]
+
+        if (!solution)
+            throw new Error('Not Found: The solution does not exist.')
 
         return solution
     }
@@ -659,10 +658,10 @@ export class OrganizationInteractor {
             throw new Error('Forbidden: You do not have permission to perform this action')
 
         const em = this.getEntityManager(),
-            { left: solution } = await em.findOneOrFail(Belongs, {
-                left: { slug, req_type: ReqType.SOLUTION } as Solution,
-                right: await this._organization
-            }) as unknown as { left: Solution }
+            solution = await this.getSolutionBySlug(slug)
+
+        if (!solution)
+            throw new Error('Not Found: The solution does not exist.')
 
         await em.removeAndFlush(solution)
     }
@@ -681,10 +680,10 @@ export class OrganizationInteractor {
             throw new Error('Forbidden: You do not have permission to perform this action')
 
         const em = this.getEntityManager(),
-            { left: solution } = await em.findOneOrFail(Belongs, {
-                left: { slug, req_type: ReqType.SOLUTION } as Solution,
-                right: await this._organization
-            }) as unknown as { left: Solution }
+            solution = await this.getSolutionBySlug(slug)
+
+        if (!solution)
+            throw new Error('Not Found: The solution does not exist.')
 
         solution.assign({
             name: props.name ?? solution.name,
@@ -735,7 +734,7 @@ export class OrganizationInteractor {
      * Returns the organization that the user is associated with
      *
      * @returns The organization
-     * @throws {Error} If the user is not associated with an organization
+     * @throws {Error} If the organization does not exist
      */
     async getOrganization(): Promise<Organization> {
         if (!this._organization)
@@ -751,10 +750,7 @@ export class OrganizationInteractor {
      */
     async deleteOrganization(): Promise<void> {
         const em = this.getEntityManager(),
-            organization = await this._organization
-
-        if (!organization)
-            throw new Error('Not Found: The organization does not exist.')
+            organization = await this.getOrganization()
 
         if (!await this.isOrganizationAdmin())
             throw new Error('Forbidden: You do not have permission to perform this action')
@@ -781,10 +777,7 @@ export class OrganizationInteractor {
      */
     async updateOrganization(props: Pick<Partial<Organization>, 'name' | 'description'>): Promise<void> {
         const em = this.getEntityManager(),
-            organization = await this._organization
-
-        if (!organization)
-            throw new Error('Not Found: The organization does not exist.')
+            organization = await this.getOrganization()
 
         if (!await this.isOrganizationContributor())
             throw new Error('Forbidden: You do not have permission to perform this action')
@@ -841,7 +834,7 @@ export class OrganizationInteractor {
             entity: string
         }
 
-        const conn = this._entityManager.getConnection(),
+        const conn = this.getEntityManager().getConnection(),
             res: RowType[] = await conn.execute(`
                 SELECT d.id, d.type, d.created_at, a.entity_id, a.entity_name, a.entity
                 FROM audit_log AS d
@@ -882,47 +875,18 @@ export class OrganizationInteractor {
         if (!this.isOrganizationReader())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        const em = this.getEntityManager(),
-            solution = await this.getSolutionById(solutionId),
-            // Check if the ParsedRequirement belongs to the solution
-            { left: parsedRequirement } = (await em.findOneOrFail(Belongs, {
-                left: { id: id, req_type: ReqType.PARSED_REQUIREMENT },
-                right: solution
-            }, { populate: ['left'] })) as { left: ParsedRequirement },
-            // Get all unapproved requirements that follow from the specified ParsedRequirement
-            requirements = (await em.find(Follows, {
-                right: parsedRequirement,
-                left: { isSilence: true }
-            }, { populate: ['left'] })).map(f => f.left as Requirement),
-            // Group the results by the requirement type
-            groupedResult = groupBy(requirements, ({ req_type }) => req_type)
+        const parsedRequirement = await this.getRequirementById({ solutionId, ReqClass: ParsedRequirement, id })
 
-        return groupedResult
-    }
+        if (!parsedRequirement)
+            throw new Error('Not Found: The ParsedRequirement does not exist.')
 
-    /**
-     * Return all ParsedRequirements for a Solution.
-     * @param solutionId The id of the solution to get the ParsedRequirements for
-     * @returns The ParsedRequirements for the Solution
-     * @throws {Error} If the user is not a reader of the organization or better
-     * @throws {Error} If the Solution does not belong to the organization
-     */
-    async getParsedRequirements(solutionId: Solution['id']): Promise<ParsedRequirement[]> {
-        if (!this.isOrganizationReader())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+        // Get all unapproved requirements that follow from the specified ParsedRequirement
+        const requirements = await parsedRequirement.followedBy.loadItems<Requirement>({
+            where: { isSilence: true }
+        })
 
-        const em = this.getEntityManager(),
-            // Check if the Solution belongs to the organization
-            { left: solution } = (await em.findOneOrFail(Belongs, {
-                left: { id: solutionId, req_type: ReqType.SOLUTION },
-                right: await this._organization
-            }, { populate: ['left'] })) as unknown as { left: Solution },
-            parsedRequirements = (await em.find(Belongs, {
-                left: { req_type: ReqType.PARSED_REQUIREMENT },
-                right: solution
-            }, { populate: ['left'] })).map((pr) => pr.left as ParsedRequirement)
-
-        return parsedRequirements
+        // Group the results by the requirement type
+        return groupBy(requirements, ({ req_type }) => req_type)
     }
 
     /**
@@ -946,10 +910,7 @@ export class OrganizationInteractor {
 
         const appUser = await this._user,
             em = this.getEntityManager(),
-            { left: solution } = (await em.findOneOrFail(Belongs, {
-                left: { id: solutionId, req_type: ReqType.SOLUTION },
-                right: await this._organization
-            }, { populate: ['left'] })) as unknown as { left: Solution }
+            solution = await this.getSolutionById(solutionId)
 
         const groupedResult = await parsingService.parse(statement)
 
@@ -962,7 +923,7 @@ export class OrganizationInteractor {
             isSilence: true
         })
 
-        em.create(Belongs, { left: parsedRequirement, right: solution });
+        em.create(Belongs, { left: parsedRequirement, right: solution })
 
         // FIXME: need a better type than 'any'
         const addSolReq = (ReqClass: typeof Requirement, props: any) => {
@@ -974,7 +935,7 @@ export class OrganizationInteractor {
                 createdBy: appUser
             })
 
-            em.create(Belongs, { left: req, right: solution });
+            em.create(Belongs, { left: req, right: solution })
 
             return req
         }
@@ -982,7 +943,8 @@ export class OrganizationInteractor {
         // FIXME: need a better type than 'any'
         const addParsedReq = (ReqClass: typeof Requirement, props: any) => {
             const req = addSolReq(ReqClass, props)
-            em.create(Follows, { left: req, right: parsedRequirement });
+            em.create(Follows, { left: req, right: parsedRequirement })
+
             return req
         };
 

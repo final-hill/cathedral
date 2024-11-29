@@ -2,7 +2,6 @@ import { Entity, ManyToOne, Property } from "@mikro-orm/core";
 import { Assumption } from "./Assumption.js";
 import { Effect } from "./Effect.js";
 import { Scenario } from "./Scenario.js";
-import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
 
 /**
@@ -14,7 +13,7 @@ export class UseCase extends Scenario {
     static override reqIdPrefix = 'S.4.' as const;
     static override req_type = ReqType.USE_CASE;
 
-    constructor(props: Properties<Omit<UseCase, 'id' | 'req_type'>>) {
+    constructor(props: ConstructorParameters<typeof Scenario>[0] & Pick<UseCase, 'scope' | 'level' | 'precondition' | 'triggerId' | 'mainSuccessScenario' | 'successGuarantee' | 'extensions'>) {
         super(props);
         this.scope = props.scope;
         this.level = props.level;

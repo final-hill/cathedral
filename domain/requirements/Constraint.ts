@@ -1,7 +1,6 @@
 import { Entity, Enum } from '@mikro-orm/core';
 import { Requirement } from './Requirement.js';
 import { ConstraintCategory } from './ConstraintCategory.js';
-import { type Properties } from '../types/index.js';
 import { ReqType } from './ReqType.js';
 
 /**
@@ -12,7 +11,7 @@ export class Constraint extends Requirement {
     static override reqIdPrefix = 'E.3.' as const;
     static override req_type = ReqType.CONSTRAINT;
 
-    constructor({ category, ...rest }: Properties<Omit<Constraint, 'id' | 'req_type'>>) {
+    constructor({ category, ...rest }: ConstructorParameters<typeof Requirement>[0] & Pick<Constraint, 'category'>) {
         super(rest);
         this.category = category;
     }

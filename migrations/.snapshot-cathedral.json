@@ -684,22 +684,13 @@
     },
     {
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
         "left_id": {
           "name": "left_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": true,
+          "nullable": false,
           "mappedType": "uuid"
         },
         "right_id": {
@@ -708,7 +699,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": true,
+          "nullable": false,
           "mappedType": "uuid"
         },
         "rel_type": {
@@ -752,9 +743,10 @@
         {
           "keyName": "requirement_relation_pkey",
           "columnNames": [
-            "id"
+            "left_id",
+            "right_id"
           ],
-          "composite": false,
+          "composite": true,
           "constraint": true,
           "primary": true,
           "unique": true
@@ -772,7 +764,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "deleteRule": "cascade"
+          "updateRule": "cascade"
         },
         "requirement_relation_right_id_foreign": {
           "constraintName": "requirement_relation_right_id_foreign",
@@ -784,7 +776,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "deleteRule": "cascade"
+          "updateRule": "cascade"
         }
       },
       "nativeEnums": {}

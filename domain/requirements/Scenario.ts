@@ -1,7 +1,6 @@
 import { Entity, ManyToOne } from "@mikro-orm/core";
 import { Example } from "./Example.js";
 import { Stakeholder } from "./Stakeholder.js";
-import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
 import { Outcome } from "./Outcome.js";
 
@@ -13,7 +12,7 @@ import { Outcome } from "./Outcome.js";
 export abstract class Scenario extends Example {
     static override req_type: ReqType = ReqType.SCENARIO;
 
-    constructor({ primaryActor, outcome, ...rest }: Properties<Omit<Scenario, 'id' | 'req_type'>>) {
+    constructor({ primaryActor, outcome, ...rest }: ConstructorParameters<typeof Example>[0] & Pick<Scenario, 'primaryActor' | 'outcome'>) {
         super(rest);
         this.primaryActor = primaryActor;
         this.outcome = outcome;

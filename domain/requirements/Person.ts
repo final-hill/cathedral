@@ -1,6 +1,5 @@
 import { Entity, Property } from "@mikro-orm/core";
 import { Actor } from "./Actor.js";
-import { type Properties } from "../types/index.js";
 import { ReqType } from "./ReqType.js";
 
 /**
@@ -11,7 +10,7 @@ export class Person extends Actor {
     static override req_type: ReqType = ReqType.PERSON;
     static override reqIdPrefix = 'P.1.' as const;
 
-    constructor({ email, ...rest }: Properties<Omit<Person, 'id' | 'req_type'>>) {
+    constructor({ email, ...rest }: ConstructorParameters<typeof Actor>[0] & Pick<Person, 'email'>) {
         super(rest);
         this.email = email;
     }
