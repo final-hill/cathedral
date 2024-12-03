@@ -1,4 +1,3 @@
-import { Entity } from "@mikro-orm/core";
 import { RequirementRelation } from "./RequirementRelation.js";
 
 /**
@@ -6,5 +5,4 @@ import { RequirementRelation } from "./RequirementRelation.js";
  *
  * X is a consequence of the property specified by Y
  */
-@Entity()
 export class Follows extends RequirementRelation { }

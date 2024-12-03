@@ -1,11 +1,9 @@
-import { Entity } from "@mikro-orm/core";
 import { Goal } from "./Goal.js";
 import { ReqType } from "./ReqType.js";
 
 /**
  * Obstacles are the challenges that prevent the goals from being achieved.
  */
-@Entity({ discriminatorValue: ReqType.OBSTACLE })
 export class Obstacle extends Goal {
     static override reqIdPrefix = 'G.2.' as const;
     static override req_type: ReqType = ReqType.OBSTACLE;

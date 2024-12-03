@@ -5,9 +5,9 @@ import dotenv from "dotenv";
 import { type Options, PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import { Migrator } from '@mikro-orm/migrations';
-import * as entities from "./domain/requirements/index.js";
-import * as relations from "./domain/relations/index.js";
-import * as appEntities from "./domain/application/index.js";
+import * as entities from "./server/data/models/requirements/index.js";
+import * as relations from "./server/data/models/relations/index.js"
+import * as appEntities from "./server/data/models/application/index.js";
 import AuditSubscriber from "./server/data/subscribers/AuditSubscriber.js";
 
 dotenv.config();
@@ -27,7 +27,7 @@ const config: Options = {
         ...Object.values(entities),
         ...Object.values(relations),
         ...Object.values(appEntities)
-    ].filter((entity) => typeof entity === 'function'),
+    ],
     discovery: { disableDynamicFileAccess: true },
     seeder: {},
     subscribers: [new AuditSubscriber()],

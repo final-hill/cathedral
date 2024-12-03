@@ -1,4 +1,3 @@
-import { Entity } from "@mikro-orm/core";
 import { Functionality } from "./Functionality.js";
 import { ReqType } from "./ReqType.js";
 
@@ -7,7 +6,6 @@ import { ReqType } from "./ReqType.js";
  * It specifies **how** the system should behave, i.e., the qualities that the system must exhibit.
  * Generally expressed in the form "system shall be <requirement>."
  */
-@Entity({ discriminatorValue: ReqType.NON_FUNCTIONAL_BEHAVIOR })
 export class NonFunctionalBehavior extends Functionality {
     static override reqIdPrefix = 'S.2.' as const;
     static override req_type = ReqType.NON_FUNCTIONAL_BEHAVIOR;

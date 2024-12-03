@@ -1,4 +1,3 @@
-import { Entity, Enum } from '@mikro-orm/core';
 import { Requirement } from './Requirement.js';
 import { ConstraintCategory } from './ConstraintCategory.js';
 import { ReqType } from './ReqType.js';
@@ -6,7 +5,6 @@ import { ReqType } from './ReqType.js';
 /**
  * A Constraint is a property imposed by the environment
  */
-@Entity({ discriminatorValue: ReqType.CONSTRAINT })
 export class Constraint extends Requirement {
     static override reqIdPrefix = 'E.3.' as const;
     static override req_type = ReqType.CONSTRAINT;
@@ -22,6 +20,5 @@ export class Constraint extends Requirement {
     /**
      * Category of the constraint
      */
-    @Enum({ items: () => ConstraintCategory })
-    category?: ConstraintCategory;
+    category: ConstraintCategory;
 }

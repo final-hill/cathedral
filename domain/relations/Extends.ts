@@ -1,4 +1,3 @@
-import { Entity } from "@mikro-orm/core";
 import { RequirementRelation } from "./RequirementRelation.js";
 
 /**
@@ -8,5 +7,4 @@ import { RequirementRelation } from "./RequirementRelation.js";
  * X assumes Y and specifies a property that Y does not.
  * X adds to properties of Y
  */
-@Entity()
 export class Extends extends RequirementRelation { }

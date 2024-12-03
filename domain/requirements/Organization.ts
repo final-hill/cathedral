@@ -1,4 +1,3 @@
-import { Entity, Property } from "@mikro-orm/core";
 import { slugify } from "../../shared/utils/slugify.js";
 import { Requirement } from "./Requirement.js";
 import { ReqType } from "./ReqType.js";
@@ -6,7 +5,6 @@ import { ReqType } from "./ReqType.js";
 /**
  * An Organization is a collection of users and solutions
  */
-@Entity({ discriminatorValue: ReqType.ORGANIZATION })
 export class Organization extends Requirement {
     static override req_type: ReqType = ReqType.ORGANIZATION
 
@@ -25,7 +23,6 @@ export class Organization extends Requirement {
     /**
      * A slugified version of the name
      */
-    @Property({ type: 'string', unique: true })
     get slug(): string { return this._slug; }
     set slug(value: string) {
         if (value !== slugify(this.name))

@@ -1,4 +1,3 @@
-import { Entity, ManyToOne } from "@mikro-orm/core";
 import { FunctionalBehavior } from "./FunctionalBehavior.js";
 import { Scenario } from "./Scenario.js";
 import { ReqType } from "./ReqType.js";
@@ -12,7 +11,6 @@ import { ReqType } from "./ReqType.js";
  * [behavior] - behaviorId (Functional Behavior)
  * [goal] - outcomeId
  */
-@Entity({ discriminatorValue: ReqType.USER_STORY })
 export class UserStory extends Scenario {
     static override reqIdPrefix = 'S.4.' as const;
     static override req_type = ReqType.USER_STORY;
@@ -25,12 +23,11 @@ export class UserStory extends Scenario {
     override get reqId() { return super.reqId as `${typeof UserStory.reqIdPrefix}${number}` | undefined; }
     override set reqId(value) { super.reqId = value; }
 
-    private _functionalBehavior?: FunctionalBehavior;
+    private _functionalBehavior!: FunctionalBehavior;
 
     /**
      * The action that the user wants to perform.
      */
-    @ManyToOne({ entity: () => FunctionalBehavior })
-    get functionalBehavior(): FunctionalBehavior | undefined { return this._functionalBehavior; }
-    set functionalBehavior(value: FunctionalBehavior | undefined) { this._functionalBehavior = value; }
+    get functionalBehavior(): FunctionalBehavior { return this._functionalBehavior; }
+    set functionalBehavior(value: FunctionalBehavior) { this._functionalBehavior = value; }
 }

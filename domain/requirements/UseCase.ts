@@ -1,4 +1,3 @@
-import { Entity, ManyToOne, Property } from "@mikro-orm/core";
 import { Assumption } from "./Assumption.js";
 import { Effect } from "./Effect.js";
 import { Scenario } from "./Scenario.js";
@@ -8,7 +7,6 @@ import { ReqType } from "./ReqType.js";
  * A Use Case specifies the scenario of a complete
  * interaction of a user through a system.
  */
-@Entity({ discriminatorValue: ReqType.USE_CASE })
 export class UseCase extends Scenario {
     static override reqIdPrefix = 'S.4.' as const;
     static override req_type = ReqType.USE_CASE;
@@ -32,27 +30,23 @@ export class UseCase extends Scenario {
      * The scope of the use case.
      */
     // TODO: <https://github.com/final-hill/cathedral/issues/154>
-    @Property({ type: 'string' })
     scope: string;
 
     /**
      * The level of the use case.
      */
     // TODO: <https://github.com/final-hill/cathedral/issues/154>
-    @Property({ type: 'string' })
     level: string;
 
     /**
      * The precondition is an Assumption that must be true before the use case can start.
      */
-    @ManyToOne({ entity: () => Assumption })
-    precondition?: Assumption;
+    precondition: Assumption;
 
     /**
      * The action upon the system that starts the use case.
      */
-    @Property({ type: 'uuid' })
-    triggerId?: string;
+    triggerId: string;
 
     /**
      * The main success scenario is the most common path through the system.
@@ -63,20 +57,17 @@ export class UseCase extends Scenario {
      * ...
      */
     //mainSuccessScenario: [FunctionalRequirement | Constraint | Role | Responsibility][]
-    @Property({ type: 'string' })
     mainSuccessScenario: string
 
     /**
      * An Effect that is guaranteed to be true after the use case is completed.
      */
-    @ManyToOne({ entity: () => Effect })
-    successGuarantee?: Effect;
+    successGuarantee: Effect;
 
     /**
      * Extensions of the use case.
      */
     // extensions: [FunctionalRequirement | Constraint | Role | Responsibility][]
-    @Property({ type: 'string' })
     extensions: string
 
     // TODO: <https://github.com/final-hill/cathedral/issues/154>

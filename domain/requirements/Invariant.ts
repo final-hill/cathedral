@@ -1,4 +1,3 @@
-import { Entity } from "@mikro-orm/core";
 import { Requirement } from "./Requirement.js";
 import { ReqType } from "./ReqType.js";
 
@@ -7,7 +6,6 @@ import { ReqType } from "./ReqType.js";
  * It exists as both an assumption and an effect.
  * (precondition and postcondition)
  */
-@Entity({ discriminatorValue: ReqType.INVARIANT })
 export class Invariant extends Requirement {
     static override reqIdPrefix = 'E.6.' as const;
     static override req_type: ReqType = ReqType.INVARIANT;

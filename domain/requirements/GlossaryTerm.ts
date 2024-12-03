@@ -1,11 +1,9 @@
-import { Entity } from "@mikro-orm/core";
 import { Component } from "./Component.js";
 import { ReqType } from "./ReqType.js";
 
 /**
  * A word or phrase that is part of a glossary. Provides a definition for the term
  */
-@Entity({ discriminatorValue: ReqType.GLOSSARY_TERM })
 export class GlossaryTerm extends Component {
     static override reqIdPrefix = 'E.1.' as const;
     static override req_type = ReqType.GLOSSARY_TERM;

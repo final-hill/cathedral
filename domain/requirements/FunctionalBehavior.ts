@@ -1,4 +1,3 @@
-import { Entity } from "@mikro-orm/core";
 import { Functionality } from "./Functionality.js";
 import { ReqType } from "./ReqType.js";
 
@@ -7,7 +6,6 @@ import { ReqType } from "./ReqType.js";
  * the results or effects of the system's operation.
  * Generally expressed in the form "system must do <requirement>"
  */
-@Entity({ discriminatorValue: ReqType.FUNCTIONAL_BEHAVIOR })
 export class FunctionalBehavior extends Functionality {
     static override reqIdPrefix = 'S.2.' as const;
     static override req_type = ReqType.FUNCTIONAL_BEHAVIOR;

@@ -1,4 +1,3 @@
-import { Entity } from "@mikro-orm/core";
 import { Repeats } from "./Repeats.js";
 
 /**
@@ -8,5 +7,4 @@ import { Repeats } from "./Repeats.js";
  * In other words, X and Y are redundant.
  * Same properties, same type (notation-wise, X ≡ Y)
  */
-@Entity()
 export class Duplicates extends Repeats { }
