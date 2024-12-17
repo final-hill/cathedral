@@ -1,16 +1,14 @@
 import { Assumption, Constraint, Effect, EnvironmentComponent, FunctionalBehavior, GlossaryTerm, Invariant, Justification, Limit, MoscowPriority, NonFunctionalBehavior, Obstacle, Organization, Outcome, ParsedRequirement, Person, ReqType, Requirement, Solution, Stakeholder, StakeholderCategory, StakeholderSegmentation, SystemComponent, UseCase, UserStory } from "~/domain/requirements";
-import { Collection, QueryOrder, type ChangeSetType, type EntityManager } from "@mikro-orm/core";
-import { AppUserOrganizationRole, AppRole, AppUser, AuditLog } from "~/domain/application";
-import { validate } from 'uuid'
+import { AppUserOrganizationRole, AppRole, AppUser } from "~/domain/application";
+import { validate, v7 as uuid7 } from 'uuid'
 import type NaturalLanguageToRequirementService from "~/server/data/services/NaturalLanguageToRequirementService";
 import { groupBy, slugify } from "#shared/utils";
 import { Belongs, Follows } from "~/domain/relations";
+import type { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository";
 
 type OrganizationInteractorConstructor = {
-    entityManager: EntityManager,
-    userId: AppUser['id'],
-    organizationId?: Organization['id'],
-    organizationSlug?: Organization['slug']
+    repository: OrganizationRepository,
+    userId: AppUser['id']
 }
 
 /**
@@ -21,52 +19,20 @@ type OrganizationInteractorConstructor = {
  * @see https://softwareengineering.stackexchange.com/a/364727/420292
  */
 export class OrganizationInteractor {
-    private readonly _entityManager: EntityManager
+    private readonly _repository: OrganizationRepository
     private readonly _user: Promise<AppUser>
-    /** This is not readonly because it can be reassigned in {@link #deleteOrganization} */
-    private _organization?: Promise<Organization>
+    private _organization: Promise<Organization> | undefined
 
     /**
      * Create a new OrganizationInteractor
      *
-     * @param props.entityManager - The entity manager to use
+     * @param props.repository - The repository to use
      * @param props.userId - The id of the user to utilize
-     * @param [props.organizationId] - The id of the organization to utilize
-     * @param [props.organizationSlug] - The slug of the organization to utilize
      */
     constructor(props: OrganizationInteractorConstructor) {
-        this._entityManager = props.entityManager
-
-        const em = this.getEntityManager(),
-            { userId, organizationId, organizationSlug } = props
-
-        this._user = em.findOneOrFail(AppUser, userId)
-        this._organization = organizationId ? em.findOneOrFail(Organization, organizationId) :
-            organizationSlug ? em.findOneOrFail(Organization, { slug: organizationSlug }) :
-                undefined
-    }
-
-    /**
-     * Gets the next requirement id for the given solution and requirement type
-     *
-     * @param prefix - The prefix for the requirement id. Ex: 'P.1.'
-     */
-    private async _getNextReqId<R extends typeof Requirement>(solution: Solution, prefix: R['reqIdPrefix']): Promise<InstanceType<R>['reqId']> {
-        const entityCount = await solution.contains.loadCount({
-            where: { reqId: { $like: `${prefix}%` } }
-        });
-
-        return `${prefix}${entityCount + 1}`
-    }
-
-    /**
-     * Create a new entity manager fork
-     *
-     * @returns The entity manager
-     */
-    // TODO: this will likely be moved into a Repository class in the future
-    getEntityManager(): EntityManager {
-        return this._entityManager.fork();
+        this._repository = props.repository
+        this._user = this._repository.getAppUserById(props.userId)
+        this._organization = this._repository.getOrganization()
     }
 
     /**
@@ -101,12 +67,12 @@ export class OrganizationInteractor {
             appUser = await this._user,
             // If the entity is silent, do not assign a reqId
             reqId = reqProps.isSilence ? undefined :
-                await this._getNextReqId(solution, ReqClass.reqIdPrefix);
+                await this._repository.getNextReqId(solution.id, ReqClass.reqIdPrefix);
 
         // if a property is a uuid, assert that it belongs to the solution
         for (const [key, value] of Object.entries(reqProps) as [keyof typeof reqProps, string][]) {
             if (validate(value) && !['id', 'createdBy', 'modifiedBy'].includes(key as string)) {
-                const reqExists = await solution.contains.loadCount({ where: { id: value } })
+                const reqExists = await solution.containsIds.loadCount({ where: { id: value } })
                 if (reqExists === 0)
                     throw new Error(`Not Found: The referenced requirement with id ${value} does not exist in the solution.`)
             }
@@ -148,7 +114,7 @@ export class OrganizationInteractor {
 
         const em = this.getEntityManager(),
             solution = await this.getSolutionById(props.solutionId),
-            requirement = (await solution.contains.loadItems<Requirement>({
+            requirement = (await solution.containsIds.loadItems<Requirement>({
                 where: { id: props.id, req_type: props.ReqClass.req_type }
             }))[0]
 
@@ -180,7 +146,7 @@ export class OrganizationInteractor {
      * @throws {Error} If the requirement does not exist
      * @throws {Error} If the requirement does not belong to the solution
      */
-    async getRequirementById<RCons extends typeof Requirement>(props: {
+    async getSolutionRequirementById<RCons extends typeof Requirement>(props: {
         solutionId: Solution['id'],
         ReqClass: RCons,
         id: InstanceType<RCons>['id']
@@ -189,7 +155,7 @@ export class OrganizationInteractor {
             throw new Error('Forbidden: You do not have permission to perform this action')
 
         const solution = await this.getSolutionById(props.solutionId),
-            requirement = (await solution.contains.loadItems<Requirement>({
+            requirement = (await solution.containsIds.loadItems<Requirement>({
                 where: { id: props.id, req_type: props.ReqClass.req_type }
             }))[0] as InstanceType<RCons>
 
@@ -217,7 +183,7 @@ export class OrganizationInteractor {
             throw new Error('Forbidden: You do not have permission to perform this action')
 
         const solution = await this.getSolutionById(props.solutionId),
-            requirements = (await solution.contains.loadItems<InstanceType<RCons>>({
+            requirements = (await solution.containsIds.loadItems<InstanceType<RCons>>({
                 where: {
                     req_type: props.ReqClass.req_type,
                     ...props.query
@@ -253,7 +219,7 @@ export class OrganizationInteractor {
 
         const em = this.getEntityManager(),
             solution = await this.getSolutionById(props.solutionId),
-            requirement = (await solution.contains.loadItems<Requirement>({
+            requirement = (await solution.containsIds.loadItems<Requirement>({
                 where: { id: props.id, req_type: props.ReqClass.req_type }
             }))[0] as InstanceType<RCons>
 
@@ -270,7 +236,7 @@ export class OrganizationInteractor {
         // If the entity is no longer silent and has no reqId, assume
         // that it is a new requirement from the workbox and assign a new reqId
         if (props.reqProps.isSilence !== undefined && props.reqProps.isSilence == false && !requirement.reqId)
-            requirement.reqId = await this._getNextReqId(solution, props.ReqClass.reqIdPrefix)
+            requirement.reqId = await this._repository.getNextReqId(solution.id, props.ReqClass.reqIdPrefix)
 
         await em.persistAndFlush(requirement)
     }
@@ -319,22 +285,12 @@ export class OrganizationInteractor {
      * @throws {Error} If the user is trying to get an app user that is not in the same organization
      */
     async getAppUserById(id: AppUser['id']): Promise<AppUser> {
-        const organization = await this.getOrganization(),
-            em = this.getEntityManager(),
-            { appUser, role } = (await em.findOneOrFail(AppUserOrganizationRole, {
-                appUser: id,
-                organization
-            }, { populate: ['appUser'] }))
+        const appUsers = await this.getOrganizationAppUsers({ id })
 
-        appUser.role = role
+        if (appUsers.length === 0)
+            throw new Error('Not Found: The app user does not exist.')
 
-        if (!appUser)
-            throw new Error('Not Found: AppUser not found for the given ID.')
-
-        if (!this.isOrganizationReader())
-            throw new Error('Forbidden: You do not have permission to perform this action')
-
-        return appUser
+        return appUsers[0]
     }
 
     /**
@@ -420,7 +376,7 @@ export class OrganizationInteractor {
      * @returns The app users with their associated roles
      * @throws {Error} If the user is not a reader of the organization or better
      */
-    async getOrganizationAppUsers(): Promise<AppUser[]> {
+    async getOrganizationAppUsers(userQuery: Partial<AppUser> = {}): Promise<AppUser[]> {
         if (!this.isOrganizationReader())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
@@ -450,8 +406,7 @@ export class OrganizationInteractor {
 
         if (appUser.isSystemAdmin) return true
 
-        const em = this.getEntityManager(),
-            auor = await em.findOne(AppUserOrganizationRole, { appUser, organization }),
+        const auor = await this._repository.getAppUserOrganizationRole({ appUserId: appUser.id, organizationId: organization.id }),
             isOrgAdmin = auor?.role ?
                 [AppRole.ORGANIZATION_ADMIN].includes(auor.role)
                 : false
@@ -468,8 +423,7 @@ export class OrganizationInteractor {
 
         if (appUser.isSystemAdmin) return true
 
-        const em = this.getEntityManager(),
-            auor = await em.findOne(AppUserOrganizationRole, { appUser, organization }),
+        const auor = await this._repository.getAppUserOrganizationRole({ appUserId: appUser.id, organizationId: organization.id }),
             isOrgContributor = auor?.role ?
                 [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR].includes(auor.role)
                 : false
@@ -486,8 +440,7 @@ export class OrganizationInteractor {
 
         if (appUser.isSystemAdmin) return true
 
-        const em = this.getEntityManager(),
-            auor = await em.findOne(AppUserOrganizationRole, { appUser, organization }),
+        const auor = await this._repository.getAppUserOrganizationRole({ appUserId: appUser.id, organizationId: organization.id }),
             isOrgReader = auor?.role ?
                 [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR, AppRole.ORGANIZATION_READER].includes(auor.role)
                 : false
@@ -502,25 +455,30 @@ export class OrganizationInteractor {
      * @returns The new organization
      */
     async addOrganization(props: Pick<Organization, 'name' | 'description'>): Promise<Organization> {
-        const em = this.getEntityManager(),
+        const repo = this._repository,
+            effectiveDate = new Date(),
             appUser = await this._user,
-            newOrganization = em.create(Organization, {
+            newOrganization = new Organization({
                 name: props.name,
                 description: props.description,
-                createdBy: appUser,
-                modifiedBy: appUser,
-                lastModified: new Date(),
+                createdById: appUser.id,
+                modifiedById: appUser.id,
+                deleted: false,
+                effectiveFrom: effectiveDate,
+                id: uuid7(),
                 isSilence: false,
                 reqId: undefined
+            }),
+            auor = new AppUserOrganizationRole({
+                appUserId: appUser.id,
+                organizationId: newOrganization.id,
+                role: AppRole.ORGANIZATION_ADMIN,
+                deleted: false,
+                effectiveFrom: effectiveDate
             })
 
-        em.create(AppUserOrganizationRole, {
-            appUser: await this._user,
-            organization: newOrganization,
-            role: AppRole.ORGANIZATION_ADMIN
-        })
-
-        await em.flush()
+        await repo.addOrganization(newOrganization)
+        await repo.addAppUserOrganizationRole(auor)
 
         return newOrganization
     }
@@ -583,7 +541,7 @@ export class OrganizationInteractor {
         if (!await this.isOrganizationReader())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        const solutions = await organization.contains.loadItems<Solution>({
+        const solutions = await organization.containsIds.loadItems<Solution>({
             where: {
                 // remove null entries from the query
                 ...Object.entries(query).reduce((acc, [key, value]) => {
@@ -611,7 +569,7 @@ export class OrganizationInteractor {
             throw new Error('Forbidden: You do not have permission to perform this action')
 
         const organization = await this.getOrganization(),
-            solution = (await organization.contains.loadItems<Solution>({
+            solution = (await organization.containsIds.loadItems<Solution>({
                 where: { id: solutionId, req_type: ReqType.SOLUTION }
             }))[0]
 
@@ -635,7 +593,7 @@ export class OrganizationInteractor {
             throw new Error('Forbidden: You do not have permission to perform this action')
 
         const organization = await this.getOrganization(),
-            solution = (await organization.contains.loadItems<Solution>({
+            solution = (await organization.containsIds.loadItems<Solution>({
                 where: { slug, req_type: ReqType.SOLUTION }
             }))[0]
 
@@ -737,9 +695,9 @@ export class OrganizationInteractor {
      * @throws {Error} If the organization does not exist
      */
     async getOrganization(): Promise<Organization> {
-        if (!this._organization)
-            throw new Error('Not Found: The organization does not exist.')
-        return await this._organization
+        if (!this.isOrganizationReader())
+            throw new Error('Forbidden: You do not have permission to perform this action')
+        return this._repository.getOrganization()
     }
 
     /**
@@ -794,75 +752,6 @@ export class OrganizationInteractor {
     }
 
     /**
-     * Get the audit log history for a specific entity
-     *
-     * @param entityId The id of the entity to get the audit log history for
-     * @returns The audit log history
-     * @throws {Error} If the user is not a reader of the organization or better
-     */
-    async getAuditLogHistory(entityId: Requirement['id']): Promise<AuditLog[]> {
-        if (!await this.isOrganizationReader())
-            throw new Error('Forbidden: You do not have permission to perform this action')
-
-        // FIXME: check the that the AuditLog entity belongs to the organization
-        // This is probably not necessary since the Audit Log is going away:
-        // https://github.com/final-hill/cathedral/issues/435
-
-        const em = this.getEntityManager()
-
-        return await em.findAll(AuditLog, {
-            where: { entityId },
-            orderBy: { createdAt: QueryOrder.DESC }
-        })
-    }
-
-    /**
-     * Returns from the audit history all the deleted entities
-     * ordered by the date and time when they were deleted in descending order.
-     *
-     * @param entityName The name of the entity to get the audit log delete history for
-     * @returns The audit log delete history
-     * @throws {Error} If the user is not a reader of the organization or better
-     */
-    async getAuditLogDeleteHistory(entityName: string): Promise<unknown> {
-        type RowType = {
-            id: string,
-            type: ChangeSetType,
-            created_at: string,
-            entity_id: string,
-            entity_name: string,
-            entity: string
-        }
-
-        const conn = this.getEntityManager().getConnection(),
-            res: RowType[] = await conn.execute(`
-                SELECT d.id, d.type, d.created_at, a.entity_id, a.entity_name, a.entity
-                FROM audit_log AS d
-                JOIN audit_log AS a
-                    ON a.entity_id = d.entity_id
-                    AND a.created_at = (
-                        SELECT MAX(a2.created_at)
-                        FROM audit_log AS a2
-                        WHERE a2.entity_id = d.entity_id
-                        AND a2.type IN ('create', 'update')
-                        AND a2.created_at < d.created_at
-                    )
-                WHERE d.type = 'delete'
-                AND a.entity_name = ?;
-        `, [entityName]),
-            auditLogs = res.map((row) => new AuditLog({
-                id: row.id,
-                createdAt: new Date(row.created_at),
-                type: row.type,
-                entityId: row.entity_id,
-                entityName: row.entity_name,
-                entity: row.entity
-            }))
-
-        return auditLogs
-    }
-
-    /**
      * Get all unapproved (isSilence) requirements that follow from the specified ParsedRequirement for a Solution
      * @param props.solutionId The id of the solution that the requirement belongs to
      * @param props.id The id of the ParsedRequirement to get the requirements that follow from it
@@ -875,13 +764,13 @@ export class OrganizationInteractor {
         if (!this.isOrganizationReader())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        const parsedRequirement = await this.getRequirementById({ solutionId, ReqClass: ParsedRequirement, id })
+        const parsedRequirement = await this.getSolutionRequirementById({ solutionId, ReqClass: ParsedRequirement, id })
 
         if (!parsedRequirement)
             throw new Error('Not Found: The ParsedRequirement does not exist.')
 
         // Get all unapproved requirements that follow from the specified ParsedRequirement
-        const requirements = await parsedRequirement.followedBy.loadItems<Requirement>({
+        const requirements = await parsedRequirement.followedByIds.loadItems<Requirement>({
             where: { isSilence: true }
         })
 

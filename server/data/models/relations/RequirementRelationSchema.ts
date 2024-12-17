@@ -1,12 +1,23 @@
-import { EntitySchema } from '@mikro-orm/core';
-import { RequirementRelation } from '../../../../domain/relations/index.js'
+import { Entity, ManyToOne } from '@mikro-orm/core';
+import { RelType } from './RelType.js';
+import { VersionedModel } from '../VersionedSchema.js';
+import { RequirementModel } from '../requirements/index.js';
 
-export const RequirementRelationSchema = new EntitySchema<RequirementRelation>({
-    class: RequirementRelation,
-    discriminatorColumn: 'rel_type',
-    abstract: true,
-    properties: {
-        left: { kind: 'm:1', primary: true, entity: 'Requirement' },
-        right: { kind: 'm:1', primary: true, entity: 'Requirement' }
-    }
-});
+// Static properties
+@Entity({ abstract: true, tableName: 'requirement_relation', discriminatorColumn: 'rel_type', discriminatorValue: RelType.RELATION })
+export abstract class RequirementRelationModel {
+    @ManyToOne({ entity: () => RequirementModel, primary: true })
+    readonly left!: RequirementModel
+
+    @ManyToOne({ entity: () => RequirementModel, primary: true })
+    readonly right!: RequirementModel
+}
+
+// Volatile properties
+@Entity({
+    abstract: true, tableName: 'requirement_relation_versions', discriminatorColumn: 'rel_type', discriminatorValue: RelType.RELATION
+})
+export abstract class RequirementRelationVersionsModel extends VersionedModel {
+    @ManyToOne({ entity: () => RequirementRelationModel, primary: true })
+    readonly requirementRelation!: RequirementRelationModel
+}

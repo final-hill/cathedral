@@ -1,7 +1,8 @@
 import { z } from "zod"
-import { fork } from "~/server/data/orm.js"
+import config from "~/mikro-orm.config"
 import { getServerSession } from '#auth'
 import { OrganizationInteractor } from "~/application"
+import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository"
 
 const querySchema = z.object({
     organizationSlug: z.string(),
@@ -17,8 +18,7 @@ export default defineEventHandler(async (event) => {
         session = (await getServerSession(event))!,
         organizationInteractor = new OrganizationInteractor({
             userId: session.id,
-            organizationSlug,
-            entityManager: fork()
+            repository: new OrganizationRepository({ config, organizationSlug })
         })
 
     return organizationInteractor.getFollowingParsedSilenceRequirements({ solutionId, id })

@@ -1,73 +1,65 @@
-import { BaseEntity } from "@mikro-orm/core";
 import { AppRole } from "./AppRole.js";
-import { type Properties } from "../types/index.js";
 
 /**
  * An AppUser is a user of the application
  */
-export class AppUser extends BaseEntity {
-    constructor(props: Properties<AppUser>) {
-        super()
-        this.id = props.id;
-        this.creationDate = props.creationDate;
-        this.isSystemAdmin = props.isSystemAdmin;
-        this.lastLoginDate = props.lastLoginDate;
-        this.name = props.name;
-        this.email = props.email;
-        this.role = props.role;
+export class AppUser {
+    constructor(props: Pick<AppUser, keyof AppUser>) {
+        Object.assign(this, props);
+
+        // email address: https://stackoverflow.com/a/574698
+        if (props.name.length > 254)
+            throw new Error('Name too long');
+        if (!props.email.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/))
+            throw new Error('Invalid email address');
+        if (props.email.length > 254)
+            throw new Error('Email address too long');
     }
 
     /**
      * The unique identifier of the AppUser (uuid)
      */
-    id: string;
-
-    private _name!: string;
+    readonly id!: string;
 
     /**
      * The name of the AppUser
      */
-    get name(): string { return this._name; }
-    set name(value: string) {
-        if (value.length > 254)
-            throw new Error('Name too long');
-        this._name = value;
-    }
+    readonly name!: string;
 
-    private _email!: string;
+    /**
+     * The date and time when the user was last modified
+     */
+    readonly effectiveFrom!: Date;
+
+    /**
+     * Whether the user is deleted
+     */
+    readonly deleted!: boolean;
 
     /**
      * The email address of the AppUser
      */
-    // email address: https://stackoverflow.com/a/574698
-    get email(): string { return this._email; }
-    set email(value: string) {
-        if (!value.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/))
-            throw new Error('Invalid email address');
-        if (value.length > 254)
-            throw new Error('Email address too long');
-        this._email = value;
-    }
+    readonly email!: string;
 
     /**
      * The date the AppUser was created
      */
-    creationDate: Date;
+    readonly creationDate!: Date;
 
     /**
      * The date the AppUser last logged in
      */
-    lastLoginDate?: Date;
+    readonly lastLoginDate?: Date;
 
     /**
      * Whether the AppUser is a system administrator
      */
-    isSystemAdmin: boolean;
+    readonly isSystemAdmin!: boolean;
 
     /**
      * The role of the AppUser.
      */
     // FIXME: this field is not mapped in the ORM. It is populated in the API layer.
     // It's a design smell that needs to be addressed.
-    role?: AppRole;
+    readonly role?: AppRole;
 }

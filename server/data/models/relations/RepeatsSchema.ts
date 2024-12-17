@@ -1,8 +1,11 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { Repeats, RequirementRelation } from "../../../../domain/relations/index.js";
+import { Entity } from "@mikro-orm/core";
+import { RequirementRelationModel, RequirementRelationVersionsModel } from "./RequirementRelationSchema.js";
+import { RelType } from "./RelType.js";
 
-export const RepeatsSchema = new EntitySchema<Repeats, RequirementRelation>({
-    class: Repeats,
-    tableName: 'requirement_relation',
-    discriminatorColumn: 'rel_type'
-})
+@Entity({ discriminatorValue: RelType.REPEATS })
+export class RepeatsModel extends RequirementRelationModel { }
+
+@Entity({ discriminatorValue: RelType.REPEATS })
+export class RepeatsVersionsModel extends RequirementRelationVersionsModel {
+    declare readonly requirementRelation: RepeatsModel
+}

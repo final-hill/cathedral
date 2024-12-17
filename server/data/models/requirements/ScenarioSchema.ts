@@ -1,12 +1,15 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { Scenario, ReqType, Example } from '../../../../domain/requirements/index.js';
+import { Entity, ManyToOne } from "@mikro-orm/core";
+import { Scenario, ReqType } from '../../../../domain/requirements/index.js';
+import { ExampleModel, ExampleVersionsModel } from "./ExampleSchema.js";
 
-export const ScenarioSchema = new EntitySchema<Scenario, Example>({
-    class: Scenario,
-    discriminatorValue: ReqType.SCENARIO,
-    abstract: true,
-    properties: {
-        primaryActor: { kind: 'm:1', entity: 'Stakeholder' },
-        outcome: { kind: 'm:1', entity: 'Outcome' }
-    }
-})
+@Entity({ discriminatorValue: ReqType.SCENARIO })
+export class ScenarioModel extends ExampleModel { }
+
+@Entity({ discriminatorValue: ReqType.SCENARIO })
+export class ScenarioVersionsModel extends ExampleVersionsModel {
+    @ManyToOne({ entity: 'Stakeholder' })
+    readonly primaryActor!: Scenario['primaryActor'];
+
+    @ManyToOne({ entity: 'Outcome' })
+    readonly outcome!: Scenario['outcome'];
+}

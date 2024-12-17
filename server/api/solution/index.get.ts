@@ -1,7 +1,8 @@
 import { getServerSession } from '#auth'
-import { fork } from "~/server/data/orm.js"
+import config from '~/mikro-orm.config';
 import { z } from "zod"
 import { OrganizationInteractor } from "~/application"
+import { OrganizationRepository } from '~/server/data/repositories/OrganizationRepository';
 
 const querySchema = z.object({
     name: z.string().max(100).optional(),
@@ -21,9 +22,7 @@ export default defineEventHandler(async (event) => {
         session = (await getServerSession(event))!,
         organizationInteractor = new OrganizationInteractor({
             userId: session.id,
-            entityManager: fork(),
-            organizationId,
-            organizationSlug
+            repository: new OrganizationRepository({ config, organizationId, organizationSlug })
         })
 
     return await organizationInteractor.findSolutions({ description, name, slug })

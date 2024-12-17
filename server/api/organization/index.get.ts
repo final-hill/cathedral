@@ -1,7 +1,8 @@
 import { z } from "zod"
-import { fork } from "~/server/data/orm.js"
+import config from "~/mikro-orm.config"
 import { OrganizationInteractor } from '~/application/index.js'
 import { getServerSession } from '#auth'
+import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository"
 
 const querySchema = z.object({
     name: z.string().optional(),
@@ -15,7 +16,7 @@ export default defineEventHandler(async (event) => {
     const query = await validateEventParams(event, querySchema),
         session = (await getServerSession(event))!,
         organizationInteractor = new OrganizationInteractor({
-            entityManager: fork(),
+            repository: new OrganizationRepository({ config }),
             userId: session.id
         })
 

@@ -1,7 +1,9 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { Silence, Requirement, ReqType } from '../../../../domain/requirements/index.js';
+import { Entity } from '@mikro-orm/core';
+import { ReqType } from '../../../../domain/requirements/index.js';
+import { RequirementModel, RequirementVersionsModel } from "./RequirementSchema.js";
 
-export const SilenceSchema = new EntitySchema<Silence, Requirement>({
-    class: Silence,
-    discriminatorValue: ReqType.SILENCE
-})
+@Entity({ discriminatorValue: ReqType.SILENCE })
+export class SilenceModel extends RequirementModel { }
+
+@Entity({ discriminatorValue: ReqType.SILENCE })
+export class SilenceVersionsModel extends RequirementVersionsModel { }

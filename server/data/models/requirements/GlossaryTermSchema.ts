@@ -1,7 +1,9 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { ReqType, Component, GlossaryTerm } from '../../../../domain/requirements/index.js';
+import { Entity } from "@mikro-orm/core";
+import { ReqType } from '../../../../domain/requirements/index.js';
+import { ComponentModel, ComponentVersionsModel } from "./ComponentSchema.js";
 
-export const GlossaryTermSchema = new EntitySchema<GlossaryTerm, Component>({
-    class: GlossaryTerm,
-    discriminatorValue: ReqType.GLOSSARY_TERM
-})
+@Entity({ discriminatorValue: ReqType.GLOSSARY_TERM })
+export class GlossaryTermModel extends ComponentModel { }
+
+@Entity({ discriminatorValue: ReqType.GLOSSARY_TERM })
+export class GlossaryTermVersionsModel extends ComponentVersionsModel { }

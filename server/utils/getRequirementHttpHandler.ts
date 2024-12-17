@@ -2,7 +2,8 @@ import { z } from "zod"
 import { getServerSession } from '#auth'
 import { Requirement } from "~/domain/requirements"
 import { OrganizationInteractor } from '~/application'
-import { fork } from "~/server/data/orm.js"
+import config from "~/mikro-orm.config"
+import { OrganizationRepository } from "../data/repositories/OrganizationRepository"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -28,12 +29,10 @@ export default function getRequirementHttpHandler<RCons extends typeof Requireme
             { solutionId, organizationId, organizationSlug } = await validateEventQuery(event, querySchema),
             session = (await getServerSession(event))!,
             organizationInteractor = new OrganizationInteractor({
-                userId: session.id,
-                organizationId,
-                organizationSlug,
-                entityManager: fork()
+                repository: new OrganizationRepository({ config, organizationId, organizationSlug }),
+                userId: session.id
             })
 
-        return (await organizationInteractor.getRequirementById({ solutionId, ReqClass, id }))
+        return (await organizationInteractor.getSolutionRequirementById({ solutionId, ReqClass, id }))
     })
 }

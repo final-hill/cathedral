@@ -1,7 +1,9 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { EnvironmentComponent, ReqType, Component } from '../../../../domain/requirements/index.js';
+import { Entity } from "@mikro-orm/core";
+import { ReqType } from '../../../../domain/requirements/index.js';
+import { ComponentModel, ComponentVersionsModel } from "./ComponentSchema.js";
 
-export const EnvironmentComponentSchema = new EntitySchema<EnvironmentComponent, Component>({
-    class: EnvironmentComponent,
-    discriminatorValue: ReqType.ENVIRONMENT_COMPONENT
-})
+@Entity({ discriminatorValue: ReqType.ENVIRONMENT_COMPONENT })
+export class EnvironmentComponentModel extends ComponentModel { }
+
+@Entity({ discriminatorValue: ReqType.ENVIRONMENT_COMPONENT })
+export class EnvironmentComponentVersionsModel extends ComponentVersionsModel { }

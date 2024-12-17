@@ -1,62 +1,39 @@
-import { EntitySchema } from '@mikro-orm/core';
-import { AppUser } from '../../../../domain/application/index.js';
-import { Requirement, ReqType } from '../../../../domain/requirements/index.js';
+import { Collection, Entity, Enum, ManyToOne, OneToMany, Property } from '@mikro-orm/core';
+import { ReqType } from '../../../../domain/requirements/index.js';
+import { VersionedModel } from '../VersionedSchema.js';
+import { AppUserModel } from '../application/AppUserSchema.js';
 
-export const RequirementSchema = new EntitySchema<Requirement>({
-    class: Requirement,
-    abstract: true,
-    discriminatorColumn: 'req_type',
-    discriminatorValue: ReqType.REQUIREMENT,
-    properties: {
-        id: { type: 'uuid', primary: true },
-        reqId: { type: 'text', nullable: true },
-        req_type: { enum: true, items: () => ReqType },
-        name: { type: 'string', length: 100 },
-        description: { type: 'string', length: 1000 },
-        lastModified: { type: 'datetime', onCreate: () => new Date(), onUpdate: () => new Date(), defaultRaw: 'now()' },
-        modifiedBy: { kind: 'm:1', entity: () => AppUser },
-        createdBy: { kind: 'm:1', entity: () => AppUser },
-        isSilence: { type: 'boolean', default: false },
+// static properties
+@Entity({ abstract: true, tableName: 'requirement', discriminatorColumn: 'req_type', discriminatorValue: ReqType.REQUIREMENT })
+export abstract class RequirementModel {
+    @Property({ type: 'uuid', primary: true })
+    readonly id!: string;
 
-        // Relations
+    @ManyToOne({ entity: () => AppUserModel })
+    readonly createdBy!: AppUserModel;
 
-        belongs: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Belongs', inversedBy: 'contains' },
-        contains: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Belongs', mappedBy: 'belongs' },
+    @OneToMany({ entity: () => RequirementVersionsModel, mappedBy: 'requirement' })
+    readonly versions = new Collection<RequirementVersionsModel>(this);
+}
 
-        characterizes: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Characterizes', inversedBy: 'characterizedBy' },
-        characterizedBy: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Characterizes', mappedBy: 'characterizes' },
+//volatile properties
+@Entity({ abstract: true, tableName: 'requirement_versions', discriminatorColumn: 'req_type', discriminatorValue: ReqType.REQUIREMENT })
+export abstract class RequirementVersionsModel extends VersionedModel {
+    @ManyToOne({ entity: () => RequirementModel, primary: true })
+    readonly requirement!: RequirementModel;
 
-        constrains: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Constrains', inversedBy: 'constrainedBy' },
-        constrainedBy: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Constrains', mappedBy: 'constrains' },
+    @Property({ length: 100 })
+    readonly name!: string
 
-        contradicts: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Contradicts', inversedBy: 'contradictedBy' },
-        contradictedBy: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Contradicts', mappedBy: 'contradicts' },
+    @Property({ length: 1000 })
+    readonly description!: string
 
-        details: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Details', inversedBy: 'detailedBy' },
-        detailedBy: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Details', mappedBy: 'details' },
+    @ManyToOne({ entity: () => AppUserModel })
+    readonly modifiedBy!: AppUserModel;
 
-        disjoins: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Disjoins', inversedBy: 'disjoinedBy' },
-        disjoinedBy: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Disjoins', mappedBy: 'disjoins' },
+    @Property({ type: 'string', nullable: true })
+    readonly reqId?: `P.${number}.${number}` | `E.${number}.${number}` | `G.${number}.${number}` | `S.${number}.${number}` | `0.${number}.${number}` | undefined
 
-        duplicates: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Duplicates', inversedBy: 'duplicatedBy' },
-        duplicatedBy: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Duplicates', mappedBy: 'duplicates' },
-
-        excepts: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Excepts', inversedBy: 'exceptedBy' },
-        exceptedBy: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Excepts', mappedBy: 'excepts' },
-
-        explains: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Explains', inversedBy: 'explainedBy' },
-        explainedBy: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Explains', mappedBy: 'explains' },
-
-        extends: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Extends', inversedBy: 'extendedBy' },
-        extendedBy: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Extends', mappedBy: 'extends' },
-
-        follows: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Follows', inversedBy: 'followedBy' },
-        followedBy: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Follows', mappedBy: 'follows' },
-
-        repeats: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Repeats', inversedBy: 'repeatedBy' },
-        repeatedBy: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Repeats', mappedBy: 'repeats' },
-
-        shares: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Shares', inversedBy: 'sharedBy' },
-        sharedBy: { kind: 'm:n', entity: 'Requirement', pivotEntity: 'Shares', mappedBy: 'shares' },
-    }
-})
+    @Property({ default: false })
+    readonly isSilence!: boolean
+}

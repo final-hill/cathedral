@@ -8,7 +8,6 @@ import { Migrator } from '@mikro-orm/migrations';
 import * as entities from "./server/data/models/requirements/index.js";
 import * as relations from "./server/data/models/relations/index.js"
 import * as appEntities from "./server/data/models/application/index.js";
-import AuditSubscriber from "./server/data/subscribers/AuditSubscriber.js";
 
 dotenv.config();
 const config: Options = {
@@ -30,7 +29,6 @@ const config: Options = {
     ],
     discovery: { disableDynamicFileAccess: true },
     seeder: {},
-    subscribers: [new AuditSubscriber()],
     forceUtcTimezone: true,
     metadataProvider: TsMorphMetadataProvider,
     debug: process.env.NODE_ENV !== 'production',

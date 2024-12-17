@@ -1,5 +1,4 @@
 import { Scenario } from "./Scenario.js";
-import { ReqType } from "./ReqType.js";
 import { FunctionalBehavior } from "./FunctionalBehavior.js";
 
 /**
@@ -7,8 +6,7 @@ import { FunctionalBehavior } from "./FunctionalBehavior.js";
  * Ex: "decrease the percentage of of fraudulent sellers by 20%"
  */
 export class Epic extends Scenario {
-    static override reqIdPrefix = 'G.5.' as const;
-    static override req_type = ReqType.EPIC;
+    static override readonly reqIdPrefix = 'G.5.' as const;
 
     constructor(props: ConstructorParameters<typeof Scenario>[0] & Pick<Epic, 'functionalBehavior'>) {
         super(props);
@@ -16,13 +14,9 @@ export class Epic extends Scenario {
     }
 
     override get reqId() { return super.reqId as `${typeof Epic.reqIdPrefix}${number}` | undefined }
-    override set reqId(value) { super.reqId = value }
-
-    private _functionalBehavior!: FunctionalBehavior;
 
     /**
      * The action that the user wants to perform.
-     */
-    get functionalBehavior(): FunctionalBehavior { return this._functionalBehavior; }
-    set functionalBehavior(value: FunctionalBehavior) { this._functionalBehavior = value; }
+    */
+    readonly functionalBehavior!: FunctionalBehavior;
 }

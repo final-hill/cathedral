@@ -1,10 +1,12 @@
-import { EntitySchema } from '@mikro-orm/core';
-import { Constraint, Requirement, ReqType, ConstraintCategory } from '../../../../domain/requirements/index.js';
+import { Entity, Enum } from "@mikro-orm/core";
+import { ConstraintCategory, ReqType } from '../../../../domain/requirements/index.js';
+import { RequirementModel, RequirementVersionsModel } from "./RequirementSchema.js";
 
-export const ConstraintSchema = new EntitySchema<Constraint, Requirement>({
-    class: Constraint,
-    discriminatorValue: ReqType.CONSTRAINT,
-    properties: {
-        category: { enum: true, items: () => ConstraintCategory }
-    }
-})
+@Entity({ discriminatorValue: ReqType.CONSTRAINT })
+export class ConstraintModel extends RequirementModel { }
+
+@Entity({ discriminatorValue: ReqType.CONSTRAINT })
+export class ConstraintVersionsModel extends RequirementVersionsModel {
+    @Enum({ items: () => ConstraintCategory })
+    readonly category?: ConstraintCategory;
+}

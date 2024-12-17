@@ -1,7 +1,9 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { Justification, MetaRequirement, ReqType } from '../../../../domain/requirements/index.js';
+import { Entity } from "@mikro-orm/core";
+import { ReqType } from '../../../../domain/requirements/index.js';
+import { MetaRequirementModel, MetaRequirementVersionsModel } from "./MetaRequirementSchema.js";
 
-export const JustificationSchema = new EntitySchema<Justification, MetaRequirement>({
-    class: Justification,
-    discriminatorValue: ReqType.JUSTIFICATION
-})
+@Entity({ discriminatorValue: ReqType.JUSTIFICATION })
+export class JustificationModel extends MetaRequirementModel { }
+
+@Entity({ discriminatorValue: ReqType.JUSTIFICATION })
+export class JustificationVersionsModel extends MetaRequirementVersionsModel { }

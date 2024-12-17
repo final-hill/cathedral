@@ -1,10 +1,12 @@
-import { EntitySchema } from '@mikro-orm/core';
-import { Solution, Requirement, ReqType } from '../../../../domain/requirements/index.js';
+import { Entity, Property } from '@mikro-orm/core';
+import { Solution, ReqType } from '../../../../domain/requirements/index.js';
+import { RequirementModel, RequirementVersionsModel } from './RequirementSchema.js';
 
-export const SolutionSchema = new EntitySchema<Solution, Requirement>({
-    class: Solution,
-    discriminatorValue: ReqType.SOLUTION,
-    properties: {
-        slug: { type: 'string', unique: true }
-    }
-})
+@Entity({ discriminatorValue: ReqType.SOLUTION })
+export class SolutionModel extends RequirementModel { }
+
+@Entity({ discriminatorValue: ReqType.SOLUTION })
+export class SolutionVersionsModel extends RequirementVersionsModel {
+    @Property({ type: 'string' })
+    readonly slug!: Solution['slug'];
+}

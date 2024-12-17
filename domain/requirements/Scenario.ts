@@ -1,6 +1,5 @@
 import { Example } from "./Example.js";
 import { Stakeholder } from "./Stakeholder.js";
-import { ReqType } from "./ReqType.js";
 import { Outcome } from "./Outcome.js";
 
 /**
@@ -8,8 +7,6 @@ import { Outcome } from "./Outcome.js";
  * of interaction between actors and the system.
  */
 export abstract class Scenario extends Example {
-    static override req_type: ReqType = ReqType.SCENARIO;
-
     constructor({ primaryActor, outcome, ...rest }: ConstructorParameters<typeof Example>[0] & Pick<Scenario, 'primaryActor' | 'outcome'>) {
         super(rest);
         this.primaryActor = primaryActor;
@@ -19,10 +16,10 @@ export abstract class Scenario extends Example {
     /**
      * Primary actor involved in the scenario
      */
-    primaryActor: Stakeholder;
+    readonly primaryActor: Stakeholder;
 
     /**
      * The outcome (goal) that the scenario is aiming to achieve.
      */
-    outcome: Outcome;
+    readonly outcome: Outcome;
 }

@@ -51,6 +51,10 @@ The application is built using the following primary technologies:
   - [MikroORM](https://mikro-orm.io/)
 - [Docker](https://www.docker.com/)
 
+## Data model
+
+
+
 ## Application Architecture
 
 The application is a [monolith](https://martinfowler.com/bliki/MonolithFirst.html) following a layered architecture. The application is split into the following layers:

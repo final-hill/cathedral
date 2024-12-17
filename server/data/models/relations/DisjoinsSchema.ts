@@ -1,8 +1,11 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { Disjoins, RequirementRelation } from "../../../../domain/relations/index.js";
+import { Entity } from "@mikro-orm/core";
+import { RequirementRelationModel, RequirementRelationVersionsModel } from "./RequirementRelationSchema.js";
+import { RelType } from "./RelType.js";
 
-export const DisjoinsSchema = new EntitySchema<Disjoins, RequirementRelation>({
-    class: Disjoins,
-    tableName: 'requirement_relation',
-    discriminatorColumn: 'rel_type'
-})
+@Entity({ discriminatorValue: RelType.DISJOINS })
+export class DisjoinsModel extends RequirementRelationModel { }
+
+@Entity({ discriminatorValue: RelType.DISJOINS })
+export class DisjoinsVersionsModel extends RequirementRelationVersionsModel {
+    declare readonly requirementRelation: DisjoinsModel
+}

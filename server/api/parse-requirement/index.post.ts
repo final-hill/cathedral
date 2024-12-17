@@ -1,8 +1,9 @@
 import { z } from "zod"
 import { getServerSession } from '#auth'
-import { fork } from "~/server/data/orm.js";
+import ormConfig from "~/mikro-orm.config";
 import { OrganizationInteractor } from "~/application/OrganizationInteractor.js";
 import NaturalLanguageToRequirementService from "~/server/data/services/NaturalLanguageToRequirementService.js";
+import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository";
 
 const bodySchema = z.object({
     solutionId: z.string().uuid(),
@@ -10,7 +11,7 @@ const bodySchema = z.object({
     statement: z.string().max(1000, 'Requirement must be less than or equal to 1000 characters')
 })
 
-const config = useRuntimeConfig()
+const appConfig = useRuntimeConfig()
 
 /**
  * Parse requirements from a statement, save the parsed requirements to the database,
@@ -21,14 +22,13 @@ export default defineEventHandler(async (event) => {
         session = (await getServerSession(event))!,
         organizationInteractor = new OrganizationInteractor({
             userId: session.id,
-            organizationSlug,
-            entityManager: fork()
+            repository: new OrganizationRepository({ config: ormConfig, organizationSlug })
         }),
         naturalLanguageToRequirementService = new NaturalLanguageToRequirementService({
-            apiKey: config.azureOpenaiApiKey,
-            apiVersion: config.azureOpenaiApiVersion,
-            endpoint: config.azureOpenaiEndpoint,
-            modelId: config.azureOpenaiDeploymentId
+            apiKey: appConfig.azureOpenaiApiKey,
+            apiVersion: appConfig.azureOpenaiApiVersion,
+            endpoint: appConfig.azureOpenaiEndpoint,
+            modelId: appConfig.azureOpenaiDeploymentId
         })
 
     return organizationInteractor.parseRequirement({

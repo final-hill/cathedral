@@ -1,8 +1,11 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { Belongs, RequirementRelation } from "../../../../domain/relations/index.js";
+import { Entity } from "@mikro-orm/core";
+import { RequirementRelationModel, RequirementRelationVersionsModel } from "./RequirementRelationSchema.js";
+import { RelType } from "./RelType.js";
 
-export const BelongsSchema = new EntitySchema<Belongs, RequirementRelation>({
-    class: Belongs,
-    tableName: 'requirement_relation',
-    discriminatorColumn: 'rel_type'
-})
+@Entity({ discriminatorValue: RelType.BELONGS })
+export class BelongsModel extends RequirementRelationModel { }
+
+@Entity({ discriminatorValue: RelType.BELONGS })
+export class BelongsVersionsModel extends RequirementRelationVersionsModel {
+    declare readonly requirementRelation: BelongsModel
+}

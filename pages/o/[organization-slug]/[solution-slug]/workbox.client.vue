@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { DataTableRowExpandEvent, DataTableRowCollapseEvent, DataTableExpandedRows } from 'primevue/datatable';
 import type { ParsedRequirementViewModel, RequirementViewModel, SolutionViewModel } from '#shared/models';
-import type { ReqType } from '~/domain/requirements/ReqType';
+import type { ReqType } from '~/server/data/models/requirements/ReqType';
 import { camelCaseToTitle, snakeCaseToSlug, snakeCaseToTitle } from '~/shared/utils';
 
 useHead({ title: 'Workbox' });

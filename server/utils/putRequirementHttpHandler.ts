@@ -1,8 +1,9 @@
 import { getServerSession } from '#auth'
 import { Requirement } from "~/domain/requirements"
 import { OrganizationInteractor } from '~/application'
-import { fork } from "~/server/data/orm.js"
+import config from "~/mikro-orm.config"
 import { z, type ZodObject } from "zod"
+import { OrganizationRepository } from '../data/repositories/OrganizationRepository'
 
 /**
  * Creates an event handler for PUT requests that update an existing requirement
@@ -37,10 +38,8 @@ export default function putRequirementHttpHandler<
             { solutionId, organizationId, organizationSlug, ...reqProps } = await validateEventBody(event, validatedBodySchema) as any,
             session = (await getServerSession(event))!,
             organizationInteractor = new OrganizationInteractor({
-                userId: session.id,
-                organizationId,
-                organizationSlug,
-                entityManager: fork()
+                repository: new OrganizationRepository({ config, organizationId, organizationSlug }),
+                userId: session.id
             })
 
         await organizationInteractor.updateRequirement({ ReqClass, id, solutionId, reqProps })

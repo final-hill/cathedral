@@ -1,10 +1,12 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { Actor, Person, ReqType } from '../../../../domain/requirements/index.js';
+import { Entity, Property } from '@mikro-orm/core';
+import { ReqType } from '../../../../domain/requirements/index.js';
+import { ActorModel, ActorVersionsModel } from './ActorSchema.js';
 
-export const PersonSchema = new EntitySchema<Person, Actor>({
-    class: Person,
-    discriminatorValue: ReqType.PERSON,
-    properties: {
-        email: { type: 'string', length: 254 }
-    }
-})
+@Entity({ discriminatorValue: ReqType.PERSON })
+export class PersonModel extends ActorModel { }
+
+@Entity({ discriminatorValue: ReqType.PERSON })
+export class PersonVersionsModel extends ActorVersionsModel {
+    @Property({ length: 254 })
+    readonly email!: string
+}

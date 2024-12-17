@@ -1,8 +1,11 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { Excepts, RequirementRelation } from "../../../../domain/relations/index.js";
+import { Entity } from "@mikro-orm/core";
+import { RequirementRelationModel, RequirementRelationVersionsModel } from "./RequirementRelationSchema.js";
+import { RelType } from "./RelType.js";
 
-export const ExceptsSchema = new EntitySchema<Excepts, RequirementRelation>({
-    class: Excepts,
-    tableName: 'requirement_relation',
-    discriminatorColumn: 'rel_type'
-})
+@Entity({ discriminatorValue: RelType.EXCEPTS })
+export class ExceptsModel extends RequirementRelationModel { }
+
+@Entity({ discriminatorValue: RelType.EXCEPTS })
+export class ExceptsVersionsModel extends RequirementRelationVersionsModel {
+    declare readonly requirementRelation: ExceptsModel
+}

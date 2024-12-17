@@ -1,7 +1,9 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { Requirement, ReqType, MetaRequirement } from '../../../../domain/requirements/index.js';
+import { Entity } from "@mikro-orm/core";
+import { ReqType } from '../../../../domain/requirements/index.js';
+import { RequirementModel, RequirementVersionsModel } from "./RequirementSchema.js";
 
-export const MetaRequirementSchema = new EntitySchema<MetaRequirement, Requirement>({
-    class: MetaRequirement,
-    discriminatorValue: ReqType.META_REQUIREMENT
-})
+@Entity({ discriminatorValue: ReqType.META_REQUIREMENT })
+export class MetaRequirementModel extends RequirementModel { }
+
+@Entity({ discriminatorValue: ReqType.META_REQUIREMENT })
+export class MetaRequirementVersionsModel extends RequirementVersionsModel { }

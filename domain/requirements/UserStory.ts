@@ -1,6 +1,5 @@
 import { FunctionalBehavior } from "./FunctionalBehavior.js";
 import { Scenario } from "./Scenario.js";
-import { ReqType } from "./ReqType.js";
 
 /**
  * A User Story specifies the handling of a specific user need.
@@ -12,8 +11,7 @@ import { ReqType } from "./ReqType.js";
  * [goal] - outcomeId
  */
 export class UserStory extends Scenario {
-    static override reqIdPrefix = 'S.4.' as const;
-    static override req_type = ReqType.USER_STORY;
+    static override readonly reqIdPrefix = 'S.4.' as const;
 
     constructor({ functionalBehavior, ...rest }: ConstructorParameters<typeof Scenario>[0] & Pick<UserStory, 'functionalBehavior'>) {
         super(rest);
@@ -21,13 +19,9 @@ export class UserStory extends Scenario {
     }
 
     override get reqId() { return super.reqId as `${typeof UserStory.reqIdPrefix}${number}` | undefined; }
-    override set reqId(value) { super.reqId = value; }
-
-    private _functionalBehavior!: FunctionalBehavior;
 
     /**
      * The action that the user wants to perform.
      */
-    get functionalBehavior(): FunctionalBehavior { return this._functionalBehavior; }
-    set functionalBehavior(value: FunctionalBehavior) { this._functionalBehavior = value; }
+    readonly functionalBehavior: FunctionalBehavior
 }

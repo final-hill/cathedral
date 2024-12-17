@@ -1,32 +1,35 @@
-import { BaseEntity } from "@mikro-orm/core";
 import { AppRole } from "./AppRole.js";
-import { AppUser } from "./AppUser.js";
-import { type Properties } from "../types/index.js";
-import { Organization } from "../requirements/Organization.js";
 
 /**
  * An AppUserOrganizationRole is a mapping between an AppUser, an Organization, and a Role
  */
-export class AppUserOrganizationRole extends BaseEntity {
-    constructor(props: Properties<AppUserOrganizationRole>) {
-        super()
-        this.appUser = props.appUser;
-        this.organization = props.organization;
-        this.role = props.role;
+export class AppUserOrganizationRole {
+    constructor(props: Pick<AppUserOrganizationRole, keyof AppUserOrganizationRole>) {
+        Object.assign(this, props);
     }
 
     /**
      * The user associated with the OrganizationRole
      */
-    appUser: AppUser;
+    readonly appUserId!: string;
 
     /**
      * The Organization associated with the OrganizationRole
      */
-    organization: Organization;
+    readonly organizationId!: string;
 
     /**
      * The Role associated with the OrganizationRole
      */
-    role: AppRole
+    readonly role!: AppRole
+
+    /**
+     * Whether the relation is deleted
+     */
+    readonly deleted!: boolean;
+
+    /**
+     * The date and time when the relation was last modified
+     */
+    readonly effectiveFrom!: Date;
 }

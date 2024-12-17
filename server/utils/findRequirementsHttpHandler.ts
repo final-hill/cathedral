@@ -1,8 +1,9 @@
-import { fork } from "~/server/data/orm.js"
+import config from '~/mikro-orm.config'
 import { getServerSession } from '#auth'
 import { OrganizationInteractor } from "~/application"
 import { type ZodObject, z } from "zod"
 import { Requirement } from "~/domain/requirements"
+import { OrganizationRepository } from '../data/repositories/OrganizationRepository'
 
 export default function findRequirementsHttpHandler<
     RCons extends typeof Requirement,
@@ -21,10 +22,8 @@ export default function findRequirementsHttpHandler<
         const { solutionId, organizationId, organizationSlug, ...query } = await validateEventQuery(event, validatedQuerySchema) as any,
             session = (await getServerSession(event))!,
             organizationInteractor = new OrganizationInteractor({
-                userId: session.id,
-                organizationId,
-                organizationSlug,
-                entityManager: fork()
+                repository: new OrganizationRepository({ config, organizationId, organizationSlug }),
+                userId: session.id
             })
 
         return await organizationInteractor.findRequirements({ solutionId, ReqClass, query })

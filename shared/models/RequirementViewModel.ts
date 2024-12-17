@@ -1,4 +1,4 @@
-import type { ReqType } from '~/domain/requirements/ReqType.js';
+import type { ReqType } from '~/server/data/models/requirements/ReqType.js';
 
 export interface RequirementViewModel {
     id: number;

@@ -1,10 +1,12 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { Behavior, Requirement, ReqType, MoscowPriority } from '../../../../domain/requirements/index.js';
+import { Entity, Enum } from "@mikro-orm/core";
+import { MoscowPriority, ReqType } from '../../../../domain/requirements/index.js';
+import { RequirementModel, RequirementVersionsModel } from "./RequirementSchema.js";
 
-export const BehaviorSchema = new EntitySchema<Behavior, Requirement>({
-    class: Behavior,
-    discriminatorValue: ReqType.BEHAVIOR,
-    properties: {
-        priority: { enum: true, items: () => MoscowPriority }
-    }
-})
+@Entity({ discriminatorValue: ReqType.BEHAVIOR })
+export class BehaviorModel extends RequirementModel { }
+
+@Entity({ discriminatorValue: ReqType.BEHAVIOR })
+export class BehaviorVersionsModel extends RequirementVersionsModel {
+    @Enum({ items: () => MoscowPriority })
+    readonly priority!: MoscowPriority;
+}

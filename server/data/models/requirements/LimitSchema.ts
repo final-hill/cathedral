@@ -1,7 +1,9 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { Requirement, ReqType, Limit } from '../../../../domain/requirements/index.js';
+import { Entity } from "@mikro-orm/core";
+import { ReqType } from '../../../../domain/requirements/index.js';
+import { RequirementModel, RequirementVersionsModel } from "./RequirementSchema.js";
 
-export const LimitSchema = new EntitySchema<Limit, Requirement>({
-    class: Limit,
-    discriminatorValue: ReqType.LIMIT
-})
+@Entity({ discriminatorValue: ReqType.LIMIT })
+export class LimitModel extends RequirementModel { }
+
+@Entity({ discriminatorValue: ReqType.LIMIT })
+export class LimitVersionsModel extends RequirementVersionsModel { }

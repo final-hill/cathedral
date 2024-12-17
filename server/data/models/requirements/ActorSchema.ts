@@ -1,7 +1,9 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { Actor, Requirement, ReqType } from '../../../../domain/requirements/index.js';
+import { Entity } from "@mikro-orm/core";
+import { ReqType } from '../../../../domain/requirements/index.js';
+import { RequirementModel, RequirementVersionsModel } from "./RequirementSchema.js";
 
-export const ActorSchema = new EntitySchema<Actor, Requirement>({
-    class: Actor,
-    discriminatorValue: ReqType.ACTOR
-})
+@Entity({ discriminatorValue: ReqType.ACTOR })
+export class ActorModel extends RequirementModel { }
+
+@Entity({ discriminatorValue: ReqType.ACTOR })
+export class ActorVersionsModel extends RequirementVersionsModel { }

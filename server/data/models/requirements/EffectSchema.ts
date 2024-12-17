@@ -1,7 +1,9 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { Effect, Requirement, ReqType } from '../../../../domain/requirements/index.js';
+import { Entity } from "@mikro-orm/core";
+import { ReqType } from '../../../../domain/requirements/index.js';
+import { RequirementModel, RequirementVersionsModel } from "./RequirementSchema.js";
 
-export const EffectSchema = new EntitySchema<Effect, Requirement>({
-    class: Effect,
-    discriminatorValue: ReqType.EFFECT
-})
+@Entity({ discriminatorValue: ReqType.EFFECT })
+export class EffectModel extends RequirementModel { }
+
+@Entity({ discriminatorValue: ReqType.EFFECT })
+export class EffectVersionsModel extends RequirementVersionsModel { }

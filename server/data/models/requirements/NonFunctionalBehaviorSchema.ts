@@ -1,7 +1,9 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { Functionality, NonFunctionalBehavior, ReqType } from '../../../../domain/requirements/index.js';
+import { Entity } from "@mikro-orm/core";
+import { ReqType } from '../../../../domain/requirements/index.js';
+import { FunctionalityModel, FunctionalityVersionsModel } from "./FunctionalitySchema.js";
 
-export const NonFunctionalBehaviorSchema = new EntitySchema<NonFunctionalBehavior, Functionality>({
-    class: NonFunctionalBehavior,
-    discriminatorValue: ReqType.NON_FUNCTIONAL_BEHAVIOR
-})
+@Entity({ discriminatorValue: ReqType.NON_FUNCTIONAL_BEHAVIOR })
+export class NonFunctionalBehaviorModel extends FunctionalityModel { }
+
+@Entity({ discriminatorValue: ReqType.NON_FUNCTIONAL_BEHAVIOR })
+export class NonFunctionalBehaviorVersionsModel extends FunctionalityVersionsModel { }

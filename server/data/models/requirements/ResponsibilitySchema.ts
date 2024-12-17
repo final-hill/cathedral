@@ -1,7 +1,9 @@
-import { EntitySchema } from "@mikro-orm/core";
-import { Responsibility, Requirement, ReqType } from '../../../../domain/requirements/index.js';
+import { Entity } from '@mikro-orm/core';
+import { ReqType } from '../../../../domain/requirements/index.js';
+import { RequirementModel, RequirementVersionsModel } from './RequirementSchema.js';
 
-export const ResponsibilitySchema = new EntitySchema<Responsibility, Requirement>({
-    class: Responsibility,
-    discriminatorValue: ReqType.RESPONSIBILITY
-})
+@Entity({ discriminatorValue: ReqType.RESPONSIBILITY })
+export class ResponsibilityModel extends RequirementModel { }
+
+@Entity({ discriminatorValue: ReqType.RESPONSIBILITY })
+export class ResponsibilityVersionsModel extends RequirementVersionsModel { }
