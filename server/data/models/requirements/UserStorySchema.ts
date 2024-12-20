@@ -1,12 +1,15 @@
-import { Entity, ManyToOne } from '@mikro-orm/core';
-import { ReqType, UserStory } from '../../../../domain/requirements/index.js';
+import { Collection, Entity, ManyToOne } from '@mikro-orm/core';
+import { ReqType } from '../../../../domain/requirements/index.js';
 import { ScenarioModel, ScenarioVersionsModel } from './ScenarioSchema.js';
+import { FunctionalBehaviorModel } from './FunctionalBehaviorSchema.js';
 
 @Entity({ discriminatorValue: ReqType.USER_STORY })
-export class UserStoryModel extends ScenarioModel { }
+export class UserStoryModel extends ScenarioModel {
+    declare readonly versions: Collection<UserStoryVersionsModel, object>;
+}
 
 @Entity({ discriminatorValue: ReqType.USER_STORY })
 export class UserStoryVersionsModel extends ScenarioVersionsModel {
-    @ManyToOne({ entity: 'FunctionalBehavior' })
-    readonly functionalBehavior!: UserStory['functionalBehavior'];
+    @ManyToOne({ entity: () => FunctionalBehaviorModel })
+    readonly functionalBehavior!: FunctionalBehaviorModel
 }

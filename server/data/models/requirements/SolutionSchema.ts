@@ -1,12 +1,14 @@
-import { Entity, Property } from '@mikro-orm/core';
-import { Solution, ReqType } from '../../../../domain/requirements/index.js';
+import { Collection, Entity, Property } from '@mikro-orm/core';
+import { ReqType } from '../../../../domain/requirements/index.js';
 import { RequirementModel, RequirementVersionsModel } from './RequirementSchema.js';
 
 @Entity({ discriminatorValue: ReqType.SOLUTION })
-export class SolutionModel extends RequirementModel { }
+export class SolutionModel extends RequirementModel {
+    declare readonly versions: Collection<SolutionVersionsModel, object>;
+}
 
 @Entity({ discriminatorValue: ReqType.SOLUTION })
 export class SolutionVersionsModel extends RequirementVersionsModel {
-    @Property({ type: 'string' })
-    readonly slug!: Solution['slug'];
+    @Property()
+    readonly slug!: string
 }

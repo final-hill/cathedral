@@ -135,29 +135,28 @@ export class OrganizationInteractor {
     }
 
     /**
-     * Get a requirement by id from the specified solution
+     * Get a requirement by id
      *
-     * @param props.solutionId The id of the solution that the requirement belongs to
      * @param props.ReqClass The Constructor of the requirement to get
      * @param props.id The id of the requirement to get
+     * @param props.solutionId The id of the solution that the requirement belongs to
      * @returns The requirement
-     * @throws {Error} If the solution does not exist
      * @throws {Error} If the user is not a reader of the organization or better
-     * @throws {Error} If the requirement does not exist
-     * @throws {Error} If the requirement does not belong to the solution
+     * @throws {Error} If the requirement does not exist in the organization nor the solution
      */
     async getSolutionRequirementById<RCons extends typeof Requirement>(props: {
-        solutionId: Solution['id'],
         ReqClass: RCons,
+        solutionId: Solution['id'],
         id: InstanceType<RCons>['id']
     }): Promise<InstanceType<RCons>> {
         if (!this.isOrganizationReader())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        const solution = await this.getSolutionById(props.solutionId),
-            requirement = (await solution.containsIds.loadItems<Requirement>({
-                where: { id: props.id, req_type: props.ReqClass.req_type }
-            }))[0] as InstanceType<RCons>
+        const requirement = await this._repository.getSolutionRequirementById({
+            ReqClass: props.ReqClass,
+            solutionId: props.solutionId,
+            id: props.id
+        })
 
         if (!requirement)
             throw new Error('Not Found: The requirement does not exist.')
