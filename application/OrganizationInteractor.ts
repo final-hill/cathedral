@@ -20,7 +20,7 @@ type OrganizationInteractorConstructor = {
  */
 export class OrganizationInteractor {
     private readonly _repository: OrganizationRepository
-    private readonly _user: Promise<AppUser>
+    private readonly _userId: AppUser['id']
     private _organization: Promise<Organization> | undefined
 
     /**
@@ -31,8 +31,8 @@ export class OrganizationInteractor {
      */
     constructor(props: OrganizationInteractorConstructor) {
         this._repository = props.repository
-        this._user = this._repository.getAppUserById(props.userId)
         this._organization = this._repository.getOrganization()
+        this._userId = props.userId
     }
 
     /**
@@ -64,7 +64,7 @@ export class OrganizationInteractor {
             throw new Error('Not Found: The solution does not exist.')
 
         const em = this.getEntityManager(),
-            appUser = await this._user,
+            appUser = await this._userId,
             // If the entity is silent, do not assign a reqId
             reqId = reqProps.isSilence ? undefined :
                 await this._repository.getNextReqId(solution.id, ReqClass.reqIdPrefix);
@@ -229,7 +229,7 @@ export class OrganizationInteractor {
         requirement.assign({
             ...props.reqProps,
             lastModified: new Date(),
-            modifiedBy: await this._user
+            modifiedBy: await this._userId
         } as any) // FIXME: TypeScript (v5.6.3) does not infer the proper type here
 
         // If the entity is no longer silent and has no reqId, assume
@@ -301,7 +301,7 @@ export class OrganizationInteractor {
     async deleteAppUser(id: AppUser['id']): Promise<unknown> {
         const em = this.getEntityManager(),
             organization = await this.getOrganization(),
-            appUser = await this._user,
+            appUser = await this._userId,
             [targetAppUserRole, orgAdminCount] = await Promise.all([
                 em.findOne(AppUserOrganizationRole, {
                     appUser: id,
@@ -339,7 +339,7 @@ export class OrganizationInteractor {
     async updateAppUserRole(id: AppUser['id'], role: AppRole): Promise<void> {
         const em = this.getEntityManager(),
             organization = await this.getOrganization(),
-            appUser = await this._user,
+            appUser = await this._userId,
             [targetAppUserRole, orgAdminCount] = await Promise.all([
                 em.findOne(AppUserOrganizationRole, {
                     appUser: id,
@@ -400,8 +400,8 @@ export class OrganizationInteractor {
      * Check if the current user is an admin of the organization or a system admin
      */
     async isOrganizationAdmin(): Promise<boolean> {
-        const appUser = await this._user,
-            organization = await this.getOrganization()
+        const organization = await this.getOrganization()
+        appUser = await this._userId,
 
         if (appUser.isSystemAdmin) return true
 
@@ -417,7 +417,7 @@ export class OrganizationInteractor {
      * Check if the current user is a contributor of the organization or a system admin
      */
     async isOrganizationContributor(): Promise<boolean> {
-        const appUser = await this._user,
+        const appUser = await this._userId,
             organization = await this.getOrganization()
 
         if (appUser.isSystemAdmin) return true
@@ -435,7 +435,7 @@ export class OrganizationInteractor {
      */
     async isOrganizationReader(): Promise<boolean> {
         const organization = await this.getOrganization(),
-            appUser = await this._user
+            appUser = await this._userId
 
         if (appUser.isSystemAdmin) return true
 
@@ -456,7 +456,7 @@ export class OrganizationInteractor {
     async addOrganization(props: Pick<Organization, 'name' | 'description'>): Promise<Organization> {
         const repo = this._repository,
             effectiveDate = new Date(),
-            appUser = await this._user,
+            appUser = await this._userId,
             newOrganization = new Organization({
                 name: props.name,
                 description: props.description,
@@ -492,7 +492,7 @@ export class OrganizationInteractor {
      */
     async addSolution({ name, description }: Pick<Solution, 'name' | 'description'>): Promise<Solution> {
         const organization = await this.getOrganization(),
-            createdBy = await this._user
+            createdBy = await this._userId
 
         if (!await this.isOrganizationAdmin())
             throw new Error('Forbidden: You do not have permission to perform this action')
@@ -646,7 +646,7 @@ export class OrganizationInteractor {
             name: props.name ?? solution.name,
             slug: props.name ? slugify(props.name) : solution.slug,
             description: props.description ?? solution.description,
-            modifiedBy: await this._user,
+            modifiedBy: await this._userId,
             lastModified: new Date()
         })
 
@@ -660,7 +660,7 @@ export class OrganizationInteractor {
      */
     async getUserOrganizations(query: Partial<Organization> = {}): Promise<Organization[]> {
         const em = this.getEntityManager(),
-            appUser = await this._user
+            appUser = await this._userId
 
         // If the user is a system admin, return all organizations
         // filtered by the query parameters
@@ -743,7 +743,7 @@ export class OrganizationInteractor {
             name: props.name ?? organization.name,
             description: props.description ?? organization.description,
             slug: props.name ? slugify(props.name) : organization.slug,
-            modifiedBy: await this._user,
+            modifiedBy: await this._userId,
             lastModified: new Date()
         })
 
@@ -796,7 +796,7 @@ export class OrganizationInteractor {
         if (!this.isOrganizationContributor())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        const appUser = await this._user,
+        const appUser = await this._userId,
             em = this.getEntityManager(),
             solution = await this.getSolutionById(solutionId)
 

@@ -1,7 +1,7 @@
 import { Collection, Entity, ManyToMany, ManyToOne, OneToMany, Property } from "@mikro-orm/core";
 import { VersionedModel } from "../VersionedSchema.js";
 import { OrganizationVersionsModel } from "../requirements/OrganizationSchema.js";
-import { AppUserOrganizationRoleVersionsModel } from "./AppUserOrganizationRoleSchema.js";
+import { AppUserOrganizationRoleVersionsModel } from "./index.js";
 
 // static properties
 @Entity({ tableName: 'app_user' })

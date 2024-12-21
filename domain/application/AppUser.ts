@@ -59,7 +59,10 @@ export class AppUser {
     /**
      * The role of the AppUser.
      */
-    // FIXME: this field is not mapped in the ORM. It is populated in the API layer.
-    // It's a design smell that needs to be addressed.
     readonly role?: AppRole;
+
+    /**
+     * The organization IDs that the AppUser is a member of
+     */
+    readonly organizationIds!: string[];
 }

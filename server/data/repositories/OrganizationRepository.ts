@@ -4,7 +4,6 @@ import { Organization, ReqType, Requirement, Solution } from "~/domain/requireme
 import { AppUserModel, AppUserOrganizationRoleModel, AppUserOrganizationRoleVersionsModel, AppUserVersionsModel } from "../models/application";
 import { OrganizationModel, OrganizationVersionsModel, RequirementModel, RequirementVersionsModel, SolutionModel, SolutionVersionsModel } from "../models/requirements";
 import { BelongsModel, BelongsVersionsModel } from "../models/relations";
-import { p } from "@vite-pwa/assets-generator/dist/shared/assets-generator.5e51fd40.mjs";
 
 export type OrganizationRepositoryOptions = {
     config: Options,
@@ -12,61 +11,47 @@ export type OrganizationRepositoryOptions = {
     organizationSlug?: Organization['slug']
 }
 
-type NormalizedReqModel<R extends RequirementModel> = {
+type NormalizedReqModel<R extends (RequirementModel | RequirementVersionsModel)> = {
     [K in keyof R as
     R[K] extends AppUserModel ? `${K & string}Id` :
-    R[K] extends Collection<any> ? `${K & string}Ids` :
+    R[K] extends Collection<any> ? `${K extends `${infer P}s` ? `${P}Ids` : never}` :
     R[K] extends RequirementModel ? `${K & string}Id` :
+    R[K] extends RequirementVersionsModel ? `${K & string}Id` :
     K]:
     R[K] extends AppUserModel ? R[K]['id'] : // user id
     R[K] extends Collection<infer C> ? string[] : // array of ids
     R[K] extends RequirementModel ? R[K]['id'] : // requirement id
+    R[K] extends RequirementVersionsModel ? R[K]['requirement']['id'] : // requirement id
     R[K]
 }
 
 /**
  * Normalizes a RequirementModel to a format that can be used to create a new Requirement domain object
  */
-const normalizeReqModel = async <R extends RequirementModel>(model: R): Promise<NormalizedReqModel<R>> => {
-    const result: any = {}
-    for (const key in model) {
-        const k = key as keyof RequirementModel
-        if (model[k] instanceof Collection)
-            result[`${k}Ids`] = (await (model[k] as Collection<any>).init({ ref: true })).map((m: any) => m.id)
-        else if (model[k] instanceof AppUserModel)
-            result[`${k}Id`] = model[k].id
-        else if ((model[k] as any) instanceof RequirementModel)
-            result[`${k}Id`] = (model[k] as any as RequirementModel).id
-        else
-            result[k] = model[k]
-    }
-    return result
-}
-
-type NormalizedReqVersionModel<R extends Omit<RequirementVersionsModel, 'requirement'>> = {
-    [K in keyof R as
-    R[K] extends AppUserModel ? `${K & string}Id` :
-    R[K] extends RequirementModel ? `${K & string}Id` :
-    K]:
-    R[K] extends AppUserModel ? R[K]['id'] :
-    R[K] extends RequirementModel ? R[K]['id'] :
-    R[K]
-}
-
-/**
- * Normalizes a RequirementVersionsModel to a format that can be used to create a new Requirement domain object
- */
-const normalizeReqVersionModel = <R extends Omit<RequirementVersionsModel, 'requirement'>>(model: R): NormalizedReqVersionModel<R> => {
+const normalizeReqModel = async <R extends (RequirementModel | RequirementVersionsModel)>(model: R): Promise<NormalizedReqModel<R>> => {
     const result: any = {}
     for (const key in model) {
         const k = key as keyof R & string
-        if (model[k] instanceof AppUserModel)
-            result[`${k}Id`] = model[k].id
-        else if ((model[k] as any) instanceof RequirementModel)
-            result[`${k}Id`] = (model[k] as any as RequirementModel).id
-        else
-            result[k] = model[k]
+        switch (true) {
+            case model[k] instanceof Collection:
+                // ${k} ends with an 's' so we remove it and add 'Ids' to the end
+                result[`${k.slice(0, -1)}Ids`] = (await (model[k] as Collection<any>)
+                    .init({ ref: true })).map((m: any) => {
+                        switch (true) {
+                            case m instanceof RequirementModel: return m.id
+                            case m instanceof AppUserModel: return m.id
+                            case m instanceof RequirementVersionsModel: return m.requirement.id
+                            default: return m
+                        }
+                    })
+                break
+            case model[k] instanceof AppUserModel: result[`${k}Id`] = model[k].id; break
+            case model[k] instanceof RequirementModel: result[`${k}Id`] = model[k].id; break
+            case model[k] instanceof RequirementVersionsModel: result[`${k}Id`] = model[k].requirement.id; break
+            default: result[k] = model[k]
+        }
     }
+
     return result
 }
 
@@ -154,12 +139,16 @@ export class OrganizationRepository {
         return new AppUserOrganizationRole({
             appUserId,
             organizationId,
-            role: auorStatic.role,
+            role: auorVolatile.role,
             effectiveFrom: auorVolatile.effectiveFrom,
             deleted: auorVolatile.deleted
         })
     }
 
+    /**
+     * Gets the organization
+     * @returns The organization
+     */
     async getOrganization(): Promise<Organization> {
         return this._organization
     }
@@ -172,7 +161,7 @@ export class OrganizationRepository {
     private async _getOrganization(): Promise<Organization> {
         const em = this._fork(),
             effectiveDate = new Date(),
-            { requirement: staticOrg, ...volatileOrg } = await em.findOneOrFail(OrganizationVersionsModel, {
+            latestOrgVersion = await em.findOneOrFail(OrganizationVersionsModel, {
                 ...(this._organizationId ? { organization: { id: this._organizationId } } : {}),
                 ...(this._organizationSlug ? { slug: this._organizationSlug } : {}),
                 effectiveFrom: { $lte: effectiveDate },
@@ -182,8 +171,8 @@ export class OrganizationRepository {
                 populate: ['requirement']
             })
 
-        const normalizedStaticModel = await normalizeReqModel<OrganizationModel>(staticOrg),
-            normalizedVersionModel = normalizeReqVersionModel<Omit<OrganizationVersionsModel, 'requirement'>>(volatileOrg)
+        const normalizedStaticModel = await normalizeReqModel<OrganizationModel>(latestOrgVersion.requirement),
+            normalizedVersionModel = await normalizeReqModel<OrganizationVersionsModel>(latestOrgVersion)
 
         return new Organization({
             ...normalizedStaticModel,
@@ -192,13 +181,15 @@ export class OrganizationRepository {
     }
 
     /**
-     * Get an app user by id
+     * Get an organization user by id
      *
-     * @param id The id of the app user to get
+     * @param props.id The id of the app user to get
+     * @param props.organizationId The id of the organization
      * @returns The app user
-     * @throws {Error} If the app user does not exist
+     * @throws {Error} If the organization does not exist
+     * @throws {Error} If the app user does not exist in the organization
      */
-    async getAppUserById(id: AppUser['id']): Promise<AppUser> {
+    async getOrganizationAppUserById({ id, organizationId }: { id: AppUser['id'], organizationId: Organization['id'] }): Promise<AppUser> {
         const em = this._fork(),
             effectiveDate = new Date(),
             { appUser: staticUser, ...volatileUser } = await em.findOneOrFail(AppUserVersionsModel, {
@@ -207,11 +198,11 @@ export class OrganizationRepository {
                 deleted: false
             }, {
                 orderBy: { effectiveFrom: 'desc' },
-                populate: ['appUser']
+                populate: ['appUser', 'organizations:ref']
             }),
             { role } = await this.getAppUserOrganizationRole({
                 appUserId: id,
-                organizationId: (await this.getOrganization()).id
+                organizationId
             })
 
         return new AppUser({
@@ -219,11 +210,12 @@ export class OrganizationRepository {
             deleted: volatileUser.deleted,
             effectiveFrom: volatileUser.effectiveFrom,
             email: volatileUser.email,
-            id: staticUser.id,
+            id,
             name: volatileUser.name,
             isSystemAdmin: volatileUser.isSystemAdmin,
             lastLoginDate: volatileUser.lastLoginDate,
-            role
+            role,
+            organizationIds: volatileUser.organizations.map((o) => o.requirement.id)
         })
     }
 
@@ -254,47 +246,50 @@ export class OrganizationRepository {
     }
 
     /**
-     * Gets all AppUsers for the organization filtered by the provided query
+     * Gets all AppUsers for the organization
      * @throws {Error} If the organization does not exist
      * @returns The AppUsers for the organization
      */
     async getOrganizationAppUsers(): Promise<AppUser[]> {
         const em = this._fork(),
-            organization = await this.getOrganization(),
-            effectiveDate = new Date()
+            effectiveDate = new Date(),
+            knex = em.getKnex(),
+            results = await knex
+                .select()
+                .from({ su: 'app_user' })
+                .join({ suv: 'app_user_versions' }, 'su.id', 'suv.app_user_id')
+        //     organization = await this.getOrganization(),
+        //     appUsers = await em.find(AppUserVersionsModel, {
+        //         appUser: { id: { $in: organization.appUserIds } },
+        //         effectiveFrom: { $lte: effectiveDate },
+        //         deleted: false
+        //     }, {
+        //         groupBy: ['appUser.id'],
+        //         orderBy: { effectiveFrom: 'desc' },
+        //         populate: ['appUser']
+        //     }),
+        //     roles = await em.find(AppUserOrganizationRoleVersionsModel, {
+        //         appUserOrganizationRole: { appUser: { id: { $in: organization.appUserIds } } },
+        //         effectiveFrom: { $lte: effectiveDate },
+        //         deleted: false
+        //     }, {
+        //         groupBy: ['appUserOrganizationRole.appUser.id'],
+        //         orderBy: { effectiveFrom: 'desc' },
+        //         populate: ['appUserOrganizationRole']
+        //     })
 
-        // TODO: Create Organization <-[m:n]-> AppUser relationship. Use the existing auor as the pivot table
-
-        const auorVersions = (await em.find(AppUserOrganizationRoleVersionsModel, {
-            appUserOrganizationRole: { organization: organization.id },
-            effectiveFrom: { $lte: effectiveDate },
-            deleted: false
-        }, {
-            orderBy: { effectiveFrom: 'desc' },
-            populate: ['appUserOrganizationRole']
-        })) //.map((model: AppUserOrganizationRoleVersionsModel) => model.appUserOrganizationRole.appUser.id)
-
-        const versionedAppUserModels = (await em.find(AppUserVersionsModel, {
-            appUser: { id: { $in: auorVersions } },
-            effectiveFrom: { $lte: effectiveDate },
-            deleted: false
-        }, {
-            orderBy: { effectiveFrom: 'desc' },
-            groupBy: ['appUser.id'],
-            populate: ['appUser']
-        }))
-
-        return versionedAppUserModels.map((model: AppUserVersionsModel) => new AppUser({
-            creationDate: model.appUser.creationDate,
-            deleted: model.deleted,
-            effectiveFrom: model.effectiveFrom,
-            email: model.email,
-            id: model.appUser.id,
-            name: model.name,
-            isSystemAdmin: model.isSystemAdmin,
-            lastLoginDate: model.lastLoginDate,
-            role: model.role
-        }))
+        // return appUsers.map(model => new AppUser({
+        //     creationDate: model.appUser.creationDate,
+        //     deleted: model.deleted,
+        //     effectiveFrom: model.effectiveFrom,
+        //     email: model.email,
+        //     id: model.appUser.id,
+        //     name: model.name,
+        //     isSystemAdmin: model.isSystemAdmin,
+        //     lastLoginDate: model.lastLoginDate,
+        //     role: model.role,
+        //     organizationIds: [organization.id]
+        // })
     }
 
     /**

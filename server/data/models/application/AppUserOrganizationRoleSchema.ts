@@ -7,20 +7,20 @@ import { OrganizationModel } from "../requirements/OrganizationSchema.js";
 // static properties
 @Entity({ tableName: 'app_user_organization_role' })
 export class AppUserOrganizationRoleModel {
-    @ManyToOne({ primary: true, entity: () => AppUserModel })
+    @ManyToOne({ primary: true, entity: 'AppUserModel' })
     readonly appUser!: AppUserModel;
 
-    @ManyToOne({ primary: true, entity: () => OrganizationModel })
+    @ManyToOne({ primary: true, entity: 'OrganizationModel' })
     readonly organization!: OrganizationModel;
 
-    @OneToMany({ entity: () => AppUserOrganizationRoleVersionsModel, mappedBy: 'appUserOrganizationRole' })
+    @OneToMany({ entity: 'AppUserOrganizationRoleVersionsModel', mappedBy: 'appUserOrganizationRole' })
     readonly versions = new Collection<AppUserOrganizationRoleVersionsModel>(this);
 }
 
 // volatile properties
 @Entity({ tableName: 'app_user_organization_role_versions' })
 export class AppUserOrganizationRoleVersionsModel extends VersionedModel {
-    @ManyToOne({ primary: true, entity: () => AppUserOrganizationRoleModel })
+    @ManyToOne({ primary: true, entity: 'AppUserOrganizationRoleModel' })
     readonly appUserOrganizationRole!: AppUserOrganizationRoleModel;
 
     @Enum({ items: () => AppRole })
