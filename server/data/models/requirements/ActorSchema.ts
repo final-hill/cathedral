@@ -1,6 +1,6 @@
 import { Collection, Entity } from "@mikro-orm/core";
-import { ReqType } from '../../../../domain/requirements/index.js';
 import { RequirementModel, RequirementVersionsModel } from "./RequirementSchema.js";
+import { ReqType } from "./ReqType.js";
 
 @Entity({ discriminatorValue: ReqType.ACTOR })
 export class ActorModel extends RequirementModel {

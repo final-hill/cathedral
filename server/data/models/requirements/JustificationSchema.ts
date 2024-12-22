@@ -1,5 +1,5 @@
 import { Collection, Entity } from "@mikro-orm/core";
-import { ReqType } from '../../../../domain/requirements/index.js';
+import { ReqType } from "./ReqType.js";
 import { MetaRequirementModel, MetaRequirementVersionsModel } from "./MetaRequirementSchema.js";
 
 @Entity({ discriminatorValue: ReqType.JUSTIFICATION })

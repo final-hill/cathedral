@@ -1,5 +1,5 @@
 import { Collection, Entity } from "@mikro-orm/core";
-import { ReqType } from '../../../../domain/requirements/index.js';
+import { ReqType } from "./ReqType.js";
 import { ComponentModel, ComponentVersionsModel } from "./ComponentSchema.js";
 
 @Entity({ discriminatorValue: ReqType.ENVIRONMENT_COMPONENT })

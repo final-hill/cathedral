@@ -1,5 +1,5 @@
 import { Collection, Entity } from "@mikro-orm/core";
-import { ReqType } from '../../../../domain/requirements/index.js';
+import { ReqType } from "./ReqType.js";
 import { FunctionalityModel, FunctionalityVersionsModel } from "./FunctionalitySchema.js";
 
 @Entity({ discriminatorValue: ReqType.NON_FUNCTIONAL_BEHAVIOR })

@@ -1,6 +1,7 @@
 import { Collection, Entity, Enum } from "@mikro-orm/core";
-import { MoscowPriority, ReqType } from '../../../../domain/requirements/index.js';
+import { MoscowPriority } from '../../../../domain/requirements/index.js';
 import { RequirementModel, RequirementVersionsModel } from "./RequirementSchema.js";
+import { ReqType } from "./ReqType.js";
 
 @Entity({ discriminatorValue: ReqType.BEHAVIOR })
 export class BehaviorModel extends RequirementModel {

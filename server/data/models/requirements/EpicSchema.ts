@@ -1,5 +1,5 @@
 import { Collection, Entity, ManyToOne } from "@mikro-orm/core";
-import { ReqType } from '../../../../domain/requirements/index.js';
+import { ReqType } from "./ReqType.js";
 import { ScenarioModel, ScenarioVersionsModel } from "./ScenarioSchema.js";
 import { FunctionalBehaviorModel } from "./FunctionalBehaviorSchema.js";
 

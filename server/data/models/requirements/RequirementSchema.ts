@@ -1,7 +1,7 @@
 import { Collection, Entity, ManyToMany, ManyToOne, OneToMany, Property } from '@mikro-orm/core';
-import { ReqType } from '../../../../domain/requirements/index.js';
 import { VersionedModel } from '../VersionedSchema.js';
 import { AppUserModel } from '../application/AppUserSchema.js';
+import { ReqType } from './ReqType.js';
 
 // static properties
 @Entity({ abstract: true, tableName: 'requirement', discriminatorColumn: 'req_type', discriminatorValue: ReqType.REQUIREMENT })

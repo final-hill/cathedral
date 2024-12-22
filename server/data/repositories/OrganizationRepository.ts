@@ -257,7 +257,14 @@ export class OrganizationRepository {
             results = await knex
                 .select()
                 .from({ su: 'app_user' })
-                .join({ suv: 'app_user_versions' }, 'su.id', 'suv.app_user_id')
+                .join({ suv: 'app_user_versions' }, function () {
+                    this.on('su.id', '=', 'suv.app_user_id')
+                        .andOn('suv.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
+                            FROM app_user_versions
+                            WHERE app_user_id = su.id AND effective_from <= now())`)
+                        )
+                })
+
         //     organization = await this.getOrganization(),
         //     appUsers = await em.find(AppUserVersionsModel, {
         //         appUser: { id: { $in: organization.appUserIds } },

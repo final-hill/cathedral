@@ -1,6 +1,7 @@
 import { Collection, Entity, Enum, Property } from '@mikro-orm/core';
-import { Stakeholder, ReqType, StakeholderCategory, StakeholderSegmentation } from '../../../../domain/requirements/index.js';
+import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from '../../../../domain/requirements/index.js';
 import { ComponentModel, ComponentVersionsModel } from './ComponentSchema.js';
+import { ReqType } from "./ReqType.js";
 
 @Entity({ discriminatorValue: ReqType.STAKEHOLDER })
 export class StakeholderModel extends ComponentModel {
