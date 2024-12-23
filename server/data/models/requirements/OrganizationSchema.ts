@@ -1,8 +1,6 @@
 import { RequirementModel, RequirementVersionsModel } from "./RequirementSchema.js";
-import { Collection, Entity, ManyToMany, Property } from "@mikro-orm/core";
+import { Collection, Entity, Property } from "@mikro-orm/core";
 import { ReqType } from "./ReqType.js";
-// import { AppUserOrganizationRoleVersionsModel } from "../application/AppUserOrganizationRoleSchema.js";
-// import { AppUserVersionsModel } from "../application/AppUserSchema.js";
 
 @Entity({ discriminatorValue: ReqType.ORGANIZATION })
 export class OrganizationModel extends RequirementModel {
@@ -15,7 +13,4 @@ export class OrganizationVersionsModel extends RequirementVersionsModel {
 
     @Property()
     readonly slug!: string
-
-    // @ManyToMany({ entity: () => AppUserVersionsModel, pivotEntity: () => AppUserOrganizationRoleVersionsModel, inversedBy: 'organizations' })
-    // appUsers = new Collection<AppUserVersionsModel>(this)
 }

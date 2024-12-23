@@ -20,5 +20,5 @@ export default defineEventHandler(async (event) => {
             userId: session.id
         })
 
-    return organizationInteractor.getUserOrganizations(query)
+    return organizationInteractor.getAppUserOrganizations(query)
 })

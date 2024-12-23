@@ -1,7 +1,7 @@
 /**
  * A Requirement is a statement that specifies a property.
  */
-export abstract class Requirement {
+export class Requirement {
     static readonly reqIdPrefix: `${'P' | 'E' | 'G' | 'S' | '0'}.${number}.` = '0.0.';
 
     constructor({ reqId, ...props }: Omit<Pick<Requirement, keyof Requirement>, 'req_type' | 'reqId'> & { reqId?: Requirement['_reqId'] }) {
@@ -63,6 +63,11 @@ export abstract class Requirement {
      * The user who created the requirement
      */
     readonly createdById!: string;
+
+    /**
+     * The date and time when the requirement was created
+     */
+    readonly creationDate!: Date
 
     /**
      * Whether the requirement is a silence requirement.

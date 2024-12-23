@@ -60,9 +60,4 @@ export class AppUser {
      * The role of the AppUser.
      */
     readonly role?: AppRole;
-
-    /**
-     * The organization IDs that the AppUser is a member of
-     */
-    readonly organizationIds!: string[];
 }
