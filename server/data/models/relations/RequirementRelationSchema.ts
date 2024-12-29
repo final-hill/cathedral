@@ -1,4 +1,4 @@
-import { Entity, ManyToOne } from '@mikro-orm/core';
+import { Collection, Entity, ManyToOne, OneToMany } from '@mikro-orm/core';
 import { RelType } from './RelType.js';
 import { VersionedModel } from '../VersionedSchema.js';
 import { RequirementModel } from '../requirements/RequirementSchema.js';
@@ -11,6 +11,9 @@ export abstract class RequirementRelationModel {
 
     @ManyToOne({ entity: 'RequirementModel', primary: true })
     readonly right!: RequirementModel
+
+    @OneToMany({ entity: 'RequirementRelationVersionsModel', mappedBy: 'requirementRelation' })
+    readonly versions = new Collection<RequirementRelationVersionsModel>(this)
 }
 
 // Volatile properties

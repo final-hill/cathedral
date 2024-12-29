@@ -26,6 +26,6 @@ export default function findRequirementsHttpHandler<
                 userId: session.id
             })
 
-        return await organizationInteractor.findRequirements({ solutionId, ReqClass, query })
+        return await organizationInteractor.findSolutionRequirements({ solutionId, ReqClass, query })
     })
 }

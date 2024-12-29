@@ -5,58 +5,13 @@ import { AppUserModel, AppUserOrganizationRoleModel, AppUserOrganizationRoleVers
 import { OrganizationModel, OrganizationVersionsModel, RequirementModel, RequirementVersionsModel, SolutionModel, SolutionVersionsModel } from "../models/requirements";
 import { BelongsModel, BelongsVersionsModel } from "../models/relations";
 import { RelType } from "../models/relations/RelType";
-import { snakeCaseToCamelCase } from "~/shared/utils/snakeCaseToCamelCase";
+import { camelCaseToSnakeCase, pascalCaseToSnakeCase, snakeCaseToCamelCase } from "#shared/utils";
 import { ReqType } from "../models/requirements/ReqType";
-import { camelCaseToSnakeCase } from "~/shared/utils/camelCaseToSnakeCase";
 
 export type OrganizationRepositoryOptions = {
     config: Options,
     organizationId?: Organization['id'],
     organizationSlug?: Organization['slug']
-}
-
-type NormalizedReqModel<R extends (RequirementModel | RequirementVersionsModel)> = {
-    [K in keyof R as
-    R[K] extends AppUserModel ? `${K & string}Id` :
-    R[K] extends Collection<any> ? `${K extends `${infer P}s` ? `${P}Ids` : never}` :
-    R[K] extends RequirementModel ? `${K & string}Id` :
-    R[K] extends RequirementVersionsModel ? `${K & string}Id` :
-    K]:
-    R[K] extends AppUserModel ? R[K]['id'] : // user id
-    R[K] extends Collection<infer C> ? string[] : // array of ids
-    R[K] extends RequirementModel ? R[K]['id'] : // requirement id
-    R[K] extends RequirementVersionsModel ? R[K]['requirement']['id'] : // requirement id
-    R[K]
-}
-
-/**
- * Normalizes a RequirementModel to a format that can be used to create a new Requirement domain object
- */
-const normalizeReqModel = async <R extends (RequirementModel | RequirementVersionsModel)>(model: R): Promise<NormalizedReqModel<R>> => {
-    const result: any = {}
-    for (const key in model) {
-        const k = key as keyof R & string
-        switch (true) {
-            case model[k] instanceof Collection:
-                // ${k} ends with an 's' so we remove it and add 'Ids' to the end
-                result[`${k.slice(0, -1)}Ids`] = (await (model[k] as Collection<any>)
-                    .init({ ref: true })).map((m: any) => {
-                        switch (true) {
-                            case m instanceof RequirementModel: return m.id
-                            case m instanceof AppUserModel: return m.id
-                            case m instanceof RequirementVersionsModel: return m.requirement.id
-                            default: return m
-                        }
-                    })
-                break
-            case model[k] instanceof AppUserModel: result[`${k}Id`] = model[k].id; break
-            case model[k] instanceof RequirementModel: result[`${k}Id`] = model[k].id; break
-            case model[k] instanceof RequirementVersionsModel: result[`${k}Id`] = model[k].requirement.id; break
-            default: result[k] = model[k]
-        }
-    }
-
-    return result
 }
 
 export class OrganizationRepository {
@@ -130,36 +85,114 @@ export class OrganizationRepository {
         // Solution is in the 'requirement' table with ReqType.SOLUTION
         const em = this._fork(),
             knex = em.getKnex(),
-            organizationId = (await this.getOrganization()).id,
-            results = await knex
-                .select('s.*', 'sv.*')
-                .from({ s: 'requirement' })
-                .join({ sv: 'requirement_versions' }, function () {
-                    this.on('s.id', '=', 'sv.solution_id')
-                        .andOn('sv.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
-                            FROM requirement_versions
-                            WHERE solution_id = s.id AND effective_from <= now())`)
-                        )
-                })
-                .join({ rel_sol_org: 'requirement_relation' }, function () {
-                    this.on('s.id', '=', 'rel_sol_org.left_id')
-                        .andOn('rel_sol_org.rel_type', '=', `'${RelType.BELONGS}'`)
-                        .andOn('rel_sol_org.right_id', '=', `'${organizationId}'`)
-                })
-                .join({ rel_sol_org_v: 'requirement_relation_versions' }, function () {
-                    this.on('rel_sol_org.id', '=', 'rel_sol_org_v.requirement_relation_id')
-                        .andOn('rel_sol_org_v.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
-                            FROM requirement_relation_versions
-                            WHERE requirement_relation_id = rel_sol_org.id AND effective_from <= now())`)
-                        )
-                })
-                .where(Object.entries(query).reduce((acc, [key, value]) => ({
-                    ...acc,
-                    // TODO: Do these need to be prefixed with 'sv.' or 's.'?
-                    // If so, then it probably can't be done generically unless
-                    // the schemas are changed to treat all non-key attributes as volatile
-                    [camelCaseToSnakeCase(key)]: value
-                }), {}))
+            organizationId = (await this.getOrganization()).id
+
+        const solutionsQuery = knex
+            .select('s.*', 'sv.*')
+            .from({ s: 'requirement' })
+            .join({ sv: 'requirement_versions' }, function () {
+                this.on('s.id', '=', 'sv.requirement_id')
+                    .andOn('sv.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
+                        FROM requirement_versions
+                        WHERE requirement_id = s.id AND effective_from <= now())`)
+                    )
+            })
+            .join({ rel_sol_org: 'requirement_relation' }, function () {
+                this.on('s.id', '=', 'rel_sol_org.left_id')
+                    .andOn('rel_sol_org.rel_type', '=', `'${RelType.BELONGS}'`)
+                    .andOn('rel_sol_org.right_id', '=', `'${organizationId}'`)
+            })
+            .join({ rel_sol_org_v: 'requirement_relation_versions' }, function () {
+                this.on('rel_sol_org.id', '=', 'rel_sol_org_v.requirement_relation_id')
+                    .andOn('rel_sol_org_v.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
+                        FROM requirement_relation_versions
+                        WHERE requirement_relation_id = rel_sol_org.id AND effective_from <= now())`)
+                    )
+            })
+            .where('s.req_type', ReqType.SOLUTION);
+
+        const solutionsFiltered = await knex
+            .select('*')
+            .from(solutionsQuery.as('sols'))
+            .where(Object.entries(query).reduce((acc, [key, value]) => ({
+                ...acc,
+                [`sols.${camelCaseToSnakeCase(key)}`]: value
+            }), {}))
+
+        return solutionsFiltered.map((result) => new Solution(
+            Object.entries(result).reduce((acc, [key, value]) => ({
+                ...acc, [snakeCaseToCamelCase(key)]: value
+            }), {} as any))
+        )
+    }
+
+    /**
+     * Find requirements that match the query parameters for a solution
+     *
+     * @param props.solutionId - The id of the solution to find the requirements for
+     * @param props.ReqClass - The Constructor of the requirement to find
+     * @param props.query - The query parameters to filter requirements by
+     * @returns The requirements that match the query parameters
+     * @throws {Error} If the solution does not exist in the organization
+     */
+    async findSolutionRequirements<RCons extends typeof Requirement>(props: {
+        solutionId: Solution['id'],
+        ReqClass: RCons,
+        query: Partial<InstanceType<RCons>>
+    }): Promise<InstanceType<RCons>[]> {
+        const em = this._fork(),
+            knex = em.getKnex(),
+            organizationId = (await this.getOrganization()).id
+
+        const requirementsQuery = knex
+            .select('rs.*', 'rv.*')
+            .from({ rs: 'requirement' })
+            .join({ rv: 'requirement_versions' }, function () {
+                this.on('rs.id', '=', 'rv.requirement_id')
+                    .andOn('rv.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
+                        FROM requirement_versions
+                        WHERE requirement_id = rs.id AND effective_from <= now())`)
+                    )
+            })
+            .join({ rel_req_sol: 'requirement_relation' }, function () {
+                this.on('rs.id', '=', 'rel_req_sol.left_id')
+                    .andOn('rel_req_sol.rel_type', '=', `'${RelType.BELONGS}'`)
+                    .andOn('rel_req_sol.right_id', '=', `'${props.solutionId}'`)
+            })
+            .join({ rel_req_sol_v: 'requirement_relation_versions' }, function () {
+                this.on('rel_req_sol.id', '=', 'rel_req_sol_v.requirement_relation_id')
+                    .andOn('rel_req_sol_v.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
+                        FROM requirement_relation_versions
+                        WHERE requirement_relation_id = rel_req_sol.id AND effective_from <= now())`)
+                    )
+            })
+            .join({ rel_sol_org: 'requirement_relation' }, function () {
+                this.on('rel_req_sol.right_id', '=', 'rel_sol_org.left_id')
+                    .andOn('rel_sol_org.rel_type', '=', `'${RelType.BELONGS}'`)
+                    .andOn('rel_sol_org.right_id', '=', `'${organizationId}'`)
+            })
+            .join({ rel_sol_org_v: 'requirement_relation_versions' }, function () {
+                this.on('rel_sol_org.id', '=', 'rel_sol_org_v.requirement_relation_id')
+                    .andOn('rel_sol_org_v.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
+                        FROM requirement_relation_versions
+                        WHERE requirement_relation_id = rel_sol_org.id AND effective_from <= now())`)
+                    )
+            })
+            .where('rs.req_type', pascalCaseToSnakeCase(props.ReqClass.name))
+
+        const requirementsFiltered = await knex
+            .select('*')
+            .from(requirementsQuery.as('reqs'))
+            .where(Object.entries(props.query).reduce((acc, [key, value]) => ({
+                ...acc,
+                [`reqs.${camelCaseToSnakeCase(key)}`]: value
+            }), {}))
+
+        return requirementsFiltered.map((result) => new props.ReqClass(
+            Object.entries(result).reduce((acc, [key, value]) => ({
+                ...acc, [snakeCaseToCamelCase(key)]: value
+            }), {} as any))
+        ) as InstanceType<RCons>[]
     }
 
     /**
@@ -243,18 +276,7 @@ export class OrganizationRepository {
                         )
                 })
 
-        return results.map((result) => new Organization({
-            creationDate: result.creationDate,
-            deleted: result.deleted,
-            effectiveFrom: result.effectiveFrom,
-            id: result.id,
-            name: result.name,
-            description: result.description,
-            isSilence: result.isSilence,
-            reqId: result.reqId,
-            createdById: result.createdById,
-            modifiedById: result.modifiedById,
-        }))
+        return results.map((result) => new Organization(result))
 
     }
 
@@ -448,7 +470,6 @@ export class OrganizationRepository {
                             WHERE requirement_id = rs.id AND effective_from <= now())`)
                         )
                 })
-                // requirement_relation { left_id: requirement_id, right_id: solution_id, rel_type: RelType.BELONGS }
                 .join({ rr: 'requirement_relation' }, function () {
                     this.on('rs.id', '=', 'rr.left_id')
                         .andOn('rr.rel_type', '=', `'${RelType.BELONGS}'`)
@@ -544,8 +565,8 @@ export class OrganizationRepository {
                 .join({ sv: 'requirement_versions' }, function () {
                     this.on('s.id', '=', 'sv.requirement_id')
                         .andOn('sv.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
-                    FROM requirement_versions
-                    WHERE requirement_id = s.id AND effective_from <= now())`)
+                            FROM requirement_versions
+                            WHERE requirement_id = s.id AND effective_from <= now())`)
                         )
                 })
                 // check that the solution belongs to the organization
@@ -593,8 +614,8 @@ export class OrganizationRepository {
                 .join({ sv: 'requirement_versions' }, function () {
                     this.on('s.id', '=', 'sv.requirement_id')
                         .andOn('sv.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
-                    FROM requirement_versions
-                    WHERE requirement_id = s.id AND effective_from <= now())`)
+                            FROM requirement_versions
+                            WHERE requirement_id = s.id AND effective_from <= now())`)
                         )
                 })
                 // check that the requirement is a solution and belongs to the organization
@@ -678,6 +699,7 @@ export class OrganizationRepository {
                         )
                 })
                 .where('rs.id', props.id)
+                .andWhere('rs.req_type', ReqType.SOLUTION)
 
         if (results.length === 0)
             throw new Error('Requirement does not exist in the organization nor the solution')

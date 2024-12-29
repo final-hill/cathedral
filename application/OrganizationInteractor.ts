@@ -170,8 +170,7 @@ export class OrganizationInteractor {
      * @returns The requirements that match the query parameters
      * @throws {Error} If the user is not a reader of the organization or better
      */
-    // TODO: refactor to use the repository
-    async findRequirements<RCons extends typeof Requirement>(props: {
+    async findSolutionRequirements<RCons extends typeof Requirement>(props: {
         solutionId: Solution['id'],
         ReqClass: RCons,
         query: Partial<InstanceType<RCons>>
@@ -179,15 +178,7 @@ export class OrganizationInteractor {
         if (!this.isOrganizationReader())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        const solution = await this.getSolutionById(props.solutionId),
-            requirements = (await solution.containsIds.loadItems<InstanceType<RCons>>({
-                where: {
-                    req_type: props.ReqClass.req_type,
-                    ...props.query
-                }
-            })) as InstanceType<RCons>[]
-
-        return requirements
+        return this._repository.findSolutionRequirements(props)
     }
 
     // TODO: allow the re-ordering of requirements in a solution (reqIds)
@@ -518,25 +509,11 @@ export class OrganizationInteractor {
      * @throws {Error} If the user is not a reader of the organization or better
      * @throws {Error} If the organization does not exist
      */
-    // TODO: refactor to use the repository
     async findSolutions(query: Partial<Solution> = {}): Promise<Solution[]> {
-        const organization = await this.getOrganization()
-
         if (!await this.isOrganizationReader())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        const solutions = await organization.containsIds.loadItems<Solution>({
-            where: {
-                // remove null entries from the query
-                ...Object.entries(query).reduce((acc, [key, value]) => {
-                    if (value !== null && value !== undefined) acc[key] = value
-                    return acc
-                }, {} as Record<string, any>),
-                req_type: ReqType.SOLUTION
-            }
-        })
-
-        return solutions
+        return this._repository.findSolutions(query)
     }
 
     /**
