@@ -5,5 +5,5 @@ export abstract class VersionedModel {
     readonly effectiveFrom!: Date
 
     @Property()
-    readonly deleted!: boolean
+    readonly isDeleted!: boolean
 }

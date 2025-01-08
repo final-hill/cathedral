@@ -54,11 +54,15 @@ export class OrganizationInteractor {
     }: {
         solutionId: Solution['id'],
         ReqClass: RCons,
-        reqProps: Omit<ConstructorParameters<RCons>[0], 'reqId' | 'lastModified' | 'modifiedBy' | 'createdBy'>
-    }): Promise<InstanceType<RCons>> {
+        reqProps: Omit<ConstructorParameters<RCons>[0],
+            'reqId' | 'lastModified' | 'modifiedBy' | 'createdBy' | 'id' | 'isDeleted'
+            | 'effectiveFrom' | 'modifiedById' | 'createdById' | 'creationDate'
+        >
+    }): Promise<Requirement['id']> {
         if (!this.isOrganizationContributor())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
+        /*
         const solution = await this.getSolutionById(solutionId)
 
         if (!solution)
@@ -92,6 +96,7 @@ export class OrganizationInteractor {
         await em.flush()
 
         return newRequirement
+        */
     }
 
     /**
@@ -423,37 +428,23 @@ export class OrganizationInteractor {
     /**
      * Creates a new organization in the database and sets the creator as an admin
      *
-     * @param props The properties of the organization
+     * @param props.name The name of the organization
+     * @param props.description The description of the organization
      * @returns The new organization
      */
-    // TODO: refactor to use the repository
-    async addOrganization(props: Pick<Organization, 'name' | 'description'>): Promise<Organization> {
+    async addOrganization(props: Pick<Organization, 'name' | 'description'>): Promise<Organization['id']> {
         const repo = this._repository,
             effectiveDate = new Date(),
-            appUser = await this._userId,
-            newOrganization = new Organization({
-                name: props.name,
-                description: props.description,
-                createdById: appUser.id,
-                modifiedById: appUser.id,
-                deleted: false,
-                effectiveFrom: effectiveDate,
-                id: uuid7(),
-                isSilence: false,
-                reqId: undefined
-            }),
-            auor = new AppUserOrganizationRole({
-                appUserId: appUser.id,
-                organizationId: newOrganization.id,
-                role: AppRole.ORGANIZATION_ADMIN,
-                deleted: false,
-                effectiveFrom: effectiveDate
-            })
+            newOrgId = await repo.addOrganization({ ...props, createdById: this._userId, effectiveDate })
 
-        await repo.addOrganization(newOrganization)
-        await repo.addAppUserOrganizationRole(auor)
+        await repo.addAppUserOrganizationRole({
+            effectiveDate,
+            appUserId: this._userId,
+            organizationId: newOrgId,
+            role: AppRole.ORGANIZATION_ADMIN
+        })
 
-        return newOrganization
+        return newOrgId
     }
 
     /**
@@ -464,41 +455,29 @@ export class OrganizationInteractor {
      * @throws {Error} If the user is not an admin of the organization
      * @throws {Error} If the organization does not exist
      */
-    // TODO: refactor to use the repository
-    async addSolution({ name, description }: Pick<Solution, 'name' | 'description'>): Promise<Solution> {
-        const organization = await this.getOrganization(),
-            createdBy = await this._userId
+    async addSolution({ name, description }: Pick<Solution, 'name' | 'description'>): Promise<Solution['id']> {
+        const repo = this._repository,
+            effectiveDate = new Date()
 
         if (!await this.isOrganizationAdmin())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        const em = this.getEntityManager(),
-            newSolution = em.create(Solution, {
-                name,
-                description,
-                lastModified: new Date(),
-                createdBy,
-                modifiedBy: createdBy,
-                isSilence: false
-            });
+        const newSolutionId = await repo.addSolution({ name, description, effectiveDate, createdById: this._userId })
 
-        em.create(Belongs, { left: newSolution, right: organization })
-
-        await em.flush()
-
+        // create initial requirements for the solution
         await this.addRequirement({
-            solutionId: newSolution.id,
+            solutionId: newSolutionId,
             ReqClass: Outcome,
-            reqProps: { name: 'G.1', description: 'Context and Objective', isSilence: false } as ConstructorParameters<typeof Outcome>[0]
+            reqProps: { name: 'G.1', description: 'Context and Objective', isSilence: false }
         })
 
         await this.addRequirement({
-            solutionId: newSolution.id,
+            solutionId: newSolutionId,
             ReqClass: Obstacle,
-            reqProps: { name: 'G.2', description: 'Situation', isSilence: false } as ConstructorParameters<typeof Obstacle>[0]
+            reqProps: { name: 'G.2', description: 'Situation', isSilence: false }
         })
 
-        return newSolution
+        return newSolutionId
     }
 
     /**

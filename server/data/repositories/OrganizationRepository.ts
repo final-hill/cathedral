@@ -5,13 +5,19 @@ import { AppUserModel, AppUserOrganizationRoleModel, AppUserOrganizationRoleVers
 import { OrganizationModel, OrganizationVersionsModel, RequirementModel, RequirementVersionsModel, SolutionModel, SolutionVersionsModel } from "../models/requirements";
 import { BelongsModel, BelongsVersionsModel } from "../models/relations";
 import { RelType } from "../models/relations/RelType";
-import { camelCaseToSnakeCase, pascalCaseToSnakeCase, snakeCaseToCamelCase } from "#shared/utils";
+import { camelCaseToSnakeCase, pascalCaseToSnakeCase, slugify, snakeCaseToCamelCase } from "#shared/utils";
 import { ReqType } from "../models/requirements/ReqType";
+import { v7 as uuid7 } from 'uuid'
 
 export type OrganizationRepositoryOptions = {
     config: Options,
     organizationId?: Organization['id'],
     organizationSlug?: Organization['slug']
+}
+
+export type CreationInfo = {
+    createdById: AppUser['id']
+    effectiveDate: Date
 }
 
 export class OrganizationRepository {
@@ -45,34 +51,128 @@ export class OrganizationRepository {
     private _fork() { return this._orm.em.fork() }
 
     /**
+     * Associates an app user with the organization with the specified role
+     * @param auor.appUserId - The id of the app user
+     * @param auor.organizationId - The id of the organization
+     * @param auor.role - The role of the app user in the organization
+     */
+    async addAppUserOrganizationRole(auor: Pick<AppUserOrganizationRole, 'appUserId' | 'organizationId' | 'role'> & { effectiveDate: Date }): Promise<void> {
+        const em = this._fork()
+
+        em.create(AppUserOrganizationRoleVersionsModel, {
+            appUserOrganizationRole: em.create(AppUserOrganizationRoleModel, {
+                appUser: auor.appUserId,
+                organization: auor.organizationId
+            }),
+            role: auor.role,
+            isDeleted: false,
+            effectiveFrom: auor.effectiveDate
+        })
+
+        await em.flush()
+    }
+
+    /**
      * Adds a new organization
-     * @param newOrg - The organization to add
+     * @param props.name - The name of the organization
+     * @param props.description - The description of the organization
+     * @param props.userId - The id of the user creating the organization
+     * @param props.effectiveDate - The effective date of the organization
      * @throws {Error} If the organization already exists
      */
-    async addOrganization(newOrg: Organization): Promise<void> {
-        const em = this._fork();
+    async addOrganization({ name, description, createdById, effectiveDate }: Pick<Organization, 'name' | 'description'> & CreationInfo): Promise<Organization['id']> {
+        const em = this._fork(),
+            existingOrg = await this.getSolutionBySlug(slugify(name))
 
-        // if (await em.findOne(OrganizationModel, { id: newOrg.id }))
-        //     throw new Error('Organization already exists')
+        if (existingOrg)
+            throw new Error('Organization already exists with the same name')
 
-        // const effectiveDate = new Date(),
-        //     staticModel = em.create(OrganizationModel, {
-        //         id: newOrg.id,
-        //         createdBy: newOrg.createdById,
-        //     }),
-        //     versionModel = em.create(OrganizationVersionsModel, {
-        //         deleted: false,
-        //         effectiveFrom: effectiveDate,
-        //         slug: newOrg.slug,
-        //         name: newOrg.name,
-        //         description: newOrg.description,
-        //         modifiedBy: newOrg.modifiedById,
-        //         isSilence: newOrg.isSilence,
-        //         requirement: newOrg.id,
-        //         ...(newOrg.reqId ? { reqId: newOrg.reqId } : {})
-        //     })
+        const newId = uuid7()
 
-        // await em.flush()
+        em.create(OrganizationVersionsModel, {
+            isDeleted: false,
+            effectiveFrom: effectiveDate,
+            isSilence: false,
+            slug: slugify(name),
+            name,
+            description,
+            modifiedBy: createdById,
+            requirement: em.create(OrganizationModel, {
+                id: newId,
+                createdBy: createdById
+            })
+        })
+
+        await em.flush()
+
+        return newId
+    }
+
+    /**
+     * Adds a new solution to the organization
+     * @param props.name - The name of the solution
+     * @param props.description - The description of the solution
+     * @param props.modifiedById - The id of the user creating the solution
+     * @param props.effectiveDate - The effective date of the solution
+     */
+    async addSolution({ name, description, createdById, effectiveDate }: Pick<Solution, 'name' | 'description'> & CreationInfo): Promise<Solution['id']> {
+        const em = this._fork(),
+            organization = await this.getOrganization(),
+            newId = uuid7()
+
+        em.create(SolutionVersionsModel, {
+            isDeleted: false,
+            effectiveFrom: effectiveDate,
+            isSilence: false,
+            slug: slugify(name),
+            name,
+            description,
+            modifiedBy: createdById,
+            requirement: em.create(SolutionModel, {
+                id: newId,
+                createdBy: createdById
+            })
+        })
+
+        // add the relation between the solution and the organization (Belongs relation)
+        em.create(BelongsVersionsModel, {
+            isDeleted: false,
+            effectiveFrom: effectiveDate,
+            requirementRelation: em.create(BelongsModel, {
+                left: newId,
+                right: organization.id
+            })
+        })
+
+        await em.flush()
+
+        return newId
+    }
+
+    /**
+     * Deletes the organization
+     *
+     * @throws {Error} If the organization does not exist
+     */
+    async deleteOrganization(): Promise<void> {
+        const em = this._fork(),
+            organization = await this.getOrganization()
+
+        em.create(OrganizationVersionsModel, {
+            isDeleted: true,
+            effectiveFrom: new Date(),
+            isSilence: false,
+            slug: organization.slug,
+            name: organization.name,
+            description: organization.description,
+            modifiedBy: organization.modifiedById,
+            requirement: em.create(OrganizationModel, {
+                id: organization.id,
+                createdBy: organization.createdById
+            })
+        })
+
+        await em.flush()
     }
 
     /**
@@ -198,7 +298,6 @@ export class OrganizationRepository {
     /**
      * Returns the AppUserOrganizationRole for the given app user and organization
      * @param props.appUserId - The id of the app user
-     * @param props.organizationId - The id of the organization
      * @returns The AppUserOrganizationRole
      * @throws {Error} If the app user organization role does not exist
      */
@@ -210,7 +309,7 @@ export class OrganizationRepository {
                 .select({
                     role: 'auorv.role',
                     effectiveFrom: 'auorv.effective_from',
-                    deleted: 'auorv.deleted'
+                    isDeleted: 'auorv.is_deleted'
                 })
                 .from({ auor: 'app_user_organization_role' })
                 .join({ auorv: 'app_user_organization_role_versions' }, function () {
@@ -233,7 +332,7 @@ export class OrganizationRepository {
             organizationId,
             role: result.role,
             effectiveFrom: result.effectiveFrom,
-            deleted: result.deleted
+            isDeleted: result.isDeleted
         })
     }
 
@@ -250,7 +349,7 @@ export class OrganizationRepository {
                     creationDate: 'rs.creation_date',
                     createdById: 'rs.created_by_id',
                     modifiedById: 'rs.modified_by_id',
-                    deleted: 'rv.deleted',
+                    isDeleted: 'rv.is_deleted',
                     effectiveFrom: 'rv.effective_from',
                     id: 'rs.id',
                     name: 'rv.name',
@@ -300,7 +399,7 @@ export class OrganizationRepository {
                     creationDate: 'rs.creation_date',
                     createdById: 'rs.created_by_id',
                     modifiedById: 'rs.modified_by_id',
-                    deleted: 'rv.deleted',
+                    isDeleted: 'rv.is_deleted',
                     effectiveFrom: 'rv.effective_from',
                     id: 'rs.id',
                     name: 'rv.name',
@@ -320,7 +419,7 @@ export class OrganizationRepository {
 
         return results.map((result) => new Organization({
             creationDate: result.creationDate,
-            deleted: result.deleted,
+            isDeleted: result.isDeleted,
             effectiveFrom: result.effectiveFrom,
             id: result.id,
             name: result.name,
@@ -345,7 +444,7 @@ export class OrganizationRepository {
                     creationDate: 'rs.creation_date',
                     createdById: 'rs.created_by_id',
                     modifiedById: 'rs.modified_by_id',
-                    deleted: 'rv.deleted',
+                    idSeleted: 'rv.is_deleted',
                     effectiveFrom: 'rv.effective_from',
                     id: 'rs.id',
                     name: 'rv.name',
@@ -374,7 +473,7 @@ export class OrganizationRepository {
 
         return new Organization({
             creationDate: result.creationDate,
-            deleted: result.deleted,
+            isDeleted: result.is_deleted,
             effectiveFrom: result.effectiveFrom,
             id: result.id,
             name: result.name,
@@ -390,7 +489,6 @@ export class OrganizationRepository {
      * Get an organization user by id
      *
      * @param props.id The id of the app user to get
-     * @param props.organizationId The id of the organization
      * @returns The app user
      * @throws {Error} If the organization does not exist
      * @throws {Error} If the app user does not exist in the organization
@@ -402,7 +500,7 @@ export class OrganizationRepository {
             results = await knex
                 .select({
                     creationDate: 'su.creation_date',
-                    deleted: 'suv.deleted',
+                    isDeleted: 'suv.is_deleted',
                     effectiveFrom: 'suv.effective_from',
                     email: 'suv.email',
                     id: 'su.id',
@@ -429,8 +527,8 @@ export class OrganizationRepository {
                         )
                 })
                 .where('su.id', id)
-                .andWhere('suv.deleted', false)
-                .andWhere('auorv.deleted', false)
+                .andWhere('suv.is_deleted', false)
+                .andWhere('auorv.is_deleted', false)
 
         if (results.length === 0)
             throw new Error('App user does not exist in the organization')
@@ -439,7 +537,7 @@ export class OrganizationRepository {
 
         return new AppUser({
             creationDate: result.creationDate,
-            deleted: result.deleted,
+            isDeleted: result.isDeleted,
             effectiveFrom: result.effectiveFrom,
             email: result.email,
             id: result.id,
@@ -453,6 +551,7 @@ export class OrganizationRepository {
     /**
      * Gets the next requirement id for the given solution and requirement type
      *
+     * @param solutionId - The id of the solution
      * @param prefix - The prefix for the requirement id. Ex: 'P.1.'
      * @returns The next requirement id
      * @throws {Error} If the solution does not exist
@@ -507,7 +606,7 @@ export class OrganizationRepository {
             results = await knex
                 .select({
                     creationDate: 'su.creation_date',
-                    deleted: 'suv.deleted',
+                    isDeleted: 'suv.is_deleted',
                     effectiveFrom: 'suv.effective_from',
                     email: 'suv.email',
                     id: 'su.id',
@@ -533,12 +632,12 @@ export class OrganizationRepository {
                             WHERE app_user_organization_role_id = auor.id AND effective_from <= now())`)
                         )
                 })
-                .where('suv.deleted', false)
-                .andWhere('auorv.deleted', false)
+                .where('suv.is_deleted', false)
+                .andWhere('auorv.is_deleted', false)
 
         return results.map((result) => new AppUser({
             creationDate: result.creationDate,
-            deleted: result.deleted,
+            isDeleted: result.isDeleted,
             effectiveFrom: result.effectiveFrom,
             email: result.email,
             id: result.id,
@@ -714,6 +813,6 @@ export class OrganizationRepository {
     }
 
     // async deleteOrganization(): Promise<void> {
-    //     // delete the organization by creating a new version with deleted set to true
+    //     // delete the organization by creating a new version with isDeleted set to true
     // }
 }

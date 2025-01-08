@@ -41,7 +41,7 @@ export class Requirement {
     /**
      * Whether the requirement is deleted
      */
-    readonly deleted!: boolean;
+    readonly isDeleted!: boolean;
 
     /**
      * A human-readable explanation of a property

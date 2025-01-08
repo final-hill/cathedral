@@ -34,7 +34,7 @@ export class AppUser {
     /**
      * Whether the user is deleted
      */
-    readonly deleted!: boolean;
+    readonly isDeleted!: boolean;
 
     /**
      * The email address of the AppUser

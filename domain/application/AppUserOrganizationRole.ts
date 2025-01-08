@@ -26,7 +26,7 @@ export class AppUserOrganizationRole {
     /**
      * Whether the relation is deleted
      */
-    readonly deleted!: boolean;
+    readonly isDeleted!: boolean;
 
     /**
      * The date and time when the relation was last modified
