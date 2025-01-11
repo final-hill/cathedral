@@ -1,6 +1,5 @@
 import { Assumption, Constraint, Effect, EnvironmentComponent, FunctionalBehavior, GlossaryTerm, Invariant, Justification, Limit, MoscowPriority, NonFunctionalBehavior, Obstacle, Organization, Outcome, ParsedRequirement, Person, ReqType, Requirement, Solution, Stakeholder, StakeholderCategory, StakeholderSegmentation, SystemComponent, UseCase, UserStory } from "~/domain/requirements";
 import { AppUserOrganizationRole, AppRole, AppUser } from "~/domain/application";
-import { validate, v7 as uuid7 } from 'uuid'
 import type NaturalLanguageToRequirementService from "~/server/data/services/NaturalLanguageToRequirementService";
 import { groupBy, slugify } from "#shared/utils";
 import { Belongs, Follows } from "~/domain/relations";
@@ -21,7 +20,6 @@ type OrganizationInteractorConstructor = {
 export class OrganizationInteractor {
     private readonly _repository: OrganizationRepository
     private readonly _userId: AppUser['id']
-    private _organization: Promise<Organization> | undefined
 
     /**
      * Create a new OrganizationInteractor
@@ -31,7 +29,6 @@ export class OrganizationInteractor {
      */
     constructor(props: OrganizationInteractorConstructor) {
         this._repository = props.repository
-        this._organization = this._repository.getOrganization()
         this._userId = props.userId
     }
 
@@ -55,7 +52,7 @@ export class OrganizationInteractor {
         solutionId: Solution['id'],
         ReqClass: RCons,
         reqProps: Omit<ConstructorParameters<RCons>[0],
-            'reqId' | 'lastModified' | 'modifiedBy' | 'createdBy' | 'id' | 'isDeleted'
+            'reqId' | 'lastModified' | 'id' | 'isDeleted' | 'isSilence'
             | 'effectiveFrom' | 'modifiedById' | 'createdById' | 'creationDate'
         >
     }): Promise<Requirement['id']> {
@@ -206,7 +203,7 @@ export class OrganizationInteractor {
         id: InstanceType<RCons>['id'],
         solutionId: Solution['id'],
         ReqClass: RCons,
-        reqProps: Partial<Omit<InstanceType<RCons>, 'reqId' | 'lastModified' | 'modifiedBy' | 'createdBy'>>
+        reqProps: Partial<Omit<InstanceType<RCons>, 'reqId' | 'lastModified' | 'modifiedById' | 'createdById'>>
     }): Promise<void> {
         if (!this.isOrganizationContributor())
             throw new Error('Forbidden: You do not have permission to perform this action')

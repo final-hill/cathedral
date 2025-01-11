@@ -2,7 +2,7 @@ import { Collection, MikroORM, type Options } from "@mikro-orm/postgresql";
 import { AppUser, AppUserOrganizationRole } from "~/domain/application";
 import { Organization, Requirement, Solution } from "~/domain/requirements";
 import { AppUserModel, AppUserOrganizationRoleModel, AppUserOrganizationRoleVersionsModel, AppUserVersionsModel } from "../models/application";
-import { OrganizationModel, OrganizationVersionsModel, RequirementModel, RequirementVersionsModel, SolutionModel, SolutionVersionsModel } from "../models/requirements";
+import * as reqModels from "../models/requirements";
 import { BelongsModel, BelongsVersionsModel } from "../models/relations";
 import { RelType } from "../models/relations/RelType";
 import { camelCaseToSnakeCase, pascalCaseToSnakeCase, slugify, snakeCaseToCamelCase } from "#shared/utils";
@@ -89,7 +89,7 @@ export class OrganizationRepository {
 
         const newId = uuid7()
 
-        em.create(OrganizationVersionsModel, {
+        em.create(reqModels.OrganizationVersionsModel, {
             isDeleted: false,
             effectiveFrom: effectiveDate,
             isSilence: false,
@@ -97,9 +97,55 @@ export class OrganizationRepository {
             name,
             description,
             modifiedBy: createdById,
-            requirement: em.create(OrganizationModel, {
+            requirement: em.create(reqModels.OrganizationModel, {
                 id: newId,
                 createdBy: createdById
+            })
+        })
+
+        await em.flush()
+
+        return newId
+    }
+
+    /**
+     *
+     */
+    async addRequirement<RCons extends typeof Requirement>(props: CreationInfo & {
+        solutionId: Solution['id'],
+        ReqClass: RCons,
+        reqProps: Omit<ConstructorParameters<RCons>[0],
+            'reqId' | 'lastModified' | 'id' | 'isDeleted' | 'isSilence'
+            | 'effectiveFrom' | 'modifiedById' | 'createdById' | 'creationDate'>
+    }): Promise<InstanceType<RCons>['id']> {
+        const em = this._fork(),
+            newId = uuid7()
+
+        const solution = await this.getSolutionById(props.solutionId)
+
+        if (!solution)
+            throw new Error('Solution does not exist')
+
+        const newRequirement = em.create<reqModels.RequirementVersionsModel>((reqModels as any)[`${props.ReqClass.name}VersionsModel`], {
+            id: newId,
+            isDeleted: false,
+            effectiveFrom: props.effectiveDate,
+            isSilence: false,
+            modifiedBy: props.createdById,
+            ...props.reqProps,
+            requirement: em.create<reqModels.RequirementModel>((reqModels as any)[props.ReqClass.name], {
+                id: newId,
+                createdBy: props.createdById
+            })
+        })
+
+        // add the relation between the requirement and the solution (Belongs relation)
+        em.create(BelongsVersionsModel, {
+            isDeleted: false,
+            effectiveFrom: props.effectiveDate,
+            requirementRelation: em.create(BelongsModel, {
+                left: newId,
+                right: props.solutionId
             })
         })
 
@@ -120,7 +166,7 @@ export class OrganizationRepository {
             organization = await this.getOrganization(),
             newId = uuid7()
 
-        em.create(SolutionVersionsModel, {
+        em.create(reqModels.SolutionVersionsModel, {
             isDeleted: false,
             effectiveFrom: effectiveDate,
             isSilence: false,
@@ -128,7 +174,7 @@ export class OrganizationRepository {
             name,
             description,
             modifiedBy: createdById,
-            requirement: em.create(SolutionModel, {
+            requirement: em.create(reqModels.SolutionModel, {
                 id: newId,
                 createdBy: createdById
             })
@@ -158,7 +204,7 @@ export class OrganizationRepository {
         const em = this._fork(),
             organization = await this.getOrganization()
 
-        em.create(OrganizationVersionsModel, {
+        em.create(reqModels.OrganizationVersionsModel, {
             isDeleted: true,
             effectiveFrom: new Date(),
             isSilence: false,
@@ -166,7 +212,7 @@ export class OrganizationRepository {
             name: organization.name,
             description: organization.description,
             modifiedBy: organization.modifiedById,
-            requirement: em.create(OrganizationModel, {
+            requirement: em.create(reqModels.OrganizationModel, {
                 id: organization.id,
                 createdBy: organization.createdById
             })
