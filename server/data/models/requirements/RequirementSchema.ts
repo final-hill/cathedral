@@ -1,16 +1,17 @@
-import { Collection, Entity, ManyToOne, OneToMany, Property } from '@mikro-orm/core';
-import { VersionedModel } from '../VersionedSchema.js';
-import { AppUserModel } from '../application/AppUserSchema.js';
+import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, Property } from '@mikro-orm/core';
+import { StaticAuditModel, VolatileAuditModel } from '../AuditSchema.js';
 import { ReqType } from './ReqType.js';
 
 // static properties
 @Entity({ abstract: true, tableName: 'requirement', discriminatorColumn: 'req_type', discriminatorValue: ReqType.REQUIREMENT })
-export abstract class RequirementModel {
+export abstract class RequirementModel extends StaticAuditModel {
+    [OptionalProps]?: 'req_type'
+
+    @Enum({ items: () => ReqType, primary: true })
+    readonly req_type!: ReqType;
+
     @Property({ type: 'uuid', primary: true })
     readonly id!: string;
-
-    @ManyToOne({ entity: () => AppUserModel })
-    readonly createdBy!: AppUserModel;
 
     @OneToMany({ entity: () => RequirementVersionsModel, mappedBy: 'requirement' })
     readonly versions = new Collection<RequirementVersionsModel>(this);
@@ -18,7 +19,12 @@ export abstract class RequirementModel {
 
 //volatile properties
 @Entity({ abstract: true, tableName: 'requirement_versions', discriminatorColumn: 'req_type', discriminatorValue: ReqType.REQUIREMENT })
-export abstract class RequirementVersionsModel extends VersionedModel {
+export abstract class RequirementVersionsModel extends VolatileAuditModel {
+    [OptionalProps]?: 'req_type'
+
+    @Enum({ items: () => ReqType, primary: true })
+    readonly req_type!: ReqType;
+
     @ManyToOne({ entity: () => RequirementModel, primary: true })
     readonly requirement!: RequirementModel;
 
@@ -27,9 +33,6 @@ export abstract class RequirementVersionsModel extends VersionedModel {
 
     @Property({ length: 1000 })
     readonly description!: string
-
-    @ManyToOne({ entity: () => AppUserModel })
-    readonly modifiedBy!: AppUserModel;
 
     @Property({ type: 'string', nullable: true })
     readonly reqId?: `P.${number}.${number}` | `E.${number}.${number}` | `G.${number}.${number}` | `S.${number}.${number}` | `0.${number}.${number}` | undefined

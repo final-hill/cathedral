@@ -45,55 +45,26 @@ export class OrganizationInteractor {
      * @throws {Error} If the user is not a contributor of the solution or better
      * @throws {Error} If a referenced requirement does not belong to the solution
      */
-    // TODO: refactor to use the repository
     async addRequirement<RCons extends typeof Requirement>({
         solutionId, ReqClass, reqProps
     }: {
         solutionId: Solution['id'],
         ReqClass: RCons,
         reqProps: Omit<ConstructorParameters<RCons>[0],
-            'reqId' | 'lastModified' | 'id' | 'isDeleted' | 'isSilence'
-            | 'effectiveFrom' | 'modifiedById' | 'createdById' | 'creationDate'
+            'reqId' | 'lastModified' | 'id' | 'isDeleted' | 'effectiveFrom'
+            | 'modifiedById' | 'createdById' | 'creationDate'
         >
     }): Promise<Requirement['id']> {
         if (!this.isOrganizationContributor())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        /*
-        const solution = await this.getSolutionById(solutionId)
-
-        if (!solution)
-            throw new Error('Not Found: The solution does not exist.')
-
-        const em = this.getEntityManager(),
-            appUser = await this._userId,
-            // If the entity is silent, do not assign a reqId
-            reqId = reqProps.isSilence ? undefined :
-                await this._repository.getNextReqId(solution.id, ReqClass.reqIdPrefix);
-
-        // if a property is a uuid, assert that it belongs to the solution
-        for (const [key, value] of Object.entries(reqProps) as [keyof typeof reqProps, string][]) {
-            if (validate(value) && !['id', 'createdBy', 'modifiedBy'].includes(key as string)) {
-                const reqExists = await solution.containsIds.loadCount({ where: { id: value } })
-                if (reqExists === 0)
-                    throw new Error(`Not Found: The referenced requirement with id ${value} does not exist in the solution.`)
-            }
-        }
-
-        const newRequirement = em.create(ReqClass, {
-            ...reqProps,
-            reqId,
-            lastModified: new Date(),
-            createdBy: appUser,
-            modifiedBy: appUser
-        }) as InstanceType<RCons>
-
-        em.create(Belongs, { left: newRequirement, right: solution })
-
-        await em.flush()
-
-        return newRequirement
-        */
+        return await this._repository.addRequirement({
+            solutionId,
+            ReqClass,
+            reqProps,
+            createdById: this._userId,
+            effectiveDate: new Date()
+        })
     }
 
     /**
@@ -532,18 +503,11 @@ export class OrganizationInteractor {
      * @throws {Error} If the solution does not exist
      * @throws {Error} If the solution does not belong to the organization
      */
-    // TODO: refactor to use the repository
     async deleteSolutionBySlug(slug: Solution['slug']): Promise<void> {
         if (!await this.isOrganizationAdmin())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        const em = this.getEntityManager(),
-            solution = await this.getSolutionBySlug(slug)
-
-        if (!solution)
-            throw new Error('Not Found: The solution does not exist.')
-
-        await em.removeAndFlush(solution)
+        return this._repository.deleteSolutionBySlug(slug)
     }
 
     /**
@@ -611,25 +575,11 @@ export class OrganizationInteractor {
      * @throws {Error} If the user is not an admin of the organization or better
      * @throws {Error} If the organization does not exist
      */
-    // TODO: refactor to use the repository
     async deleteOrganization(): Promise<void> {
-        const em = this.getEntityManager(),
-            organization = await this.getOrganization()
-
         if (!await this.isOrganizationAdmin())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        // Remove all roles associated with the organization
-        const appUserOrganizationRoles = await em.findAll(AppUserOrganizationRole, {
-            where: { organization }
-        })
-
-        for (const auor of appUserOrganizationRoles)
-            em.remove(auor)
-
-        await em.removeAndFlush(organization)
-
-        this._organization = undefined
+        return this._repository.deleteOrganization()
     }
 
     /**

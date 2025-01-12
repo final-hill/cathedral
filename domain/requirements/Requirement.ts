@@ -1,23 +1,30 @@
+import { AuditMetadata } from "../AuditMetadata";
+
 /**
  * A Requirement is a statement that specifies a property.
  */
-export class Requirement {
+export class Requirement extends AuditMetadata {
     static readonly reqIdPrefix: `${'P' | 'E' | 'G' | 'S' | '0'}.${number}.` = '0.0.';
 
-    constructor({ reqId, ...props }: Omit<Pick<Requirement, keyof Requirement>, 'req_type' | 'reqId'> & { reqId?: Requirement['_reqId'] }) {
+    constructor({ reqId, ...props }: Omit<Pick<Requirement, keyof Requirement>, 'reqId'> & { reqId?: Requirement['_reqId'] }) {
+        super(props)
         if (props.name.length > 100)
             throw new Error('Name must be less than 100 characters')
         if (props.description.length > 1000)
             throw new Error('Description must be less than 1000 characters')
 
-        Object.assign(this, props)
         this._reqId = reqId;
+        this.id = props.id;
+        this.name = props.name;
+        this.description = props.description;
+        this.isDeleted = props.isDeleted;
+        this.isSilence = props.isSilence;
     }
 
     /**
      * The unique identifier of the Requirement
      */
-    readonly id!: string;
+    readonly id: string;
 
     private readonly _reqId?: `${typeof Requirement['reqIdPrefix']}${number}`
 
@@ -36,42 +43,22 @@ export class Requirement {
      * A short name for the requirement
      * @throws {Error} if the name is longer than 100 characters
     */
-    readonly name!: string;
+    readonly name: string;
 
     /**
      * Whether the requirement is deleted
      */
-    readonly isDeleted!: boolean;
+    readonly isDeleted: boolean;
 
     /**
      * A human-readable explanation of a property
      * @throws {Error} if the description is longer than 1000 characters
     */
-    readonly description!: string;
-
-    /**
-     * The date and time when the requirement was last modified
-     */
-    readonly effectiveFrom!: Date;
-
-    /**
-     * The user who last modified the requirement
-     */
-    readonly modifiedById!: string;
-
-    /**
-     * The user who created the requirement
-     */
-    readonly createdById!: string;
-
-    /**
-     * The date and time when the requirement was created
-     */
-    readonly creationDate!: Date
+    readonly description: string;
 
     /**
      * Whether the requirement is a silence requirement.
      * (i.e. a requirement that is not included in the solution)
      */
-    readonly isSilence!: boolean;
+    readonly isSilence: boolean;
 }

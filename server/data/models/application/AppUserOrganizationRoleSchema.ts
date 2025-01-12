@@ -1,6 +1,6 @@
 import { Collection, Entity, Enum, ManyToOne, OneToMany } from "@mikro-orm/core";
 import { AppRole } from "../../../../domain/application/index.js";
-import { VersionedModel } from "../VersionedSchema.js";
+import { VolatileAuditModel } from "../AuditSchema.js";
 import { AppUserModel } from "./AppUserSchema.js";
 import { OrganizationModel } from "../requirements/index.js";
 
@@ -19,7 +19,7 @@ export class AppUserOrganizationRoleModel {
 
 // volatile properties
 @Entity({ tableName: 'app_user_organization_role_versions' })
-export class AppUserOrganizationRoleVersionsModel extends VersionedModel {
+export class AppUserOrganizationRoleVersionsModel extends VolatileAuditModel {
     @ManyToOne({ primary: true, entity: 'AppUserOrganizationRoleModel' })
     readonly appUserOrganizationRole!: AppUserOrganizationRoleModel;
 

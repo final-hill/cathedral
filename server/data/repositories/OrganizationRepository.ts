@@ -1,4 +1,4 @@
-import { Collection, MikroORM, type Options } from "@mikro-orm/postgresql";
+import { Collection, MikroORM, raw, type Options } from "@mikro-orm/postgresql";
 import { AppUser, AppUserOrganizationRole } from "~/domain/application";
 import { Organization, Requirement, Solution } from "~/domain/requirements";
 import { AppUserModel, AppUserOrganizationRoleModel, AppUserOrganizationRoleVersionsModel, AppUserVersionsModel } from "../models/application";
@@ -7,7 +7,7 @@ import { BelongsModel, BelongsVersionsModel } from "../models/relations";
 import { RelType } from "../models/relations/RelType";
 import { camelCaseToSnakeCase, pascalCaseToSnakeCase, slugify, snakeCaseToCamelCase } from "#shared/utils";
 import { ReqType } from "../models/requirements/ReqType";
-import { v7 as uuid7 } from 'uuid'
+import { v7 as uuid7, validate as validateUuid } from 'uuid'
 
 export type OrganizationRepositoryOptions = {
     config: Options,
@@ -99,7 +99,8 @@ export class OrganizationRepository {
             modifiedBy: createdById,
             requirement: em.create(reqModels.OrganizationModel, {
                 id: newId,
-                createdBy: createdById
+                createdBy: createdById,
+                creationDate: effectiveDate
             })
         })
 
@@ -109,13 +110,18 @@ export class OrganizationRepository {
     }
 
     /**
-     *
+     * Adds a new requirement to the organization
+     * @param props.solutionId - The id of the solution to add the requirement to
+     * @param props.ReqClass - The Constructor of the requirement to add
+     * @param props.reqProps - The properties of the requirement to add
+     * @param props.effectiveDate - The effective date of the requirement
+     * @param props.createdById - The id of the user creating the requirement
      */
     async addRequirement<RCons extends typeof Requirement>(props: CreationInfo & {
         solutionId: Solution['id'],
         ReqClass: RCons,
         reqProps: Omit<ConstructorParameters<RCons>[0],
-            'reqId' | 'lastModified' | 'id' | 'isDeleted' | 'isSilence'
+            'reqId' | 'lastModified' | 'id' | 'isDeleted'
             | 'effectiveFrom' | 'modifiedById' | 'createdById' | 'creationDate'>
     }): Promise<InstanceType<RCons>['id']> {
         const em = this._fork(),
@@ -126,16 +132,37 @@ export class OrganizationRepository {
         if (!solution)
             throw new Error('Solution does not exist')
 
-        const newRequirement = em.create<reqModels.RequirementVersionsModel>((reqModels as any)[`${props.ReqClass.name}VersionsModel`], {
+        // if a property is a uuid, assert that it belongs to the solution
+        // This is to prevent a requirement from another solution being added to the current solution
+        for (const [key, value] of Object.entries(props.reqProps) as [keyof typeof props.reqProps, string][]) {
+            if (validateUuid(value) && ['id', 'createdById', 'modifiedById'].includes(key as string)) {
+                // query the Belongs relation to check if the requirement belongs to the solution
+                const belongs = await em.findOne(BelongsVersionsModel, {
+                    requirementRelation: {
+                        left: value,
+                        right: props.solutionId
+                    },
+                    effectiveFrom: { $lte: props.effectiveDate },
+                    isDeleted: false
+                })
+
+                if (!belongs)
+                    throw new Error(`Requirement with id ${value} does not belong to the solution`)
+            }
+        }
+
+        em.create<reqModels.RequirementVersionsModel>((reqModels as any)[`${props.ReqClass.name}VersionsModel`], {
             id: newId,
             isDeleted: false,
             effectiveFrom: props.effectiveDate,
-            isSilence: false,
             modifiedBy: props.createdById,
+            // Silent requirements do not have a reqId as they are not approved to be part of the solution
+            reqId: props.reqProps.isSilence ? undefined : await this.getNextReqId(props.solutionId, props.ReqClass.reqIdPrefix),
             ...props.reqProps,
             requirement: em.create<reqModels.RequirementModel>((reqModels as any)[props.ReqClass.name], {
                 id: newId,
-                createdBy: props.createdById
+                createdBy: props.createdById,
+                creationDate: props.effectiveDate
             })
         })
 
@@ -143,9 +170,12 @@ export class OrganizationRepository {
         em.create(BelongsVersionsModel, {
             isDeleted: false,
             effectiveFrom: props.effectiveDate,
+            modifiedBy: props.createdById,
             requirementRelation: em.create(BelongsModel, {
                 left: newId,
-                right: props.solutionId
+                right: props.solutionId,
+                createdBy: props.createdById,
+                creationDate: props.effectiveDate
             })
         })
 
@@ -176,7 +206,8 @@ export class OrganizationRepository {
             modifiedBy: createdById,
             requirement: em.create(reqModels.SolutionModel, {
                 id: newId,
-                createdBy: createdById
+                createdBy: createdById,
+                creationDate: effectiveDate
             })
         })
 
@@ -184,9 +215,12 @@ export class OrganizationRepository {
         em.create(BelongsVersionsModel, {
             isDeleted: false,
             effectiveFrom: effectiveDate,
+            modifiedBy: createdById,
             requirementRelation: em.create(BelongsModel, {
                 left: newId,
-                right: organization.id
+                right: organization.id,
+                createdBy: createdById,
+                creationDate: effectiveDate
             })
         })
 
@@ -196,38 +230,47 @@ export class OrganizationRepository {
     }
 
     /**
-     * Deletes the organization
-     *
-     * @throws {Error} If the organization does not exist
-     */
-    async deleteOrganization(): Promise<void> {
-        const em = this._fork(),
-            organization = await this.getOrganization()
-
-        em.create(reqModels.OrganizationVersionsModel, {
-            isDeleted: true,
-            effectiveFrom: new Date(),
-            isSilence: false,
-            slug: organization.slug,
-            name: organization.name,
-            description: organization.description,
-            modifiedBy: organization.modifiedById,
-            requirement: em.create(reqModels.OrganizationModel, {
-                id: organization.id,
-                createdBy: organization.createdById
-            })
-        })
-
-        await em.flush()
-    }
-
-    /**
      * Find solutions that match the query parameters for an organization
      *
      * @param query The query parameters to filter solutions by
      * @returns The solutions that match the query parameters
      */
     async findSolutions(query: Partial<Solution>): Promise<Solution[]> {
+        const em = this._fork(),
+            organizationId = (await this.getOrganization()).id
+
+        const solsInOrg = await em.find(BelongsModel, {
+            left: { req_type: ReqType.SOLUTION },
+            right: { id: organizationId, req_type: ReqType.ORGANIZATION }
+        }, {
+            populate: ['versions'],
+            populateFilter: {
+                versions: {
+                    effectiveFrom: {
+                        $eq: raw(`(SELECT MAX(effective_from)
+                            FROM requirement_relation_versions
+                            WHERE requirement_relation_id = requirement_relation.id AND effective_from <= now())`)
+                    },
+                    isDeleted: false
+                }
+            }
+        })
+
+        const solutionsQuery = em.find(reqModels.SolutionModel, {
+            id: {
+                $in: solsInOrg.map(sol => sol.left.id)
+            },
+            versions: {
+                effectiveFrom: {
+                    $eq: raw(`(SELECT MAX(effective_from)
+                    FROM requirement_versions
+                    WHERE requirement_id = s.id AND effective_from <= now())`)
+                },
+                isDeleted: false
+            }
+        })
+
+        /*
         // Solution is in the 'requirement' table with ReqType.SOLUTION
         const em = this._fork(),
             knex = em.getKnex(),
@@ -270,6 +313,7 @@ export class OrganizationRepository {
                 ...acc, [snakeCaseToCamelCase(key)]: value
             }), {} as any))
         )
+        */
     }
 
     /**
@@ -428,6 +472,7 @@ export class OrganizationRepository {
     /**
      * Gets the organization
      * @returns The organization
+     * @throws {Error} If the organization does not exist
      */
     async getOrganization(): Promise<Organization> {
         return this._organization
@@ -466,7 +511,7 @@ export class OrganizationRepository {
         return results.map((result) => new Organization({
             creationDate: result.creationDate,
             isDeleted: result.isDeleted,
-            effectiveFrom: result.effectiveFrom,
+            lastModified: result.effectiveFrom,
             id: result.id,
             name: result.name,
             description: result.description,
@@ -520,7 +565,7 @@ export class OrganizationRepository {
         return new Organization({
             creationDate: result.creationDate,
             isDeleted: result.is_deleted,
-            effectiveFrom: result.effectiveFrom,
+            lastModified: result.effectiveFrom,
             id: result.id,
             name: result.name,
             description: result.description,
@@ -702,44 +747,46 @@ export class OrganizationRepository {
      */
     async getSolutionById(solutionId: Solution['id']): Promise<Solution> {
         const em = this._fork(),
-            knex = em.getKnex(),
             organizationId = (await this.getOrganization()).id,
-            results = await knex
-                .select('s.*', 'sv.*')
-                .from({ s: 'requirement' })
-                .join({ sv: 'requirement_versions' }, function () {
-                    this.on('s.id', '=', 'sv.requirement_id')
-                        .andOn('sv.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
-                            FROM requirement_versions
-                            WHERE requirement_id = s.id AND effective_from <= now())`)
-                        )
-                })
-                // check that the solution belongs to the organization
-                .join({ rel_sol_org: 'requirement_relation' }, function () {
-                    this.on('s.id', '=', 'rel_sol_org.left_id')
-                        .andOn('rel_sol_org.rel_type', '=', `'${RelType.BELONGS}'`)
-                        .andOn('rel_sol_org.right_id', '=', `'${organizationId}'`)
-                })
-                .join({ rel_sol_org_v: 'requirement_relation_versions' }, function () {
-                    this.on('rel_sol_org.id', '=', 'rel_sol_org_v.requirement_relation_id')
-                        .andOn('rel_sol_org_v.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
-                    FROM requirement_relation_versions
-                    WHERE requirement_relation_id = rel_sol_org.id AND effective_from <= now())`)
-                        )
-                })
-                .where('s.id', solutionId)
-                .andWhere('s.req_type', ReqType.SOLUTION)
+            effectiveDate = new Date()
 
-        if (results.length === 0)
+        // Find the Belongs relation between the solution and the organization
+        const solsBelongingToOrg = await em.find(BelongsVersionsModel, {
+            requirementRelation: {
+                left: {
+                    id: solutionId,
+                    req_type: ReqType.SOLUTION
+                },
+                right: organizationId
+            },
+            effectiveFrom: { $lte: effectiveDate },
+            isDeleted: false
+        })
+
+        if (solsBelongingToOrg.length === 0)
             throw new Error('Solution does not exist in the organization')
 
-        const result = results[0]
+        // Find the latest version of the solution
+        const { requirement: solutionStatic, ...solutionVolatile } = await em.findOneOrFail(reqModels.SolutionVersionsModel, {
+            requirement: {
+                id: solutionId
+            },
+            effectiveFrom: { $lte: effectiveDate },
+            isDeleted: false
+        }, { orderBy: { effectiveFrom: 'desc' } })
 
-        return new Solution(
-            Object.entries(result).reduce((acc, [key, value]) => ({
-                ...acc, [snakeCaseToCamelCase(key)]: value
-            }), {} as any)
-        )
+        return new Solution({
+            createdById: solutionStatic.createdBy.id,
+            description: solutionVolatile.description,
+            lastModified: solutionVolatile.effectiveFrom,
+            id: solutionStatic.id,
+            creationDate: solutionStatic.creationDate,
+            isDeleted: solutionVolatile.isDeleted,
+            isSilence: solutionVolatile.isSilence,
+            modifiedById: solutionVolatile.modifiedBy.id,
+            name: solutionVolatile.name,
+            reqId: solutionVolatile.reqId
+        })
     }
 
     /**
@@ -751,44 +798,43 @@ export class OrganizationRepository {
      */
     async getSolutionBySlug(solutionSlug: Solution['slug']): Promise<Solution> {
         const em = this._fork(),
-            knex = em.getKnex(),
             organizationId = (await this.getOrganization()).id,
-            results = await knex
-                .select('s.*', 'sv.*')
-                .from({ s: 'requirement' })
-                .join({ sv: 'requirement_versions' }, function () {
-                    this.on('s.id', '=', 'sv.requirement_id')
-                        .andOn('sv.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
-                            FROM requirement_versions
-                            WHERE requirement_id = s.id AND effective_from <= now())`)
-                        )
-                })
-                // check that the requirement is a solution and belongs to the organization
-                .join({ rel_sol_org: 'requirement_relation' }, function () {
-                    this.on('s.id', '=', 'rel_sol_org.left_id')
-                        .andOn('rel_sol_org.rel_type', '=', `'${RelType.BELONGS}'`)
-                        .andOn('rel_sol_org.right_id', '=', `'${organizationId}'`)
-                })
-                .join({ rel_sol_org_v: 'requirement_relation_versions' }, function () {
-                    this.on('rel_sol_org.id', '=', 'rel_sol_org_v.requirement_relation_id')
-                        .andOn('rel_sol_org_v.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
-                    FROM requirement_relation_versions
-                    WHERE requirement_relation_id = rel_sol_org.id AND effective_from <= now())`)
-                        )
-                })
-                .where('sv.slug', solutionSlug)
-                .andWhere('s.req_type', ReqType.SOLUTION)
+            effectiveDate = new Date()
 
-        if (results.length === 0)
+        const solsBelongingToOrg = await em.find(BelongsVersionsModel, {
+            requirementRelation: {
+                left: { req_type: ReqType.SOLUTION },
+                right: organizationId
+            },
+            effectiveFrom: { $lte: effectiveDate },
+            isDeleted: false
+        })
+
+        if (solsBelongingToOrg.length === 0)
             throw new Error('Solution does not exist in the organization')
 
-        const result = results[0]
+        // Find the latest version of the solution with the given slug
+        const { requirement: solutionStatic, ...solutionVolatile } = await em.findOneOrFail(reqModels.SolutionVersionsModel, {
+            requirement: {
+                id: { $in: solsBelongingToOrg.map(sol => sol.requirementRelation.left.id) }
+            },
+            effectiveFrom: { $lte: effectiveDate },
+            isDeleted: false,
+            slug: solutionSlug
+        }, { orderBy: { effectiveFrom: 'desc' }, populate: ['requirement'] })
 
-        return new Solution(
-            Object.entries(result).reduce((acc, [key, value]) => ({
-                ...acc, [snakeCaseToCamelCase(key)]: value
-            }), {} as any)
-        )
+        return new Solution({
+            createdById: solutionStatic.createdBy.id,
+            description: solutionVolatile.description,
+            lastModified: solutionVolatile.effectiveFrom,
+            id: solutionStatic.id,
+            creationDate: solutionStatic.creationDate,
+            isDeleted: solutionVolatile.isDeleted,
+            isSilence: solutionVolatile.isSilence,
+            modifiedById: solutionVolatile.modifiedBy.id,
+            name: solutionVolatile.name,
+            reqId: solutionVolatile.reqId
+        })
     }
 
     /**
@@ -858,7 +904,74 @@ export class OrganizationRepository {
         ) as InstanceType<RCons>
     }
 
-    // async deleteOrganization(): Promise<void> {
-    //     // delete the organization by creating a new version with isDeleted set to true
-    // }
+    /**
+     * Deletes the organization
+     * @throws {Error} If the organization does not exist
+     */
+    async deleteOrganization(): Promise<void> {
+        const em = this._fork(),
+            organization = await this.getOrganization(),
+            effectiveDate = new Date()
+
+        em.create(reqModels.OrganizationVersionsModel, {
+            isDeleted: true,
+            effectiveFrom: effectiveDate,
+            isSilence: false,
+            slug: organization.slug,
+            name: organization.name,
+            description: organization.description,
+            modifiedBy: organization.modifiedById,
+            requirement: em.create(reqModels.OrganizationModel, {
+                id: organization.id,
+                createdBy: organization.createdById
+            })
+        })
+
+        // delete all roles associated with the organization by creating a new version with isDeleted set to true
+        const orgUsers = await this.getOrganizationAppUsers()
+
+        for (const user of orgUsers) {
+            em.create(AppUserOrganizationRoleVersionsModel, {
+                isDeleted: true,
+                effectiveFrom: effectiveDate,
+                role: user.role,
+                appUserOrganizationRole: { organization: organization.id, appUser: user.id }
+            })
+        }
+
+        await em.flush()
+
+        this._organization = this._getOrganization()
+    }
+
+    /**
+     * Deletes a solution by slug
+     * @param slug - The slug of the solution to delete
+     * @throws {Error} If the solution does not exist
+     * @throws {Error} If the solution does not belong to the organization
+     */
+    async deleteSolutionBySlug(slug: Solution['slug']): Promise<void> {
+        const em = this._fork(),
+            organization = await this.getOrganization(),
+            effectiveDate = new Date()
+
+        const solution = await this.getSolutionBySlug(slug)
+
+        em.create(reqModels.SolutionVersionsModel, {
+            isDeleted: true,
+            effectiveFrom: effectiveDate,
+            isSilence: false,
+            slug: solution.slug,
+            name: solution.name,
+            description: solution.description,
+            modifiedBy: solution.modifiedById,
+            requirement: em.create(reqModels.SolutionModel, {
+                id: solution.id,
+                createdBy: solution.createdById
+            })
+        })
+
+        // delete all requirements associated with the solution by creating a new version with isDeleted set to true
+        const solutionRequirements = await em.findAll(BelongsVersionsModel)
+    }
 }
