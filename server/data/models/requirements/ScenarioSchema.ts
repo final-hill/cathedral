@@ -13,8 +13,8 @@ export class ScenarioModel extends ExampleModel {
 @Entity({ discriminatorValue: ReqType.SCENARIO })
 export class ScenarioVersionsModel extends ExampleVersionsModel {
     @ManyToOne({ entity: () => StakeholderModel })
-    readonly primaryActor!: Scenario['primaryActor'];
+    readonly primaryActor!: Scenario['primaryActorId'];
 
     @ManyToOne({ entity: () => OutcomeModel })
-    readonly outcome!: Scenario['outcome'];
+    readonly outcome!: Scenario['outcomeId'];
 }

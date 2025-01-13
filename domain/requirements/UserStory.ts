@@ -1,4 +1,3 @@
-import { FunctionalBehavior } from "./FunctionalBehavior.js";
 import { Scenario } from "./Scenario.js";
 
 /**
@@ -13,9 +12,9 @@ import { Scenario } from "./Scenario.js";
 export class UserStory extends Scenario {
     static override readonly reqIdPrefix = 'S.4.' as const;
 
-    constructor({ functionalBehavior, ...rest }: ConstructorParameters<typeof Scenario>[0] & Pick<UserStory, 'functionalBehavior'>) {
+    constructor({ functionalBehaviorId, ...rest }: ConstructorParameters<typeof Scenario>[0] & Pick<UserStory, 'functionalBehaviorId'>) {
         super(rest);
-        this.functionalBehavior = functionalBehavior;
+        this.functionalBehaviorId = functionalBehaviorId;
     }
 
     override get reqId() { return super.reqId as `${typeof UserStory.reqIdPrefix}${number}` | undefined; }
@@ -23,5 +22,5 @@ export class UserStory extends Scenario {
     /**
      * The action that the user wants to perform.
      */
-    readonly functionalBehavior: FunctionalBehavior
+    readonly functionalBehaviorId: string
 }

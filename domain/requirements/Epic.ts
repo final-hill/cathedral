@@ -1,5 +1,4 @@
 import { Scenario } from "./Scenario.js";
-import { FunctionalBehavior } from "./FunctionalBehavior.js";
 
 /**
  * An Epic is a collection of Use Cases and User Stories all directed towards a common goal.
@@ -8,9 +7,9 @@ import { FunctionalBehavior } from "./FunctionalBehavior.js";
 export class Epic extends Scenario {
     static override readonly reqIdPrefix = 'G.5.' as const;
 
-    constructor(props: ConstructorParameters<typeof Scenario>[0] & Pick<Epic, 'functionalBehavior'>) {
+    constructor(props: ConstructorParameters<typeof Scenario>[0] & Pick<Epic, 'functionalBehaviorId'>) {
         super(props);
-        this.functionalBehavior = props.functionalBehavior;
+        this.functionalBehaviorId = props.functionalBehaviorId;
     }
 
     override get reqId() { return super.reqId as `${typeof Epic.reqIdPrefix}${number}` | undefined }
@@ -18,5 +17,5 @@ export class Epic extends Scenario {
     /**
      * The action that the user wants to perform.
     */
-    readonly functionalBehavior!: FunctionalBehavior;
+    readonly functionalBehaviorId!: string;
 }

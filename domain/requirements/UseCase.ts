@@ -1,5 +1,3 @@
-import { Assumption } from "./Assumption.js";
-import { Effect } from "./Effect.js";
 import { Scenario } from "./Scenario.js";
 
 /**
@@ -9,14 +7,14 @@ import { Scenario } from "./Scenario.js";
 export class UseCase extends Scenario {
     static override readonly reqIdPrefix = 'S.4.' as const;
 
-    constructor(props: ConstructorParameters<typeof Scenario>[0] & Pick<UseCase, 'scope' | 'level' | 'precondition' | 'triggerId' | 'mainSuccessScenario' | 'successGuarantee' | 'extensions'>) {
+    constructor(props: ConstructorParameters<typeof Scenario>[0] & Pick<UseCase, 'scope' | 'level' | 'preconditionId' | 'triggerId' | 'mainSuccessScenario' | 'successGuaranteeId' | 'extensions'>) {
         super(props);
         this.scope = props.scope;
         this.level = props.level;
-        this.precondition = props.precondition;
+        this.preconditionId = props.preconditionId;
         this.triggerId = props.triggerId;
         this.mainSuccessScenario = props.mainSuccessScenario;
-        this.successGuarantee = props.successGuarantee;
+        this.successGuaranteeId = props.successGuaranteeId;
         this.extensions = props.extensions;
         // this.stakeHoldersAndInterests = props.stakeHoldersAndInterests;
     }
@@ -38,7 +36,7 @@ export class UseCase extends Scenario {
     /**
      * The precondition is an Assumption that must be true before the use case can start.
      */
-    readonly precondition: Assumption;
+    readonly preconditionId: string;
 
     /**
      * The action upon the system that starts the use case.
@@ -59,7 +57,7 @@ export class UseCase extends Scenario {
     /**
      * An Effect that is guaranteed to be true after the use case is completed.
      */
-    readonly successGuarantee: Effect;
+    readonly successGuaranteeId: string;
 
     /**
      * Extensions of the use case.

@@ -20,6 +20,23 @@ export type CreationInfo = {
     effectiveDate: Date
 }
 
+/**
+ * Converts a Requirement query to a model query
+ * @param query - The query to convert
+ * @returns The model query
+ */
+const reqQueryToModelQuery = (query: Partial<Requirement>) => {
+    return Object.entries(query).reduce((acc, [key, value]) => {
+        if (['createdById', 'creationDate', 'id'].includes(key))
+            return acc
+        if (key.endsWith('Id'))
+            key = key.slice(0, -2)
+        else if (key === 'lastModified')
+            key = 'effectiveFrom'
+        return { ...acc, [key]: value }
+    }, {})
+}
+
 export class OrganizationRepository {
     private _orm
 
@@ -66,7 +83,8 @@ export class OrganizationRepository {
             }),
             role: auor.role,
             isDeleted: false,
-            effectiveFrom: auor.effectiveDate
+            effectiveFrom: auor.effectiveDate,
+            modifiedBy: auor.appUserId
         })
 
         await em.flush()
@@ -239,8 +257,11 @@ export class OrganizationRepository {
         const em = this._fork(),
             organizationId = (await this.getOrganization()).id
 
-        const solsInOrg = await em.find(BelongsModel, {
-            left: { req_type: ReqType.SOLUTION },
+        const belongsModels = (await em.find(BelongsModel, {
+            left: {
+                ...(query.id ? { id: query.id } : {}),
+                req_type: ReqType.SOLUTION
+            },
             right: { id: organizationId, req_type: ReqType.ORGANIZATION }
         }, {
             populate: ['versions'],
@@ -254,66 +275,45 @@ export class OrganizationRepository {
                     isDeleted: false
                 }
             }
-        })
+        })).filter(belongs => belongs.versions.length > 0)
+            .map(belongs => belongs.versions[0].requirementRelation.left.id)
 
-        const solutionsQuery = em.find(reqModels.SolutionModel, {
-            id: {
-                $in: solsInOrg.map(sol => sol.left.id)
-            },
-            versions: {
-                effectiveFrom: {
-                    $eq: raw(`(SELECT MAX(effective_from)
-                    FROM requirement_versions
-                    WHERE requirement_id = s.id AND effective_from <= now())`)
+        if (belongsModels.length === 0 && query.id !== undefined)
+            throw new Error('Solution does not exist in the organization')
+
+        // TODO: generalize the query. It would be nice to not have to mention the keys
+        // but the models need to utilize accessors for reflection to work
+        const solutionModels = (await em.find(reqModels.SolutionModel, {
+            id: { $in: belongsModels },
+            ...(query.createdById ? { createdBy: query.createdById } : {}),
+            ...(query.creationDate ? { creationDate: query.creationDate } : {})
+        }, {
+            populate: ['versions'],
+            populateFilter: {
+                versions: {
+                    effectiveFrom: {
+                        $eq: raw(`(SELECT MAX(effective_from)
+                            FROM requirement_versions
+                            WHERE requirement_id = s.id AND effective_from <= now())`)
+                    },
+                    isDeleted: false,
+                    ...reqQueryToModelQuery(query)
                 },
-                isDeleted: false
             }
-        })
+        })).filter(sol => sol.versions.length > 0)
 
-        /*
-        // Solution is in the 'requirement' table with ReqType.SOLUTION
-        const em = this._fork(),
-            knex = em.getKnex(),
-            organizationId = (await this.getOrganization()).id
-
-        const solutionsQuery = knex
-            .select('s.*', 'sv.*')
-            .from({ s: 'requirement' })
-            .join({ sv: 'requirement_versions' }, function () {
-                this.on('s.id', '=', 'sv.requirement_id')
-                    .andOn('sv.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
-                        FROM requirement_versions
-                        WHERE requirement_id = s.id AND effective_from <= now())`)
-                    )
-            })
-            .join({ rel_sol_org: 'requirement_relation' }, function () {
-                this.on('s.id', '=', 'rel_sol_org.left_id')
-                    .andOn('rel_sol_org.rel_type', '=', `'${RelType.BELONGS}'`)
-                    .andOn('rel_sol_org.right_id', '=', `'${organizationId}'`)
-            })
-            .join({ rel_sol_org_v: 'requirement_relation_versions' }, function () {
-                this.on('rel_sol_org.id', '=', 'rel_sol_org_v.requirement_relation_id')
-                    .andOn('rel_sol_org_v.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
-                        FROM requirement_relation_versions
-                        WHERE requirement_relation_id = rel_sol_org.id AND effective_from <= now())`)
-                    )
-            })
-            .where('s.req_type', ReqType.SOLUTION);
-
-        const solutionsFiltered = await knex
-            .select('*')
-            .from(solutionsQuery.as('sols'))
-            .where(Object.entries(query).reduce((acc, [key, value]) => ({
-                ...acc,
-                [`sols.${camelCaseToSnakeCase(key)}`]: value
-            }), {}))
-
-        return solutionsFiltered.map((result) => new Solution(
-            Object.entries(result).reduce((acc, [key, value]) => ({
-                ...acc, [snakeCaseToCamelCase(key)]: value
-            }), {} as any))
-        )
-        */
+        return solutionModels.map(sol => new Solution({
+            createdById: sol.createdBy.id,
+            description: sol.versions[0].description,
+            lastModified: sol.versions[0].effectiveFrom,
+            id: sol.id,
+            creationDate: sol.creationDate,
+            isDeleted: sol.versions[0].isDeleted,
+            isSilence: sol.versions[0].isSilence,
+            modifiedById: sol.versions[0].modifiedBy.id,
+            name: sol.versions[0].name,
+            reqId: sol.versions[0].reqId
+        }))
     }
 
     /**
@@ -330,59 +330,66 @@ export class OrganizationRepository {
         ReqClass: RCons,
         query: Partial<InstanceType<RCons>>
     }): Promise<InstanceType<RCons>[]> {
-        const em = this._fork(),
-            knex = em.getKnex(),
-            organizationId = (await this.getOrganization()).id
+        const em = this._fork()
 
-        const requirementsQuery = knex
-            .select('rs.*', 'rv.*')
-            .from({ rs: 'requirement' })
-            .join({ rv: 'requirement_versions' }, function () {
-                this.on('rs.id', '=', 'rv.requirement_id')
-                    .andOn('rv.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
+        const reqsInSolution = (await em.find(BelongsModel, {
+            left: {
+                req_type: pascalCaseToSnakeCase(props.ReqClass.name) as ReqType,
+                ...(props.query.id ? { id: props.query.id } : {})
+            },
+            right: { id: props.solutionId, req_type: ReqType.SOLUTION }
+        }, {
+            populate: ['versions'],
+            populateFilter: {
+                versions: {
+                    effectiveFrom: {
+                        $eq: raw(`(SELECT MAX(effective_from)
+                            FROM requirement_relation_versions
+                            WHERE requirement_relation_id = requirement_relation.id AND effective_from <= now())`)
+                    },
+                    isDeleted: false
+                }
+            }
+        }))
+            .filter(rel => rel.versions.length > 0)
+            .map(rel => rel.versions[0].requirementRelation.left.id)
+
+        if (reqsInSolution.length === 0 && props.query.id !== undefined)
+            throw new Error('Requirement does not exist in the solution')
+
+        const requirementModels = (await em.find<reqModels.RequirementModel, 'versions'>((reqModels as any)[`${props.ReqClass.name}Model`], {
+            id: { $in: reqsInSolution },
+            ...(props.query.createdById ? { createdBy: props.query.createdById } : {}),
+            ...(props.query.creationDate ? { creationDate: props.query.creationDate } : {})
+        }, {
+            populate: ['versions'],
+            populateFilter: {
+                versions: {
+                    effectiveFrom: {
+                        $eq: raw(`(SELECT MAX(effective_from)
                         FROM requirement_versions
-                        WHERE requirement_id = rs.id AND effective_from <= now())`)
-                    )
-            })
-            .join({ rel_req_sol: 'requirement_relation' }, function () {
-                this.on('rs.id', '=', 'rel_req_sol.left_id')
-                    .andOn('rel_req_sol.rel_type', '=', `'${RelType.BELONGS}'`)
-                    .andOn('rel_req_sol.right_id', '=', `'${props.solutionId}'`)
-            })
-            .join({ rel_req_sol_v: 'requirement_relation_versions' }, function () {
-                this.on('rel_req_sol.id', '=', 'rel_req_sol_v.requirement_relation_id')
-                    .andOn('rel_req_sol_v.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
-                        FROM requirement_relation_versions
-                        WHERE requirement_relation_id = rel_req_sol.id AND effective_from <= now())`)
-                    )
-            })
-            .join({ rel_sol_org: 'requirement_relation' }, function () {
-                this.on('rel_req_sol.right_id', '=', 'rel_sol_org.left_id')
-                    .andOn('rel_sol_org.rel_type', '=', `'${RelType.BELONGS}'`)
-                    .andOn('rel_sol_org.right_id', '=', `'${organizationId}'`)
-            })
-            .join({ rel_sol_org_v: 'requirement_relation_versions' }, function () {
-                this.on('rel_sol_org.id', '=', 'rel_sol_org_v.requirement_relation_id')
-                    .andOn('rel_sol_org_v.effective_from', '=', knex.raw(`(SELECT MAX(effective_from)
-                        FROM requirement_relation_versions
-                        WHERE requirement_relation_id = rel_sol_org.id AND effective_from <= now())`)
-                    )
-            })
-            .where('rs.req_type', pascalCaseToSnakeCase(props.ReqClass.name))
+                        WHERE requirement_id = requirement.id AND effective_from <= now())`)
+                    },
+                    isDeleted: false,
+                    ...Object.entries(props.query).reduce((acc: Record<string, any>, [key, value]) => {
+                        if (!['createdById', 'creationDate', 'id'].includes(key))
+                            acc[key.endsWith('Id') ? key.slice(0, -2) : key] = value
+                        return acc
+                    }, {})
+                }
+            }
+        }))
+            .filter(req => req.versions.length > 0)
 
-        const requirementsFiltered = await knex
-            .select('*')
-            .from(requirementsQuery.as('reqs'))
-            .where(Object.entries(props.query).reduce((acc, [key, value]) => ({
-                ...acc,
-                [`reqs.${camelCaseToSnakeCase(key)}`]: value
-            }), {}))
-
-        return requirementsFiltered.map((result) => new props.ReqClass(
-            Object.entries(result).reduce((acc, [key, value]) => ({
-                ...acc, [snakeCaseToCamelCase(key)]: value
-            }), {} as any))
-        ) as InstanceType<RCons>[]
+        // TODO
+        return requirementModels.map(req => new props.ReqClass({
+            id: req.id,
+            creationDate: req.creationDate,
+            createdById: req.createdBy.id,
+            ...Object.entries(req.versions[0]).reduce((acc, [key, value]) => {
+                //TODO
+            })
+        }))
     }
 
     /**
@@ -746,47 +753,7 @@ export class OrganizationRepository {
      * @throws {Error} If the solution does not exist in the organization
      */
     async getSolutionById(solutionId: Solution['id']): Promise<Solution> {
-        const em = this._fork(),
-            organizationId = (await this.getOrganization()).id,
-            effectiveDate = new Date()
-
-        // Find the Belongs relation between the solution and the organization
-        const solsBelongingToOrg = await em.find(BelongsVersionsModel, {
-            requirementRelation: {
-                left: {
-                    id: solutionId,
-                    req_type: ReqType.SOLUTION
-                },
-                right: organizationId
-            },
-            effectiveFrom: { $lte: effectiveDate },
-            isDeleted: false
-        })
-
-        if (solsBelongingToOrg.length === 0)
-            throw new Error('Solution does not exist in the organization')
-
-        // Find the latest version of the solution
-        const { requirement: solutionStatic, ...solutionVolatile } = await em.findOneOrFail(reqModels.SolutionVersionsModel, {
-            requirement: {
-                id: solutionId
-            },
-            effectiveFrom: { $lte: effectiveDate },
-            isDeleted: false
-        }, { orderBy: { effectiveFrom: 'desc' } })
-
-        return new Solution({
-            createdById: solutionStatic.createdBy.id,
-            description: solutionVolatile.description,
-            lastModified: solutionVolatile.effectiveFrom,
-            id: solutionStatic.id,
-            creationDate: solutionStatic.creationDate,
-            isDeleted: solutionVolatile.isDeleted,
-            isSilence: solutionVolatile.isSilence,
-            modifiedById: solutionVolatile.modifiedBy.id,
-            name: solutionVolatile.name,
-            reqId: solutionVolatile.reqId
-        })
+        return (await this.findSolutions({ id: solutionId }))[0]
     }
 
     /**
@@ -797,44 +764,7 @@ export class OrganizationRepository {
      * @throws {Error} If the solution does not exist
      */
     async getSolutionBySlug(solutionSlug: Solution['slug']): Promise<Solution> {
-        const em = this._fork(),
-            organizationId = (await this.getOrganization()).id,
-            effectiveDate = new Date()
-
-        const solsBelongingToOrg = await em.find(BelongsVersionsModel, {
-            requirementRelation: {
-                left: { req_type: ReqType.SOLUTION },
-                right: organizationId
-            },
-            effectiveFrom: { $lte: effectiveDate },
-            isDeleted: false
-        })
-
-        if (solsBelongingToOrg.length === 0)
-            throw new Error('Solution does not exist in the organization')
-
-        // Find the latest version of the solution with the given slug
-        const { requirement: solutionStatic, ...solutionVolatile } = await em.findOneOrFail(reqModels.SolutionVersionsModel, {
-            requirement: {
-                id: { $in: solsBelongingToOrg.map(sol => sol.requirementRelation.left.id) }
-            },
-            effectiveFrom: { $lte: effectiveDate },
-            isDeleted: false,
-            slug: solutionSlug
-        }, { orderBy: { effectiveFrom: 'desc' }, populate: ['requirement'] })
-
-        return new Solution({
-            createdById: solutionStatic.createdBy.id,
-            description: solutionVolatile.description,
-            lastModified: solutionVolatile.effectiveFrom,
-            id: solutionStatic.id,
-            creationDate: solutionStatic.creationDate,
-            isDeleted: solutionVolatile.isDeleted,
-            isSilence: solutionVolatile.isSilence,
-            modifiedById: solutionVolatile.modifiedBy.id,
-            name: solutionVolatile.name,
-            reqId: solutionVolatile.reqId
-        })
+        return (await this.findSolutions({ slug: solutionSlug }))[0]
     }
 
     /**
