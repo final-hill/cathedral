@@ -17,7 +17,6 @@ export class Requirement extends AuditMetadata {
         this.id = props.id;
         this.name = props.name;
         this.description = props.description;
-        this.isDeleted = props.isDeleted;
         this.isSilence = props.isSilence;
     }
 
@@ -44,11 +43,6 @@ export class Requirement extends AuditMetadata {
      * @throws {Error} if the name is longer than 100 characters
     */
     readonly name: string;
-
-    /**
-     * Whether the requirement is deleted
-     */
-    readonly isDeleted: boolean;
 
     /**
      * A human-readable explanation of a property

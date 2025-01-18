@@ -151,7 +151,7 @@ export class OrganizationInteractor {
         if (!this.isOrganizationReader())
             throw new Error('Forbidden: You do not have permission to perform this action')
 
-        return this._repository.findSolutionRequirements(props)
+        return this._repository.findSolutionRequirementsByType(props)
     }
 
     // TODO: allow the re-ordering of requirements in a solution (reqIds)

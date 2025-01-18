@@ -1,12 +1,12 @@
 import { Collection, Entity, Enum, ManyToOne, OneToMany } from "@mikro-orm/core";
 import { AppRole } from "../../../../domain/application/index.js";
-import { VolatileAuditModel } from "../AuditSchema.js";
+import { StaticAuditModel, VolatileAuditModel } from "../AuditSchema.js";
 import { AppUserModel } from "./AppUserSchema.js";
 import { OrganizationModel } from "../requirements/index.js";
 
 // static properties
 @Entity({ tableName: 'app_user_organization_role' })
-export class AppUserOrganizationRoleModel {
+export class AppUserOrganizationRoleModel extends StaticAuditModel {
     @ManyToOne({ primary: true, entity: 'AppUserModel' })
     readonly appUser!: AppUserModel;
 

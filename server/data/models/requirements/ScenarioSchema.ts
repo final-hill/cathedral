@@ -1,5 +1,4 @@
 import { Collection, Entity, ManyToOne } from "@mikro-orm/core";
-import { Scenario } from '../../../../domain/requirements/index.js';
 import { ReqType } from "./ReqType.js";
 import { ExampleModel, ExampleVersionsModel } from "./ExampleSchema.js";
 import { StakeholderModel } from "./StakeholderSchema.js";
@@ -13,8 +12,8 @@ export class ScenarioModel extends ExampleModel {
 @Entity({ discriminatorValue: ReqType.SCENARIO })
 export class ScenarioVersionsModel extends ExampleVersionsModel {
     @ManyToOne({ entity: () => StakeholderModel })
-    readonly primaryActor!: Scenario['primaryActorId'];
+    readonly primaryActor!: StakeholderModel;
 
     @ManyToOne({ entity: () => OutcomeModel })
-    readonly outcome!: Scenario['outcomeId'];
+    readonly outcome!: OutcomeModel;
 }

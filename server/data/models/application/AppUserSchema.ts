@@ -1,15 +1,12 @@
-import { Collection, Entity, ManyToMany, ManyToOne, OneToMany, Property } from "@mikro-orm/core";
-import { VolatileAuditModel } from "../AuditSchema.js";
+import { Collection, Entity, ManyToOne, OneToMany, Property } from "@mikro-orm/core";
+import { StaticAuditModel, VolatileAuditModel } from "../AuditSchema.js";
 // import { AppUserOrganizationRoleVersionsModel } from "./index.js";
 
 // static properties
 @Entity({ tableName: 'app_user' })
-export class AppUserModel {
+export class AppUserModel extends StaticAuditModel {
     @Property({ type: 'uuid', primary: true })
     readonly id!: string
-
-    @Property()
-    readonly creationDate!: Date
 
     @OneToMany({ entity: () => AppUserVersionsModel, mappedBy: 'appUser' })
     readonly versions = new Collection<AppUserVersionsModel>(this);

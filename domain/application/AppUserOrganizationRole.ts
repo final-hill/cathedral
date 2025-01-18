@@ -1,11 +1,15 @@
+import { AuditMetadata } from "../AuditMetadata.js";
 import { AppRole } from "./AppRole.js";
 
 /**
  * An AppUserOrganizationRole is a mapping between an AppUser, an Organization, and a Role
  */
-export class AppUserOrganizationRole {
-    constructor(props: Pick<AppUserOrganizationRole, keyof AppUserOrganizationRole>) {
-        Object.assign(this, props);
+export class AppUserOrganizationRole extends AuditMetadata {
+    constructor({ appUserId, organizationId, role, ...parentProps }: Pick<AppUserOrganizationRole, keyof AppUserOrganizationRole>) {
+        super(parentProps);
+        this.appUserId = appUserId;
+        this.organizationId = organizationId;
+        this.role = role;
     }
 
     /**
@@ -22,14 +26,4 @@ export class AppUserOrganizationRole {
      * The Role associated with the OrganizationRole
      */
     readonly role!: AppRole
-
-    /**
-     * Whether the relation is deleted
-     */
-    readonly isDeleted!: boolean;
-
-    /**
-     * The date and time when the relation was last modified
-     */
-    readonly effectiveFrom!: Date;
 }

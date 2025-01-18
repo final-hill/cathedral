@@ -5,6 +5,7 @@ export abstract class AuditMetadata {
     constructor(props: Pick<AuditMetadata, keyof AuditMetadata>) {
         this.createdById = props.createdById;
         this.creationDate = props.creationDate;
+        this.isDeleted = props.isDeleted
         this.lastModified = props.lastModified;
         this.modifiedById = props.modifiedById;
     }
@@ -20,6 +21,11 @@ export abstract class AuditMetadata {
     readonly creationDate: Date
 
     /**
+     * Whether the entity is deleted
+     */
+    readonly isDeleted: boolean;
+
+    /**
      * The date and time when the entity was last modified
      */
     readonly lastModified: Date;
@@ -28,4 +34,5 @@ export abstract class AuditMetadata {
      * The user who last modified the entity
      */
     readonly modifiedById: string;
+
 }
