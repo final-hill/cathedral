@@ -42,6 +42,6 @@ export default function putRequirementHttpHandler<
                 userId: session.id
             })
 
-        await organizationInteractor.updateRequirement({ ReqClass, id, solutionId, reqProps })
+        await organizationInteractor.updateSolutionRequirement({ ReqClass, id, solutionId, reqProps })
     })
 }

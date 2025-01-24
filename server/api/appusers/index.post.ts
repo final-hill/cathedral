@@ -26,5 +26,5 @@ export default defineEventHandler(async (event) => {
             organizationSlug
         })
 
-    return await organizationInteractor.addAppUserToOrganization({ email, role })
+    return await organizationInteractor.addAppUser({ email, role })
 })

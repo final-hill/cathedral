@@ -1,5 +1,5 @@
 import { ManyToOne, Property } from "@mikro-orm/core"
-import { AppUserModel } from "./application";
+import { AppUserModel } from "./index.js"
 
 export abstract class StaticAuditModel {
     @ManyToOne({ entity: () => AppUserModel })

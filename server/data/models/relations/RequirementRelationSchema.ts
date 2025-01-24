@@ -1,13 +1,12 @@
-import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, Property } from '@mikro-orm/core';
+import { Collection, Entity, Enum, ManyToOne, OneToMany, OneToOne, OptionalProps, Ref } from '@mikro-orm/core';
 import { RelType } from './RelType.js';
-import { StaticAuditModel, VolatileAuditModel } from '../AuditSchema.js';
-import { RequirementModel } from '../requirements/RequirementSchema.js';
-import { AppUserModel } from '../application/AppUserSchema.js';
+import { StaticAuditModel, VolatileAuditModel } from '../index.js';
+import { RequirementModel } from '../requirements/index.js';
 
 // Static properties
 @Entity({ abstract: true, tableName: 'requirement_relation', discriminatorColumn: 'rel_type', discriminatorValue: RelType.RELATION })
 export abstract class RequirementRelationModel extends StaticAuditModel {
-    [OptionalProps]?: 'rel_type'
+    [OptionalProps]?: 'rel_type' | 'latestVersion'
 
     @Enum({ items: () => RelType, primary: true })
     readonly rel_type!: RelType
@@ -20,6 +19,21 @@ export abstract class RequirementRelationModel extends StaticAuditModel {
 
     @OneToMany({ entity: 'RequirementRelationVersionsModel', mappedBy: 'requirementRelation' })
     readonly versions = new Collection<RequirementRelationVersionsModel>(this)
+
+    @OneToOne({
+        entity: () => RequirementRelationVersionsModel,
+        ref: true,
+        // Select the latest version id of the requirement (effective_from <= now())
+        formula: alias =>
+            `select id
+            from requirement_relation_versions
+            where requirement_relation_id = ${alias}.id
+            and effective_from <= now()
+            and is_deleted = false
+            order by effective_from
+            desc limit 1`
+    })
+    readonly latestVersion?: Ref<RequirementRelationVersionsModel>
 }
 
 // Volatile properties

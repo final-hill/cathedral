@@ -1,4 +1,4 @@
-import { AuditMetadata } from "../AuditMetadata";
+import { AuditMetadata } from "../AuditMetadata.js";
 
 /**
  * A Requirement is a statement that specifies a property.

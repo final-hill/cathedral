@@ -1,11 +1,11 @@
-import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, Property } from '@mikro-orm/core';
-import { StaticAuditModel, VolatileAuditModel } from '../AuditSchema.js';
+import { Collection, Entity, Enum, ManyToOne, OneToMany, OneToOne, OptionalProps, Property, Ref } from '@mikro-orm/core';
+import { StaticAuditModel, VolatileAuditModel } from '../index.js';
 import { ReqType } from './ReqType.js';
 
 // static properties
 @Entity({ abstract: true, tableName: 'requirement', discriminatorColumn: 'req_type', discriminatorValue: ReqType.REQUIREMENT })
 export abstract class RequirementModel extends StaticAuditModel {
-    [OptionalProps]?: 'req_type'
+    [OptionalProps]?: 'req_type' | 'latestVersion'
 
     @Enum({ items: () => ReqType, primary: true })
     readonly req_type!: ReqType;
@@ -15,6 +15,20 @@ export abstract class RequirementModel extends StaticAuditModel {
 
     @OneToMany({ entity: () => RequirementVersionsModel, mappedBy: 'requirement' })
     readonly versions = new Collection<RequirementVersionsModel>(this);
+
+    @OneToOne({
+        entity: () => RequirementVersionsModel,
+        ref: true,
+        formula: alias =>
+            `select id
+            from requirement_versions
+            where requirement_id = ${alias}.id
+            and effective_from <= now()
+            and is_deleted = false
+            order by effective_from
+            desc limit 1`
+    })
+    readonly latestVersion?: Ref<RequirementVersionsModel>;
 }
 
 //volatile properties
