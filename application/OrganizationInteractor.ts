@@ -291,13 +291,16 @@ export class OrganizationInteractor {
      *
      * @param query The query parameters to filter organizations by
      */
-    async getAppUserOrganizations(): Promise<req.Organization[]> {
+    async getAppUserOrganizations(query: Partial<req.Organization> = {}): Promise<req.Organization[]> {
         const appUser = await this._repository.getOrganizationAppUserById(this._userId)
 
         if (appUser.isSystemAdmin)
             return this._repository.getAllOrganizations()
 
-        return this._repository.getAppUserOrganizations(appUser.id)
+        return (await this._repository.getAppUserOrganizations(appUser.id))
+            .filter(org => (Object.keys(query) as (keyof typeof query)[])
+                .every(key => query[key] === org[key])
+            )
     }
 
     /**

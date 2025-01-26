@@ -18,9 +18,13 @@ export default defineEventHandler(async (event) => {
         organizationInteractor = new OrganizationInteractor({
             repository: new OrganizationRepository({ config }),
             userId: session.id
-        })
+        }),
+        newOrgId = await organizationInteractor.addOrganization({ name, description })
 
-    const newOrg = await organizationInteractor.addOrganization({ name, description })
+    const newOrgInteractor = new OrganizationInteractor({
+        repository: new OrganizationRepository({ config, organizationId: newOrgId }),
+        userId: session.id
+    })
 
-    return newOrg.slug
+    return newOrgInteractor.getOrganization()
 })
