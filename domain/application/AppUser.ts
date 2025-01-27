@@ -59,5 +59,5 @@ export class AppUser {
     /**
      * The role of the AppUser.
      */
-    readonly role!: AppRole;
+    readonly role?: AppRole;
 }

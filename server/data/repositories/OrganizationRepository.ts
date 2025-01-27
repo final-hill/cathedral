@@ -1,4 +1,4 @@
-import { Collection, MikroORM, raw, type Options } from "@mikro-orm/postgresql";
+import { raw } from "@mikro-orm/postgresql";
 import { AppUser, AppUserOrganizationRole } from "~/domain/application";
 import * as req from "~/domain/requirements";
 import * as reqModels from "../models/requirements";
@@ -8,12 +8,9 @@ import { pascalCaseToSnakeCase, slugify, snakeCaseToCamelCase } from "#shared/ut
 import { ReqType } from "../models/requirements/ReqType";
 import { v7 as uuid7 } from 'uuid'
 import { AuditMetadata } from "~/domain/AuditMetadata";
-
-export type OrganizationRepositoryOptions = {
-    config: Options,
-    organizationId?: req.Organization['id'],
-    organizationSlug?: req.Organization['slug']
-}
+import { Repository } from "./Repository";
+import { ReqQueryToModelQuery } from "../mappers/ReqQueryToModelQuery";
+import { DataModelToDomainModel } from "../mappers/DataModelToDomainModel";
 
 export type CreationInfo = {
     createdById: AppUser['id']
@@ -30,61 +27,8 @@ export type DeletionInfo = {
     deletedDate: Date
 }
 
-// TODO: This is an Adapter.
-/**
- * Converts a Requirement query to a model query
- * @param query - The query to convert
- * @returns The model query
- */
-const reqQueryToModelQuery = (query: Partial<req.Requirement>) => {
-    return Object.entries(query).reduce((acc, [key, value]) => {
-        if (['createdById', 'creationDate', 'id'].includes(key))
-            return acc
-        if (key.endsWith('Id'))
-            key = key.slice(0, -2)
-        else if (key === 'lastModified')
-            key = 'effectiveFrom'
-        return { ...acc, [key]: value }
-    }, {})
-}
-
-// TODO: This is an Adapter.
-/**
- * Converts a data model to a domain model
- * @param model - The data model to convert
- * @returns The domain model
- */
-const dataModelToDomainModel = <M extends reqModels.RequirementModel, R extends req.Requirement>(model: M): R => {
-    const staticProps = Object.entries(model).reduce((acc, [key, value]) => {
-        if (typeof value === 'object' && value !== null && 'id' in value)
-            return { ...acc, [`${key}Id`]: value.id }
-        else if (key === 'versions' || key === 'latestVersion')
-            return acc // skip
-        else
-            return { ...acc, [key]: value }
-    }, {})
-
-    const version = model.latestVersion!.getEntity()
-
-    const versionProps = Object.entries(version).reduce((acc, [key, value]) => {
-        if (key === 'requirement')
-            return acc // skip
-        else if (typeof value === 'object' && value !== null && 'id' in value)
-            return { ...acc, [`${key}Id`]: value.id }
-        else if (key === 'effectiveFrom')
-            return { ...acc, lastModified: value }
-        else if (value instanceof Collection)
-            return { ...acc, [`${key}Ids`]: value.getItems().map(item => item.id) }
-        else
-            return { ...acc, [key]: value }
-    }, {})
-
-    return { ...staticProps, ...versionProps } as R
-}
-
-export class OrganizationRepository {
-    private _orm
-
+// TODO: parameterize the repository type
+export class OrganizationRepository extends Repository<req.Organization> {
     private _organizationId?: req.Organization['id']
     private _organizationSlug?: req.Organization['slug']
     /** This is not readonly because it can be reassigned in {@link #deleteOrganization} */
@@ -98,19 +42,18 @@ export class OrganizationRepository {
      * @param [props.organizationId] - The id of the organization to utilize
      * @param [props.organizationSlug] - The slug of the organization to utilize
      */
-    constructor(options: OrganizationRepositoryOptions) {
-        const { config, organizationId, organizationSlug } = options
+    constructor(options: ConstructorParameters<typeof Repository>[0] & {
+        organizationId?: req.Organization['id'],
+        organizationSlug?: req.Organization['slug']
+    }) {
+        super({ config: options.config })
+
+        const { organizationId, organizationSlug } = options
 
         this._organizationId = organizationId
         this._organizationSlug = organizationSlug
-        this._orm = MikroORM.initSync(config)
         this._organization = this._getOrganization()
     }
-
-    /**
-     * Returns new EntityManager instance with its own identity map
-     */
-    private _fork() { return this._orm.em.fork() }
 
     /**
      * Associates an app user with the organization with the specified role
@@ -506,13 +449,13 @@ export class OrganizationRepository {
             ...(query.creationDate ? { creationDate: query.creationDate } : {}),
             latestVersion: {
                 isDeleted: false,
-                ...reqQueryToModelQuery(query)
+                ...new ReqQueryToModelQuery().map(query)
             }
         }, {
             populate: ['latestVersion']
         })).filter(sol => sol.latestVersion != undefined)
 
-        return solutionModels.map(sol => new req.Solution(dataModelToDomainModel(sol)))
+        return solutionModels.map(sol => new req.Solution(new DataModelToDomainModel().map(sol)))
     }
 
     /**
@@ -586,14 +529,14 @@ export class OrganizationRepository {
             ...(props.query.creationDate ? { creationDate: props.query.creationDate } : {}),
             latestVersion: {
                 isDeleted: false,
-                ...reqQueryToModelQuery(props.query)
+                ...new ReqQueryToModelQuery().map(props.query)
             }
         }, {
             populate: ['latestVersion']
         }))
             .filter(req => req.latestVersion != undefined)
 
-        return requirementModels.map(req => new props.ReqClass(dataModelToDomainModel(req))) as InstanceType<RCons>[]
+        return requirementModels.map(req => new props.ReqClass(new DataModelToDomainModel().map(req))) as InstanceType<RCons>[]
     }
 
     /**
@@ -641,35 +584,6 @@ export class OrganizationRepository {
     }
 
     /**
-     * Returns all organizations associated with the app user
-     * @param appUserId - The id of the app user
-     * @returns The organizations associated with the app user
-     */
-    async getAppUserOrganizations(appUserId: AppUser['id']): Promise<req.Organization[]> {
-        const em = this._fork()
-
-        const auors = (await em.find(AppUserOrganizationRoleModel, {
-            appUser: appUserId,
-            latestVersion: { isDeleted: false }
-        }, {
-            populate: ['latestVersion']
-        }))
-            .filter(auor => auor.latestVersion != undefined)
-
-        const organizationIds = auors.map(auor => auor.organization.id)
-
-        const organizations = (await em.find(reqModels.OrganizationModel, {
-            id: { $in: organizationIds },
-            latestVersion: { isDeleted: false }
-        }, {
-            populate: ['latestVersion']
-        }))
-            .filter(org => org.latestVersion != undefined)
-
-        return organizations.map(org => new req.Organization(dataModelToDomainModel(org)))
-    }
-
-    /**
      * Gets the organization
      * @returns The organization
      * @throws {Error} If the organization does not exist
@@ -692,7 +606,7 @@ export class OrganizationRepository {
         }))
             .filter(org => org.latestVersion != undefined)
 
-        return organizations.map(org => new req.Organization(dataModelToDomainModel(org)))
+        return organizations.map(org => new req.Organization(new DataModelToDomainModel().map(org)))
     }
 
     /**
@@ -722,7 +636,7 @@ export class OrganizationRepository {
         if (!result || !result.latestVersion)
             throw new Error('Organization does not exist')
 
-        return new req.Organization(dataModelToDomainModel(result))
+        return new req.Organization(new DataModelToDomainModel().map(result))
     }
 
     /**

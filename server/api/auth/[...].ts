@@ -1,7 +1,9 @@
 import { NuxtAuthHandler } from '#auth'
 import AzureADB2CProvider, { type AzureB2CProfile } from "next-auth/providers/azure-ad-b2c";
-import { fork } from '~/server/data/orm.js'
+import ormConfig from "~/mikro-orm.config"
 import { AppUser } from '~/domain/application/index.js';
+import { AppUserInteractor } from '~/application/AppUserInteractor';
+import { AppUserRepository } from '~/server/data/repositories/AppUserRepository';
 
 const config = useRuntimeConfig()
 
@@ -29,11 +31,14 @@ export default NuxtAuthHandler({
 
             if (account) {
                 const p = profile as AzureB2CProfile,
-                    em = fork()
+                    appUserInteractor = new AppUserInteractor({
+                        userId: p.oid,
+                        repository: new AppUserRepository({
+                            config: ormConfig
+                        })
+                    })
 
-                let appUser = await em.findOne(AppUser, {
-                    id: p.oid
-                })
+                let appUser = await appUserInteractor.getAppUserById(p.oid)
 
                 if (!appUser) {
                     appUser = em.create(AppUser, {
