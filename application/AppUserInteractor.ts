@@ -34,9 +34,26 @@ export class AppUserInteractor extends Interactor<AppUser> {
      * @param id - The id of the app user
      * @returns The app user
      * @throws {Error} If the user does not exist
+     * @throws {Error} If the current user is not a system admin or the user being queried is not the current user
      */
     async getAppUserById(id: AppUser['id']): Promise<AppUser> {
+        if (id !== this._userId && !this._isSystemAdmin())
+            throw new Error(`User with id ${this._userId} does not have permission to get user with id ${id}`)
         return this.repository.getUserById(id)
+    }
+
+    /**
+     * Get the app user by email
+     * @param email - The email of the app user
+     * @returns The app user
+     * @throws {Error} If the user does not exist
+     * @throws {Error} If the current user is not a system admin or the user being queried is not the current user
+     */
+    async getAppUserByEmail(email: AppUser['email']): Promise<AppUser> {
+        const currentUser = await this.getAppUserById(this._userId)
+        if (currentUser.email !== email && !this._isSystemAdmin())
+            throw new Error(`User with id ${this._userId} does not have permission to get user with email ${email}`)
+        return this.repository.getUserByEmail(email)
     }
 
     /**

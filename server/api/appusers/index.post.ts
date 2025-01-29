@@ -1,8 +1,11 @@
 import { z } from "zod"
-import { fork } from "~/server/data/orm.js"
 import { getServerSession } from '#auth'
 import { AppRole, } from "~/domain/application/index.js"
 import { OrganizationInteractor } from "~/application"
+import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository";
+import config from "~/mikro-orm.config";
+import { AppUserInteractor } from "~/application/AppUserInteractor";
+import { AppUserRepository } from "~/server/data/repositories/AppUserRepository";
 
 const bodySchema = z.object({
     email: z.string(),
@@ -19,12 +22,28 @@ const bodySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { email, organizationId, organizationSlug, role } = await validateEventBody(event, bodySchema),
         session = (await getServerSession(event))!,
+        appUserInteractor = new AppUserInteractor({
+            userId: session.id,
+            repository: new AppUserRepository({
+                config
+            })
+        }),
         organizationInteractor = new OrganizationInteractor({
             userId: session.id,
-            entityManager: fork(),
-            organizationId,
-            organizationSlug
+            repository: new OrganizationRepository({
+                config: config,
+                organizationId,
+                organizationSlug
+            })
         })
 
-    return await organizationInteractor.addAppUserOrganizationRole({ email, role })
+    const orgId = organizationId ?? (await organizationInteractor.getOrganization()).id
+
+    const appUser = await appUserInteractor.getAppUserByEmail(email)
+
+    return await organizationInteractor.addAppUserOrganizationRole({
+        appUserId: appUser.id,
+        organizationId: orgId,
+        role
+    })
 })

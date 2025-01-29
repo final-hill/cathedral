@@ -4,6 +4,40 @@ import { AppUserModel, AppUserOrganizationRoleModel, OrganizationModel } from ".
 import { Organization } from "~/domain/requirements";
 
 export class AppUserRepository extends Repository<AppUser> {
+
+    /**
+     * Get the app user by email.
+     * Note: The 'role' will not be populated. Use the OrganizationInteractor methods if you need the associated role.
+     * @param email - The email of the app user
+     * @returns The app user
+     * @throws {Error} If the user does not exist
+     */
+    async getUserByEmail(email: AppUser['email']): Promise<AppUser> {
+        const em = this._fork()
+
+        const user = await em.findOneOrFail(AppUserModel, {
+            latestVersion: { email, isDeleted: false }
+        })
+
+        const latestVersion = user.latestVersion?.getEntity()
+
+        if (latestVersion == undefined)
+            throw new Error(`User with email ${email} does not exist`)
+
+        return new AppUser({
+            id: user.id,
+            creationDate: user.creationDate,
+            lastLoginDate: latestVersion.lastLoginDate,
+            effectiveFrom: latestVersion.effectiveFrom,
+            email: latestVersion.email,
+            isDeleted: latestVersion.isDeleted,
+            isSystemAdmin: latestVersion.isSystemAdmin,
+            name: latestVersion.name,
+            // Roles are associated with organizations, not users
+            role: undefined
+        })
+    }
+
     /**
      * Get the app user by id.
      * Note: The 'role' will not be populated. Use the OrganizationInteractor methods if you need the associated role.
