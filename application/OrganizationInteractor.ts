@@ -544,7 +544,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @throws {Error} If the user is not a reader of the organization or better
      * @throws {Error} If the ParsedRequirement does not exist
      * @throws {Error} If the ParsedRequirement does not belong to the solution
-     */
+     * /
     // TODO: refactor to use the repository
     async getFollowingParsedSilenceRequirements({ solutionId, id }: { solutionId: req.Solution['id'], id: req.Requirement['id'] }): Promise<Partial<Record<ReqType, Requirement[]>>> {
         if (!this.isOrganizationReader())
@@ -563,6 +563,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
         // Group the results by the requirement type
         return groupBy(requirements, ({ req_type }) => req_type)
     }
+    */
 
     /**
      * Parse requirements from a statement, save the parsed requirements to the database
@@ -573,8 +574,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @returns The number of requirements parsed
      * @throws {Error} If the user is not a contributor of the organization or better
      * @throws {Error} If the Solution does not belong to the organization
-     */
-    // TODO: refactor to use the repository
+     * /
     async parseRequirement({ solutionId, statement, parsingService }: {
         solutionId: req.Solution['id'],
         statement: string,
@@ -702,4 +702,5 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
 
         return reqCount
     }
+    */
 }

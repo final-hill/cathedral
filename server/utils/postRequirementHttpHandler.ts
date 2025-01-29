@@ -33,8 +33,8 @@ export default function postRequirementHttpHandler<
                 userId: session.id
             })
 
-        const newRequirement = await organizationInteractor.addRequirement({ ReqClass, solutionId, reqProps })
+        const newRequirementId = await organizationInteractor.addRequirement({ ReqClass, solutionId, reqProps })
 
-        return newRequirement.id
+        return newRequirementId
     })
 }
