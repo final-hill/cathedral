@@ -11,21 +11,9 @@ import { AuditMetadata } from "~/domain/AuditMetadata";
 import { Repository } from "./Repository";
 import { ReqQueryToModelQuery } from "../mappers/ReqQueryToModelQuery";
 import { DataModelToDomainModel } from "../mappers/DataModelToDomainModel";
-
-export type CreationInfo = {
-    createdById: AppUser['id']
-    effectiveDate: Date
-}
-
-export type UpdationInfo = {
-    modifiedById: AppUser['id']
-    modifiedDate: Date
-}
-
-export type DeletionInfo = {
-    deletedById: AppUser['id']
-    deletedDate: Date
-}
+import { CreationInfo } from "./CreationInfo";
+import { UpdationInfo } from "./UpdationInfo";
+import { DeletionInfo } from "./DeletionInfo";
 
 // TODO: parameterize the repository type
 export class OrganizationRepository extends Repository<req.Organization> {
@@ -415,6 +403,28 @@ export class OrganizationRepository extends Repository<req.Organization> {
         })
 
         await em.flush()
+    }
+
+    /**
+     * Finds organizations that match the query parameters
+     * @param query - The query parameters to filter organizations by
+     * @returns The organizations that match the query parameters
+     */
+    async findOrganizations(query: Partial<req.Organization>): Promise<req.Organization[]> {
+        const em = this._fork()
+
+        const organizations = (await em.find(reqModels.OrganizationModel, {
+            ...(query.id ? { id: query.id } : {}),
+            latestVersion: {
+                isDeleted: false,
+                ...new ReqQueryToModelQuery().map(query)
+            }
+        }, {
+            populate: ['latestVersion']
+        }))
+            .filter(org => org.latestVersion != undefined)
+
+        return organizations.map(org => new req.Organization(new DataModelToDomainModel().map(org)))
     }
 
     /**

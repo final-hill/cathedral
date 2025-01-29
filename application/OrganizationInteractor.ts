@@ -232,6 +232,20 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
     }
 
     /**
+     * Find organizations that match the query parameters
+     *
+     * @param query The query parameters to filter organizations by
+     * @returns The organizations that match the query parameters
+     * @throws {Error} If the user is not a reader of the organization or better
+     */
+    async findOrganizations(query: Partial<req.Organization> = {}): Promise<req.Organization[]> {
+        if (!await this.isOrganizationReader())
+            throw new Error('Forbidden: You do not have permission to perform this action')
+
+        return this.repository.findOrganizations(query)
+    }
+
+    /**
      * Find requirements that match the query parameters for a solution
      *
      * @param props.solutionId - The id of the solution to find the requirements for

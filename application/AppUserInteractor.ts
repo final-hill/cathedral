@@ -1,6 +1,7 @@
 import type { AppUserRepository } from "~/server/data/repositories/AppUserRepository";
 import { Interactor } from "./Interactor";
 import type { AppUser } from "~/domain/application";
+import { NIL as SYSTEM_USER_ID } from 'uuid'
 
 /**
  * Interactor for the AppUser
@@ -20,6 +21,11 @@ export class AppUserInteractor extends Interactor<AppUser> {
     }
 
     protected async _isSystemAdmin(): Promise<boolean> {
+        // The EMPTY_UUID is used to represent the system itself
+        // see usage in: /server/api/auth/[...].ts
+        if (this._userId === SYSTEM_USER_ID)
+            return true
+
         const currentUser = await this.getAppUserById(this._userId)
         return currentUser.isSystemAdmin
     }
@@ -27,6 +33,17 @@ export class AppUserInteractor extends Interactor<AppUser> {
     // TODO: This should not be necessary
     get repository(): AppUserRepository {
         return this._repository as AppUserRepository
+    }
+
+    /**
+     * Create a new app user
+     * @param props - The properties of the app user
+     * @returns The id of the created app user
+     */
+    async createAppUser(props: Pick<AppUser, keyof AppUser>): Promise<AppUser['id']> {
+        if (!this._isSystemAdmin())
+            throw new Error(`User with id ${this._userId} does not have permission to create users`)
+        return this.repository.createAppUser(props)
     }
 
     /**

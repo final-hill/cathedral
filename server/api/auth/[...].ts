@@ -1,9 +1,9 @@
 import { NuxtAuthHandler } from '#auth'
 import AzureADB2CProvider, { type AzureB2CProfile } from "next-auth/providers/azure-ad-b2c";
 import ormConfig from "~/mikro-orm.config"
-import { AppUser } from '~/domain/application/index.js';
 import { AppUserInteractor } from '~/application/AppUserInteractor';
 import { AppUserRepository } from '~/server/data/repositories/AppUserRepository';
+import { NIL as SYSTEM_USER_ID } from 'uuid'
 
 const config = useRuntimeConfig()
 
@@ -31,8 +31,9 @@ export default NuxtAuthHandler({
 
             if (account) {
                 const p = profile as AzureB2CProfile,
+                    effectiveDate = new Date(),
                     appUserInteractor = new AppUserInteractor({
-                        userId: p.oid,
+                        userId: SYSTEM_USER_ID,
                         repository: new AppUserRepository({
                             config: ormConfig
                         })
@@ -41,18 +42,24 @@ export default NuxtAuthHandler({
                 let appUser = await appUserInteractor.getAppUserById(p.oid)
 
                 if (!appUser) {
-                    appUser = em.create(AppUser, {
+                    appUser = await appUserInteractor.createAppUser({
                         id: p.oid,
-                        creationDate: new Date(),
-                        lastLoginDate: new Date(),
+                        creationDate: effectiveDate,
+                        lastLoginDate: effectiveDate,
                         isSystemAdmin: false,
                         name: p.name,
-                        email: p.emails[0]
+                        email: p.emails[0],
+                        effectiveFrom: effectiveDate,
+                        isDeleted: false,
+                        role: undefined
                     })
                 } else {
-                    appUser.name = p.name
-                    appUser.email = p.emails[0]
-                    appUser.lastLoginDate = new Date()
+                    appUser = await appUserInteractor.updateAppUser({
+                        name: p.name,
+                        email: p.emails[0],
+                        lastLoginDate: effectiveDate
+                    })
+
                 }
 
                 await em.persistAndFlush(appUser)
