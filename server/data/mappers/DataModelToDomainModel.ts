@@ -1,6 +1,6 @@
 import { Requirement } from "~/domain/requirements"
 import { RequirementModel } from "../models"
-import { Mapper } from "./Mapper"
+import { type Mapper } from "./Mapper"
 import { Collection } from "@mikro-orm/core"
 
 /**

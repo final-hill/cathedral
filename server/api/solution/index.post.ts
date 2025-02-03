@@ -23,7 +23,8 @@ export default defineEventHandler(async (event) => {
             userId: session.id,
             repository: new OrganizationRepository({ config, organizationId, organizationSlug })
         }),
-        newSolution = await organizationInteractor.addSolution({ name, description })
+        newSolutionId = await organizationInteractor.addSolution({ name, description }),
+        newSolution = await organizationInteractor.getSolutionById(newSolutionId)
 
     return newSolution.slug
 })

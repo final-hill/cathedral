@@ -43,7 +43,13 @@ export class AppUserInteractor extends Interactor<AppUser> {
     async createAppUser(props: Pick<AppUser, keyof AppUser>): Promise<AppUser['id']> {
         if (!this._isSystemAdmin())
             throw new Error(`User with id ${this._userId} does not have permission to create users`)
-        return this.repository.createAppUser(props)
+        const effectiveDate = new Date()
+        return this.repository.createAppUser({
+            ...props,
+            createdById: this._userId,
+            creationDate: effectiveDate,
+            effectiveDate
+        })
     }
 
     /**
@@ -99,5 +105,22 @@ export class AppUserInteractor extends Interactor<AppUser> {
         if (id !== this._userId && !this._isSystemAdmin())
             throw new Error(`User with id ${this._userId} does not have permission to check if user with id ${id} exists`)
         return this.repository.hasUser(id)
+    }
+
+    /**
+     * Update an app user
+     * @param props - The properties to update
+     * @throws {Error} If the current user is not a system admin or the user being updated is not the current user
+     */
+    async updateAppUser(props: Pick<AppUser, 'id' | 'name' | 'email' | 'lastLoginDate'>): Promise<void> {
+        if (props.id !== this._userId && !this._isSystemAdmin())
+            throw new Error(`User with id ${this._userId} does not have permission to update user with id ${props.id}`)
+        const modifiedDate = new Date()
+
+        return this.repository.updateAppUser({
+            ...props,
+            modifiedById: this._userId,
+            modifiedDate
+        })
     }
 }

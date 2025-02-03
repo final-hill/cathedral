@@ -11,9 +11,9 @@ import { AuditMetadata } from "~/domain/AuditMetadata";
 import { Repository } from "./Repository";
 import { ReqQueryToModelQuery } from "../mappers/ReqQueryToModelQuery";
 import { DataModelToDomainModel } from "../mappers/DataModelToDomainModel";
-import { CreationInfo } from "./CreationInfo";
-import { UpdationInfo } from "./UpdationInfo";
-import { DeletionInfo } from "./DeletionInfo";
+import { type CreationInfo } from "./CreationInfo";
+import { type UpdationInfo } from "./UpdationInfo";
+import { type DeletionInfo } from "./DeletionInfo";
 
 // TODO: parameterize the repository type
 export class OrganizationRepository extends Repository<req.Organization> {
@@ -91,7 +91,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
         const em = this._fork(),
             existingOrgStatic = await em.findOne(reqModels.OrganizationModel, {
                 latestVersion: {
-                    slug: slugify(name),
+                    slug: slugify(props.name),
                     isDeleted: false
                 } as reqModels.OrganizationVersionsModel
             }, {
@@ -108,8 +108,8 @@ export class OrganizationRepository extends Repository<req.Organization> {
             isDeleted: false,
             effectiveFrom: props.effectiveDate,
             isSilence: false,
-            slug: slugify(name),
-            name,
+            slug: slugify(props.name),
+            name: props.name,
             description: props.description,
             modifiedBy: props.createdById,
             requirement: existingOrgStatic ?? em.create(reqModels.OrganizationModel, {
@@ -693,7 +693,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
             isSystemAdmin: userv.isSystemAdmin,
             lastLoginDate: userv.lastLoginDate,
             creationDate: user.creationDate,
-            effectiveFrom: auorv.effectiveFrom,
+            lastModified: auorv.effectiveFrom,
             isDeleted: auorv.isDeleted,
             role: auorv.role
         })
@@ -781,7 +781,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
                 isSystemAdmin: userv.isSystemAdmin,
                 lastLoginDate: userv.lastLoginDate,
                 creationDate: user.creationDate,
-                effectiveFrom: auorv.effectiveFrom,
+                lastModified: auorv.effectiveFrom,
                 isDeleted: auorv.isDeleted,
                 role: auorv.role
             })

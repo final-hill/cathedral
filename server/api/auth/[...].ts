@@ -42,27 +42,27 @@ export default NuxtAuthHandler({
                 let appUser = await appUserInteractor.getAppUserById(p.oid)
 
                 if (!appUser) {
-                    appUser = await appUserInteractor.createAppUser({
+                    const newUserId = await appUserInteractor.createAppUser({
                         id: p.oid,
                         creationDate: effectiveDate,
                         lastLoginDate: effectiveDate,
                         isSystemAdmin: false,
                         name: p.name,
                         email: p.emails[0],
-                        effectiveFrom: effectiveDate,
+                        lastModified: effectiveDate,
                         isDeleted: false,
                         role: undefined
                     })
+
+                    appUser = await appUserInteractor.getAppUserById(newUserId)
                 } else {
-                    appUser = await appUserInteractor.updateAppUser({
+                    await appUserInteractor.updateAppUser({
                         name: p.name,
                         email: p.emails[0],
-                        lastLoginDate: effectiveDate
+                        lastLoginDate: effectiveDate,
+                        id: p.oid
                     })
-
                 }
-
-                await em.persistAndFlush(appUser)
 
                 Object.assign(token, {
                     id: p.oid,

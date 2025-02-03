@@ -29,7 +29,7 @@ export class AppUser {
     /**
      * The date and time when the user was last modified
      */
-    readonly effectiveFrom!: Date;
+    readonly lastModified!: Date;
 
     /**
      * Whether the user is deleted

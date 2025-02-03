@@ -1,5 +1,5 @@
 import { Requirement } from "~/domain/requirements"
-import { Mapper } from "./Mapper"
+import { type Mapper } from "./Mapper"
 
 /**
  * Converts a Requirement query to a model query
