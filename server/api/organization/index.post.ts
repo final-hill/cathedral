@@ -26,5 +26,5 @@ export default defineEventHandler(async (event) => {
         userId: session.id
     })
 
-    return newOrgInteractor.getOrganization()
+    return (await (newOrgInteractor.getOrganization())).slug
 })
