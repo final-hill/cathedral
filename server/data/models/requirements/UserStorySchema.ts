@@ -10,6 +10,6 @@ export class UserStoryModel extends ScenarioModel {
 
 @Entity({ discriminatorValue: ReqType.USER_STORY })
 export class UserStoryVersionsModel extends ScenarioVersionsModel {
-    @ManyToOne({ entity: () => FunctionalBehaviorModel })
+    @ManyToOne()
     readonly functionalBehavior!: FunctionalBehaviorModel
 }

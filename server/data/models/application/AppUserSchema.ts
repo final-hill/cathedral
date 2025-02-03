@@ -1,4 +1,4 @@
-import { Collection, Entity, ManyToOne, OneToMany, OneToOne, OptionalProps, Property, type Ref } from "@mikro-orm/core";
+import { Collection, Entity, Formula, ManyToOne, OneToMany, OneToOne, OptionalProps, Property, type Ref } from "@mikro-orm/core";
 import { StaticAuditModel, VolatileAuditModel } from "../index.js";
 
 // static properties
@@ -9,21 +9,19 @@ export class AppUserModel extends StaticAuditModel {
     @Property({ type: 'uuid', primary: true })
     readonly id!: string
 
-    @OneToMany({ entity: () => AppUserVersionsModel, mappedBy: 'appUser' })
+    @OneToMany({ mappedBy: 'appUser' })
     readonly versions = new Collection<AppUserVersionsModel>(this);
 
-    @OneToOne({
-        entity: () => AppUserVersionsModel,
-        ref: true,
-        formula: alias =>
-            `select id
-            from app_user_versions
-            where app_user_id = ${alias}.id
-            and effective_from <= now()
-            and is_deleted = false
-            order by effective_from
-            desc limit 1`
-    })
+    // Select the latest version id of the requirement (effective_from <= now())
+    @Formula(alias =>
+        `select id, effective_from
+        from app_user_versions
+        where app_user_id = ${alias}.id
+        and effective_from <= now()
+        and is_deleted = false
+        order by effective_from
+        desc limit 1`
+    )
     readonly latestVersion?: Ref<AppUserVersionsModel>
 }
 

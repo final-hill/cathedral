@@ -17,7 +17,7 @@ export class UseCaseVersionsModel extends ScenarioVersionsModel {
     @Property()
     readonly level!: string
 
-    @ManyToOne({ entity: () => AssumptionModel })
+    @ManyToOne()
     readonly precondition!: AssumptionModel
 
     @Property({ type: 'uuid' })
@@ -26,9 +26,9 @@ export class UseCaseVersionsModel extends ScenarioVersionsModel {
     @Property()
     readonly mainSuccessScenario!: string
 
-    @ManyToOne({ entity: () => EffectModel })
+    @ManyToOne()
     readonly successGuarantee!: EffectModel
 
-    @Property({ type: 'string' })
+    @Property()
     readonly extensions!: string
 }

@@ -1,4 +1,4 @@
-import { Collection, Entity, Enum, ManyToOne, OneToMany, OneToOne, OptionalProps, Property, type Ref } from '@mikro-orm/core';
+import { Collection, Entity, Enum, Formula, ManyToOne, OneToMany, OneToOne, OptionalProps, Property, type Ref } from '@mikro-orm/core';
 import { StaticAuditModel, VolatileAuditModel } from '../index.js';
 import { ReqType } from './ReqType.js';
 
@@ -7,27 +7,25 @@ import { ReqType } from './ReqType.js';
 export abstract class RequirementModel extends StaticAuditModel {
     [OptionalProps]?: 'req_type' | 'latestVersion'
 
-    @Enum({ items: () => ReqType, primary: true })
+    @Enum({ items: () => ReqType })
     readonly req_type!: ReqType;
 
     @Property({ type: 'uuid', primary: true })
     readonly id!: string;
 
-    @OneToMany({ entity: () => RequirementVersionsModel, mappedBy: 'requirement' })
+    @OneToMany({ mappedBy: 'requirement' })
     readonly versions = new Collection<RequirementVersionsModel>(this);
 
-    @OneToOne({
-        entity: () => RequirementVersionsModel,
-        ref: true,
-        formula: alias =>
-            `select id
-            from requirement_versions
-            where requirement_id = ${alias}.id
-            and effective_from <= now()
-            and is_deleted = false
-            order by effective_from
-            desc limit 1`
-    })
+    // Select the latest version id of the requirement (effective_from <= now())
+    @Formula(alias =>
+        `select id, effective_from
+        from requirement_versions
+        where requirement_id = ${alias}.id
+        and effective_from <= now()
+        and is_deleted = false
+        order by effective_from
+        desc limit 1`
+    )
     readonly latestVersion?: Ref<RequirementVersionsModel>;
 }
 
@@ -36,10 +34,10 @@ export abstract class RequirementModel extends StaticAuditModel {
 export abstract class RequirementVersionsModel extends VolatileAuditModel {
     [OptionalProps]?: 'req_type'
 
-    @Enum({ items: () => ReqType, primary: true })
+    @Enum({ items: () => ReqType })
     readonly req_type!: ReqType;
 
-    @ManyToOne({ entity: () => RequirementModel, primary: true })
+    @ManyToOne({ primary: true })
     readonly requirement!: RequirementModel;
 
     @Property({ length: 100 })

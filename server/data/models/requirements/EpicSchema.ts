@@ -10,6 +10,6 @@ export class EpicModel extends ScenarioModel {
 
 @Entity({ discriminatorValue: ReqType.EPIC })
 export class EpicVersionsModel extends ScenarioVersionsModel {
-    @ManyToOne({ entity: () => FunctionalBehaviorModel })
+    @ManyToOne()
     readonly functionalBehavior!: FunctionalBehaviorModel
 }

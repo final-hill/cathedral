@@ -1,4 +1,4 @@
-import { Collection, Entity, Enum, ManyToOne, OneToMany, OneToOne, OptionalProps, type Ref } from '@mikro-orm/core';
+import { Collection, Entity, Enum, Formula, ManyToOne, OneToMany, OneToOne, OptionalProps, type Ref } from '@mikro-orm/core';
 import { RelType } from './RelType.js';
 import { StaticAuditModel, VolatileAuditModel } from '../index.js';
 import { RequirementModel } from '../requirements/index.js';
@@ -8,31 +8,28 @@ import { RequirementModel } from '../requirements/index.js';
 export abstract class RequirementRelationModel extends StaticAuditModel {
     [OptionalProps]?: 'rel_type' | 'latestVersion'
 
-    @Enum({ items: () => RelType, primary: true })
+    @Enum({ items: () => RelType })
     readonly rel_type!: RelType
 
-    @ManyToOne({ entity: 'RequirementModel', primary: true })
-    readonly left!: RequirementModel
+    @ManyToOne({ primary: true })
+    readonly left!: Ref<RequirementModel>
 
-    @ManyToOne({ entity: 'RequirementModel', primary: true })
-    readonly right!: RequirementModel
+    @ManyToOne({ primary: true })
+    readonly right!: Ref<RequirementModel>
 
-    @OneToMany({ entity: 'RequirementRelationVersionsModel', mappedBy: 'requirementRelation' })
+    @OneToMany({ mappedBy: 'requirementRelation' })
     readonly versions = new Collection<RequirementRelationVersionsModel>(this)
 
-    @OneToOne({
-        entity: () => RequirementRelationVersionsModel,
-        ref: true,
-        // Select the latest version id of the requirement (effective_from <= now())
-        formula: alias =>
-            `select id
-            from requirement_relation_versions
-            where requirement_relation_id = ${alias}.id
-            and effective_from <= now()
-            and is_deleted = false
-            order by effective_from
-            desc limit 1`
-    })
+    // Select the latest version id of the requirement (effective_from <= now())
+    @Formula(alias =>
+        `select left, right, effective_from
+        from requirement_relation_versions
+        where requirement_relation_id = ${alias}.id
+        and effective_from <= now()
+        and is_deleted = false
+        order by effective_from
+        desc limit 1`
+    )
     readonly latestVersion?: Ref<RequirementRelationVersionsModel>
 }
 
@@ -46,6 +43,6 @@ export abstract class RequirementRelationVersionsModel extends VolatileAuditMode
     @Enum({ items: () => RelType, primary: true })
     readonly rel_type!: RelType
 
-    @ManyToOne({ entity: 'RequirementRelationModel', primary: true })
+    @ManyToOne({ primary: true })
     readonly requirementRelation!: RequirementRelationModel
 }
