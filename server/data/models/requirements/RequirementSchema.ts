@@ -13,7 +13,7 @@ export abstract class RequirementModel extends StaticAuditModel {
     @Property({ type: 'uuid', primary: true })
     readonly id!: string;
 
-    @OneToMany({ mappedBy: 'requirement' })
+    @OneToMany({ mappedBy: 'requirement', entity: () => RequirementVersionsModel })
     readonly versions = new Collection<RequirementVersionsModel>(this);
 
     // Select the latest version id of the requirement (effective_from <= now())
@@ -37,7 +37,7 @@ export abstract class RequirementVersionsModel extends VolatileAuditModel {
     @Enum({ items: () => ReqType })
     readonly req_type!: ReqType;
 
-    @ManyToOne({ primary: true })
+    @ManyToOne({ primary: true, entity: () => RequirementModel })
     readonly requirement!: RequirementModel;
 
     @Property({ length: 100 })

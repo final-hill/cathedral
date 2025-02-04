@@ -11,13 +11,13 @@ export abstract class RequirementRelationModel extends StaticAuditModel {
     @Enum({ items: () => RelType })
     readonly rel_type!: RelType
 
-    @ManyToOne({ primary: true })
+    @ManyToOne({ primary: true, entity: () => RequirementModel })
     readonly left!: Ref<RequirementModel>
 
-    @ManyToOne({ primary: true })
+    @ManyToOne({ primary: true, entity: () => RequirementModel })
     readonly right!: Ref<RequirementModel>
 
-    @OneToMany({ mappedBy: 'requirementRelation' })
+    @OneToMany({ mappedBy: 'requirementRelation', entity: () => RequirementRelationVersionsModel })
     readonly versions = new Collection<RequirementRelationVersionsModel>(this)
 
     // Select the latest version id of the requirement (effective_from <= now())
@@ -43,6 +43,6 @@ export abstract class RequirementRelationVersionsModel extends VolatileAuditMode
     @Enum({ items: () => RelType, primary: true })
     readonly rel_type!: RelType
 
-    @ManyToOne({ primary: true })
+    @ManyToOne({ primary: true, entity: () => RequirementRelationModel })
     readonly requirementRelation!: RequirementRelationModel
 }

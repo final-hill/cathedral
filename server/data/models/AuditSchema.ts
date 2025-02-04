@@ -2,7 +2,7 @@ import { ManyToOne, Property, type Rel } from "@mikro-orm/core"
 import { AppUserModel } from "./index.js"
 
 export abstract class StaticAuditModel {
-    @ManyToOne()
+    @ManyToOne({ entity: () => AppUserModel })
     readonly createdBy!: Rel<AppUserModel>;
 
     @Property()
@@ -16,6 +16,6 @@ export abstract class VolatileAuditModel {
     @Property()
     readonly isDeleted!: boolean
 
-    @ManyToOne()
+    @ManyToOne({ entity: () => AppUserModel })
     readonly modifiedBy!: Rel<AppUserModel>;
 }

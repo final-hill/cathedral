@@ -9,7 +9,7 @@ export class AppUserModel extends StaticAuditModel {
     @Property({ type: 'uuid', primary: true })
     readonly id!: string
 
-    @OneToMany({ mappedBy: 'appUser' })
+    @OneToMany({ mappedBy: 'appUser', entity: () => AppUserVersionsModel })
     readonly versions = new Collection<AppUserVersionsModel>(this);
 
     // Select the latest version id of the requirement (effective_from <= now())

@@ -9,13 +9,13 @@ import { OrganizationModel } from "../requirements/index.js";
 export class AppUserOrganizationRoleModel extends StaticAuditModel {
     [OptionalProps]?: 'latestVersion'
 
-    @ManyToOne({ primary: true })
+    @ManyToOne({ primary: true, entity: () => AppUserModel })
     readonly appUser!: AppUserModel;
 
-    @ManyToOne({ primary: true })
+    @ManyToOne({ primary: true, entity: () => OrganizationModel })
     readonly organization!: Ref<OrganizationModel>;
 
-    @OneToMany({ mappedBy: 'appUserOrganizationRole' })
+    @OneToMany({ mappedBy: 'appUserOrganizationRole', entity: () => AppUserOrganizationRoleVersionsModel })
     readonly versions = new Collection<AppUserOrganizationRoleVersionsModel>(this);
 
     // Select the latest version id of the requirement (effective_from <= now())
@@ -34,7 +34,7 @@ export class AppUserOrganizationRoleModel extends StaticAuditModel {
 // volatile properties
 @Entity({ tableName: 'app_user_organization_role_versions' })
 export class AppUserOrganizationRoleVersionsModel extends VolatileAuditModel {
-    @ManyToOne({ primary: true })
+    @ManyToOne({ primary: true, entity: () => AppUserOrganizationRoleModel })
     readonly appUserOrganizationRole!: AppUserOrganizationRoleModel;
 
     @Enum({ items: () => AppRole })
