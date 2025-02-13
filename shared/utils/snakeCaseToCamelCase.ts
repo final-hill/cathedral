@@ -5,6 +5,8 @@
  * @param str - The snake_case string to convert
  * @returns The camelCase string
  */
-const snakeCaseToCamelCase = (str: string) => str.replace(/_./g, char => char[1].toUpperCase());
-
-export { snakeCaseToCamelCase }
+export function snakeCaseToCamelCase(str: string): string {
+    return str
+        .replace(/^_+|_+$/g, '') // Remove leading and trailing underscores
+        .replace(/_+(\w)/g, (_, c) => c ? c.toUpperCase() : '')
+}

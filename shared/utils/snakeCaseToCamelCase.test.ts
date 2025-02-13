@@ -19,7 +19,7 @@ describe('snakeCaseToCamelCase', () => {
     });
 
     it('should handle strings with leading and trailing underscores', () => {
-        expect(snakeCaseToCamelCase('_leading_and_trailing_')).toBe('LeadingAndTrailing');
+        expect(snakeCaseToCamelCase('_leading_and_trailing_')).toBe('leadingAndTrailing');
     });
 
     it('should handle strings with only underscores', () => {
