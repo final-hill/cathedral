@@ -1,4 +1,4 @@
-import { Collection, Entity, ManyToOne, Property } from '@mikro-orm/core';
+import { Collection, Entity, ManyToOne, Property, types } from '@mikro-orm/core';
 import { ReqType } from "./ReqType.js";
 import { ScenarioModel, ScenarioVersionsModel } from './ScenarioSchema.js';
 import { AssumptionModel } from './AssumptionSchema.js';
@@ -11,24 +11,24 @@ export class UseCaseModel extends ScenarioModel {
 
 @Entity({ discriminatorValue: ReqType.USE_CASE })
 export class UseCaseVersionsModel extends ScenarioVersionsModel {
-    @Property()
+    @Property({ type: types.string })
     readonly scope!: string
 
-    @Property()
+    @Property({ type: types.string })
     readonly level!: string
 
     @ManyToOne({ entity: () => AssumptionModel })
     readonly precondition!: AssumptionModel
 
-    @Property({ type: 'uuid' })
+    @Property({ type: types.uuid })
     readonly triggerId!: string
 
-    @Property()
+    @Property({ type: types.string })
     readonly mainSuccessScenario!: string
 
     @ManyToOne({ entity: () => EffectModel })
     readonly successGuarantee!: EffectModel
 
-    @Property()
+    @Property({ type: types.string })
     readonly extensions!: string
 }

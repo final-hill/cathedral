@@ -4,26 +4,22 @@ import { AppUserModel, AppUserOrganizationRoleModel, AppUserVersionsModel, Organ
 import { Organization } from "~/domain/requirements";
 import { type CreationInfo } from "./CreationInfo";
 import { type UpdationInfo } from "./UpdationInfo";
-import { type DeletionInfo } from "./DeletionInfo";
+import { DuplicateEntityException, NotFoundException } from "~/domain/exceptions";
 
 export class AppUserRepository extends Repository<AppUser> {
-
     /**
      * Create a new app user
      * @param props - The properties of the app user
      * @returns The id of the created app user
-     * @throws {Error} If the user already exists
+     * @throws {DuplicateEntityException} If the user already exists
      */
     async createAppUser(props: Pick<AppUser, keyof AppUser> & CreationInfo): Promise<AppUser['id']> {
         const em = this._fork(),
-            existingUserStatic = await em.findOne(AppUserModel, {
-                id: props.id,
-                latestVersion: { isDeleted: false }
-            }, { populate: ['latestVersion'] }),
-            latestVersion = existingUserStatic?.latestVersion?.getEntity() as AppUserVersionsModel | undefined
+            existingUserStatic = await em.findOne(AppUserModel, { id: props.id }),
+            latestVersion = await existingUserStatic?.latestVersion
 
         if (latestVersion)
-            throw new Error(`User with id ${props.id} already exists`)
+            throw new DuplicateEntityException(`User with id ${props.id} already exists`)
 
         em.create(AppUserVersionsModel, {
             appUser: existingUserStatic ?? em.create(AppUserModel, {
@@ -50,19 +46,23 @@ export class AppUserRepository extends Repository<AppUser> {
      * Note: The 'role' will not be populated. Use the OrganizationInteractor methods if you need the associated role.
      * @param email - The email of the app user
      * @returns The app user
-     * @throws {Error} If the user does not exist
+     * @throws {NotFoundException} If the user does not exist
      */
     async getUserByEmail(email: AppUser['email']): Promise<AppUser> {
         const em = this._fork()
 
-        const user = await em.findOneOrFail(AppUserModel, {
-            latestVersion: { email, isDeleted: false }
+        const userVersions = await em.findOne(AppUserVersionsModel, {
+            email,
+            isDeleted: false
+        }, {
+            orderBy: { effectiveFrom: 'desc' },
+            populate: ['appUser']
         })
+        const user = userVersions?.appUser,
+            latestVersion = await userVersions?.appUser.latestVersion
 
-        const latestVersion = user.latestVersion?.getEntity()
-
-        if (latestVersion == undefined)
-            throw new Error(`User with email ${email} does not exist`)
+        if (!user || !latestVersion)
+            throw new NotFoundException(`User with email ${email} does not exist`)
 
         return new AppUser({
             id: user.id,
@@ -83,20 +83,16 @@ export class AppUserRepository extends Repository<AppUser> {
      * Note: The 'role' will not be populated. Use the OrganizationInteractor methods if you need the associated role.
      * @param id - The id of the app user
      * @returns The app user
-     * @throws {Error} If the user does not exist
+     * @throws {NotFoundException} If the user does not exist
      */
     async getUserById(id: AppUser['id']): Promise<AppUser> {
         const em = this._fork()
 
-        const user = await em.findOneOrFail(AppUserModel, {
-            id,
-            latestVersion: { isDeleted: false }
-        })
+        const user = await em.findOne(AppUserModel, { id }),
+            latestVersion = await user?.latestVersion
 
-        const latestVersion = user.latestVersion?.getEntity()
-
-        if (latestVersion == undefined)
-            throw new Error(`User with id ${id} does not exist`)
+        if (!user || !latestVersion)
+            throw new NotFoundException(`User with id ${id} does not exist`)
 
         return new AppUser({
             id: user.id,
@@ -120,21 +116,13 @@ export class AppUserRepository extends Repository<AppUser> {
     async getUserOrganizationIds(appUserId: AppUser['id']): Promise<Organization['id'][]> {
         const em = this._fork()
 
-        const auors = (await em.find(AppUserOrganizationRoleModel, {
-            appUser: appUserId,
-            latestVersion: { isDeleted: false }
-        }, {
-            populate: ['latestVersion']
-        }))
-            .filter(auor => auor.latestVersion != undefined)
+        const auors = (await em.find(AppUserOrganizationRoleModel, { appUser: appUserId }))
+            .filter(async auor => (await auor.latestVersion) != undefined)
 
         const organizationIds = auors.map(auor => auor.organization.id)
 
-        const organizations = (await em.find(OrganizationModel, {
-            id: { $in: organizationIds },
-            latestVersion: { isDeleted: false }
-        }))
-            .filter(org => org.latestVersion != undefined)
+        const organizations = (await em.find(OrganizationModel, { id: { $in: organizationIds } }))
+            .filter(async org => (await org.latestVersion) != undefined)
 
         return organizations.map(org => org.id)
     }
@@ -144,30 +132,23 @@ export class AppUserRepository extends Repository<AppUser> {
      */
     async hasUser(id: AppUser['id']): Promise<boolean> {
         const em = this._fork(),
-            user = await em.findOne(AppUserModel, {
-                id,
-                latestVersion: { isDeleted: false }
-            })
+            user = await em.findOne(AppUserModel, { id })
 
-        return user != undefined && user.latestVersion?.getEntity() != undefined
+        return user != undefined && (await user.latestVersion) != undefined
     }
 
     /**
      * Update the app user
      * @param props - The properties to update
-     * @throws {Error} If the user does not exist
+     * @throws {NotFoundException} If the user does not exist
      */
     async updateAppUser(props: Pick<AppUser, 'id' | 'name' | 'email' | 'lastLoginDate'> & UpdationInfo): Promise<void> {
         const em = this._fork(),
-            user = await em.findOneOrFail(AppUserModel, {
-                id: props.id,
-                latestVersion: { isDeleted: false }
-            })
-
-        const latestVersion = user.latestVersion?.getEntity() as AppUserVersionsModel
+            user = await em.findOneOrFail(AppUserModel, { id: props.id }),
+            latestVersion = (await user.latestVersion)
 
         if (latestVersion == undefined)
-            throw new Error(`User with id ${props.id} does not exist`)
+            throw new NotFoundException(`User with id ${props.id} does not exist`)
 
         em.create(AppUserVersionsModel, {
             appUser: user,

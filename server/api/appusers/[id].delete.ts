@@ -3,6 +3,7 @@ import { getServerSession } from '#auth'
 import { OrganizationInteractor } from "~/application"
 import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository";
 import config from "~/mikro-orm.config";
+import handleDomainException from "~/server/utils/handleDomainException";
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -31,5 +32,5 @@ export default defineEventHandler(async (event) => {
             })
         })
 
-    await organizationInteractor.deleteAppUser(id)
+    await organizationInteractor.deleteAppUser(id).catch(handleDomainException)
 })

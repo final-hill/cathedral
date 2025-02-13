@@ -6,9 +6,11 @@ import { MikroORM, type Options } from "@mikro-orm/postgresql"
 // TODO: E should be a type that extends Entity | ValueObject
 // Though more accurately, should be a type that implements Equatable
 export abstract class Repository<E> {
-    private _orm
+    protected _orm
+    protected _config
 
     constructor(options: { config: Options }) {
+        this._config = options.config
         this._orm = MikroORM.initSync(options.config)
     }
 

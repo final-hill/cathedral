@@ -7,7 +7,7 @@ import { Collection } from "@mikro-orm/core"
  * Converts a data model to a domain model
  */
 export class DataModelToDomainModel implements Mapper<RequirementModel, Requirement> {
-    map<M extends RequirementModel, R extends Requirement>(model: M): R {
+    async map<M extends RequirementModel, R extends Requirement>(model: M): Promise<R> {
         const staticProps = Object.entries(model).reduce((acc, [key, value]) => {
             if (typeof value === 'object' && value !== null && 'id' in value)
                 return { ...acc, [`${key}Id`]: value.id }
@@ -17,7 +17,7 @@ export class DataModelToDomainModel implements Mapper<RequirementModel, Requirem
                 return { ...acc, [key]: value }
         }, {})
 
-        const version = model.latestVersion!.getEntity()
+        const version = (await model.latestVersion)!
 
         const versionProps = Object.entries(version).reduce((acc, [key, value]) => {
             if (key === 'requirement')
@@ -32,6 +32,6 @@ export class DataModelToDomainModel implements Mapper<RequirementModel, Requirem
                 return { ...acc, [key]: value }
         }, {})
 
-        return { ...staticProps, ...versionProps } as R
+        return await ({ ...staticProps, ...versionProps } as R)
     }
 }

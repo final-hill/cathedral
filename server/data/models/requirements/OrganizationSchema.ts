@@ -1,5 +1,5 @@
 import { RequirementModel, RequirementVersionsModel } from "./RequirementSchema.js";
-import { Collection, Entity, Property } from "@mikro-orm/core";
+import { Collection, Entity, Property, types } from "@mikro-orm/core";
 import { ReqType } from "./ReqType.js";
 
 @Entity({ discriminatorValue: ReqType.ORGANIZATION })
@@ -11,6 +11,6 @@ export class OrganizationModel extends RequirementModel {
 export class OrganizationVersionsModel extends RequirementVersionsModel {
     declare readonly requirement: OrganizationModel
 
-    @Property()
+    @Property({ type: types.string })
     readonly slug!: string
 }

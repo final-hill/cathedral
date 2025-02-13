@@ -1,4 +1,4 @@
-import { Collection, Entity, Formula, ManyToOne, OneToMany, OneToOne, OptionalProps, Property, type Ref } from "@mikro-orm/core";
+import { Collection, Entity, ManyToOne, OneToMany, OptionalProps, Property, types } from "@mikro-orm/core";
 import { StaticAuditModel, VolatileAuditModel } from "../index.js";
 
 // static properties
@@ -6,23 +6,24 @@ import { StaticAuditModel, VolatileAuditModel } from "../index.js";
 export class AppUserModel extends StaticAuditModel {
     [OptionalProps]?: 'latestVersion'
 
-    @Property({ type: 'uuid', primary: true })
+    @Property({ type: types.uuid, primary: true })
     readonly id!: string
 
     @OneToMany({ mappedBy: 'appUser', entity: () => AppUserVersionsModel })
     readonly versions = new Collection<AppUserVersionsModel>(this);
 
-    // Select the latest version id of the requirement (effective_from <= now())
-    @Formula(alias =>
-        `select id, effective_from
-        from app_user_versions
-        where app_user_id = ${alias}.id
-        and effective_from <= now()
-        and is_deleted = false
-        order by effective_from
-        desc limit 1`
-    )
-    readonly latestVersion?: Ref<AppUserVersionsModel>
+    /**
+     * The latest version of the AppUser (effective_from <= now())
+     */
+    get latestVersion(): Promise<AppUserVersionsModel | undefined> {
+        return this.versions.loadItems({
+            where: {
+                effectiveFrom: { $lte: new Date() },
+                isDeleted: false
+            },
+            orderBy: { effectiveFrom: 'desc' },
+        }).then(items => items[0])
+    }
 }
 
 // volatile properties
@@ -31,15 +32,15 @@ export class AppUserVersionsModel extends VolatileAuditModel {
     @ManyToOne({ entity: () => AppUserModel, primary: true })
     readonly appUser!: AppUserModel;
 
-    @Property({ length: 254 })
+    @Property({ type: types.string, length: 254 })
     readonly name!: string;
 
-    @Property({ length: 254 })
+    @Property({ type: types.string, length: 254 })
     readonly email!: string;
 
-    @Property({ nullable: true })
+    @Property({ type: types.datetime, nullable: true })
     readonly lastLoginDate?: Date
 
-    @Property()
+    @Property({ type: types.boolean })
     readonly isSystemAdmin!: boolean
 }

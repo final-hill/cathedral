@@ -1,4 +1,4 @@
-import { Collection, Entity, Enum, Formula, ManyToOne, OneToMany, OneToOne, OptionalProps, type Ref } from '@mikro-orm/core';
+import { Collection, Entity, Enum, ManyToOne, OneToMany, OneToOne, OptionalProps, type Ref } from '@mikro-orm/core';
 import { RelType } from './RelType.js';
 import { StaticAuditModel, VolatileAuditModel } from '../index.js';
 import { RequirementModel } from '../requirements/index.js';
@@ -20,17 +20,18 @@ export abstract class RequirementRelationModel extends StaticAuditModel {
     @OneToMany({ mappedBy: 'requirementRelation', entity: () => RequirementRelationVersionsModel })
     readonly versions = new Collection<RequirementRelationVersionsModel>(this)
 
-    // Select the latest version id of the requirement (effective_from <= now())
-    @Formula(alias =>
-        `select left, right, effective_from
-        from requirement_relation_versions
-        where requirement_relation_id = ${alias}.id
-        and effective_from <= now()
-        and is_deleted = false
-        order by effective_from
-        desc limit 1`
-    )
-    readonly latestVersion?: Ref<RequirementRelationVersionsModel>
+    /**
+     * The latest version of the relation (effective_from <= now())
+     */
+    get latestVersion(): Promise<RequirementRelationVersionsModel | undefined> {
+        return this.versions.loadItems({
+            where: {
+                effectiveFrom: { $lte: new Date() },
+                isDeleted: false
+            },
+            orderBy: { effectiveFrom: 'desc' },
+        }).then(items => items[0])
+    }
 }
 
 // Volatile properties

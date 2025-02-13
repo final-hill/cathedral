@@ -1,8 +1,9 @@
 import { z } from "zod"
 import config from "~/mikro-orm.config"
 import { getServerSession } from '#auth'
-import { OrganizationInteractor } from "~/application/index"
-import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository"
+import { OrganizationCollectionInteractor } from "~/application/index"
+import { OrganizationCollectionRepository } from "~/server/data/repositories"
+import handleDomainException from "~/server/utils/handleDomainException"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -15,16 +16,18 @@ const bodySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { name, description } = await validateEventBody(event, bodySchema),
         session = (await getServerSession(event))!,
-        organizationInteractor = new OrganizationInteractor({
-            repository: new OrganizationRepository({ config }),
+        organizationCollectionInteractor = new OrganizationCollectionInteractor({
+            repository: new OrganizationCollectionRepository({ config }),
             userId: session.id
         }),
-        newOrgId = await organizationInteractor.addOrganization({ name, description })
+        newOrgId = await organizationCollectionInteractor.createOrganization({ name, description }).catch(handleDomainException),
+        newOrg = (await organizationCollectionInteractor.findOrganizations({ id: newOrgId! }).catch(handleDomainException))![0]
 
-    const newOrgInteractor = new OrganizationInteractor({
-        repository: new OrganizationRepository({ config, organizationId: newOrgId }),
-        userId: session.id
-    })
+    if (!newOrg)
+        throw createError({
+            status: 500,
+            message: `Failed to find newly created organization for id: ${newOrgId}`
+        })
 
-    return (await (newOrgInteractor.getOrganization())).slug
+    return newOrg.slug
 })

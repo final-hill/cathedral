@@ -1,4 +1,4 @@
-import { Collection, Entity, Enum, Property } from '@mikro-orm/core';
+import { Collection, Entity, Enum, Property, types } from '@mikro-orm/core';
 import { StakeholderCategory, StakeholderSegmentation } from '../../../../domain/requirements/index.js';
 import { ComponentModel, ComponentVersionsModel } from './ComponentSchema.js';
 import { ReqType } from "./ReqType.js";
@@ -16,9 +16,9 @@ export class StakeholderVersionsModel extends ComponentVersionsModel {
     @Enum({ items: () => StakeholderCategory })
     readonly category!: StakeholderCategory
 
-    @Property({ check: 'availability >= 0 AND availability <= 100' })
+    @Property({ type: types.integer, check: 'availability >= 0 AND availability <= 100' })
     readonly availability!: number
 
-    @Property({ check: 'influence >= 0 AND influence <= 100' })
+    @Property({ type: types.integer, check: 'influence >= 0 AND influence <= 100' })
     readonly influence!: number
 }

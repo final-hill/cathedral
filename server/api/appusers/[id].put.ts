@@ -4,6 +4,7 @@ import { AppRole } from "~/domain/application/index.js"
 import { OrganizationInteractor } from "~/application"
 import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository"
 import config from "~/mikro-orm.config"
+import handleDomainException from "~/server/utils/handleDomainException"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -33,5 +34,5 @@ export default defineEventHandler(async (event) => {
             })
         })
 
-    await organizationInteractor.updateAppUserRole(id, role)
+    await organizationInteractor.updateAppUserRole(id, role).catch(handleDomainException)
 })

@@ -1,4 +1,4 @@
-import { Collection, Entity, Enum, Formula, ManyToOne, OneToMany, OneToOne, OptionalProps, Property, type Ref } from '@mikro-orm/core';
+import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, PrimaryKey, Property, types } from '@mikro-orm/core';
 import { StaticAuditModel, VolatileAuditModel } from '../index.js';
 import { ReqType } from './ReqType.js';
 
@@ -10,23 +10,25 @@ export abstract class RequirementModel extends StaticAuditModel {
     @Enum({ items: () => ReqType })
     readonly req_type!: ReqType;
 
-    @Property({ type: 'uuid', primary: true })
+    @PrimaryKey({ type: types.uuid })
     readonly id!: string;
 
     @OneToMany({ mappedBy: 'requirement', entity: () => RequirementVersionsModel })
     readonly versions = new Collection<RequirementVersionsModel>(this);
 
-    // Select the latest version id of the requirement (effective_from <= now())
-    @Formula(alias =>
-        `select id, effective_from
-        from requirement_versions
-        where requirement_id = ${alias}.id
-        and effective_from <= now()
-        and is_deleted = false
-        order by effective_from
-        desc limit 1`
-    )
-    readonly latestVersion?: Ref<RequirementVersionsModel>;
+    /**
+     * The latest version of the requirement (effective_from <= now())
+     */
+    get latestVersion(): Promise<RequirementVersionsModel | undefined> {
+        return this.versions.loadItems({
+            where: {
+                effectiveFrom: { $lte: new Date() },
+                isDeleted: false
+            },
+            orderBy: { effectiveFrom: 'desc' },
+        }).then(items => items[0])
+    }
+
 }
 
 //volatile properties
@@ -40,15 +42,15 @@ export abstract class RequirementVersionsModel extends VolatileAuditModel {
     @ManyToOne({ primary: true, entity: () => RequirementModel })
     readonly requirement!: RequirementModel;
 
-    @Property({ length: 100 })
+    @Property({ type: types.string, length: 100 })
     readonly name!: string
 
-    @Property({ length: 1000 })
+    @Property({ type: types.string, length: 1000 })
     readonly description!: string
 
-    @Property({ type: 'string', nullable: true })
+    @Property({ type: types.string, nullable: true })
     readonly reqId?: `P.${number}.${number}` | `E.${number}.${number}` | `G.${number}.${number}` | `S.${number}.${number}` | `0.${number}.${number}` | undefined
 
-    @Property({ default: false })
+    @Property({ type: types.boolean, default: false })
     readonly isSilence!: boolean
 }

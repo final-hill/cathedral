@@ -4,6 +4,7 @@ import { OrganizationInteractor } from '~/application'
 import config from "~/mikro-orm.config"
 import { z, type ZodObject } from "zod"
 import { OrganizationRepository } from '../data/repositories/OrganizationRepository';
+import handleDomainException from './handleDomainException'
 
 /**
  * Creates an event handler for POST requests that create a new requirement
@@ -33,7 +34,7 @@ export default function postRequirementHttpHandler<
                 userId: session.id
             })
 
-        const newRequirementId = await organizationInteractor.addRequirement({ ReqClass, solutionId, reqProps })
+        const newRequirementId = await organizationInteractor.addRequirement({ ReqClass, solutionId, reqProps }).catch(handleDomainException)
 
         return newRequirementId
     })

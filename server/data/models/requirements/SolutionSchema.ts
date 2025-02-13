@@ -1,4 +1,4 @@
-import { Collection, Entity, Property } from '@mikro-orm/core';
+import { Collection, Entity, Property, types } from '@mikro-orm/core';
 import { ReqType } from "./ReqType.js";
 import { RequirementModel, RequirementVersionsModel } from './RequirementSchema.js';
 
@@ -9,6 +9,6 @@ export class SolutionModel extends RequirementModel {
 
 @Entity({ discriminatorValue: ReqType.SOLUTION })
 export class SolutionVersionsModel extends RequirementVersionsModel {
-    @Property()
+    @Property({ type: types.string })
     readonly slug!: string
 }

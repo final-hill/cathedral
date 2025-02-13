@@ -5,7 +5,7 @@ import { type Mapper } from "./Mapper"
  * Converts a Requirement query to a model query
  */
 export class ReqQueryToModelQuery implements Mapper<Partial<Requirement>, Record<string, any>> {
-    map(query: Partial<Requirement>) {
+    async map(query: Partial<Requirement>) {
         return Object.entries(query).reduce((acc, [key, value]) => {
             if (['createdById', 'creationDate', 'id'].includes(key))
                 return acc

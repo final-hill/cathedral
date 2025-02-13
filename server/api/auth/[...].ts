@@ -4,6 +4,8 @@ import ormConfig from "~/mikro-orm.config"
 import { AppUserInteractor } from '~/application/AppUserInteractor';
 import { AppUserRepository } from '~/server/data/repositories/AppUserRepository';
 import { NIL as SYSTEM_USER_ID } from 'uuid'
+import { AppUser } from '~/domain/application';
+import handleDomainException from '~/server/utils/handleDomainException';
 
 const config = useRuntimeConfig()
 
@@ -39,10 +41,15 @@ export default NuxtAuthHandler({
                         })
                     })
 
-                let appUser = await appUserInteractor.getAppUserById(p.oid)
+                if (p.oid === SYSTEM_USER_ID)
+                    throw new Error('System user cannot be authenticated')
 
-                if (!appUser) {
-                    const newUserId = await appUserInteractor.createAppUser({
+                let appUser: AppUser | undefined
+
+                const userExists = await appUserInteractor.hasUser(p.oid)
+
+                if (!userExists) {
+                    const newUserId = (await appUserInteractor.createAppUser({
                         id: p.oid,
                         creationDate: effectiveDate,
                         lastLoginDate: effectiveDate,
@@ -52,16 +59,16 @@ export default NuxtAuthHandler({
                         lastModified: effectiveDate,
                         isDeleted: false,
                         role: undefined
-                    })
+                    }).catch(handleDomainException))!
 
-                    appUser = await appUserInteractor.getAppUserById(newUserId)
+                    appUser = (await appUserInteractor.getAppUserById(newUserId).catch(handleDomainException))!
                 } else {
                     await appUserInteractor.updateAppUser({
                         name: p.name,
                         email: p.emails[0],
                         lastLoginDate: effectiveDate,
                         id: p.oid
-                    })
+                    }).catch(handleDomainException)
                 }
 
                 Object.assign(token, {

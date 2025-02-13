@@ -53,7 +53,7 @@ The application is built using the following primary technologies:
 
 ## Data model
 
-
+The database is in Version Normal Form to support temporal data. More details available [here](https://github.com/final-hill/cathedral/issues/435).
 
 ## Application Architecture
 

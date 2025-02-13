@@ -4,6 +4,7 @@ import { OrganizationInteractor } from '~/application'
 import config from "~/mikro-orm.config"
 import { z, type ZodObject } from "zod"
 import { OrganizationRepository } from '../data/repositories/OrganizationRepository'
+import handleDomainException from './handleDomainException'
 
 /**
  * Creates an event handler for PUT requests that update an existing requirement
@@ -42,6 +43,6 @@ export default function putRequirementHttpHandler<
                 userId: session.id
             })
 
-        await organizationInteractor.updateSolutionRequirement({ ReqClass, id, solutionId, reqProps })
+        await organizationInteractor.updateSolutionRequirement({ ReqClass, id, solutionId, reqProps }).catch(handleDomainException)
     })
 }

@@ -1,13 +1,11 @@
 import { z } from "zod"
 import config from "~/mikro-orm.config"
-import { OrganizationInteractor } from '~/application/index.js'
+import { AppUserInteractor, OrganizationInteractor } from '~/application'
+import { AppUserRepository, OrganizationRepository } from "~/server/data/repositories"
 import { getServerSession } from '#auth'
-import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository"
+import handleDomainException from "~/server/utils/handleDomainException"
 
-const querySchema = z.object({
-    name: z.string().optional(),
-    description: z.string().optional()
-})
+const querySchema = z.object({})
 
 /**
  * Returns all organizations that match the query parameters
@@ -15,10 +13,21 @@ const querySchema = z.object({
 export default defineEventHandler(async (event) => {
     const query = await validateEventParams(event, querySchema),
         session = (await getServerSession(event))!,
-        organizationInteractor = new OrganizationInteractor({
-            repository: new OrganizationRepository({ config }),
+        appUserInteractor = new AppUserInteractor({
+            repository: new AppUserRepository({ config }),
             userId: session.id
         })
 
-    return organizationInteractor.findOrganizations(query)
+    const orgIds = await appUserInteractor.getUserOrganizationIds(session.id),
+        orgs = await Promise.all(orgIds.map(id => {
+            return (new OrganizationInteractor({
+                repository: new OrganizationRepository({
+                    config,
+                    organizationId: id
+                }),
+                userId: session.id
+            })).getOrganization().catch(handleDomainException)
+        }))
+
+    return orgs
 })

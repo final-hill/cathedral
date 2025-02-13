@@ -3,6 +3,7 @@ import { getServerSession } from '#auth'
 import { OrganizationInteractor } from "~/application"
 import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository";
 import config from "~/mikro-orm.config";
+import handleDomainException from "~/server/utils/handleDomainException";
 
 const querySchema = z.object({
     organizationId: z.string().uuid().optional(),
@@ -26,5 +27,5 @@ export default defineEventHandler(async (event) => {
             })
         })
 
-    return await organizationInteractor.getOrganizationAppUsers()
+    return await organizationInteractor.getOrganizationAppUsers().catch(handleDomainException)
 })

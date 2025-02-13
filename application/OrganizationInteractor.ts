@@ -1,12 +1,10 @@
 import * as req from "~/domain/requirements";
 import { AppUserOrganizationRole, AppRole, AppUser } from "~/domain/application";
-import type NaturalLanguageToRequirementService from "~/server/data/services/NaturalLanguageToRequirementService";
-import { groupBy } from "#shared/utils";
-import { Belongs, Follows } from "~/domain/relations";
 import type { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository";
 import { validate as validateUuid } from 'uuid'
 import type { AuditMetadata } from "~/domain/AuditMetadata";
 import { Interactor } from "./Interactor";
+import { DuplicateEntityException, MismatchException, NotFoundException, PermissionDeniedException } from "~/domain/exceptions";
 
 /**
  * The OrganizationInteractor class contains the business logic for interacting with an organization.
@@ -34,14 +32,12 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      *
      * @param props.appUserId The id of the app user to invite
      * @param props.role The role to assign to the app user
-     * @throws {Error} If the user is not an admin of the organization
-     * @throws {Error} If the organization does not exist
-     * @throws {Error} If the target app user does not exist
-     * @throws {Error} If the target app user is already associated with the organization
+     * @throws {PermissionDeniedException} If the user is not an admin of the organization
+     * @throws {DuplicateEntityException} If the target app user is already associated with the organization
      */
     async addAppUserOrganizationRole(props: Pick<AppUserOrganizationRole, 'appUserId' | 'organizationId' | 'role'>): Promise<void> {
         if (!await this.isOrganizationAdmin())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         this.repository.addAppUserOrganizationRole({
             createdById: this._userId,
@@ -51,40 +47,15 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
     }
 
     /**
-     * Creates a new organization in the database and sets the creator as an admin
-     *
-     * @param props.name The name of the organization
-     * @param props.description The description of the organization
-     * @returns The new organization id
-     */
-    async addOrganization(props: Pick<req.Organization, 'name' | 'description'>): Promise<req.Organization['id']> {
-        const repo = this.repository,
-            effectiveDate = new Date(),
-            newOrgId = await repo.addOrganization({ ...props, createdById: this._userId, effectiveDate })
-
-        await repo.addAppUserOrganizationRole({
-            effectiveDate,
-            appUserId: this._userId,
-            organizationId: newOrgId,
-            role: AppRole.ORGANIZATION_ADMIN,
-            createdById: this._userId
-        })
-
-        return newOrgId
-    }
-
-    /**
      * Add a new requirement to a solution and assign it a new requirement id
      *
      * @param props.solutionId - The id of the solution to add the requirement to
      * @param props.ReqClass - The Constructor of the requirement to add
      * @param props.reqProps - The requirement data to add
      * @returns The id of the new requirement
-     * @throws {Error} If the organization does not exist
-     * @throws {Error} If the solution does not exist
-     * @throws {Error} If the user is not a reader of the organization or better
-     * @throws {Error} If the user is not a contributor of the solution or better
-     * @throws {Error} If a referenced requirement does not belong to the solution
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {MismatchException} If a referenced requirement does not belong to the solution
+     * @throws {NotFoundException} If the solution does not exist
      */
     async addRequirement<RCons extends typeof req.Requirement>({
         solutionId, ReqClass, reqProps
@@ -94,7 +65,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
         reqProps: Omit<InstanceType<RCons>, 'reqId' | 'id' | keyof AuditMetadata>
     }): Promise<req.Requirement['id']> {
         if (!this.isOrganizationContributor())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         await this._assertReferenceRequirementsBelongToSolution({ solutionId, reqProps })
 
@@ -112,15 +83,15 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      *
      * @param props The properties of the solution
      * @returns The new solution
-     * @throws {Error} If the user is not an admin of the organization
-     * @throws {Error} If the organization does not exist
+     * @throws {PermissionDeniedException} If the user is not an admin of the organization
+     * @throws {NotFoundException} If the organization does not exist
      */
     async addSolution({ name, description }: Pick<req.Solution, 'name' | 'description'>): Promise<req.Solution['id']> {
         const repo = this.repository,
             effectiveDate = new Date()
 
         if (!await this.isOrganizationAdmin())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         const newSolutionId = await repo.addSolution({ name, description, effectiveDate, createdById: this._userId })
 
@@ -144,13 +115,13 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * Delete an app user from the current organization
      *
      * @param id The id of the app user to delete
-     * @throws {Error} If the user is not an admin of the organization unless the user is deleting themselves
-     * @throws {Error} If the user is deleting the last admin of the organization
-     * @throws {Error} If the target app user does not exist
+     * @throws {PermissionDeniedException} If the user is not an admin of the organization unless the user is deleting themselves
+     * @throws {PermissionDeniedException} If the user is deleting the last admin of the organization
+     * @throws {NotFoundException} If the target app user does not exist
      */
     async deleteAppUser(id: AppUser['id']): Promise<unknown> {
         if (!this.isOrganizationAdmin() && id !== this._userId)
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         const targetUser = await this.getAppUserById(id),
             orgAdminCount = (await this.repository.findAppUserOrganizationRoles({
@@ -158,7 +129,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
             })).length
 
         if (targetUser.role === AppRole.ORGANIZATION_ADMIN && orgAdminCount === 1)
-            throw new Error('Forbidden: You cannot delete the last organization admin.')
+            throw new PermissionDeniedException('Forbidden: You cannot delete the last organization admin.')
 
         return this.repository.deleteAppUserOrganizationRole({
             appUserId: id,
@@ -169,28 +140,15 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
     }
 
     /**
-     * Delete the organization
-     *
-     * @throws {Error} If the user is not an admin of the organization or better
-     * @throws {Error} If the organization does not exist
-     */
-    async deleteOrganization(): Promise<void> {
-        if (!await this.isOrganizationAdmin())
-            throw new Error('Forbidden: You do not have permission to perform this action')
-
-        return this.repository.deleteOrganization({ deletedById: this._userId, deletedDate: new Date() })
-    }
-
-    /**
      * Delete a requirement by id from the specified solution
      *
      * @param props.id - The id of the requirement to delete
      * @param props.solutionId - The id of the solution that the requirement belongs to
      * @param props.ReqClass - The Constructor of the requirement to delete
-     * @throws {Error} If the solution does not exist
-     * @throws {Error} If the user is not a contributor of the organization or better
-     * @throws {Error} If the requirement does not exist
-     * @throws {Error} If the requirement does not belong to the solution
+     * @throws {NotFoundException} If the solution does not exist
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {NotFoundException} If the requirement does not exist
+     * @throws {MismatchException} If the requirement does not belong to the solution
      */
     async deleteRequirement<RCons extends typeof req.Requirement>(props: {
         id: InstanceType<RCons>['id'],
@@ -198,7 +156,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
         ReqClass: RCons
     }): Promise<void> {
         if (!this.isOrganizationContributor())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         await this.repository.deleteSolutionRequirementById({
             deletedById: this._userId,
@@ -216,13 +174,13 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * Delete a solution by slug from an organization
      *
      * @param slug The id of the solution to delete
-     * @throws {Error} If the user is not an admin of the organization
-     * @throws {Error} If the solution does not exist
-     * @throws {Error} If the solution does not belong to the organization
+     * @throws {PermissionDeniedException} If the user is not an admin of the organization
+     * @throws {NotFoundException} If the solution does not exist
+     * @throws {MismatchException} If the solution does not belong to the organization
      */
     async deleteSolutionBySlug(slug: req.Solution['slug']): Promise<void> {
         if (!await this.isOrganizationAdmin())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         return this.repository.deleteSolutionBySlug({
             deletedById: this._userId,
@@ -232,27 +190,13 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
     }
 
     /**
-     * Find organizations that match the query parameters
-     *
-     * @param query The query parameters to filter organizations by
-     * @returns The organizations that match the query parameters
-     * @throws {Error} If the user is not a reader of the organization or better
-     */
-    async findOrganizations(query: Partial<req.Organization> = {}): Promise<req.Organization[]> {
-        if (!await this.isOrganizationReader())
-            throw new Error('Forbidden: You do not have permission to perform this action')
-
-        return this.repository.findOrganizations(query)
-    }
-
-    /**
      * Find requirements that match the query parameters for a solution
      *
      * @param props.solutionId - The id of the solution to find the requirements for
      * @param props.ReqClass - The Constructor of the requirement to find
      * @param props.query - The query parameters to filter requirements by
      * @returns The requirements that match the query parameters
-     * @throws {Error} If the user is not a reader of the organization or better
+     * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
     async findSolutionRequirements<RCons extends typeof req.Requirement>(props: {
         solutionId: req.Solution['id'],
@@ -260,7 +204,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
         query: Partial<InstanceType<RCons>>
     }): Promise<InstanceType<RCons>[]> {
         if (!this.isOrganizationReader())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         return this.repository.findSolutionRequirementsByType(props)
     }
@@ -270,12 +214,12 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      *
      * @param query The query parameters to filter solutions by
      * @returns The solutions that match the query parameters
-     * @throws {Error} If the user is not a reader of the organization or better
-     * @throws {Error} If the organization does not exist
+     * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
+     * @throws {NotFoundException} If the organization does not exist
      */
     async findSolutions(query: Partial<req.Solution> = {}): Promise<req.Solution[]> {
         if (!await this.isOrganizationReader())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         return this.repository.findSolutions(query)
     }
@@ -285,13 +229,13 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      *
      * @param id The id of the app user to get
      * @returns The app user
-     * @throws {Error} If the app user does not exist
-     * @throws {Error} If the user is not a reader of the organization or better
-     * @throws {Error} If the user is trying to get an app user that is not in the same organization
+     * @throws {NotFoundException} If the app user does not exist
+     * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
+     * @throws {PermissionDeniedException} If the user is trying to get an app user that is not in the same organization
      */
     async getAppUserById(id: AppUser['id']): Promise<AppUser> {
         if (!this.isOrganizationReader())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
         return this.repository.getOrganizationAppUserById(id)
     }
 
@@ -299,11 +243,11 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * Returns the organization that the user is associated with
      *
      * @returns The organization
-     * @throws {Error} If the organization does not exist
+     * @throws {NotFoundException} If the organization does not exist
      */
     async getOrganization(): Promise<req.Organization> {
         if (!this.isOrganizationReader())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new NotFoundException('Forbidden: You do not have permission to perform this action')
         return this.repository.getOrganization()
     }
 
@@ -311,11 +255,11 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * Get all app users for the organization with their associated roles
      *
      * @returns The app users with their associated roles
-     * @throws {Error} If the user is not a reader of the organization or better
+     * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
     async getOrganizationAppUsers(): Promise<AppUser[]> {
         if (!this.isOrganizationReader())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         return this.repository.getOrganizationAppUsers()
     }
@@ -325,13 +269,13 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      *
      * @param solutionId The id of the solution to get
      * @returns The solution
-     * @throws {Error} If the user is not a reader of the organization or better
-     * @throws {Error} If the solution does not exist
-     * @throws {Error} If the solution does not belong to the organization
+     * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
+     * @throws {NotFoundException} If the solution does not exist
+     * @throws {MismatchException} If the solution does not belong to the organization
      */
     async getSolutionById(solutionId: req.Solution['id']): Promise<req.Solution> {
         if (!await this.isOrganizationReader())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         return this.repository.getSolutionById(solutionId)
     }
@@ -341,13 +285,13 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      *
      * @param slug The slug of the solution to get
      * @returns The solution
-     * @throws {Error} If the user is not a reader of the organization or better
-     * @throws {Error} If the solution does not exist
-     * @throws {Error} If the solution does not belong to the organization
+     * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
+     * @throws {NotFoundException} If the solution does not exist
+     * @throws {MismatchException} If the solution does not belong to the organization
      */
     async getSolutionBySlug(slug: req.Solution['slug']): Promise<req.Solution> {
         if (!await this.isOrganizationReader())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         return this.repository.getSolutionBySlug(slug)
     }
@@ -359,8 +303,8 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @param props.id The id of the requirement to get
      * @param props.solutionId The id of the solution that the requirement belongs to
      * @returns The requirement
-     * @throws {Error} If the user is not a reader of the organization or better
-     * @throws {Error} If the requirement does not exist in the organization nor the solution
+     * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
+     * @throws {NotFoundException} If the requirement does not exist in the organization nor the solution
      */
     async getSolutionRequirementById<RCons extends typeof req.Requirement>(props: {
         ReqClass: RCons,
@@ -368,7 +312,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
         id: InstanceType<RCons>['id']
     }): Promise<InstanceType<RCons>> {
         if (!this.isOrganizationReader())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         return await this.repository.getSolutionRequirementById({
             ReqClass: props.ReqClass,
@@ -379,6 +323,10 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
 
     /**
      * Check if the current user is an admin of the organization or a system admin
+     * @returns The result of the check
+     * @throws {NotFoundException} If the organization does not exist
+     * @throws {NotFoundException} If the app user does not exist in the organization
+     * @throws {NotFoundException} If the app user organization role does not exist
      */
     async isOrganizationAdmin(): Promise<boolean> {
         const appUser = await this.repository.getOrganizationAppUserById(this._userId)
@@ -395,6 +343,10 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
 
     /**
      * Check if the current user is a contributor of the organization or a system admin
+     * @returns The result of the check
+     * @throws {NotFoundException} If the organization does not exist
+     * @throws {NotFoundException} If the app user does not exist in the organization
+     * @throws {NotFoundException} If the app user organization role does not exist
      */
     async isOrganizationContributor(): Promise<boolean> {
         const appUser = await this.repository.getOrganizationAppUserById(this._userId)
@@ -411,6 +363,10 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
 
     /**
      * Check if the current user is a reader of the organization or a system admin
+     * @returns The result of the check
+     * @throws {NotFoundException} If the organization does not exist
+     * @throws {NotFoundException} If the app user does not exist in the organization
+     * @throws {NotFoundException} If the app user organization role does not exist
      */
     async isOrganizationReader(): Promise<boolean> {
         const appUser = await this.repository.getOrganizationAppUserById(this._userId)
@@ -430,23 +386,23 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      *
      * @param id The id of the target user to update
      * @param role The new role to assign to the target user
-     * @throws {Error} If the current user is not an admin of the organization
-     * @throws {Error} If the target user does not exist
-     * @throws {Error} If the target user is not in the same organization
-     * @throws {Error} If the target user is the last admin of the organization and the new role is not an admin
-     * @throws {Error} If the target user is trying to update themselves
+     * @throws {PermissionDeniedException} If the current user is not an admin of the organization
+     * @throws {NotFoundException} If the target user does not exist
+     * @throws {PermissionDeniedException} If the target user is not in the same organization
+     * @throws {PermissionDeniedException} If the target user is the last admin of the organization and the new role is not an admin
+     * @throws {PermissionDeniedException} If the target user is trying to update themselves
      */
     async updateAppUserRole(id: AppUser['id'], role: AppRole): Promise<void> {
         if (!this.isOrganizationAdmin())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         const targetUser = await this.getAppUserById(id)
 
         if (targetUser.id === this._userId)
-            throw new Error('Forbidden: You cannot update your own role.')
+            throw new PermissionDeniedException('Forbidden: You cannot update your own role.')
 
         if (targetUser.role === AppRole.ORGANIZATION_ADMIN && role !== AppRole.ORGANIZATION_ADMIN)
-            throw new Error('Forbidden: You cannot remove the last organization admin.')
+            throw new PermissionDeniedException('Forbidden: You cannot remove the last organization admin.')
 
         await this.repository.updateAppUserRole({
             appUserId: id,
@@ -460,12 +416,12 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * Update the organization with the given properties.
      *
      * @param props The properties to update
-     * @throws {Error} If the user is not a contributor of the organization or better
-     * @throws {Error} If the organization does not exist
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {NotFoundException} If the organization does not exist
      */
     async updateOrganization(props: Pick<Partial<req.Organization>, 'name' | 'description'>): Promise<void> {
         if (!this.isOrganizationContributor())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         await this.repository.updateOrganization({
             modifiedById: this._userId,
@@ -478,6 +434,9 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * Assert that all requirement references (uuid properties) belong to the same solution.
      * This is to prevent a requirement from another solution being added to the current solution.
      * This is a security measure to prevent unauthorized access to requirements
+     * @param props.solutionId The id of the solution that the requirements belong to
+     * @param props.reqProps The properties of the requirements to check
+     * @throws {MismatchException} If a referenced requirement does not belong to the solution
      */
     private async _assertReferenceRequirementsBelongToSolution(props: {
         solutionId: req.Solution['id'],
@@ -488,7 +447,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
                 const solHasReq = await this.repository.solutionHasRequirement({ id: value, solutionId: props.solutionId })
 
                 if (!solHasReq)
-                    throw new Error(`Requirement with id ${value} does not belong to the solution`)
+                    throw new MismatchException(`Requirement with id ${value} does not belong to the solution`)
             }
         }
     }
@@ -500,11 +459,11 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @param props.solutionId The id of the solution that the requirement belongs to
      * @param props.ReqClass The Constructor of the requirement to update
      * @param props.reqProps The properties to update
-     * @throws {Error} If the user is not a contributor of the organization or better
-     * @throws {Error} If the requirement does not exist
-     * @throws {Error} If the solution does not exist
-     * @throws {Error} If the requirement is not owned by the solution
-     * @throws {Error} If a referenced requirement does not belong to the solution
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {NotFoundException} If the requirement does not exist
+     * @throws {NotFoundException} If the solution does not exist
+     * @throws {MismatchException} If the requirement is not owned by the solution
+     * @throws {MismatchException} If a referenced requirement does not belong to the solution
      */
     async updateSolutionRequirement<RCons extends typeof req.Requirement>(props: {
         id: InstanceType<RCons>['id'],
@@ -513,7 +472,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
         reqProps: Partial<Omit<InstanceType<RCons>, 'id' | 'reqId' | keyof AuditMetadata>>
     }): Promise<void> {
         if (!this.isOrganizationContributor())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         await this._assertReferenceRequirementsBelongToSolution({
             solutionId: props.solutionId,
@@ -535,13 +494,13 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      *
      * @param slug The slug of the solution to update
      * @param props The properties to update
-     * @throws {Error} If the user is not a contributor of the organization or better
-     * @throws {Error} If the solution does not exist
-     * @throws {Error} If the solution does not belong to the organization
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {NotFoundException} If the solution does not exist
+     * @throws {MismatchException} If the solution does not belong to the organization
      */
     async updateSolutionBySlug(slug: req.Solution['slug'], props: Pick<Partial<req.Solution>, 'name' | 'description'>): Promise<void> {
         if (!await this.isOrganizationContributor())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         await this.repository.updateSolutionBySlug(slug, {
             modifiedById: this._userId,
@@ -555,14 +514,14 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @param props.solutionId The id of the solution that the requirement belongs to
      * @param props.id The id of the ParsedRequirement to get the requirements that follow from it
      * @returns The requirements that follow from the specified ParsedRequirement
-     * @throws {Error} If the user is not a reader of the organization or better
-     * @throws {Error} If the ParsedRequirement does not exist
-     * @throws {Error} If the ParsedRequirement does not belong to the solution
+     * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
+     * @throws {NotFoundException} If the ParsedRequirement does not exist
+     * @throws {MismatchException} If the ParsedRequirement does not belong to the solution
      * /
     // TODO: refactor to use the repository
     async getFollowingParsedSilenceRequirements({ solutionId, id }: { solutionId: req.Solution['id'], id: req.Requirement['id'] }): Promise<Partial<Record<ReqType, Requirement[]>>> {
         if (!this.isOrganizationReader())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         const parsedRequirement = await this.getSolutionRequirementById({ solutionId, ReqClass: ParsedRequirement, id })
 
@@ -586,8 +545,8 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @param props.statement The statement to parse requirements from
      * @param props.parsingService The parsing service to use
      * @returns The number of requirements parsed
-     * @throws {Error} If the user is not a contributor of the organization or better
-     * @throws {Error} If the Solution does not belong to the organization
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {MismatchException} If the Solution does not belong to the organization
      * /
     async parseRequirement({ solutionId, statement, parsingService }: {
         solutionId: req.Solution['id'],
@@ -596,7 +555,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
         parsingService: NaturalLanguageToRequirementService
     }): Promise<number> {
         if (!this.isOrganizationContributor())
-            throw new Error('Forbidden: You do not have permission to perform this action')
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         const appUser = await this._userId,
             em = this.getEntityManager(),

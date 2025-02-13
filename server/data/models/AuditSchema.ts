@@ -1,19 +1,19 @@
-import { ManyToOne, Property, type Rel } from "@mikro-orm/core"
+import { ManyToOne, PrimaryKey, Property, type Rel, types } from "@mikro-orm/core"
 import { AppUserModel } from "./index.js"
 
 export abstract class StaticAuditModel {
     @ManyToOne({ entity: () => AppUserModel })
     readonly createdBy!: Rel<AppUserModel>;
 
-    @Property()
+    @Property({ type: types.datetime })
     readonly creationDate!: Date;
 }
 
 export abstract class VolatileAuditModel {
-    @Property({ primary: true })
+    @PrimaryKey({ type: types.datetime })
     readonly effectiveFrom!: Date
 
-    @Property()
+    @Property({ type: types.boolean })
     readonly isDeleted!: boolean
 
     @ManyToOne({ entity: () => AppUserModel })

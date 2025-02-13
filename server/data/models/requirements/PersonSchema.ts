@@ -1,4 +1,4 @@
-import { Collection, Entity, Property } from '@mikro-orm/core';
+import { Collection, Entity, Property, types } from '@mikro-orm/core';
 import { ReqType } from "./ReqType.js";
 import { ActorModel, ActorVersionsModel } from './ActorSchema.js';
 
@@ -9,6 +9,6 @@ export class PersonModel extends ActorModel {
 
 @Entity({ discriminatorValue: ReqType.PERSON })
 export class PersonVersionsModel extends ActorVersionsModel {
-    @Property({ length: 254 })
+    @Property({ length: 254, type: types.string })
     readonly email!: string
 }

@@ -2,7 +2,8 @@ import { z } from "zod"
 import config from "~/mikro-orm.config"
 import { getServerSession } from '#auth'
 import { OrganizationInteractor } from "~/application"
-import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository"
+import { OrganizationRepository } from "~/server/data/repositories"
+import handleDomainException from "~/server/utils/handleDomainException"
 
 const paramSchema = z.object({
     slug: z.string().max(100)
@@ -19,5 +20,5 @@ export default defineEventHandler(async (event) => {
             userId: session.id
         })
 
-    return await organizationInteractor.getOrganization()
+    return await organizationInteractor.getOrganization().catch(handleDomainException)
 })

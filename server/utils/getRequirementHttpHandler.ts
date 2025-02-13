@@ -4,6 +4,7 @@ import { Requirement } from "~/domain/requirements"
 import { OrganizationInteractor } from '~/application'
 import config from "~/mikro-orm.config"
 import { OrganizationRepository } from "../data/repositories/OrganizationRepository"
+import handleDomainException from "./handleDomainException"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -33,6 +34,6 @@ export default function getRequirementHttpHandler<RCons extends typeof Requireme
                 userId: session.id
             })
 
-        return (await organizationInteractor.getSolutionRequirementById({ solutionId, ReqClass, id }))
+        return await organizationInteractor.getSolutionRequirementById({ solutionId, ReqClass, id }).catch(handleDomainException)
     })
 }

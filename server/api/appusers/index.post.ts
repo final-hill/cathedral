@@ -6,6 +6,7 @@ import { OrganizationRepository } from "~/server/data/repositories/OrganizationR
 import config from "~/mikro-orm.config";
 import { AppUserInteractor } from "~/application/AppUserInteractor";
 import { AppUserRepository } from "~/server/data/repositories/AppUserRepository";
+import handleDomainException from "~/server/utils/handleDomainException";
 
 const bodySchema = z.object({
     email: z.string(),
@@ -37,13 +38,13 @@ export default defineEventHandler(async (event) => {
             })
         })
 
-    const orgId = organizationId ?? (await organizationInteractor.getOrganization()).id
+    const orgId = organizationId ?? (await organizationInteractor.getOrganization().catch(handleDomainException))!.id
 
-    const appUser = await appUserInteractor.getAppUserByEmail(email)
+    const appUser = (await appUserInteractor.getAppUserByEmail(email).catch(handleDomainException))!
 
     return await organizationInteractor.addAppUserOrganizationRole({
         appUserId: appUser.id,
         organizationId: orgId,
         role
-    })
+    }).catch(handleDomainException)
 })

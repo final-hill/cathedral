@@ -3,6 +3,7 @@ import config from '~/mikro-orm.config';
 import { z } from "zod"
 import { OrganizationInteractor } from "~/application"
 import { OrganizationRepository } from '~/server/data/repositories/OrganizationRepository';
+import handleDomainException from '~/server/utils/handleDomainException';
 
 const bodySchema = z.object({
     name: z.string().min(1).max(100),
@@ -23,8 +24,8 @@ export default defineEventHandler(async (event) => {
             userId: session.id,
             repository: new OrganizationRepository({ config, organizationId, organizationSlug })
         }),
-        newSolutionId = await organizationInteractor.addSolution({ name, description }),
-        newSolution = await organizationInteractor.getSolutionById(newSolutionId)
+        newSolutionId = (await organizationInteractor.addSolution({ name, description }).catch(handleDomainException))!,
+        newSolution = (await organizationInteractor.getSolutionById(newSolutionId).catch(handleDomainException))!
 
     return newSolution.slug
 })

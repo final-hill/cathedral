@@ -3,6 +3,7 @@ import { z } from "zod"
 import { OrganizationInteractor } from "~/application"
 import config from '~/mikro-orm.config'
 import { OrganizationRepository } from '~/server/data/repositories/OrganizationRepository'
+import handleDomainException from '~/server/utils/handleDomainException'
 
 const paramSchema = z.object({
     slug: z.string().max(100)
@@ -29,5 +30,5 @@ export default defineEventHandler(async (event) => {
             repository: new OrganizationRepository({ config, organizationId, organizationSlug })
         })
 
-    await organizationInteractor.updateSolutionBySlug(slug, body)
+    await organizationInteractor.updateSolutionBySlug(slug, body).catch(handleDomainException)
 })

@@ -1,4 +1,4 @@
-import { Collection, Entity, Enum, Formula, ManyToOne, OneToMany, OneToOne, OptionalProps, type Ref } from "@mikro-orm/core";
+import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, type Ref } from "@mikro-orm/core";
 import { AppRole } from "../../../../domain/application/index.js";
 import { StaticAuditModel, VolatileAuditModel } from "../AuditSchema.js";
 import { AppUserModel, } from "./index.js"
@@ -18,17 +18,18 @@ export class AppUserOrganizationRoleModel extends StaticAuditModel {
     @OneToMany({ mappedBy: 'appUserOrganizationRole', entity: () => AppUserOrganizationRoleVersionsModel })
     readonly versions = new Collection<AppUserOrganizationRoleVersionsModel>(this);
 
-    // Select the latest version id of the requirement (effective_from <= now())
-    @Formula(alias =>
-        `select id, effective_from
-        from app_user_organization_role_versions
-        where app_user_organization_role_id = ${alias}.id
-        and effective_from <= now()
-        and is_deleted = false
-        order by effective_from
-        desc limit 1`
-    )
-    readonly latestVersion?: Ref<AppUserOrganizationRoleVersionsModel>;
+    /**
+     * The latest version of the relation (effective_from <= now())
+     */
+    get latestVersion(): Promise<AppUserOrganizationRoleVersionsModel | undefined> {
+        return this.versions.loadItems({
+            where: {
+                effectiveFrom: { $lte: new Date() },
+                isDeleted: false
+            },
+            orderBy: { effectiveFrom: 'desc' },
+        }).then(items => items[0])
+    }
 }
 
 // volatile properties

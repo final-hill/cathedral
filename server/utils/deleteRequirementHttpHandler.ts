@@ -4,6 +4,7 @@ import { OrganizationInteractor } from '~/application'
 import { Requirement } from '~/domain/requirements'
 import config from '~/mikro-orm.config'
 import { OrganizationRepository } from "../data/repositories/OrganizationRepository"
+import handleDomainException from "./handleDomainException"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -33,6 +34,6 @@ export default function deleteRequirementHttpHandler<RCons extends typeof Requir
                 userId: session.id
             })
 
-        await organizationInteractor.deleteRequirement({ ReqClass, id, solutionId })
+        await organizationInteractor.deleteRequirement({ ReqClass, id, solutionId }).catch(handleDomainException)
     })
 }
