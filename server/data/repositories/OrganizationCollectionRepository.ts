@@ -146,21 +146,27 @@ export class OrganizationCollectionRepository extends Repository<Organization> {
      */
     async findOrganizations(query: Partial<Organization>): Promise<Organization[]> {
         const em = this._fork(),
-            modelQuery = Object.entries(await new ReqQueryToModelQuery().map(query)),
-            organizations = (await em.find(OrganizationModel, {
-                ...(query.id ? { id: query.id } : {})
-            })).filter(async org => {
-                const latestVersion = await org.latestVersion
+            modelQuery = Object.entries(await new ReqQueryToModelQuery().map(query))
 
-                return latestVersion != undefined &&
-                    modelQuery.every(
-                        ([key, value]) => (latestVersion as any)[key] === value
-                    )
-            })
+        const organizationEntities = await em.find(OrganizationModel, {
+            ...(query.id ? { id: query.id } : {}),
+        });
 
-        return Promise.all(
-            organizations.map(async org => new Organization(await new DataModelToDomainModel().map(org)))
-        )
+        const organizations: Organization[] = []
+        for (const org of organizationEntities) {
+            const latestVersion = await org.latestVersion
+            if (!latestVersion)
+                continue
+
+            const domainOrg = new Organization(await new DataModelToDomainModel().map(
+                Object.assign({}, org, latestVersion)
+            ))
+
+            if (modelQuery.every(([key, value]) => (domainOrg as any)[key] === value))
+                organizations.push(domainOrg)
+        }
+
+        return organizations
     }
 
     /**
@@ -169,13 +175,22 @@ export class OrganizationCollectionRepository extends Repository<Organization> {
      */
     async getAllOrganizations(): Promise<Organization[]> {
         const em = this._fork()
+        const organizations: Organization[] = []
 
-        const organizations = (await em.find(OrganizationModel, {}))
-            .filter(async org => (await org.latestVersion) != undefined)
+        const organizationEntities = await em.find(OrganizationModel, {})
 
-        return Promise.all(
-            organizations.map(async org => new Organization(await new DataModelToDomainModel().map(org)))
-        )
+        for await (const org of organizationEntities) {
+            const latestVersion = await org.latestVersion
+            if (!latestVersion)
+                continue
+
+            const domainOrg = new Organization(await new DataModelToDomainModel().map(
+                Object.assign({}, org, latestVersion)
+            ))
+            organizations.push(domainOrg)
+        }
+
+        return organizations
     }
 
     /**

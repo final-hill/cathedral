@@ -6,7 +6,7 @@ import { OrganizationModel } from "../requirements/index.js";
 
 // static properties
 @Entity({ tableName: 'app_user_organization_role' })
-export class AppUserOrganizationRoleModel extends StaticAuditModel {
+export class AppUserOrganizationRoleModel extends StaticAuditModel<AppUserOrganizationRoleVersionsModel> {
     [OptionalProps]?: 'latestVersion'
 
     @ManyToOne({ primary: true, entity: () => AppUserModel })
@@ -17,19 +17,6 @@ export class AppUserOrganizationRoleModel extends StaticAuditModel {
 
     @OneToMany({ mappedBy: 'appUserOrganizationRole', entity: () => AppUserOrganizationRoleVersionsModel })
     readonly versions = new Collection<AppUserOrganizationRoleVersionsModel>(this);
-
-    /**
-     * The latest version of the relation (effective_from <= now())
-     */
-    get latestVersion(): Promise<AppUserOrganizationRoleVersionsModel | undefined> {
-        return this.versions.loadItems({
-            where: {
-                effectiveFrom: { $lte: new Date() },
-                isDeleted: false
-            },
-            orderBy: { effectiveFrom: 'desc' },
-        }).then(items => items[0])
-    }
 }
 
 // volatile properties

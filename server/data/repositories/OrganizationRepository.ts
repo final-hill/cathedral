@@ -188,9 +188,10 @@ export class OrganizationRepository extends Repository<req.Organization> {
      */
     async deleteAppUserOrganizationRole(auor: Pick<AppUserOrganizationRole, 'appUserId' | 'organizationId'> & DeletionInfo): Promise<void> {
         const em = this._fork(),
+            organizationId = (await this.getOrganization()).id,
             existingAuor = await em.findOne(AppUserOrganizationRoleModel, {
                 appUser: auor.appUserId,
-                organization: await this.getOrganization()
+                organization: organizationId
             }),
             latestVersion = await existingAuor?.latestVersion
 
@@ -324,35 +325,40 @@ export class OrganizationRepository extends Repository<req.Organization> {
         const em = this._fork(),
             organizationId = (await this.getOrganization()).id
 
-        const belongsModels = await Promise.all((await em.find(BelongsModel, {
+        const belongsModels = []
+        for (const belongs of await em.find(BelongsModel, {
             left: {
                 ...(query.id ? { id: query.id } : {}),
                 req_type: ReqType.SOLUTION
             },
             right: { id: organizationId, req_type: ReqType.ORGANIZATION }
-        }))
-            .filter(async belongs => (await belongs.latestVersion) != undefined)
-            .map(async belongs => (await belongs.latestVersion)!.requirementRelation.left.id))
+        })) {
+            if (await belongs.latestVersion)
+                belongsModels.push((await belongs.latestVersion)!.requirementRelation.left.id)
+        }
 
         if (belongsModels.length === 0 && query.id !== undefined)
             throw new NotFoundException('Solution does not exist in the organization')
 
         const modelQuery = Object.entries(await new ReqQueryToModelQuery().map(query))
 
-        const solutionModels = (await em.find(reqModels.SolutionModel, {
+        const solutionModels = []
+        for (const sol of await em.find(reqModels.SolutionModel, {
             id: { $in: belongsModels },
             ...(query.createdById ? { createdBy: query.createdById } : {}),
             ...(query.creationDate ? { creationDate: query.creationDate } : {})
-        })).filter(async sol => {
+        })) {
             const latestVersion = await sol.latestVersion
+            if (latestVersion && modelQuery.every(([key, value]) => (latestVersion as any)[key] === value))
+                solutionModels.push(sol)
+        }
 
-            return latestVersion != undefined &&
-                modelQuery.every(
-                    ([key, value]) => (latestVersion as any)[key] === value
-                )
-        })
-
-        return Promise.all(solutionModels.map(async sol => new req.Solution(await new DataModelToDomainModel().map(sol))))
+        const solutions = [];
+        for await (const sol of solutionModels) {
+            const domainModel = await new DataModelToDomainModel().map(Object.assign({}, sol, await sol.latestVersion));
+            solutions.push(new req.Solution(domainModel));
+        }
+        return solutions;
     }
 
     /**
@@ -401,38 +407,43 @@ export class OrganizationRepository extends Repository<req.Organization> {
     }): Promise<InstanceType<RCons>[]> {
         const em = this._fork()
 
-        const reqsInSolution = await Promise.all((await em.find(BelongsModel, {
+        const reqsInSolution = [];
+        for (const rel of await em.find(BelongsModel, {
             left: {
                 req_type: pascalCaseToSnakeCase(props.ReqClass.name) as ReqType,
                 ...(props.query.id ? { id: props.query.id } : {})
             },
             right: { id: props.solutionId, req_type: ReqType.SOLUTION }
-        }))
-            .filter(async rel => (await rel.latestVersion) != undefined)
-            .map(async rel => (await rel.latestVersion)!.requirementRelation.left.id))
+        })) {
+            const latestVersion = await rel.latestVersion;
+            if (latestVersion)
+                reqsInSolution.push(latestVersion.requirementRelation.left.id);
+        }
 
         if (reqsInSolution.length === 0 && props.query.id !== undefined)
             throw new MismatchException('Requirement does not exist in the solution')
 
         const modelQuery = Object.entries(await new ReqQueryToModelQuery().map(props.query))
 
-        const requirementModels = (await em.find<reqModels.RequirementModel>((reqModels as any)[`${props.ReqClass.name}Model`], {
+        const requirementModels = [];
+        for (const req of await em.find<reqModels.RequirementModel>((reqModels as any)[`${props.ReqClass.name}Model`], {
             id: { $in: reqsInSolution },
             ...(props.query.createdById ? { createdBy: props.query.createdById } : {}),
             ...(props.query.creationDate ? { creationDate: props.query.creationDate } : {})
-        }))
-            .filter(async req => {
-                const latestVersion = await req.latestVersion
+        })) {
+            const latestVersion = await req.latestVersion,
+                matchesQuery = modelQuery.every(([key, value]) => (latestVersion as any)[key] === value);
+            if (latestVersion != undefined && matchesQuery)
+                requirementModels.push(req);
+        }
 
-                return latestVersion != undefined &&
-                    modelQuery.every(
-                        ([key, value]) => (latestVersion as any)[key] === value
-                    )
-            })
+        const requirements = [];
+        for (const req of requirementModels) {
+            const domainModel = await new DataModelToDomainModel().map(Object.assign({}, req, await req.latestVersion));
+            requirements.push(new props.ReqClass(domainModel));
+        }
 
-        return Promise.all(requirementModels.map(
-            async req => new props.ReqClass(await new DataModelToDomainModel().map(req))
-        )) as Promise<InstanceType<RCons>[]>
+        return requirements as InstanceType<RCons>[];
     }
 
     /**
@@ -503,7 +514,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
         if (organizationSlug && latestVersion.slug !== organizationSlug)
             throw new NotFoundException('Organization does not exist')
 
-        return new req.Organization(await new DataModelToDomainModel().map(result))
+        return new req.Organization(await new DataModelToDomainModel().map(Object.assign({}, result, latestVersion)))
     }
 
     /**
@@ -703,7 +714,8 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @throws {NotFoundException} If the app user organization role does not exist
      */
     async updateAppUserRole(props: Pick<AppUserOrganizationRole, 'appUserId' | 'role'> & UpdationInfo): Promise<void> {
-        const existingAuor = await this.getAppUserOrganizationRole(props.appUserId)
+        const existingAuor = await this.getAppUserOrganizationRole(props.appUserId),
+            organizationId = (await this.getOrganization()).id
 
         if (existingAuor.role === props.role)
             return
@@ -717,7 +729,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
             role: props.role,
             appUserOrganizationRole: await em.findOneOrFail(AppUserOrganizationRoleModel, {
                 appUser: props.appUserId,
-                organization: await this.getOrganization()
+                organization: organizationId
             })
         })
 

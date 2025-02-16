@@ -3,7 +3,7 @@ import { StaticAuditModel, VolatileAuditModel } from "../index.js";
 
 // static properties
 @Entity({ tableName: 'app_user' })
-export class AppUserModel extends StaticAuditModel {
+export class AppUserModel extends StaticAuditModel<AppUserVersionsModel> {
     [OptionalProps]?: 'latestVersion'
 
     @Property({ type: types.uuid, primary: true })
@@ -11,19 +11,6 @@ export class AppUserModel extends StaticAuditModel {
 
     @OneToMany({ mappedBy: 'appUser', entity: () => AppUserVersionsModel })
     readonly versions = new Collection<AppUserVersionsModel>(this);
-
-    /**
-     * The latest version of the AppUser (effective_from <= now())
-     */
-    get latestVersion(): Promise<AppUserVersionsModel | undefined> {
-        return this.versions.loadItems({
-            where: {
-                effectiveFrom: { $lte: new Date() },
-                isDeleted: false
-            },
-            orderBy: { effectiveFrom: 'desc' },
-        }).then(items => items[0])
-    }
 }
 
 // volatile properties

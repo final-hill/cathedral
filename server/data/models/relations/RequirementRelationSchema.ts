@@ -5,7 +5,7 @@ import { RequirementModel } from '../requirements/index.js';
 
 // Static properties
 @Entity({ abstract: true, tableName: 'requirement_relation', discriminatorColumn: 'rel_type', discriminatorValue: RelType.RELATION })
-export abstract class RequirementRelationModel extends StaticAuditModel {
+export abstract class RequirementRelationModel extends StaticAuditModel<RequirementRelationVersionsModel> {
     [OptionalProps]?: 'rel_type' | 'latestVersion'
 
     @Enum({ items: () => RelType })
@@ -19,19 +19,6 @@ export abstract class RequirementRelationModel extends StaticAuditModel {
 
     @OneToMany({ mappedBy: 'requirementRelation', entity: () => RequirementRelationVersionsModel })
     readonly versions = new Collection<RequirementRelationVersionsModel>(this)
-
-    /**
-     * The latest version of the relation (effective_from <= now())
-     */
-    get latestVersion(): Promise<RequirementRelationVersionsModel | undefined> {
-        return this.versions.loadItems({
-            where: {
-                effectiveFrom: { $lte: new Date() },
-                isDeleted: false
-            },
-            orderBy: { effectiveFrom: 'desc' },
-        }).then(items => items[0])
-    }
 }
 
 // Volatile properties

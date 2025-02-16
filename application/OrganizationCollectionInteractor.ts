@@ -83,7 +83,7 @@ export class OrganizationCollectionInteractor extends Interactor<Organization> {
     }
 
     /**
-     * Find organizations that match the query parameters and the current user is a reader of the organization
+     * Find organizations that match the query parameters where the current user is a reader of the organization
      *
      * @param query The query parameters to filter organizations by
      * @returns The organizations that match the query parameters
