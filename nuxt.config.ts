@@ -110,6 +110,7 @@ export default defineNuxtConfig({
                 'img-src': ["'self'", 'data:', 'blob:', 'https://avatars.githubusercontent.com'],
             }
         },
+        rateLimiter: false
     },
     routeRules: {
         '/api/slack': {
