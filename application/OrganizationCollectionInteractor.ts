@@ -2,7 +2,8 @@ import type { Organization } from "~/domain/requirements";
 import { Interactor } from "./Interactor";
 import { type OrganizationCollectionRepository } from "~/server/data/repositories";
 import { AppRole, type AppUser } from "~/domain/application";
-import { NotFoundException, PermissionDeniedException, type DuplicateEntityException } from "~/domain/exceptions";
+import { DuplicateEntityException, NotFoundException, PermissionDeniedException } from "~/domain/exceptions";
+import { slugify } from "~/shared/utils";
 
 export class OrganizationCollectionInteractor extends Interactor<Organization> {
     /**
@@ -96,6 +97,8 @@ export class OrganizationCollectionInteractor extends Interactor<Organization> {
 
     /**
      * Check if the current user is an admin of the organization or a system admin
+     * @param id The id of the organization
+     * @returns Whether the user is an admin of the organization
      */
     async isOrganizationAdmin(id: Organization['id']): Promise<boolean> {
         const appUser = await this.repository.getOrganizationAppUserById({
@@ -117,7 +120,33 @@ export class OrganizationCollectionInteractor extends Interactor<Organization> {
     }
 
     /**
+     * Check if the current user is a contributor of the organization or a system admin
+     * @param id The id of the organization
+     * @returns Whether the user is a contributor of the organization
+     */
+    async isOrganizationContributor(id: Organization['id']): Promise<boolean> {
+        const appUser = await this.repository.getOrganizationAppUserById({
+            organizationId: id,
+            userId: this._userId
+        })
+
+        if (appUser.isSystemAdmin) return true
+
+        const auor = await this.repository.getAppUserOrganizationRole({
+            organizationId: id,
+            userId: appUser.id
+        }),
+            isOrgContributor = auor?.role ?
+                [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR].includes(auor.role)
+                : false
+
+        return isOrgContributor
+    }
+
+    /**
      * Check if the current user is a reader of the organization or a system admin
+     * @param id The id of the organization
+     * @returns Whether the user is a reader of the organization
      */
     async isOrganizationReader(id: Organization['id']): Promise<boolean> {
         const appUser = await this.repository.getOrganizationAppUserById({
@@ -136,5 +165,36 @@ export class OrganizationCollectionInteractor extends Interactor<Organization> {
                 : false
 
         return isOrgReader
+    }
+
+    /**
+     * Update the organization with the given properties.
+     *
+     * @param slug The slug of the organization to update
+     * @param props The properties to update
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {NotFoundException} If the organization does not exist
+     * @throws {DuplicateEntityException} If an organization already exists with the new name
+     */
+    async updateOrganizationBySlug(slug: Organization['slug'], props: Pick<Partial<Organization>, 'name' | 'description'>): Promise<void> {
+        const existingOrg = (await this.repository.findOrganizations({ slug }))[0],
+            newSlug = props.name ? slugify(props.name) : existingOrg.slug
+
+        if (!existingOrg)
+            throw new NotFoundException(`Organization not found with slug: ${slug}`)
+
+        if (!await this.isOrganizationContributor(existingOrg.id))
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
+
+        const existingSlugOrg = (await this.repository.findOrganizations({ slug: newSlug }))[0]
+
+        if (existingSlugOrg && existingSlugOrg.id !== existingOrg.id)
+            throw new DuplicateEntityException('Organization already exists with that name')
+
+        await this.repository.updateOrganizationById(existingOrg.id, {
+            modifiedById: this._userId,
+            modifiedDate: new Date(),
+            ...props
+        })
     }
 }

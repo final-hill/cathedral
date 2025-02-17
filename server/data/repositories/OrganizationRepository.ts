@@ -504,7 +504,10 @@ export class OrganizationRepository extends Repository<req.Organization> {
                 ...organizationId ? { id: organizationId } : {},
             },
             ...(organizationSlug ? { slug: organizationSlug } : {})
-        }, { populate: ['requirement'] }),
+        }, {
+            populate: ['requirement'],
+            orderBy: { effectiveFrom: 'desc' }
+        }),
             result = tempResult?.requirement,
             latestVersion = await result?.latestVersion as reqModels.OrganizationVersionsModel | undefined
 
@@ -811,33 +814,6 @@ export class OrganizationRepository extends Repository<req.Organization> {
             description: props.description ?? solution.description,
             modifiedBy: props.modifiedById,
             requirement: existingSolution
-        })
-
-        await em.flush()
-    }
-
-    /**
-     * Updates an organization
-     * @param props - The properties to update
-     * @throws {NotFoundException} If the organization does not exist
-     */
-    async updateOrganization(props: Pick<Partial<req.Organization>, 'name' | 'description'> & UpdationInfo): Promise<void> {
-        const em = this._fork(),
-            organization = await this.getOrganization(),
-            existingOrganization = await em.findOne(reqModels.OrganizationModel, { id: organization.id })
-
-        if (!existingOrganization)
-            throw new NotFoundException('Organization does not exist')
-
-        em.create(reqModels.OrganizationVersionsModel, {
-            isDeleted: false,
-            effectiveFrom: props.modifiedDate,
-            isSilence: false,
-            slug: props.name ? slugify(props.name) : organization.slug,
-            name: props.name ?? organization.name,
-            description: props.description ?? organization.description,
-            modifiedBy: props.modifiedById,
-            requirement: existingOrganization
         })
 
         await em.flush()

@@ -7,6 +7,7 @@ import { slugify } from "~/shared/utils";
 import { v7 as uuid7 } from 'uuid'
 import { type CreationInfo } from "./CreationInfo";
 import { type DeletionInfo } from "./DeletionInfo";
+import { type UpdationInfo } from "./UpdationInfo";
 import { AppUser, AppUserOrganizationRole } from "~/domain/application";
 import { DuplicateEntityException, NotFoundException } from "~/domain/exceptions";
 
@@ -54,17 +55,15 @@ export class OrganizationCollectionRepository extends Repository<Organization> {
      * @param props.userId - The id of the user creating the organization
      * @param props.effectiveDate - The effective date of the organization
      * @returns The id of the organization
-     * @throws {DuplicateEntityException} If the organization already exists
+     * @throws {DuplicateEntityException} If the organization already exists that is not in a deleted state
      */
     async createOrganization(props: Pick<Organization, 'name' | 'description'> & CreationInfo): Promise<Organization['id']> {
         const em = this._fork(),
             latestVersion = await em.findOne(OrganizationVersionsModel, {
                 slug: slugify(props.name),
-                isDeleted: false
-            }, { populate: ['requirement'], orderBy: { effectiveFrom: 'desc' } }),
-            existingOrgStatic = latestVersion?.requirement
+            }, { populate: ['requirement'], orderBy: { effectiveFrom: 'desc' } })
 
-        if (latestVersion)
+        if (latestVersion && !latestVersion.isDeleted)
             throw new DuplicateEntityException('Organization already exists with the same name')
 
         const newId = uuid7()
@@ -77,7 +76,7 @@ export class OrganizationCollectionRepository extends Repository<Organization> {
             name: props.name,
             description: props.description,
             modifiedBy: props.createdById,
-            requirement: existingOrgStatic ?? em.create(OrganizationModel, {
+            requirement: em.create(OrganizationModel, {
                 id: newId,
                 createdBy: props.createdById,
                 creationDate: props.effectiveDate
@@ -262,5 +261,37 @@ export class OrganizationCollectionRepository extends Repository<Organization> {
             isDeleted: auorv.isDeleted,
             role: auorv.role
         })
+    }
+
+    /**
+     * Updates an organization
+     * @param props - The properties to update
+     * @throws {NotFoundException} If the organization does not exist
+     * @throws {MismatchException} If the provided name is already taken
+     */
+    async updateOrganizationById(id: Organization['id'], props: Pick<Partial<Organization>, 'name' | 'description'> & UpdationInfo): Promise<void> {
+        const em = this._fork(),
+            organization = (await this.findOrganizations({ id }))[0]
+
+        if (!organization)
+            throw new NotFoundException('Organization does not exist')
+
+        const existingOrgModel = await em.findOne(OrganizationModel, { id: organization.id })
+
+        if (!existingOrgModel)
+            throw new NotFoundException('Organization does not exist')
+
+        em.create(OrganizationVersionsModel, {
+            isDeleted: false,
+            effectiveFrom: props.modifiedDate,
+            isSilence: false,
+            slug: props.name ? slugify(props.name) : organization.slug,
+            name: props.name ?? organization.name,
+            description: props.description ?? organization.description,
+            modifiedBy: props.modifiedById,
+            requirement: existingOrgModel
+        })
+
+        await em.flush()
     }
 }

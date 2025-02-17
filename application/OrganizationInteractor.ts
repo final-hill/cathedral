@@ -413,24 +413,6 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
     }
 
     /**
-     * Update the organization with the given properties.
-     *
-     * @param props The properties to update
-     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
-     * @throws {NotFoundException} If the organization does not exist
-     */
-    async updateOrganization(props: Pick<Partial<req.Organization>, 'name' | 'description'>): Promise<void> {
-        if (!this.isOrganizationContributor())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
-
-        await this.repository.updateOrganization({
-            modifiedById: this._userId,
-            modifiedDate: new Date(),
-            ...props
-        })
-    }
-
-    /**
      * Assert that all requirement references (uuid properties) belong to the same solution.
      * This is to prevent a requirement from another solution being added to the current solution.
      * This is a security measure to prevent unauthorized access to requirements
