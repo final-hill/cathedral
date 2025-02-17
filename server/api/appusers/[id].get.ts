@@ -32,5 +32,5 @@ export default defineEventHandler(async (event) => {
             })
         })
 
-    await organizationInteractor.getAppUserById(id).catch(handleDomainException)
+    return await organizationInteractor.getAppUserById(id).catch(handleDomainException)
 })

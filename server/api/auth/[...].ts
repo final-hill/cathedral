@@ -49,26 +49,34 @@ export default NuxtAuthHandler({
                 const userExists = await appUserInteractor.hasUser(p.oid)
 
                 if (!userExists) {
-                    const newUserId = (await appUserInteractor.createAppUser({
-                        id: p.oid,
-                        creationDate: effectiveDate,
-                        lastLoginDate: effectiveDate,
-                        isSystemAdmin: false,
-                        name: p.name,
-                        email: p.emails[0],
-                        lastModified: effectiveDate,
-                        isDeleted: false,
-                        role: undefined
-                    }).catch(handleDomainException))!
+                    try {
+                        const newUserId = (await appUserInteractor.createAppUser({
+                            id: p.oid,
+                            creationDate: effectiveDate,
+                            lastLoginDate: effectiveDate,
+                            isSystemAdmin: false,
+                            name: p.name,
+                            email: p.emails[0],
+                            lastModified: effectiveDate,
+                            isDeleted: false,
+                            role: undefined
+                        }))!
 
-                    appUser = (await appUserInteractor.getAppUserById(newUserId).catch(handleDomainException))!
+                        appUser = (await appUserInteractor.getAppUserById(newUserId))!
+                    } catch (error: any) {
+                        handleDomainException(error)
+                    }
                 } else {
-                    await appUserInteractor.updateAppUser({
-                        name: p.name,
-                        email: p.emails[0],
-                        lastLoginDate: effectiveDate,
-                        id: p.oid
-                    }).catch(handleDomainException)
+                    try {
+                        await appUserInteractor.updateAppUser({
+                            name: p.name,
+                            email: p.emails[0],
+                            lastLoginDate: effectiveDate,
+                            id: p.oid
+                        })
+                    } catch (error: any) {
+                        handleDomainException(error)
+                    }
                 }
 
                 Object.assign(token, {

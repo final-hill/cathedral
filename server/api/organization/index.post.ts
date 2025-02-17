@@ -19,15 +19,20 @@ export default defineEventHandler(async (event) => {
         organizationCollectionInteractor = new OrganizationCollectionInteractor({
             repository: new OrganizationCollectionRepository({ config }),
             userId: session.id
-        }),
-        newOrgId = await organizationCollectionInteractor.createOrganization({ name, description }).catch(handleDomainException),
-        newOrg = (await organizationCollectionInteractor.findOrganizations({ id: newOrgId! }).catch(handleDomainException))![0]
-
-    if (!newOrg)
-        throw createError({
-            status: 500,
-            message: `Failed to find newly created organization for id: ${newOrgId}`
         })
 
-    return newOrg.slug
+    try {
+        const newOrgId = await organizationCollectionInteractor.createOrganization({ name, description }),
+            newOrg = (await organizationCollectionInteractor.findOrganizations({ id: newOrgId! }))![0]
+
+        if (!newOrg)
+            throw createError({
+                status: 500,
+                message: `Failed to find newly created organization for id: ${newOrgId}`
+            })
+
+        return newOrg.slug
+    } catch (error: any) {
+        return handleDomainException(error)
+    }
 })

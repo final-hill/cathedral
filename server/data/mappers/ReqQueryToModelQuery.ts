@@ -9,6 +9,9 @@ export class ReqQueryToModelQuery implements Mapper<Partial<Requirement>, Record
         return Object.entries(query).reduce((acc, [key, value]) => {
             if (['createdById', 'creationDate', 'id'].includes(key))
                 return acc
+            else if (value === undefined)
+                return acc
+
             if (key.endsWith('Id'))
                 key = key.slice(0, -2)
             else if (key === 'lastModified')

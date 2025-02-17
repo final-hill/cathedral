@@ -32,5 +32,5 @@ export default defineEventHandler(async (event) => {
             })
         })
 
-    await organizationInteractor.deleteAppUser(id).catch(handleDomainException)
+    return await organizationInteractor.deleteAppUser(id).catch(handleDomainException)
 })

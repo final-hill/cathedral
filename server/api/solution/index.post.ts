@@ -23,9 +23,13 @@ export default defineEventHandler(async (event) => {
         organizationInteractor = new OrganizationInteractor({
             userId: session.id,
             repository: new OrganizationRepository({ config, organizationId, organizationSlug })
-        }),
-        newSolutionId = (await organizationInteractor.addSolution({ name, description }).catch(handleDomainException))!,
-        newSolution = (await organizationInteractor.getSolutionById(newSolutionId).catch(handleDomainException))!
+        })
 
-    return newSolution.slug
+    try {
+        const newSolutionId = (await organizationInteractor.addSolution({ name, description }))!,
+            newSolution = await organizationInteractor.getSolutionById(newSolutionId)
+        return newSolution.slug
+    } catch (error: any) {
+        return handleDomainException(error)
+    }
 })

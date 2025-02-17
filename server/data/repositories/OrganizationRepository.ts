@@ -108,7 +108,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
             // Silent requirements do not have a reqId as they are not approved to be part of the solution
             reqId: props.reqProps.isSilence ? undefined : await this.getNextReqId(props.solutionId, props.ReqClass.reqIdPrefix),
             ...props.reqProps,
-            requirement: em.create<reqModels.RequirementModel>((reqModels as any)[props.ReqClass.name], {
+            requirement: em.create<reqModels.RequirementModel>((reqModels as any)[`${props.ReqClass.name}Model`], {
                 id: newId,
                 createdBy: props.createdById,
                 creationDate: props.effectiveDate

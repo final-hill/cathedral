@@ -34,5 +34,5 @@ export default defineEventHandler(async (event) => {
             })
         })
 
-    await organizationInteractor.updateAppUserRole(id, role).catch(handleDomainException)
+    return await organizationInteractor.updateAppUserRole(id, role).catch(handleDomainException)
 })

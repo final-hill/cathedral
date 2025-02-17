@@ -38,13 +38,16 @@ export default defineEventHandler(async (event) => {
             })
         })
 
-    const orgId = organizationId ?? (await organizationInteractor.getOrganization().catch(handleDomainException))!.id
+    try {
+        const orgId = organizationId ?? (await organizationInteractor.getOrganization())!.id,
+            appUser = (await appUserInteractor.getAppUserByEmail(email))!
 
-    const appUser = (await appUserInteractor.getAppUserByEmail(email).catch(handleDomainException))!
-
-    return await organizationInteractor.addAppUserOrganizationRole({
-        appUserId: appUser.id,
-        organizationId: orgId,
-        role
-    }).catch(handleDomainException)
+        return await organizationInteractor.addAppUserOrganizationRole({
+            appUserId: appUser.id,
+            organizationId: orgId,
+            role
+        })
+    } catch (error: any) {
+        return handleDomainException(error)
+    }
 })
