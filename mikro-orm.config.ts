@@ -2,7 +2,7 @@
 // The CLI use case requires the direct and indirect imports to have a .js extension.
 // Additionally, the imports can not use '~'
 import dotenv from "dotenv";
-import { type Options, PostgreSqlDriver } from '@mikro-orm/postgresql';
+import { MikroORM, type Options, PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import { Migrator } from '@mikro-orm/migrations';
 import * as entities from "./server/data/models/requirements/index.js";
@@ -34,5 +34,7 @@ const config: Options = {
     debug: process.env.NODE_ENV !== 'production',
     migrations: { transactional: true }
 };
+
+export const connection = MikroORM.init(config)
 
 export default config;

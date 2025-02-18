@@ -3,7 +3,6 @@ import { getServerSession } from '#auth'
 import { AppRole } from "~/domain/application/index.js"
 import { OrganizationInteractor } from "~/application"
 import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository"
-import config from "~/mikro-orm.config"
 import handleDomainException from "~/server/utils/handleDomainException"
 
 const paramSchema = z.object({
@@ -28,7 +27,7 @@ export default defineEventHandler(async (event) => {
         organizationInteractor = new OrganizationInteractor({
             userId: session.id,
             repository: new OrganizationRepository({
-                config: config,
+                em: event.context.em,
                 organizationId,
                 organizationSlug
             })

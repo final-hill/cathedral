@@ -1,5 +1,4 @@
 import { z } from "zod"
-import config from "~/mikro-orm.config"
 import { getServerSession } from '#auth'
 import { OrganizationInteractor } from "~/application"
 import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository"

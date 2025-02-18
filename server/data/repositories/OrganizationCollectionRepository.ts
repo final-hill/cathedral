@@ -21,7 +21,7 @@ export class OrganizationCollectionRepository extends Repository<Organization> {
      * @throws {DuplicateEntityException} If the app user organization role already exists
      */
     async addAppUserOrganizationRole(auor: Pick<AppUserOrganizationRole, 'appUserId' | 'role' | 'organizationId'> & CreationInfo): Promise<void> {
-        const em = this._fork(),
+        const em = this._em,
             existingAuor = await em.findOne(AppUserOrganizationRoleModel, {
                 appUser: auor.appUserId,
                 organization: auor.organizationId
@@ -58,7 +58,7 @@ export class OrganizationCollectionRepository extends Repository<Organization> {
      * @throws {DuplicateEntityException} If the organization already exists that is not in a deleted state
      */
     async createOrganization(props: Pick<Organization, 'name' | 'description'> & CreationInfo): Promise<Organization['id']> {
-        const em = this._fork(),
+        const em = this._em,
             latestVersion = await em.findOne(OrganizationVersionsModel, {
                 slug: slugify(props.name),
             }, { populate: ['requirement'], orderBy: { effectiveFrom: 'desc' } })
@@ -94,12 +94,12 @@ export class OrganizationCollectionRepository extends Repository<Organization> {
      * @throws {NotFoundException} If the organization does not exist
      */
     async deleteOrganization(props: Pick<Organization, 'id'> & DeletionInfo): Promise<void> {
-        const em = this._fork(),
+        const em = this._em,
             orgRepo = new OrganizationRepository({
-                config: this._config,
+                em: this._em,
                 organizationId: props.id
             }),
-            { id, slug, name, description } = await orgRepo.getOrganization(),
+            { id, slug, name, description } = (await this.findOrganizations({ id: props.id }))[0],
             existingOrg = await em.findOne(OrganizationModel, { id })
 
         if (!existingOrg)
@@ -144,7 +144,7 @@ export class OrganizationCollectionRepository extends Repository<Organization> {
      * @returns The organizations that match the query parameters
      */
     async findOrganizations(query: Partial<Organization>): Promise<Organization[]> {
-        const em = this._fork(),
+        const em = this._em,
             modelQuery = Object.entries(await new ReqQueryToModelQuery().map(query))
 
         const organizationEntities = await em.find(OrganizationModel, {
@@ -173,7 +173,7 @@ export class OrganizationCollectionRepository extends Repository<Organization> {
      * @returns The organizations
      */
     async getAllOrganizations(): Promise<Organization[]> {
-        const em = this._fork()
+        const em = this._em
         const organizations: Organization[] = []
 
         const organizationEntities = await em.find(OrganizationModel, {})
@@ -200,7 +200,7 @@ export class OrganizationCollectionRepository extends Repository<Organization> {
      * @throws {NotFoundException} If the app user organization role does not exist
      */
     async getAppUserOrganizationRole({ organizationId, userId }: { organizationId: Organization['id'], userId: AppUser['id'] }): Promise<AppUserOrganizationRole> {
-        const em = this._fork()
+        const em = this._em
 
         const auor = await em.findOne(AppUserOrganizationRoleModel, {
             appUser: userId,
@@ -233,7 +233,7 @@ export class OrganizationCollectionRepository extends Repository<Organization> {
      * @throws {NotFoundException} If the app user does not exist in the organization
      */
     async getOrganizationAppUserById({ organizationId, userId }: { organizationId: Organization['id'], userId: AppUser['id'] }): Promise<AppUser> {
-        const em = this._fork()
+        const em = this._em
 
         const auor = await em.findOne(AppUserOrganizationRoleModel, {
             appUser: userId,
@@ -270,7 +270,7 @@ export class OrganizationCollectionRepository extends Repository<Organization> {
      * @throws {MismatchException} If the provided name is already taken
      */
     async updateOrganizationById(id: Organization['id'], props: Pick<Partial<Organization>, 'name' | 'description'> & UpdationInfo): Promise<void> {
-        const em = this._fork(),
+        const em = this._em,
             organization = (await this.findOrganizations({ id }))[0]
 
         if (!organization)

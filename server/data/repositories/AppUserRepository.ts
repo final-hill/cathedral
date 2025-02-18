@@ -14,7 +14,7 @@ export class AppUserRepository extends Repository<AppUser> {
      * @throws {DuplicateEntityException} If the user already exists
      */
     async createAppUser(props: Pick<AppUser, keyof AppUser> & CreationInfo): Promise<AppUser['id']> {
-        const em = this._fork(),
+        const em = this._em,
             existingUserStatic = await em.findOne(AppUserModel, { id: props.id }),
             latestVersion = await existingUserStatic?.latestVersion
 
@@ -49,7 +49,7 @@ export class AppUserRepository extends Repository<AppUser> {
      * @throws {NotFoundException} If the user does not exist
      */
     async getUserByEmail(email: AppUser['email']): Promise<AppUser> {
-        const em = this._fork()
+        const em = this._em
 
         const userVersions = await em.findOne(AppUserVersionsModel, {
             email,
@@ -86,7 +86,7 @@ export class AppUserRepository extends Repository<AppUser> {
      * @throws {NotFoundException} If the user does not exist
      */
     async getUserById(id: AppUser['id']): Promise<AppUser> {
-        const em = this._fork()
+        const em = this._em
 
         const user = await em.findOne(AppUserModel, { id }),
             latestVersion = await user?.latestVersion
@@ -114,7 +114,7 @@ export class AppUserRepository extends Repository<AppUser> {
      * @returns The organizations associated with the app user
      */
     async getUserOrganizationIds(appUserId: AppUser['id']): Promise<Organization['id'][]> {
-        const em = this._fork()
+        const em = this._em
 
         const auors = (await em.find(AppUserOrganizationRoleModel, { appUser: appUserId }))
             .filter(async auor => (await auor.latestVersion) != undefined)
@@ -131,7 +131,7 @@ export class AppUserRepository extends Repository<AppUser> {
      * Checks if the specified app user exists
      */
     async hasUser(id: AppUser['id']): Promise<boolean> {
-        const em = this._fork(),
+        const em = this._em,
             user = await em.findOne(AppUserModel, { id })
 
         return user != undefined && (await user.latestVersion) != undefined
@@ -143,7 +143,7 @@ export class AppUserRepository extends Repository<AppUser> {
      * @throws {NotFoundException} If the user does not exist
      */
     async updateAppUser(props: Pick<AppUser, 'id' | 'name' | 'email' | 'lastLoginDate'> & UpdationInfo): Promise<void> {
-        const em = this._fork(),
+        const em = this._em,
             user = await em.findOneOrFail(AppUserModel, { id: props.id }),
             latestVersion = (await user.latestVersion)
 

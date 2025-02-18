@@ -2,7 +2,6 @@ import { z } from "zod"
 import { getServerSession } from '#auth'
 import { Requirement } from "~/domain/requirements"
 import { OrganizationInteractor } from '~/application'
-import config from "~/mikro-orm.config"
 import { OrganizationRepository } from "../data/repositories/OrganizationRepository"
 import handleDomainException from "./handleDomainException"
 
@@ -30,7 +29,7 @@ export default function getRequirementHttpHandler<RCons extends typeof Requireme
             { solutionId, organizationId, organizationSlug } = await validateEventQuery(event, querySchema),
             session = (await getServerSession(event))!,
             organizationInteractor = new OrganizationInteractor({
-                repository: new OrganizationRepository({ config, organizationId, organizationSlug }),
+                repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug }),
                 userId: session.id
             })
 

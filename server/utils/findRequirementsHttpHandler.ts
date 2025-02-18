@@ -1,4 +1,3 @@
-import config from '~/mikro-orm.config'
 import { getServerSession } from '#auth'
 import { OrganizationInteractor } from "~/application"
 import { type ZodObject, z } from "zod"
@@ -23,7 +22,7 @@ export default function findRequirementsHttpHandler<
         const { solutionId, organizationId, organizationSlug, ...query } = await validateEventQuery(event, validatedQuerySchema) as any,
             session = (await getServerSession(event))!,
             organizationInteractor = new OrganizationInteractor({
-                repository: new OrganizationRepository({ config, organizationId, organizationSlug }),
+                repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug }),
                 userId: session.id
             })
 

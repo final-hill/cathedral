@@ -1,5 +1,4 @@
 import { getServerSession } from '#auth'
-import config from '~/mikro-orm.config';
 import { z } from "zod"
 import { OrganizationInteractor } from "~/application"
 import { OrganizationRepository } from '~/server/data/repositories/OrganizationRepository';
@@ -23,7 +22,7 @@ export default defineEventHandler(async (event) => {
         session = (await getServerSession(event))!,
         organizationInteractor = new OrganizationInteractor({
             userId: session.id,
-            repository: new OrganizationRepository({ config, organizationId, organizationSlug })
+            repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug })
         })
 
     return await organizationInteractor.findSolutions({ description, name, slug }).catch(handleDomainException)

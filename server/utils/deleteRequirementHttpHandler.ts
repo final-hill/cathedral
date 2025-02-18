@@ -2,7 +2,6 @@ import { z } from "zod"
 import { getServerSession } from '#auth'
 import { OrganizationInteractor } from '~/application'
 import { Requirement } from '~/domain/requirements'
-import config from '~/mikro-orm.config'
 import { OrganizationRepository } from "../data/repositories/OrganizationRepository"
 import handleDomainException from "./handleDomainException"
 
@@ -30,7 +29,7 @@ export default function deleteRequirementHttpHandler<RCons extends typeof Requir
             { solutionId, organizationId, organizationSlug } = await validateEventBody(event, bodySchema),
             session = (await getServerSession(event))!,
             organizationInteractor = new OrganizationInteractor({
-                repository: new OrganizationRepository({ config, organizationId, organizationSlug }),
+                repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug }),
                 userId: session.id
             })
 

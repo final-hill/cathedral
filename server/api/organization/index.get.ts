@@ -1,5 +1,4 @@
 import { z } from "zod"
-import config from "~/mikro-orm.config"
 import { OrganizationCollectionInteractor } from '~/application'
 import { OrganizationCollectionRepository } from "~/server/data/repositories"
 import { getServerSession } from '#auth'
@@ -14,7 +13,7 @@ export default defineEventHandler(async (event) => {
     const query = await validateEventParams(event, querySchema),
         session = (await getServerSession(event))!,
         orgColInt = new OrganizationCollectionInteractor({
-            repository: new OrganizationCollectionRepository({ config }),
+            repository: new OrganizationCollectionRepository({ em: event.context.em }),
             userId: session.id
         })
 

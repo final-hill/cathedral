@@ -3,7 +3,6 @@ import { getServerSession } from '#auth'
 import { AppRole, } from "~/domain/application/index.js"
 import { OrganizationInteractor } from "~/application"
 import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository";
-import config from "~/mikro-orm.config";
 import { AppUserInteractor } from "~/application/AppUserInteractor";
 import { AppUserRepository } from "~/server/data/repositories/AppUserRepository";
 import handleDomainException from "~/server/utils/handleDomainException";
@@ -26,13 +25,13 @@ export default defineEventHandler(async (event) => {
         appUserInteractor = new AppUserInteractor({
             userId: session.id,
             repository: new AppUserRepository({
-                config
+                em: event.context.em
             })
         }),
         organizationInteractor = new OrganizationInteractor({
             userId: session.id,
             repository: new OrganizationRepository({
-                config: config,
+                em: event.context.em,
                 organizationId,
                 organizationSlug
             })

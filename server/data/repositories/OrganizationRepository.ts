@@ -33,7 +33,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
         organizationId?: req.Organization['id'],
         organizationSlug?: req.Organization['slug']
     }) {
-        super({ config: options.config })
+        super({ em: options.em })
 
         const { organizationId, organizationSlug } = options
 
@@ -50,7 +50,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @throws {DuplicateEntityException} If the app user organization role already exists
      */
     async addAppUserOrganizationRole(auor: Pick<AppUserOrganizationRole, 'appUserId' | 'role' | 'organizationId'> & CreationInfo): Promise<void> {
-        const em = this._fork(),
+        const em = this._em,
             existingAuor = await em.findOne(AppUserOrganizationRoleModel, {
                 appUser: auor.appUserId,
                 organization: auor.organizationId
@@ -92,7 +92,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
         ReqClass: RCons,
         reqProps: Omit<InstanceType<RCons>, 'reqId' | 'id' | keyof AuditMetadata>
     }): Promise<InstanceType<RCons>['id']> {
-        const em = this._fork(),
+        const em = this._em,
             newId = uuid7()
 
         const solution = await this.getSolutionById(props.solutionId)
@@ -141,7 +141,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @param props.effectiveDate - The effective date of the solution
      */
     async addSolution({ name, description, createdById, effectiveDate }: Pick<req.Solution, 'name' | 'description'> & CreationInfo): Promise<req.Solution['id']> {
-        const em = this._fork(),
+        const em = this._em,
             organization = await this.getOrganization(),
             newId = uuid7()
 
@@ -187,7 +187,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @throws {NotFoundException} If the app user organization role does not exist
      */
     async deleteAppUserOrganizationRole(auor: Pick<AppUserOrganizationRole, 'appUserId' | 'organizationId'> & DeletionInfo): Promise<void> {
-        const em = this._fork(),
+        const em = this._em,
             organizationId = (await this.getOrganization()).id,
             existingAuor = await em.findOne(AppUserOrganizationRoleModel, {
                 appUser: auor.appUserId,
@@ -216,7 +216,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @throws {MismatchException} If the solution does not belong to the organization
      */
     async deleteSolutionBySlug(props: DeletionInfo & Pick<req.Solution, 'slug'>): Promise<void> {
-        const em = this._fork(),
+        const em = this._em,
             solution = await this.getSolutionBySlug(props.slug),
             existingSolution = await em.findOne(reqModels.SolutionModel, { id: solution.id })
 
@@ -278,7 +278,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
         }
     ): Promise<void> {
         // delete the requirement associated with the solution by creating a new version with isDeleted set to true
-        const em = this._fork()
+        const em = this._em
 
         const existingReq = await em.findOne<reqModels.RequirementModel>(
             reqModels[`${props.ReqClass.name}Model` as keyof typeof reqModels], {
@@ -322,7 +322,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @throws {NotFoundException} If the solution does not exist in the organization
      */
     async findSolutions(query: Partial<req.Solution>): Promise<req.Solution[]> {
-        const em = this._fork(),
+        const em = this._em,
             organizationId = (await this.getOrganization()).id
 
         const belongsModels = []
@@ -366,7 +366,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @returns The app user organization roles that match the query parameters
      */
     async findAppUserOrganizationRoles({ role }: { role?: AppRole } = {}): Promise<AppUserOrganizationRole[]> {
-        const em = this._fork(),
+        const em = this._em,
             organizationId = (await this.getOrganization()).id
 
         const auors = (await em.find(AppUserOrganizationRoleModel, {
@@ -405,7 +405,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
         ReqClass: RCons,
         query: Partial<InstanceType<RCons>>
     }): Promise<InstanceType<RCons>[]> {
-        const em = this._fork()
+        const em = this._em
 
         const reqsInSolution = [];
         for (const rel of await em.find(BelongsModel, {
@@ -454,7 +454,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      */
     async getAppUserOrganizationRole(appUserId: AppUser['id']): Promise<AppUserOrganizationRole> {
         const organizationId = (await this.getOrganization()).id,
-            em = this._fork()
+            em = this._em
 
         const auor = await em.findOne(AppUserOrganizationRoleModel, {
             appUser: appUserId,
@@ -491,7 +491,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @throws {NotFoundException} If the organization does not exist
      */
     private async _getOrganization(): Promise<req.Organization> {
-        const em = this._fork();
+        const em = this._em;
 
         const organizationId = this._organizationId,
             organizationSlug = this._organizationSlug
@@ -529,7 +529,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @throws {NotFoundException} If the app user does not exist in the organization
      */
     async getOrganizationAppUserById(id: AppUser['id']): Promise<AppUser> {
-        const em = this._fork(),
+        const em = this._em,
             organizationId = (await this.getOrganization()).id
 
         const auor = await em.findOne(AppUserOrganizationRoleModel, {
@@ -569,7 +569,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @throws {NotFoundException} If the solution does not exist
      */
     async getNextReqId<R extends typeof req.Requirement>(solutionId: req.Solution['id'], prefix: R['reqIdPrefix']): Promise<InstanceType<R>['reqId']> {
-        const em = this._fork(),
+        const em = this._em,
             solution = await this.getSolutionById(solutionId)
 
         const reqsBelongingToSolution = await Promise.all((await em.find(BelongsModel, {
@@ -606,7 +606,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @returns The AppUsers for the organization
      */
     async getOrganizationAppUsers(): Promise<AppUser[]> {
-        const em = this._fork(),
+        const em = this._em,
             organizationId = (await this.getOrganization()).id
 
         const auors = (await em.find(AppUserOrganizationRoleModel, {
@@ -700,7 +700,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
         solutionId: req.Solution['id'],
         id: req.Requirement['id']
     }): Promise<boolean> {
-        const em = this._fork()
+        const em = this._em
 
         const reqInSolution = (await em.findOne(BelongsModel, {
             left: { id: props.id },
@@ -723,7 +723,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
         if (existingAuor.role === props.role)
             return
 
-        const em = this._fork()
+        const em = this._em
 
         em.create(AppUserOrganizationRoleVersionsModel, {
             isDeleted: false,
@@ -757,7 +757,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
         ReqClass: RCons,
         reqProps: Omit<Partial<InstanceType<RCons>>, 'id' | 'reqId' | keyof AuditMetadata>
     }): Promise<void> {
-        const em = this._fork()
+        const em = this._em
 
         const existingSolution = await this.getSolutionById(props.solutionId)
 
@@ -798,7 +798,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @throws {NotFoundException} If the solution does not belong to the organization
      */
     async updateSolutionBySlug(slug: req.Solution['slug'], props: Pick<Partial<req.Solution>, 'name' | 'description'> & UpdationInfo): Promise<void> {
-        const em = this._fork(),
+        const em = this._em,
             solution = await this.getSolutionBySlug(slug),
             existingSolution = await em.findOne(reqModels.SolutionModel, { id: solution.id })
 
