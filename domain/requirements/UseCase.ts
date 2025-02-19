@@ -67,4 +67,18 @@ export class UseCase extends Scenario {
 
     // TODO: <https://github.com/final-hill/cathedral/issues/154>
     // stakeHoldersAndInterests: string[] // Actor[]
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            scope: this.scope,
+            level: this.level,
+            preconditionId: this.preconditionId,
+            triggerId: this.triggerId,
+            mainSuccessScenario: this.mainSuccessScenario,
+            successGuaranteeId: this.successGuaranteeId,
+            extensions: this.extensions,
+            // stakeHoldersAndInterests: this.stakeHoldersAndInterests
+        }
+    }
 }

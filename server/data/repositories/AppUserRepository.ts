@@ -13,7 +13,7 @@ export class AppUserRepository extends Repository<AppUser> {
      * @returns The id of the created app user
      * @throws {DuplicateEntityException} If the user already exists
      */
-    async createAppUser(props: Pick<AppUser, keyof AppUser> & CreationInfo): Promise<AppUser['id']> {
+    async createAppUser(props: ConstructorParameters<typeof AppUser>[0] & CreationInfo): Promise<AppUser['id']> {
         const em = this._em,
             existingUserStatic = await em.findOne(AppUserModel, { id: props.id }),
             latestVersion = await existingUserStatic?.latestVersion

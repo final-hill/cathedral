@@ -293,6 +293,8 @@ export class OrganizationRepository extends Repository<req.Organization> {
         em.create<reqModels.RequirementVersionsModel>(
             reqModels[`${props.ReqClass.name}VersionsModel` as keyof typeof reqModels], {
             ...existingReqLatestVersion,
+            modifiedBy: props.deletedById,
+            effectiveFrom: props.deletedDate,
             isDeleted: true
         })
 
@@ -308,8 +310,57 @@ export class OrganizationRepository extends Repository<req.Organization> {
 
         em.create(BelongsVersionsModel, {
             ...relLatestVersion,
+            modifiedBy: props.deletedById,
+            effectiveFrom: props.deletedDate,
             isDeleted: true
         })
+
+        // find all requirements with the same reqId prefix in the solution
+        // and a suffix greater than the current requirement's suffix
+        // and decrement their suffix by 1
+        // TODO: lift to the interactor?
+        const existingReqId = existingReqLatestVersion.reqId,
+            reReqId = /([0PEGS]\.\d+\.)(\d+)/,
+            [prefix, suffix] = existingReqId?.match(reReqId)?.slice(1) ?? [undefined, undefined]
+
+        if (prefix && suffix) {
+            const reqsInSolution = [];
+            for (const rel of await em.find(BelongsModel, {
+                left: { id: { $ne: props.id } }, // exclude the currently deleted requirement
+                right: props.solutionId
+            })) {
+                const latestVersion = await rel.latestVersion;
+                if (latestVersion) {
+                    const staticRelModel = latestVersion.requirementRelation;
+                    reqsInSolution.push(staticRelModel.left.id);
+                }
+            }
+
+            const reqs = [];
+            for (const req of await em.find<reqModels.RequirementModel>((reqModels as any)[`${props.ReqClass.name}Model`], {
+                id: { $in: reqsInSolution }
+            })) {
+                const latestVersion = await req.latestVersion;
+                if (latestVersion?.reqId?.startsWith(prefix)) {
+                    const [, s] = latestVersion.reqId.match(reReqId)?.slice(1) ?? [undefined, undefined]
+                    if (s && +s > +suffix)
+                        reqs.push(latestVersion);
+                }
+            }
+
+            for (const req of reqs) {
+                const [, s] = req.reqId!.match(reReqId)?.slice(1) ?? [undefined, undefined]
+                if (s) {
+                    em.create<reqModels.RequirementVersionsModel>(
+                        reqModels[`${props.ReqClass.name}VersionsModel` as keyof typeof reqModels], {
+                        ...req,
+                        reqId: `${prefix}${+s - 1}` as req.Requirement['reqId'],
+                        modifiedBy: props.deletedById,
+                        effectiveFrom: props.deletedDate
+                    })
+                }
+            }
+        }
 
         await em.flush()
     }
@@ -572,26 +623,26 @@ export class OrganizationRepository extends Repository<req.Organization> {
         const em = this._em,
             solution = await this.getSolutionById(solutionId)
 
-        const reqsBelongingToSolution = await Promise.all((await em.find(BelongsModel, {
-            right: solution.id
-        }))
-            .filter(async rel => (await rel.latestVersion) != undefined)
-            .map(async rel => (await rel.latestVersion)!.requirementRelation.left.id))
+        const reqsInSolution = [];
+        for (const rel of await em.find(BelongsModel, { right: solution.id })) {
+            const latestVersion = await rel.latestVersion;
+            if (latestVersion) {
+                const staticRelModel = latestVersion.requirementRelation;
+                reqsInSolution.push(staticRelModel.left.id);
+            }
+        }
 
-        if (reqsBelongingToSolution.length === 0)
+        if (reqsInSolution.length === 0)
             return `${prefix}1`
 
-        const reqs = (await em.find(reqModels.RequirementModel, {
-            id: { $in: reqsBelongingToSolution }
-        }))
-            .filter(async req => {
-                const latestVersion = await req.latestVersion
-
-                return latestVersion != undefined &&
-                    latestVersion.reqId !== undefined &&
-                    latestVersion.reqId.startsWith(prefix)
-            })
-            .map(async req => (await req.latestVersion)!.reqId)
+        const reqs = [];
+        for (const req of await em.find(reqModels.RequirementModel, {
+            id: { $in: reqsInSolution }
+        })) {
+            const latestVersion = await req.latestVersion;
+            if (latestVersion?.reqId?.startsWith(prefix))
+                reqs.push(latestVersion.reqId);
+        }
 
         const count = reqs.length
 

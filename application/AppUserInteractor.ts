@@ -42,7 +42,7 @@ export class AppUserInteractor extends Interactor<AppUser> {
      * @returns The id of the created app user
      * @throws {PermissionDeniedException} If the current user is not a system admin
      */
-    async createAppUser(props: Pick<AppUser, keyof AppUser>): Promise<AppUser['id']> {
+    async createAppUser(props: ConstructorParameters<typeof AppUser>[0]): Promise<AppUser['id']> {
         if (!this._isSystemAdmin())
             throw new PermissionDeniedException(`User with id ${this._userId} does not have permission to create users`)
         const effectiveDate = new Date()

@@ -37,4 +37,14 @@ export class Stakeholder extends Component {
      * The influence of the stakeholder.
      */
     readonly influence: number;
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            segmentation: this.segmentation,
+            category: this.category,
+            availability: this.availability,
+            influence: this.influence
+        }
+    }
 }

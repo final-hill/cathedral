@@ -2,10 +2,10 @@
  * Represents the metadata of an entity that is used to track the creation and modification of the entity
  */
 export abstract class AuditMetadata {
-    constructor(props: Pick<AuditMetadata, keyof AuditMetadata>) {
+    constructor(props: Omit<AuditMetadata, 'toJSON'>) {
         this.createdById = props.createdById;
         this.creationDate = props.creationDate;
-        this.isDeleted = props.isDeleted
+        this.isDeleted = props.isDeleted;
         this.lastModified = props.lastModified;
         this.modifiedById = props.modifiedById;
     }
@@ -35,4 +35,13 @@ export abstract class AuditMetadata {
      */
     readonly modifiedById: string;
 
+    toJSON() {
+        return {
+            createdById: this.createdById,
+            creationDate: this.creationDate,
+            isDeleted: this.isDeleted,
+            lastModified: this.lastModified,
+            modifiedById: this.modifiedById
+        }
+    }
 }

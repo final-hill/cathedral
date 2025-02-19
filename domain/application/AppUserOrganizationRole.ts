@@ -5,7 +5,7 @@ import { AppRole } from "./AppRole.js";
  * An AppUserOrganizationRole is a mapping between an AppUser, an Organization, and a Role
  */
 export class AppUserOrganizationRole extends AuditMetadata {
-    constructor({ appUserId, organizationId, role, ...parentProps }: Pick<AppUserOrganizationRole, keyof AppUserOrganizationRole>) {
+    constructor({ appUserId, organizationId, role, ...parentProps }: Omit<AppUserOrganizationRole, 'toJSON'>) {
         super(parentProps);
         this.appUserId = appUserId;
         this.organizationId = organizationId;
@@ -26,4 +26,13 @@ export class AppUserOrganizationRole extends AuditMetadata {
      * The Role associated with the OrganizationRole
      */
     readonly role!: AppRole
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            appUserId: this.appUserId,
+            organizationId: this.organizationId,
+            role: this.role
+        }
+    }
 }

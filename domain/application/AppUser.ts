@@ -4,7 +4,7 @@ import { AppRole } from "./AppRole.js";
  * An AppUser is a user of the application
  */
 export class AppUser {
-    constructor(props: Pick<AppUser, keyof AppUser>) {
+    constructor(props: Omit<AppUser, 'toJSON'>) {
         Object.assign(this, props);
 
         // email address: https://stackoverflow.com/a/574698
@@ -60,4 +60,18 @@ export class AppUser {
      * The role of the AppUser.
      */
     readonly role?: AppRole;
+
+    toJSON() {
+        return {
+            id: this.id,
+            name: this.name,
+            lastModified: this.lastModified,
+            isDeleted: this.isDeleted,
+            email: this.email,
+            creationDate: this.creationDate,
+            lastLoginDate: this.lastLoginDate,
+            isSystemAdmin: this.isSystemAdmin,
+            role: this.role
+        }
+    }
 }

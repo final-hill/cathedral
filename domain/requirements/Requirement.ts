@@ -6,7 +6,7 @@ import { AuditMetadata } from "../AuditMetadata.js";
 export class Requirement extends AuditMetadata {
     static readonly reqIdPrefix: `${'P' | 'E' | 'G' | 'S' | '0'}.${number}.` = '0.0.';
 
-    constructor({ reqId, ...props }: Omit<Pick<Requirement, keyof Requirement>, 'reqId'> & { reqId?: Requirement['_reqId'] }) {
+    constructor({ reqId, ...props }: Omit<Requirement, 'reqId' | 'toJSON'> & { reqId?: Requirement['_reqId'] }) {
         super(props)
         if (props.name.length > 100)
             throw new Error('Name must be less than 100 characters')
@@ -55,4 +55,15 @@ export class Requirement extends AuditMetadata {
      * (i.e. a requirement that is not included in the solution)
      */
     readonly isSilence: boolean;
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            id: this.id,
+            reqId: this._reqId,
+            name: this.name,
+            description: this.description,
+            isSilence: this.isSilence
+        }
+    }
 }

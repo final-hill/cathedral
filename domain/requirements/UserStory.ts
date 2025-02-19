@@ -23,4 +23,11 @@ export class UserStory extends Scenario {
      * The action that the user wants to perform.
      */
     readonly functionalBehaviorId: string
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            functionalBehaviorId: this.functionalBehaviorId
+        }
+    }
 }

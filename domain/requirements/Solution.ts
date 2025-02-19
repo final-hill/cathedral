@@ -14,4 +14,11 @@ export class Solution extends Requirement {
      * A slugified version of the name
      */
     readonly slug: string;
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            slug: this.slug
+        }
+    }
 }

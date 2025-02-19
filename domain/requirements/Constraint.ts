@@ -18,4 +18,11 @@ export class Constraint extends Requirement {
      * Category of the constraint
      */
     readonly category: ConstraintCategory;
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            category: this.category
+        }
+    }
 }

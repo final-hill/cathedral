@@ -22,4 +22,11 @@ export class Person extends Actor {
      * Email address of the person
      */
     readonly email?: string;
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            email: this.email
+        }
+    }
 }

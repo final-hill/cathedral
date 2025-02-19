@@ -14,4 +14,11 @@ export class Behavior extends Requirement {
      * The priority of the behavior.
      */
     readonly priority: MoscowPriority;
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            priority: this.priority
+        }
+    }
 }

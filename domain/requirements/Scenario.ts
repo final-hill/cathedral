@@ -20,4 +20,12 @@ export abstract class Scenario extends Example {
      * The outcome (goal) that the scenario is aiming to achieve.
      */
     readonly outcomeId: string;
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            primaryActorId: this.primaryActorId,
+            outcomeId: this.outcomeId
+        }
+    }
 }
