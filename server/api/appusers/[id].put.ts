@@ -1,8 +1,9 @@
 import { z } from "zod"
-import { fork } from "~/server/data/orm.js"
 import { getServerSession } from '#auth'
 import { AppRole } from "~/domain/application/index.js"
 import { OrganizationInteractor } from "~/application"
+import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository"
+import handleDomainException from "~/server/utils/handleDomainException"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -25,10 +26,12 @@ export default defineEventHandler(async (event) => {
         session = (await getServerSession(event))!,
         organizationInteractor = new OrganizationInteractor({
             userId: session.id,
-            entityManager: fork(),
-            organizationId,
-            organizationSlug
+            repository: new OrganizationRepository({
+                em: event.context.em,
+                organizationId,
+                organizationSlug
+            })
         })
 
-    await organizationInteractor.updateAppUserRole(id, role)
+    return await organizationInteractor.updateAppUserRole(id, role).catch(handleDomainException)
 })

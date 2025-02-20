@@ -3,7 +3,7 @@ import type Dialog from 'primevue/dialog'
 import type DataTable from 'primevue/datatable'
 import { FilterMatchMode } from 'primevue/api';
 import type { AuditLogViewModel } from '#shared/models';
-import { camelCaseToTitle } from '#shared/utils';
+import { camelCaseToTitleCase } from '#shared/utils';
 
 export type RequirementFieldType = { type: 'requirement', options: { id: string, name: string }[] }
 
@@ -186,7 +186,7 @@ const onEditDialogCancel = () => {
             :globalFilterFields="Object.keys(props.datasource?.[0] ?? {})" :loading="props.loading" stripedRows>
             <Column
                 v-for="key of Object.keys(props.viewModel).filter(k => props.viewModel[k as keyof RowType] !== 'hidden')"
-                :key="key" :field="key" :header="camelCaseToTitle(key)" sortable>
+                :key="key" :field="key" :header="camelCaseToTitleCase(key)" sortable>
                 <template #body="{ data, field }">
                     <span v-if="props.viewModel[field as keyof RowType] === 'text'">{{ data[field] }}</span>
                     <span v-else-if="
@@ -229,7 +229,7 @@ const onEditDialogCancel = () => {
             <div class="field grid"
                 v-for="key of Object.keys(props.createModel).filter(k => props.createModel[k as keyof RowType] !== 'hidden')"
                 :key="key" :field="key">
-                <label :for="key" class="col-4">{{ camelCaseToTitle(key) }}</label>
+                <label :for="key" class="col-4">{{ camelCaseToTitleCase(key) }}</label>
 
                 <InputText v-if="props.createModel[key as keyof RowType] === 'text'" :name="key"
                     v-model.trim="createDialogItem[key]" class="col-8" />
@@ -256,7 +256,7 @@ const onEditDialogCancel = () => {
                     (props.createModel[key as keyof RowType] as any).type === 'requirement'
                 " :name="key" class="p-inputtext p-component col-8"
                     v-model.trim="(createDialogItem[key] ?? { id: '' }).id">
-                    <option value="" disabled>Select a {{ camelCaseToTitle(key) }}</option>
+                    <option value="" disabled>Select a {{ camelCaseToTitleCase(key) }}</option>
                     <option v-for="option of (props.createModel[key as keyof RowType] as any).options" :key="option?.id"
                         :value="option?.id">
                         {{ option.name }}
@@ -279,7 +279,7 @@ const onEditDialogCancel = () => {
         <form id="editDialogForm" autocomplete="off" @submit.prevent="onEditDialogSave" @reset="onEditDialogCancel">
             <div class="field grid" v-for="key of Object.keys(props.editModel)" :key="key" :field="key">
                 <label v-if="props.editModel[key as keyof RowType] !== 'hidden'" :for="key" class="col-4">{{
-                    camelCaseToTitle(key) }}</label>
+                    camelCaseToTitleCase(key) }}</label>
 
                 <InputText v-if="props.editModel[key as keyof RowType] === 'text'" :name="key"
                     v-model.trim="editDialogItem[key]" class="col-8" />
@@ -308,7 +308,7 @@ const onEditDialogCancel = () => {
                     (props.editModel[key as keyof RowType] as any).type === 'requirement'
                 " :name="key" class="p-inputtext p-component col-8"
                     v-model.trim="(editDialogItem[key] ?? { id: '' }).id">
-                    <option value="" disabled>Select a {{ camelCaseToTitle(key) }}</option>
+                    <option value="" disabled>Select a {{ camelCaseToTitleCase(key) }}</option>
                     <option v-for="option of (props.editModel[key as keyof RowType] as any).options" :key="option.id"
                         :value="option.id">
                         {{ option.name }}
@@ -331,7 +331,7 @@ const onEditDialogCancel = () => {
             <DataTable ref="recycleBin" :value="recycleItems" dataKey="date" :loading="recycleDialogLoading">
                 <Column field="date" header="Date" sortable />
                 <Column v-for="key of Object.keys(recycleItems?.[0]?.entity ?? {})" :key="key" :field="key"
-                    :header="camelCaseToTitle(key)">
+                    :header="camelCaseToTitleCase(key)">
                     <template #body="{ data, field }">
                         <span v-if="data.entity[field] instanceof Date">{{ data.entity[field].toLocaleString() }}</span>
                         <span v-else-if="typeof data.entity[field] === 'object'">
@@ -363,7 +363,7 @@ const onEditDialogCancel = () => {
         </template>
         <section>
             <div class="field grid" v-for="key of Object.keys(selectedHistoryItem.entity)" :key="key">
-                <label :for="key" class="col-4">{{ camelCaseToTitle(key) }}:</label>
+                <label :for="key" class="col-4">{{ camelCaseToTitleCase(key) }}:</label>
                 <span class="col-8" v-if="selectedHistoryItem.entity[key] instanceof Date">
                     {{ selectedHistoryItem.entity[key].toLocaleString() }}
                 </span>

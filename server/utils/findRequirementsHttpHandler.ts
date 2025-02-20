@@ -1,8 +1,9 @@
-import { fork } from "~/server/data/orm.js"
 import { getServerSession } from '#auth'
 import { OrganizationInteractor } from "~/application"
 import { type ZodObject, z } from "zod"
 import { Requirement } from "~/domain/requirements"
+import { OrganizationRepository } from '../data/repositories/OrganizationRepository'
+import handleDomainException from './handleDomainException'
 
 export default function findRequirementsHttpHandler<
     RCons extends typeof Requirement,
@@ -21,12 +22,10 @@ export default function findRequirementsHttpHandler<
         const { solutionId, organizationId, organizationSlug, ...query } = await validateEventQuery(event, validatedQuerySchema) as any,
             session = (await getServerSession(event))!,
             organizationInteractor = new OrganizationInteractor({
-                userId: session.id,
-                organizationId,
-                organizationSlug,
-                entityManager: fork()
+                repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug }),
+                userId: session.id
             })
 
-        return await organizationInteractor.findRequirements({ solutionId, ReqClass, query })
+        return await organizationInteractor.findSolutionRequirements({ solutionId, ReqClass, query }).catch(handleDomainException)
     })
 }

@@ -1,65 +1,77 @@
-import { BaseEntity, Entity, Enum, Property } from "@mikro-orm/core";
 import { AppRole } from "./AppRole.js";
-import { type Properties } from "../types/index.js";
 
 /**
  * An AppUser is a user of the application
  */
-@Entity()
-export class AppUser extends BaseEntity {
-    constructor(props: Properties<AppUser>) {
-        super()
-        this.id = props.id;
-        this.creationDate = props.creationDate;
-        this.isSystemAdmin = props.isSystemAdmin;
-        this.lastLoginDate = props.lastLoginDate;
-        this.name = props.name;
-        this.email = props.email;
-        this.role = props.role;
+export class AppUser {
+    constructor(props: Omit<AppUser, 'toJSON'>) {
+        Object.assign(this, props);
+
+        // email address: https://stackoverflow.com/a/574698
+        if (props.name.length > 254)
+            throw new Error('Name too long');
+        if (!props.email.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/))
+            throw new Error('Invalid email address');
+        if (props.email.length > 254)
+            throw new Error('Email address too long');
     }
 
     /**
      * The unique identifier of the AppUser (uuid)
      */
-    @Property({ type: 'uuid', primary: true })
-    id: string;
+    readonly id!: string;
 
     /**
      * The name of the AppUser
      */
-    @Property({ type: 'string', length: 254 })
-    name: string;
+    readonly name!: string;
+
+    /**
+     * The date and time when the user was last modified
+     */
+    readonly lastModified!: Date;
+
+    /**
+     * Whether the user is deleted
+     */
+    readonly isDeleted!: boolean;
 
     /**
      * The email address of the AppUser
      */
-    // email address: https://stackoverflow.com/a/574698
-    @Property({ type: 'string', length: 254 })
-    email: string;
+    readonly email!: string;
 
     /**
      * The date the AppUser was created
      */
-    @Property({ type: 'datetime' })
-    creationDate: Date;
+    readonly creationDate!: Date;
 
     /**
      * The date the AppUser last logged in
      */
-    @Property({ type: 'datetime', nullable: true })
-    lastLoginDate?: Date;
+    readonly lastLoginDate?: Date;
 
     /**
      * Whether the AppUser is a system administrator
      */
-    @Property({ type: 'boolean' })
-    isSystemAdmin: boolean;
+    readonly isSystemAdmin!: boolean;
 
     /**
      * The role of the AppUser.
      */
-    // FIXME: this field is not mapped in the ORM. It is populated in the API layer.
-    // It's a design smell that needs to be addressed.
-    @Enum({ items: () => AppRole, persist: false })
-    role?: AppRole;
+    readonly role?: AppRole;
+
+    toJSON() {
+        return {
+            id: this.id,
+            name: this.name,
+            lastModified: this.lastModified,
+            isDeleted: this.isDeleted,
+            email: this.email,
+            creationDate: this.creationDate,
+            lastLoginDate: this.lastLoginDate,
+            isSystemAdmin: this.isSystemAdmin,
+            role: this.role
+        }
+    }
 }

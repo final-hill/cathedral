@@ -13,8 +13,8 @@ const { $eventBus } = useNuxtApp(),
     confirm = useConfirm()
 
 const rawRequirement = ref(''),
-    rawRequirementSizeLimit = 1000,
-    parsedRequirementCount = ref<number | null>(null)
+    rawRequirementSizeLimit = 1000
+// parsedRequirementCount = ref<number | null>(null)
 
 if (solutionError.value)
     $eventBus.$emit('page-error', solutionError.value)
@@ -65,7 +65,7 @@ const parseRawRequirement = async () => {
         parsingError.value = e.message
     }).finally(() => parsingRequirements.value = false)
 
-    parsedRequirementCount.value = response ?? null
+    //parsedRequirementCount.value = response ?? null
 
     if (response)
         resetRawRequirement()
@@ -130,9 +130,11 @@ const resetRawRequirement = () => {
             <InlineMessage severity="error" class="mt-4" v-if="parsingError">
                 {{ parsingError }}
             </InlineMessage>
+            <!--
             <InlineMessage severity="success" class="mt-4" v-if="parsedRequirementCount">
                 {{ parsedRequirementCount }} requirements added to the workbox.
             </InlineMessage>
+            -->
         </TabPanel>
         <!--
         <TabPanel header="Workbox">

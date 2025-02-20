@@ -6,7 +6,12 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "client: chrome",
+            "name": "Brave",
+            "runtimeExecutable": "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+            "runtimeArgs": [
+                "--remote-debugging-port=9222"
+            ],
+            "userDataDir": true,
             "url": "https://localhost:3000",
             "webRoot": "${workspaceFolder}"
         },
@@ -26,7 +31,7 @@
             "name": "fullstack: nuxt",
             "configurations": [
                 "server: nuxt",
-                "client: chrome"
+                "Brave"
             ]
         }
     ]

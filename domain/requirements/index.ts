@@ -31,7 +31,6 @@ export * from './Outcome.js';
 export * from './Person.js';
 export * from './Product.js';
 export * from './Responsibility.js';
-export * from './ReqType.js';
 export * from './Role.js';
 export * from './Scenario.js';
 export * from './Epic.js';

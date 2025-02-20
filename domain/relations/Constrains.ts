@@ -1,4 +1,3 @@
-import { Entity } from "@mikro-orm/core";
 import { RequirementRelation } from "./RequirementRelation.js";
 
 /**
@@ -6,5 +5,4 @@ import { RequirementRelation } from "./RequirementRelation.js";
  *
  * Constraint X applies to Y
  */
-@Entity()
 export class Constrains extends RequirementRelation { }

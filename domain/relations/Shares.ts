@@ -1,4 +1,3 @@
-import { Entity } from "@mikro-orm/core";
 import { Repeats } from "./Repeats.js";
 
 /**
@@ -8,5 +7,4 @@ import { Repeats } from "./Repeats.js";
  * (Involve Repeats).
  * Some subrequirement is in common between X and Y.
  */
-@Entity()
 export class Shares extends Repeats { }

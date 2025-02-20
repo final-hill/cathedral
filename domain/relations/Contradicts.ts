@@ -1,4 +1,3 @@
-import { Entity } from "@mikro-orm/core";
 import { RequirementRelation } from "./RequirementRelation.js";
 
 /**
@@ -6,5 +5,4 @@ import { RequirementRelation } from "./RequirementRelation.js";
  *
  * Properties specified by X and Y cannot both hold
  */
-@Entity()
 export class Contradicts extends RequirementRelation { }

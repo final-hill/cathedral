@@ -1,8 +1,9 @@
 import { z } from "zod"
 import { getServerSession } from '#auth'
 import { OrganizationInteractor } from '~/application'
-import { fork } from "~/server/data/orm.js"
 import { Requirement } from '~/domain/requirements'
+import { OrganizationRepository } from "../data/repositories/OrganizationRepository"
+import handleDomainException from "./handleDomainException"
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -28,12 +29,10 @@ export default function deleteRequirementHttpHandler<RCons extends typeof Requir
             { solutionId, organizationId, organizationSlug } = await validateEventBody(event, bodySchema),
             session = (await getServerSession(event))!,
             organizationInteractor = new OrganizationInteractor({
-                organizationId,
-                organizationSlug,
-                userId: session.id,
-                entityManager: fork()
+                repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug }),
+                userId: session.id
             })
 
-        await organizationInteractor.deleteRequirement({ ReqClass, id, solutionId })
+        await organizationInteractor.deleteRequirement({ ReqClass, id, solutionId }).catch(handleDomainException)
     })
 }

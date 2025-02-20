@@ -1,12 +1,10 @@
 import { z } from "zod"
-import { fork } from "~/server/data/orm.js"
-import { OrganizationInteractor } from '~/application/index.js'
+import { OrganizationCollectionInteractor } from '~/application'
+import { OrganizationCollectionRepository } from "~/server/data/repositories"
 import { getServerSession } from '#auth'
+import handleDomainException from "~/server/utils/handleDomainException"
 
-const querySchema = z.object({
-    name: z.string().optional(),
-    description: z.string().optional()
-})
+const querySchema = z.object({})
 
 /**
  * Returns all organizations that match the query parameters
@@ -14,10 +12,10 @@ const querySchema = z.object({
 export default defineEventHandler(async (event) => {
     const query = await validateEventParams(event, querySchema),
         session = (await getServerSession(event))!,
-        organizationInteractor = new OrganizationInteractor({
-            entityManager: fork(),
+        orgColInt = new OrganizationCollectionInteractor({
+            repository: new OrganizationCollectionRepository({ em: event.context.em }),
             userId: session.id
         })
 
-    return organizationInteractor.getUserOrganizations(query)
+    return orgColInt.findOrganizations({}).catch(handleDomainException)
 })

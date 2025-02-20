@@ -1,7 +1,8 @@
 import { z } from "zod"
-import { fork } from "~/server/data/orm.js"
 import { getServerSession } from '#auth'
-import { OrganizationInteractor } from "~/application/index"
+import { OrganizationCollectionInteractor } from "~/application/index"
+import { OrganizationCollectionRepository } from "~/server/data/repositories"
+import handleDomainException from "~/server/utils/handleDomainException"
 
 const bodySchema = z.object({
     name: z.string(),
@@ -14,12 +15,23 @@ const bodySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { name, description } = await validateEventBody(event, bodySchema),
         session = (await getServerSession(event))!,
-        organizationInteractor = new OrganizationInteractor({
-            entityManager: fork(),
+        organizationCollectionInteractor = new OrganizationCollectionInteractor({
+            repository: new OrganizationCollectionRepository({ em: event.context.em }),
             userId: session.id
         })
 
-    const newOrg = await organizationInteractor.addOrganization({ name, description })
+    try {
+        const newOrgId = await organizationCollectionInteractor.createOrganization({ name, description }),
+            newOrg = (await organizationCollectionInteractor.findOrganizations({ id: newOrgId! }))![0]
 
-    return newOrg.slug
+        if (!newOrg)
+            throw createError({
+                status: 500,
+                message: `Failed to find newly created organization for id: ${newOrgId}`
+            })
+
+        return newOrg.slug
+    } catch (error: any) {
+        return handleDomainException(error)
+    }
 })

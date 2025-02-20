@@ -1,8 +1,9 @@
 import { getServerSession } from '#auth'
 import { Requirement } from "~/domain/requirements"
 import { OrganizationInteractor } from '~/application'
-import { fork } from "~/server/data/orm.js"
 import { z, type ZodObject } from "zod"
+import { OrganizationRepository } from '../data/repositories/OrganizationRepository';
+import handleDomainException from './handleDomainException'
 
 /**
  * Creates an event handler for POST requests that create a new requirement
@@ -28,14 +29,12 @@ export default function postRequirementHttpHandler<
         const { solutionId, organizationId, organizationSlug, ...reqProps } = await validateEventBody(event, validatedBodySchema) as any,
             session = (await getServerSession(event))!,
             organizationInteractor = new OrganizationInteractor({
-                userId: session.id,
-                organizationId,
-                organizationSlug,
-                entityManager: fork()
+                repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug }),
+                userId: session.id
             })
 
-        const newRequirement = await organizationInteractor.addRequirement({ ReqClass, solutionId, reqProps })
+        const newRequirementId = await organizationInteractor.addRequirement({ ReqClass, solutionId, reqProps }).catch(handleDomainException)
 
-        return newRequirement.id
+        return newRequirementId
     })
 }

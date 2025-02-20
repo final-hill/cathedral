@@ -1,26 +1,22 @@
-import { BaseEntity, Entity, ManyToOne } from "@mikro-orm/core";
-import { Requirement } from '../requirements/Requirement.js'
+import { AuditMetadata } from "../AuditMetadata";
 
 /**
  * Relations between requirements
  */
-@Entity({ abstract: true, discriminatorColumn: 'rel_type' })
-export abstract class RequirementRelation extends BaseEntity {
-    constructor({ left, right }: { left: Requirement, right: Requirement }) {
-        super()
-        this.left = left;
-        this.right = right;
+export abstract class RequirementRelation extends AuditMetadata {
+    constructor(props: Pick<RequirementRelation, keyof RequirementRelation>) {
+        super(props)
+        this.leftId = props.leftId
+        this.rightId = props.rightId
     }
 
     /**
      * The left-hand side of the relation
      */
-    @ManyToOne({ primary: true, entity: () => Requirement })
-    left: Requirement
+    readonly leftId: string
 
     /**
      * The right-hand side of the relation
      */
-    @ManyToOne({ primary: true, entity: () => Requirement })
-    right: Requirement
+    readonly rightId: string
 }

@@ -1,32 +1,31 @@
-import { Entity, ManyToOne } from "@mikro-orm/core";
 import { Example } from "./Example.js";
-import { Stakeholder } from "./Stakeholder.js";
-import { ReqType } from "./ReqType.js";
-import { Outcome } from "./Outcome.js";
 
 /**
  * A Scenario specifies system behavior by describing paths
  * of interaction between actors and the system.
  */
-@Entity({ abstract: true, discriminatorValue: ReqType.SCENARIO })
 export abstract class Scenario extends Example {
-    static override req_type: ReqType = ReqType.SCENARIO;
-
-    constructor({ primaryActor, outcome, ...rest }: ConstructorParameters<typeof Example>[0] & Pick<Scenario, 'primaryActor' | 'outcome'>) {
+    constructor({ primaryActorId, outcomeId, ...rest }: ConstructorParameters<typeof Example>[0] & Pick<Scenario, 'primaryActorId' | 'outcomeId'>) {
         super(rest);
-        this.primaryActor = primaryActor;
-        this.outcome = outcome;
+        this.primaryActorId = primaryActorId;
+        this.outcomeId = outcomeId;
     }
 
     /**
      * Primary actor involved in the scenario
      */
-    @ManyToOne({ entity: () => Stakeholder })
-    primaryActor?: Stakeholder;
+    readonly primaryActorId: string;
 
     /**
      * The outcome (goal) that the scenario is aiming to achieve.
      */
-    @ManyToOne({ entity: () => Outcome })
-    outcome?: Outcome;
+    readonly outcomeId: string;
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            primaryActorId: this.primaryActorId,
+            outcomeId: this.outcomeId
+        }
+    }
 }

@@ -1,27 +1,32 @@
-import { Entity, Property } from "@mikro-orm/core";
 import { Actor } from "./Actor.js";
-import { ReqType } from "./ReqType.js";
 
 /**
  * A person is a member of the Project staff
  */
-@Entity({ discriminatorValue: ReqType.PERSON })
 export class Person extends Actor {
-    static override req_type: ReqType = ReqType.PERSON;
-    static override reqIdPrefix = 'P.1.' as const;
+    static override readonly reqIdPrefix = 'P.1.' as const;
 
     constructor({ email, ...rest }: ConstructorParameters<typeof Actor>[0] & Pick<Person, 'email'>) {
         super(rest);
+        // email address: https://stackoverflow.com/a/574698
+        if (email && !email.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/))
+            throw new Error('Invalid email address');
+        if (email && email.length > 254)
+            throw new Error('Email address too long');
         this.email = email;
     }
 
     override get reqId() { return super.reqId as `${typeof Person.reqIdPrefix}${number}` | undefined }
-    override set reqId(value) { super.reqId = value }
 
     /**
      * Email address of the person
      */
-    // email address: https://stackoverflow.com/a/574698
-    @Property({ type: 'string', length: 254 })
-    email?: string;
+    readonly email?: string;
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            email: this.email
+        }
+    }
 }

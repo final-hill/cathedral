@@ -1,7 +1,8 @@
 import { getServerSession } from '#auth'
-import { fork } from "~/server/data/orm.js"
 import { z } from "zod"
 import { OrganizationInteractor } from "~/application"
+import { OrganizationRepository } from '~/server/data/repositories/OrganizationRepository';
+import handleDomainException from '~/server/utils/handleDomainException';
 
 const bodySchema = z.object({
     name: z.string().min(1).max(100),
@@ -20,11 +21,14 @@ export default defineEventHandler(async (event) => {
         session = (await getServerSession(event))!,
         organizationInteractor = new OrganizationInteractor({
             userId: session.id,
-            entityManager: fork(),
-            organizationId,
-            organizationSlug
-        }),
-        newSolution = await organizationInteractor.addSolution({ name, description })
+            repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug })
+        })
 
-    return newSolution.slug
+    try {
+        const newSolutionId = (await organizationInteractor.addSolution({ name, description }))!,
+            newSolution = await organizationInteractor.getSolutionById(newSolutionId)
+        return newSolution.slug
+    } catch (error: any) {
+        return handleDomainException(error)
+    }
 })

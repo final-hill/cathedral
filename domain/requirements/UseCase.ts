@@ -1,58 +1,47 @@
-import { Entity, ManyToOne, Property } from "@mikro-orm/core";
-import { Assumption } from "./Assumption.js";
-import { Effect } from "./Effect.js";
 import { Scenario } from "./Scenario.js";
-import { ReqType } from "./ReqType.js";
 
 /**
  * A Use Case specifies the scenario of a complete
  * interaction of a user through a system.
  */
-@Entity({ discriminatorValue: ReqType.USE_CASE })
 export class UseCase extends Scenario {
-    static override reqIdPrefix = 'S.4.' as const;
-    static override req_type = ReqType.USE_CASE;
+    static override readonly reqIdPrefix = 'S.4.' as const;
 
-    constructor(props: ConstructorParameters<typeof Scenario>[0] & Pick<UseCase, 'scope' | 'level' | 'precondition' | 'triggerId' | 'mainSuccessScenario' | 'successGuarantee' | 'extensions'>) {
+    constructor(props: ConstructorParameters<typeof Scenario>[0] & Pick<UseCase, 'scope' | 'level' | 'preconditionId' | 'triggerId' | 'mainSuccessScenario' | 'successGuaranteeId' | 'extensions'>) {
         super(props);
         this.scope = props.scope;
         this.level = props.level;
-        this.precondition = props.precondition;
+        this.preconditionId = props.preconditionId;
         this.triggerId = props.triggerId;
         this.mainSuccessScenario = props.mainSuccessScenario;
-        this.successGuarantee = props.successGuarantee;
+        this.successGuaranteeId = props.successGuaranteeId;
         this.extensions = props.extensions;
         // this.stakeHoldersAndInterests = props.stakeHoldersAndInterests;
     }
 
     override get reqId() { return super.reqId as `${typeof UseCase.reqIdPrefix}${number}` | undefined }
-    override set reqId(value) { super.reqId = value }
 
     /**
      * The scope of the use case.
      */
     // TODO: <https://github.com/final-hill/cathedral/issues/154>
-    @Property({ type: 'string' })
-    scope: string;
+    readonly scope: string;
 
     /**
      * The level of the use case.
      */
     // TODO: <https://github.com/final-hill/cathedral/issues/154>
-    @Property({ type: 'string' })
-    level: string;
+    readonly level: string;
 
     /**
      * The precondition is an Assumption that must be true before the use case can start.
      */
-    @ManyToOne({ entity: () => Assumption })
-    precondition?: Assumption;
+    readonly preconditionId: string;
 
     /**
      * The action upon the system that starts the use case.
      */
-    @Property({ type: 'uuid' })
-    triggerId?: string;
+    readonly triggerId: string;
 
     /**
      * The main success scenario is the most common path through the system.
@@ -63,22 +52,33 @@ export class UseCase extends Scenario {
      * ...
      */
     //mainSuccessScenario: [FunctionalRequirement | Constraint | Role | Responsibility][]
-    @Property({ type: 'string' })
-    mainSuccessScenario: string
+    readonly mainSuccessScenario: string
 
     /**
      * An Effect that is guaranteed to be true after the use case is completed.
      */
-    @ManyToOne({ entity: () => Effect })
-    successGuarantee?: Effect;
+    readonly successGuaranteeId: string;
 
     /**
      * Extensions of the use case.
      */
     // extensions: [FunctionalRequirement | Constraint | Role | Responsibility][]
-    @Property({ type: 'string' })
-    extensions: string
+    readonly extensions: string
 
     // TODO: <https://github.com/final-hill/cathedral/issues/154>
     // stakeHoldersAndInterests: string[] // Actor[]
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            scope: this.scope,
+            level: this.level,
+            preconditionId: this.preconditionId,
+            triggerId: this.triggerId,
+            mainSuccessScenario: this.mainSuccessScenario,
+            successGuaranteeId: this.successGuaranteeId,
+            extensions: this.extensions,
+            // stakeHoldersAndInterests: this.stakeHoldersAndInterests
+        }
+    }
 }

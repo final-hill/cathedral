@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import type { DataTableRowExpandEvent, DataTableRowCollapseEvent, DataTableExpandedRows } from 'primevue/datatable';
 import type { ParsedRequirementViewModel, RequirementViewModel, SolutionViewModel } from '#shared/models';
-import type { ReqType } from '~/domain/requirements/ReqType';
-import { camelCaseToTitle, snakeCaseToSlug, snakeCaseToTitle } from '~/shared/utils';
+import type { ReqType } from '~/server/data/models/requirements/ReqType';
+import { camelCaseToTitleCase, snakeCaseToSlug, snakeCaseToTitleCase } from '~/shared/utils';
 
 useHead({ title: 'Workbox' });
 definePageMeta({ name: 'Workbox' });
@@ -103,10 +103,10 @@ const reqKeys = (req: object = {}) => Object.keys(req)
                     :value="dataRows[data.id].data[reqType as ReqType]" :loading="dataRows[data.id].isLoading"
                     stripedRows>
                     <template #header>
-                        <h4>{{ snakeCaseToTitle(reqType) }}</h4>
+                        <h4>{{ snakeCaseToTitleCase(reqType) }}</h4>
                     </template>
                     <Column v-for="col of reqKeys(dataRows[data.id]?.data[reqType as ReqType]?.[0])" :key="col"
-                        :field="col" :header="camelCaseToTitle(col)" sortable />
+                        :field="col" :header="camelCaseToTitleCase(col)" sortable />
                     <Column header="Actions" frozen align-frozen="right">
                         <template #body="{ data }">
                             <Button icon="pi pi-check" text rounded class="mr-2" severity="success" title="Approve"
