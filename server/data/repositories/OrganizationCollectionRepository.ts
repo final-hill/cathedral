@@ -105,6 +105,29 @@ export class OrganizationCollectionRepository extends Repository<Organization> {
         if (!existingOrg)
             throw new NotFoundException('Organization does not exist')
 
+        // delete all solutions associated with the organization
+        const orgSolutions = await orgRepo.findSolutions({})
+
+        for (const sol of orgSolutions) {
+            await orgRepo.deleteSolutionBySlug({
+                deletedById: props.deletedById,
+                slug: sol.slug,
+                deletedDate: props.deletedDate
+            });
+        }
+
+        // delete all AppUserOrganizationRoles associated with the organization
+        const orgUsers = await orgRepo.getOrganizationAppUsers()
+
+        for (const user of orgUsers) {
+            await orgRepo.deleteAppUserOrganizationRole({
+                appUserId: user.id,
+                organizationId: id,
+                deletedById: props.deletedById,
+                deletedDate: props.deletedDate
+            });
+        }
+
         em.create(OrganizationVersionsModel, {
             isDeleted: true,
             effectiveFrom: props.deletedDate,
@@ -115,25 +138,6 @@ export class OrganizationCollectionRepository extends Repository<Organization> {
             modifiedBy: props.deletedById,
             requirement: existingOrg
         })
-
-        // delete all AppUserOrganizationRoles associated with the organization
-        const orgUsers = await orgRepo.getOrganizationAppUsers()
-
-        await Promise.all(orgUsers.map(user => orgRepo.deleteAppUserOrganizationRole({
-            appUserId: user.id,
-            organizationId: id,
-            deletedById: props.deletedById,
-            deletedDate: props.deletedDate
-        })))
-
-        // delete all solutions associated with the organization
-        const orgSolutions = await orgRepo.findSolutions({})
-
-        await Promise.all(orgSolutions.map(sol => orgRepo.deleteSolutionBySlug({
-            deletedById: props.deletedById,
-            slug: sol.slug,
-            deletedDate: props.deletedDate
-        })))
 
         await em.flush()
     }

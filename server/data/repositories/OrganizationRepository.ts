@@ -3,7 +3,7 @@ import * as req from "~/domain/requirements";
 import * as reqModels from "../models/requirements";
 import { AppUserModel, AppUserOrganizationRoleModel, AppUserOrganizationRoleVersionsModel } from "../models/application";
 import { BelongsModel, BelongsVersionsModel } from "../models/relations";
-import { pascalCaseToSnakeCase, slugify, snakeCaseToCamelCase } from "#shared/utils";
+import { pascalCaseToSnakeCase, slugify } from "#shared/utils";
 import { ReqType } from "../models/requirements/ReqType";
 import { v7 as uuid7 } from 'uuid'
 import { AuditMetadata } from "~/domain/AuditMetadata";
@@ -13,6 +13,7 @@ import { type CreationInfo } from "./CreationInfo";
 import { type UpdationInfo } from "./UpdationInfo";
 import { type DeletionInfo } from "./DeletionInfo";
 import { DuplicateEntityException, NotFoundException, MismatchException } from "~/domain/exceptions";
+import { snakeCaseToPascalCase } from "~/shared/utils/snakeCaseToPascalCase";
 
 // TODO: parameterize the repository type
 export class OrganizationRepository extends Repository<req.Organization> {
@@ -236,25 +237,33 @@ export class OrganizationRepository extends Repository<req.Organization> {
 
         // delete all requirements associated with the solution
 
-        const reqIdTypesInSolution = (await em.find(BelongsModel, {
+        const reqIdTypesInSolution = [];
+        for (const rel of await em.find(BelongsModel, {
             right: solution.id
-        }))
-            .filter(async rel => (await rel.latestVersion) != undefined)
-            .map(rel => ({
-                id: rel.left.id,
-                req_type: rel.left.getEntity().req_type
-            }))
+        }, { populate: ['left'] })) {
+            const latestVersion = await rel.latestVersion;
+            if (latestVersion) {
+                const left = latestVersion.requirementRelation.left as unknown as reqModels.RequirementModel
+
+                reqIdTypesInSolution.push({
+                    id: rel.left.id,
+                    req_type: left.req_type
+                });
+            }
+        }
 
         // The keys representing the requirement classes in the req module
         type RCons = keyof { [K in keyof typeof req]: typeof req[K] extends typeof req.Requirement ? K : never }
 
-        await Promise.all(reqIdTypesInSolution.map(reqIdType => this.deleteSolutionRequirementById({
-            id: reqIdType.id,
-            deletedById: props.deletedById,
-            deletedDate: props.deletedDate,
-            solutionId: solution.id,
-            ReqClass: req[snakeCaseToCamelCase(reqIdType.req_type) as RCons] as typeof req.Requirement
-        })))
+        for (const reqIdType of reqIdTypesInSolution) {
+            await this.deleteSolutionRequirementById({
+                id: reqIdType.id,
+                deletedById: props.deletedById,
+                deletedDate: props.deletedDate,
+                solutionId: solution.id,
+                ReqClass: req[snakeCaseToPascalCase(reqIdType.req_type) as RCons] as typeof req.Requirement
+            });
+        }
 
         await em.flush()
     }
