@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-    compatibilityDate: '2024-11-19',
+    compatibilityDate: '2025-02-21',
     devtools: {
         enabled: process.env.NODE_ENV === 'development'
     },
@@ -8,7 +8,11 @@ export default defineNuxtConfig({
         https: {
             key: './cert/localhost.key',
             cert: './cert/localhost.crt'
-        }
+        },
+        // Below should be used when local development is done with a custom domain
+        // cors: {
+        //     origin: ['https://example.com'],
+        // }
     },
     experimental: {
         typedPages: true
@@ -46,9 +50,6 @@ export default defineNuxtConfig({
     // https://primeflex.org/
     // https://sidebase.io/nuxt-auth/getting-started
     modules: [
-        // The latest version (^1.5.0) is needed due to https://github.com/nuxt/devtools/issues/723
-        // It looks like this won't be integrated into Nuxt until after 3.14.0
-        '@nuxt/devtools',
         'nuxt-primevue',
         '@vite-pwa/nuxt',
         '@sidebase/nuxt-auth',
@@ -128,7 +129,7 @@ export default defineNuxtConfig({
                 tsconfigRaw: {
                     compilerOptions: {
                         experimentalDecorators: true,
-                        // @ts-expect-error: Is this even doing anything?
+                        // @ts-ignore
                         emitDecoratorMetadata: true,
                         declaration: true
                     }
@@ -142,18 +143,7 @@ export default defineNuxtConfig({
             // It doesn't support transactions for example
             // https://nitro.unjs.io/guide/database
             // database: true
-        },
-        /*
-        database: {
-            // stored at .data/cathedral.sqlite3
-            default: {
-                connector: 'sqlite',
-                options: {
-                    name: 'cathedral'
-                }
-            }
         }
-        */
     },
     primevue: {},
     pwa: {},
@@ -167,7 +157,7 @@ export default defineNuxtConfig({
             tsconfigRaw: {
                 compilerOptions: {
                     experimentalDecorators: true,
-                    // @ts-expect-error: Is this even doing anything?
+                    // @ts-ignore
                     emitDecoratorMetadata: true,
                     declaration: true
                 }
