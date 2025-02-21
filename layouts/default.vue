@@ -28,7 +28,7 @@ $eventBus.$on('page-error', showError);
         <Toast position="bottom-right" group="br" />
     </section>
     <footer>
-        &copy; Final Hill 2024. All rights reserved. |
+        &copy; {{ new Date().getFullYear() }} Final Hill. All rights reserved. |
         Warning: This is Pre-release software. Use at your own risk. Data may be lost.
     </footer>
 </template>
