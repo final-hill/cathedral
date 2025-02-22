@@ -35,6 +35,10 @@ const config: Options = {
     migrations: { transactional: true }
 };
 
-export const connection = MikroORM.init(config)
+let connection: ReturnType<typeof MikroORM.init> | undefined;
+
+export const getConnection = async () => {
+    return connection ? connection : (connection = MikroORM.init(config));
+};
 
 export default config;
