@@ -1,11 +1,12 @@
 import { NuxtAuthHandler } from '#auth'
 import AzureADB2CProvider, { type AzureB2CProfile } from "next-auth/providers/azure-ad-b2c";
-import { connection } from "~/mikro-orm.config"
+import { getConnection } from "~/mikro-orm.config"
 import { AppUserInteractor } from '~/application/AppUserInteractor';
 import { AppUserRepository } from '~/server/data/repositories/AppUserRepository';
 import { NIL as SYSTEM_USER_ID } from 'uuid'
 import { AppUser } from '~/domain/application';
 import handleDomainException from '~/server/utils/handleDomainException';
+import { PostgreSqlDriver, SqlEntityManager } from '@mikro-orm/postgresql';
 
 const config = useRuntimeConfig()
 
@@ -37,7 +38,7 @@ export default NuxtAuthHandler({
                     appUserInteractor = new AppUserInteractor({
                         userId: SYSTEM_USER_ID,
                         repository: new AppUserRepository({
-                            em: (await connection).em.fork({ useContext: true })
+                            em: (await getConnection()).em.fork({ useContext: true }) as SqlEntityManager<PostgreSqlDriver>
                         })
                     })
 
