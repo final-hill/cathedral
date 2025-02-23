@@ -4,7 +4,6 @@ export * from './camelCaseToTitleCase';
 export * from './debounce';
 export * from './dedent';
 export * from './deSlugify';
-export * from './groupBy';
 export * from './pascalCaseToSnakeCase'
 export * from './slugify';
 export * from './snakeCaseToCamelCase';

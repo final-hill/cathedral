@@ -516,7 +516,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
         })
 
         // Group the results by the requirement type
-        return groupBy(requirements, ({ req_type }) => req_type)
+        return Object.groupBy(requirements, ({ req_type }) => req_type)
     }
     */
 
