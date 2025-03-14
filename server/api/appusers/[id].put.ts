@@ -1,18 +1,17 @@
 import { z } from "zod"
 import { getServerSession } from '#auth'
-import { AppRole } from "~/domain/application/index.js"
 import { OrganizationInteractor } from "~/application"
 import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository"
 import handleDomainException from "~/server/utils/handleDomainException"
+import { AppUser, Organization } from "#shared/domain"
 
-const paramSchema = z.object({
-    id: z.string().uuid()
-})
+const paramSchema = AppUser.pick({ id: true }),
+    { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
 const bodySchema = z.object({
-    organizationId: z.string().uuid().optional(),
-    organizationSlug: z.string().max(100).optional(),
-    role: z.nativeEnum(AppRole)
+    organizationId,
+    organizationSlug,
+    ...AppUser.pick({ role: true }).required().shape
 }).refine((value) => {
     return value.organizationId !== undefined || value.organizationSlug !== undefined;
 }, "At least one of organizationId or organizationSlug should be provided");

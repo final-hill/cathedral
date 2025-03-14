@@ -1,6 +1,3 @@
-import { SystemComponent } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns an system component by id
- */
-export default getRequirementHttpHandler(SystemComponent)
+export default getRequirementHttpHandler(ReqType.SYSTEM_COMPONENT)

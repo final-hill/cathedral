@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import type { InvariantViewModel, SolutionViewModel } from '#shared/models'
+import { Invariant } from '#shared/domain'
+import type { z } from 'zod'
 
 useHead({ title: 'Invariants' })
 definePageMeta({ name: 'Invariants' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Invariants').params,
-    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
         query: { organizationSlug }
     }),
     solutionId = solution.value?.id
@@ -14,18 +15,38 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: invariants, refresh, status, error: getInvariantsError } = await useFetch<InvariantViewModel[]>(`/api/invariant`, {
+const { data: invariants, refresh, status, error: getInvariantsError } = await useFetch<z.infer<typeof Invariant>[]>(`/api/invariant`, {
     query: { solutionId, organizationSlug },
-    transform: (data) => data.map((item) => {
-        item.lastModified = new Date(item.lastModified)
-        return item
-    })
+    transform: (data) => data.map((item) => ({
+        ...item,
+        lastModified: new Date(item.lastModified),
+        creationDate: new Date(item.creationDate)
+    }))
 })
 
 if (getInvariantsError.value)
     $eventBus.$emit('page-error', getInvariantsError.value)
 
-const onCreate = async (data: InvariantViewModel) => {
+const viewSchema = Invariant.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const createSchema = Invariant.pick({
+    name: true,
+    description: true
+})
+
+const editSchema = Invariant.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const onCreate = async (data: z.infer<typeof createSchema>) => {
     await useFetch(`/api/invariant`, {
         method: 'POST',
         body: {
@@ -39,7 +60,7 @@ const onCreate = async (data: InvariantViewModel) => {
     refresh()
 }
 
-const onUpdate = async (data: InvariantViewModel) => {
+const onUpdate = async (data: z.infer<typeof editSchema>) => {
     await useFetch(`/api/invariant/${data.id}`, {
         method: 'PUT', body: {
             id: data.id,
@@ -64,15 +85,9 @@ const onDelete = async (id: string) => {
 </script>
 
 <template>
-    <p>
-        Invariants are properties that must always be true. They are used to
-        constrain the possible states of a system.
-    </p>
-
-    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
-        :createModel="{ name: 'text', description: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="invariants" :on-create="onCreate"
-        :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationSlug"
-        entityName="Invariant" :showRecycleBin="true">
+    <h1> Invariants </h1>
+    <p> {{ Invariant.description }} </p>
+    <XDataTable :viewSchema="viewSchema" :createSchema="createSchema" :editSchema="editSchema" :data="invariants"
+        :onCreate="onCreate" :onDelete="onDelete" :onUpdate="onUpdate" :loading="status === 'pending'">
     </XDataTable>
 </template>

@@ -1,6 +1,3 @@
-import { EnvironmentComponent } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns an environment component by id
- */
-export default getRequirementHttpHandler(EnvironmentComponent)
+export default getRequirementHttpHandler(ReqType.ENVIRONMENT_COMPONENT)

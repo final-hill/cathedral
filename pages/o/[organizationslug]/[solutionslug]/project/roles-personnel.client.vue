@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import type { PersonViewModel, SolutionViewModel } from '#shared/models'
+import { Person } from '#shared/domain'
+import type { z } from 'zod'
 
 useHead({ title: 'Roles & Personnel' })
 definePageMeta({ name: 'Roles & Personnel' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Roles & Personnel').params,
-    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
         query: { organizationSlug }
     }),
     solutionId = solution.value?.id
@@ -14,18 +15,37 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: personnel, refresh, status, error: getPersonnelError } = await useFetch<PersonViewModel[]>(`/api/person`, {
+const { data: personnel, refresh, status, error: getPersonnelError } = await useFetch<z.infer<typeof Person>[]>(`/api/person`, {
     query: { solutionId, organizationSlug },
-    transform: (data) => data.map((item) => {
-        item.lastModified = new Date(item.lastModified)
-        return item
-    })
+    transform: (data) => data.map((item) => ({
+        ...item,
+        lastModified: new Date(item.lastModified),
+        creationDate: new Date(item.creationDate)
+    }))
 })
 
 if (getPersonnelError.value)
     $eventBus.$emit('page-error', getPersonnelError.value)
 
-const onCreate = async (data: PersonViewModel) => {
+const viewSchema = Person.pick({
+    id: true,
+    name: true,
+    email: true,
+    description: true
+})
+
+const createSchema = Person.pick({
+    name: true,
+    email: true
+})
+
+const editSchema = Person.pick({
+    id: true,
+    name: true,
+    email: true
+})
+
+const onCreate = async (data: z.infer<typeof createSchema>) => {
     await $fetch(`/api/person`, {
         method: 'POST',
         body: {
@@ -40,7 +60,7 @@ const onCreate = async (data: PersonViewModel) => {
     refresh();
 }
 
-const onUpdate = async (data: PersonViewModel) => {
+const onUpdate = async (data: z.infer<typeof editSchema>) => {
     await $fetch(`/api/person/${data.id}`, {
         method: 'PUT',
         body: {
@@ -64,14 +84,10 @@ const onDelete = async (id: string) => {
 }
 </script>
 <template>
-    <p>
-        Roles & Personnel lists the roles and personnel involved in the project
-        along with their responsibilities, availability, and contact information.
-    </p>
+    <h1> Roles &amp; Personnel </h1>
+    <p> {{ Person.description }} </p>
 
-    <XDataTable :viewModel="{ reqId: 'text', name: 'text', email: 'text' }"
-        :createModel="{ name: 'text', email: 'text' }" :editModel="{ id: 'hidden', name: 'text', email: 'text' }"
-        :datasource="personnel" :on-create="onCreate" :on-update="onUpdate" :on-delete="onDelete"
-        :loading="status === 'pending'" :organizationSlug="organizationSlug" entityName="Person" :showRecycleBin="true">
+    <XDataTable :viewSchema="viewSchema" :createSchema="createSchema" :editSchema="editSchema" :data="personnel"
+        :onCreate="onCreate" :onDelete="onDelete" :onUpdate="onUpdate" :loading="status === 'pending'">
     </XDataTable>
 </template>

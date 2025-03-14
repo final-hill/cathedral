@@ -1,6 +1,3 @@
-import { SystemComponent } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete an system component by id.
- */
-export default deleteRequirementHttpHandler(SystemComponent)
+export default deleteRequirementHttpHandler(ReqType.SYSTEM_COMPONENT)

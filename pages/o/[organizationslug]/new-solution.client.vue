@@ -1,42 +1,50 @@
 <script lang="ts" setup>
-import type { OrganizationViewModel } from '#shared/models'
 import { slugify } from '#shared/utils';
+import { z } from 'zod';
+import { Solution } from '#shared/domain';
 
 useHead({ title: 'New Solution' })
 definePageMeta({ name: 'New Solution' })
 
 const { $eventBus } = useNuxtApp(),
     { organizationslug: organizationSlug } = useRoute('New Solution').params,
-    router = useRouter(),
-    name = ref(''),
-    slug = ref(''),
-    description = ref('')
+    router = useRouter()
 
-const { data: organization, error: getOrgError } = await useFetch<OrganizationViewModel[]>(`/api/organization/${organizationSlug}`)
+const { data: organization, error: getOrgError } = await useFetch(`/api/organization/${organizationSlug}`)
 
 if (!organization.value) {
     $eventBus.$emit('page-error', getOrgError.value)
     throw new Error('Organization not found')
 }
 
-const createSolution = async () => {
+const formSchema = Solution.innerType().pick({
+    name: true,
+    slug: true,
+    description: true
+})
+
+type FormSchema = z.infer<typeof formSchema>;
+
+const formState = reactive<FormSchema>({
+    name: '',
+    slug: '',
+    description: ''
+});
+
+const createSolution = async (data: FormSchema) => {
     try {
-        const newSolutionSlug = (await $fetch('/api/solution', {
+        const newSolutionSlug = await $fetch('/api/solution', {
             method: 'post',
             body: {
-                name: name.value,
-                description: description.value,
+                name: data.name,
+                description: data.description,
                 organizationSlug
             }
-        }).catch((e) => $eventBus.$emit('page-error', e)));
+        })
 
-        if (newSolutionSlug) {
-            router.push({ name: 'Solution', params: { organizationslug: organizationSlug, solutionslug: newSolutionSlug } });
-        } else {
-            $eventBus.$emit('page-error', 'Failed to create solution. No solution slug returned.');
-        }
+        router.push({ name: 'Solution', params: { organizationslug: organizationSlug, solutionslug: newSolutionSlug } });
     } catch (error) {
-        console.error(error)
+        $eventBus.$emit('page-error', error)
     }
 }
 
@@ -44,35 +52,11 @@ const cancel = () => {
     router.push({ name: 'Organization', params: { organizationslug: organizationSlug } });
 }
 
-watch(() => name.value, (newName) => {
-    slug.value = slugify(newName);
+watch(() => formState.name, (newName) => {
+    formState.slug = slugify(newName);
 });
 </script>
 
 <template>
-    <form autocomplete="off" @submit.prevent="createSolution" @reset="cancel">
-        <div class="field grid">
-            <label for="name" class="required col-fixed w-7rem">Name</label>
-            <InputText v-model.trim="name" name="name" class="w-23rem col" placeholder="Sample Solution"
-                :maxlength="100" required />
-        </div>
-
-        <div class="field grid">
-            <label for="slug" class="col-fixed w-7rem">Slug</label>
-            <InputText name="slug" disabled tabindex="-1" v-model="slug" variant="filled" class="w-23rem col" />
-        </div>
-
-        <div class="field grid">
-            <label for="description" class="col-fixed w-7rem">Description</label>
-            <InputText name="description" placeholder="A description of the solution" class="w-23rem col"
-                v-model.trim="description" />
-        </div>
-
-        <Toolbar class="w-30rem">
-            <template #center>
-                <Button type="submit" class="mr-4" label="Create" severity="info" />
-                <Button type="reset" class="ml-4" label="Cancel" severity="secondary" />
-            </template>
-        </Toolbar>
-    </form>
+    <XForm :schema="formSchema" :state="formState" :onSubmit="createSolution" :onCancel="cancel" />
 </template>

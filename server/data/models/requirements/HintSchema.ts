@@ -1,5 +1,5 @@
 import { Collection, Entity } from "@mikro-orm/core";
-import { ReqType } from "./ReqType.js";
+import { ReqType } from "../../../../shared/domain/requirements/ReqType.js";
 import { NoiseModel, NoiseVersionsModel } from "./NoiseSchema.js";
 
 @Entity({ discriminatorValue: ReqType.HINT })

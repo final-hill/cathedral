@@ -1,6 +1,3 @@
-import { Limit } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns a limit by id
- */
-export default getRequirementHttpHandler(Limit)
+export default getRequirementHttpHandler(ReqType.LIMIT)

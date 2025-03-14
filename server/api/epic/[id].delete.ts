@@ -1,6 +1,3 @@
-import { Epic } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete an epic by id.
- */
-export default deleteRequirementHttpHandler(Epic)
+export default deleteRequirementHttpHandler(ReqType.EPIC)

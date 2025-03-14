@@ -1,15 +1,11 @@
-import { z } from "zod"
-import { EnvironmentComponent } from "~/domain/requirements/index.js"
+import { EnvironmentComponent } from "#shared/domain"
 
-/**
- * Updates an environment component by id.
- */
-export default putRequirementHttpHandler({
-    ReqClass: EnvironmentComponent,
-    bodySchema: z.object({
-        name: z.string().optional(),
-        description: z.string().optional(),
-        parentComponentId: z.string().uuid().optional(),
-        isSilence: z.boolean().optional()
-    })
-})
+export default putRequirementHttpHandler(
+    EnvironmentComponent.pick({
+        reqType: true,
+        name: true,
+        description: true,
+        parentComponent: true,
+        isSilence: true
+    }).partial().required({ reqType: true })
+)

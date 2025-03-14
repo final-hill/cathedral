@@ -1,6 +1,3 @@
-import { UseCase } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns a UseCase by id
- */
-export default getRequirementHttpHandler(UseCase)
+export default getRequirementHttpHandler(ReqType.USE_CASE)

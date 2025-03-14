@@ -1,9 +1,16 @@
 {
     "editor.formatOnSave": true,
+    "editor.quickSuggestions": {
+        // used for tailwindcss
+        "strings": "on"
+    },
     "git.pruneOnFetch": true,
     "explorer.fileNesting.enabled": true,
     "explorer.fileNesting.patterns": {
         "*.ts": "${capture}.test.ts",
         "*.vue": "${capture}.test.ts"
+    },
+    "files.associations": {
+        "*.css": "tailwindcss"
     }
 }

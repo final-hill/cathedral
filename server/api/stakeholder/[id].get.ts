@@ -1,6 +1,3 @@
-import { Stakeholder } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns a stakeholder by id
- */
-export default getRequirementHttpHandler(Stakeholder)
+export default getRequirementHttpHandler(ReqType.STAKEHOLDER)

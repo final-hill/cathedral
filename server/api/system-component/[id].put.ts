@@ -1,15 +1,11 @@
-import { z } from "zod"
-import { SystemComponent } from "~/domain/requirements/index.js"
+import { SystemComponent } from "#shared/domain"
 
-/**
- * Updates an environment component by id.
- */
-export default putRequirementHttpHandler({
-    ReqClass: SystemComponent,
-    bodySchema: z.object({
-        name: z.string().optional(),
-        description: z.string().optional(),
-        parentComponent: z.string().uuid().optional(),
-        isSilence: z.boolean().optional()
-    })
-})
+export default putRequirementHttpHandler(
+    SystemComponent.pick({
+        reqType: true,
+        name: true,
+        description: true,
+        parentComponent: true,
+        isSilence: true
+    }).partial().required({ reqType: true })
+)

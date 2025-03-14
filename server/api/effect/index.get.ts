@@ -1,14 +1,10 @@
-import { z } from "zod"
-import { Effect } from "~/domain/requirements/index.js"
+import { Effect } from "#shared/domain"
 
-/**
- * Returns all effects that match the query parameters
- */
-export default findRequirementsHttpHandler({
-    ReqClass: Effect,
-    querySchema: z.object({
-        name: z.string().optional(),
-        description: z.string().optional(),
-        isSilence: z.boolean().optional().default(false)
-    })
-})
+export default findRequirementsHttpHandler(
+    Effect.pick({
+        reqType: true,
+        name: true,
+        description: true,
+        isSilence: true
+    }).partial().required({ reqType: true })
+)

@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import type { LimitViewModel, SolutionViewModel } from '#shared/models'
+import { Limit } from '#shared/domain'
+import type { z } from 'zod'
 
 useHead({ title: 'Limitations' })
 definePageMeta({ name: 'Limitations' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Limitations').params,
-    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
         query: { organizationSlug }
     }),
     solutionId = solution.value?.id
@@ -14,18 +15,38 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: limits, status, refresh, error: getLimitsError } = await useFetch<LimitViewModel[]>(`/api/limit`, {
+const { data: limits, status, refresh, error: getLimitsError } = await useFetch<z.infer<typeof Limit>[]>(`/api/limit`, {
     query: { solutionId, organizationSlug },
-    transform: (data) => data.map((item) => {
-        item.lastModified = new Date(item.lastModified)
-        return item
-    })
+    transform: (data) => data.map((item) => ({
+        ...item,
+        lastModified: new Date(item.lastModified),
+        creationDate: new Date(item.creationDate)
+    }))
 })
 
 if (getLimitsError.value)
     $eventBus.$emit('page-error', getLimitsError.value)
 
-const onCreate = async (data: LimitViewModel) => {
+const viewSchema = Limit.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const createSchema = Limit.pick({
+    name: true,
+    description: true
+})
+
+const editSchema = Limit.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const onCreate = async (data: z.infer<typeof createSchema>) => {
     await $fetch(`/api/limit`, {
         method: 'POST',
         body: {
@@ -39,7 +60,7 @@ const onCreate = async (data: LimitViewModel) => {
     refresh()
 }
 
-const onUpdate = async (data: LimitViewModel) => {
+const onUpdate = async (data: z.infer<typeof editSchema>) => {
     await $fetch(`/api/limit/${data.id}`, {
         method: 'PUT', body: {
             solutionId,
@@ -63,15 +84,10 @@ const onDelete = async (id: string) => {
 }
 </script>
 <template>
-    <p>
-        Limitations are the constraints on functionality. They describe What that is out-of-scope and excluded.
-        Example: "Providing an interface to the user to change the color of the background is out-of-scope."
-    </p>
+    <h1> Limitations </h1>
+    <p> {{ Limit.description }} </p>
 
-    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
-        :createModel="{ name: 'text', description: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="limits" :on-create="onCreate"
-        :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationSlug"
-        entityName="Limit" :showRecycleBin="true">
+    <XDataTable :viewSchema="viewSchema" :createSchema="createSchema" :editSchema="editSchema" :data="limits"
+        :onCreate="onCreate" :onDelete="onDelete" :onUpdate="onUpdate" :loading="status === 'pending'">
     </XDataTable>
 </template>

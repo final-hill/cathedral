@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import { MoscowPriority } from '~/domain/requirements/MoscowPriority.js'
-import type { EpicViewModel, StakeholderViewModel, FunctionalBehaviorViewModel, OutcomeViewModel, SolutionViewModel } from '#shared/models'
+import { Epic, Stakeholder, FunctionalBehavior, Outcome, MoscowPriority } from '#shared/domain'
+import type { z } from 'zod';
 
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Goal Scenarios' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Scenarios').params,
-    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
         query: { organizationSlug }
     }),
     solutionId = solution.value?.id;
@@ -21,16 +21,17 @@ const [
     { data: functionalBehaviors, error: getFunctionalBehaviorsError },
     { data: outcomes, error: getOutcomesError },
 ] = await Promise.all([
-    useFetch<EpicViewModel[]>(`/api/epic`, {
+    useFetch<z.infer<typeof Epic>[]>(`/api/epic`, {
         query: { solutionId, organizationSlug },
-        transform: (data) => data.map((item) => {
-            item.lastModified = new Date(item.lastModified)
-            return item
-        })
+        transform: (data) => data.map((item) => ({
+            ...item,
+            lastModified: new Date(item.lastModified),
+            creationDate: new Date(item.creationDate)
+        }))
     }),
-    useFetch<StakeholderViewModel[]>(`/api/stakeholder`, { query: { solutionId, organizationSlug } }),
-    useFetch<FunctionalBehaviorViewModel[]>(`/api/functional-behavior`, { query: { solutionId, organizationSlug } }),
-    useFetch<OutcomeViewModel[]>(`/api/outcome`, { query: { solutionId, organizationSlug } })
+    useFetch<z.infer<typeof Stakeholder>[]>(`/api/stakeholder`, { query: { solutionId, organizationSlug } }),
+    useFetch<z.infer<typeof FunctionalBehavior>[]>(`/api/functional-behavior`, { query: { solutionId, organizationSlug } }),
+    useFetch<z.infer<typeof Outcome>[]>(`/api/outcome`, { query: { solutionId, organizationSlug } })
 ])
 
 if (getEpicsError.value)
@@ -42,7 +43,26 @@ if (getFunctionalBehaviorsError.value)
 if (getOutcomesError.value)
     $eventBus.$emit('page-error', getOutcomesError.value);
 
-const onEpicCreate = async (epic: EpicViewModel) => {
+const viewSchema = Epic.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const createSchema = Epic.pick({
+    name: true,
+    description: true
+})
+
+const editSchema = Epic.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const onCreate = async (epic: z.infer<typeof createSchema>) => {
     await $fetch(`/api/epic`, {
         method: 'POST',
         body: {
@@ -57,7 +77,7 @@ const onEpicCreate = async (epic: EpicViewModel) => {
     refresh();
 }
 
-const onEpicUpdate = async (epic: EpicViewModel) => {
+const onUpdate = async (epic: z.infer<typeof editSchema>) => {
     await $fetch(`/api/epic/${epic.id}`, {
         method: 'PUT',
         body: {
@@ -72,7 +92,7 @@ const onEpicUpdate = async (epic: EpicViewModel) => {
     refresh();
 }
 
-const onEpicDelete = async (id: string) => {
+const onDelete = async (id: string) => {
     await $fetch(`/api/epic/${id}`, {
         method: 'DELETE',
         body: { solutionId, organizationSlug }
@@ -84,9 +104,7 @@ const onEpicDelete = async (id: string) => {
 <template>
     <h1>Scenarios</h1>
 
-    <p>
-        This section defines the main scenarios that the system must support to achieve the goals of the solution.
-    </p>
+    <p> {{ Epic.description }} </p>
     <p>
         Before you can begin, you must define one or more
         <NuxtLink class="underline"
@@ -101,25 +119,7 @@ const onEpicDelete = async (id: string) => {
         for the solution.
     </p>
 
-    <XDataTable :viewModel="{
-        reqId: 'text',
-        name: 'text',
-        primaryActor: { type: 'requirement', options: roles ?? [] },
-        functionalBehavior: { type: 'requirement', options: functionalBehaviors ?? [] },
-        outcome: { type: 'requirement', options: outcomes ?? [] }
-    }" :createModel="{
-        name: 'text',
-        primaryActor: { type: 'requirement', options: roles ?? [] },
-        functionalBehavior: { type: 'requirement', options: functionalBehaviors ?? [] },
-        outcome: { type: 'requirement', options: outcomes ?? [] }
-    }" :editModel="{
-        id: 'hidden',
-        name: 'text',
-        primaryActor: { type: 'requirement', options: roles ?? [] },
-        functionalBehavior: { type: 'requirement', options: functionalBehaviors ?? [] },
-        outcome: { type: 'requirement', options: outcomes ?? [] }
-    }" :datasource="epics" :onCreate="onEpicCreate" :onUpdate="onEpicUpdate" :onDelete="onEpicDelete"
-        :loading="status === 'pending'" :organizationSlug="organizationSlug" entityName="UserStory"
-        :showRecycleBin="true">
+    <XDataTable :viewSchema="viewSchema" :createSchema="createSchema" :editSchema="editSchema" :data="epics"
+        :onCreate="onCreate" :onDelete="onDelete" :onUpdate="onUpdate" :loading="status === 'pending'">
     </XDataTable>
 </template>

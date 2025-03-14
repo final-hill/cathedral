@@ -1,7 +1,7 @@
 import { Collection, Entity, Enum } from "@mikro-orm/core";
-import { ConstraintCategory } from '../../../../domain/requirements/index.js';
+import { ConstraintCategory } from '../../../../shared/domain/requirements/enums.js';
 import { RequirementModel, RequirementVersionsModel } from "./RequirementSchema.js";
-import { ReqType } from "./ReqType.js";
+import { ReqType } from "../../../../shared/domain/requirements/ReqType.js";
 
 @Entity({ discriminatorValue: ReqType.CONSTRAINT })
 export class ConstraintModel extends RequirementModel {

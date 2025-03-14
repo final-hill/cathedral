@@ -1,18 +1,19 @@
 import { getServerSession } from '#auth'
 import { OrganizationInteractor } from "~/application"
-import { type ZodObject, z } from "zod"
-import { Requirement } from "~/domain/requirements"
+import { type ZodObject } from "zod"
 import { OrganizationRepository } from '../data/repositories/OrganizationRepository'
 import handleDomainException from './handleDomainException'
+import { Organization, Solution } from '~/shared/domain'
+
+const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
 export default function findRequirementsHttpHandler<
-    RCons extends typeof Requirement,
-    Q extends ZodObject<any>
->({ ReqClass, querySchema }: { ReqClass: RCons, querySchema: Q }) {
+    QuerySchema extends ZodObject<any>
+>(querySchema: QuerySchema) {
     const validatedQuerySchema = querySchema.extend({
-        solutionId: z.string().uuid(),
-        organizationId: z.string().uuid().optional(),
-        organizationSlug: z.string().max(100).optional()
+        solutionId: Solution.innerType().pick({ id: true }).shape.id,
+        organizationId,
+        organizationSlug
     }).refine((value) => {
         return value.organizationId !== undefined || value.organizationSlug !== undefined;
     }, "At least one of organizationId or organizationSlug should be provided");
@@ -26,6 +27,6 @@ export default function findRequirementsHttpHandler<
                 userId: session.id
             })
 
-        return await organizationInteractor.findSolutionRequirements({ solutionId, ReqClass, query }).catch(handleDomainException)
+        return await organizationInteractor.findSolutionRequirements({ solutionId, query }).catch(handleDomainException)
     })
 }

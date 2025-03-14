@@ -1,18 +1,19 @@
 import { z } from "zod"
 import { getServerSession } from '#auth'
 import { OrganizationInteractor } from '~/application'
-import { Requirement } from '~/domain/requirements'
 import { OrganizationRepository } from "../data/repositories/OrganizationRepository"
 import handleDomainException from "./handleDomainException"
+import { ReqType } from "#shared/domain/requirements/ReqType";
+import { Organization, Solution } from "~/shared/domain"
 
-const paramSchema = z.object({
-    id: z.string().uuid()
-})
+const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
+
+const paramSchema = Organization.innerType().pick({ id: true })
 
 const bodySchema = z.object({
-    solutionId: z.string().uuid(),
-    organizationId: z.string().uuid().optional(),
-    organizationSlug: z.string().max(100).optional(),
+    solutionId: Solution.innerType().pick({ id: true }).shape.id,
+    organizationId,
+    organizationSlug
 }).refine((value) => {
     return value.organizationId !== undefined || value.organizationSlug !== undefined;
 }, "At least one of organizationId or organizationSlug should be provided");
@@ -20,10 +21,10 @@ const bodySchema = z.object({
 /**
  * Create an event handler for deleting a requirement
  *
- * @param ReqClass The class of the requirement to delete
+ * @param reqType The type of the requirement to delete
  * @returns The event handler
  */
-export default function deleteRequirementHttpHandler<RCons extends typeof Requirement>(ReqClass: RCons) {
+export default function deleteRequirementHttpHandler(reqType: ReqType) {
     return defineEventHandler(async (event) => {
         const { id } = await validateEventParams(event, paramSchema),
             { solutionId, organizationId, organizationSlug } = await validateEventBody(event, bodySchema),
@@ -33,6 +34,6 @@ export default function deleteRequirementHttpHandler<RCons extends typeof Requir
                 userId: session.id
             })
 
-        await organizationInteractor.deleteRequirement({ ReqClass, id, solutionId }).catch(handleDomainException)
+        await organizationInteractor.deleteRequirement({ reqType, id, solutionId }).catch(handleDomainException)
     })
 }

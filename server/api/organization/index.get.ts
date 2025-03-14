@@ -1,10 +1,10 @@
-import { z } from "zod"
 import { OrganizationCollectionInteractor } from '~/application'
 import { OrganizationCollectionRepository } from "~/server/data/repositories"
 import { getServerSession } from '#auth'
 import handleDomainException from "~/server/utils/handleDomainException"
+import { Organization } from "#shared/domain"
 
-const querySchema = z.object({})
+const querySchema = Organization.innerType().partial()
 
 /**
  * Returns all organizations that match the query parameters
@@ -17,5 +17,5 @@ export default defineEventHandler(async (event) => {
             userId: session.id
         })
 
-    return orgColInt.findOrganizations({}).catch(handleDomainException)
+    return orgColInt.findOrganizations(query).catch(handleDomainException)
 })

@@ -1,6 +1,3 @@
-import { Assumption } from '~/domain/requirements'
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns an assumption associated with a solution
- */
-export default getRequirementHttpHandler(Assumption)
+export default getRequirementHttpHandler(ReqType.ASSUMPTION)

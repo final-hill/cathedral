@@ -1,6 +1,3 @@
-import { Effect } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete an effect by id.
- */
-export default deleteRequirementHttpHandler(Effect)
+export default deleteRequirementHttpHandler(ReqType.EFFECT)

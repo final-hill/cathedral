@@ -1,6 +1,3 @@
-import { Obstacle } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete obstacle by id.
- */
-export default deleteRequirementHttpHandler(Obstacle)
+export default deleteRequirementHttpHandler(ReqType.OBSTACLE)

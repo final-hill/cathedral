@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import { MoscowPriority } from '~/domain/requirements/MoscowPriority.js';
-import type { AssumptionViewModel, EffectViewModel, FunctionalBehaviorViewModel, OutcomeViewModel, StakeholderViewModel, SolutionViewModel, UseCaseViewModel, UserStoryViewModel } from '#shared/models';
+import { Assumption, Effect, FunctionalBehavior, Outcome, Scenario, Stakeholder, UseCase, UserStory } from '#shared/domain';
+import type { z } from 'zod';
 
 useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Scenarios' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Scenarios').params,
-    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
         query: { organizationSlug }
     }),
     solutionId = solution.value?.id!;
@@ -15,25 +15,32 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: userStories, refresh: refreshUserStories, error: getUserStoriesError, status: userStoryStatus } = await useFetch<UserStoryViewModel[]>(`/api/user-story`, {
+const tabItems = ref([
+    { label: 'User Stories', slot: 'user-stories' },
+    { label: 'Use Cases', slot: 'use-cases' }
+])
+
+const { data: userStories, refresh: refreshUserStories, error: getUserStoriesError, status: userStoryStatus } = await useFetch<z.infer<typeof UserStory>[]>(`/api/user-story`, {
     query: { solutionId, organizationSlug },
-    transform: (data) => data.map((item) => {
-        item.lastModified = new Date(item.lastModified)
-        return item
-    })
+    transform: (data) => data.map((item) => ({
+        ...item,
+        lastModified: new Date(item.lastModified),
+        creationDate: new Date(item.creationDate)
+    }))
 }),
-    { data: useCases, refresh: refreshUseCases, error: getUseCasesError, status: useCaseStatus } = await useFetch<UseCaseViewModel[]>(`/api/use-case`, {
+    { data: useCases, refresh: refreshUseCases, error: getUseCasesError, status: useCaseStatus } = await useFetch<z.infer<typeof UseCase>[]>(`/api/use-case`, {
         query: { solutionId, organizationSlug },
-        transform: (data) => data.map((item) => {
-            item.lastModified = new Date(item.lastModified)
-            return item
-        })
+        transform: (data) => data.map((item) => ({
+            ...item,
+            lastModified: new Date(item.lastModified),
+            creationDate: new Date(item.creationDate)
+        }))
     }),
-    { data: roles, error: getRolesError } = await useFetch<StakeholderViewModel[]>(`/api/stakeholder`, { query: { solutionId, organizationSlug } }),
-    { data: functionalBehaviors, error: getFunctionalBehaviorsError } = await useFetch<FunctionalBehaviorViewModel[]>(`/api/functional-behavior`, { query: { solutionId, organizationSlug } }),
-    { data: outcomes, error: getOutcomesError } = await useFetch<OutcomeViewModel[]>(`/api/outcome`, { query: { solutionId, organizationSlug } }),
-    { data: assumptions, error: getAssumptionsError } = await useFetch<AssumptionViewModel[]>(`/api/assumption`, { query: { solutionId, organizationSlug } }),
-    { data: effects, error: getEffectsError } = await useFetch<EffectViewModel[]>(`/api/effect`, { query: { solutionId, organizationSlug } }),
+    { data: roles, error: getRolesError } = await useFetch<z.infer<typeof Stakeholder>[]>(`/api/stakeholder`, { query: { solutionId, organizationSlug } }),
+    { data: functionalBehaviors, error: getFunctionalBehaviorsError } = await useFetch<z.infer<typeof FunctionalBehavior>[]>(`/api/functional-behavior`, { query: { solutionId, organizationSlug } }),
+    { data: outcomes, error: getOutcomesError } = await useFetch<z.infer<typeof Outcome>[]>(`/api/outcome`, { query: { solutionId, organizationSlug } }),
+    { data: assumptions, error: getAssumptionsError } = await useFetch<z.infer<typeof Assumption>[]>(`/api/assumption`, { query: { solutionId, organizationSlug } }),
+    { data: effects, error: getEffectsError } = await useFetch<z.infer<typeof Effect>[]>(`/api/effect`, { query: { solutionId, organizationSlug } }),
     triggerIds = ref<{ id: string, name: string }[]>([])
 
 if (getUserStoriesError.value)
@@ -49,16 +56,64 @@ if (getAssumptionsError.value)
 if (getEffectsError.value)
     $eventBus.$emit('page-error', getEffectsError.value);
 
-const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
+const userStoryViewSchema = UserStory.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    primaryActor: true,
+    functionalBehavior: true,
+    outcome: true,
+    priority: true
+})
+
+const useCaseViewSchema = UseCase.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    primaryActor: true,
+    outcome: true,
+    priority: true
+})
+
+const userStoryCreateSchema = UserStory.pick({
+    name: true,
+    primaryActor: true,
+    outcome: true,
+    functionalBehavior: true,
+    priority: true
+})
+
+const useCaseCreateSchema = UseCase.pick({
+    name: true,
+    primaryActor: true,
+    outcome: true,
+    priority: true
+})
+
+const userStoryEditSchema = UserStory.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    primaryActor: true,
+    outcome: true,
+    functionalBehavior: true,
+    priority: true
+})
+
+const useCaseEditSchema = UseCase.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    primaryActor: true,
+    outcome: true,
+    priority: true
+})
+
+const onUserStoryCreate = async (userStory: z.infer<typeof userStoryCreateSchema>) => {
     await $fetch(`/api/user-story`, {
         method: 'POST',
         body: {
-            name: userStory.name,
-            description: '',
-            primaryActor: userStory.primaryActor,
-            priority: userStory.priority,
-            outcome: userStory.outcome,
-            functionalBehavior: userStory.functionalBehavior,
+            ...userStory,
             solutionId,
             organizationSlug
         }
@@ -67,65 +122,39 @@ const onUserStoryCreate = async (userStory: UserStoryViewModel) => {
     refreshUserStories();
 }
 
-const onUserStoryUpdate = async (userStory: UserStoryViewModel) => {
+const onUserStoryUpdate = async (userStory: z.infer<typeof userStoryEditSchema>) => {
     await $fetch(`/api/user-story/${userStory.id}`, {
         method: 'PUT',
         body: {
-            name: userStory.name,
-            primaryActor: userStory.primaryActor,
-            outcome: userStory.outcome,
-            functionalBehavior: userStory.functionalBehavior,
+            ...userStory,
             solutionId,
             organizationSlug,
-            description: '',
-            priority: userStory.priority
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
 
     refreshUserStories();
 }
 
-const onUseCaseCreate = async (useCase: UseCaseViewModel) => {
+const onUseCaseCreate = async (useCase: z.infer<typeof useCaseCreateSchema>) => {
     await $fetch(`/api/use-case`, {
         method: 'POST',
         body: {
-            name: useCase.name,
-            scope: useCase.scope,
-            level: useCase.level,
-            primaryActor: useCase.primaryActor,
-            outcome: useCase.outcome,
-            precondition: useCase.precondition,
-            triggerId: useCase.triggerId,
-            mainSuccessScenario: useCase.mainSuccessScenario,
-            successGuarantee: useCase.successGuarantee,
-            extensions: useCase.extensions,
+            ...useCase,
             solutionId,
             organizationSlug,
-            description: '',
-            priority: useCase.priority
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
 
     refreshUseCases();
 }
 
-const onUseCaseUpdate = async (useCase: UseCaseViewModel) => {
+const onUseCaseUpdate = async (useCase: z.infer<typeof useCaseEditSchema>) => {
     await $fetch(`/api/use-case/${useCase.id}`, {
         method: 'PUT',
         body: {
-            name: useCase.name,
-            scope: useCase.scope,
-            level: useCase.level,
-            primaryActor: useCase.primaryActor,
-            outcome: useCase.outcome,
-            precondition: useCase.precondition,
-            triggerId: useCase.triggerId,
-            mainSuccessScenario: useCase.mainSuccessScenario,
-            successGuarantee: useCase.successGuarantee,
-            extensions: useCase.extensions,
+            ...useCase,
             solutionId,
             organizationSlug,
-            description: ''
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
 
@@ -154,87 +183,24 @@ const onUseCaseDelete = async (id: string) => {
 <template>
     <h1>Scenarios</h1>
 
-    <p>Scenarios are the detailed steps that an actor takes to achieve a goal.</p>
+    <p> {{ Scenario.description }}</p>
 
-    <TabView>
-        <TabPanel header="User Stories">
-            <p>
-                A User Story specifies a goal that an actor wants to achieve by
-                leveraging a particular behavior of the system.
-            </p>
+    <UTabs :items="tabItems">
+        <template #user-stories="{ item }">
+            <p> {{ UserStory.description }} </p>
 
-            <XDataTable :viewModel="{
-                reqId: 'text',
-                name: 'text',
-                primaryActor: { type: 'requirement', options: roles ?? [] },
-                functionalBehavior: { type: 'requirement', options: functionalBehaviors ?? [] },
-                outcome: { type: 'requirement', options: outcomes ?? [] },
-                priority: 'text'
-            }" :createModel="{
-                name: 'text',
-                primaryActor: { type: 'requirement', options: roles ?? [] },
-                functionalBehavior: { type: 'requirement', options: functionalBehaviors ?? [] },
-                outcome: { type: 'requirement', options: outcomes ?? [] },
-                priority: Object.values(MoscowPriority)
-            }" :editModel="{
-                id: 'hidden',
-                name: 'text',
-                primaryActor: { type: 'requirement', options: roles ?? [] },
-                functionalBehavior: { type: 'requirement', options: functionalBehaviors ?? [] },
-                outcome: { type: 'requirement', options: outcomes ?? [] },
-                priority: Object.values(MoscowPriority)
-            }" :datasource="userStories" :onCreate="onUserStoryCreate" :onUpdate="onUserStoryUpdate"
-                :onDelete="onUserStoryDelete" :loading="userStoryStatus === 'pending'"
-                :organizationSlug="organizationSlug" entityName="UserStory" :showRecycleBin="true">
+            <XDataTable :viewSchema="userStoryViewSchema" :createSchema="userStoryCreateSchema"
+                :editSchema="userStoryEditSchema" :data="userStories" :onCreate="onUserStoryCreate"
+                :onDelete="onUserStoryDelete" :onUpdate="onUserStoryUpdate" :loading="userStoryStatus === 'pending'">
             </XDataTable>
-        </TabPanel>
-        <TabPanel header="Use Cases">
-            <p>
-                A Use Case describes a complete interaction between an actor and the
-                system to achieve a goal.
-            </p>
-            <XDataTable :viewModel="{
-                reqId: 'text',
-                name: 'text',
-                scope: 'text',
-                level: 'text',
-                priority: 'text',
-                primaryActor: { type: 'requirement', options: roles ?? [] },
-                outcome: { type: 'requirement', options: outcomes ?? [] },
-                precondition: { type: 'requirement', options: assumptions ?? [] },
-                triggerId: 'text',
-                mainSuccessScenario: 'text',
-                successGuarantee: { type: 'requirement', options: effects ?? [] },
-                extensions: 'text'
-            }" :createModel="{
-                name: 'text',
-                scope: 'text',
-                level: 'text',
-                priority: Object.values(MoscowPriority),
-                primaryActor: { type: 'requirement', options: roles ?? [] },
-                outcome: { type: 'requirement', options: outcomes ?? [] },
-                precondition: { type: 'requirement', options: assumptions ?? [] },
-                triggerId: 'text',
-                mainSuccessScenario: 'text',
-                successGuarantee: { type: 'requirement', options: effects ?? [] },
-                extensions: 'text'
-            }" :editModel="{
-                id: 'hidden',
-                name: 'text',
-                scope: 'text',
-                level: 'text',
-                priority: Object.values(MoscowPriority),
-                primaryActor: { type: 'requirement', options: roles ?? [] },
-                outcome: { type: 'requirement', options: outcomes ?? [] },
-                precondition: { type: 'requirement', options: assumptions ?? [] },
-                triggerId: 'text',
-                mainSuccessScenario: 'text',
-                successGuarantee: { type: 'requirement', options: effects ?? [] },
-                extensions: 'text'
-            }" :datasource="useCases!" :onCreate="onUseCaseCreate" :onUpdate="onUseCaseUpdate"
-                :onDelete="onUseCaseDelete" :loading="useCaseStatus === 'pending'" :organizationSlug="organizationSlug"
-                entityName="UseCase" :showRecycleBin="true">
+        </template>
+        <template #use-cases="{ item }">
+            <p> {{ UseCase.description }} </p>
+
+            <XDataTable :viewSchema="useCaseViewSchema" :createSchema="useCaseCreateSchema"
+                :editSchema="useCaseEditSchema" :data="useCases" :onCreate="onUseCaseCreate" :onDelete="onUseCaseDelete"
+                :onUpdate="onUseCaseUpdate" :loading="useCaseStatus === 'pending'">
             </XDataTable>
-        </TabPanel>
-    </TabView>
+        </template>
+    </UTabs>
 </template>

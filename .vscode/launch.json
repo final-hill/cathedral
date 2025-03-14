@@ -20,9 +20,10 @@
             "request": "launch",
             "name": "server: nuxt",
             "outputCapture": "std",
-            "program": "${workspaceFolder}/node_modules/nuxi/bin/nuxi.mjs",
+            "program": "${workspaceFolder}/node_modules/@nuxt/cli/bin/nuxi.mjs",
             "args": [
-                "dev"
+                "dev",
+                "--inspect"
             ],
         }
     ],

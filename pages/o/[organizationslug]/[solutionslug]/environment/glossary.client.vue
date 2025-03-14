@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import type { GlossaryTermViewModel, SolutionViewModel } from '#shared/models'
+import { GlossaryTerm } from '#shared/domain'
+import type { z } from 'zod';
 
 useHead({ title: 'Glossary' })
 definePageMeta({ name: 'Glossary' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Glossary').params,
-    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
         query: { organizationSlug }
     }),
     solutionId = solution.value?.id;
@@ -14,18 +15,38 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = await useFetch<GlossaryTermViewModel[]>(`/api/glossary-term`, {
+const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = await useFetch(`/api/glossary-term`, {
     query: { solutionId, organizationSlug },
-    transform: (data) => data.map((item) => {
-        item.lastModified = new Date(item.lastModified)
-        return item
-    })
+    transform: (data) => data.map((item) => ({
+        ...item,
+        lastModified: new Date(item.lastModified),
+        creationDate: new Date(item.creationDate)
+    }))
 })
 
 if (getGlossaryTermsError.value)
     $eventBus.$emit('page-error', getGlossaryTermsError.value)
 
-const onCreate = async (data: GlossaryTermViewModel) => {
+const viewSchema = GlossaryTerm.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const createSchema = GlossaryTerm.pick({
+    name: true,
+    description: true
+})
+
+const editSchema = GlossaryTerm.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const onCreate = async (data: z.infer<typeof createSchema>) => {
     await $fetch(`/api/glossary-term`, {
         method: 'POST',
         body: {
@@ -39,7 +60,7 @@ const onCreate = async (data: GlossaryTermViewModel) => {
     refresh()
 }
 
-const onUpdate = async (data: GlossaryTermViewModel) => {
+const onUpdate = async (data: z.infer<typeof editSchema>) => {
     await $fetch(`/api/glossary-term/${data.id}`, {
         method: 'PUT',
         body: {
@@ -64,13 +85,9 @@ const onDelete = async (id: string) => {
 </script>
 
 <template>
-    <p>
-        A Glossary is a list of terms in a particular domain of knowledge with the definitions for those terms.
-    </p>
-    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
-        :createModel="{ name: 'text', description: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="glossaryTerms"
-        :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'"
-        :organizationSlug="organizationSlug" entityName="GlossaryTerm" :showRecycleBin="true">
+    <h1> Glossary </h1>
+    <p> {{ GlossaryTerm.description }} </p>
+    <XDataTable :viewSchema="viewSchema" :createSchema="createSchema" :editSchema="editSchema" :data="glossaryTerms"
+        :onCreate="onCreate" :onDelete="onDelete" :onUpdate="onUpdate" :loading="status === 'pending'">
     </XDataTable>
 </template>

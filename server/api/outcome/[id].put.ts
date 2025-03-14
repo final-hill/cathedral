@@ -1,14 +1,10 @@
-import { z } from "zod"
-import { Outcome } from "~/domain/requirements/index.js"
+import { Outcome } from "#shared/domain"
 
-/**
- * Updates an outcome by id.
- */
-export default putRequirementHttpHandler({
-    ReqClass: Outcome,
-    bodySchema: z.object({
-        name: z.string().optional(),
-        description: z.string().optional(),
-        isSilence: z.boolean().optional()
-    })
-})
+export default putRequirementHttpHandler(
+    Outcome.pick({
+        reqType: true,
+        name: true,
+        description: true,
+        isSilence: true
+    }).partial().required({ reqType: true })
+)

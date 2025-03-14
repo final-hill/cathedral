@@ -1,14 +1,10 @@
-import { z } from "zod"
-import { Obstacle } from "~/domain/requirements/index.js"
+import { Obstacle } from "#shared/domain"
 
-/**
- * Updates an obstacle by id.
- */
-export default putRequirementHttpHandler({
-    ReqClass: Obstacle,
-    bodySchema: z.object({
-        name: z.string().optional(),
-        description: z.string().optional(),
-        isSilence: z.boolean().optional()
-    })
-})
+export default putRequirementHttpHandler(
+    Obstacle.pick({
+        reqType: true,
+        name: true,
+        description: true,
+        isSilence: true
+    }).partial().required({ reqType: true })
+)

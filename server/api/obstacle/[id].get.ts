@@ -1,6 +1,3 @@
-import { Obstacle } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns a obstacle by id
- */
-export default getRequirementHttpHandler(Obstacle)
+export default getRequirementHttpHandler(ReqType.OBSTACLE)

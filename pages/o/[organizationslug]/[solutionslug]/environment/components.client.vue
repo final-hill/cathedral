@@ -1,22 +1,24 @@
 <script lang="ts" setup>
 import { useHead, useRoute, useNuxtApp, useFetch } from '#imports';
-import type { EnvironmentComponentViewModel, SolutionViewModel } from '#shared/models';
+import { EnvironmentComponent } from '#shared/domain';
+import { z } from 'zod';
 
 useHead({ title: 'Components' })
 definePageMeta({ name: 'Environment Components' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Environment Components').params,
-    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
         query: { organizationSlug }
     }),
     solutionId = solution.value?.id,
-    { data: environmentComponents, status, refresh, error: getEnvironmentComponentsError } = await useFetch<EnvironmentComponentViewModel[]>(`/api/environment-component`, {
+    { data: environmentComponents, status, refresh, error: getEnvironmentComponentsError } = await useFetch<z.infer<typeof EnvironmentComponent>[]>(`/api/environment-component`, {
         query: { solutionId, organizationSlug },
-        transform: (data) => data.map((item) => {
-            item.lastModified = new Date(item.lastModified)
-            return item
-        })
+        transform: (data) => data.map((item) => ({
+            ...item,
+            lastModified: new Date(item.lastModified),
+            creationDate: new Date(item.creationDate)
+        }))
     })
 
 if (getSolutionError.value)
@@ -25,7 +27,26 @@ if (getSolutionError.value)
 if (getEnvironmentComponentsError.value)
     $eventBus.$emit('page-error', getEnvironmentComponentsError.value)
 
-const onCreate = async (data: EnvironmentComponentViewModel) => {
+const viewSchema = EnvironmentComponent.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const createSchema = EnvironmentComponent.pick({
+    name: true,
+    description: true
+})
+
+const editSchema = EnvironmentComponent.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const onCreate = async (data: z.infer<typeof createSchema>) => {
     await $fetch(`/api/environment-component`, {
         method: 'POST',
         body: {
@@ -47,7 +68,7 @@ const onDelete = async (id: string) => {
     refresh()
 }
 
-const onUpdate = async (data: EnvironmentComponentViewModel) => {
+const onUpdate = async (data: z.infer<typeof editSchema>) => {
     await $fetch(`/api/environment-component/${data.id}`, {
         method: 'PUT',
         body: {
@@ -62,14 +83,10 @@ const onUpdate = async (data: EnvironmentComponentViewModel) => {
 </script>
 
 <template>
-    <p>
-        Environment components are the EXTERNAL elements that the system interacts with.
-        These external components expose interfaces that the system uses to communicate with.
-    </p>
-    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
-        :createModel="{ name: 'text', description: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="environmentComponents"
-        :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'"
-        :organizationSlug="organizationSlug" entityName="EnvironmentComponent" :showRecycleBin="true">
+    <h1> Environment Components </h1>
+    <p> {{ EnvironmentComponent.description }} </p>
+    <XDataTable :viewSchema="viewSchema" :createSchema="createSchema" :editSchema="editSchema"
+        :data="environmentComponents" :onCreate="onCreate" :onDelete="onDelete" :onUpdate="onUpdate"
+        :loading="status === 'pending'">
     </XDataTable>
 </template>

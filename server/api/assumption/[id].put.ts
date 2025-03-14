@@ -1,14 +1,10 @@
-import { z } from "zod"
-import { Assumption } from '~/domain/requirements'
+import { Assumption } from '#shared/domain'
 
-/**
- * Updates an assumption by id.
- */
-export default putRequirementHttpHandler({
-    ReqClass: Assumption,
-    bodySchema: z.object({
-        name: z.string().optional(),
-        description: z.string().optional(),
-        isSilence: z.boolean().optional()
-    })
-})
+export default putRequirementHttpHandler(
+    Assumption.pick({
+        reqType: true,
+        name: true,
+        description: true,
+        isSilence: true
+    }).partial().required({ reqType: true })
+)

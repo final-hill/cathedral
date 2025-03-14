@@ -1,13 +1,14 @@
 <script lang="ts" setup>
-import type { OutcomeViewModel, SolutionViewModel } from '#shared/models';
-import { debounce } from '~/shared/utils';
+import { Outcome } from '#shared/domain';
+import { z } from 'zod';
 
 useHead({ title: 'Context and Objective' })
 definePageMeta({ name: 'Context and Objective' })
 
 const { $eventBus } = useNuxtApp(),
+    router = useRouter(),
     { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Context and Objective').params,
-    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
         query: { organizationSlug }
     }),
     solutionId = solution.value?.id;
@@ -15,39 +16,44 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: outcomes, error: getOutcomesError } = await useFetch<OutcomeViewModel[]>(`/api/outcome`, {
+const { data: outcomes, error: getOutcomesError } = await useFetch<z.infer<typeof Outcome>[]>(`/api/outcome`, {
     query: { name: 'G.1', solutionId, organizationSlug }
 });
 
-if (getOutcomesError.value)
+if (getOutcomesError.value || !outcomes.value || outcomes.value.length === 0)
     $eventBus.$emit('page-error', getOutcomesError.value);
 
-const contextObjectiveDescription = ref(outcomes.value?.[0].description!),
-    contextObjective = outcomes.value![0]
+const contextAndObjective = outcomes.value![0];
 
-watch(contextObjectiveDescription, debounce(() => {
-    contextObjective.description = contextObjectiveDescription.value;
-    $fetch(`/api/outcome/${contextObjective.id}`, {
+const formSchema = Outcome.pick({
+    description: true
+});
+
+type FormSchema = z.infer<typeof formSchema>;
+
+const formState = reactive<FormSchema>({
+    description: contextAndObjective.description
+});
+
+const onUpdate = async (data: FormSchema) => {
+    await $fetch(`/api/outcome/${contextAndObjective.id}`, {
         method: 'PUT',
         body: {
             solutionId,
             organizationSlug,
-            name: contextObjective.name,
-            description: contextObjective.description
+            name: contextAndObjective.name,
+            description: data.description
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
-}, 500));
+}
 </script>
 
 <template>
-    <form autocomplete="off">
-        <h2>Context and Objective</h2>
-        <div class="field">
-            <p>
-                High-level view of the project: organizational context and reason for building a system
-            </p>
-            <Textarea name="contextObjective" id="contextObjective" class="w-full h-10rem"
-                v-model.trim.lazy="contextObjectiveDescription" />
-        </div>
-    </form>
+    <h1>Context and Objective</h1>
+
+    <p>
+        High-level view of the project: organizational context and reason for building the system
+    </p>
+
+    <XForm :schema="formSchema" :state="formState" :onSubmit="onUpdate" />
 </template>

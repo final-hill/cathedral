@@ -1,6 +1,3 @@
-import { Constraint } from "~/domain/requirements/Constraint.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns a constraint by id
- */
-export default getRequirementHttpHandler(Constraint)
+export default getRequirementHttpHandler(ReqType.CONSTRAINT)

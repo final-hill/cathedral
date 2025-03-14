@@ -53,7 +53,7 @@ const bodySchema = z.union([urlVerificationSchema, eventCallbackSchema])
 const config = useRuntimeConfig(),
     slack = new WebClient(config.slackBotToken)
 
-async function sendResponse(slackEvent: typeof eventCallbackSchema._type.event) {
+async function sendResponse(slackEvent: z.infer<typeof eventCallbackSchema>['event']) {
     try {
         // const thread = await slack.conversations.replies({
         //     channel,

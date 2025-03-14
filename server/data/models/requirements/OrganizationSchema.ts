@@ -1,6 +1,6 @@
 import { RequirementModel, RequirementVersionsModel } from "./RequirementSchema.js";
 import { Collection, Entity, Property, types } from "@mikro-orm/core";
-import { ReqType } from "./ReqType.js";
+import { ReqType } from "../../../../shared/domain/requirements/ReqType.js";
 
 @Entity({ discriminatorValue: ReqType.ORGANIZATION })
 export class OrganizationModel extends RequirementModel {

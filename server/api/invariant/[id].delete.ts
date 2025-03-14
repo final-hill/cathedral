@@ -1,6 +1,3 @@
-import { Invariant } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete invariant by id.
- */
-export default deleteRequirementHttpHandler(Invariant)
+export default deleteRequirementHttpHandler(ReqType.INVARIANT)

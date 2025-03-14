@@ -1,6 +1,3 @@
-import { Limit } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete limit by id.
- */
-export default deleteRequirementHttpHandler(Limit)
+export default deleteRequirementHttpHandler(ReqType.LIMIT)

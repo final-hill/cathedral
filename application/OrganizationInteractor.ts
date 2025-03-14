@@ -1,15 +1,17 @@
-import * as req from "~/domain/requirements";
-import { AppUserOrganizationRole, AppRole, AppUser } from "~/domain/application";
-import type { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository";
+import type { z } from "zod";
 import { validate as validateUuid } from 'uuid'
-import type { AuditMetadata } from "~/domain/AuditMetadata";
+import * as req from "#shared/domain/requirements";
+import { ReqType } from "#shared/domain/requirements/ReqType";
+import { AppRole, type AppUser } from "#shared/domain/application";
+import type { AuditMetadata } from "#shared/domain/AuditMetadata";
+import { MismatchException, NotFoundException, PermissionDeniedException } from "#shared/domain/exceptions";
+import type { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository";
 import { Interactor } from "./Interactor";
-import { DuplicateEntityException, MismatchException, NotFoundException, PermissionDeniedException } from "~/domain/exceptions";
 
 /**
  * The OrganizationInteractor class contains the business logic for interacting with an organization.
  */
-export class OrganizationInteractor extends Interactor<req.Organization> {
+export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organization>> {
     /**
      * Create a new OrganizationInteractor
      *
@@ -19,7 +21,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
     constructor(props: {
         // TODO: This should be Repository<Organization>
         repository: OrganizationRepository,
-        userId: AppUser['id']
+        userId: z.infer<typeof AppUser>['id']
     }) { super(props) }
 
     // FIXME: this shouldn't be necessary
@@ -31,11 +33,12 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * Add an appuser to the organization with a role
      *
      * @param props.appUserId The id of the app user to invite
+     * @param props.organizationId The id of the organization to add the app user to
      * @param props.role The role to assign to the app user
      * @throws {PermissionDeniedException} If the user is not an admin of the organization
      * @throws {DuplicateEntityException} If the target app user is already associated with the organization
      */
-    async addAppUserOrganizationRole(props: Pick<AppUserOrganizationRole, 'appUserId' | 'organizationId' | 'role'>): Promise<void> {
+    async addAppUserOrganizationRole(props: { appUserId: string, organizationId: string, role: AppRole }): Promise<void> {
         if (!await this.isOrganizationAdmin())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
@@ -50,20 +53,18 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * Add a new requirement to a solution and assign it a new requirement id
      *
      * @param props.solutionId - The id of the solution to add the requirement to
-     * @param props.ReqClass - The Constructor of the requirement to add
      * @param props.reqProps - The requirement data to add
      * @returns The id of the new requirement
      * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
      * @throws {MismatchException} If a referenced requirement does not belong to the solution
      * @throws {NotFoundException} If the solution does not exist
      */
-    async addRequirement<RCons extends typeof req.Requirement>({
-        solutionId, ReqClass, reqProps
+    async addRequirement<R extends keyof typeof req>({
+        solutionId, reqProps
     }: {
-        solutionId: req.Solution['id'],
-        ReqClass: RCons,
-        reqProps: Omit<InstanceType<RCons>, 'reqId' | 'id' | keyof AuditMetadata>
-    }): Promise<req.Requirement['id']> {
+        solutionId: z.infer<typeof req.Solution>['id'],
+        reqProps: Omit<z.infer<typeof req[R]>, 'reqId' | 'id' | keyof z.infer<typeof AuditMetadata>> & { reqType: ReqType }
+    }): Promise<z.infer<typeof req[R]>['id']> {
         if (!this.isOrganizationContributor())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
@@ -71,7 +72,6 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
 
         return await this.repository.addRequirement({
             solutionId,
-            ReqClass,
             reqProps,
             createdById: this._userId,
             effectiveDate: new Date()
@@ -86,7 +86,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @throws {PermissionDeniedException} If the user is not an admin of the organization
      * @throws {NotFoundException} If the organization does not exist
      */
-    async addSolution({ name, description }: Pick<req.Solution, 'name' | 'description'>): Promise<req.Solution['id']> {
+    async addSolution({ name, description }: Pick<z.infer<typeof req.Solution>, 'name' | 'description'>): Promise<z.infer<typeof req.Solution>['id']> {
         const repo = this.repository,
             effectiveDate = new Date()
 
@@ -98,14 +98,12 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
         // create initial requirements for the solution
         await this.addRequirement({
             solutionId: newSolutionId,
-            ReqClass: req.Outcome,
-            reqProps: { name: 'G.1', description: 'Context and Objective', isSilence: false }
+            reqProps: { reqType: ReqType.OUTCOME, name: 'G.1', description: 'Context and Objective', isSilence: false }
         })
 
         await this.addRequirement({
             solutionId: newSolutionId,
-            ReqClass: req.Obstacle,
-            reqProps: { name: 'G.2', description: 'Situation', isSilence: false }
+            reqProps: { reqType: ReqType.OBSTACLE, name: 'G.2', description: 'Situation', isSilence: false }
         })
 
         return newSolutionId
@@ -119,7 +117,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @throws {PermissionDeniedException} If the user is deleting the last admin of the organization
      * @throws {NotFoundException} If the target app user does not exist
      */
-    async deleteAppUser(id: AppUser['id']): Promise<unknown> {
+    async deleteAppUser(id: z.infer<typeof AppUser>['id']): Promise<void> {
         if (!this.isOrganizationAdmin() && id !== this._userId)
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
@@ -134,8 +132,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
         return this.repository.deleteAppUserOrganizationRole({
             appUserId: id,
             deletedById: this._userId,
-            deletedDate: new Date(),
-            organizationId: (await this.getOrganization()).id
+            deletedDate: new Date()
         })
     }
 
@@ -144,16 +141,16 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      *
      * @param props.id - The id of the requirement to delete
      * @param props.solutionId - The id of the solution that the requirement belongs to
-     * @param props.ReqClass - The Constructor of the requirement to delete
+     * @param props.reqType - The type of the requirement to delete
      * @throws {NotFoundException} If the solution does not exist
      * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
      * @throws {NotFoundException} If the requirement does not exist
      * @throws {MismatchException} If the requirement does not belong to the solution
      */
-    async deleteRequirement<RCons extends typeof req.Requirement>(props: {
-        id: InstanceType<RCons>['id'],
-        solutionId: req.Solution['id'],
-        ReqClass: RCons
+    async deleteRequirement(props: {
+        id: z.infer<typeof req.Requirement>['id'],
+        solutionId: z.infer<typeof req.Solution>['id'],
+        reqType: ReqType
     }): Promise<void> {
         if (!this.isOrganizationContributor())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
@@ -161,7 +158,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
         await this.repository.deleteSolutionRequirementById({
             deletedById: this._userId,
             deletedDate: new Date(),
-            ReqClass: props.ReqClass,
+            reqType: props.reqType,
             id: props.id,
             solutionId: props.solutionId
         })
@@ -178,7 +175,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @throws {NotFoundException} If the solution does not exist
      * @throws {MismatchException} If the solution does not belong to the organization
      */
-    async deleteSolutionBySlug(slug: req.Solution['slug']): Promise<void> {
+    async deleteSolutionBySlug(slug: z.infer<typeof req.Solution>['slug']): Promise<void> {
         if (!await this.isOrganizationAdmin())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
@@ -193,16 +190,14 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * Find requirements that match the query parameters for a solution
      *
      * @param props.solutionId - The id of the solution to find the requirements for
-     * @param props.ReqClass - The Constructor of the requirement to find
      * @param props.query - The query parameters to filter requirements by
      * @returns The requirements that match the query parameters
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
-    async findSolutionRequirements<RCons extends typeof req.Requirement>(props: {
-        solutionId: req.Solution['id'],
-        ReqClass: RCons,
-        query: Partial<InstanceType<RCons>>
-    }): Promise<InstanceType<RCons>[]> {
+    async findSolutionRequirements<R extends keyof typeof req>(props: {
+        solutionId: z.infer<typeof req.Solution>['id'],
+        query: Partial<z.infer<typeof req[R]>> & { reqType: ReqType }
+    }): Promise<z.infer<typeof req[R]>[]> {
         if (!this.isOrganizationReader())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
@@ -217,7 +212,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      * @throws {NotFoundException} If the organization does not exist
      */
-    async findSolutions(query: Partial<req.Solution> = {}): Promise<req.Solution[]> {
+    async findSolutions(query: Partial<z.infer<typeof req.Solution>> = {}): Promise<z.infer<typeof req.Solution>[]> {
         if (!await this.isOrganizationReader())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
@@ -233,7 +228,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      * @throws {PermissionDeniedException} If the user is trying to get an app user that is not in the same organization
      */
-    async getAppUserById(id: AppUser['id']): Promise<AppUser> {
+    async getAppUserById(id: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof AppUser>> {
         if (!this.isOrganizationReader())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
         return this.repository.getOrganizationAppUserById(id)
@@ -245,7 +240,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @returns The organization
      * @throws {NotFoundException} If the organization does not exist
      */
-    async getOrganization(): Promise<req.Organization> {
+    async getOrganization(): Promise<z.infer<typeof req.Organization>> {
         if (!this.isOrganizationReader())
             throw new NotFoundException('Forbidden: You do not have permission to perform this action')
         return this.repository.getOrganization()
@@ -257,7 +252,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @returns The app users with their associated roles
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
-    async getOrganizationAppUsers(): Promise<AppUser[]> {
+    async getOrganizationAppUsers(): Promise<z.infer<typeof AppUser>[]> {
         if (!this.isOrganizationReader())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
@@ -273,7 +268,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @throws {NotFoundException} If the solution does not exist
      * @throws {MismatchException} If the solution does not belong to the organization
      */
-    async getSolutionById(solutionId: req.Solution['id']): Promise<req.Solution> {
+    async getSolutionById(solutionId: z.infer<typeof req.Solution>['id']): Promise<z.infer<typeof req.Solution>> {
         if (!await this.isOrganizationReader())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
@@ -289,7 +284,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @throws {NotFoundException} If the solution does not exist
      * @throws {MismatchException} If the solution does not belong to the organization
      */
-    async getSolutionBySlug(slug: req.Solution['slug']): Promise<req.Solution> {
+    async getSolutionBySlug(slug: z.infer<typeof req.Solution>['slug']): Promise<z.infer<typeof req.Solution>> {
         if (!await this.isOrganizationReader())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
@@ -299,23 +294,23 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
     /**
      * Get a requirement by id
      *
-     * @param props.ReqClass The Constructor of the requirement to get
+     * @param props.reqType The type of the requirement to get
      * @param props.id The id of the requirement to get
      * @param props.solutionId The id of the solution that the requirement belongs to
      * @returns The requirement
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      * @throws {NotFoundException} If the requirement does not exist in the organization nor the solution
      */
-    async getSolutionRequirementById<RCons extends typeof req.Requirement>(props: {
-        ReqClass: RCons,
-        solutionId: req.Solution['id'],
-        id: InstanceType<RCons>['id']
-    }): Promise<InstanceType<RCons>> {
+    async getSolutionRequirementById<R extends keyof typeof req>(props: {
+        reqType: ReqType,
+        solutionId: z.infer<typeof req.Solution>['id'],
+        id: z.infer<typeof req.Requirement>['id']
+    }): Promise<z.infer<typeof req[R]>> {
         if (!this.isOrganizationReader())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         return await this.repository.getSolutionRequirementById({
-            ReqClass: props.ReqClass,
+            reqType: props.reqType,
             solutionId: props.solutionId,
             id: props.id
         })
@@ -392,7 +387,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @throws {PermissionDeniedException} If the target user is the last admin of the organization and the new role is not an admin
      * @throws {PermissionDeniedException} If the target user is trying to update themselves
      */
-    async updateAppUserRole(id: AppUser['id'], role: AppRole): Promise<void> {
+    async updateAppUserRole(id: z.infer<typeof AppUser>['id'], role: AppRole): Promise<void> {
         if (!this.isOrganizationAdmin())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
@@ -421,8 +416,8 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @throws {MismatchException} If a referenced requirement does not belong to the solution
      */
     private async _assertReferenceRequirementsBelongToSolution(props: {
-        solutionId: req.Solution['id'],
-        reqProps: Partial<Omit<req.Requirement, 'reqId' | keyof AuditMetadata>>
+        solutionId: z.infer<typeof req.Solution>['id'],
+        reqProps: Partial<Omit<z.infer<typeof req.Requirement>, 'reqId' | keyof z.infer<typeof AuditMetadata>>>
     }) {
         for (const [_, value] of Object.entries(props.reqProps) as [keyof typeof props.reqProps, string][]) {
             if (validateUuid(value)) {
@@ -439,7 +434,6 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      *
      * @param props.id The id of the requirement to update
      * @param props.solutionId The id of the solution that the requirement belongs to
-     * @param props.ReqClass The Constructor of the requirement to update
      * @param props.reqProps The properties to update
      * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
      * @throws {NotFoundException} If the requirement does not exist
@@ -447,11 +441,10 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @throws {MismatchException} If the requirement is not owned by the solution
      * @throws {MismatchException} If a referenced requirement does not belong to the solution
      */
-    async updateSolutionRequirement<RCons extends typeof req.Requirement>(props: {
-        id: InstanceType<RCons>['id'],
-        solutionId: req.Solution['id'],
-        ReqClass: RCons,
-        reqProps: Partial<Omit<InstanceType<RCons>, 'id' | 'reqId' | keyof AuditMetadata>>
+    async updateSolutionRequirement<R extends keyof typeof req>(props: {
+        id: z.infer<typeof req[R]>['id'],
+        solutionId: z.infer<typeof req.Solution>['id'],
+        reqProps: Partial<Omit<z.infer<typeof req[R]>, 'id' | 'reqId' | keyof z.infer<typeof AuditMetadata>>> & { reqType: ReqType }
     }): Promise<void> {
         if (!this.isOrganizationContributor())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
@@ -464,7 +457,6 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
         await this.repository.updateSolutionRequirement({
             modifiedById: this._userId,
             modifiedDate: new Date(),
-            ReqClass: props.ReqClass,
             requirementId: props.id,
             solutionId: props.solutionId,
             reqProps: props.reqProps
@@ -480,7 +472,7 @@ export class OrganizationInteractor extends Interactor<req.Organization> {
      * @throws {NotFoundException} If the solution does not exist
      * @throws {MismatchException} If the solution does not belong to the organization
      */
-    async updateSolutionBySlug(slug: req.Solution['slug'], props: Pick<Partial<req.Solution>, 'name' | 'description'>): Promise<void> {
+    async updateSolutionBySlug(slug: z.infer<typeof req.Solution>['slug'], props: Pick<Partial<z.infer<typeof req.Solution>>, 'name' | 'description'>): Promise<void> {
         if (!await this.isOrganizationContributor())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 

@@ -1,6 +1,3 @@
-import { Effect } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns an effect by id
- */
-export default getRequirementHttpHandler(Effect)
+export default getRequirementHttpHandler(ReqType.EFFECT)

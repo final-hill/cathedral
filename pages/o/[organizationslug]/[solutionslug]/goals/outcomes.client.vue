@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import type { OutcomeViewModel, SolutionViewModel } from '#shared/models'
+import { Outcome } from '#shared/domain'
+import type { z } from 'zod';
 
 useHead({ title: 'Outcomes' })
 definePageMeta({ name: 'Outcomes' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Outcomes').params,
-    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
         query: { organizationSlug }
     }),
     solutionId = solution.value?.id;
@@ -14,18 +15,37 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: outcomes, refresh, status, error: getOutcomesError } = await useFetch<OutcomeViewModel[]>(`/api/outcome`, {
+const { data: outcomes, refresh, status, error: getOutcomesError } = await useFetch<z.infer<typeof Outcome>[]>(`/api/outcome`, {
     query: { solutionId, organizationSlug },
-    transform: (data) => data.map((item) => {
-        item.lastModified = new Date(item.lastModified)
-        return item
-    }).filter((item) => item.reqId !== 'G.3.1') // FIXME: Filter out the default outcome (Context and Objective)
+    transform: (data) => data.map((item) => ({
+        ...item,
+        lastModified: new Date(item.lastModified),
+        creationDate: new Date(item.creationDate)
+    })).filter((item) => item.reqId !== 'G.3.1') // FIXME: Filter out the default outcome (Context and Objective)
 })
 
 if (getOutcomesError.value)
     $eventBus.$emit('page-error', getOutcomesError.value);
 
-const onCreate = async (data: OutcomeViewModel) => {
+const viewSchema = Outcome.pick({
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const createSchema = Outcome.pick({
+    name: true,
+    description: true
+})
+
+const editSchema = Outcome.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const onCreate = async (data: z.infer<typeof createSchema>) => {
     await $fetch(`/api/outcome`, {
         method: 'POST',
         body: {
@@ -39,7 +59,7 @@ const onCreate = async (data: OutcomeViewModel) => {
     refresh()
 }
 
-const onUpdate = async (data: OutcomeViewModel) => {
+const onUpdate = async (data: z.infer<typeof editSchema>) => {
     await $fetch(`/api/outcome/${data.id}`, {
         method: 'PUT',
         body: {
@@ -64,15 +84,10 @@ const onDelete = async (id: string) => {
 </script>
 
 <template>
-    <p>
-        Outcomes are the expected benefits, capabilities, or processes
-        of the system that will be achieved by the associated project.
-    </p>
+    <h1>Outcomes</h1>
+    <p> {{ Outcome.description }} </p>
 
-    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
-        :createModel="{ name: 'text', description: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="outcomes" :onCreate="onCreate"
-        :onUpdate="onUpdate" :onDelete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationSlug"
-        entityName="Outcome" :showRecycleBin="true">
+    <XDataTable :viewSchema="viewSchema" :createSchema="createSchema" :editSchema="editSchema" :data="outcomes"
+        :onCreate="onCreate" :onDelete="onDelete" :onUpdate="onUpdate" :loading="status === 'pending'">
     </XDataTable>
 </template>

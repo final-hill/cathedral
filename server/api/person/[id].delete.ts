@@ -1,6 +1,3 @@
-import { Person } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete Person by id.
- */
-export default deleteRequirementHttpHandler(Person)
+export default deleteRequirementHttpHandler(ReqType.PERSON)

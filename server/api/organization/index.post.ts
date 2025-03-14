@@ -1,13 +1,10 @@
-import { z } from "zod"
 import { getServerSession } from '#auth'
 import { OrganizationCollectionInteractor } from "~/application/index"
 import { OrganizationCollectionRepository } from "~/server/data/repositories"
 import handleDomainException from "~/server/utils/handleDomainException"
+import { Organization } from "#shared/domain"
 
-const bodySchema = z.object({
-    name: z.string(),
-    description: z.string().default("")
-})
+const bodySchema = Organization.innerType().pick({ name: true, description: true })
 
 /**
  * Creates a new organization and returns its slug

@@ -1,9 +1,12 @@
 import { z } from "zod"
 import { getServerSession } from '#auth'
-import { Requirement } from "~/domain/requirements"
 import { OrganizationInteractor } from '~/application'
 import { OrganizationRepository } from "../data/repositories/OrganizationRepository"
 import handleDomainException from "./handleDomainException"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
+import { Organization } from "~/shared/domain"
+
+const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
 const paramSchema = z.object({
     id: z.string().uuid()
@@ -11,8 +14,8 @@ const paramSchema = z.object({
 
 const querySchema = z.object({
     solutionId: z.string().uuid(),
-    organizationId: z.string().uuid().optional(),
-    organizationSlug: z.string().max(100).optional()
+    organizationId,
+    organizationSlug
 }).refine((value) => {
     return value.organizationId !== undefined || value.organizationSlug !== undefined;
 }, "At least one of organizationId or organizationSlug should be provided");
@@ -20,10 +23,10 @@ const querySchema = z.object({
 /**
  * Create an event handler for getting a requirement
  *
- * @param ReqClass The class of the requirement to get
+ * @param reqType The type of the requirement to get
  * @returns The event handler
  */
-export default function getRequirementHttpHandler<RCons extends typeof Requirement>(ReqClass: RCons) {
+export default function getRequirementHttpHandler(reqType: ReqType) {
     return defineEventHandler(async (event) => {
         const { id } = await validateEventParams(event, paramSchema),
             { solutionId, organizationId, organizationSlug } = await validateEventQuery(event, querySchema),
@@ -33,6 +36,6 @@ export default function getRequirementHttpHandler<RCons extends typeof Requireme
                 userId: session.id
             })
 
-        return await organizationInteractor.getSolutionRequirementById({ solutionId, ReqClass, id }).catch(handleDomainException)
+        return await organizationInteractor.getSolutionRequirementById({ solutionId, reqType, id }).catch(handleDomainException)
     })
 }

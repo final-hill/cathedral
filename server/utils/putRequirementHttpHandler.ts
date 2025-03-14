@@ -1,33 +1,31 @@
 import { getServerSession } from '#auth'
-import { Requirement } from "~/domain/requirements"
+import * as req from "#shared/domain/requirements";
 import { OrganizationInteractor } from '~/application'
-import { z, type ZodObject } from "zod"
+import { z, ZodObject } from "zod"
 import { OrganizationRepository } from '../data/repositories/OrganizationRepository'
 import handleDomainException from './handleDomainException'
+
+const { id: organizationId, slug: organizationSlug } = req.Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
 /**
  * Creates an event handler for PUT requests that update an existing requirement
  *
- * @param props.ReqClass - The class of the requirement to be updated
- * @param props.bodySchema - The schema for the request body
+  * @param props.bodySchema - The schema for the request body
  * @returns The event handler
  */
 export default function putRequirementHttpHandler<
-    RCons extends typeof Requirement,
-    B extends (ZodObject<any>)
->({ ReqClass, bodySchema }: { ReqClass: RCons, bodySchema: B }) {
+    BodyType extends ZodObject<any, any, any>
+>(bodySchema: BodyType) {
     const paramSchema = z.object({
         id: z.string().uuid()
     })
 
-    // FIXME: Zod sucks at type inference. see: https://github.com/colinhacks/zod/issues/2807
-    // Omit<InstanceType<RCons>, 'reqId' | 'lastModified' | 'modifiedBy' | 'createdBy'> & { solutionId: string }
     const validatedBodySchema = bodySchema
         .omit({ reqId: true, lastModified: true, modifiedBy: true, createdBy: true })
         .extend({
             solutionId: z.string().uuid(),
-            organizationId: z.string().uuid().optional(),
-            organizationSlug: z.string().max(100).optional()
+            organizationId,
+            organizationSlug
         }).refine((value) => {
             return value.organizationId !== undefined || value.organizationSlug !== undefined;
         }, "At least one of organizationId or organizationSlug should be provided");
@@ -42,6 +40,6 @@ export default function putRequirementHttpHandler<
                 userId: session.id
             })
 
-        await organizationInteractor.updateSolutionRequirement({ ReqClass, id, solutionId, reqProps }).catch(handleDomainException)
+        await organizationInteractor.updateSolutionRequirement({ id, solutionId, reqProps }).catch(handleDomainException)
     })
 }

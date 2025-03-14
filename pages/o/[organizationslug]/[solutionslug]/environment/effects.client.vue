@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import type { EffectViewModel, SolutionViewModel } from '#shared/models'
+import type { z } from 'zod'
+import { Effect } from '~/shared/domain'
 
 useHead({ title: 'Effects' })
 definePageMeta({ name: 'Effects' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Effects').params,
-    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
         query: { organizationSlug }
     }),
     solutionId = solution.value?.id
@@ -14,10 +15,11 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const { data: effects, refresh, status, error: getEffectsError } = await useFetch<EffectViewModel[]>(`/api/effect`, {
+const { data: effects, refresh, status, error: getEffectsError } = await useFetch(`/api/effect`, {
     query: { solutionId, organizationSlug },
     transform: (data) => data.map((item) => ({
         ...item,
+        creationDate: new Date(item.creationDate),
         lastModified: new Date(item.lastModified)
     }))
 })
@@ -25,7 +27,26 @@ const { data: effects, refresh, status, error: getEffectsError } = await useFetc
 if (getEffectsError.value)
     $eventBus.$emit('page-error', getEffectsError.value)
 
-const onCreate = async (data: EffectViewModel) => {
+const viewSchema = Effect.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const createSchema = Effect.pick({
+    name: true,
+    description: true
+})
+
+const editSchema = Effect.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const onCreate = async (data: z.infer<typeof createSchema>) => {
     await $fetch(`/api/effect`, {
         method: 'POST',
         body: {
@@ -38,7 +59,7 @@ const onCreate = async (data: EffectViewModel) => {
     refresh()
 }
 
-const onUpdate = async (data: EffectViewModel) => {
+const onUpdate = async (data: z.infer<typeof editSchema>) => {
     await $fetch(`/api/effect/${data.id}`, {
         method: 'PUT',
         body: {
@@ -63,14 +84,9 @@ const onDelete = async (id: string) => {
 </script>
 
 <template>
-    <p>
-        An Effect is an environment property affected by a System.
-        Example: "The running system will cause the temperature of the room to increase."
-    </p>
-    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
-        :createModel="{ name: 'text', description: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="effects" :on-create="onCreate"
-        :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'" :organizationSlug="organizationSlug"
-        entityName="Effect" :showRecycleBin="true">
+    <h1>Effects</h1>
+    <p> {{ Effect.description }} </p>
+    <XDataTable :viewSchema="viewSchema" :createSchema="createSchema" :editSchema="editSchema" :data="effects"
+        :onCreate="onCreate" :onDelete="onDelete" :onUpdate="onUpdate" :loading="status === 'pending'">
     </XDataTable>
 </template>

@@ -1,14 +1,10 @@
-import { z } from "zod"
-import { Justification } from "~/domain/requirements/index.js"
+import { Justification } from "#shared/domain"
 
-/**
- * Updates a Justification by id.
- */
-export default putRequirementHttpHandler({
-    bodySchema: z.object({
-        name: z.string().optional(),
-        description: z.string().optional(),
-        isSilence: z.boolean().optional()
-    }),
-    ReqClass: Justification
-})
+export default putRequirementHttpHandler(
+    Justification.pick({
+        reqType: true,
+        name: true,
+        description: true,
+        isSilence: true
+    }).partial().required({ reqType: true })
+)

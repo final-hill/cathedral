@@ -1,26 +1,26 @@
-import { AppRole, AppUser, AppUserOrganizationRole } from "~/domain/application";
-import * as req from "~/domain/requirements";
+import { pascalCaseToSnakeCase, snakeCaseToPascalCase, slugify } from "#shared/utils";
+import { v7 as uuid7 } from 'uuid'
+import { AuditMetadata } from "#shared/domain";
+import * as req from "#shared/domain/requirements";
+import { AppUser, AppRole, AppUserOrganizationRole } from "#shared/domain/application";
+import { DuplicateEntityException, NotFoundException, MismatchException } from "#shared/domain/exceptions";
 import * as reqModels from "../models/requirements";
 import { AppUserModel, AppUserOrganizationRoleModel, AppUserOrganizationRoleVersionsModel } from "../models/application";
 import { BelongsModel, BelongsVersionsModel } from "../models/relations";
-import { pascalCaseToSnakeCase, slugify } from "#shared/utils";
-import { ReqType } from "../models/requirements/ReqType";
-import { v7 as uuid7 } from 'uuid'
-import { AuditMetadata } from "~/domain/AuditMetadata";
+import { ReqType } from "../../../shared/domain/requirements/ReqType";
 import { Repository } from "./Repository";
-import { DataModelToDomainModel, ReqQueryToModelQuery } from "../mappers/index";
+import { DataModelToDomainModel, ReqQueryToModelQuery } from "../mappers";
 import { type CreationInfo } from "./CreationInfo";
 import { type UpdationInfo } from "./UpdationInfo";
 import { type DeletionInfo } from "./DeletionInfo";
-import { DuplicateEntityException, NotFoundException, MismatchException } from "~/domain/exceptions";
-import { snakeCaseToPascalCase } from "~/shared/utils/snakeCaseToPascalCase";
+import { z } from "zod";
 
 // TODO: parameterize the repository type
-export class OrganizationRepository extends Repository<req.Organization> {
-    private _organizationId?: req.Organization['id']
-    private _organizationSlug?: req.Organization['slug']
+export class OrganizationRepository extends Repository<z.infer<typeof req.Organization>> {
+    private _organizationId?: z.infer<typeof req.Organization>['id']
+    private _organizationSlug?: z.infer<typeof req.Organization>['slug']
     /** This is not readonly because it can be reassigned in {@link #deleteOrganization} */
-    private _organization: Promise<req.Organization>
+    private _organization: Promise<z.infer<typeof req.Organization>>
 
     /**
      * Constructs a new OrganizationRepository instance
@@ -31,8 +31,8 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @param [props.organizationSlug] - The slug of the organization to utilize
      */
     constructor(options: ConstructorParameters<typeof Repository>[0] & {
-        organizationId?: req.Organization['id'],
-        organizationSlug?: req.Organization['slug']
+        organizationId?: z.infer<typeof req.Organization>['id'],
+        organizationSlug?: z.infer<typeof req.Organization>['slug']
     }) {
         super({ em: options.em })
 
@@ -50,7 +50,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @param auor.role - The role of the app user in the organization
      * @throws {DuplicateEntityException} If the app user organization role already exists
      */
-    async addAppUserOrganizationRole(auor: Pick<AppUserOrganizationRole, 'appUserId' | 'role' | 'organizationId'> & CreationInfo): Promise<void> {
+    async addAppUserOrganizationRole(auor: { appUserId: string, organizationId: string, role: AppRole } & CreationInfo): Promise<void> {
         const em = this._em,
             existingAuor = await em.findOne(AppUserOrganizationRoleModel, {
                 appUser: auor.appUserId,
@@ -81,35 +81,39 @@ export class OrganizationRepository extends Repository<req.Organization> {
     /**
      * Adds a new requirement to the organization
      * @param props.solutionId - The id of the solution to add the requirement to
-     * @param props.ReqClass - The Constructor of the requirement to add
      * @param props.reqProps - The properties of the requirement to add
      * @param props.effectiveDate - The effective date of the requirement
      * @param props.createdById - The id of the user creating the requirement
+     * @param props.reqIdPrefix - The prefix of the requirement id
      * @returns The id of the newly created requirement
      * @throws {NotFoundException} If the solution does not exist
      */
-    async addRequirement<RCons extends typeof req.Requirement>(props: CreationInfo & {
-        solutionId: req.Solution['id'],
-        ReqClass: RCons,
-        reqProps: Omit<InstanceType<RCons>, 'reqId' | 'id' | keyof AuditMetadata>
-    }): Promise<InstanceType<RCons>['id']> {
+    async addRequirement<R extends keyof typeof req>(props: CreationInfo & {
+        solutionId: z.infer<typeof req.Solution>['id'],
+        reqIdPrefix?: req.ReqIdPrefix,
+        reqProps: Omit<z.infer<typeof req[R]>, 'reqId' | 'id' | keyof z.infer<typeof AuditMetadata>> & { reqType: ReqType }
+    }): Promise<z.infer<typeof req.Requirement>['id']> {
         const em = this._em,
-            newId = uuid7()
+            newId = uuid7(),
+            { reqType, ...reqProps } = props.reqProps,
+            ReqTypePascal = snakeCaseToPascalCase(reqType) as keyof typeof req,
+            ReqModel = reqModels[`${ReqTypePascal}Model` as keyof typeof reqModels],
+            ReqVersionsModel = reqModels[`${ReqTypePascal}VersionsModel` as keyof typeof reqModels]
 
         const solution = await this.getSolutionById(props.solutionId)
 
         if (!solution)
             throw new NotFoundException('Solution does not exist')
 
-        em.create<reqModels.RequirementVersionsModel>((reqModels as any)[`${props.ReqClass.name}VersionsModel`], {
+        em.create<reqModels.RequirementVersionsModel>(ReqVersionsModel, {
             id: newId,
             isDeleted: false,
             effectiveFrom: props.effectiveDate,
             modifiedBy: props.createdById,
             // Silent requirements do not have a reqId as they are not approved to be part of the solution
-            reqId: props.reqProps.isSilence ? undefined : await this.getNextReqId(props.solutionId, props.ReqClass.reqIdPrefix),
-            ...props.reqProps,
-            requirement: em.create<reqModels.RequirementModel>((reqModels as any)[`${props.ReqClass.name}Model`], {
+            reqId: reqProps.isSilence ? undefined : await this.getNextReqId(props.solutionId, props.reqIdPrefix),
+            ...reqProps,
+            requirement: em.create<reqModels.RequirementModel>(ReqModel, {
                 id: newId,
                 createdBy: props.createdById,
                 creationDate: props.effectiveDate
@@ -129,6 +133,28 @@ export class OrganizationRepository extends Repository<req.Organization> {
             })
         })
 
+        /*
+        const isComponent = ['Component', 'EnvironmentComponent', 'SystemComponent'].includes(props.reqType as unknown as string)
+
+        // add the relation between the requirement and the parent component if parentComponentId is provided
+        if (isComponent) {
+            const parentComponentId = Reflect.get(props.reqProps, 'parentComponentId') as string
+            if (parentComponentId) {
+                em.create(BelongsVersionsModel, {
+                    isDeleted: false,
+                    effectiveFrom: props.effectiveDate,
+                    modifiedBy: props.createdById,
+                    requirementRelation: em.create(BelongsModel, {
+                        left: newId,
+                        right: parentComponentId,
+                        createdBy: props.createdById,
+                        creationDate: props.effectiveDate
+                    })
+                })
+            }
+        }
+        */
+
         await em.flush()
 
         return newId
@@ -138,10 +164,10 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * Adds a new solution to the organization
      * @param props.name - The name of the solution
      * @param props.description - The description of the solution
-     * @param props.modifiedById - The id of the user creating the solution
+     * @param props.createdById - The id of the user creating the solution
      * @param props.effectiveDate - The effective date of the solution
      */
-    async addSolution({ name, description, createdById, effectiveDate }: Pick<req.Solution, 'name' | 'description'> & CreationInfo): Promise<req.Solution['id']> {
+    async addSolution({ name, description, createdById, effectiveDate }: Pick<z.infer<typeof req.Solution>, 'name' | 'description'> & CreationInfo): Promise<z.infer<typeof req.Solution>['id']> {
         const em = this._em,
             organization = await this.getOrganization(),
             newId = uuid7()
@@ -182,12 +208,11 @@ export class OrganizationRepository extends Repository<req.Organization> {
     /**
      * Deletes an app user organization role
      * @param auor.appUserId - The id of the app user
-     * @param auor.organizationId - The id of the organization
      * @param auor.deletedById - The id of the user deleting the app user organization role
      * @param auor.effectiveDate - The effective date of the deletion
      * @throws {NotFoundException} If the app user organization role does not exist
      */
-    async deleteAppUserOrganizationRole(auor: Pick<AppUserOrganizationRole, 'appUserId' | 'organizationId'> & DeletionInfo): Promise<void> {
+    async deleteAppUserOrganizationRole(auor: { appUserId: string } & DeletionInfo): Promise<void> {
         const em = this._em,
             organizationId = (await this.getOrganization()).id,
             existingAuor = await em.findOne(AppUserOrganizationRoleModel, {
@@ -216,7 +241,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @throws {NotFoundException} If the solution does not exist
      * @throws {MismatchException} If the solution does not belong to the organization
      */
-    async deleteSolutionBySlug(props: DeletionInfo & Pick<req.Solution, 'slug'>): Promise<void> {
+    async deleteSolutionBySlug(props: DeletionInfo & Pick<z.infer<typeof req.Solution>, 'slug'>): Promise<void> {
         const em = this._em,
             solution = await this.getSolutionBySlug(props.slug),
             existingSolution = await em.findOne(reqModels.SolutionModel, { id: solution.id })
@@ -252,16 +277,13 @@ export class OrganizationRepository extends Repository<req.Organization> {
             }
         }
 
-        // The keys representing the requirement classes in the req module
-        type RCons = keyof { [K in keyof typeof req]: typeof req[K] extends typeof req.Requirement ? K : never }
-
         for (const reqIdType of reqIdTypesInSolution) {
             await this.deleteSolutionRequirementById({
                 id: reqIdType.id,
                 deletedById: props.deletedById,
                 deletedDate: props.deletedDate,
                 solutionId: solution.id,
-                ReqClass: req[snakeCaseToPascalCase(reqIdType.req_type) as RCons] as typeof req.Requirement
+                reqType: reqIdType.req_type
             });
         }
 
@@ -271,26 +293,29 @@ export class OrganizationRepository extends Repository<req.Organization> {
     /**
      * Deletes a requirement belonging to a solution by id
      * @param props.deletedById - The id of the user deleting the requirement
-     * @param props.effectiveDate - The effective date of the deletion
+     * @param props.deletedDate - The effective date of the deletion
      * @param props.id - The id of the requirement to delete
      * @param props.solutionId - The id of the solution the requirement belongs to
-     * @param props.ReqClass - The Constructor of the requirement to delete
+     * @param props.reqType - The type of the requirement to delete
      * @throws {NotFoundException} If the requirement does not exist
      * @throws {MismatchException} If the requirement does not belong to the solution
      * @throws {NotFoundException} If the solution does not exist
      */
-    async deleteSolutionRequirementById<RCons extends typeof req.Requirement>(
+    async deleteSolutionRequirementById(
         props: DeletionInfo & {
             id: string,
             solutionId: string,
-            ReqClass: RCons
+            reqType: ReqType
         }
     ): Promise<void> {
         // delete the requirement associated with the solution by creating a new version with isDeleted set to true
-        const em = this._em
+        const em = this._em,
+            ReqTypePascal = snakeCaseToPascalCase(props.reqType) as keyof typeof req,
+            ReqModel = reqModels[`${ReqTypePascal}Model` as keyof typeof reqModels],
+            ReqVersionsModel = reqModels[`${ReqTypePascal}VersionsModel` as keyof typeof reqModels]
 
         const existingReq = await em.findOne<reqModels.RequirementModel>(
-            reqModels[`${props.ReqClass.name}Model` as keyof typeof reqModels], {
+            ReqModel, {
             id: props.id
         }),
             existingReqLatestVersion = await existingReq?.latestVersion
@@ -300,7 +325,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
 
         // "delete" the requirement by creating a new version with isDeleted set to true
         em.create<reqModels.RequirementVersionsModel>(
-            reqModels[`${props.ReqClass.name}VersionsModel` as keyof typeof reqModels], {
+            ReqVersionsModel, {
             ...existingReqLatestVersion,
             modifiedBy: props.deletedById,
             effectiveFrom: props.deletedDate,
@@ -346,7 +371,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
             }
 
             const reqs = [];
-            for (const req of await em.find<reqModels.RequirementModel>((reqModels as any)[`${props.ReqClass.name}Model`], {
+            for (const req of await em.find<reqModels.RequirementModel>(ReqModel, {
                 id: { $in: reqsInSolution }
             })) {
                 const latestVersion = await req.latestVersion;
@@ -361,9 +386,9 @@ export class OrganizationRepository extends Repository<req.Organization> {
                 const [, s] = req.reqId!.match(reReqId)?.slice(1) ?? [undefined, undefined]
                 if (s) {
                     em.create<reqModels.RequirementVersionsModel>(
-                        reqModels[`${props.ReqClass.name}VersionsModel` as keyof typeof reqModels], {
+                        ReqVersionsModel, {
                         ...req,
-                        reqId: `${prefix}${+s - 1}` as req.Requirement['reqId'],
+                        reqId: `${prefix}${+s - 1}` as `${'P' | 'E' | 'G' | 'S' | '0'}.${number}.${number}`,
                         modifiedBy: props.deletedById,
                         effectiveFrom: props.deletedDate
                     })
@@ -381,7 +406,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @returns The solutions that match the query parameters
      * @throws {NotFoundException} If the solution does not exist in the organization
      */
-    async findSolutions(query: Partial<req.Solution>): Promise<req.Solution[]> {
+    async findSolutions(query: Partial<z.infer<typeof req.Solution>>): Promise<z.infer<typeof req.Solution>[]> {
         const em = this._em,
             organizationId = (await this.getOrganization()).id
 
@@ -402,21 +427,31 @@ export class OrganizationRepository extends Repository<req.Organization> {
 
         const modelQuery = Object.entries(await new ReqQueryToModelQuery().map(query))
 
+        // FIXME
+
         const solutionModels = []
         for (const sol of await em.find(reqModels.SolutionModel, {
             id: { $in: belongsModels },
-            ...(query.createdById ? { createdBy: query.createdById } : {}),
+            ...(query.createdBy ? { createdBy: query.createdBy } : {}),
             ...(query.creationDate ? { creationDate: query.creationDate } : {})
         })) {
             const latestVersion = await sol.latestVersion
-            if (latestVersion && modelQuery.every(([key, value]) => (latestVersion as any)[key] === value))
+            if (latestVersion && modelQuery.every(([key, value]) => {
+                const fieldValue = (latestVersion as any)[key]
+
+                // LIKE query for string fields
+                if (typeof value === 'string' && typeof fieldValue === 'string')
+                    return fieldValue.toLowerCase().includes(value.toLowerCase())
+                else
+                    return fieldValue === value
+            }))
                 solutionModels.push(sol)
         }
 
         const solutions = [];
         for await (const sol of solutionModels) {
             const domainModel = await new DataModelToDomainModel().map(Object.assign({}, sol, await sol.latestVersion));
-            solutions.push(new req.Solution(domainModel));
+            solutions.push(req.Solution.parse(domainModel));
         }
         return solutions;
     }
@@ -425,7 +460,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * Find app user organization roles belonging to the organization
      * @returns The app user organization roles that match the query parameters
      */
-    async findAppUserOrganizationRoles({ role }: { role?: AppRole } = {}): Promise<AppUserOrganizationRole[]> {
+    async findAppUserOrganizationRoles({ role }: { role?: AppRole } = {}): Promise<z.infer<typeof AppUserOrganizationRole>[]> {
         const em = this._em,
             organizationId = (await this.getOrganization()).id
 
@@ -436,18 +471,22 @@ export class OrganizationRepository extends Repository<req.Organization> {
             .filter(async auor => (await auor.latestVersion) != undefined)
 
         return Promise.all(auors.map(async auor => {
-            const auorv = (await auor.latestVersion)!
+            const auorv = (await auor.latestVersion)!,
+                appUserVersion = (await auor.appUser.latestVersion)!,
+                createdByVersion = (await auor.createdBy.latestVersion)!,
+                modifiedByVersion = (await auorv.modifiedBy.latestVersion)!,
+                orgVersion = (await auor.organization.latestVersion)!
 
-            return new AppUserOrganizationRole({
-                appUserId: auor.appUser.id,
-                organizationId,
+            return AppUserOrganizationRole.parse({
+                appUser: { id: auor.appUser.id, name: appUserVersion.name },
+                organization: { id: auor.organization.id, name: orgVersion.name },
                 role: auorv.role,
                 isDeleted: auorv.isDeleted,
-                createdById: auor.createdBy.id,
-                modifiedById: auorv.modifiedBy.id,
+                createdBy: { id: auor.createdBy.id, name: createdByVersion.name },
+                modifiedBy: { id: auorv.modifiedBy.id, name: modifiedByVersion.name },
                 creationDate: auor.creationDate,
                 lastModified: auorv.effectiveFrom
-            })
+            } as z.infer<typeof AppUserOrganizationRole>)
         }))
     }
 
@@ -455,24 +494,25 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * Find requirements that match the query parameters for a solution
      *
      * @param props.solutionId - The id of the solution to find the requirements for
-     * @param props.ReqClass - The Constructor of the requirement to find
      * @param props.query - The query parameters to filter requirements by
      * @returns The requirements that match the query parameters
      * @throws {MismatchException} If the solution does not exist in the organization
      */
-    async findSolutionRequirementsByType<RCons extends typeof req.Requirement>(props: {
-        solutionId: req.Solution['id'],
-        ReqClass: RCons,
-        query: Partial<InstanceType<RCons>>
-    }): Promise<InstanceType<RCons>[]> {
-        const em = this._em
+    async findSolutionRequirementsByType<R extends keyof typeof req>(props: {
+        solutionId: z.infer<typeof req.Solution>['id'],
+        query: Partial<z.infer<typeof req[R]>> & { reqType: ReqType }
+    }): Promise<z.infer<typeof req[R]>[]> {
+        const em = this._em,
+            { reqType, createdBy, creationDate, ...query } = props.query,
+            ReqTypePascal = snakeCaseToPascalCase(reqType) as keyof typeof req,
+            ReqModel = reqModels[`${ReqTypePascal}Model` as keyof typeof reqModels]
 
         const reqsInSolution = [];
         for (const rel of await em.find(BelongsModel, {
             left: {
-                req_type: pascalCaseToSnakeCase(props.ReqClass.name) as ReqType,
+                req_type: props.query.reqType,
                 ...(props.query.id ? { id: props.query.id } : {})
-            },
+            } as any,
             right: { id: props.solutionId, req_type: ReqType.SOLUTION }
         })) {
             const latestVersion = await rel.latestVersion;
@@ -483,13 +523,13 @@ export class OrganizationRepository extends Repository<req.Organization> {
         if (reqsInSolution.length === 0 && props.query.id !== undefined)
             throw new MismatchException('Requirement does not exist in the solution')
 
-        const modelQuery = Object.entries(await new ReqQueryToModelQuery().map(props.query))
+        const modelQuery = Object.entries(await new ReqQueryToModelQuery().map(query))
 
-        const requirementModels = [];
-        for (const req of await em.find<reqModels.RequirementModel>((reqModels as any)[`${props.ReqClass.name}Model`], {
+        const requirementModels = []
+        for (const req of await em.find<reqModels.RequirementModel>(ReqModel, {
             id: { $in: reqsInSolution },
-            ...(props.query.createdById ? { createdBy: props.query.createdById } : {}),
-            ...(props.query.creationDate ? { creationDate: props.query.creationDate } : {})
+            ...(createdBy ? { createdBy: createdBy.id } : {}),
+            ...(creationDate ? { creationDate: creationDate } : {})
         })) {
             const latestVersion = await req.latestVersion,
                 matchesQuery = modelQuery.every(([key, value]) => (latestVersion as any)[key] === value);
@@ -498,12 +538,12 @@ export class OrganizationRepository extends Repository<req.Organization> {
         }
 
         const requirements = [];
-        for (const req of requirementModels) {
-            const domainModel = await new DataModelToDomainModel().map(Object.assign({}, req, await req.latestVersion));
-            requirements.push(new props.ReqClass(domainModel));
+        for (const r of requirementModels) {
+            const domainModel = await new DataModelToDomainModel().map(Object.assign({}, r, await r.latestVersion));
+            requirements.push(req[ReqTypePascal].parse(domainModel));
         }
 
-        return requirements as InstanceType<RCons>[];
+        return requirements;
     }
 
     /**
@@ -512,7 +552,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @returns The AppUserOrganizationRole
      * @throws {NotFoundException} If the app user organization role does not exist
      */
-    async getAppUserOrganizationRole(appUserId: AppUser['id']): Promise<AppUserOrganizationRole> {
+    async getAppUserOrganizationRole(appUserId: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof AppUserOrganizationRole>> {
         const organizationId = (await this.getOrganization()).id,
             em = this._em
 
@@ -525,23 +565,28 @@ export class OrganizationRepository extends Repository<req.Organization> {
         if (!auor || !auorv)
             throw new NotFoundException('App user organization role does not exist')
 
-        return new AppUserOrganizationRole({
-            appUserId,
-            organizationId,
+        const appUserVersion = (await auor.appUser.latestVersion)!,
+            createdByVersion = (await auor.createdBy.latestVersion)!,
+            modifiedByVersion = (await auorv.modifiedBy.latestVersion)!,
+            orgVersion = (await auor.organization.latestVersion)!
+
+        return AppUserOrganizationRole.parse({
+            appUser: { id: appUserId, name: appUserVersion.name },
+            organization: { id: organizationId, name: orgVersion.name },
             role: auorv.role,
             isDeleted: auorv.isDeleted,
-            createdById: auor.createdBy.id,
-            modifiedById: auorv.modifiedBy.id,
+            createdBy: { id: auor.createdBy.id, name: createdByVersion.name },
+            modifiedBy: { id: auorv.modifiedBy.id, name: modifiedByVersion.name },
             creationDate: auor.creationDate,
             lastModified: auorv.effectiveFrom
-        })
+        } as z.infer<typeof AppUserOrganizationRole>)
     }
 
     /**
      * Gets the organization
      * @returns The organization
      */
-    async getOrganization(): Promise<req.Organization> {
+    async getOrganization(): Promise<z.infer<typeof req.Organization>> {
         return this._organization
     }
 
@@ -550,10 +595,9 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @returns The organization
      * @throws {NotFoundException} If the organization does not exist
      */
-    private async _getOrganization(): Promise<req.Organization> {
-        const em = this._em;
-
-        const organizationId = this._organizationId,
+    private async _getOrganization(): Promise<z.infer<typeof req.Organization>> {
+        const em = this._em,
+            organizationId = this._organizationId,
             organizationSlug = this._organizationSlug
 
         if (!organizationId && !organizationSlug)
@@ -565,7 +609,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
             },
             ...(organizationSlug ? { slug: organizationSlug } : {})
         }, {
-            populate: ['requirement'],
+            populate: ['requirement', 'requirement.createdBy', 'modifiedBy'],
             orderBy: { effectiveFrom: 'desc' }
         }),
             result = tempResult?.requirement,
@@ -577,7 +621,9 @@ export class OrganizationRepository extends Repository<req.Organization> {
         if (organizationSlug && latestVersion.slug !== organizationSlug)
             throw new NotFoundException('Organization does not exist')
 
-        return new req.Organization(await new DataModelToDomainModel().map(Object.assign({}, result, latestVersion)))
+        const dataModel = await new DataModelToDomainModel().map(Object.assign({}, result, latestVersion))
+
+        return req.Organization.parse(dataModel)
     }
 
     /**
@@ -588,7 +634,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @throws {NotFoundException} If the organization does not exist
      * @throws {NotFoundException} If the app user does not exist in the organization
      */
-    async getOrganizationAppUserById(id: AppUser['id']): Promise<AppUser> {
+    async getOrganizationAppUserById(id: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof AppUser>> {
         const em = this._em,
             organizationId = (await this.getOrganization()).id
 
@@ -607,7 +653,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
         if (!user || !userv)
             throw new NotFoundException('App user does not exist')
 
-        return new AppUser({
+        return AppUser.parse({
             id,
             name: userv.name,
             email: userv.email,
@@ -617,7 +663,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
             lastModified: auorv.effectiveFrom,
             isDeleted: auorv.isDeleted,
             role: auorv.role
-        })
+        } as z.infer<typeof AppUser>)
     }
 
     /**
@@ -628,7 +674,10 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @returns The next requirement id
      * @throws {NotFoundException} If the solution does not exist
      */
-    async getNextReqId<R extends typeof req.Requirement>(solutionId: req.Solution['id'], prefix: R['reqIdPrefix']): Promise<InstanceType<R>['reqId']> {
+    async getNextReqId(solutionId: z.infer<typeof req.Solution>['id'], prefix?: req.ReqIdPrefix): Promise<req.ReqId | undefined> {
+        if (!prefix)
+            return
+
         const em = this._em,
             solution = await this.getSolutionById(solutionId)
 
@@ -665,7 +714,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * Gets all AppUsers for the organization
      * @returns The AppUsers for the organization
      */
-    async getOrganizationAppUsers(): Promise<AppUser[]> {
+    async getOrganizationAppUsers(): Promise<z.infer<typeof AppUser>[]> {
         const em = this._em,
             organizationId = (await this.getOrganization()).id
 
@@ -686,7 +735,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
                 auor = auors.find(auor => auor.appUser.id === user.id),
                 auorv = (await auor!.latestVersion)!
 
-            return new AppUser({
+            return AppUser.parse({
                 id: user.id,
                 name: userv.name,
                 email: userv.email,
@@ -696,7 +745,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
                 lastModified: auorv.effectiveFrom,
                 isDeleted: auorv.isDeleted,
                 role: auorv.role
-            })
+            } as z.infer<typeof AppUser>)
         }))
     }
 
@@ -706,7 +755,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @returns The solution
      * @throws {NotFoundException} If the solution does not exist in the organization
      */
-    async getSolutionById(solutionId: req.Solution['id']): Promise<req.Solution> {
+    async getSolutionById(solutionId: z.infer<typeof req.Solution>['id']): Promise<z.infer<typeof req.Solution>> {
         return (await this.findSolutions({ id: solutionId }))[0]
     }
 
@@ -716,7 +765,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @returns The solution
      * @throws {NotFoundException} If the solution does not exist in the organization
      */
-    async getSolutionBySlug(solutionSlug: req.Solution['slug']): Promise<req.Solution> {
+    async getSolutionBySlug(solutionSlug: z.infer<typeof req.Solution>['slug']): Promise<z.infer<typeof req.Solution>> {
         const solutions = (await this.findSolutions({ slug: solutionSlug }))
 
         if (solutions.length === 0)
@@ -728,20 +777,19 @@ export class OrganizationRepository extends Repository<req.Organization> {
     /**
      * Gets a requirement by id belonging to the organization solution
      * @param props.id - The id of the requirement to get
-     * @param props.ReqClass - The class of the requirement to get
+     * @param props.reqType - The type of the requirement to get
      * @param props.solutionId - The id of the solution to get the requirement from
      * @returns The requirement
      * @throws {NotFoundException} If the requirement does not exist in the organization nor the solution
      */
-    async getSolutionRequirementById<RCons extends typeof req.Requirement>(props: {
-        id: req.Requirement['id'],
-        solutionId: req.Solution['id'],
-        ReqClass: RCons,
-    }): Promise<InstanceType<RCons>> {
+    async getSolutionRequirementById<R extends keyof typeof req>(props: {
+        id: z.infer<typeof req.Requirement>['id'],
+        solutionId: z.infer<typeof req.Solution>['id'],
+        reqType: ReqType,
+    }): Promise<z.infer<typeof req[R]>> {
         const requirement = (await this.findSolutionRequirementsByType({
             solutionId: props.solutionId,
-            ReqClass: props.ReqClass,
-            query: { id: props.id } as Partial<InstanceType<RCons>>
+            query: { id: props.id, reqType: props.reqType, } as Partial<z.infer<typeof req[R]>> & { reqType: ReqType }
         }))[0]
 
         if (!requirement)
@@ -757,8 +805,8 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @returns Whether the organization has the requirement
      */
     async solutionHasRequirement(props: {
-        solutionId: req.Solution['id'],
-        id: req.Requirement['id']
+        solutionId: z.infer<typeof req.Solution>['id'],
+        id: z.infer<typeof req.Requirement>['id']
     }): Promise<boolean> {
         const em = this._em
 
@@ -773,10 +821,11 @@ export class OrganizationRepository extends Repository<req.Organization> {
 
     /**
      * Updates the role of an app user in the organization
-     * @param props - The properties of the app user organization role to update
+     * @param props.appUserId - The id of the app user
+     * @param props.role - The role of the app user in the organization
      * @throws {NotFoundException} If the app user organization role does not exist
      */
-    async updateAppUserRole(props: Pick<AppUserOrganizationRole, 'appUserId' | 'role'> & UpdationInfo): Promise<void> {
+    async updateAppUserRole(props: { appUserId: string, role: AppRole } & UpdationInfo): Promise<void> {
         const existingAuor = await this.getAppUserOrganizationRole(props.appUserId),
             organizationId = (await this.getOrganization()).id
 
@@ -803,7 +852,6 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * Updates a requirement by id
      * @param props.solutionId - The id of the solution the requirement belongs to
      * @param props.requirementId - The id of the requirement to update
-     * @param props.ReqClass - The Constructor of the requirement to update
      * @param props.reqProps - The properties of the requirement to update
      * @param props.modifiedById - The id of the user updating the requirement
      * @param props.modifiedDate - The effective date of the update
@@ -811,18 +859,22 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @throws {MismatchException} If the requirement does not belong to the solution
      * @throws {NotFoundException} If the solution does not exist
      */
-    async updateSolutionRequirement<RCons extends typeof req.Requirement>(props: UpdationInfo & {
-        solutionId: req.Solution['id'],
-        requirementId: req.Requirement['id'],
-        ReqClass: RCons,
-        reqProps: Omit<Partial<InstanceType<RCons>>, 'id' | 'reqId' | keyof AuditMetadata>
+    async updateSolutionRequirement<R extends keyof typeof req>(props: UpdationInfo & {
+        solutionId: z.infer<typeof req.Solution>['id'],
+        requirementId: z.infer<typeof req.Requirement>['id'],
+        reqProps: Omit<Partial<z.infer<typeof req[R]>>, 'id' | 'reqId' | keyof z.infer<typeof AuditMetadata>>
+        & { reqType: ReqType }
     }): Promise<void> {
-        const em = this._em
+        const em = this._em,
+            { reqType, ...reqProps } = props.reqProps,
+            ReqType = snakeCaseToPascalCase(reqType) as keyof typeof req,
+            ReqModel = reqModels[`${ReqType}Model` as keyof typeof reqModels],
+            ReqVersionsModel = reqModels[`${ReqType}VersionsModel` as keyof typeof reqModels]
 
         const existingSolution = await this.getSolutionById(props.solutionId)
 
         const existingReq = await em.findOne<reqModels.RequirementModel>(
-            reqModels[`${props.ReqClass.name}Model` as keyof typeof reqModels], {
+            ReqModel, {
             id: props.requirementId
         }),
             existingReqv = await existingReq?.latestVersion
@@ -840,9 +892,9 @@ export class OrganizationRepository extends Repository<req.Organization> {
             throw new MismatchException(`Requirement does not belong to solution with id ${props.solutionId}`)
 
         em.create<reqModels.RequirementVersionsModel>(
-            reqModels[`${props.ReqClass.name}VersionsModel` as keyof typeof reqModels], {
+            ReqVersionsModel, {
             ...existingReqv,
-            ...props.reqProps,
+            ...reqProps,
             effectiveFrom: props.modifiedDate,
             modifiedBy: props.modifiedById,
             isDeleted: false
@@ -857,7 +909,7 @@ export class OrganizationRepository extends Repository<req.Organization> {
      * @param props - The properties to update
      * @throws {NotFoundException} If the solution does not belong to the organization
      */
-    async updateSolutionBySlug(slug: req.Solution['slug'], props: Pick<Partial<req.Solution>, 'name' | 'description'> & UpdationInfo): Promise<void> {
+    async updateSolutionBySlug(slug: z.infer<typeof req.Solution>['slug'], props: Pick<Partial<z.infer<typeof req.Solution>>, 'name' | 'description'> & UpdationInfo): Promise<void> {
         const em = this._em,
             solution = await this.getSolutionBySlug(slug),
             existingSolution = await em.findOne(reqModels.SolutionModel, { id: solution.id })

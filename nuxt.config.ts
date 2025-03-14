@@ -15,46 +15,26 @@ export default defineNuxtConfig({
         // }
     },
     experimental: {
+        viewTransition: true,
         typedPages: true
     },
     sourcemap: process.env.NODE_ENV === 'development',
     css: [
-        '~/assets/css/main.css',
-        'primeflex/primeflex.css',
-        'primeicons/primeicons.css'
+        '~/assets/css/main.css'
     ],
-    app: {
-        head: {
-            link: [
-                {
-                    id: 'theme-link',
-                    rel: 'stylesheet',
-                    href: '/themes/aura-light-blue/theme.css',
-                    media: 'screen and (prefers-color-scheme: light)'
-                },
-                {
-                    id: 'theme-link',
-                    rel: 'stylesheet',
-                    href: '/themes/aura-dark-blue/theme.css',
-                    media: 'screen and (prefers-color-scheme: dark)'
-                }
-            ]
-        }
-    },
     components: {
         global: true,
         dirs: ['~/components']
     },
-    // https://primevue.org/
     // https://vite-pwa-org.netlify.app/frameworks/nuxt
-    // https://primeflex.org/
     // https://sidebase.io/nuxt-auth/getting-started
+    // https://icones.js.org/collection/lucide
     modules: [
-        'nuxt-primevue',
+        '@nuxt/ui',
         '@vite-pwa/nuxt',
         '@sidebase/nuxt-auth',
         'nuxt-security',
-        '@nuxt/test-utils/module',
+        '@nuxt/test-utils/module'
     ],
     runtimeConfig: {
         // The private keys which are only available within server-side

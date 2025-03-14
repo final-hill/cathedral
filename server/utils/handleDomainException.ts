@@ -1,4 +1,4 @@
-import { DuplicateEntityException, MismatchException, NotFoundException, PermissionDeniedException } from "~/domain/exceptions";
+import { DuplicateEntityException, MismatchException, NotFoundException, PermissionDeniedException } from "#shared/domain/exceptions";
 
 /**
  * Create an HTTP error from a domain exception

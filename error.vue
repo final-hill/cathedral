@@ -17,6 +17,6 @@ const handleError = () => clearError({ redirect: '/' })
     <div>
         <h2>{{ error?.statusCode }}</h2>
         <pre>{{ error?.message }}</pre>
-        <Button @click="handleError" label="Clear error" />
+        <UButton @click="handleError" size="xl" label="Clear error" />
     </div>
 </template>

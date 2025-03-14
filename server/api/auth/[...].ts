@@ -4,9 +4,10 @@ import { getConnection } from "~/mikro-orm.config"
 import { AppUserInteractor } from '~/application/AppUserInteractor';
 import { AppUserRepository } from '~/server/data/repositories/AppUserRepository';
 import { NIL as SYSTEM_USER_ID } from 'uuid'
-import { AppUser } from '~/domain/application';
+import { AppUser } from "#shared/domain";
 import handleDomainException from '~/server/utils/handleDomainException';
 import { PostgreSqlDriver, SqlEntityManager } from '@mikro-orm/postgresql';
+import { z } from 'zod';
 
 const config = useRuntimeConfig()
 
@@ -45,7 +46,7 @@ export default NuxtAuthHandler({
                 if (p.oid === SYSTEM_USER_ID)
                     throw new Error('System user cannot be authenticated')
 
-                let appUser: AppUser | undefined
+                let appUser: z.infer<typeof AppUser> | undefined
 
                 const userExists = await appUserInteractor.hasUser(p.oid)
 

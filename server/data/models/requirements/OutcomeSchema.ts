@@ -1,5 +1,5 @@
 import { Collection, Entity } from "@mikro-orm/core";
-import { ReqType } from "./ReqType.js";
+import { ReqType } from "../../../../shared/domain/requirements/ReqType.js";
 import { GoalModel, GoalVersionsModel } from "./GoalSchema.js";
 
 @Entity({ discriminatorValue: ReqType.OUTCOME })

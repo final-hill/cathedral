@@ -1,7 +1,9 @@
 <script lang="ts" setup>
 import { deSlugify } from '#shared/utils';
+import type { DropdownMenuItem } from '@nuxt/ui';
 
 const { data, signIn, signOut } = useAuth(),
+    user = data.value?.user,
     router = useRouter()
 
 let getCrumbs = () => {
@@ -9,60 +11,66 @@ let getCrumbs = () => {
         crumbs = route.path.split('/').filter((crumb) => crumb !== '');
 
     return [
-        { label: 'Home', route: '/' },
+        { label: 'Home', to: '/' },
         ...crumbs.map((crumb, index) => {
             return {
                 label: deSlugify(crumb),
-                route: '/' + crumbs.slice(0, index + 1).join('/')
+                to: '/' + crumbs.slice(0, index + 1).join('/')
             };
         })
-    ].filter(({ route }) => route !== '/o');
+    ].filter(({ to }) => to !== '/o');
 };
 
 const crumbs = ref(getCrumbs());
 
 router.afterEach(() => { crumbs.value = getCrumbs(); });
 
-const op = ref();
+const avatarFallback = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1em' height='1em' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'%3E%3Cpath d='M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/g%3E%3C/svg%3E"
 
-const toggle = (event: Event) => op.value.toggle(event)
+const menuItems = ref<DropdownMenuItem[][]>([
+    [{
+        type: 'label',
+        label: user?.name ?? 'Guest',
+        avatar: { src: user?.image ?? avatarFallback }
+    }], [{
+        label: user ? 'Sign Out' : 'Sign In',
+        icon: user ? 'i-lucide-user-round-x' : 'i-lucide-user-check',
+        onSelect: user ? () => signOut() : () => signIn(undefined)
+    }]
+])
 </script>
 
 <template>
-    <Menubar class="top-nav">
-        <template #start>
-            <div class="inline-flex flex-row align-items-center">
-                <NuxtLink to="/" class="h-2rem">
-                    <img src="/logo.png" alt="Cathedral Logo" title="Cathedral" class="h-full" />
-                </NuxtLink>
-                <Breadcrumb :model="crumbs" class="h-full py-0">
-                    <template #item="{ item, props }">
-                        <NuxtLink v-slot="{ href, navigate }" :to="item.route">
-                            {{ item.label }}
-                        </NuxtLink>
-                    </template>
-                </Breadcrumb>
-            </div>
-        </template>
-        <template #end>
-            <Button type="button" @click="toggle" link>
-                <Avatar v-if="data?.user?.image" :image="data?.user?.image ?? undefined" shape="circle" />
-                <Avatar v-else icon="pi pi-user" shape="circle" />
-            </Button>
-        </template>
-    </Menubar>
+    <nav
+        class="top-nav p-2 grid gap-4 items-center ring ring-(--ui-border) rounded-[calc(var(--ui-radius)*2)] bg-(--ui-bg-elevated)/50">
+        <NuxtLink to="/" class="site-logo w-8 h-8 justify-self-center">
+            <img src="/logo.png" alt="Cathedral Logo" title="Cathedral" />
+        </NuxtLink>
+        <UBreadcrumb :items="crumbs" class="breadcrumb" />
 
-    <OverlayPanel ref="op">
-        <p> {{ data?.name }} </p>
-        <small> {{ data?.email }} </small>
-        <hr>
-        <Button v-if="!data?.user" type="button" @click="signIn(undefined)" label="Sign In" icon="pi pi-sign-in" />
-        <Button v-else type="button" @click="signOut()" label="Sign Out" icon="pi pi-sign-out" />
-    </OverlayPanel>
+        <UDropdownMenu :items="menuItems" class="profile-menu">
+            <UButton icon="i-lucide-user" variant="outline" color="primary" size="xl" class="justify-self-center" />
+        </UDropdownMenu>
+    </nav>
 </template>
+<style>
+.top-nav {
+    grid-template-columns: 0.5in 1fr 0.5in;
+    grid-template-rows: 1fr;
+    grid-template-areas: "logo crumbs profile-menu";
+    /* border: var(--ui-border); */
 
-<style scoped>
-:deep(.p-icon) {
-    color: var(--primary-color);
+    &>.site-logo {
+        grid-area: logo;
+    }
+
+    &>.breadcrumb {
+        grid-area: crumbs;
+    }
+
+    &>.profile-menu {
+        grid-area: profile-menu;
+        cursor: pointer;
+    }
 }
 </style>

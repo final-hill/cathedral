@@ -1,6 +1,3 @@
-import { GlossaryTerm } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete glossary term by id.
- */
-export default deleteRequirementHttpHandler(GlossaryTerm)
+export default deleteRequirementHttpHandler(ReqType.GLOSSARY_TERM)

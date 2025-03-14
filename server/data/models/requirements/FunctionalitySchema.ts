@@ -1,5 +1,5 @@
 import { Collection, Entity } from "@mikro-orm/core";
-import { ReqType } from "./ReqType.js";
+import { ReqType } from "../../../../shared/domain/requirements/ReqType.js";
 import { BehaviorModel, BehaviorVersionsModel } from "./BehaviorSchema.js";
 
 @Entity({ discriminatorValue: ReqType.FUNCTIONALITY })

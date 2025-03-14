@@ -1,14 +1,10 @@
-import { z } from "zod"
-import { Outcome } from "~/domain/requirements/index.js"
+import { Outcome } from "#shared/domain"
 
-/**
- * Creates a new obstacle and returns its id
- */
-export default postRequirementHttpHandler({
-    ReqClass: Outcome,
-    bodySchema: z.object({
-        name: z.string().default("{Untitled Outcome}"),
-        description: z.string().default(""),
-        isSilence: z.boolean().default(false)
+export default postRequirementHttpHandler(
+    Outcome.pick({
+        reqType: true,
+        name: true,
+        description: true,
+        isSilence: true
     })
-})
+)

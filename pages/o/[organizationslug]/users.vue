@@ -1,25 +1,45 @@
 <script setup lang="ts">
-import { AppRole } from '~/domain/application/AppRole'
-import type { AppUserViewModel, OrganizationViewModel } from '#shared/models'
+import { AppUser } from '#shared/domain/application'
+import type { z } from 'zod'
 
 useHead({ title: 'Users' })
 definePageMeta({ name: 'Organization Users' })
 
 const { $eventBus } = useNuxtApp(),
     { organizationslug: organizationSlug } = useRoute('Organization Users').params,
-    { data: users, status, refresh, error: getUserError } = await useFetch<AppUserViewModel[]>('/api/appusers', {
+    { data: users, status, refresh, error: getUserError } = await useFetch('/api/appusers', {
         query: { organizationSlug },
-        transform: (data: any[]) => data.map<AppUserViewModel>((user) => {
-            user.creationDate = new Date(user.creationDate)
-            user.lastLoginDate = user.lastLoginDate ? new Date(user.lastLoginDate) : undefined
-            return user
-        })
+        transform: (data) => data.map((user) => ({
+            ...user,
+            creationDate: new Date(user.creationDate),
+            lastLoginDate: user.lastLoginDate ? new Date(user.lastLoginDate) : undefined,
+            lastModified: new Date(user.lastModified)
+        }))
     })
 
 if (getUserError.value)
     $eventBus.$emit('page-error', getUserError.value)
 
-const onCreate = async (data: AppUserViewModel) => {
+const viewSchema = AppUser.pick({
+    name: true,
+    email: true,
+    role: true,
+    isSystemAdmin: true,
+    creationDate: true,
+    lastLoginDate: true
+})
+const editSchema = AppUser.pick({
+    id: true,
+    email: true,
+    role: true,
+    isSystemAdmin: true
+})
+const createSchema = AppUser.pick({
+    email: true,
+    role: true
+})
+
+const onCreate = async (data: z.infer<typeof createSchema>) => {
     await $fetch(`/api/appusers/`, {
         method: 'POST',
         body: {
@@ -45,7 +65,7 @@ const onDelete = async (id: string) => {
     refresh()
 }
 
-const onUpdate = async (data: AppUserViewModel) => {
+const onUpdate = async (data: z.infer<typeof viewSchema> & { id: string }) => {
     await $fetch(`/api/appusers/${data.id}`, {
         method: 'PUT',
         body: {
@@ -62,26 +82,10 @@ const onUpdate = async (data: AppUserViewModel) => {
 
 <template>
     <h1>Application Users</h1>
-    <p>
-        Use this page to manage the users of your organization.
-    </p>
-    <XDataTable :viewModel="{
-        name: 'text',
-        email: 'text',
-        role: 'text',
-        isSystemAdmin: 'boolean',
-        creationDate: 'date',
-        lastLoginDate: 'date'
-    }" :createModel="{
-        email: 'text',
-        role: Object.values(AppRole),
-    }" :editModel="{
-        id: 'hidden',
-        email: 'text',
-        role: Object.values(AppRole),
-        isSystemAdmin: 'boolean'
-    }" :datasource="users" :on-create="onCreate" :on-delete="onDelete" :on-update="onUpdate"
-        :loading="status === 'pending'" :organizationSlug="organizationSlug" entityName="AppUser"
-        :showRecycleBin="false">
+
+    <p> {{ AppUser.description }} </p>
+
+    <XDataTable :viewSchema="viewSchema" :createSchema="createSchema" :editSchema="editSchema" :data="users"
+        :onCreate="onCreate" :onDelete="onDelete" :onUpdate="onUpdate" :loading="status === 'pending'">
     </XDataTable>
 </template>

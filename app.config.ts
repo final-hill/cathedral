@@ -1,3 +1,8 @@
 export default defineAppConfig({
-    darkMode: 'light'
+    ui: {
+        colors: {
+            primary: 'blue',
+            neutral: 'slate'
+        }
+    }
 })

@@ -1,13 +1,14 @@
 <script lang="ts" setup>
 import { useFetch } from 'nuxt/app';
-import type { AssumptionViewModel, SolutionViewModel } from '#shared/models';
+import { Assumption } from '#shared/domain';
+import type { z } from 'zod';
 
 useHead({ title: 'Assumptions' })
 definePageMeta({ name: 'Assumptions' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Assumptions').params,
-    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
+    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
         query: { organizationSlug }
     }),
     solutionId = solution.value?.id
@@ -15,10 +16,11 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const { data: assumptions, refresh, status, error: getAssumptionsError } = await useFetch<AssumptionViewModel[]>(`/api/assumption`, {
+const { data: assumptions, refresh, status, error: getAssumptionsError } = await useFetch(`/api/assumption`, {
     query: { solutionId, organizationSlug },
     transform: (data) => data.map((item) => ({
         ...item,
+        creationDate: new Date(item.creationDate),
         lastModified: new Date(item.lastModified)
     }))
 })
@@ -26,7 +28,25 @@ const { data: assumptions, refresh, status, error: getAssumptionsError } = await
 if (getAssumptionsError.value)
     $eventBus.$emit('page-error', getAssumptionsError.value);
 
-const onCreate = async (data: AssumptionViewModel) => {
+const viewSchema = Assumption.pick({
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const createSchema = Assumption.pick({
+    name: true,
+    description: true
+})
+
+const editSchema = Assumption.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const onCreate = async (data: z.infer<typeof createSchema>) => {
     await $fetch(`/api/assumption`, {
         method: 'post',
         body: {
@@ -49,7 +69,7 @@ const onDelete = async (id: string) => {
     refresh()
 }
 
-const onUpdate = async (data: AssumptionViewModel) => {
+const onUpdate = async (data: z.infer<typeof editSchema>) => {
     await $fetch(`/api/assumption/${data.id}`, {
         method: 'put',
         body: {
@@ -65,16 +85,10 @@ const onUpdate = async (data: AssumptionViewModel) => {
 </script>
 
 <template>
-    <p>
-        An assumption is a property of the environment that is assumed to be true.
-        Assumptions are used to simplify the problem and to make it more tractable.
-        An example of an assumption would be: "Screen resolution will not change during
-        the execution of the program".
-    </p>
-    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
-        :createModel="{ name: 'text', description: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="assumptions" :on-create="onCreate"
-        :on-delete="onDelete" :on-update="onUpdate" :loading="status === 'pending'" :organizationSlug="organizationSlug"
-        entityName="Assumption" :showRecycleBin="true">
+    <h1>Assumptions</h1>
+    <p> {{ Assumption.description }} </p>
+
+    <XDataTable :viewSchema="viewSchema" :createSchema="createSchema" :editSchema="editSchema" :data="assumptions"
+        :onCreate="onCreate" :onDelete="onDelete" :onUpdate="onUpdate" :loading="status === 'pending'">
     </XDataTable>
 </template>

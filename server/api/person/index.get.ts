@@ -1,15 +1,11 @@
-import { z } from "zod"
-import { Person } from "~/domain/requirements/index.js"
+import { Person } from "#shared/domain"
 
-/**
- * Returns all persons that match the query parameters
- */
-export default findRequirementsHttpHandler({
-    ReqClass: Person,
-    querySchema: z.object({
-        name: z.string().optional(),
-        description: z.string().optional(),
-        email: z.string().email().optional(),
-        isSilence: z.boolean().optional().default(false)
-    })
-})
+export default findRequirementsHttpHandler(
+    Person.pick({
+        reqType: true,
+        name: true,
+        description: true,
+        email: true,
+        isSilence: true
+    }).partial().required({ reqType: true })
+)
