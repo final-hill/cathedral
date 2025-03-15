@@ -1,4 +1,4 @@
-import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, Ref } from "@mikro-orm/core";
+import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, type Ref } from "@mikro-orm/core";
 import { AppRole } from '../../../../shared/domain/index.js';
 import { StaticAuditModel, VolatileAuditModel } from "../AuditSchema.js";
 import { AppUserModel, } from "./index.js"

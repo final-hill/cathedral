@@ -65,7 +65,7 @@ const onDelete = async (id: string) => {
     refresh()
 }
 
-const onUpdate = async (data: z.infer<typeof viewSchema> & { id: string }) => {
+const onUpdate = async (data: z.infer<typeof editSchema> & { id: string }) => {
     await $fetch(`/api/appusers/${data.id}`, {
         method: 'PUT',
         body: {

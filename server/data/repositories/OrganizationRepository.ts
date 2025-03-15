@@ -475,7 +475,8 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
                 appUserVersion = (await auor.appUser.latestVersion)!,
                 createdByVersion = (await auor.createdBy.latestVersion)!,
                 modifiedByVersion = (await auorv.modifiedBy.latestVersion)!,
-                orgVersion = (await auor.organization.latestVersion)!
+                orgVersion = (await auor.organization.load()
+                    .then(org => org!.latestVersion))!
 
             return AppUserOrganizationRole.parse({
                 appUser: { id: auor.appUser.id, name: appUserVersion.name },
@@ -568,7 +569,8 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
         const appUserVersion = (await auor.appUser.latestVersion)!,
             createdByVersion = (await auor.createdBy.latestVersion)!,
             modifiedByVersion = (await auorv.modifiedBy.latestVersion)!,
-            orgVersion = (await auor.organization.latestVersion)!
+            orgVersion = (await auor.organization.load()
+                .then(org => org!.latestVersion))!
 
         return AppUserOrganizationRole.parse({
             appUser: { id: appUserId, name: appUserVersion.name },

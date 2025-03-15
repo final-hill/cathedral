@@ -218,7 +218,8 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
             modifiedBy = await em.findOne(AppUserModel, { id: auorv.modifiedBy.id }),
             modifiedByVersion = await modifiedBy?.latestVersion,
             appUserVersion = (await auor.appUser.latestVersion)!,
-            organizationVersion = (await auor.organization.latestVersion)!
+            organizationVersion = (await auor.organization.load()
+                .then(org => org!.latestVersion))!
 
         return AppUserOrganizationRole.parse({
             appUser: { id: userId, name: appUserVersion.name },
