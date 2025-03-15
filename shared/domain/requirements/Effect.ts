@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Requirement } from "./Requirement.js";
-import { dedent } from "#shared/utils/dedent.js";
+import { dedent } from "../../../shared/utils/dedent.js";
 import { ReqType } from "./ReqType.js";
 
 export const Effect = Requirement.extend({

@@ -1,6 +1,6 @@
-import { AuditMetadata } from "../AuditMetadata";
+import { AuditMetadata } from "../AuditMetadata.js";
 import { z } from 'zod';
-import { AppRole } from "./AppRole";
+import { AppRole } from "./AppRole.js";
 
 export const AppUserOrganizationRole = AuditMetadata.extend({
     appUser: z.object({

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Functionality } from "./Functionality.js";
-import { dedent } from "#shared/utils";
+import { dedent } from "../../../shared/utils/dedent.js";
 import { ReqType } from "./ReqType.js";
 
 export const FunctionalBehavior = Functionality.extend({

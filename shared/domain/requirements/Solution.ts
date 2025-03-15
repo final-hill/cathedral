@@ -1,4 +1,4 @@
-import { slugify } from '#shared/utils/slugify';
+import { slugify } from '../../../shared/utils/slugify.js';
 import { z } from 'zod';
 import { Requirement } from './Requirement.js';
 import { ReqType } from "./ReqType.js";

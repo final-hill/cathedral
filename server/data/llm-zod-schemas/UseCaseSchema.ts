@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { dedent } from "#shared/utils";
+import { dedent } from "../../../shared/utils/dedent.js";
 
 export default z.object({
     type: z.literal('UseCase'),
