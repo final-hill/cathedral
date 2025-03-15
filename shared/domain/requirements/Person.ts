@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Actor } from "./Actor.js";
-import { dedent } from "~/shared/utils/dedent.js";
+import { dedent } from "../../../shared/utils/dedent.js";
 import { ReqType } from "./ReqType.js";
 
 export const Person = Actor.extend({

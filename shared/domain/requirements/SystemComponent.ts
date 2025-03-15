@@ -1,4 +1,4 @@
-import { dedent } from "#shared/utils/dedent.js";
+import { dedent } from "../../../shared/utils/dedent.js";
 import { Component } from "./Component.js";
 import { z } from 'zod';
 import { ReqType } from "./ReqType.js";
