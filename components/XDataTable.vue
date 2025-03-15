@@ -74,7 +74,8 @@ const actionColumn: TableColumn<z.infer<V>> = {
 const columns = [...viewDataColumns, actionColumn]
 
 const openEditModal = (itemId: string) => {
-    editModalItem.value = props.data!.find((row: z.infer<V>) => row.id === itemId)
+    const item = props.data!.find((row: z.infer<V>) => row.id === itemId)
+    editModalItem.value = Object.create(item!)
     editModalOpenState.value = true
 }
 
@@ -100,7 +101,10 @@ const onCreateModalReset = () => {
 }
 
 const onEditModalSubmit = async (_: any) => {
-    props.onUpdate(editModalItem.value!)
+    const index = props.data!.findIndex((row: z.infer<V>) => row.id === (editModalItem.value! as { id: string }).id)
+    if (index !== -1)
+        props.data![index] = { ...props.data![index], ...editModalItem.value }
+    await props.onUpdate(editModalItem.value!)
     editModalItem.value = Object.create(null)
     editModalOpenState.value = false
 }
@@ -134,7 +138,7 @@ const onDeleteModalSubmit = async (_: any) => {
         </template>
     </UModal>
 
-    <UModal v-model:open="deleteModalOpenState" title='Delete Item'>
+    <UModal v-model:open="deleteModalOpenState" title='Delete Item' :dismissable="false">
         <template #body>
             Are you sure you want to delete {{ deleteModalItem?.name }}?
         </template>
