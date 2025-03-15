@@ -68,7 +68,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
         if (!this.isOrganizationContributor())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
-        await this._assertReferenceRequirementsBelongToSolution({ solutionId, reqProps })
+        await this._assertReferencedRequirementsBelongToSolution({ solutionId, reqProps })
 
         return await this.repository.addRequirement({
             solutionId,
@@ -415,7 +415,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @param props.reqProps The properties of the requirements to check
      * @throws {MismatchException} If a referenced requirement does not belong to the solution
      */
-    private async _assertReferenceRequirementsBelongToSolution(props: {
+    private async _assertReferencedRequirementsBelongToSolution(props: {
         solutionId: z.infer<typeof req.Solution>['id'],
         reqProps: Partial<Omit<z.infer<typeof req.Requirement>, 'reqId' | keyof z.infer<typeof AuditMetadata>>>
     }) {
@@ -449,7 +449,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
         if (!this.isOrganizationContributor())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
-        await this._assertReferenceRequirementsBelongToSolution({
+        await this._assertReferencedRequirementsBelongToSolution({
             solutionId: props.solutionId,
             reqProps: props.reqProps
         })
