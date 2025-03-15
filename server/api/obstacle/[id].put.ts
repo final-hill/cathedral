@@ -4,7 +4,6 @@ export default putRequirementHttpHandler(
     Obstacle.pick({
         reqType: true,
         name: true,
-        description: true,
-        isSilence: true
+        description: true
     }).partial().required({ reqType: true })
 )

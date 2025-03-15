@@ -8,7 +8,6 @@ export default putRequirementHttpHandler(
         primaryActor: true,
         priority: true,
         outcome: true,
-        functionalBehavior: true,
-        isSilence: true
+        functionalBehavior: true
     }).partial().required({ reqType: true })
 )

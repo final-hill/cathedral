@@ -5,7 +5,6 @@ export default putRequirementHttpHandler(
         reqType: true,
         name: true,
         description: true,
-        parentComponent: true,
-        isSilence: true
+        parentComponent: true
     }).partial().required({ reqType: true })
 )

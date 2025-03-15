@@ -4,7 +4,6 @@ export default postRequirementHttpHandler(
     Limit.pick({
         reqType: true,
         name: true,
-        description: true,
-        isSilence: true
+        description: true
     })
 )

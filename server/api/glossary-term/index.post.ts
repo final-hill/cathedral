@@ -5,7 +5,6 @@ export default postRequirementHttpHandler(
         reqType: true,
         name: true,
         description: true,
-        parentComponent: true,
-        isSilence: true
+        parentComponent: true
     })
 )

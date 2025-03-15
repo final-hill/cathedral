@@ -5,7 +5,6 @@ export default postRequirementHttpHandler(
         reqType: true,
         name: true,
         description: true,
-        priority: true,
-        isSilence: true
+        priority: true
     })
 )

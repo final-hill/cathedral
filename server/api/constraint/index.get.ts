@@ -5,7 +5,6 @@ export default findRequirementsHttpHandler(
         reqType: true,
         name: true,
         description: true,
-        category: true,
-        isSilence: true
+        category: true
     }).partial().required({ reqType: true })
 )

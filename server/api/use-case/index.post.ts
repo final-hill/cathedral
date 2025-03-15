@@ -14,7 +14,6 @@ export default postRequirementHttpHandler(
         trigger: true,
         mainSuccessScenario: true,
         successGuarantee: true,
-        extensions: true,
-        isSilence: true
+        extensions: true
     })
 )

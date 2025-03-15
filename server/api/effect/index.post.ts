@@ -4,7 +4,6 @@ export default postRequirementHttpHandler(
     Effect.pick({
         reqType: true,
         name: true,
-        description: true,
-        isSilence: true
+        description: true
     })
 )

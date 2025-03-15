@@ -8,7 +8,6 @@ export default postRequirementHttpHandler(
         primaryActor: true,
         outcome: true,
         description: true,
-        functionalBehavior: true,
-        isSilence: true
+        functionalBehavior: true
     })
 )

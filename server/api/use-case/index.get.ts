@@ -14,7 +14,6 @@ export default findRequirementsHttpHandler(
         trigger: true,
         mainSuccessScenario: true,
         successGuarantee: true,
-        extensions: true,
-        isSilence: true
+        extensions: true
     }).partial().required({ reqType: true })
 )
