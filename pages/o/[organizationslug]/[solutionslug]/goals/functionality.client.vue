@@ -28,7 +28,6 @@ if (getFunctionalBehaviorsError.value)
     $eventBus.$emit('page-error', getFunctionalBehaviorsError.value);
 
 const viewSchema = FunctionalBehavior.pick({
-    id: true,
     reqId: true,
     name: true,
     description: true
@@ -41,7 +40,6 @@ const createSchema = FunctionalBehavior.pick({
 
 const editSchema = FunctionalBehavior.pick({
     id: true,
-    reqId: true,
     name: true,
     description: true
 })

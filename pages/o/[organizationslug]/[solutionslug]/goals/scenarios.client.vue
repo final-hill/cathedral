@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Epic, Stakeholder, FunctionalBehavior, Outcome, MoscowPriority } from '#shared/domain'
+import { Epic, MoscowPriority } from '#shared/domain'
 import type { z } from 'zod';
 
 useHead({ title: 'Scenarios' })
@@ -15,12 +15,7 @@ const { $eventBus } = useNuxtApp(),
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value);
 
-const [
-    { data: epics, refresh, status, error: getEpicsError },
-    { data: roles, error: getRolesError },
-    { data: functionalBehaviors, error: getFunctionalBehaviorsError },
-    { data: outcomes, error: getOutcomesError },
-] = await Promise.all([
+const { data: epics, refresh, status, error: getEpicsError } = await
     useFetch<z.infer<typeof Epic>[]>(`/api/epic`, {
         query: { solutionId, organizationSlug },
         transform: (data) => data.map((item) => ({
@@ -28,38 +23,35 @@ const [
             lastModified: new Date(item.lastModified),
             creationDate: new Date(item.creationDate)
         }))
-    }),
-    useFetch<z.infer<typeof Stakeholder>[]>(`/api/stakeholder`, { query: { solutionId, organizationSlug } }),
-    useFetch<z.infer<typeof FunctionalBehavior>[]>(`/api/functional-behavior`, { query: { solutionId, organizationSlug } }),
-    useFetch<z.infer<typeof Outcome>[]>(`/api/outcome`, { query: { solutionId, organizationSlug } })
-])
+    })
 
 if (getEpicsError.value)
     $eventBus.$emit('page-error', getEpicsError.value);
-if (getRolesError.value)
-    $eventBus.$emit('page-error', getRolesError.value);
-if (getFunctionalBehaviorsError.value)
-    $eventBus.$emit('page-error', getFunctionalBehaviorsError.value);
-if (getOutcomesError.value)
-    $eventBus.$emit('page-error', getOutcomesError.value);
 
 const viewSchema = Epic.pick({
-    id: true,
     reqId: true,
     name: true,
-    description: true
+    description: true,
+    primaryActor: true,
+    functionalBehavior: true,
+    outcome: true
 })
 
 const createSchema = Epic.pick({
     name: true,
-    description: true
+    description: true,
+    primaryActor: true,
+    functionalBehavior: true,
+    outcome: true
 })
 
 const editSchema = Epic.pick({
     id: true,
-    reqId: true,
     name: true,
-    description: true
+    description: true,
+    primaryActor: true,
+    functionalBehavior: true,
+    outcome: true
 })
 
 const onCreate = async (epic: z.infer<typeof createSchema>) => {

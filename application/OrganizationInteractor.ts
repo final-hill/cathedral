@@ -201,7 +201,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
         if (!this.isOrganizationReader())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
-        return this.repository.findSolutionRequirementsByType(props)
+        return this.repository.findSolutionRequirements(props)
     }
 
     /**

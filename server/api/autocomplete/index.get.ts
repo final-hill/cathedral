@@ -4,17 +4,16 @@ import handleDomainException from "~/server/utils/handleDomainException"
 import { OrganizationInteractor } from "~/application";
 import { OrganizationRepository } from "~/server/data/repositories";
 import { ReqType } from "#shared/domain/requirements/ReqType";
-import { Organization, Requirement, Solution } from "#shared/domain";
+import { Organization, Solution } from "#shared/domain";
 
 const querySchema = z.object({
     solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
     organizationSlug: Organization.innerType().pick({ slug: true }).shape.slug,
-    reqType: z.nativeEnum(ReqType),
-    name: Requirement.pick({ name: true }).shape.name
+    reqType: z.nativeEnum(ReqType)
 })
 
 export default defineEventHandler(async (event) => {
-    const { solutionSlug, organizationSlug, name, reqType } = await validateEventQuery(event, querySchema),
+    const { solutionSlug, organizationSlug, reqType } = await validateEventQuery(event, querySchema),
         session = (await getServerSession(event))!,
         organizationInteractor = new OrganizationInteractor({
             repository: new OrganizationRepository({ em: event.context.em, organizationSlug }),
@@ -24,6 +23,6 @@ export default defineEventHandler(async (event) => {
 
     return await organizationInteractor.findSolutionRequirements({
         solutionId,
-        query: { name, reqType }
+        query: { reqType }
     }).catch(handleDomainException)
 })

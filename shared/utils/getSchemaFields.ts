@@ -25,7 +25,7 @@ const getSchemaFields = (schema: z.ZodObject<any>) => Object.entries<z.ZodRawSha
                     : fieldType,
             isEnum = innerType instanceof z.ZodNativeEnum || innerType instanceof z.ZodEnum,
             isObject = innerType instanceof z.ZodObject,
-            objectReqType = isObject ? innerType._def.shape().reqType._def.defaultValue() : undefined,
+            reqType = isObject ? innerType._def.shape().reqType._def.defaultValue() : undefined,
             maxLength = innerType instanceof z.ZodString ? innerType._def.checks.find(check => check.kind === 'max')?.value : undefined,
             min = innerType instanceof z.ZodNumber ? innerType._def.checks.find(check => check.kind === 'min')?.value : undefined,
             max = innerType instanceof z.ZodNumber ? innerType._def.checks.find(check => check.kind === 'max')?.value : undefined
@@ -37,7 +37,7 @@ const getSchemaFields = (schema: z.ZodObject<any>) => Object.entries<z.ZodRawSha
             fieldType,
             isOptional,
             isObject,
-            objectReqType,
+            reqType,
             isReadOnly,
             innerType,
             min,

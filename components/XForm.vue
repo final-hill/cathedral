@@ -1,7 +1,7 @@
 <script lang="ts" generic="F extends FormSchema" setup>
-import type { FormSubmitEvent } from '@nuxt/ui';
+import type { AsyncData } from '#app';
+import type { FormSubmitEvent, InputMenuItem } from '@nuxt/ui';
 import { z } from 'zod';
-import type { ReqType } from '~/shared/domain/requirements/ReqType';
 import { getSchemaFields } from '~/shared/utils';
 
 export type FormSchema = z.ZodObject<{ [key: string]: z.ZodTypeAny }>
@@ -38,28 +38,34 @@ const onCancel = () => {
         props.onCancel()
 }
 
-// Fetch data for UInputMenu
+const schemaFields = getSchemaFields(props.schema);
+
+// Autocomplete data for UInputMenu
 type RouteType = { solutionslug?: string, organizationslug?: string }
-const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute().params as RouteType,
-    reqType = ref<ReqType>(),
-    objQuery = ref<string>('')
-const { data: autocomplete, status: autocompleteStatus } = await useFetch('/api/autocomplete', {
-    query: { solutionSlug, organizationSlug, reqType, name: objQuery },
-    lazy: true,
-    immediate: false,
-    transform: (items) => {
-        return items.map((item) => ({
-            label: item.name,
-            value: item.id
-        }))
+const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute().params as RouteType
+
+const autocompleteFetchObjects = schemaFields.reduce((acc, field) => {
+    const reqType = field.reqType
+    if (field.isObject) {
+        acc[field.key] = useFetch('/api/autocomplete', {
+            query: { solutionSlug, organizationSlug, reqType },
+            transform: (items) => {
+                return items.map((item) => ({
+                    label: item.name,
+                    value: item.id
+                }))
+            }
+        });
     }
-})
+    return acc;
+}, {} as Record<string, AsyncData<InputMenuItem[], unknown>>);
+
 </script>
 
 <template>
     <UForm ref="form" :id="props.id" :state="props.state" :schema="props.schema"
         :class="`gap-4 flex flex-col ${props.class}`" @submit="onSubmit" autocomplete="off">
-        <template v-for="field of getSchemaFields(props.schema)" :key="field.key">
+        <template v-for="field of schemaFields" :key="field.key">
             <UInput v-if="field.key === 'id'" type="hidden" v-model="props.state.id" name="id" />
             <UFormField v-if="field.key !== 'id'" :label="field.label" :name="field.key" :field="field.key"
                 :required="!field.isOptional" :description="field.description"
@@ -91,9 +97,10 @@ const { data: autocomplete, status: autocompleteStatus } = await useFetch('/api/
                     v-model.trim="props.state[field.key]" class="w-full" />
                 <USelect v-else-if="field.isEnum" v-model="props.state[field.key]" :items="field.enumOptions"
                     class="w-full" />
-                <UInputMenu v-else-if="field.isObject" v-model="props.state[field.key]" :items="autocomplete || []"
-                    :loading="autocompleteStatus === 'pending'" class="w-full" />
-                <!-- :loading="(await fetchAutocompleteData(formState[field.key])).status === 'pending'" -->
+                <UInputMenu v-else-if="field.isObject" v-model="props.state[field.key]"
+                    :items="(autocompleteFetchObjects[field.key].data || []) as any"
+                    :loading="(autocompleteFetchObjects[field.key].status as any) === 'pending'" class="w-full"
+                    placeholder="Search for an item" />
                 <UInput v-else v-model.trim="props.state[field.key]" class="w-full" />
             </UFormField>
         </template>

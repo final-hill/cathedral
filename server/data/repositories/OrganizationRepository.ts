@@ -499,7 +499,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
      * @returns The requirements that match the query parameters
      * @throws {MismatchException} If the solution does not exist in the organization
      */
-    async findSolutionRequirementsByType<R extends keyof typeof req>(props: {
+    async findSolutionRequirements<R extends keyof typeof req>(props: {
         solutionId: z.infer<typeof req.Solution>['id'],
         query: Partial<z.infer<typeof req[R]>> & { reqType: ReqType }
     }): Promise<z.infer<typeof req[R]>[]> {
@@ -789,7 +789,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
         solutionId: z.infer<typeof req.Solution>['id'],
         reqType: ReqType,
     }): Promise<z.infer<typeof req[R]>> {
-        const requirement = (await this.findSolutionRequirementsByType({
+        const requirement = (await this.findSolutionRequirements({
             solutionId: props.solutionId,
             query: { id: props.id, reqType: props.reqType, } as Partial<z.infer<typeof req[R]>> & { reqType: ReqType }
         }))[0]
