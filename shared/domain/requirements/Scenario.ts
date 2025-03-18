@@ -4,7 +4,7 @@ import { ReqType } from "./ReqType.js";
 
 export const Scenario = Example.extend({
     primaryActor: z.object({
-        reqType: z.nativeEnum(ReqType).default(ReqType.ACTOR),
+        reqType: z.nativeEnum(ReqType).default(ReqType.STAKEHOLDER),
         id: z.string().uuid()
             .describe('Primary actor involved in the scenario'),
         name: z.string()
