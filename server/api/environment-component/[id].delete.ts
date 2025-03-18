@@ -1,6 +1,3 @@
-import { EnvironmentComponent } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete an environment component by id.
- */
-export default deleteRequirementHttpHandler(EnvironmentComponent)
+export default deleteRequirementHttpHandler(ReqType.ENVIRONMENT_COMPONENT)

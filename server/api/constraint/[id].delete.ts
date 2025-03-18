@@ -1,6 +1,3 @@
-import { Constraint } from '~/domain/requirements'
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete constraint by id.
- */
-export default deleteRequirementHttpHandler(Constraint)
+export default deleteRequirementHttpHandler(ReqType.CONSTRAINT)

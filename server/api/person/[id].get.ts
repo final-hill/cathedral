@@ -1,6 +1,3 @@
-import { Person } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns a person by id
- */
-export default getRequirementHttpHandler(Person)
+export default getRequirementHttpHandler(ReqType.PERSON)

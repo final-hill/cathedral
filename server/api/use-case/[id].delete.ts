@@ -1,6 +1,3 @@
-import { UseCase } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete UseCase by id.
- */
-export default deleteRequirementHttpHandler(UseCase)
+export default deleteRequirementHttpHandler(ReqType.USE_CASE)

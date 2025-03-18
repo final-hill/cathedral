@@ -1,23 +1,6 @@
-body {
-    margin: 0;
-    padding: 0;
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
-    color: var(--font-color);
-}
+@import 'tailwindcss' theme(static);
+@import '@nuxt/ui';
 
-a {
-    color: var(--link-color);
-    text-decoration: none;
-}
-
-a:hover,
-a:active,
-a:focus {
-    text-decoration: underline;
-}
-
-.required::after {
-    content: "*";
-    color: var(--red-400);
-    padding-left: 0.25em;
+@theme static {
+    --font-sans: Verdana, Geneva, Tahoma, sans-serif;
 }

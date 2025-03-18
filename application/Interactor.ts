@@ -1,5 +1,5 @@
-import type { AppUser } from "~/domain/application"
-import type { Requirement } from "~/domain/requirements"
+import { AppUser } from "#shared/domain";
+import type { z } from "zod";
 import type { Repository } from "~/server/data/repositories/Repository"
 
 /**
@@ -21,7 +21,7 @@ export abstract class Interactor<E> {
      */
     constructor(props: {
         repository: Repository<E>,
-        userId: AppUser['id']
+        userId: z.infer<typeof AppUser>['id']
     }) {
         this._repository = props.repository
         this._userId = props.userId

@@ -1,6 +1,3 @@
-import { UserStory } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete User Story by id.
- */
-export default deleteRequirementHttpHandler(UserStory)
+export default deleteRequirementHttpHandler(ReqType.USER_STORY)

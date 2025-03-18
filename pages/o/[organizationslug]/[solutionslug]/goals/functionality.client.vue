@@ -1,37 +1,48 @@
 <script lang="ts" setup>
-import { MoscowPriority } from '~/domain/requirements/MoscowPriority.js';
-import type { FunctionalBehaviorViewModel, SolutionViewModel } from '#shared/models';
+import { FunctionalBehavior, MoscowPriority } from '#shared/domain';
+import type { z } from 'zod';
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Goals Functionality' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Functionality').params,
-    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Functionality').params
 
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value)
-
-const { data: functionalBehaviors, refresh, status, error: getFunctionalBehaviorsError } = await useFetch<FunctionalBehaviorViewModel[]>(`/api/functional-behavior`, {
-    query: { solutionId, organizationSlug },
-    transform: (data) => data.map((item) => {
-        item.lastModified = new Date(item.lastModified)
-        return item
-    })
+const { data: functionalBehaviors, refresh, status, error: getFunctionalBehaviorsError } = await useFetch<z.infer<typeof FunctionalBehavior>[]>(`/api/functional-behavior`, {
+    query: { solutionSlug, organizationSlug },
+    transform: (data) => data.map((item) => ({
+        ...item,
+        lastModified: new Date(item.lastModified),
+        creationDate: new Date(item.creationDate)
+    }))
 })
 
 if (getFunctionalBehaviorsError.value)
     $eventBus.$emit('page-error', getFunctionalBehaviorsError.value);
 
-const onCreate = async (data: FunctionalBehaviorViewModel) => {
+const viewSchema = FunctionalBehavior.pick({
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const createSchema = FunctionalBehavior.pick({
+    name: true,
+    description: true
+})
+
+const editSchema = FunctionalBehavior.pick({
+    id: true,
+    name: true,
+    description: true
+})
+
+const onCreate = async (data: z.infer<typeof createSchema>) => {
     await $fetch(`/api/functional-behavior`, {
         method: 'POST',
         body: {
             ...data,
-            solutionId,
+            solutionSlug,
             organizationSlug,
             priority: MoscowPriority.MUST
         }
@@ -40,12 +51,12 @@ const onCreate = async (data: FunctionalBehaviorViewModel) => {
     refresh()
 }
 
-const onUpdate = async (data: FunctionalBehaviorViewModel) => {
+const onUpdate = async (data: z.infer<typeof editSchema>) => {
     await $fetch(`/api/functional-behavior/${data.id}`, {
         method: 'PUT',
         body: {
             ...data,
-            solutionId,
+            solutionSlug,
             organizationSlug,
             priority: MoscowPriority.MUST
         }
@@ -57,7 +68,7 @@ const onUpdate = async (data: FunctionalBehaviorViewModel) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/functional-behavior/${id}`, {
         method: 'DELETE',
-        body: { solutionId, organizationSlug }
+        body: { solutionSlug, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
@@ -65,16 +76,11 @@ const onDelete = async (id: string) => {
 </script>
 
 <template>
-    <p>
-        This section describes the Functional Behaviors of the solution.
-        These are the features that the solution must have to meet the needs of the users.
-        They describe <strong>WHAT</strong> the solution must do and not how it does it.
-    </p>
+    <h1>Functionality</h1>
+    <p>{{ FunctionalBehavior.description }}</p>
 
-    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
-        :createModel="{ name: 'text', description: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="functionalBehaviors"
-        :on-create="onCreate" :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'"
-        :organizationSlug="organizationSlug" entityName="FunctionalBehavior" :showRecycleBin="true">
+    <XDataTable :viewSchema="viewSchema" :createSchema="createSchema" :editSchema="editSchema"
+        :data="functionalBehaviors" :onCreate="onCreate" :onDelete="onDelete" :onUpdate="onUpdate"
+        :loading="status === 'pending'">
     </XDataTable>
 </template>

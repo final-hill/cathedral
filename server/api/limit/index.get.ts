@@ -1,14 +1,9 @@
-import { z } from "zod"
-import { Limit } from "~/domain/requirements/index.js"
+import { Limit } from "#shared/domain"
 
-/**
- * Returns all limits that match the query parameters
- */
-export default findRequirementsHttpHandler({
-    ReqClass: Limit,
-    querySchema: z.object({
-        name: z.string().optional(),
-        description: z.string().optional(),
-        isSilence: z.boolean().optional().default(false)
-    })
-})
+export default findRequirementsHttpHandler(
+    Limit.pick({
+        reqType: true,
+        name: true,
+        description: true
+    }).partial().required({ reqType: true })
+)

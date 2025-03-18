@@ -1,6 +1,3 @@
-import { Outcome } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete outcome by id.
- */
-export default deleteRequirementHttpHandler(Outcome)
+export default deleteRequirementHttpHandler(ReqType.OUTCOME)

@@ -1,5 +1,5 @@
 import { Collection, Entity } from '@mikro-orm/core';
-import { ReqType } from "./ReqType.js";
+import { ReqType } from "../../../../shared/domain/requirements/ReqType.js";
 import { ResponsibilityModel, ResponsibilityVersionsModel } from './ResponsibilitySchema.js';
 
 @Entity({ discriminatorValue: ReqType.ROLE })

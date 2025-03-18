@@ -1,6 +1,3 @@
-import { Justification } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete a justification by id.
- */
-export default deleteRequirementHttpHandler(Justification)
+export default deleteRequirementHttpHandler(ReqType.JUSTIFICATION)

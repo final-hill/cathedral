@@ -1,6 +1,3 @@
-import { FunctionalBehavior } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns a functional behavior by id
- */
-export default getRequirementHttpHandler(FunctionalBehavior)
+export default getRequirementHttpHandler(ReqType.FUNCTIONAL_BEHAVIOR)

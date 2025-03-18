@@ -1,6 +1,3 @@
-import { Epic } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns an epic by id
- */
-export default getRequirementHttpHandler(Epic)
+export default getRequirementHttpHandler(ReqType.EPIC)

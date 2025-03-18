@@ -1,6 +1,3 @@
-import { GlossaryTerm } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns a glossary term by id
- */
-export default getRequirementHttpHandler(GlossaryTerm)
+export default getRequirementHttpHandler(ReqType.GLOSSARY_TERM)

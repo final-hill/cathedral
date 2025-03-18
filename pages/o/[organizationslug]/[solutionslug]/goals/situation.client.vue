@@ -1,56 +1,81 @@
 <script lang="ts" setup>
-import type { ObstacleViewModel, SolutionViewModel } from '#shared/models';
-import { debounce } from '#shared/utils';
+import { Obstacle } from '#shared/domain';
+import { z } from 'zod';
 
 useHead({ title: 'Situation' })
 definePageMeta({ name: 'Situation' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Situation').params,
-    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id;
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Situation').params
 
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value);
-
-const { data: situations, error: getSituationError } = await useFetch<ObstacleViewModel[]>(`/api/obstacle`, {
-    query: { name: 'G.2', solutionId, organizationSlug }
+const { data: situations, error: getSituationError } = await useFetch<z.infer<typeof Obstacle>[]>(`/api/obstacle`, {
+    transform: (data) => data.map((item) => ({
+        ...item,
+        lastModified: new Date(item.lastModified),
+        creationDate: new Date(item.creationDate)
+    })),
+    query: { name: 'G.2', solutionSlug, organizationSlug }
 });
 
 if (getSituationError.value)
     $eventBus.$emit('page-error', getSituationError.value);
 
-const situationDescription = ref(situations.value?.[0].description!),
-    situation = situations.value![0]
+const situation = situations.value![0]
 
-watch(situationDescription, debounce(() => {
-    situation.description = situationDescription.value;
-    $fetch(`/api/obstacle/${situation.id}`, {
+const formSchema = Obstacle.pick({
+    description: true
+});
+
+type FormSchema = z.infer<typeof formSchema>;
+
+const formState = reactive<FormSchema>({
+    description: situation.description
+});
+
+const updateSituation = async (data: FormSchema) => {
+    await $fetch(`/api/obstacle/${situation.id}`, {
         method: 'PUT',
         body: {
-            solutionId,
+            solutionSlug,
             organizationSlug,
             name: situation.name,
-            description: situation.description
+            description: data.description
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
-}, 500));
+}
 
-const { data: obstacles, refresh, status, error: getObstaclesError } = await useFetch<ObstacleViewModel[]>(`/api/obstacle`, {
-    query: { solutionId, organizationSlug },
-    transform: (data) => data.map((item) => {
-        item.lastModified = new Date(item.lastModified)
-        return item
-    }).filter((item) => item.reqId !== 'G.2.1')
+const { data: obstacles, refresh, status, error: getObstaclesError } = await useFetch<z.infer<typeof Obstacle>[]>(`/api/obstacle`, {
+    query: { solutionSlug, organizationSlug },
+    transform: (data) => data.map((item) => ({
+        ...item,
+        lastModified: new Date(item.lastModified),
+        creationDate: new Date(item.creationDate)
+    })).filter((item) => item.reqId !== 'G.2.1')
 })
 
-const onCreate = async (data: ObstacleViewModel) => {
+const viewSchema = Obstacle.pick({
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const createSchema = Obstacle.pick({
+    name: true,
+    description: true
+})
+
+const editSchema = Obstacle.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    description: true
+})
+
+const onCreate = async (data: z.infer<typeof createSchema>) => {
     await $fetch(`/api/obstacle`, {
         method: 'POST',
         body: {
-            solutionId,
+            solutionSlug,
             organizationSlug,
             name: data.name,
             description: data.description
@@ -60,11 +85,11 @@ const onCreate = async (data: ObstacleViewModel) => {
     refresh()
 }
 
-const onUpdate = async (data: ObstacleViewModel) => {
+const onUpdate = async (data: z.infer<typeof editSchema>) => {
     await $fetch(`/api/obstacle/${data.id}`, {
         method: 'PUT',
         body: {
-            solutionId,
+            solutionSlug,
             organizationSlug,
             name: data.name,
             description: data.description
@@ -77,7 +102,7 @@ const onUpdate = async (data: ObstacleViewModel) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/obstacle/${id}`, {
         method: 'DELETE',
-        body: { solutionId, organizationSlug }
+        body: { solutionSlug, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
@@ -85,25 +110,17 @@ const onDelete = async (id: string) => {
 </script>
 
 <template>
-    <form autocomplete="off">
-        <h2>G.2.1 Situation</h2>
-        <div class="field">
-            <p>
-                The situation is the current state of affairs that need to be
-                addressed by the system created by a project.
-            </p>
-            <Textarea name="situation" id="situation" class="w-full h-10rem" v-model.trim.lazy="situationDescription" />
-        </div>
-    </form>
+    <h1>G.2.1 Situation</h1>
+
+    <p>
+        The current state of affairs that need to be addressed by the system created by a project.
+    </p>
+
+    <XForm :schema="formSchema" :state="formState" :onSubmit="updateSituation" />
 
     <h2>Obstacles</h2>
-    <p>
-        Obstacles are the challenges that prevent the goals from being achieved.
-    </p>
-    <XDataTable :viewModel="{ reqId: 'text', name: 'text', description: 'text' }"
-        :createModel="{ name: 'text', description: 'text' }"
-        :editModel="{ id: 'hidden', name: 'text', description: 'text' }" :datasource="obstacles" :on-create="onCreate"
-        :on-update="onUpdate" :on-delete="onDelete" :loading="status === 'pending'" :organizationSlug="organizationSlug"
-        entityName="Obstacle" :showRecycleBin="true">
+    <p> {{ Obstacle.description }} </p>
+    <XDataTable :viewSchema="viewSchema" :createSchema="createSchema" :editSchema="editSchema" :data="obstacles"
+        :onCreate="onCreate" :onDelete="onDelete" :onUpdate="onUpdate" :loading="status === 'pending'">
     </XDataTable>
 </template>

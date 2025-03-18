@@ -1,77 +1,88 @@
 <script lang="ts" setup>
-import mermaid from 'mermaid';
-import { StakeholderCategory } from '~/domain/requirements/StakeholderCategory.js';
-import { StakeholderSegmentation } from '~/domain/requirements/StakeholderSegmentation.js';
-import type { StakeholderViewModel, SolutionViewModel } from '#shared/models';
+import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from '#shared/domain';
+import type { z } from 'zod';
 
 useHead({ title: 'Stakeholders' })
 definePageMeta({ name: 'Stakeholders' })
 
-const config = useAppConfig(),
-    { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Stakeholders').params,
-    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id;
+const { $eventBus } = useNuxtApp(),
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Stakeholders').params
 
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value);
-
-const { data: stakeholders, refresh: refreshStakeholders, status, error: getStakeholdersError } = await useFetch<StakeholderViewModel[]>(`/api/stakeholder`, {
-    query: { solutionId, organizationSlug },
-    transform: (data) => data.map((item) => {
-        item.lastModified = new Date(item.lastModified)
-        return item
-    })
+const { data: stakeholders, refresh: refreshStakeholders, status, error: getStakeholdersError } = await useFetch<z.infer<typeof Stakeholder>[]>(`/api/stakeholder`, {
+    query: { solutionSlug, organizationSlug },
+    transform: (data) => data.map((item) => ({
+        ...item,
+        lastModified: new Date(item.lastModified),
+        creationDate: new Date(item.creationDate)
+    }))
 })
+
+const tabs = [
+    { label: 'Stakeholders', slot: 'stakeholders' },
+    { label: 'Stakeholder Map', slot: 'stakeholder-map' }
+]
 
 if (getStakeholdersError.value)
     $eventBus.$emit('page-error', getStakeholdersError.value);
 
-enum themeMap {
-    light = 'default',
-    dark = 'dark'
-};
+const viewSchema = Stakeholder.pick({
+    name: true,
+    description: true,
+    category: true,
+    segmentation: true,
+    availability: true,
+    influence: true
+})
 
-mermaid.initialize({
-    startOnLoad: false,
-    theme: themeMap[config.darkMode]
-});
+const createSchema = Stakeholder.pick({
+    name: true,
+    description: true,
+    category: true,
+    segmentation: true,
+    availability: true,
+    influence: true
+})
 
-const chartDefinition = (stakeholders: StakeholderViewModel[], category: StakeholderSegmentation) => `
+const editSchema = Stakeholder.pick({
+    id: true,
+    name: true,
+    description: true,
+    category: true,
+    segmentation: true,
+    availability: true,
+    influence: true
+})
+
+const chartDefinition = (stakeholders: z.infer<typeof Stakeholder>[], category: StakeholderSegmentation) => `
     quadrantChart
     title ${category}
     x-axis Low Availability --> High Availability
     y-axis Low Infuence --> High Influence
-    quadrant-1 "${StakeholderCategory.KEY_STAKEHOLDER} (Satisfy)"
-    quadrant-2 "${StakeholderCategory.SHADOW_INFLUENCER} (Manage)"
-    quadrant-3 "${StakeholderCategory.FELLOW_TRAVELER} (Inform)"
-    quadrant-4 "${StakeholderCategory.OBSERVER} (Monitor)"
+    quadrant-1 "${StakeholderCategory['Key Stakeholder']} (Satisfy)"
+    quadrant-2 "${StakeholderCategory['Shadow Influencer']} (Manage)"
+    quadrant-3 "${StakeholderCategory['Fellow Traveler']} (Inform)"
+    quadrant-4 "${StakeholderCategory['Observer']} (Monitor)"
     ${stakeholders.map(({ name, availability, influence }) =>
     `"${name}": [${availability / 100}, ${influence / 100}]`)?.join('\n')
     }
 `;
 
-const clientMap = ref<HTMLElement>(),
-    vendorMap = ref<HTMLElement>();
+const clientMap = ref<string>(''),
+    vendorMap = ref<string>('');
 
 const renderChart = async () => {
     const groupStakeholders = Object.groupBy(stakeholders.value!, ({ segmentation }) => segmentation ?? 'unknown'),
         clientGroup = groupStakeholders.Client ?? [],
         vendorGroup = groupStakeholders.Vendor ?? [];
 
-    clientMap.value!.textContent = chartDefinition(clientGroup, StakeholderSegmentation.CLIENT)
-    vendorMap.value!.textContent = chartDefinition(vendorGroup, StakeholderSegmentation.VENDOR)
-
-    await mermaid.run({
-        nodes: [clientMap.value!, vendorMap.value!]
-    })
+    clientMap.value = chartDefinition(clientGroup, StakeholderSegmentation['Client'])
+    vendorMap.value = chartDefinition(vendorGroup, StakeholderSegmentation['Vendor'])
 }
 
 watch(stakeholders, renderChart);
+renderChart();
 
-const onCreate = async (data: StakeholderViewModel) => {
+const onCreate = async (data: z.infer<typeof createSchema>) => {
     await $fetch(`/api/stakeholder`, {
         method: 'POST',
         body: {
@@ -81,7 +92,7 @@ const onCreate = async (data: StakeholderViewModel) => {
             segmentation: data.segmentation,
             availability: Number(data.availability),
             influence: Number(data.influence),
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -89,7 +100,7 @@ const onCreate = async (data: StakeholderViewModel) => {
     refreshStakeholders()
 }
 
-const onUpdate = async (data: StakeholderViewModel) => {
+const onUpdate = async (data: z.infer<typeof editSchema>) => {
     await $fetch(`/api/stakeholder/${data.id}`, {
         method: 'PUT',
         body: {
@@ -99,7 +110,7 @@ const onUpdate = async (data: StakeholderViewModel) => {
             segmentation: data.segmentation,
             availability: Number(data.availability),
             influence: Number(data.influence),
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -110,7 +121,7 @@ const onUpdate = async (data: StakeholderViewModel) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/stakeholder/${id}`, {
         method: 'DELETE',
-        body: { solutionId, organizationSlug }
+        body: { solutionSlug, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refreshStakeholders()
@@ -118,45 +129,19 @@ const onDelete = async (id: string) => {
 </script>
 
 <template>
-    <p>
-        Stakeholders are the categories of people who are affected by the
-        problem you are trying to solve. Do not list individuals, but rather
-        groups or roles. Example: instead of "Jane Doe", use "Project Manager".
-    </p>
+    <h1>Stakeholders</h1>
+    <p> {{ Stakeholder.description }} </p>
 
-    <TabView @tab-change="(e) => refreshStakeholders()">
-        <TabPanel header="Stakeholders">
-            <XDataTable :viewModel="{
-                reqId: 'text',
-                name: 'text',
-                description: 'text',
-                availability: 'number',
-                influence: 'number',
-                category: 'text',
-                segmentation: 'text'
-            }" :createModel="{
-                name: 'text',
-                description: 'text',
-                availability: { type: 'number', max: 100, min: 0 },
-                influence: { type: 'number', max: 100, min: 0 },
-                category: Object.values(StakeholderCategory),
-                segmentation: Object.values(StakeholderSegmentation)
-            }" :editModel="{
-                id: 'hidden',
-                name: 'text',
-                description: 'text',
-                availability: { type: 'number', max: 100, min: 0 },
-                influence: { type: 'number', max: 100, min: 0 },
-                category: Object.values(StakeholderCategory),
-                segmentation: Object.values(StakeholderSegmentation)
-            }" :datasource="stakeholders" :on-create="onCreate" :on-update="onUpdate" :on-delete="onDelete"
-                :loading="status === 'pending'" :organizationSlug="organizationSlug" entityName="Stakeholder"
-                :showRecycleBin="true">
+    <UTabs :items="tabs" @update:open="refreshStakeholders">
+        <template #stakeholders="{ item }">
+            <XDataTable :viewSchema="viewSchema" :createSchema="createSchema" :editSchema="editSchema"
+                :data="stakeholders" :onCreate="onCreate" :onDelete="onDelete" :onUpdate="onUpdate"
+                :loading="status === 'pending'">
             </XDataTable>
-        </TabPanel>
-        <TabPanel header="Stakeholder Map">
-            <section ref="clientMap"></section>
-            <section ref="vendorMap"></section>
-        </TabPanel>
-    </TabView>
+        </template>
+        <template #stakeholder-map="{ item }">
+            <Mermaid :value="clientMap" />
+            <Mermaid :value="vendorMap" />
+        </template>
+    </UTabs>
 </template>

@@ -1,6 +1,3 @@
-import { Outcome } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns an outcome by id
- */
-export default getRequirementHttpHandler(Outcome)
+export default getRequirementHttpHandler(ReqType.OUTCOME)

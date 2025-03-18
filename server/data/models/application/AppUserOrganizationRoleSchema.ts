@@ -1,5 +1,5 @@
 import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, type Ref } from "@mikro-orm/core";
-import { AppRole } from "../../../../domain/application/index.js";
+import { AppRole } from '../../../../shared/domain/index.js';
 import { StaticAuditModel, VolatileAuditModel } from "../AuditSchema.js";
 import { AppUserModel, } from "./index.js"
 import { OrganizationModel } from "../requirements/index.js";
@@ -12,7 +12,7 @@ export class AppUserOrganizationRoleModel extends StaticAuditModel<AppUserOrgani
     @ManyToOne({ primary: true, entity: () => AppUserModel })
     readonly appUser!: AppUserModel;
 
-    @ManyToOne({ primary: true, entity: () => OrganizationModel })
+    @ManyToOne({ primary: true, ref: true, entity: () => OrganizationModel })
     readonly organization!: Ref<OrganizationModel>;
 
     @OneToMany({ mappedBy: 'appUserOrganizationRole', entity: () => AppUserOrganizationRoleVersionsModel })

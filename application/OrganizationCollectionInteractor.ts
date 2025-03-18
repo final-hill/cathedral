@@ -1,11 +1,10 @@
-import type { Organization } from "~/domain/requirements";
+import { z } from 'zod'
+import { AppUser, AppRole, Organization, DuplicateEntityException, NotFoundException, PermissionDeniedException } from "#shared/domain";
+import { slugify } from "#shared/utils";
 import { Interactor } from "./Interactor";
 import { type OrganizationCollectionRepository } from "~/server/data/repositories";
-import { AppRole, type AppUser } from "~/domain/application";
-import { DuplicateEntityException, NotFoundException, PermissionDeniedException } from "~/domain/exceptions";
-import { slugify } from "~/shared/utils";
 
-export class OrganizationCollectionInteractor extends Interactor<Organization> {
+export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof Organization>> {
     /**
      * Create a new OrganizationCollectionInteractor
      *
@@ -15,7 +14,7 @@ export class OrganizationCollectionInteractor extends Interactor<Organization> {
     constructor(props: {
         // TODO: This should be Repository<Organization>
         repository: OrganizationCollectionRepository,
-        userId: AppUser['id']
+        userId: z.infer<typeof AppUser>['id']
     }) { super(props) }
 
     // FIXME: this shouldn't be necessary
@@ -32,7 +31,7 @@ export class OrganizationCollectionInteractor extends Interactor<Organization> {
      * @throws {DuplicateEntityException} If the organization already exists
      * @throws {DuplicateEntityException} If the app user organization role already exists
      */
-    async createOrganization(props: Pick<Organization, 'name' | 'description'>): Promise<Organization['id']> {
+    async createOrganization(props: Pick<z.infer<typeof Organization>, 'name' | 'description'>): Promise<z.infer<typeof Organization>['id']> {
         const repo = this.repository,
             effectiveDate = new Date(),
             newOrgId = await repo.createOrganization({ ...props, createdById: this._userId, effectiveDate })
@@ -54,7 +53,7 @@ export class OrganizationCollectionInteractor extends Interactor<Organization> {
      * @throws {PermissionDeniedException} If the user is not an admin of the organization or better
      * @throws {NotFoundException} If the organization does not exist
      */
-    async deleteOrganizationById(id: Organization['id']): Promise<void> {
+    async deleteOrganizationById(id: z.infer<typeof Organization>['id']): Promise<void> {
         if (!await this.isOrganizationAdmin(id))
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
@@ -71,7 +70,7 @@ export class OrganizationCollectionInteractor extends Interactor<Organization> {
      * @throws {PermissionDeniedException} If the user is not an admin of the organization or better
      * @throws {NotFoundException} If the organization does not exist
      */
-    async deleteOrganizationBySlug(slug: Organization['slug']): Promise<void> {
+    async deleteOrganizationBySlug(slug: z.infer<typeof Organization>['slug']): Promise<void> {
         const org = (await this.repository.findOrganizations({ slug }))[0]
 
         if (!org)
@@ -89,7 +88,7 @@ export class OrganizationCollectionInteractor extends Interactor<Organization> {
      * @param query The query parameters to filter organizations by
      * @returns The organizations that match the query parameters
      */
-    async findOrganizations(query: Partial<Organization> = {}): Promise<Organization[]> {
+    async findOrganizations(query: Partial<z.infer<typeof Organization>> = {}): Promise<z.infer<typeof Organization>[]> {
         const orgs = await this.repository.findOrganizations(query)
 
         return orgs.filter(async org => await this.isOrganizationReader(org.id))
@@ -100,7 +99,7 @@ export class OrganizationCollectionInteractor extends Interactor<Organization> {
      * @param id The id of the organization
      * @returns Whether the user is an admin of the organization
      */
-    async isOrganizationAdmin(id: Organization['id']): Promise<boolean> {
+    async isOrganizationAdmin(id: z.infer<typeof Organization>['id']): Promise<boolean> {
         const appUser = await this.repository.getOrganizationAppUserById({
             organizationId: id,
             userId: this._userId
@@ -124,7 +123,7 @@ export class OrganizationCollectionInteractor extends Interactor<Organization> {
      * @param id The id of the organization
      * @returns Whether the user is a contributor of the organization
      */
-    async isOrganizationContributor(id: Organization['id']): Promise<boolean> {
+    async isOrganizationContributor(id: z.infer<typeof Organization>['id']): Promise<boolean> {
         const appUser = await this.repository.getOrganizationAppUserById({
             organizationId: id,
             userId: this._userId
@@ -148,7 +147,7 @@ export class OrganizationCollectionInteractor extends Interactor<Organization> {
      * @param id The id of the organization
      * @returns Whether the user is a reader of the organization
      */
-    async isOrganizationReader(id: Organization['id']): Promise<boolean> {
+    async isOrganizationReader(id: z.infer<typeof Organization>['id']): Promise<boolean> {
         const appUser = await this.repository.getOrganizationAppUserById({
             organizationId: id,
             userId: this._userId
@@ -176,7 +175,7 @@ export class OrganizationCollectionInteractor extends Interactor<Organization> {
      * @throws {NotFoundException} If the organization does not exist
      * @throws {DuplicateEntityException} If an organization already exists with the new name
      */
-    async updateOrganizationBySlug(slug: Organization['slug'], props: Pick<Partial<Organization>, 'name' | 'description'>): Promise<void> {
+    async updateOrganizationBySlug(slug: z.infer<typeof Organization>['slug'], props: Pick<Partial<z.infer<typeof Organization>>, 'name' | 'description'>): Promise<void> {
         const existingOrg = (await this.repository.findOrganizations({ slug }))[0],
             newSlug = props.name ? slugify(props.name) : existingOrg.slug
 

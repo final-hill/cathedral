@@ -1,6 +1,3 @@
-import { Justification } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns a justification by id
- */
-export default getRequirementHttpHandler(Justification)
+export default getRequirementHttpHandler(ReqType.JUSTIFICATION)

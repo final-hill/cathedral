@@ -1,14 +1,10 @@
-import { z } from "zod"
-import { Limit } from "~/domain/requirements/index.js"
+import { Limit } from "#shared/domain"
 
-/**
- * Updates a limit by id.
- */
-export default putRequirementHttpHandler({
-    ReqClass: Limit,
-    bodySchema: z.object({
-        name: z.string().optional(),
-        description: z.string().optional(),
-        isSilence: z.boolean().optional()
-    })
-})
+export default putRequirementHttpHandler(
+    Limit.pick({
+        reqType: true,
+        reqIdPrefix: true,
+        name: true,
+        description: true
+    }).partial().required({ reqType: true })
+)

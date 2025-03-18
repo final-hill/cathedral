@@ -3,9 +3,10 @@ import { v7 as uuidv7 } from 'uuid';
 import zodToJsonSchema from "zod-to-json-schema";
 import zodSchema from '../llm-zod-schemas/index.js'
 import { zodResponseFormat } from "openai/helpers/zod";
-import { dedent } from "#shared/utils";
+import { dedent } from "../../../shared/utils/dedent.js";
+import { z } from "zod";
 
-type LLMResponseType = typeof zodSchema['_type']['requirements']
+type LLMResponseType = z.infer<typeof zodSchema>['requirements']
 type ArrayToUnion<T> = T extends (infer U)[] ? U : never
 type ExtractGroupItem<T extends string> = Extract<ArrayToUnion<LLMResponseType>, { type: T }> & { id: string }
 export type ParsedRequirementGroup = {

@@ -1,6 +1,6 @@
 import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, PrimaryKey, Property, types } from '@mikro-orm/core';
 import { StaticAuditModel, VolatileAuditModel } from '../index.js';
-import { ReqType } from './ReqType.js';
+import { ReqType } from '../../../../shared/domain/requirements/ReqType.js';
 
 // static properties
 @Entity({ abstract: true, tableName: 'requirement', discriminatorColumn: 'req_type', discriminatorValue: ReqType.REQUIREMENT })
@@ -35,7 +35,7 @@ export abstract class RequirementVersionsModel extends VolatileAuditModel {
     readonly description!: string
 
     @Property({ type: types.string, nullable: true })
-    readonly reqId?: `P.${number}.${number}` | `E.${number}.${number}` | `G.${number}.${number}` | `S.${number}.${number}` | `0.${number}.${number}` | undefined
+    readonly reqId?: `${'P' | 'E' | 'G' | 'S' | '0'}.${number}.${number}`
 
     @Property({ type: types.boolean, default: false })
     readonly isSilence!: boolean

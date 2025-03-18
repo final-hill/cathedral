@@ -1,6 +1,3 @@
-import { NonFunctionalBehavior } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete non-functional behavior by id.
- */
-export default deleteRequirementHttpHandler(NonFunctionalBehavior)
+export default deleteRequirementHttpHandler(ReqType.NON_FUNCTIONAL_BEHAVIOR)

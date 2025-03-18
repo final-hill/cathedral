@@ -1,31 +1,32 @@
 import { getServerSession } from '#auth'
 import { OrganizationInteractor } from "~/application"
-import { type ZodObject, z } from "zod"
-import { Requirement } from "~/domain/requirements"
+import { type ZodObject } from "zod"
 import { OrganizationRepository } from '../data/repositories/OrganizationRepository'
 import handleDomainException from './handleDomainException'
+import { Organization, Solution } from '~/shared/domain'
+
+const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
 export default function findRequirementsHttpHandler<
-    RCons extends typeof Requirement,
-    Q extends ZodObject<any>
->({ ReqClass, querySchema }: { ReqClass: RCons, querySchema: Q }) {
+    QuerySchema extends ZodObject<any>
+>(querySchema: QuerySchema) {
     const validatedQuerySchema = querySchema.extend({
-        solutionId: z.string().uuid(),
-        organizationId: z.string().uuid().optional(),
-        organizationSlug: z.string().max(100).optional()
+        solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
+        organizationId,
+        organizationSlug
     }).refine((value) => {
         return value.organizationId !== undefined || value.organizationSlug !== undefined;
     }, "At least one of organizationId or organizationSlug should be provided");
 
     return defineEventHandler(async (event) => {
         // FIXME: Zod sucks at type inference. see: https://github.com/colinhacks/zod/issues/2807
-        const { solutionId, organizationId, organizationSlug, ...query } = await validateEventQuery(event, validatedQuerySchema) as any,
+        const { solutionSlug, organizationId, organizationSlug, ...query } = await validateEventQuery(event, validatedQuerySchema) as any,
             session = (await getServerSession(event))!,
             organizationInteractor = new OrganizationInteractor({
                 repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug }),
                 userId: session.id
             })
 
-        return await organizationInteractor.findSolutionRequirements({ solutionId, ReqClass, query }).catch(handleDomainException)
+        return await organizationInteractor.findSolutionRequirements({ solutionSlug, query }).catch(handleDomainException)
     })
 }

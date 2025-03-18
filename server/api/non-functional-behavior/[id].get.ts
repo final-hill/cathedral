@@ -1,6 +1,3 @@
-import { NonFunctionalBehavior } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns a non-functional behavior by id
- */
-export default getRequirementHttpHandler(NonFunctionalBehavior)
+export default getRequirementHttpHandler(ReqType.NON_FUNCTIONAL_BEHAVIOR)

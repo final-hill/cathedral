@@ -1,386 +1,160 @@
-<script lang="ts" generic="RowType extends {id: string, name: string}" setup>
-import type Dialog from 'primevue/dialog'
-import type DataTable from 'primevue/datatable'
-import { FilterMatchMode } from 'primevue/api';
-import type { AuditLogViewModel } from '#shared/models';
-import { camelCaseToTitleCase } from '#shared/utils';
+<script lang="tsx" generic="V extends ViewSchema, E extends EditSchema, C extends CreateSchema" setup>
+import { getSchemaFields } from '#shared/utils';
+import type { TableColumn } from '@nuxt/ui';
+import { UButton, UCheckbox, UModal } from '#components';
+import { z } from 'zod';
+import XForm from './XForm.vue';
 
-export type RequirementFieldType = { type: 'requirement', options: { id: string, name: string }[] }
-
-export type ViewFieldType = 'text' | 'textarea' | 'number' | 'date' | 'boolean' | 'hidden' | 'object' | RequirementFieldType
-
-export type FormFieldType = 'text' | 'textarea' | { type: 'number', min: number, max: number } | 'date' | 'boolean' | 'hidden' | string[]
-    | RequirementFieldType
+export type ZodShape = z.ZodString | z.ZodNumber | z.ZodDate | z.ZodBoolean | z.ZodObject<{ id: z.ZodString, name: z.ZodString }>
+    | z.ZodReadonly<ZodShape> | z.ZodOptional<ZodShape> | z.ZodNativeEnum<any>
+export type ViewSchema = z.ZodObject<{ [key: string]: ZodShape }>
+export type EditSchema = z.ZodObject<{ id: z.ZodReadonly<z.ZodString>, [key: string]: ZodShape }>
+export type CreateSchema = z.ZodObject<{ [key: string]: ZodShape }>
 
 const props = defineProps<{
-    datasource: RowType[] | null,
-    entityName: string,
-    showRecycleBin: boolean,
-    viewModel: { [K in keyof RowType]?: ViewFieldType },
-    createModel: { [K in keyof RowType]?: FormFieldType },
-    editModel: { [K in keyof RowType]?: FormFieldType },
+    data: ({ id: string } & z.infer<V>)[] | null,
+    viewSchema: V,
+    editSchema: E,
+    createSchema: C,
     loading: boolean,
-    organizationSlug: string,
-    onCreate: (data: RowType) => Promise<void>,
+    onCreate: (data: z.infer<C>) => Promise<void>,
     onDelete: (id: string) => Promise<void>,
-    onUpdate: (data: RowType) => Promise<void>
+    onUpdate: (data: z.infer<E>) => Promise<void>
 }>()
 
-const dataTable = ref<DataTable>(),
-    createDisabled = ref(false),
-    confirm = useConfirm(),
-    createDialog = ref<Dialog>(),
-    createDialogVisible = ref(false),
-    createDialogItem = ref<RowType>(Object.create(null)),
-    editDialog = ref<Dialog>(),
-    editDialogVisible = ref(false),
-    editDialogItem = ref<RowType>(Object.create(null)),
-    historyDialog = ref<Dialog>(),
-    historyDialogVisible = ref(false),
-    historyItems = ref<{ date: string, entity: Record<string, any> }[]>([]),
-    selectedHistoryItem = ref<{ date: string, entity: Record<string, any> }>({ date: '', entity: {} }),
-    historyDialogLoading = ref(false),
-    recycleDialog = ref<Dialog>(),
-    recycleDialogVisible = ref(false),
-    recycleDialogLoading = ref(false),
-    recycleItems = ref<{ date: string, entity: Record<string, any> }[]>([]),
-    recycleBin = ref<DataTable>()
+const createDisabled = ref(false),
+    deleteModalOpenState = ref(false),
+    deleteModalItem = ref<z.infer<E>>(),
+    editModalOpenState = ref(false),
+    editModalItem = ref<z.infer<E>>(),
+    createModalOpenState = ref(false),
+    createModalItem = ref<z.infer<C>>(),
+    globalFilter = ref<any>('')
 
-const filters = ref<Record<string, { value: any, matchMode: string }>>({
-    'global': { value: null, matchMode: FilterMatchMode.CONTAINS }
-});
+const viewDataColumns: TableColumn<z.infer<V>>[] = getSchemaFields(props.viewSchema)
+    .map(({ key, label, innerType }) => ({
+        key,
+        header: label,
+        sortable: !(innerType instanceof z.ZodObject),
+        cell: ({ row }) => {
+            const value = row.original[key]
 
-const openEditDialog = (item: RowType) => {
-    editDialogVisible.value = true
-    // focus on the first element under the #editDialogForm with a name attribute that isn't 'hidden'
-    const firstInput = document.querySelector('#editDialogForm [name]:not([type="hidden"])') as HTMLInputElement
-    if (firstInput) firstInput.focus()
-    editDialogItem.value = { ...item }
-}
-
-const openRecycleDialog = async () => {
-    recycleDialogLoading.value = true
-    recycleDialogVisible.value = true
-    const recycleBinItems = (await $fetch<AuditLogViewModel[]>(`/api/audit-log/deleted`, {
-        method: 'GET',
-        query: {
-            entityName: props.entityName,
-            organizationSlug: props.organizationSlug
+            switch (true) {
+                case innerType instanceof z.ZodString:
+                case innerType instanceof z.ZodNumber:
+                case innerType instanceof z.ZodNativeEnum:
+                case innerType instanceof z.ZodEnum:
+                    return value
+                case innerType instanceof z.ZodDate:
+                    return <time datetime={value as string}>{new Date(value as string).toLocaleString()}</time>
+                case innerType instanceof z.ZodBoolean:
+                    return <UCheckbox modelValue={Boolean(value)} disabled />
+                case innerType instanceof z.ZodObject:
+                    const reqObj = value as { id: string, name: string } | null
+                    if (!reqObj)
+                        return null
+                    return reqObj.name
+                default:
+                    return value
+            }
         }
-    })).map(log => ({
-        date: new Date(log.createdAt).toLocaleString(),
-        entity: JSON.parse(log.entity)
     }))
 
-    recycleItems.value = recycleBinItems
-    recycleDialogLoading.value = false
+const actionColumn: TableColumn<z.infer<V>> = {
+    header: 'Actions',
+    cell: ({ row }) => {
+        const item = row.original
+
+        return <div class='flex gap-2'>
+            <UButton icon="i-lucide-pen" color="primary" onClick={() => openEditModal(item.id as string)} />
+            <UButton icon="i-lucide-trash-2" color="error" onClick={() => openDeleteModal(item.id as string)} />
+        </div>
+    }
 }
 
-const openHistoryDialog = async (item: RowType) => {
-    historyDialogLoading.value = true
-    historyDialogVisible.value = true
-    const auditLog = (await $fetch<AuditLogViewModel[]>(`/api/audit-log`, {
-        method: 'GET',
-        query: {
-            entityId: item.id,
-            organizationSlug: props.organizationSlug
-        }
-    })).map(log => ({
-        date: new Date(log.createdAt).toLocaleString(),
-        entity: JSON.parse(log.entity)
-    }))
+const columns = [...viewDataColumns, actionColumn]
 
-    historyItems.value = [
-        { date: 'Current', entity: item },
-        ...auditLog
-    ]
-
-    selectedHistoryItem.value = historyItems.value[0]
-    historyDialogLoading.value = false
+const openEditModal = (itemId: string) => {
+    const item = props.data!.find((row: z.infer<V>) => row.id === itemId)
+    editModalItem.value = Object.create(item!)
+    editModalOpenState.value = true
 }
 
-const onHistoryChange = (e: Event) => {
-    const select = e.target as HTMLSelectElement
-    selectedHistoryItem.value = historyItems.value[select.selectedIndex]
+const openDeleteModal = (itemId: string) => {
+    deleteModalItem.value = props.data!.find((row: z.infer<V>) => row.id === itemId)
+    deleteModalOpenState.value = true
 }
 
-const onDelete = (item: RowType) => new Promise<void>((resolve, _reject) => {
-    confirm.require({
-        message: `Are you sure you want to delete ${item.name}?`,
-        header: 'Delete Confirmation',
-        icon: 'pi pi-exclamation-triangle',
-        rejectLabel: 'Cancel',
-        acceptLabel: 'Delete',
-        accept: async () => {
-            await props.onDelete(item.id)
-            resolve()
-        },
-        reject: () => { }
-    })
-})
-
-const onCreateDialogSave = async (e: Event) => {
-    const form = e.target as HTMLFormElement
-    if (!form.reportValidity())
-        return
-    const data = [...new FormData(form).entries()].reduce((acc, [key, value]) => {
-        // If the data entry was from a form input element with inputmode="numeric", convert it to a number
-        const input = form.querySelector(`[name="${key}"]`) as HTMLInputElement
-        Object.assign(acc, { [key]: input.inputMode === 'numeric' ? parseFloat(value as string) : value })
-        return acc
-    }, {} as RowType)
-
-    await props.onCreate(data)
-    createDialogVisible.value = false
-    createDialogItem.value = Object.create(null)
+const openCreateModal = () => {
+    createModalItem.value = Object.create(null)
+    createModalOpenState.value = true
 }
 
-const onCreateDialogCancel = () => {
-    createDialogItem.value = Object.create(null)
-    createDialogVisible.value = false
+const onCreateModalSubmit = async (_: any) => {
+    props.onCreate(createModalItem.value!)
+    createModalItem.value = Object.create(null)
+    createModalOpenState.value = false
 }
 
-const openCreateDialog = () => {
-    createDialogVisible.value = true
-    // focus on the first element under the #createDialogForm with a name attribute that isn't 'hidden'
-    const firstInput = document.querySelector('#createDialogForm [name]:not([type="hidden"])') as HTMLInputElement
-    if (firstInput) firstInput.focus()
+const onCreateModalReset = () => {
+    createModalItem.value = Object.create(null)
+    createModalOpenState.value = false
 }
 
-const onEditDialogSave = async (e: Event) => {
-    const form = e.target as HTMLFormElement
-    if (!form.reportValidity())
-        return
-    const data = [...new FormData(form).entries()].reduce((acc, [key, value]) => {
-        // If the data entry was from a form input element with inputmode="numeric", convert it to a number
-        const input = form.querySelector(`[name="${key}"]`) as HTMLInputElement
-        Object.assign(acc, { [key]: input.inputMode === 'numeric' ? parseFloat(value as string) : value })
-        return acc
-    }, {} as RowType)
-
-    await props.onUpdate(data)
-    editDialogVisible.value = false
-    editDialogItem.value = undefined
+const onEditModalSubmit = async (_: any) => {
+    const index = props.data!.findIndex((row: z.infer<V>) => row.id === (editModalItem.value! as { id: string }).id)
+    if (index !== -1)
+        props.data![index] = { ...props.data![index], ...editModalItem.value }
+    await props.onUpdate(editModalItem.value!)
+    editModalItem.value = Object.create(null)
+    editModalOpenState.value = false
 }
 
-const onEditDialogCancel = () => {
-    editDialogItem.value = undefined
-    editDialogVisible.value = false
+const onEditModalReset = () => {
+    editModalItem.value = Object.create(null)
+    editModalOpenState.value = false
+}
+
+const onDeleteModalSubmit = async (_: any) => {
+    props.onDelete((deleteModalItem.value! as { id: string }).id)
+    deleteModalItem.value = undefined
+    deleteModalOpenState.value = false
 }
 </script>
 
 <template>
     <section>
-        <ConfirmDialog></ConfirmDialog>
-        <Toolbar>
-            <template #start>
-                <Button label="Create" severity="info" class="mr-2" @click="openCreateDialog"
-                    :disabled="createDisabled" />
-                <Button v-if="props.showRecycleBin" label="Recycle Bin" severity="help" @click="openRecycleDialog" />
-            </template>
-            <template #end>
-                <InputText v-model="filters['global'].value" placeholder="Keyword Search" />
-            </template>
-        </Toolbar>
-        <DataTable ref="dataTable" :value="props.datasource as unknown as any[]" dataKey="id" v-model:filters="filters"
-            :globalFilterFields="Object.keys(props.datasource?.[0] ?? {})" :loading="props.loading" stripedRows>
-            <Column
-                v-for="key of Object.keys(props.viewModel).filter(k => props.viewModel[k as keyof RowType] !== 'hidden')"
-                :key="key" :field="key" :header="camelCaseToTitleCase(key)" sortable>
-                <template #body="{ data, field }">
-                    <span v-if="props.viewModel[field as keyof RowType] === 'text'">{{ data[field] }}</span>
-                    <span v-else-if="
-                        typeof props.viewModel[field as keyof RowType] === 'object' &&
-                        (props.viewModel[field as keyof RowType] as any).type === 'number'
-                    ">{{ data[field] }}</span>
-                    <time v-else-if="props.viewModel[field as keyof RowType] === 'date'" :datetime="data[field]">
-                        {{ new Date(data[field]).toLocaleDateString() }}
-                    </time>
-                    <Checkbox v-else-if="props.viewModel[field as keyof RowType] === 'boolean'" v-model="data[field]"
-                        disabled />
-                    <span v-else-if="props.viewModel[field as keyof RowType] === 'object'">
-                        {{ data[field]?.name ?? JSON.stringify(data[field]) }}
-                    </span>
-                    <span
-                        v-else-if="(props.viewModel[key as keyof RowType] as RequirementFieldType).type === 'requirement'">
-                        {{ (props.viewModel[key as keyof RowType] as RequirementFieldType).options.find(o => o.id ===
-                            data[key])?.name }}
-                    </span>
-                    <span v-else-if="props.viewModel[field as keyof RowType] === 'textarea'">{{ data[field] }}</span>
-                    <span v-else>{{ data[field] }}</span>
-                </template>
-            </Column>
-            <Column frozen align-frozen="right">
-                <template #body="{ data }">
-                    <Button icon="pi pi-pencil" text rounded @click="openEditDialog(data)" title="Edit" />
-                    <Button icon="pi pi-clock" text rounded @click="openHistoryDialog(data)" title="History" />
-                    <Button icon="pi pi-trash" text rounded severity="danger" @click="onDelete(data)" title="Delete" />
-                </template>
-            </Column>
-            <template #empty>No data found</template>
-            <template #loading>Loading data...</template>
-        </DataTable>
+        <div class="flex justify-between items-center mb-4">
+            <UButton label="Create" color="primary" @click="openCreateModal" :disabled="createDisabled" size="xl" />
+            <UInput type="text" v-model="globalFilter" placeholder="Filter..." />
+        </div>
+        <UTable :data="props.data ?? undefined" v-model:global-filter="globalFilter" :columns="columns"
+            :empty-state="{ icon: 'i-lucide-database', label: 'No items.' }" />
     </section>
 
-    <Dialog ref="createDialog" v-model:visible="createDialogVisible" :modal="true" class="p-fluid">
-        <template #header>Create Item</template>
-        <form id="createDialogForm" autocomplete="off" @submit.prevent="onCreateDialogSave"
-            @reset="onCreateDialogCancel">
-            <div class="field grid"
-                v-for="key of Object.keys(props.createModel).filter(k => props.createModel[k as keyof RowType] !== 'hidden')"
-                :key="key" :field="key">
-                <label :for="key" class="col-4">{{ camelCaseToTitleCase(key) }}</label>
-
-                <InputText v-if="props.createModel[key as keyof RowType] === 'text'" :name="key"
-                    v-model.trim="createDialogItem[key]" class="col-8" />
-                <InputNumber v-else-if="
-                    typeof props.createModel[key as keyof RowType] === 'object' &&
-                    (props.createModel[key as keyof RowType] as any).type === 'number'
-                " :name="key" v-model.trim="createDialogItem[key]"
-                    :min="(props.createModel[key as keyof RowType] as any).min"
-                    :max="(props.createModel[key as keyof RowType] as any).max" class="col-8"
-                    :pt="{ input: { root: { name: key, required: true } } }" />
-                <Calendar v-else-if="props.createModel[key as keyof RowType] === 'date'" v-model="createDialogItem[key]"
-                    :name="key" :showTime="true" hourFormat="24" />
-                <Checkbox v-else-if="props.createModel[key as keyof RowType] === 'boolean'" :name="key"
-                    v-model="createDialogItem[key]" class="col-8" />
-                <select v-else-if="Array.isArray(props.createModel[key as keyof RowType])" :name="key"
-                    class="p-inputtext p-component col-8" v-model="createDialogItem[key]">
-                    <option v-for="option of props.createModel[key as keyof RowType]" :key="option as string"
-                        :value="option">
-                        {{ option }}
-                    </option>
-                </select>
-                <select v-else-if="
-                    typeof props.createModel[key as keyof RowType] === 'object' &&
-                    (props.createModel[key as keyof RowType] as any).type === 'requirement'
-                " :name="key" class="p-inputtext p-component col-8"
-                    v-model.trim="(createDialogItem[key] ?? { id: '' }).id">
-                    <option value="" disabled>Select a {{ camelCaseToTitleCase(key) }}</option>
-                    <option v-for="option of (props.createModel[key as keyof RowType] as any).options" :key="option?.id"
-                        :value="option?.id">
-                        {{ option.name }}
-                    </option>
-                </select>
-
-                <Textarea v-else-if="props.createModel[key as keyof RowType] === 'textarea'" :name="key"
-                    v-model.trim="createDialogItem[key]" class="col-8" />
-                <span v-else>{{ createDialogItem[key] }}</span>
-            </div>
-        </form>
-        <template #footer>
-            <Button label="Save" form="createDialogForm" type="submit" icon="pi pi-check" class="p-button-text" />
-            <Button label="Cancel" type="reset" form="createDialogForm" icon="pi pi-times" class="p-button-text" />
+    <UModal v-model:open="createModalOpenState" title='Create Item'>
+        <template #body>
+            <XForm :state="createModalItem!" :schema="props.createSchema" :onSubmit="onCreateModalSubmit"
+                :onCancel="onCreateModalReset" />
         </template>
-    </Dialog>
+    </UModal>
 
-    <Dialog ref="editDialog" v-model:visible="editDialogVisible" :modal="true" class="p-fluid">
-        <template #header>Edit Item</template>
-        <form id="editDialogForm" autocomplete="off" @submit.prevent="onEditDialogSave" @reset="onEditDialogCancel">
-            <div class="field grid" v-for="key of Object.keys(props.editModel)" :key="key" :field="key">
-                <label v-if="props.editModel[key as keyof RowType] !== 'hidden'" :for="key" class="col-4">{{
-                    camelCaseToTitleCase(key) }}</label>
-
-                <InputText v-if="props.editModel[key as keyof RowType] === 'text'" :name="key"
-                    v-model.trim="editDialogItem[key]" class="col-8" />
-                <input v-else-if="props.editModel[key as keyof RowType] === 'hidden'" type="hidden" :name="key"
-                    v-model.trim="editDialogItem[key]" />
-                <InputNumber v-else-if="
-                    typeof props.editModel[key as keyof RowType] === 'object' &&
-                    (props.editModel[key as keyof RowType] as any).type === 'number'
-                " :name="key" v-model.trim="editDialogItem[key]"
-                    :min="(props.editModel[key as keyof RowType] as any).min"
-                    :max="(props.editModel[key as keyof RowType] as any).max" class="col-8"
-                    :pt="{ input: { root: { name: key, required: true } } }" />
-                <Calendar v-else-if="props.editModel[key as keyof RowType] === 'date'" v-model="editDialogItem[key]"
-                    :name="key" :showTime="true" hourFormat="24" />
-                <Checkbox v-else-if="props.editModel[key as keyof RowType] === 'boolean'" :name="key"
-                    v-model="editDialogItem[key]" class="col-8" />
-                <select v-else-if="Array.isArray(props.editModel[key as keyof RowType])" :name="key"
-                    class="p-inputtext p-component col-8" v-model="editDialogItem[key]">
-                    <option v-for="option of props.editModel[key as keyof RowType]" :key="option as string"
-                        :value="option">
-                        {{ option }}
-                    </option>
-                </select>
-                <select v-else-if="
-                    typeof props.editModel[key as keyof RowType] === 'object' &&
-                    (props.editModel[key as keyof RowType] as any).type === 'requirement'
-                " :name="key" class="p-inputtext p-component col-8"
-                    v-model.trim="(editDialogItem[key] ?? { id: '' }).id">
-                    <option value="" disabled>Select a {{ camelCaseToTitleCase(key) }}</option>
-                    <option v-for="option of (props.editModel[key as keyof RowType] as any).options" :key="option.id"
-                        :value="option.id">
-                        {{ option.name }}
-                    </option>
-                </select>
-                <Textarea v-else-if="props.editModel[key as keyof RowType] === 'textarea'" :name="key"
-                    v-model.trim="editDialogItem[key]" class="col-8" />
-                <span v-else>{{ editDialogItem[key] }}</span>
-            </div>
-        </form>
-        <template #footer>
-            <Button label="Save" type="submit" form="editDialogForm" icon="pi pi-check" class="p-button-text" />
-            <Button label="Cancel" type="reset" form="editDialogForm" icon="pi pi-times" class="p-button-text" />
+    <UModal v-model:open="deleteModalOpenState" title='Delete Item' :dismissable="false">
+        <template #body>
+            Are you sure you want to delete {{ deleteModalItem?.name }}?
         </template>
-    </Dialog>
-
-    <Dialog ref="recycleDialog" v-model:visible="recycleDialogVisible" :modal="true" class="p-fluid">
-        <template #header>Recycle Bin</template>
-        <section>
-            <DataTable ref="recycleBin" :value="recycleItems" dataKey="date" :loading="recycleDialogLoading">
-                <Column field="date" header="Date" sortable />
-                <Column v-for="key of Object.keys(recycleItems?.[0]?.entity ?? {})" :key="key" :field="key"
-                    :header="camelCaseToTitleCase(key)">
-                    <template #body="{ data, field }">
-                        <span v-if="data.entity[field] instanceof Date">{{ data.entity[field].toLocaleString() }}</span>
-                        <span v-else-if="typeof data.entity[field] === 'object'">
-                            {{ data.entity[field]?.name ?? JSON.stringify(data.entity[field]) }}
-                        </span>
-                        <span v-else>{{ data.entity[field] }}</span>
-                    </template>
-                </Column>
-                <template #empty>The Recycle Bin is empty</template>
-                <template #loading>Loading data...</template>
-            </DataTable>
-        </section>
         <template #footer>
-            <Button label="Close" icon="pi pi-times" class="p-button-text" @click="recycleDialogVisible = false" />
-        </template>
-    </Dialog>
-
-    <Dialog ref="historyDialog" v-model:visible="historyDialogVisible" :modal="true" class="p-fluid">
-        <template #header>
-            <div class="flex flex-row gap-5 w-full">
-                <span class="flex align-items-center justify-content-center">History</span>
-                <select class="p-component p-inputtext flex align-items-center justify-content-center w-14rem"
-                    @change="onHistoryChange">
-                    <option v-for="item in historyItems" :key="item.date">{{ item.date }}</option>
-                </select>
-                <ProgressSpinner v-if="historyDialogLoading"
-                    class="flex align-items-center justify-content-center w-2rem" style="width: 50px; height: 50px" />
+            <div class="flex gap-2">
+                <UButton label="Cancel" color="neutral" @click="deleteModalOpenState = false" />
+                <UButton label="Delete" color="error" @click="onDeleteModalSubmit" />
             </div>
         </template>
-        <section>
-            <div class="field grid" v-for="key of Object.keys(selectedHistoryItem.entity)" :key="key">
-                <label :for="key" class="col-4">{{ camelCaseToTitleCase(key) }}:</label>
-                <span class="col-8" v-if="selectedHistoryItem.entity[key] instanceof Date">
-                    {{ selectedHistoryItem.entity[key].toLocaleString() }}
-                </span>
-                <span class="col-8" v-else-if="typeof selectedHistoryItem.entity[key] === 'object'">
-                    {{ selectedHistoryItem.entity[key]?.name ?? JSON.stringify(selectedHistoryItem.entity[key]) }}
-                </span>
-                <span class="col-8" v-else>{{ selectedHistoryItem.entity[key] }}</span>
-            </div>
-        </section>
-        <template #footer>
-            <Button label="Close" icon="pi pi-times" class="p-button-text" @click="historyDialogVisible = false" />
+    </UModal>
+
+    <UModal v-model:open="editModalOpenState" title="Edit Item">
+        <template #body>
+            <XForm :state="editModalItem!" :schema="props.editSchema" :onSubmit="onEditModalSubmit"
+                :onCancel="onEditModalReset" />
         </template>
-    </Dialog>
+    </UModal>
 </template>
-
-<style scoped>
-select {
-    appearance: auto;
-}
-</style>

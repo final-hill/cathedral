@@ -3,12 +3,14 @@ import { z } from "zod"
 import { OrganizationInteractor } from "~/application"
 import { OrganizationRepository } from '~/server/data/repositories/OrganizationRepository';
 import handleDomainException from '~/server/utils/handleDomainException';
+import { Organization, Solution } from '#shared/domain';
+
+const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
 const bodySchema = z.object({
-    name: z.string().min(1).max(100),
-    description: z.string(),
-    organizationId: z.string().uuid().optional(),
-    organizationSlug: z.string().max(100).optional(),
+    ...Solution.innerType().pick({ name: true, description: true }).shape,
+    organizationId,
+    organizationSlug,
 }).refine((value) => {
     return value.organizationId !== undefined || value.organizationSlug !== undefined;
 }, "At least one of organizationId or organizationSlug should be provided");

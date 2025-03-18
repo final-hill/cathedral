@@ -5,5 +5,5 @@ export default z.object({
     name: z.string(),
     description: z.string()
     // TODO: The LLM won't be able to handle this without alot of help.
-    // parentComponent
+    // parentComponentId
 }).describe('A system component is a part of the System')

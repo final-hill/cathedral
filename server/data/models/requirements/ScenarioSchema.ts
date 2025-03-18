@@ -1,5 +1,5 @@
 import { Collection, Entity, ManyToOne } from "@mikro-orm/core";
-import { ReqType } from "./ReqType.js";
+import { ReqType } from "../../../../shared/domain/requirements/ReqType.js";
 import { ExampleModel, ExampleVersionsModel } from "./ExampleSchema.js";
 import { StakeholderModel } from "./StakeholderSchema.js";
 import { OutcomeModel } from "./OutcomeSchema.js";

@@ -1,6 +1,7 @@
-import { AppUser } from "~/domain/application";
+import { AppUser } from "#shared/domain/application";
+import { z } from "zod";
 
 export type DeletionInfo = {
-    deletedById: AppUser['id'];
+    deletedById: z.infer<typeof AppUser>['id'];
     deletedDate: Date;
 };

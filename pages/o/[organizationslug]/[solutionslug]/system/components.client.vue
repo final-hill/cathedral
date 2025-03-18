@@ -1,38 +1,54 @@
 <script lang="ts" setup>
-import type { SystemComponentViewModel, SolutionViewModel } from '#shared/models';
+import { SystemComponent } from '#shared/domain';
+import type { z } from 'zod';
 
 useHead({ title: 'Components' })
 definePageMeta({ name: 'System Components' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('System Components').params,
-    { data: solution, error: getSolutionError } = await useFetch<SolutionViewModel>(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id;
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('System Components').params
 
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value);
-
-const { data: systemComponents, refresh, status, error: getSystemComponentsError } = await useFetch<SystemComponentViewModel[]>(`/api/system-component`, {
-    query: { solutionId, organizationSlug },
-    transform: (data) => data.map((item) => {
-        item.lastModified = new Date(item.lastModified)
-        return item
-    })
+const { data: systemComponents, refresh, status, error: getSystemComponentsError } = await useFetch<z.infer<typeof SystemComponent>[]>(`/api/system-component`, {
+    query: { solutionSlug, organizationSlug },
+    transform: (data) => data.map((item) => ({
+        ...item,
+        lastModified: new Date(item.lastModified),
+        creationDate: new Date(item.creationDate)
+    }))
 })
 
 if (getSystemComponentsError.value)
     $eventBus.$emit('page-error', getSystemComponentsError.value);
 
-const onCreate = async (data: SystemComponentViewModel) => {
+const viewSchema = SystemComponent.pick({
+    reqId: true,
+    name: true,
+    description: true,
+    parentComponent: true,
+})
+
+const createSchema = SystemComponent.pick({
+    name: true,
+    description: true,
+    parentComponent: true
+})
+
+const editSchema = SystemComponent.pick({
+    id: true,
+    reqId: true,
+    name: true,
+    description: true,
+    parentComponent: true
+})
+
+const onCreate = async (data: z.infer<typeof createSchema>) => {
     await $fetch(`/api/system-component`, {
         method: 'POST',
         body: {
             name: data.name,
             description: data.description,
             parentComponent: data.parentComponent,
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -40,14 +56,14 @@ const onCreate = async (data: SystemComponentViewModel) => {
     refresh()
 }
 
-const onUpdate = async (data: SystemComponentViewModel) => {
+const onUpdate = async (data: z.infer<typeof editSchema>) => {
     await $fetch(`/api/system-component/${data.id}`, {
         method: 'PUT',
         body: {
             name: data.name,
             description: data.description,
             parentComponent: data.parentComponent,
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -58,32 +74,17 @@ const onUpdate = async (data: SystemComponentViewModel) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/system-component/${id}`, {
         method: 'DELETE',
-        body: { solutionId, organizationSlug }
+        body: { solutionSlug, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
 }
 </script>
 <template>
-    <p>
-        Components describe the structure of the system as a list or hierarchy.
-    </p>
-    <XDataTable :viewModel="{
-        reqId: 'text',
-        name: 'text',
-        description: 'text',
-        parentComponent: { type: 'requirement', options: systemComponents ?? [] }
-    }" :createModel="{
-        name: 'text',
-        description: 'text',
-        parentComponent: { type: 'requirement', options: systemComponents ?? [] }
-    }" :editModel="{
-        id: 'hidden',
-        name: 'text',
-        description: 'text',
-        parentComponent: { type: 'requirement', options: systemComponents ?? [] }
-    }" :datasource="systemComponents" :onCreate="onCreate" :onUpdate="onUpdate" :onDelete="onDelete"
-        :loading="status === 'pending'" :organizationSlug="organizationSlug" entityName="SystemComponent"
-        :showRecycleBin="true">
+    <h1>System Components</h1>
+    <p> {{ SystemComponent.description }} </p>
+
+    <XDataTable :viewSchema="viewSchema" :createSchema="createSchema" :editSchema="editSchema" :data="systemComponents"
+        :onCreate="onCreate" :onDelete="onDelete" :onUpdate="onUpdate" :loading="status === 'pending'">
     </XDataTable>
 </template>

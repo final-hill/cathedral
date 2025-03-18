@@ -1,14 +1,10 @@
-import { z } from "zod"
-import { Invariant } from "~/domain/requirements/index.js"
+import { Invariant } from "#shared/domain"
 
-/**
- * Updates an invariant by id.
- */
-export default putRequirementHttpHandler({
-    ReqClass: Invariant,
-    bodySchema: z.object({
-        name: z.string().optional(),
-        description: z.string().optional(),
-        isSilence: z.boolean().optional()
-    })
-})
+export default putRequirementHttpHandler(
+    Invariant.pick({
+        reqType: true,
+        reqIdPrefix: true,
+        name: true,
+        description: true
+    }).partial().required({ reqType: true })
+)

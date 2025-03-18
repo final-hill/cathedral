@@ -1,6 +1,3 @@
-import { Invariant } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns an invariant by id
- */
-export default getRequirementHttpHandler(Invariant)
+export default getRequirementHttpHandler(ReqType.INVARIANT)

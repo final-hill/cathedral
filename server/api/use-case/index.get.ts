@@ -1,25 +1,19 @@
-import { z } from "zod"
-import { MoscowPriority, UseCase } from "~/domain/requirements/index.js"
-import { NIL as emptyUuid } from "uuid"
+import { UseCase } from "#shared/domain"
 
-/**
- * Returns all stakeholders that match the query parameters
- */
-export default findRequirementsHttpHandler({
-    ReqClass: UseCase,
-    querySchema: z.object({
-        name: z.string().optional(),
-        description: z.string().optional(),
-        primaryActor: z.string().uuid().optional(),
-        priority: z.nativeEnum(MoscowPriority).optional(),
-        scope: z.string().optional(),
-        level: z.string().optional(),
-        outcome: z.string().uuid().optional(),
-        precondition: z.string().uuid().optional(),
-        triggerId: z.literal(emptyUuid).optional(),
-        mainSuccessScenario: z.string().optional(),
-        successGuarantee: z.string().uuid().optional(),
-        extensions: z.string().optional(),
-        isSilence: z.boolean().optional().default(false)
-    })
-})
+export default findRequirementsHttpHandler(
+    UseCase.pick({
+        reqType: true,
+        name: true,
+        description: true,
+        primaryActor: true,
+        priority: true,
+        scope: true,
+        level: true,
+        outcome: true,
+        precondition: true,
+        trigger: true,
+        mainSuccessScenario: true,
+        successGuarantee: true,
+        extensions: true
+    }).partial().required({ reqType: true })
+)

@@ -1,6 +1,3 @@
-import { UserStory } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Returns a User Story by id
- */
-export default getRequirementHttpHandler(UserStory)
+export default getRequirementHttpHandler(ReqType.USER_STORY)

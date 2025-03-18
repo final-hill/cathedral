@@ -1,14 +1,9 @@
-import { z } from "zod"
-import { Invariant } from "~/domain/requirements/index.js"
+import { Invariant } from "#shared/domain"
 
-/**
- * Returns all invariants that match the query parameters
- */
-export default findRequirementsHttpHandler({
-    ReqClass: Invariant,
-    querySchema: z.object({
-        name: z.string().optional(),
-        description: z.string().optional(),
-        isSilence: z.boolean().optional().default(false)
-    })
-})
+export default findRequirementsHttpHandler(
+    Invariant.pick({
+        reqType: true,
+        name: true,
+        description: true
+    }).partial().required({ reqType: true })
+)

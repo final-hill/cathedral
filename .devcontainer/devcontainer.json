@@ -34,7 +34,8 @@
                 "bpruitt-goddard.mermaid-markdown-syntax-highlighting",
                 "hediet.vscode-drawio",
                 "vitest.explorer",
-                "kingwl.vscode-vitest-runner"
+                "kingwl.vscode-vitest-runner",
+                "bradlc.vscode-tailwindcss"
             ]
         }
     }

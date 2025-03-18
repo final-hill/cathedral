@@ -1,7 +1,7 @@
-import { AppUser } from "~/domain/application";
-
+import { AppUser } from "#shared/domain/application";
+import { z } from "zod";
 
 export type UpdationInfo = {
-    modifiedById: AppUser['id'];
+    modifiedById: z.infer<typeof AppUser>['id'];
     modifiedDate: Date;
 };

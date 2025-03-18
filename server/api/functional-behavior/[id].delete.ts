@@ -1,6 +1,3 @@
-import { FunctionalBehavior } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete an functional behavior by id.
- */
-export default deleteRequirementHttpHandler(FunctionalBehavior)
+export default deleteRequirementHttpHandler(ReqType.FUNCTIONAL_BEHAVIOR)

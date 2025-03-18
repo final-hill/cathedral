@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { useToast } from "primevue/usetoast";
-
 const { $eventBus } = useNuxtApp(),
     toast = useToast();
 
@@ -15,7 +13,12 @@ const showError = (e: unknown) => {
         error = 'An error occurred. Check the browser console for more details.'
 
     console.error(error);
-    toast.add({ severity: 'error', summary: 'Error', detail: error, group: 'br', life: 5000 });
+    toast.add({
+        title: 'Error',
+        description: error,
+        color: 'error',
+        icon: 'i-lucide-octagon-alert'
+    });
 }
 
 $eventBus.$on('page-error', showError);
@@ -23,10 +26,9 @@ $eventBus.$on('page-error', showError);
 </script>
 <template>
     <TopNavigation />
-    <section id="content" class="surface-ground">
+    <UContainer id="content" class="flex flex-col p-8 overflow-auto leading-6 space-y-8 w-full">
         <slot @page-error="showError" />
-        <Toast position="bottom-right" group="br" />
-    </section>
+    </UContainer>
     <footer>
         &copy; {{ new Date().getFullYear() }} Final Hill. All rights reserved. |
         Warning: This is Pre-release software. Use at your own risk. Data may be lost.
@@ -35,18 +37,20 @@ $eventBus.$on('page-error', showError);
 
 <style>
 #__nuxt {
-    box-shadow: 2px 0 5px 0px var(--shadow-color);
-    box-sizing: border-box;
-    color: var(--font-color);
     display: grid;
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
     grid-template-columns: 1fr;
     grid-template-rows: 0.6in 1fr 0.6in;
     grid-template-areas: "top-nav" "content" "footer";
     height: 100vh;
-    line-height: 1.5;
     overflow: hidden;
-    width: 100vw;
+
+    /* box-shadow: 2px 0 5px 0px var(--shadow-color);
+    line-height: 1.5;
+    width: 100vw; */
+
+    & a:hover {
+        text-decoration: underline;
+    }
 
     &>.top-nav {
         grid-area: top-nav;
@@ -54,14 +58,24 @@ $eventBus.$on('page-error', showError);
 
     &>#content {
         grid-area: content;
-        overflow: auto;
-        padding: 2em;
+
+        & h1 {
+            font-size: 1.5em;
+        }
+
+        & h2 {
+            font-size: 1.25em;
+        }
+
+        & h3 {
+            font-size: 1.1em;
+        }
     }
 
     &>footer {
         grid-area: footer;
         padding: 1em;
-        color: red;
+        color: var(--ui-error);
         text-align: center;
     }
 }

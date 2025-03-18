@@ -1,6 +1,3 @@
-import { Assumption } from '~/domain/requirements'
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete an assumption associated with a solution
- */
-export default deleteRequirementHttpHandler(Assumption)
+export default deleteRequirementHttpHandler(ReqType.ASSUMPTION)

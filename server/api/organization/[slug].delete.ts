@@ -1,12 +1,10 @@
-import { z } from "zod"
 import { getServerSession } from '#auth'
 import { OrganizationCollectionInteractor } from "~/application"
 import { OrganizationCollectionRepository } from "~/server/data/repositories"
 import handleDomainException from "~/server/utils/handleDomainException"
+import { Organization } from "#shared/domain"
 
-const paramSchema = z.object({
-    slug: z.string().max(100)
-})
+const paramSchema = Organization.innerType().pick({ slug: true })
 
 /**
  * Delete an organization by id.

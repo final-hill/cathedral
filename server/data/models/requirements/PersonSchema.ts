@@ -1,5 +1,5 @@
 import { Collection, Entity, Property, types } from '@mikro-orm/core';
-import { ReqType } from "./ReqType.js";
+import { ReqType } from "../../../../shared/domain/requirements/ReqType.js";
 import { ActorModel, ActorVersionsModel } from './ActorSchema.js';
 
 @Entity({ discriminatorValue: ReqType.PERSON })

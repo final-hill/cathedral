@@ -1,6 +1,3 @@
-import { Stakeholder } from "~/domain/requirements/index.js"
+import { ReqType } from "~/shared/domain/requirements/ReqType";
 
-/**
- * Delete Stakeholder by id.
- */
-export default deleteRequirementHttpHandler(Stakeholder)
+export default deleteRequirementHttpHandler(ReqType.STAKEHOLDER)
