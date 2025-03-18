@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import mermaid from 'mermaid';
 import { Stakeholder, StakeholderCategory, StakeholderSegmentation } from '#shared/domain';
 import type { z } from 'zod';
 
@@ -7,17 +6,10 @@ useHead({ title: 'Stakeholders' })
 definePageMeta({ name: 'Stakeholders' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Stakeholders').params,
-    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id;
-
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value);
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Stakeholders').params
 
 const { data: stakeholders, refresh: refreshStakeholders, status, error: getStakeholdersError } = await useFetch<z.infer<typeof Stakeholder>[]>(`/api/stakeholder`, {
-    query: { solutionId, organizationSlug },
+    query: { solutionSlug, organizationSlug },
     transform: (data) => data.map((item) => ({
         ...item,
         lastModified: new Date(item.lastModified),
@@ -61,18 +53,6 @@ const editSchema = Stakeholder.pick({
     influence: true
 })
 
-const colorMode = useColorMode()
-
-enum themeMap {
-    light = 'default',
-    dark = 'dark'
-};
-
-mermaid.initialize({
-    startOnLoad: false,
-    theme: themeMap[colorMode.value as keyof typeof themeMap]
-});
-
 const chartDefinition = (stakeholders: z.infer<typeof Stakeholder>[], category: StakeholderSegmentation) => `
     quadrantChart
     title ${category}
@@ -87,23 +67,20 @@ const chartDefinition = (stakeholders: z.infer<typeof Stakeholder>[], category: 
     }
 `;
 
-const clientMap = ref<HTMLElement>(),
-    vendorMap = ref<HTMLElement>();
+const clientMap = ref<string>(''),
+    vendorMap = ref<string>('');
 
 const renderChart = async () => {
     const groupStakeholders = Object.groupBy(stakeholders.value!, ({ segmentation }) => segmentation ?? 'unknown'),
         clientGroup = groupStakeholders.Client ?? [],
         vendorGroup = groupStakeholders.Vendor ?? [];
 
-    clientMap.value!.textContent = chartDefinition(clientGroup, StakeholderSegmentation['Client'])
-    vendorMap.value!.textContent = chartDefinition(vendorGroup, StakeholderSegmentation['Vendor'])
-
-    await mermaid.run({
-        nodes: [clientMap.value!, vendorMap.value!]
-    })
+    clientMap.value = chartDefinition(clientGroup, StakeholderSegmentation['Client'])
+    vendorMap.value = chartDefinition(vendorGroup, StakeholderSegmentation['Vendor'])
 }
 
 watch(stakeholders, renderChart);
+renderChart();
 
 const onCreate = async (data: z.infer<typeof createSchema>) => {
     await $fetch(`/api/stakeholder`, {
@@ -115,7 +92,7 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
             segmentation: data.segmentation,
             availability: Number(data.availability),
             influence: Number(data.influence),
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -133,7 +110,7 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
             segmentation: data.segmentation,
             availability: Number(data.availability),
             influence: Number(data.influence),
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -144,7 +121,7 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/stakeholder/${id}`, {
         method: 'DELETE',
-        body: { solutionId, organizationSlug }
+        body: { solutionSlug, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refreshStakeholders()
@@ -163,8 +140,8 @@ const onDelete = async (id: string) => {
             </XDataTable>
         </template>
         <template #stakeholder-map="{ item }">
-            <section ref="clientMap"></section>
-            <section ref="vendorMap"></section>
+            <Mermaid :value="clientMap" />
+            <Mermaid :value="vendorMap" />
         </template>
     </UTabs>
 </template>
