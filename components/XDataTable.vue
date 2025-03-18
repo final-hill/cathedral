@@ -50,10 +50,11 @@ const viewDataColumns: TableColumn<z.infer<V>>[] = getSchemaFields(props.viewSch
                 case innerType instanceof z.ZodBoolean:
                     return <UCheckbox modelValue={Boolean(value)} disabled />
                 case innerType instanceof z.ZodObject:
-                    const reqObj = value as { id: string, name: string }
+                    const reqObj = value as { id: string, name: string } | null
+                    if (!reqObj)
+                        return null
                     return reqObj.name
                 default:
-                    // TODO: Readonly and Optional
                     return value
             }
         }
