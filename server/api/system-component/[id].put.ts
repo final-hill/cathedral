@@ -3,6 +3,7 @@ import { SystemComponent } from "#shared/domain"
 export default putRequirementHttpHandler(
     SystemComponent.pick({
         reqType: true,
+        reqIdPrefix: true,
         name: true,
         description: true,
         parentComponent: true

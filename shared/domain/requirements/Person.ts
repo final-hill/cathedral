@@ -8,6 +8,7 @@ export const Person = Actor.extend({
         .describe('The email address of the person'),
     reqId: z.string().regex(/^P\.1\.\d+$/).optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
+    reqIdPrefix: z.literal('P.1.').default('P.1.'),
     reqType: z.nativeEnum(ReqType).default(ReqType.PERSON)
 }).describe(dedent(`
     A member of the Project staff with associated contact information, roles, and responsibilities.

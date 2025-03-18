@@ -3,6 +3,7 @@ import { UseCase } from "#shared/domain"
 export default postRequirementHttpHandler(
     UseCase.pick({
         reqType: true,
+        reqIdPrefix: true,
         name: true,
         description: true,
         primaryActor: true,

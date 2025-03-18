@@ -3,6 +3,7 @@ import { Stakeholder } from "#shared/domain"
 export default putRequirementHttpHandler(
     Stakeholder.pick({
         reqType: true,
+        reqIdPrefix: true,
         name: true,
         description: true,
         parentComponent: true,

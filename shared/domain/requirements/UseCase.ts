@@ -5,6 +5,7 @@ import { ReqType } from "./ReqType.js";
 export const UseCase = Scenario.extend({
     reqId: z.string().regex(/^S\.4\.\d+$/).optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
+    reqIdPrefix: z.literal('S.4.').default('S.4.'),
     // TODO: <https://github.com/final-hill/cathedral/issues/154>
     scope: z.string().max(100)
         .describe('The scope of the use case'),

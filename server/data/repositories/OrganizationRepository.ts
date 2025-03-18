@@ -84,14 +84,14 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
      * @param props.reqProps - The properties of the requirement to add
      * @param props.effectiveDate - The effective date of the requirement
      * @param props.createdById - The id of the user creating the requirement
-     * @param props.reqIdPrefix - The prefix of the requirement id
      * @returns The id of the newly created requirement
      * @throws {NotFoundException} If the solution does not exist
      */
     async addRequirement<R extends keyof typeof req>(props: CreationInfo & {
         solutionSlug: z.infer<typeof req.Solution>['slug'],
-        reqIdPrefix?: req.ReqIdPrefix,
-        reqProps: Omit<z.infer<typeof req[R]>, 'reqId' | 'id' | keyof z.infer<typeof AuditMetadata>> & { reqType: ReqType }
+        reqProps: Omit<z.infer<typeof req[R]>, 'reqId' | 'id' | keyof z.infer<typeof AuditMetadata>> & {
+            reqType: ReqType, reqIdPrefix: req.ReqIdPrefix | undefined
+        }
     }): Promise<z.infer<typeof req.Requirement>['id']> {
         const em = this._em,
             newId = uuid7(),
@@ -105,7 +105,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
         if (!solution)
             throw new NotFoundException('Solution does not exist')
 
-        const { parentComponentId, ...mappedProps } = await new ReqQueryToModelQuery().map(reqProps) as any
+        const { parentComponentId, reqIdPrefix, ...mappedProps } = await new ReqQueryToModelQuery().map(reqProps) as any
 
         em.create<reqModels.RequirementVersionsModel>(ReqVersionsModel, {
             id: newId,
@@ -113,7 +113,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             effectiveFrom: props.effectiveDate,
             modifiedBy: props.createdById,
             // Silent requirements do not have a reqId as they are not approved to be part of the solution
-            reqId: reqProps.isSilence ? undefined : await this.getNextReqId(solution.id, props.reqIdPrefix),
+            reqId: reqProps.isSilence ? undefined : await this.getNextReqId(solution.id, reqIdPrefix),
             ...mappedProps,
             requirement: em.create<reqModels.RequirementModel>(ReqModel, {
                 id: newId,
@@ -890,7 +890,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
         if (!relLatestVersion)
             throw new MismatchException(`Requirement does not belong to solution with slug ${props.solutionSlug}`)
 
-        const { parentComponentId, ...mappedProps } = await new ReqQueryToModelQuery().map(reqProps)
+        const { parentComponentId, reqIdPrefix, ...mappedProps } = await new ReqQueryToModelQuery().map(reqProps)
 
         em.create<reqModels.RequirementVersionsModel>(
             ReqVersionsModel, {

@@ -63,7 +63,10 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
         solutionSlug, reqProps
     }: {
         solutionSlug: z.infer<typeof req.Solution>['slug'],
-        reqProps: Omit<z.infer<typeof req[R]>, 'reqId' | 'id' | keyof z.infer<typeof AuditMetadata>> & { reqType: ReqType }
+        reqProps: Omit<z.infer<typeof req[R]>, 'reqId' | 'id' | keyof z.infer<typeof AuditMetadata>> & {
+            reqType: ReqType,
+            reqIdPrefix: req.ReqIdPrefix | undefined
+        }
     }): Promise<z.infer<typeof req[R]>['id']> {
         if (!this.isOrganizationContributor())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
@@ -99,12 +102,12 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
         // create initial requirements for the solution
         await this.addRequirement({
             solutionSlug: newSolution.slug,
-            reqProps: { reqType: ReqType.OUTCOME, name: 'G.1', description: 'Context and Objective', isSilence: false }
+            reqProps: { reqType: ReqType.OUTCOME, reqIdPrefix: undefined, name: 'G.1', description: 'Context and Objective', isSilence: false }
         })
 
         await this.addRequirement({
             solutionSlug: newSolution.slug,
-            reqProps: { reqType: ReqType.OBSTACLE, name: 'G.2', description: 'Situation', isSilence: false }
+            reqProps: { reqType: ReqType.OBSTACLE, reqIdPrefix: undefined, name: 'G.2', description: 'Situation', isSilence: false }
         })
 
         return newSolutionId

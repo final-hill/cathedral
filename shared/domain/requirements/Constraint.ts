@@ -9,6 +9,7 @@ export const Constraint = Requirement.extend({
         .describe('Category of the constraint'),
     reqId: z.string().regex(/^E\.3\.\d+$/).optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
+    reqIdPrefix: z.literal('E.3.').default('E.3.'),
     reqType: z.nativeEnum(ReqType).default(ReqType.CONSTRAINT)
 }).describe(dedent(`
     Constraints are the limitations and obligations that

@@ -6,6 +6,7 @@ import { ReqType } from "./ReqType.js";
 export const UserStory = Scenario.extend({
     reqId: z.string().regex(/^S\.4\.\d+$/).optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
+    reqIdPrefix: z.literal('S.4.').default('S.4.'),
     functionalBehavior: z.object({
         reqType: z.nativeEnum(ReqType).default(ReqType.FUNCTIONAL_BEHAVIOR),
         id: z.string().uuid()

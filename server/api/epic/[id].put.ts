@@ -3,6 +3,7 @@ import { Epic } from "#shared/domain"
 export default putRequirementHttpHandler(
     Epic.pick({
         reqType: true,
+        reqIdPrefix: true,
         name: true,
         priority: true,
         primaryActor: true,

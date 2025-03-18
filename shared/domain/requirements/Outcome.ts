@@ -7,6 +7,7 @@ export const Outcome = Goal.extend({
     // FIXME: The Context and overall objective entry is an Outcome, but the req_id is G.1.0
     reqId: z.string().regex(/^G\.3\.\d+$/).optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
+    reqIdPrefix: z.literal('G.3.').default('G.3.'),
     reqType: z.nativeEnum(ReqType).default(ReqType.OUTCOME)
 }).describe(dedent(`
     An Outcome is the expected benefit, capability, or process

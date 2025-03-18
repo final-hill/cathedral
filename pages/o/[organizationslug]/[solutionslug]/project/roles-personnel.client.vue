@@ -21,6 +21,7 @@ if (getPersonnelError.value)
     $eventBus.$emit('page-error', getPersonnelError.value)
 
 const viewSchema = Person.pick({
+    reqId: true,
     name: true,
     email: true
 })
