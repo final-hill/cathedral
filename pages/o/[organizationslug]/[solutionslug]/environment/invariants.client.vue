@@ -28,7 +28,6 @@ if (getInvariantsError.value)
     $eventBus.$emit('page-error', getInvariantsError.value)
 
 const viewSchema = Invariant.pick({
-    id: true,
     reqId: true,
     name: true,
     description: true

@@ -30,14 +30,12 @@ if (getSituationError.value)
 const situation = situations.value![0]
 
 const formSchema = Obstacle.pick({
-    name: true,
     description: true
 });
 
 type FormSchema = z.infer<typeof formSchema>;
 
 const formState = reactive<FormSchema>({
-    name: situation.name,
     description: situation.description
 });
 
@@ -63,7 +61,6 @@ const { data: obstacles, refresh, status, error: getObstaclesError } = await use
 })
 
 const viewSchema = Obstacle.pick({
-    id: true,
     reqId: true,
     name: true,
     description: true

@@ -28,7 +28,6 @@ if (getEnvironmentComponentsError.value)
     $eventBus.$emit('page-error', getEnvironmentComponentsError.value)
 
 const viewSchema = EnvironmentComponent.pick({
-    id: true,
     reqId: true,
     name: true,
     description: true

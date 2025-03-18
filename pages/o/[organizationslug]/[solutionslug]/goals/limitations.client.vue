@@ -28,7 +28,6 @@ if (getLimitsError.value)
     $eventBus.$emit('page-error', getLimitsError.value)
 
 const viewSchema = Limit.pick({
-    id: true,
     reqId: true,
     name: true,
     description: true

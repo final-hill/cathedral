@@ -28,7 +28,6 @@ if (getGlossaryTermsError.value)
     $eventBus.$emit('page-error', getGlossaryTermsError.value)
 
 const viewSchema = GlossaryTerm.pick({
-    id: true,
     reqId: true,
     name: true,
     description: true

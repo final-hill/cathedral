@@ -28,10 +28,10 @@ if (getSystemComponentsError.value)
     $eventBus.$emit('page-error', getSystemComponentsError.value);
 
 const viewSchema = SystemComponent.pick({
-    id: true,
     reqId: true,
     name: true,
-    description: true
+    description: true,
+    parentComponent: true,
 })
 
 const createSchema = SystemComponent.pick({

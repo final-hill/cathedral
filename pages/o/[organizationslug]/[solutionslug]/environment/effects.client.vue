@@ -28,7 +28,6 @@ if (getEffectsError.value)
     $eventBus.$emit('page-error', getEffectsError.value)
 
 const viewSchema = Effect.pick({
-    id: true,
     reqId: true,
     name: true,
     description: true

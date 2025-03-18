@@ -28,10 +28,8 @@ if (getPersonnelError.value)
     $eventBus.$emit('page-error', getPersonnelError.value)
 
 const viewSchema = Person.pick({
-    id: true,
     name: true,
-    email: true,
-    description: true
+    email: true
 })
 
 const createSchema = Person.pick({
