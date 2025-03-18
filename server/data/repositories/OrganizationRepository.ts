@@ -105,6 +105,8 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
         if (!solution)
             throw new NotFoundException('Solution does not exist')
 
+        const { parentComponentId, ...mappedProps } = await new ReqQueryToModelQuery().map(reqProps) as any
+
         em.create<reqModels.RequirementVersionsModel>(ReqVersionsModel, {
             id: newId,
             isDeleted: false,
@@ -112,7 +114,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             modifiedBy: props.createdById,
             // Silent requirements do not have a reqId as they are not approved to be part of the solution
             reqId: reqProps.isSilence ? undefined : await this.getNextReqId(props.solutionId, props.reqIdPrefix),
-            ...reqProps,
+            ...mappedProps,
             requirement: em.create<reqModels.RequirementModel>(ReqModel, {
                 id: newId,
                 createdBy: props.createdById,
@@ -133,27 +135,20 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             })
         })
 
-        /*
-        const isComponent = ['Component', 'EnvironmentComponent', 'SystemComponent'].includes(props.reqType as unknown as string)
-
-        // add the relation between the requirement and the parent component if parentComponentId is provided
-        if (isComponent) {
-            const parentComponentId = Reflect.get(props.reqProps, 'parentComponentId') as string
-            if (parentComponentId) {
-                em.create(BelongsVersionsModel, {
-                    isDeleted: false,
-                    effectiveFrom: props.effectiveDate,
-                    modifiedBy: props.createdById,
-                    requirementRelation: em.create(BelongsModel, {
-                        left: newId,
-                        right: parentComponentId,
-                        createdBy: props.createdById,
-                        creationDate: props.effectiveDate
-                    })
+        // add the relation between the requirement and the parent component (Belongs relation)
+        if (parentComponentId) {
+            em.create(BelongsVersionsModel, {
+                isDeleted: false,
+                effectiveFrom: props.effectiveDate,
+                modifiedBy: props.createdById,
+                requirementRelation: em.create(BelongsModel, {
+                    left: newId,
+                    right: parentComponentId,
+                    createdBy: props.createdById,
+                    creationDate: props.effectiveDate
                 })
-            }
+            })
         }
-        */
 
         await em.flush()
 
@@ -332,22 +327,23 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             isDeleted: true
         })
 
-        // "delete" the relation between the requirement and the solution (Belongs relation)
-        const rel = await em.findOne(BelongsModel, {
-            left: props.id,
-            right: props.solutionId
-        }),
-            relLatestVersion = await rel?.latestVersion
+        // "delete" the relationships between the requirement and any parent requirements (Belongs relations)
+        const parentRels = await em.find(BelongsModel, {
+            left: props.id
+        });
 
-        if (!relLatestVersion)
-            throw new MismatchException(`Requirement does not belong to solution with id ${props.solutionId}`)
+        for (const parentRel of parentRels) {
+            const parentRelLatestVersion = await parentRel.latestVersion;
 
-        em.create(BelongsVersionsModel, {
-            ...relLatestVersion,
-            modifiedBy: props.deletedById,
-            effectiveFrom: props.deletedDate,
-            isDeleted: true
-        })
+            if (parentRelLatestVersion) {
+                em.create(BelongsVersionsModel, {
+                    ...parentRelLatestVersion,
+                    modifiedBy: props.deletedById,
+                    effectiveFrom: props.deletedDate,
+                    isDeleted: true
+                });
+            }
+        }
 
         // find all requirements with the same reqId prefix in the solution
         // and a suffix greater than the current requirement's suffix
@@ -893,14 +889,40 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
         if (!relLatestVersion)
             throw new MismatchException(`Requirement does not belong to solution with id ${props.solutionId}`)
 
+        const { parentComponentId, ...mappedProps } = await new ReqQueryToModelQuery().map(reqProps)
+
         em.create<reqModels.RequirementVersionsModel>(
             ReqVersionsModel, {
             ...existingReqv,
-            ...reqProps,
+            ...mappedProps,
             effectiveFrom: props.modifiedDate,
             modifiedBy: props.modifiedById,
             isDeleted: false
         })
+
+        // update the relation between the requirement and the parent component (Belongs relation)
+        // if it has changed
+        if (parentComponentId) {
+            const parentComponentRel = await em.findOne(BelongsModel, {
+                left: props.requirementId,
+                right: parentComponentId
+            }),
+                parentComponentRelLatestVersion = await parentComponentRel?.latestVersion
+
+            if (!parentComponentRelLatestVersion) {
+                em.create(BelongsVersionsModel, {
+                    isDeleted: false,
+                    effectiveFrom: props.modifiedDate,
+                    modifiedBy: props.modifiedById,
+                    requirementRelation: em.create(BelongsModel, {
+                        left: props.requirementId,
+                        right: parentComponentId,
+                        createdBy: props.modifiedById,
+                        creationDate: props.modifiedDate
+                    })
+                })
+            }
+        }
 
         await em.flush()
     }
