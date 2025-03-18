@@ -52,7 +52,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
     /**
      * Add a new requirement to a solution and assign it a new requirement id
      *
-     * @param props.solutionId - The id of the solution to add the requirement to
+     * @param props.solutionSlug - The slug of the solution to add the requirement to
      * @param props.reqProps - The requirement data to add
      * @returns The id of the new requirement
      * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
@@ -60,18 +60,18 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {NotFoundException} If the solution does not exist
      */
     async addRequirement<R extends keyof typeof req>({
-        solutionId, reqProps
+        solutionSlug, reqProps
     }: {
-        solutionId: z.infer<typeof req.Solution>['id'],
+        solutionSlug: z.infer<typeof req.Solution>['slug'],
         reqProps: Omit<z.infer<typeof req[R]>, 'reqId' | 'id' | keyof z.infer<typeof AuditMetadata>> & { reqType: ReqType }
     }): Promise<z.infer<typeof req[R]>['id']> {
         if (!this.isOrganizationContributor())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
-        await this._assertReferencedRequirementsBelongToSolution({ solutionId, reqProps })
+        await this._assertReferencedRequirementsBelongToSolution({ solutionSlug, reqProps })
 
         return await this.repository.addRequirement({
-            solutionId,
+            solutionSlug,
             reqProps,
             createdById: this._userId,
             effectiveDate: new Date()
@@ -93,16 +93,17 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
         if (!await this.isOrganizationAdmin())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
-        const newSolutionId = await repo.addSolution({ name, description, effectiveDate, createdById: this._userId })
+        const newSolutionId = await repo.addSolution({ name, description, effectiveDate, createdById: this._userId }),
+            newSolution = await repo.getSolutionById(newSolutionId)
 
         // create initial requirements for the solution
         await this.addRequirement({
-            solutionId: newSolutionId,
+            solutionSlug: newSolution.slug,
             reqProps: { reqType: ReqType.OUTCOME, name: 'G.1', description: 'Context and Objective', isSilence: false }
         })
 
         await this.addRequirement({
-            solutionId: newSolutionId,
+            solutionSlug: newSolution.slug,
             reqProps: { reqType: ReqType.OBSTACLE, name: 'G.2', description: 'Situation', isSilence: false }
         })
 
@@ -149,22 +150,27 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      */
     async deleteRequirement(props: {
         id: z.infer<typeof req.Requirement>['id'],
-        solutionId: z.infer<typeof req.Solution>['id'],
+        solutionSlug: z.infer<typeof req.Solution>['slug'],
         reqType: ReqType
     }): Promise<void> {
         if (!this.isOrganizationContributor())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
+
+        const solution = await this.repository.getSolutionBySlug(props.solutionSlug),
+            solHasReq = await this.repository.solutionHasRequirement({ id: props.id, solutionId: solution.id })
+
+        if (!solHasReq)
+            throw new MismatchException('Requirement does not belong to the solution')
 
         await this.repository.deleteSolutionRequirementById({
             deletedById: this._userId,
             deletedDate: new Date(),
             reqType: props.reqType,
             id: props.id,
-            solutionId: props.solutionId
+            solutionId: solution.id
         })
 
         // TODO: decrement the reqId of all requirements that have a reqId greater than the deleted requirement
-        // see https://github.com/final-hill/cathedral/issues/475
     }
 
     /**
@@ -189,13 +195,13 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
     /**
      * Find requirements that match the query parameters for a solution
      *
-     * @param props.solutionId - The id of the solution to find the requirements for
+     * @param props.solutionSlug - The slug of the solution to find the requirements for
      * @param props.query - The query parameters to filter requirements by
      * @returns The requirements that match the query parameters
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
     async findSolutionRequirements<R extends keyof typeof req>(props: {
-        solutionId: z.infer<typeof req.Solution>['id'],
+        solutionSlug: z.infer<typeof req.Solution>['slug'],
         query: Partial<z.infer<typeof req[R]>> & { reqType: ReqType }
     }): Promise<z.infer<typeof req[R]>[]> {
         if (!this.isOrganizationReader())
@@ -296,14 +302,14 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      *
      * @param props.reqType The type of the requirement to get
      * @param props.id The id of the requirement to get
-     * @param props.solutionId The id of the solution that the requirement belongs to
+     * @param props.solutionSlug The slug of the solution that the requirement belongs to
      * @returns The requirement
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      * @throws {NotFoundException} If the requirement does not exist in the organization nor the solution
      */
     async getSolutionRequirementById<R extends keyof typeof req>(props: {
         reqType: ReqType,
-        solutionId: z.infer<typeof req.Solution>['id'],
+        solutionSlug: z.infer<typeof req.Solution>['slug'],
         id: z.infer<typeof req.Requirement>['id']
     }): Promise<z.infer<typeof req[R]>> {
         if (!this.isOrganizationReader())
@@ -311,7 +317,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
 
         return await this.repository.getSolutionRequirementById({
             reqType: props.reqType,
-            solutionId: props.solutionId,
+            solutionSlug: props.solutionSlug,
             id: props.id
         })
     }
@@ -411,17 +417,18 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * Assert that all requirement references (uuid properties) belong to the same solution.
      * This is to prevent a requirement from another solution being added to the current solution.
      * This is a security measure to prevent unauthorized access to requirements
-     * @param props.solutionId The id of the solution that the requirements belong to
+     * @param props.solutionSlug The slug of the solution that the requirements belong to
      * @param props.reqProps The properties of the requirements to check
      * @throws {MismatchException} If a referenced requirement does not belong to the solution
      */
     private async _assertReferencedRequirementsBelongToSolution(props: {
-        solutionId: z.infer<typeof req.Solution>['id'],
+        solutionSlug: z.infer<typeof req.Solution>['slug'],
         reqProps: Partial<Omit<z.infer<typeof req.Requirement>, 'reqId' | keyof z.infer<typeof AuditMetadata>>>
     }) {
+        const solution = await this.repository.getSolutionBySlug(props.solutionSlug)
         for (const [_, value] of Object.entries(props.reqProps) as [keyof typeof props.reqProps, string][]) {
             if (validateUuid(value)) {
-                const solHasReq = await this.repository.solutionHasRequirement({ id: value, solutionId: props.solutionId })
+                const solHasReq = await this.repository.solutionHasRequirement({ id: value, solutionId: solution.id })
 
                 if (!solHasReq)
                     throw new MismatchException(`Requirement with id ${value} does not belong to the solution`)
@@ -433,7 +440,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * Update a requirement by id for a solution with the given properties
      *
      * @param props.id The id of the requirement to update
-     * @param props.solutionId The id of the solution that the requirement belongs to
+     * @param props.solutionSlug The slug of the solution that the requirement belongs to
      * @param props.reqProps The properties to update
      * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
      * @throws {NotFoundException} If the requirement does not exist
@@ -443,14 +450,14 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      */
     async updateSolutionRequirement<R extends keyof typeof req>(props: {
         id: z.infer<typeof req[R]>['id'],
-        solutionId: z.infer<typeof req.Solution>['id'],
+        solutionSlug: z.infer<typeof req.Solution>['slug'],
         reqProps: Partial<Omit<z.infer<typeof req[R]>, 'id' | 'reqId' | keyof z.infer<typeof AuditMetadata>>> & { reqType: ReqType }
     }): Promise<void> {
         if (!this.isOrganizationContributor())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         await this._assertReferencedRequirementsBelongToSolution({
-            solutionId: props.solutionId,
+            solutionSlug: props.solutionSlug,
             reqProps: props.reqProps
         })
 
@@ -458,7 +465,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
             modifiedById: this._userId,
             modifiedDate: new Date(),
             requirementId: props.id,
-            solutionId: props.solutionId,
+            solutionSlug: props.solutionSlug,
             reqProps: props.reqProps
         })
     }

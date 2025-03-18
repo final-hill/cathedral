@@ -6,17 +6,10 @@ useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Functionality' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Functionality').params,
-    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id;
-
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value)
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Functionality').params
 
 const { data: components, status, refresh, error: getComponentsError } = await useFetch<z.infer<typeof SystemComponent>[]>(`/api/system-component`, {
-    query: { solutionId, organizationSlug },
+    query: { solutionSlug, organizationSlug },
     transform: (data) => data.map((item) => ({
         ...item,
         lastModified: new Date(item.lastModified),
@@ -29,12 +22,12 @@ if (getComponentsError.value)
 
 const fnFunctionalBehaviors = async (componentId: string) =>
     await $fetch<z.infer<typeof FunctionalBehavior>[]>(`/api/functional-behavior`, {
-        query: { solutionId, componentId, organizationSlug }
+        query: { solutionSlug, componentId, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e));
 
 const fnNonFunctionalBehaviors = async (componentId: string) =>
     await $fetch<z.infer<typeof NonFunctionalBehavior>[]>(`/api/non-functional-behavior`, {
-        query: { solutionId, componentId, organizationSlug }
+        query: { solutionSlug, componentId, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
 const viewSchema = SystemComponent.pick({

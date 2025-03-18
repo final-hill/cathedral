@@ -80,7 +80,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
 
     /**
      * Adds a new requirement to the organization
-     * @param props.solutionId - The id of the solution to add the requirement to
+     * @param props.solutionSlug - The slug of the solution to add the requirement to
      * @param props.reqProps - The properties of the requirement to add
      * @param props.effectiveDate - The effective date of the requirement
      * @param props.createdById - The id of the user creating the requirement
@@ -89,7 +89,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
      * @throws {NotFoundException} If the solution does not exist
      */
     async addRequirement<R extends keyof typeof req>(props: CreationInfo & {
-        solutionId: z.infer<typeof req.Solution>['id'],
+        solutionSlug: z.infer<typeof req.Solution>['slug'],
         reqIdPrefix?: req.ReqIdPrefix,
         reqProps: Omit<z.infer<typeof req[R]>, 'reqId' | 'id' | keyof z.infer<typeof AuditMetadata>> & { reqType: ReqType }
     }): Promise<z.infer<typeof req.Requirement>['id']> {
@@ -100,7 +100,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             ReqModel = reqModels[`${ReqTypePascal}Model` as keyof typeof reqModels],
             ReqVersionsModel = reqModels[`${ReqTypePascal}VersionsModel` as keyof typeof reqModels]
 
-        const solution = await this.getSolutionById(props.solutionId)
+        const solution = await this.getSolutionBySlug(props.solutionSlug)
 
         if (!solution)
             throw new NotFoundException('Solution does not exist')
@@ -113,7 +113,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             effectiveFrom: props.effectiveDate,
             modifiedBy: props.createdById,
             // Silent requirements do not have a reqId as they are not approved to be part of the solution
-            reqId: reqProps.isSilence ? undefined : await this.getNextReqId(props.solutionId, props.reqIdPrefix),
+            reqId: reqProps.isSilence ? undefined : await this.getNextReqId(solution.id, props.reqIdPrefix),
             ...mappedProps,
             requirement: em.create<reqModels.RequirementModel>(ReqModel, {
                 id: newId,
@@ -129,7 +129,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             modifiedBy: props.createdById,
             requirementRelation: em.create(BelongsModel, {
                 left: newId,
-                right: props.solutionId,
+                right: solution.id,
                 createdBy: props.createdById,
                 creationDate: props.effectiveDate
             })
@@ -490,19 +490,20 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
     /**
      * Find requirements that match the query parameters for a solution
      *
-     * @param props.solutionId - The id of the solution to find the requirements for
+     * @param props.solutionSlug - The slug of the solution to find the requirements for
      * @param props.query - The query parameters to filter requirements by
      * @returns The requirements that match the query parameters
      * @throws {MismatchException} If the solution does not exist in the organization
      */
     async findSolutionRequirements<R extends keyof typeof req>(props: {
-        solutionId: z.infer<typeof req.Solution>['id'],
+        solutionSlug: z.infer<typeof req.Solution>['slug'],
         query: Partial<z.infer<typeof req[R]>> & { reqType: ReqType }
     }): Promise<z.infer<typeof req[R]>[]> {
         const em = this._em,
             { reqType, createdBy, creationDate, ...query } = props.query,
             ReqTypePascal = snakeCaseToPascalCase(reqType) as keyof typeof req,
-            ReqModel = reqModels[`${ReqTypePascal}Model` as keyof typeof reqModels]
+            ReqModel = reqModels[`${ReqTypePascal}Model` as keyof typeof reqModels],
+            solution = await this.getSolutionBySlug(props.solutionSlug)
 
         const reqsInSolution = [];
         for (const rel of await em.find(BelongsModel, {
@@ -510,7 +511,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
                 req_type: props.query.reqType,
                 ...(props.query.id ? { id: props.query.id } : {})
             } as any,
-            right: { id: props.solutionId, req_type: ReqType.SOLUTION }
+            right: { id: solution.id, req_type: ReqType.SOLUTION }
         })) {
             const latestVersion = await rel.latestVersion;
             if (latestVersion)
@@ -776,17 +777,17 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
      * Gets a requirement by id belonging to the organization solution
      * @param props.id - The id of the requirement to get
      * @param props.reqType - The type of the requirement to get
-     * @param props.solutionId - The id of the solution to get the requirement from
+     * @param props.solutionSlug - The slug of the solution to get the requirement from
      * @returns The requirement
      * @throws {NotFoundException} If the requirement does not exist in the organization nor the solution
      */
     async getSolutionRequirementById<R extends keyof typeof req>(props: {
         id: z.infer<typeof req.Requirement>['id'],
-        solutionId: z.infer<typeof req.Solution>['id'],
+        solutionSlug: z.infer<typeof req.Solution>['slug'],
         reqType: ReqType,
     }): Promise<z.infer<typeof req[R]>> {
         const requirement = (await this.findSolutionRequirements({
-            solutionId: props.solutionId,
+            solutionSlug: props.solutionSlug,
             query: { id: props.id, reqType: props.reqType, } as Partial<z.infer<typeof req[R]>> & { reqType: ReqType }
         }))[0]
 
@@ -848,7 +849,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
 
     /**
      * Updates a requirement by id
-     * @param props.solutionId - The id of the solution the requirement belongs to
+     * @param props.solutionSlug - The slug of the solution the requirement belongs to
      * @param props.requirementId - The id of the requirement to update
      * @param props.reqProps - The properties of the requirement to update
      * @param props.modifiedById - The id of the user updating the requirement
@@ -858,7 +859,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
      * @throws {NotFoundException} If the solution does not exist
      */
     async updateSolutionRequirement<R extends keyof typeof req>(props: UpdationInfo & {
-        solutionId: z.infer<typeof req.Solution>['id'],
+        solutionSlug: z.infer<typeof req.Solution>['slug'],
         requirementId: z.infer<typeof req.Requirement>['id'],
         reqProps: Omit<Partial<z.infer<typeof req[R]>>, 'id' | 'reqId' | keyof z.infer<typeof AuditMetadata>>
         & { reqType: ReqType }
@@ -869,7 +870,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             ReqModel = reqModels[`${ReqType}Model` as keyof typeof reqModels],
             ReqVersionsModel = reqModels[`${ReqType}VersionsModel` as keyof typeof reqModels]
 
-        const existingSolution = await this.getSolutionById(props.solutionId)
+        const existingSolution = await this.getSolutionBySlug(props.solutionSlug)
 
         const existingReq = await em.findOne<reqModels.RequirementModel>(
             ReqModel, {
@@ -887,7 +888,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             relLatestVersion = await rel?.latestVersion
 
         if (!relLatestVersion)
-            throw new MismatchException(`Requirement does not belong to solution with id ${props.solutionId}`)
+            throw new MismatchException(`Requirement does not belong to solution with slug ${props.solutionSlug}`)
 
         const { parentComponentId, ...mappedProps } = await new ReqQueryToModelQuery().map(reqProps)
 

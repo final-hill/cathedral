@@ -6,17 +6,10 @@ useHead({ title: 'Components' })
 definePageMeta({ name: 'System Components' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('System Components').params,
-    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id;
-
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value);
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('System Components').params
 
 const { data: systemComponents, refresh, status, error: getSystemComponentsError } = await useFetch<z.infer<typeof SystemComponent>[]>(`/api/system-component`, {
-    query: { solutionId, organizationSlug },
+    query: { solutionSlug, organizationSlug },
     transform: (data) => data.map((item) => ({
         ...item,
         lastModified: new Date(item.lastModified),
@@ -55,7 +48,7 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
             name: data.name,
             description: data.description,
             parentComponent: data.parentComponent,
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -70,7 +63,7 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
             name: data.name,
             description: data.description,
             parentComponent: data.parentComponent,
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -81,7 +74,7 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/system-component/${id}`, {
         method: 'DELETE',
-        body: { solutionId, organizationSlug }
+        body: { solutionSlug, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()

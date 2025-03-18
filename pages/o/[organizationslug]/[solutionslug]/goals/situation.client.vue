@@ -6,14 +6,7 @@ useHead({ title: 'Situation' })
 definePageMeta({ name: 'Situation' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Situation').params,
-    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id;
-
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value);
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Situation').params
 
 const { data: situations, error: getSituationError } = await useFetch<z.infer<typeof Obstacle>[]>(`/api/obstacle`, {
     transform: (data) => data.map((item) => ({
@@ -21,7 +14,7 @@ const { data: situations, error: getSituationError } = await useFetch<z.infer<ty
         lastModified: new Date(item.lastModified),
         creationDate: new Date(item.creationDate)
     })),
-    query: { name: 'G.2', solutionId, organizationSlug }
+    query: { name: 'G.2', solutionSlug, organizationSlug }
 });
 
 if (getSituationError.value)
@@ -43,7 +36,7 @@ const updateSituation = async (data: FormSchema) => {
     await $fetch(`/api/obstacle/${situation.id}`, {
         method: 'PUT',
         body: {
-            solutionId,
+            solutionSlug,
             organizationSlug,
             name: situation.name,
             description: data.description
@@ -52,7 +45,7 @@ const updateSituation = async (data: FormSchema) => {
 }
 
 const { data: obstacles, refresh, status, error: getObstaclesError } = await useFetch<z.infer<typeof Obstacle>[]>(`/api/obstacle`, {
-    query: { solutionId, organizationSlug },
+    query: { solutionSlug, organizationSlug },
     transform: (data) => data.map((item) => ({
         ...item,
         lastModified: new Date(item.lastModified),
@@ -82,7 +75,7 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
     await $fetch(`/api/obstacle`, {
         method: 'POST',
         body: {
-            solutionId,
+            solutionSlug,
             organizationSlug,
             name: data.name,
             description: data.description
@@ -96,7 +89,7 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
     await $fetch(`/api/obstacle/${data.id}`, {
         method: 'PUT',
         body: {
-            solutionId,
+            solutionSlug,
             organizationSlug,
             name: data.name,
             description: data.description
@@ -109,7 +102,7 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/obstacle/${id}`, {
         method: 'DELETE',
-        body: { solutionId, organizationSlug }
+        body: { solutionSlug, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()

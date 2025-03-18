@@ -7,22 +7,15 @@ useHead({ title: 'Constraints' })
 definePageMeta({ name: 'Constraints' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Constraints').params,
-    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id,
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Constraints').params,
     { data: constraints, status, refresh, error: getConstraintsError } = await useFetch<z.infer<typeof Constraint>[]>(`/api/constraint`, {
-        query: { solutionId, organizationSlug },
+        query: { solutionSlug, organizationSlug },
         transform: (data) => data.map((item) => ({
             ...item,
             lastModified: new Date(item.lastModified),
             creationDate: new Date(item.creationDate)
         }))
     });
-
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value)
 
 if (getConstraintsError.value)
     $eventBus.$emit('page-error', getConstraintsError.value)
@@ -55,7 +48,7 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
             name: data.name,
             description: data.description,
             category: data.category,
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -66,7 +59,7 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/constraint/${id}`, {
         method: 'DELETE',
-        body: { solutionId, organizationSlug }
+        body: { solutionSlug, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
     refresh()
 }
@@ -78,7 +71,7 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
             name: data.name,
             description: data.description,
             category: data.category,
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))

@@ -6,17 +6,10 @@ useHead({ title: 'Limitations' })
 definePageMeta({ name: 'Limitations' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Limitations').params,
-    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id
-
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value)
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Limitations').params
 
 const { data: limits, status, refresh, error: getLimitsError } = await useFetch<z.infer<typeof Limit>[]>(`/api/limit`, {
-    query: { solutionId, organizationSlug },
+    query: { solutionSlug, organizationSlug },
     transform: (data) => data.map((item) => ({
         ...item,
         lastModified: new Date(item.lastModified),
@@ -49,7 +42,7 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
     await $fetch(`/api/limit`, {
         method: 'POST',
         body: {
-            solutionId,
+            solutionSlug,
             organizationSlug,
             name: data.name,
             description: data.description
@@ -62,7 +55,7 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
 const onUpdate = async (data: z.infer<typeof editSchema>) => {
     await $fetch(`/api/limit/${data.id}`, {
         method: 'PUT', body: {
-            solutionId,
+            solutionSlug,
             organizationSlug,
             id: data.id,
             name: data.name,
@@ -76,7 +69,7 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/limit/${id}`, {
         method: 'DELETE',
-        body: { solutionId, organizationSlug }
+        body: { solutionSlug, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()

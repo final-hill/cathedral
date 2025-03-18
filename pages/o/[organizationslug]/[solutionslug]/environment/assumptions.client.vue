@@ -7,17 +7,10 @@ useHead({ title: 'Assumptions' })
 definePageMeta({ name: 'Assumptions' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Assumptions').params,
-    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id
-
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value);
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Assumptions').params
 
 const { data: assumptions, refresh, status, error: getAssumptionsError } = await useFetch(`/api/assumption`, {
-    query: { solutionId, organizationSlug },
+    query: { solutionSlug, organizationSlug },
     transform: (data) => data.map((item) => ({
         ...item,
         creationDate: new Date(item.creationDate),
@@ -52,7 +45,7 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
         body: {
             name: data.name,
             description: data.description,
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -63,7 +56,7 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/assumption/${id}`, {
         method: 'delete',
-        body: { solutionId, organizationSlug }
+        body: { solutionSlug, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()
@@ -75,7 +68,7 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
         body: {
             name: data.name,
             description: data.description,
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))

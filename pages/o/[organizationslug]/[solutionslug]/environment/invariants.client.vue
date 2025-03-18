@@ -6,17 +6,10 @@ useHead({ title: 'Invariants' })
 definePageMeta({ name: 'Invariants' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Invariants').params,
-    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id
-
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value)
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Invariants').params
 
 const { data: invariants, refresh, status, error: getInvariantsError } = await useFetch<z.infer<typeof Invariant>[]>(`/api/invariant`, {
-    query: { solutionId, organizationSlug },
+    query: { solutionSlug, organizationSlug },
     transform: (data) => data.map((item) => ({
         ...item,
         lastModified: new Date(item.lastModified),
@@ -51,7 +44,7 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
         body: {
             name: data.name,
             description: data.description,
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -65,7 +58,7 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
             id: data.id,
             name: data.name,
             description: data.description,
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -76,7 +69,7 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
 const onDelete = async (id: string) => {
     await useFetch(`/api/invariant/${id}`, {
         method: 'DELETE',
-        body: { solutionId, organizationSlug }
+        body: { solutionSlug, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()

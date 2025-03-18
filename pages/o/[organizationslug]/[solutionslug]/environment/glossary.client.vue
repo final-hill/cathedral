@@ -6,17 +6,10 @@ useHead({ title: 'Glossary' })
 definePageMeta({ name: 'Glossary' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Glossary').params,
-    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id;
-
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value);
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Glossary').params;
 
 const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = await useFetch(`/api/glossary-term`, {
-    query: { solutionId, organizationSlug },
+    query: { solutionSlug, organizationSlug },
     transform: (data) => data.map((item) => ({
         ...item,
         lastModified: new Date(item.lastModified),
@@ -51,7 +44,7 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
         body: {
             name: data.name,
             description: data.description,
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -66,7 +59,7 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
             id: data.id,
             name: data.name,
             description: data.description,
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
@@ -77,7 +70,7 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/glossary-term/${id}`, {
         method: 'DELETE',
-        body: { solutionId, organizationSlug }
+        body: { solutionSlug, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
     refresh()
 }

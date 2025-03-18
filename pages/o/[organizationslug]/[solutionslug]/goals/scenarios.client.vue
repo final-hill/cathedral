@@ -6,18 +6,11 @@ useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Goal Scenarios' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Scenarios').params,
-    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id;
-
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value);
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Scenarios').params
 
 const { data: epics, refresh, status, error: getEpicsError } = await
     useFetch<z.infer<typeof Epic>[]>(`/api/epic`, {
-        query: { solutionId, organizationSlug },
+        query: { solutionSlug, organizationSlug },
         transform: (data) => data.map((item) => ({
             ...item,
             lastModified: new Date(item.lastModified),
@@ -59,7 +52,7 @@ const onCreate = async (epic: z.infer<typeof createSchema>) => {
         method: 'POST',
         body: {
             ...epic,
-            solutionId,
+            solutionSlug,
             organizationSlug,
             description: '',
             priority: MoscowPriority.MUST
@@ -74,7 +67,7 @@ const onUpdate = async (epic: z.infer<typeof editSchema>) => {
         method: 'PUT',
         body: {
             ...epic,
-            solutionId,
+            solutionSlug,
             organizationSlug,
             description: '',
             priority: MoscowPriority.MUST
@@ -87,7 +80,7 @@ const onUpdate = async (epic: z.infer<typeof editSchema>) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/epic/${id}`, {
         method: 'DELETE',
-        body: { solutionId, organizationSlug }
+        body: { solutionSlug, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e));
     refresh();
 }
@@ -100,13 +93,14 @@ const onDelete = async (id: string) => {
     <p>
         Before you can begin, you must define one or more
         <NuxtLink class="underline"
-            :to="{ name: 'Stakeholders', params: { solutionslug: slug, organizationslug: organizationSlug } }">
+            :to="{ name: 'Stakeholders', params: { solutionslug: solutionSlug, organizationslug: organizationSlug } }">
             Stakeholders</NuxtLink>,
         <NuxtLink class="underline"
-            :to="{ name: 'Goals Functionality', params: { solutionslug: slug, organizationslug: organizationSlug } }"
+            :to="{ name: 'Goals Functionality', params: { solutionslug: solutionSlug, organizationslug: organizationSlug } }"
             v-text="'Functional Behaviors'" />,
         and <NuxtLink class="underline"
-            :to="{ name: 'Outcomes', params: { solutionslug: slug, organizationslug: organizationSlug } }">Outcomes
+            :to="{ name: 'Outcomes', params: { solutionslug: solutionSlug, organizationslug: organizationSlug } }">
+            Outcomes
         </NuxtLink>
         for the solution.
     </p>

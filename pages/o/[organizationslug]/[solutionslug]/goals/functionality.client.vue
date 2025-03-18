@@ -6,17 +6,10 @@ useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Goals Functionality' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Functionality').params,
-    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id
-
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value)
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Functionality').params
 
 const { data: functionalBehaviors, refresh, status, error: getFunctionalBehaviorsError } = await useFetch<z.infer<typeof FunctionalBehavior>[]>(`/api/functional-behavior`, {
-    query: { solutionId, organizationSlug },
+    query: { solutionSlug, organizationSlug },
     transform: (data) => data.map((item) => ({
         ...item,
         lastModified: new Date(item.lastModified),
@@ -49,7 +42,7 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
         method: 'POST',
         body: {
             ...data,
-            solutionId,
+            solutionSlug,
             organizationSlug,
             priority: MoscowPriority.MUST
         }
@@ -63,7 +56,7 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
         method: 'PUT',
         body: {
             ...data,
-            solutionId,
+            solutionSlug,
             organizationSlug,
             priority: MoscowPriority.MUST
         }
@@ -75,7 +68,7 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
 const onDelete = async (id: string) => {
     await $fetch(`/api/functional-behavior/${id}`, {
         method: 'DELETE',
-        body: { solutionId, organizationSlug }
+        body: { solutionSlug, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
     refresh()

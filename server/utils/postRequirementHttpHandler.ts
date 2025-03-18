@@ -1,7 +1,7 @@
 import { getServerSession } from '#auth'
 import * as req from "#shared/domain/requirements";
 import { OrganizationInteractor } from '~/application'
-import { z, type ZodObject } from "zod"
+import { type ZodObject } from "zod"
 import { OrganizationRepository } from '../data/repositories/OrganizationRepository';
 import handleDomainException from './handleDomainException'
 
@@ -17,7 +17,7 @@ export default function postRequirementHttpHandler<
     BodySchema extends (ZodObject<any>)
 >(bodySchema: BodySchema) {
     const validatedBodySchema = bodySchema.extend({
-        solutionId: z.string().uuid(),
+        solutionSlug: req.Solution.innerType().pick({ slug: true }).shape.slug,
         organizationId,
         organizationSlug
     }).refine((value) => {
@@ -26,14 +26,14 @@ export default function postRequirementHttpHandler<
 
     return defineEventHandler(async (event) => {
         // FIXME: Zod sucks at type inference. see: https://github.com/colinhacks/zod/issues/2807
-        const { solutionId, organizationId, organizationSlug, ...reqProps } = await validateEventBody(event, validatedBodySchema) as any,
+        const { solutionSlug, organizationId, organizationSlug, ...reqProps } = await validateEventBody(event, validatedBodySchema) as any,
             session = (await getServerSession(event))!,
             organizationInteractor = new OrganizationInteractor({
                 repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug }),
                 userId: session.id
             })
 
-        const newRequirementId = await organizationInteractor.addRequirement({ solutionId, reqProps }).catch(handleDomainException)
+        const newRequirementId = await organizationInteractor.addRequirement({ solutionSlug, reqProps }).catch(handleDomainException)
 
         return newRequirementId
     })

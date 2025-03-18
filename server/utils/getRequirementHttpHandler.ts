@@ -4,7 +4,7 @@ import { OrganizationInteractor } from '~/application'
 import { OrganizationRepository } from "../data/repositories/OrganizationRepository"
 import handleDomainException from "./handleDomainException"
 import { ReqType } from "~/shared/domain/requirements/ReqType";
-import { Organization } from "~/shared/domain"
+import { Organization, Solution } from "~/shared/domain"
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
@@ -13,7 +13,7 @@ const paramSchema = z.object({
 })
 
 const querySchema = z.object({
-    solutionId: z.string().uuid(),
+    solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
     organizationId,
     organizationSlug
 }).refine((value) => {
@@ -29,13 +29,13 @@ const querySchema = z.object({
 export default function getRequirementHttpHandler(reqType: ReqType) {
     return defineEventHandler(async (event) => {
         const { id } = await validateEventParams(event, paramSchema),
-            { solutionId, organizationId, organizationSlug } = await validateEventQuery(event, querySchema),
+            { solutionSlug, organizationId, organizationSlug } = await validateEventQuery(event, querySchema),
             session = (await getServerSession(event))!,
             organizationInteractor = new OrganizationInteractor({
                 repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug }),
                 userId: session.id
             })
 
-        return await organizationInteractor.getSolutionRequirementById({ solutionId, reqType, id }).catch(handleDomainException)
+        return await organizationInteractor.getSolutionRequirementById({ solutionSlug, reqType, id }).catch(handleDomainException)
     })
 }

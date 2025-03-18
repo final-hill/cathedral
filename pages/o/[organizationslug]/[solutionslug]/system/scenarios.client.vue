@@ -6,14 +6,7 @@ useHead({ title: 'Scenarios' })
 definePageMeta({ name: 'Scenarios' })
 
 const { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Scenarios').params,
-    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id!;
-
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value);
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Scenarios').params
 
 const tabItems = ref([
     { label: 'User Stories', slot: 'user-stories' },
@@ -21,7 +14,7 @@ const tabItems = ref([
 ])
 
 const { data: userStories, refresh: refreshUserStories, error: getUserStoriesError, status: userStoryStatus } = await useFetch<z.infer<typeof UserStory>[]>(`/api/user-story`, {
-    query: { solutionId, organizationSlug },
+    query: { solutionSlug, organizationSlug },
     transform: (data) => data.map((item) => ({
         ...item,
         lastModified: new Date(item.lastModified),
@@ -29,18 +22,18 @@ const { data: userStories, refresh: refreshUserStories, error: getUserStoriesErr
     }))
 }),
     { data: useCases, refresh: refreshUseCases, error: getUseCasesError, status: useCaseStatus } = await useFetch<z.infer<typeof UseCase>[]>(`/api/use-case`, {
-        query: { solutionId, organizationSlug },
+        query: { solutionSlug, organizationSlug },
         transform: (data) => data.map((item) => ({
             ...item,
             lastModified: new Date(item.lastModified),
             creationDate: new Date(item.creationDate)
         }))
     }),
-    { data: roles, error: getRolesError } = await useFetch<z.infer<typeof Stakeholder>[]>(`/api/stakeholder`, { query: { solutionId, organizationSlug } }),
-    { data: functionalBehaviors, error: getFunctionalBehaviorsError } = await useFetch<z.infer<typeof FunctionalBehavior>[]>(`/api/functional-behavior`, { query: { solutionId, organizationSlug } }),
-    { data: outcomes, error: getOutcomesError } = await useFetch<z.infer<typeof Outcome>[]>(`/api/outcome`, { query: { solutionId, organizationSlug } }),
-    { data: assumptions, error: getAssumptionsError } = await useFetch<z.infer<typeof Assumption>[]>(`/api/assumption`, { query: { solutionId, organizationSlug } }),
-    { data: effects, error: getEffectsError } = await useFetch<z.infer<typeof Effect>[]>(`/api/effect`, { query: { solutionId, organizationSlug } }),
+    { data: roles, error: getRolesError } = await useFetch<z.infer<typeof Stakeholder>[]>(`/api/stakeholder`, { query: { solutionSlug, organizationSlug } }),
+    { data: functionalBehaviors, error: getFunctionalBehaviorsError } = await useFetch<z.infer<typeof FunctionalBehavior>[]>(`/api/functional-behavior`, { query: { solutionSlug, organizationSlug } }),
+    { data: outcomes, error: getOutcomesError } = await useFetch<z.infer<typeof Outcome>[]>(`/api/outcome`, { query: { solutionSlug, organizationSlug } }),
+    { data: assumptions, error: getAssumptionsError } = await useFetch<z.infer<typeof Assumption>[]>(`/api/assumption`, { query: { solutionSlug, organizationSlug } }),
+    { data: effects, error: getEffectsError } = await useFetch<z.infer<typeof Effect>[]>(`/api/effect`, { query: { solutionSlug, organizationSlug } }),
     triggerIds = ref<{ id: string, name: string }[]>([])
 
 if (getUserStoriesError.value)
@@ -114,7 +107,7 @@ const onUserStoryCreate = async (userStory: z.infer<typeof userStoryCreateSchema
         method: 'POST',
         body: {
             ...userStory,
-            solutionId,
+            solutionSlug,
             organizationSlug
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
@@ -127,7 +120,7 @@ const onUserStoryUpdate = async (userStory: z.infer<typeof userStoryEditSchema>)
         method: 'PUT',
         body: {
             ...userStory,
-            solutionId,
+            solutionSlug,
             organizationSlug,
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
@@ -140,7 +133,7 @@ const onUseCaseCreate = async (useCase: z.infer<typeof useCaseCreateSchema>) => 
         method: 'POST',
         body: {
             ...useCase,
-            solutionId,
+            solutionSlug,
             organizationSlug,
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
@@ -153,7 +146,7 @@ const onUseCaseUpdate = async (useCase: z.infer<typeof useCaseEditSchema>) => {
         method: 'PUT',
         body: {
             ...useCase,
-            solutionId,
+            solutionSlug,
             organizationSlug,
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
@@ -164,7 +157,7 @@ const onUseCaseUpdate = async (useCase: z.infer<typeof useCaseEditSchema>) => {
 const onUserStoryDelete = async (id: string) => {
     await $fetch(`/api/user-story/${id}`, {
         method: 'DELETE',
-        body: { solutionId, organizationSlug }
+        body: { solutionSlug, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e));
 
     refreshUserStories();
@@ -173,7 +166,7 @@ const onUserStoryDelete = async (id: string) => {
 const onUseCaseDelete = async (id: string) => {
     await $fetch(`/api/use-case/${id}`, {
         method: 'DELETE',
-        body: { solutionId, organizationSlug }
+        body: { solutionSlug, organizationSlug }
     }).catch((e) => $eventBus.$emit('page-error', e));
 
     refreshUseCases();

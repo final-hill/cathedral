@@ -6,18 +6,10 @@ useHead({ title: 'Context and Objective' })
 definePageMeta({ name: 'Context and Objective' })
 
 const { $eventBus } = useNuxtApp(),
-    router = useRouter(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Context and Objective').params,
-    { data: solution, error: getSolutionError } = await useFetch(`/api/solution/${slug}`, {
-        query: { organizationSlug }
-    }),
-    solutionId = solution.value?.id;
-
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value);
+    { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Context and Objective').params
 
 const { data: outcomes, error: getOutcomesError } = await useFetch<z.infer<typeof Outcome>[]>(`/api/outcome`, {
-    query: { name: 'G.1', solutionId, organizationSlug }
+    query: { name: 'G.1', solutionSlug, organizationSlug }
 });
 
 if (getOutcomesError.value || !outcomes.value || outcomes.value.length === 0)
@@ -39,7 +31,7 @@ const onUpdate = async (data: FormSchema) => {
     await $fetch(`/api/outcome/${contextAndObjective.id}`, {
         method: 'PUT',
         body: {
-            solutionId,
+            solutionSlug,
             organizationSlug,
             name: contextAndObjective.name,
             description: data.description

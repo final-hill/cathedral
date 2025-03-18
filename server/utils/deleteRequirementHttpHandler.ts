@@ -11,7 +11,7 @@ const { id: organizationId, slug: organizationSlug } = Organization.innerType().
 const paramSchema = Organization.innerType().pick({ id: true })
 
 const bodySchema = z.object({
-    solutionId: Solution.innerType().pick({ id: true }).shape.id,
+    solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
     organizationId,
     organizationSlug
 }).refine((value) => {
@@ -27,13 +27,13 @@ const bodySchema = z.object({
 export default function deleteRequirementHttpHandler(reqType: ReqType) {
     return defineEventHandler(async (event) => {
         const { id } = await validateEventParams(event, paramSchema),
-            { solutionId, organizationId, organizationSlug } = await validateEventBody(event, bodySchema),
+            { solutionSlug, organizationId, organizationSlug } = await validateEventBody(event, bodySchema),
             session = (await getServerSession(event))!,
             organizationInteractor = new OrganizationInteractor({
                 repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug }),
                 userId: session.id
             })
 
-        await organizationInteractor.deleteRequirement({ reqType, id, solutionId }).catch(handleDomainException)
+        await organizationInteractor.deleteRequirement({ reqType, id, solutionSlug }).catch(handleDomainException)
     })
 }

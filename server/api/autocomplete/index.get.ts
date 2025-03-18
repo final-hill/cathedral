@@ -18,11 +18,10 @@ export default defineEventHandler(async (event) => {
         organizationInteractor = new OrganizationInteractor({
             repository: new OrganizationRepository({ em: event.context.em, organizationSlug }),
             userId: session.id
-        }),
-        solutionId = await organizationInteractor.getSolutionBySlug(solutionSlug).then(solution => solution.id)
+        })
 
     return await organizationInteractor.findSolutionRequirements({
-        solutionId,
+        solutionSlug,
         query: { reqType }
     }).then(requirements => requirements.map(req => ({ label: req.name, value: req.id })))
         .catch(handleDomainException)
