@@ -44,22 +44,17 @@ const schemaFields = getSchemaFields(props.schema);
 type RouteType = { solutionslug?: string, organizationslug?: string }
 const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute().params as RouteType
 
-const autocompleteFetchObjects = schemaFields.reduce((acc, field) => {
-    const reqType = field.reqType
+const autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field) => {
+    const reqType = field.reqType;
     if (field.isObject) {
-        acc[field.key] = useFetch('/api/autocomplete', {
-            query: { solutionSlug, organizationSlug, reqType },
-            transform: (items) => {
-                return items.map((item) => ({
-                    label: item.name,
-                    value: item.id
-                }))
-            }
-        });
+        return {
+            [field.key]: await useFetch('/api/autocomplete', {
+                query: { solutionSlug, organizationSlug, reqType }
+            })
+        };
     }
-    return acc;
-}, {} as Record<string, AsyncData<InputMenuItem[], unknown>>);
-
+    return {};
+})).then(results => results.reduce((acc, result) => ({ ...acc, ...result }), {}));
 </script>
 
 <template>
@@ -98,7 +93,7 @@ const autocompleteFetchObjects = schemaFields.reduce((acc, field) => {
                 <USelect v-else-if="field.isEnum" v-model="props.state[field.key]" :items="field.enumOptions"
                     class="w-full" />
                 <UInputMenu v-else-if="field.isObject" v-model="props.state[field.key]"
-                    :items="(autocompleteFetchObjects[field.key].data || []) as any"
+                    :items="(autocompleteFetchObjects[field.key].data.value || []) as any"
                     :loading="(autocompleteFetchObjects[field.key].status as any) === 'pending'" class="w-full"
                     placeholder="Search for an item" />
                 <UInput v-else v-model.trim="props.state[field.key]" class="w-full" />
