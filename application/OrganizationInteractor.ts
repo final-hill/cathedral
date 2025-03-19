@@ -620,7 +620,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
                 }),
                 primaryActor: addSolReq(req.Stakeholder, {
                     name: item.primaryActor,
-                    availability: 50,
+                    interest: 50,
                     influence: 50,
                     description: '',
                     category: req.StakeholderCategory.KEY_STAKEHOLDER,
@@ -644,7 +644,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
                 }),
                 primaryActor: addSolReq(req.Stakeholder, {
                     name: item.role,
-                    availability: 50,
+                    interest: 50,
                     influence: 50,
                     description: '',
                     category: req.StakeholderCategory.KEY_STAKEHOLDER,

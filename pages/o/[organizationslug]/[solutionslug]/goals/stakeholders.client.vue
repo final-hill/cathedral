@@ -30,7 +30,7 @@ const viewSchema = Stakeholder.pick({
     description: true,
     category: true,
     segmentation: true,
-    availability: true,
+    interest: true,
     influence: true
 })
 
@@ -39,7 +39,7 @@ const createSchema = Stakeholder.pick({
     description: true,
     category: true,
     segmentation: true,
-    availability: true,
+    interest: true,
     influence: true
 })
 
@@ -49,21 +49,21 @@ const editSchema = Stakeholder.pick({
     description: true,
     category: true,
     segmentation: true,
-    availability: true,
+    interest: true,
     influence: true
 })
 
 const chartDefinition = (stakeholders: z.infer<typeof Stakeholder>[], category: StakeholderSegmentation) => `
     quadrantChart
     title ${category}
-    x-axis Low Availability --> High Availability
+    x-axis Low Interest --> High Interest
     y-axis Low Infuence --> High Influence
     quadrant-1 "${StakeholderCategory['Key Stakeholder']} (Satisfy)"
     quadrant-2 "${StakeholderCategory['Shadow Influencer']} (Manage)"
     quadrant-3 "${StakeholderCategory['Fellow Traveler']} (Inform)"
     quadrant-4 "${StakeholderCategory['Observer']} (Monitor)"
-    ${stakeholders.map(({ name, availability, influence }) =>
-    `"${name}": [${availability / 100}, ${influence / 100}]`)?.join('\n')
+    ${stakeholders.map(({ name, interest, influence }) =>
+    `"${name}": [${interest / 100}, ${influence / 100}]`)?.join('\n')
     }
 `;
 
@@ -90,7 +90,7 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
             description: data.description,
             category: data.category,
             segmentation: data.segmentation,
-            availability: Number(data.availability),
+            interest: Number(data.interest),
             influence: Number(data.influence),
             solutionSlug,
             organizationSlug
@@ -108,7 +108,7 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
             description: data.description,
             category: data.category,
             segmentation: data.segmentation,
-            availability: Number(data.availability),
+            interest: Number(data.interest),
             influence: Number(data.influence),
             solutionSlug,
             organizationSlug
