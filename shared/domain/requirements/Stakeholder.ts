@@ -13,8 +13,8 @@ export const Stakeholder = Component.extend({
         .describe('The segmentation of the stakeholder'),
     category: z.nativeEnum(StakeholderCategory)
         .describe('The category of the stakeholder'),
-    availability: z.number().int().min(0).max(100)
-        .describe('The availability of the stakeholder'),
+    interest: z.number().int().min(0).max(100)
+        .describe('The interest that the stakeholder has in the project; AKA "availability"'),
     influence: z.number().int().min(0).max(100)
         .describe('The influence of the stakeholder'),
     reqType: z.nativeEnum(ReqType).default(ReqType.STAKEHOLDER)

@@ -35,7 +35,8 @@
                 "hediet.vscode-drawio",
                 "vitest.explorer",
                 "kingwl.vscode-vitest-runner",
-                "bradlc.vscode-tailwindcss"
+                "bradlc.vscode-tailwindcss",
+                "xadamxk.prune-stale-git-branches"
             ]
         }
     }

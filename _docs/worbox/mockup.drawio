@@ -557,7 +557,7 @@
                 <mxCell id="YcKK3B8yqcviEEFcOghY-19" value="" style="verticalLabelPosition=bottom;shadow=0;dashed=0;align=center;html=1;verticalAlign=top;strokeWidth=1;shape=mxgraph.mockup.forms.horSlider;strokeColor=#999999;sliderStyle=basic;sliderPos=63.999;handleStyle=circle;fillColor2=#ddeeff;rounded=0;glass=0;sketch=0;fontSize=12;fillColor=#1A1A1A;" vertex="1" parent="YcKK3B8yqcviEEFcOghY-6">
                     <mxGeometry x="100" y="145" width="150" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="YcKK3B8yqcviEEFcOghY-20" value="Availability" style="text;strokeColor=none;align=left;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;shadow=0;glass=0;sketch=0;strokeWidth=0;fontSize=12;" vertex="1" parent="YcKK3B8yqcviEEFcOghY-6">
+                <mxCell id="YcKK3B8yqcviEEFcOghY-20" value="Interest" style="text;strokeColor=none;align=left;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;shadow=0;glass=0;sketch=0;strokeWidth=0;fontSize=12;" vertex="1" parent="YcKK3B8yqcviEEFcOghY-6">
                     <mxGeometry x="10" y="165" width="60" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="YcKK3B8yqcviEEFcOghY-21" value="" style="verticalLabelPosition=bottom;shadow=0;dashed=0;align=center;html=1;verticalAlign=top;strokeWidth=1;shape=mxgraph.mockup.forms.horSlider;strokeColor=#999999;sliderStyle=basic;sliderPos=85.604;handleStyle=circle;fillColor2=#ddeeff;rounded=0;glass=0;sketch=0;fontSize=12;fillColor=#1A1A1A;" vertex="1" parent="YcKK3B8yqcviEEFcOghY-6">

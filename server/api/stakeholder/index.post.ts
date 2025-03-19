@@ -7,7 +7,7 @@ export default postRequirementHttpHandler(
         name: true,
         description: true,
         parentComponent: true,
-        availability: true,
+        interest: true,
         influence: true,
         segmentation: true,
         category: true

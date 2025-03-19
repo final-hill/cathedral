@@ -991,8 +991,8 @@
           ],
           "mappedType": "enum"
         },
-        "availability": {
-          "name": "availability",
+        "interest": {
+          "name": "interest",
           "type": "int",
           "unsigned": false,
           "autoincrement": false,
