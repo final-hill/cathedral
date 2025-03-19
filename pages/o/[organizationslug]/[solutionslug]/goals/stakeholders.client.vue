@@ -29,18 +29,29 @@ const viewSchema = Stakeholder.pick({
     name: true,
     description: true,
     category: true,
-    segmentation: true,
-    interest: true,
-    influence: true
+    segmentation: true
 })
+
+const computeInterestAndInfluence = (category: StakeholderCategory) => {
+    switch (category) {
+        case StakeholderCategory['Fellow Traveler']:
+            return { interest: 25, influence: 25 };
+        case StakeholderCategory['Observer']:
+            return { interest: 75, influence: 25 };
+        case StakeholderCategory['Shadow Influencer']:
+            return { interest: 25, influence: 75 };
+        case StakeholderCategory['Key Stakeholder']:
+            return { interest: 75, influence: 75 };
+        default:
+            return { interest: 0, influence: 0 };
+    }
+}
 
 const createSchema = Stakeholder.pick({
     name: true,
     description: true,
     category: true,
-    segmentation: true,
-    interest: true,
-    influence: true
+    segmentation: true
 })
 
 const editSchema = Stakeholder.pick({
@@ -48,9 +59,7 @@ const editSchema = Stakeholder.pick({
     name: true,
     description: true,
     category: true,
-    segmentation: true,
-    interest: true,
-    influence: true
+    segmentation: true
 })
 
 const chartDefinition = (stakeholders: z.infer<typeof Stakeholder>[], category: StakeholderSegmentation) => `
@@ -83,6 +92,7 @@ watch(stakeholders, renderChart);
 renderChart();
 
 const onCreate = async (data: z.infer<typeof createSchema>) => {
+    const { interest, influence } = computeInterestAndInfluence(data.category);
     await $fetch(`/api/stakeholder`, {
         method: 'POST',
         body: {
@@ -90,8 +100,8 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
             description: data.description,
             category: data.category,
             segmentation: data.segmentation,
-            interest: Number(data.interest),
-            influence: Number(data.influence),
+            interest,
+            influence,
             solutionSlug,
             organizationSlug
         }
@@ -101,6 +111,7 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
 }
 
 const onUpdate = async (data: z.infer<typeof editSchema>) => {
+    const { interest, influence } = computeInterestAndInfluence(data.category);
     await $fetch(`/api/stakeholder/${data.id}`, {
         method: 'PUT',
         body: {
@@ -108,8 +119,8 @@ const onUpdate = async (data: z.infer<typeof editSchema>) => {
             description: data.description,
             category: data.category,
             segmentation: data.segmentation,
-            interest: Number(data.interest),
-            influence: Number(data.influence),
+            interest,
+            influence,
             solutionSlug,
             organizationSlug
         }
