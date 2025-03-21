@@ -28,7 +28,8 @@ const getSchemaFields = (schema: z.ZodObject<any>) => Object.entries<z.ZodRawSha
             reqType = isObject ? innerType._def.shape().reqType._def.defaultValue() : undefined,
             maxLength = innerType instanceof z.ZodString ? innerType._def.checks.find(check => check.kind === 'max')?.value : undefined,
             min = innerType instanceof z.ZodNumber ? innerType._def.checks.find(check => check.kind === 'min')?.value : undefined,
-            max = innerType instanceof z.ZodNumber ? innerType._def.checks.find(check => check.kind === 'max')?.value : undefined
+            max = innerType instanceof z.ZodNumber ? innerType._def.checks.find(check => check.kind === 'max')?.value : undefined,
+            isEmail = innerType instanceof z.ZodString && innerType._def.checks.some(check => check.kind === 'email')
 
         return {
             key,
@@ -44,6 +45,7 @@ const getSchemaFields = (schema: z.ZodObject<any>) => Object.entries<z.ZodRawSha
             max,
             maxLength,
             isEnum,
+            isEmail,
             enumOptions: isEnum ? enumToLabelValue((innerType as z.ZodEnum<any>).enum) : []
         } as const
     })

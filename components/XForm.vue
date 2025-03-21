@@ -1,6 +1,5 @@
 <script lang="ts" generic="F extends FormSchema" setup>
-import type { AsyncData } from '#app';
-import type { FormSubmitEvent, InputMenuItem } from '@nuxt/ui';
+import type { FormSubmitEvent } from '@nuxt/ui';
 import { z } from 'zod';
 import { getSchemaFields } from '~/shared/utils';
 
@@ -70,7 +69,7 @@ const autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field
                 <UCheckbox v-if="field.innerType instanceof z.ZodBoolean" v-model="props.state[field.key]"
                     class="w-full" />
                 <UInput type="text"
-                    v-else-if="field.innerType instanceof z.ZodString && field.maxLength && field.maxLength <= 254"
+                    v-else-if="field.innerType instanceof z.ZodString && field.maxLength && field.maxLength <= 254 && !field.isEmail"
                     v-model.trim="props.state[field.key]" class="w-full" aria-describedby="character-count"
                     :ui="{ trailing: 'pointer-events-none' }">
                     <template #trailing>
@@ -81,7 +80,7 @@ const autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field
                     </template>
                 </UInput>
                 <UTextarea
-                    v-else-if="field.innerType instanceof z.ZodString && field.maxLength && field.maxLength > 254"
+                    v-else-if="field.innerType instanceof z.ZodString && field.maxLength && field.maxLength > 254 && !field.isEmail"
                     v-model.trim="props.state[field.key]" class="w-full" autoresize>
                 </UTextarea>
                 <UInput v-else-if="field.isReadOnly" type="text" v-model.trim="props.state[field.key]" disabled
@@ -96,6 +95,8 @@ const autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field
                     :items="(autocompleteFetchObjects[field.key].data.value || []) as any"
                     :loading="(autocompleteFetchObjects[field.key].status as any) === 'pending'" class="w-full"
                     placeholder="Search for an item" />
+                <UInput type="email" v-else-if="field.innerType instanceof z.ZodString && field.isEmail"
+                    v-model.trim="props.state[field.key]" class="w-full" />
                 <UInput v-else v-model.trim="props.state[field.key]" class="w-full" />
             </UFormField>
         </template>
