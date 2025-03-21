@@ -43,7 +43,7 @@
         "@mikro-orm/seeder": "^6.4.7",
         "@nuxt/ui": "^3.0.0-beta.2",
         "@sidebase/nuxt-auth": "^0.10.0",
-        "@slack/web-api": "^7.8.0",
+        "@slack/web-api": "^7.9.0",
         "@vite-pwa/nuxt": "^0.10.6",
         "mitt": "^3.0.1",
         "nuxt": "^3.15.4",
@@ -54,14 +54,14 @@
         "vue": "^3.5.13",
         "vue-router": "^4.4.5",
         "zod": "^3.24.2",
-        "zod-to-json-schema": "^3.24.3"
+        "zod-to-json-schema": "^3.24.5"
     },
     "devDependencies": {
-        "@iconify-json/lucide": "^1.2.26",
+        "@iconify-json/lucide": "^1.2.32",
         "@mikro-orm/cli": "^6.4.7",
         "@mikro-orm/migrations": "^6.4.7",
         "@nuxt/test-utils": "^3.17.0",
-        "@types/node": "^22.13.5",
+        "@types/node": "^22.13.11",
         "@types/pg": "^8.11.11",
         "@types/uuid": "^10.0.0",
         "@vite-pwa/assets-generator": "^0.2.6",
