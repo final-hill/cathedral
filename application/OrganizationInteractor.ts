@@ -96,6 +96,8 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
         if (!await this.isOrganizationAdmin())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
+        await this._assertSolutionSlugIsUnique(name)
+
         const newSolutionId = await repo.addSolution({ name, description, effectiveDate, createdById: this._userId }),
             newSolution = await repo.getSolutionById(newSolutionId)
 
@@ -440,6 +442,18 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
     }
 
     /**
+     * Assert that the solution slug is unique within the organization
+     * @param slug The slug of the solution to check
+     * @throws {MismatchException} If the solution slug is not unique within the organization
+     */
+    private async _assertSolutionSlugIsUnique(slug: z.infer<typeof req.Solution>['slug']): Promise<void> {
+        const existingSolution = await this.repository.getSolutionBySlug(slug)
+
+        if (existingSolution)
+            throw new MismatchException(`Solution with slug ${slug} already exists in the organization`)
+    }
+
+    /**
      * Update a requirement by id for a solution with the given properties
      *
      * @param props.id The id of the requirement to update
@@ -485,6 +499,9 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
     async updateSolutionBySlug(slug: z.infer<typeof req.Solution>['slug'], props: Pick<Partial<z.infer<typeof req.Solution>>, 'name' | 'description'>): Promise<void> {
         if (!await this.isOrganizationContributor())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
+
+        if (props.name)
+            await this._assertSolutionSlugIsUnique(props.name)
 
         await this.repository.updateSolutionBySlug(slug, {
             modifiedById: this._userId,
