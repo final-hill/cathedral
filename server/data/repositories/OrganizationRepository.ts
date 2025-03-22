@@ -1,4 +1,4 @@
-import { pascalCaseToSnakeCase, snakeCaseToPascalCase, slugify } from "#shared/utils";
+import { snakeCaseToPascalCase, slugify } from "#shared/utils";
 import { v7 as uuid7 } from 'uuid'
 import { AuditMetadata } from "#shared/domain";
 import * as req from "#shared/domain/requirements";
@@ -697,7 +697,8 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             id: { $in: reqsInSolution }
         })) {
             const latestVersion = await req.latestVersion;
-            if (latestVersion?.reqId?.startsWith(prefix))
+            // Ignore special requirements (e.g. 'Situation' & 'Context and Objective')
+            if (latestVersion?.reqId?.startsWith(prefix) && !latestVersion.reqId?.endsWith('.0'))
                 reqs.push(latestVersion.reqId);
         }
 

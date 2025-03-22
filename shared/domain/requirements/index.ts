@@ -22,6 +22,7 @@ export * from './Noise.js';
 export * from './Hint.js';
 export * from './NonFunctionalBehavior.js';
 export * from './Obstacle.js';
+export * from './Situation.js';
 export * from './Outcome.js';
 export * from './Person.js';
 export * from './Product.js';
