@@ -23,6 +23,7 @@ export * from './NoiseSchema.js';
 export * from './HintSchema.js';
 export * from './NonFunctionalBehaviorSchema.js';
 export * from './ObstacleSchema.js';
+export * from './SituationSchema.js';
 export * from './OutcomeSchema.js';
 export * from './PersonSchema.js';
 export * from './ProductSchema.js';

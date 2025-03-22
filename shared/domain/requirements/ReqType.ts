@@ -24,6 +24,7 @@ export enum ReqType {
     NOISE = 'noise',
     NON_FUNCTIONAL_BEHAVIOR = 'non_functional_behavior',
     OBSTACLE = 'obstacle',
+    SITUATION = 'situation',
     ORGANIZATION = 'organization',
     OUTCOME = 'outcome',
     PARSED_REQUIREMENT = 'parsed_requirement',

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Obstacle } from '#shared/domain';
+import { Situation, Obstacle } from '#shared/domain';
 import { z } from 'zod';
 
 useHead({ title: 'Situation' })
@@ -8,13 +8,13 @@ definePageMeta({ name: 'Situation' })
 const { $eventBus } = useNuxtApp(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Situation').params
 
-const { data: situations, error: getSituationError } = await useFetch<z.infer<typeof Obstacle>[]>(`/api/obstacle`, {
+const { data: situations, error: getSituationError } = await useFetch<z.infer<typeof Situation>[]>(`/api/situation`, {
     transform: (data) => data.map((item) => ({
         ...item,
         lastModified: new Date(item.lastModified),
         creationDate: new Date(item.creationDate)
     })),
-    query: { name: 'G.2', solutionSlug, organizationSlug }
+    query: { solutionSlug, organizationSlug }
 });
 
 if (getSituationError.value)
@@ -22,18 +22,18 @@ if (getSituationError.value)
 
 const situation = situations.value![0]
 
-const formSchema = Obstacle.pick({
+const formSchema = Situation.pick({
     description: true
 });
 
-type FormSchema = z.infer<typeof formSchema>;
+type SituationFormSchema = z.infer<typeof formSchema>;
 
-const formState = reactive<FormSchema>({
+const formState = reactive<SituationFormSchema>({
     description: situation.description
 });
 
-const updateSituation = async (data: FormSchema) => {
-    await $fetch(`/api/obstacle/${situation.id}`, {
+const updateSituation = async (data: SituationFormSchema) => {
+    await $fetch(`/api/situation/${situation.id}`, {
         method: 'PUT',
         body: {
             solutionSlug,
@@ -110,11 +110,9 @@ const onDelete = async (id: string) => {
 </script>
 
 <template>
-    <h1>G.2.1 Situation</h1>
+    <h1>G.2.0 Situation</h1>
 
-    <p>
-        The current state of affairs that need to be addressed by the system created by a project.
-    </p>
+    <p> {{ Situation.description }} </p>
 
     <XForm :schema="formSchema" :state="formState" :onSubmit="updateSituation" />
 
