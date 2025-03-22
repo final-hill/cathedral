@@ -14,7 +14,7 @@ const { data: outcomes, refresh, status, error: getOutcomesError } = await useFe
         ...item,
         lastModified: new Date(item.lastModified),
         creationDate: new Date(item.creationDate)
-    })).filter((item) => item.reqId !== 'G.3.1') // FIXME: Filter out the default outcome (Context and Objective)
+    }))
 })
 
 if (getOutcomesError.value)

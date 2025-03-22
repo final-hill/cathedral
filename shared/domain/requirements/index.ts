@@ -24,6 +24,7 @@ export * from './NonFunctionalBehavior.js';
 export * from './Obstacle.js';
 export * from './Situation.js';
 export * from './Outcome.js';
+export * from './ContextAndObjective.js';
 export * from './Person.js';
 export * from './Product.js';
 export * from './Responsibility.js';

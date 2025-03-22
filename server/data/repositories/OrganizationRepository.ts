@@ -423,7 +423,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
 
         const modelQuery = Object.entries(await new ReqQueryToModelQuery().map(query))
 
-        // FIXME
+        // FIXME: efficiency
 
         const solutionModels = []
         for (const sol of await em.find(reqModels.SolutionModel, {

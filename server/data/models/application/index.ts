@@ -1,2 +1,2 @@
-export * from './AppUserSchema.js';
-export * from './AppUserOrganizationRoleSchema.js';
+export * from './AppUserModel.js';
+export * from './AppUserOrganizationRoleModel.js';

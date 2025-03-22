@@ -8,6 +8,7 @@ export enum ReqType {
     BEHAVIOR = 'behavior',
     COMPONENT = 'component',
     CONSTRAINT = 'constraint',
+    CONTEXT_AND_OBJECTIVE = 'context_and_objective',
     EFFECT = 'effect',
     ENVIRONMENT_COMPONENT = 'environment_component',
     EPIC = 'epic',
