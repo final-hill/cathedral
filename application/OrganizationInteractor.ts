@@ -104,12 +104,12 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
         // create initial requirements for the solution
         await this.addRequirement({
             solutionSlug: newSolution.slug,
-            reqProps: { reqType: ReqType.OUTCOME, reqIdPrefix: undefined, name: 'G.1', description: 'Context and Objective', isSilence: false }
+            reqProps: { reqType: ReqType.CONTEXT_AND_OBJECTIVE, reqIdPrefix: undefined, name: 'Context And Objective', description: 'Context and Objective', isSilence: false }
         })
 
         await this.addRequirement({
             solutionSlug: newSolution.slug,
-            reqProps: { reqType: ReqType.OBSTACLE, reqIdPrefix: undefined, name: 'G.2', description: 'Situation', isSilence: false }
+            reqProps: { reqType: ReqType.SITUATION, reqIdPrefix: undefined, name: 'Situation', description: 'Situation', isSilence: false }
         })
 
         return newSolutionId

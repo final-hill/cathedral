@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Outcome } from '#shared/domain';
+import { ContextAndObjective } from '#shared/domain';
 import { z } from 'zod';
 
 useHead({ title: 'Context and Objective' })
@@ -8,8 +8,8 @@ definePageMeta({ name: 'Context and Objective' })
 const { $eventBus } = useNuxtApp(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Context and Objective').params
 
-const { data: outcomes, error: getOutcomesError } = await useFetch<z.infer<typeof Outcome>[]>(`/api/outcome`, {
-    query: { name: 'G.1', solutionSlug, organizationSlug }
+const { data: outcomes, error: getOutcomesError } = await useFetch<z.infer<typeof ContextAndObjective>[]>(`/api/context-and-objective`, {
+    query: { solutionSlug, organizationSlug }
 });
 
 if (getOutcomesError.value || !outcomes.value || outcomes.value.length === 0)
@@ -17,7 +17,7 @@ if (getOutcomesError.value || !outcomes.value || outcomes.value.length === 0)
 
 const contextAndObjective = outcomes.value![0];
 
-const formSchema = Outcome.pick({
+const formSchema = ContextAndObjective.pick({
     description: true
 });
 
@@ -28,7 +28,7 @@ const formState = reactive<FormSchema>({
 });
 
 const onUpdate = async (data: FormSchema) => {
-    await $fetch(`/api/outcome/${contextAndObjective.id}`, {
+    await $fetch(`/api/context-and-objective/${contextAndObjective.id}`, {
         method: 'PUT',
         body: {
             solutionSlug,
@@ -43,9 +43,7 @@ const onUpdate = async (data: FormSchema) => {
 <template>
     <h1>Context and Objective</h1>
 
-    <p>
-        High-level view of the project: organizational context and reason for building the system
-    </p>
+    <p> {{ ContextAndObjective.description }} </p>
 
     <XForm :schema="formSchema" :state="formState" :onSubmit="onUpdate" />
 </template>

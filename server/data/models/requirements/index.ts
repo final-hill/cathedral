@@ -25,6 +25,7 @@ export * from './NonFunctionalBehaviorSchema.js';
 export * from './ObstacleSchema.js';
 export * from './SituationSchema.js';
 export * from './OutcomeSchema.js';
+export * from './ContextAndObjectiveSchema.js';
 export * from './PersonSchema.js';
 export * from './ProductSchema.js';
 export * from './ResponsibilitySchema.js';
