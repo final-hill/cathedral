@@ -9,7 +9,7 @@ definePageMeta({ name: 'Assumptions' })
 const { $eventBus } = useNuxtApp(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Assumptions').params
 
-const { data: assumptions, refresh, status, error: getAssumptionsError } = await useFetch(`/api/assumption`, {
+const { data: assumptions, refresh, status, error: getAssumptionsError } = await useFetch<z.infer<typeof Assumption>[]>(`/api/assumption`, {
     query: { solutionSlug, organizationSlug },
     transform: (data) => data.map((item) => ({
         ...item,
@@ -62,14 +62,13 @@ const onDelete = async (id: string) => {
     refresh()
 }
 
-const onUpdate = async (data: z.infer<typeof editSchema>) => {
-    await $fetch(`/api/assumption/${data.id}`, {
+const onUpdate = async ({ id, ...data }: z.infer<typeof editSchema>) => {
+    await $fetch(`/api/assumption/${id}`, {
         method: 'put',
         body: {
-            name: data.name,
-            description: data.description,
             solutionSlug,
-            organizationSlug
+            organizationSlug,
+            ...data
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 

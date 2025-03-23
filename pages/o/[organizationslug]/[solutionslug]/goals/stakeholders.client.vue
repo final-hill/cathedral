@@ -26,6 +26,7 @@ if (getStakeholdersError.value)
     $eventBus.$emit('page-error', getStakeholdersError.value);
 
 const viewSchema = Stakeholder.pick({
+    reqId: true,
     name: true,
     description: true,
     category: true,
@@ -56,6 +57,7 @@ const createSchema = Stakeholder.pick({
 
 const editSchema = Stakeholder.pick({
     id: true,
+    reqId: true,
     name: true,
     description: true,
     category: true,
@@ -110,15 +112,13 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
     refreshStakeholders()
 }
 
-const onUpdate = async (data: z.infer<typeof editSchema>) => {
+const onUpdate = async ({ id, ...data }: z.infer<typeof editSchema>) => {
     const { interest, influence } = computeInterestAndInfluence(data.category);
-    await $fetch(`/api/stakeholder/${data.id}`, {
+
+    await $fetch(`/api/stakeholder/${id}`, {
         method: 'PUT',
         body: {
-            name: data.name,
-            description: data.description,
-            category: data.category,
-            segmentation: data.segmentation,
+            ...data,
             interest,
             influence,
             solutionSlug,

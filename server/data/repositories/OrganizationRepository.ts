@@ -2,12 +2,13 @@ import { snakeCaseToPascalCase, slugify } from "#shared/utils";
 import { v7 as uuid7 } from 'uuid'
 import { AuditMetadata } from "#shared/domain";
 import * as req from "#shared/domain/requirements";
+import { ReqType } from "#shared/domain/requirements/ReqType";
+import { reqIdPattern } from "#shared/domain/requirements/reqIdPattern";
 import { AppUser, AppRole, AppUserOrganizationRole } from "#shared/domain/application";
 import { DuplicateEntityException, NotFoundException, MismatchException } from "#shared/domain/exceptions";
 import * as reqModels from "../models/requirements";
 import { AppUserModel, AppUserOrganizationRoleModel, AppUserOrganizationRoleVersionsModel } from "../models/application";
 import { BelongsModel, BelongsVersionsModel } from "../models/relations";
-import { ReqType } from "../../../shared/domain/requirements/ReqType";
 import { Repository } from "./Repository";
 import { DataModelToDomainModel, ReqQueryToModelQuery } from "../mappers";
 import { type CreationInfo } from "./CreationInfo";
@@ -350,8 +351,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
         // and decrement their suffix by 1
         // TODO: lift to the interactor?
         const existingReqId = existingReqLatestVersion.reqId,
-            reReqId = /([0PEGS]\.\d+\.)(\d+)/,
-            [prefix, suffix] = existingReqId?.match(reReqId)?.slice(1) ?? [undefined, undefined]
+            [prefix, suffix] = existingReqId?.match(reqIdPattern)?.slice(1) ?? [undefined, undefined]
 
         if (prefix && suffix) {
             const reqsInSolution = [];
@@ -372,14 +372,14 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             })) {
                 const latestVersion = await req.latestVersion;
                 if (latestVersion?.reqId?.startsWith(prefix)) {
-                    const [, s] = latestVersion.reqId.match(reReqId)?.slice(1) ?? [undefined, undefined]
+                    const [, s] = latestVersion.reqId.match(reqIdPattern)?.slice(1) ?? [undefined, undefined]
                     if (s && +s > +suffix)
                         reqs.push(latestVersion);
                 }
             }
 
             for (const req of reqs) {
-                const [, s] = req.reqId!.match(reReqId)?.slice(1) ?? [undefined, undefined]
+                const [, s] = req.reqId!.match(reqIdPattern)?.slice(1) ?? [undefined, undefined]
                 if (s) {
                     em.create<reqModels.RequirementVersionsModel>(
                         ReqVersionsModel, {
@@ -492,7 +492,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
      *
      * @param props.solutionSlug - The slug of the solution to find the requirements for
      * @param props.query - The query parameters to filter requirements by
-     * @returns The requirements that match the query parameters
+     * @returns The requirements that match the query parameters ordered by reqId
      * @throws {MismatchException} If the solution does not exist in the organization
      */
     async findSolutionRequirements<R extends keyof typeof req>(props: {
@@ -540,6 +540,14 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             const domainModel = await new DataModelToDomainModel().map(Object.assign({}, r, await r.latestVersion));
             requirements.push(req[ReqTypePascal].parse(domainModel));
         }
+
+        // Order reqs by reqId suffix ascending
+        if (requirements.length && requirements[0].reqId)
+            requirements.sort((a, b) => {
+                const suffixA = parseInt(a.reqId!.split('.').pop()!),
+                    suffixB = parseInt(b.reqId!.split('.').pop()!);
+                return suffixA - suffixB;
+            });
 
         return requirements;
     }
@@ -666,17 +674,13 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
     }
 
     /**
-     * Gets the next requirement id for the given solution and prefix
-     *
+     * Gets all requirements in solution with the given prefix.
+     * Note: This ignores special requirements with suffix '.0'
      * @param solutionId - The id of the solution
-     * @param prefix - The prefix for the requirement id. Ex: 'P.1.'
-     * @returns The next requirement id
-     * @throws {NotFoundException} If the solution does not exist
+     * @param prefix - The prefix of the requirement id
+     * @returns The requirements in the solution with the given prefix in ascending order of reqId
      */
-    async getNextReqId(solutionId: z.infer<typeof req.Solution>['id'], prefix?: req.ReqIdPrefix): Promise<req.ReqId | undefined> {
-        if (!prefix)
-            return
-
+    private async _getReqsInSolution(solutionId: z.infer<typeof req.Solution>['id'], prefix?: req.ReqIdPrefix) {
         const em = this._em,
             solution = await this.getSolutionById(solutionId)
 
@@ -689,20 +693,41 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             }
         }
 
-        if (reqsInSolution.length === 0)
-            return `${prefix}1`
-
         const reqs = [];
         for (const req of await em.find(reqModels.RequirementModel, {
             id: { $in: reqsInSolution }
         })) {
             const latestVersion = await req.latestVersion;
             // Ignore special requirements (e.g. 'Situation' & 'Context and Objective')
-            if (latestVersion?.reqId?.startsWith(prefix) && !latestVersion.reqId?.endsWith('.0'))
-                reqs.push(latestVersion.reqId);
+            // These share the same prefix but have a suffix of '.0'
+            if (latestVersion?.reqId?.startsWith(prefix as string) && !latestVersion.reqId?.endsWith('.0'))
+                reqs.push(latestVersion);
         }
 
-        const count = reqs.length
+        // Order reqs by reqId suffix ascending
+        reqs.sort((a, b) => {
+            const suffixA = parseInt(a.reqId!.split('.').pop()!),
+                suffixB = parseInt(b.reqId!.split('.').pop()!);
+            return suffixA - suffixB;
+        });
+
+        return reqs;
+    }
+
+    /**
+     * Gets the next requirement id for the given solution and prefix
+     *
+     * @param solutionId - The id of the solution
+     * @param prefix - The prefix for the requirement id. Ex: 'P.1.'
+     * @returns The next requirement id
+     * @throws {NotFoundException} If the solution does not exist
+     */
+    async getNextReqId(solutionId: z.infer<typeof req.Solution>['id'], prefix?: req.ReqIdPrefix): Promise<req.ReqId | undefined> {
+        if (!prefix)
+            return
+
+        const reqs = await this._getReqsInSolution(solutionId, prefix),
+            count = reqs.length
 
         if (count === 0)
             return `${prefix}1`
@@ -862,11 +887,12 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
     async updateSolutionRequirement<R extends keyof typeof req>(props: UpdationInfo & {
         solutionSlug: z.infer<typeof req.Solution>['slug'],
         requirementId: z.infer<typeof req.Requirement>['id'],
-        reqProps: Omit<Partial<z.infer<typeof req[R]>>, 'id' | 'reqId' | keyof z.infer<typeof AuditMetadata>>
+        reqProps: Omit<Partial<z.infer<typeof req[R]>>, 'id' | keyof z.infer<typeof AuditMetadata>>
         & { reqType: ReqType }
     }): Promise<void> {
         const em = this._em,
-            { reqType, ...reqProps } = props.reqProps,
+            { reqType, reqId: newReqId, ...reqProps } = props.reqProps,
+            reqId = newReqId as req.ReqId | undefined,
             ReqType = snakeCaseToPascalCase(reqType) as keyof typeof req,
             ReqModel = reqModels[`${ReqType}Model` as keyof typeof reqModels],
             ReqVersionsModel = reqModels[`${ReqType}VersionsModel` as keyof typeof reqModels]
@@ -893,14 +919,51 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
 
         const { parentComponentId, reqIdPrefix, ...mappedProps } = await new ReqQueryToModelQuery().map(reqProps)
 
-        em.create<reqModels.RequirementVersionsModel>(
-            ReqVersionsModel, {
-            ...existingReqv,
-            ...mappedProps,
-            effectiveFrom: props.modifiedDate,
-            modifiedBy: props.modifiedById,
-            isDeleted: false
-        })
+        if (reqId && reqId !== existingReqv.reqId) {
+            const [prefix, suffix] = reqId.match(reqIdPattern)?.slice(1) ?? [undefined, undefined]
+
+            if (!prefix || !suffix || prefix !== reqIdPrefix)
+                throw new MismatchException(`Invalid reqId format or prefix for reqType ${reqType}`)
+
+            const reqs = await this._getReqsInSolution(existingSolution.id, prefix as req.ReqIdPrefix),
+                count = reqs.length
+
+            // The suffix of the reqId must be within the range of the existing reqIds
+            if (+suffix < 1 || +suffix > count)
+                throw new MismatchException(`Invalid reqId suffix for reqType ${reqType}. Must be between ${prefix}1 and ${prefix}${count}`)
+
+            // Remove the source requirement from the array
+            const sourceReqIndex = reqs.findIndex(req => req.reqId === existingReqv.reqId),
+                [sourceReq] = reqs.splice(sourceReqIndex, 1)
+
+            // Insert the source requirement at the requested position
+            reqs.splice(+suffix - 1, 0, sourceReq)
+
+            // Update the reqIds for the relevant range
+            const start = Math.min(sourceReqIndex, +suffix - 1),
+                end = Math.max(sourceReqIndex, +suffix - 1)
+
+            for (let i = start; i <= end; i++) {
+                const req = reqs[i]
+                em.create<reqModels.RequirementVersionsModel>(
+                    ReqVersionsModel, {
+                    ...req,
+                    reqId: `${prefix}${i + 1}` as req.ReqId,
+                    modifiedBy: props.modifiedById,
+                    effectiveFrom: props.modifiedDate,
+                    isDeleted: false
+                })
+            }
+        } else {
+            em.create<reqModels.RequirementVersionsModel>(
+                ReqVersionsModel, {
+                ...existingReqv,
+                ...mappedProps,
+                effectiveFrom: props.modifiedDate,
+                modifiedBy: props.modifiedById,
+                isDeleted: false
+            })
+        }
 
         // update the relation between the requirement and the parent component (Belongs relation)
         // if it has changed

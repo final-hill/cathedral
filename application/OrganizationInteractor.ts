@@ -468,7 +468,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
     async updateSolutionRequirement<R extends keyof typeof req>(props: {
         id: z.infer<typeof req[R]>['id'],
         solutionSlug: z.infer<typeof req.Solution>['slug'],
-        reqProps: Partial<Omit<z.infer<typeof req[R]>, 'id' | 'reqId' | keyof z.infer<typeof AuditMetadata>>> & { reqType: ReqType }
+        reqProps: Partial<Omit<z.infer<typeof req[R]>, 'id' | keyof z.infer<typeof AuditMetadata>>> & { reqType: ReqType }
     }): Promise<void> {
         if (!this.isOrganizationContributor())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')

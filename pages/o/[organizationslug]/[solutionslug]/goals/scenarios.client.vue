@@ -40,6 +40,7 @@ const createSchema = Epic.pick({
 
 const editSchema = Epic.pick({
     id: true,
+    reqId: true,
     name: true,
     description: true,
     primaryActor: true,
@@ -62,14 +63,13 @@ const onCreate = async (epic: z.infer<typeof createSchema>) => {
     refresh();
 }
 
-const onUpdate = async (epic: z.infer<typeof editSchema>) => {
-    await $fetch(`/api/epic/${epic.id}`, {
+const onUpdate = async ({ id, ...data }: z.infer<typeof editSchema>) => {
+    await $fetch(`/api/epic/${id}`, {
         method: 'PUT',
         body: {
-            ...epic,
+            ...data,
             solutionSlug,
             organizationSlug,
-            description: '',
             priority: MoscowPriority.MUST
         }
     }).catch((e) => $eventBus.$emit('page-error', e));

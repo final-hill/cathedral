@@ -32,14 +32,13 @@ const formState = reactive<SituationFormSchema>({
     description: situation.description
 });
 
-const updateSituation = async (data: SituationFormSchema) => {
+const updateSituation = async ({ ...data }: SituationFormSchema) => {
     await $fetch(`/api/situation/${situation.id}`, {
         method: 'PUT',
         body: {
             solutionSlug,
             organizationSlug,
-            name: situation.name,
-            description: data.description
+            ...data
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
 }
@@ -85,14 +84,13 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
     refresh()
 }
 
-const onUpdate = async (data: z.infer<typeof editSchema>) => {
-    await $fetch(`/api/obstacle/${data.id}`, {
+const onUpdate = async ({ id, ...data }: z.infer<typeof editSchema>) => {
+    await $fetch(`/api/obstacle/${id}`, {
         method: 'PUT',
         body: {
             solutionSlug,
             organizationSlug,
-            name: data.name,
-            description: data.description
+            ...data
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 

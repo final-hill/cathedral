@@ -4,7 +4,7 @@ import { z } from "zod";
 import { ReqType } from "./ReqType.js";
 
 export const Assumption = Requirement.extend({
-    reqId: z.string().regex(/^E\.4\.\d+$/).optional()
+    reqId: z.string().regex(/^E\.4\.\d+$/, 'Format must be E.4.#')
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('E.4.').default('E.4.'),
     reqType: z.nativeEnum(ReqType).default(ReqType.ASSUMPTION)

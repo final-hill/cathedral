@@ -4,7 +4,7 @@ import { dedent } from "../../../shared/utils/dedent.js";
 import { ReqType } from "./ReqType.js";
 
 export const Invariant = Requirement.extend({
-    reqId: z.string().regex(/^E\.6\.\d+$/).optional()
+    reqId: z.string().regex(/^E\.6\.\d+$/, 'Format must be E.6.#')
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('E.6.').default('E.6.'),
     reqType: z.nativeEnum(ReqType).default(ReqType.INVARIANT)

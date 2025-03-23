@@ -64,15 +64,13 @@ const onDelete = async (id: string) => {
     refresh()
 }
 
-const onUpdate = async (data: z.infer<typeof editSchema>) => {
-    await $fetch(`/api/constraint/${data.id}`, {
+const onUpdate = async ({ id, ...data }: z.infer<typeof editSchema>) => {
+    await $fetch(`/api/constraint/${id}`, {
         method: 'PUT',
         body: {
-            name: data.name,
-            description: data.description,
-            category: data.category,
             solutionSlug,
-            organizationSlug
+            organizationSlug,
+            ...data
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
     refresh()
