@@ -4,7 +4,7 @@ import { ReqType } from './ReqType.js';
 import { dedent } from "../../../shared/utils/dedent.js";
 
 export const ContextAndObjective = Outcome.extend({
-    name: z.literal('Context And Objective').default('Context And Objective')
+    name: z.literal('Context And Objective')
         .describe('The name'),
     reqId: z.literal('G.1.0').default('G.1.0')
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),

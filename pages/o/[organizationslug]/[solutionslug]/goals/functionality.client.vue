@@ -51,8 +51,8 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
     refresh()
 }
 
-const onUpdate = async (data: z.infer<typeof editSchema>) => {
-    await $fetch(`/api/functional-behavior/${data.id}`, {
+const onUpdate = async ({ id, ...data }: z.infer<typeof editSchema>) => {
+    await $fetch(`/api/functional-behavior/${id}`, {
         method: 'PUT',
         body: {
             ...data,

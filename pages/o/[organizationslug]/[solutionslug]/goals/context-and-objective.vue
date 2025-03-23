@@ -27,14 +27,14 @@ const formState = reactive<FormSchema>({
     description: contextAndObjective.description
 });
 
-const onUpdate = async (data: FormSchema) => {
+const onUpdate = async ({ description }: FormSchema) => {
     await $fetch(`/api/context-and-objective/${contextAndObjective.id}`, {
         method: 'PUT',
         body: {
             solutionSlug,
             organizationSlug,
             name: contextAndObjective.name,
-            description: data.description
+            description
         }
     }).catch((e) => $eventBus.$emit('page-error', e));
 }

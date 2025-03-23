@@ -4,7 +4,7 @@ import { dedent } from "../../../shared/utils/dedent.js";
 import { ReqType } from "./ReqType.js";
 
 export const Epic = Scenario.extend({
-    reqId: z.string().regex(/^G\.5\.\d+$/).optional()
+    reqId: z.string().regex(/^G\.5\.\d+$/, 'Format must be G.5.#')
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('G.5.').default('G.5.'),
     functionalBehavior: z.object({

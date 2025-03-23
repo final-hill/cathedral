@@ -10,7 +10,7 @@ const { id: organizationId, slug: organizationSlug } = req.Organization.innerTyp
 /**
  * Creates an event handler for PUT requests that update an existing requirement
  *
-  * @param props.bodySchema - The schema for the request body
+ * @param props.bodySchema - The schema for the request body
  * @returns The event handler
  */
 export default function putRequirementHttpHandler<
@@ -21,7 +21,7 @@ export default function putRequirementHttpHandler<
     })
 
     const validatedBodySchema = bodySchema
-        .omit({ reqId: true, lastModified: true, modifiedBy: true, createdBy: true })
+        .omit({ lastModified: true, modifiedBy: true, createdBy: true })
         .extend({
             solutionSlug: req.Solution.innerType().pick({ slug: true }).shape.slug,
             organizationId,

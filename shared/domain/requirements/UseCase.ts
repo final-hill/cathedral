@@ -3,7 +3,7 @@ import { Scenario } from "./Scenario.js";
 import { ReqType } from "./ReqType.js";
 
 export const UseCase = Scenario.extend({
-    reqId: z.string().regex(/^S\.4\.\d+$/).optional()
+    reqId: z.string().regex(/^S\.4\.\d+$/, 'Format must be S.4.#')
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('S.4.').default('S.4.'),
     // TODO: <https://github.com/final-hill/cathedral/issues/154>

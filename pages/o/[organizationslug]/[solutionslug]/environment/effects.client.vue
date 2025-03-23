@@ -8,7 +8,7 @@ definePageMeta({ name: 'Effects' })
 const { $eventBus } = useNuxtApp(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Effects').params
 
-const { data: effects, refresh, status, error: getEffectsError } = await useFetch(`/api/effect`, {
+const { data: effects, refresh, status, error: getEffectsError } = await useFetch<z.infer<typeof Effect>[]>(`/api/effect`, {
     query: { solutionSlug, organizationSlug },
     transform: (data) => data.map((item) => ({
         ...item,
@@ -51,14 +51,13 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
     refresh()
 }
 
-const onUpdate = async (data: z.infer<typeof editSchema>) => {
-    await $fetch(`/api/effect/${data.id}`, {
+const onUpdate = async ({ id, ...data }: z.infer<typeof editSchema>) => {
+    await $fetch(`/api/effect/${id}`, {
         method: 'PUT',
         body: {
-            name: data.name,
-            description: data.description,
             solutionSlug,
-            organizationSlug
+            organizationSlug,
+            ...data
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 

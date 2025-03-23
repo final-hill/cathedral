@@ -115,11 +115,11 @@ const onUserStoryCreate = async (userStory: z.infer<typeof userStoryCreateSchema
     refreshUserStories();
 }
 
-const onUserStoryUpdate = async (userStory: z.infer<typeof userStoryEditSchema>) => {
-    await $fetch(`/api/user-story/${userStory.id}`, {
+const onUserStoryUpdate = async ({ id, ...data }: z.infer<typeof userStoryEditSchema>) => {
+    await $fetch(`/api/user-story/${id}`, {
         method: 'PUT',
         body: {
-            ...userStory,
+            ...data,
             solutionSlug,
             organizationSlug,
         }
@@ -141,11 +141,11 @@ const onUseCaseCreate = async (useCase: z.infer<typeof useCaseCreateSchema>) => 
     refreshUseCases();
 }
 
-const onUseCaseUpdate = async (useCase: z.infer<typeof useCaseEditSchema>) => {
-    await $fetch(`/api/use-case/${useCase.id}`, {
+const onUseCaseUpdate = async ({ id, ...data }: z.infer<typeof useCaseEditSchema>) => {
+    await $fetch(`/api/use-case/${id}`, {
         method: 'PUT',
         body: {
-            ...useCase,
+            ...data,
             solutionSlug,
             organizationSlug,
         }

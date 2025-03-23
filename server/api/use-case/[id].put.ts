@@ -3,6 +3,7 @@ import { UseCase } from "#shared/domain"
 export default putRequirementHttpHandler(
     UseCase.pick({
         reqType: true,
+        reqId: true,
         reqIdPrefix: true,
         name: true,
         description: true,
@@ -16,5 +17,5 @@ export default putRequirementHttpHandler(
         mainSuccessScenario: true,
         successGuarantee: true,
         extensions: true
-    }).partial().required({ reqType: true })
+    }).partial().required({ reqType: true, reqIdPrefix: true })
 )

@@ -52,14 +52,12 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
     refresh()
 }
 
-const onUpdate = async (data: z.infer<typeof editSchema>) => {
-    await useFetch(`/api/invariant/${data.id}`, {
+const onUpdate = async ({ id, ...data }: z.infer<typeof editSchema>) => {
+    await useFetch(`/api/invariant/${id}`, {
         method: 'PUT', body: {
-            id: data.id,
-            name: data.name,
-            description: data.description,
             solutionSlug,
-            organizationSlug
+            organizationSlug,
+            ...data
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 

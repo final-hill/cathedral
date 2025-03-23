@@ -4,7 +4,7 @@ import { dedent } from "../../../shared/utils/dedent.js";
 import { ReqType } from "./ReqType.js";
 
 export const Outcome = Goal.extend({
-    reqId: z.string().regex(/^G\.3\.\d+$/).optional()
+    reqId: z.string().regex(/^G\.3\.\d+$/, 'Format must be G.3.#')
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('G.3.').default('G.3.'),
     reqType: z.nativeEnum(ReqType).default(ReqType.OUTCOME)

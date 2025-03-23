@@ -56,13 +56,11 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
     refresh()
 }
 
-const onUpdate = async (data: z.infer<typeof editSchema>) => {
-    await $fetch(`/api/system-component/${data.id}`, {
+const onUpdate = async ({ id, ...data }: z.infer<typeof editSchema>) => {
+    await $fetch(`/api/system-component/${id}`, {
         method: 'PUT',
         body: {
-            name: data.name,
-            description: data.description,
-            parentComponent: data.parentComponent,
+            ...data,
             solutionSlug,
             organizationSlug
         }

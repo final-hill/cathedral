@@ -8,7 +8,7 @@ definePageMeta({ name: 'Glossary' })
 const { $eventBus } = useNuxtApp(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Glossary').params;
 
-const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = await useFetch(`/api/glossary-term`, {
+const { data: glossaryTerms, refresh, status, error: getGlossaryTermsError } = await useFetch<z.infer<typeof GlossaryTerm>[]>(`/api/glossary-term`, {
     query: { solutionSlug, organizationSlug },
     transform: (data) => data.map((item) => ({
         ...item,
@@ -52,15 +52,13 @@ const onCreate = async (data: z.infer<typeof createSchema>) => {
     refresh()
 }
 
-const onUpdate = async (data: z.infer<typeof editSchema>) => {
-    await $fetch(`/api/glossary-term/${data.id}`, {
+const onUpdate = async ({ id, ...data }: z.infer<typeof editSchema>) => {
+    await $fetch(`/api/glossary-term/${id}`, {
         method: 'PUT',
         body: {
-            id: data.id,
-            name: data.name,
-            description: data.description,
             solutionSlug,
-            organizationSlug
+            organizationSlug,
+            ...data
         }
     }).catch((e) => $eventBus.$emit('page-error', e))
 
