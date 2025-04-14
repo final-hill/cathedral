@@ -572,9 +572,9 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
                 isSystemAdmin: appUserVersionModel!.isSystemAdmin,
                 lastLoginDate: appUserVersionModel!.lastLoginDate,
                 creationDate: auor.appUser.creationDate,
-                lastModified: auor.versions[0].effectiveFrom,
-                isDeleted: auor.versions[0].isDeleted,
-                role: auor.versions[0].role
+                lastModified: auorv!.effectiveFrom,
+                isDeleted: auorv!.isDeleted,
+                role: auorv!.role
             } as z.infer<typeof AppUser>);
         }));
     }
