@@ -18,7 +18,7 @@ export class DataModelToDomainModel<
                 return ['lastModified', value];
             else if (typeof value === 'object' && value !== null && 'id' in value)
                 return [key, { name: '{unknown}', id: value.id }];
-            else if (typeof value === 'object' && value === null)
+            else if (value === null)
                 return [key, undefined]; // convert null to undefined
             else if (key === 'id' && value === null)
                 return [key, undefined];
