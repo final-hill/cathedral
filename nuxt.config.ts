@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-    compatibilityDate: '2025-02-21',
+    compatibilityDate: '2025-04-14',
     devtools: {
         enabled: process.env.NODE_ENV === 'development'
     },
@@ -15,6 +15,7 @@ export default defineNuxtConfig({
         // }
     },
     experimental: {
+        decorators: true,
         viewTransition: true,
         typedPages: true
     },
