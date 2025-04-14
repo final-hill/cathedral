@@ -26,7 +26,7 @@ $eventBus.$on('page-error', showError);
 </script>
 <template>
     <TopNavigation />
-    <UContainer id="content" class="flex flex-col p-8 overflow-auto leading-6 space-y-8 w-full">
+    <UContainer id="content" class="flex flex-col p-8 overflow-auto leading-6 space-y-8">
         <slot @page-error="showError" />
     </UContainer>
     <footer>

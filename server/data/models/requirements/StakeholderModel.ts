@@ -14,9 +14,9 @@ export class StakeholderVersionsModel extends ComponentVersionsModel {
     @Enum({ items: () => StakeholderCategory })
     readonly category!: StakeholderCategory
 
-    @Property({ type: types.integer, check: 'interest >= 0 AND interest <= 100' })
+    @Property<StakeholderVersionsModel>({ type: types.integer })
     readonly interest!: number
 
-    @Property({ type: types.integer, check: 'influence >= 0 AND influence <= 100' })
+    @Property<StakeholderVersionsModel>({ type: types.integer })
     readonly influence!: number
 }

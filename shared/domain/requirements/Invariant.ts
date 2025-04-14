@@ -10,7 +10,7 @@ export const Invariant = Requirement.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.INVARIANT)
 }).describe(dedent(`
     An Invariant is an Environment property that must be maintained.
-    It constrain the possible states of a System.
+    It constrains the possible states of a System.
     It exists as both an assumption and an effect.
     (precondition and postcondition)
 `));
