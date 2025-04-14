@@ -30,26 +30,6 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
     }
 
     /**
-     * Add an appuser to the organization with a role
-     *
-     * @param props.appUserId The id of the app user to invite
-     * @param props.organizationId The id of the organization to add the app user to
-     * @param props.role The role to assign to the app user
-     * @throws {PermissionDeniedException} If the user is not an admin of the organization
-     * @throws {DuplicateEntityException} If the target app user is already associated with the organization
-     */
-    async addAppUserOrganizationRole(props: { appUserId: string, organizationId: string, role: AppRole }): Promise<void> {
-        if (!await this.isOrganizationAdmin())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
-
-        this.repository.addAppUserOrganizationRole({
-            createdById: this._userId,
-            effectiveDate: new Date(),
-            ...props
-        })
-    }
-
-    /**
      * Add a new requirement to a solution and assign it a new requirement id
      *
      * @param props.solutionSlug - The slug of the solution to add the requirement to
@@ -104,12 +84,12 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
         // create initial requirements for the solution
         await this.addRequirement({
             solutionSlug: newSolution.slug,
-            reqProps: { reqType: ReqType.CONTEXT_AND_OBJECTIVE, reqIdPrefix: undefined, name: 'Context And Objective', description: 'Context and Objective', isSilence: false }
+            reqProps: { reqType: ReqType.CONTEXT_AND_OBJECTIVE, reqIdPrefix: undefined, name: 'Context And Objective', description: 'Context and Objective' }
         })
 
         await this.addRequirement({
             solutionSlug: newSolution.slug,
-            reqProps: { reqType: ReqType.SITUATION, reqIdPrefix: undefined, name: 'Situation', description: 'Situation', isSilence: false }
+            reqProps: { reqType: ReqType.SITUATION, reqIdPrefix: undefined, name: 'Situation', description: 'Situation' }
         })
 
         return newSolutionId
@@ -161,11 +141,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
         if (!this.isOrganizationContributor())
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
-        const solution = await this.repository.getSolutionBySlug(props.solutionSlug),
-            solHasReq = await this.repository.solutionHasRequirement({ id: props.id, solutionId: solution.id })
-
-        if (!solHasReq)
-            throw new MismatchException('Requirement does not belong to the solution')
+        const solution = await this.repository.getSolutionBySlug(props.solutionSlug)
 
         await this.repository.deleteSolutionRequirementById({
             deletedById: this._userId,
@@ -330,21 +306,18 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
     /**
      * Check if the current user is an admin of the organization or a system admin
      * @returns The result of the check
-     * @throws {NotFoundException} If the organization does not exist
-     * @throws {NotFoundException} If the app user does not exist in the organization
-     * @throws {NotFoundException} If the app user organization role does not exist
      */
     async isOrganizationAdmin(): Promise<boolean> {
-        const appUser = await this.repository.getOrganizationAppUserById(this._userId)
+        const appUser = await this.repository.getOrganizationAppUserById(this._userId);
 
-        if (appUser.isSystemAdmin) return true
+        if (appUser.isSystemAdmin) return true;
 
         const auor = await this.repository.getAppUserOrganizationRole(appUser.id),
             isOrgAdmin = auor?.role ?
                 [AppRole.ORGANIZATION_ADMIN].includes(auor.role)
-                : false
+                : false;
 
-        return isOrgAdmin
+        return isOrgAdmin;
     }
 
     /**
@@ -430,13 +403,20 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
         solutionSlug: z.infer<typeof req.Solution>['slug'],
         reqProps: Partial<Omit<z.infer<typeof req.Requirement>, 'reqId' | keyof z.infer<typeof AuditMetadata>>>
     }) {
-        const solution = await this.repository.getSolutionBySlug(props.solutionSlug)
         for (const [_, value] of Object.entries(props.reqProps) as [keyof typeof props.reqProps, string][]) {
-            if (validateUuid(value)) {
-                const solHasReq = await this.repository.solutionHasRequirement({ id: value, solutionId: solution.id })
+            const { id, reqType } = typeof value === 'string' && validateUuid(value) ? { id: value, reqType: undefined } :
+                typeof value === 'object' && value != null ? value : { id: undefined, reqType: undefined };
 
-                if (!solHasReq)
-                    throw new MismatchException(`Requirement with id ${value} does not belong to the solution`)
+            if (!id || !reqType) continue;
+
+            try {
+                await this.repository.getSolutionRequirementById({
+                    id,
+                    solutionSlug: props.solutionSlug,
+                    reqType
+                });
+            } catch (error) {
+                throw new MismatchException(`Requirement with id ${value} does not belong to the solution`);
             }
         }
     }
@@ -447,9 +427,9 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {MismatchException} If the solution slug is not unique within the organization
      */
     private async _assertSolutionSlugIsUnique(slug: z.infer<typeof req.Solution>['slug']): Promise<void> {
-        const existingSolution = await this.repository.getSolutionBySlug(slug)
+        const solutions = (await this.findSolutions({ slug }))
 
-        if (existingSolution)
+        if (solutions.length > 0)
             throw new MismatchException(`Solution with slug ${slug} already exists in the organization`)
     }
 
@@ -530,9 +510,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
             throw new Error('Not Found: The ParsedRequirement does not exist.')
 
         // Get all unapproved requirements that follow from the specified ParsedRequirement
-        const requirements = await parsedRequirement.followedByIds.loadItems<Requirement>({
-            where: { isSilence: true }
-        })
+        const requirements = await parsedRequirement.followedByIds.loadItems<Requirement>({})
 
         // Group the results by the requirement type
         return Object.groupBy(requirements, ({ req_type }) => req_type)
@@ -570,7 +548,6 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
             createdBy: appUser,
             modifiedBy: appUser,
             lastModified: new Date(),
-            isSilence: true
         })
 
         em.create(Belongs, { left: parsedRequirement, right: solution })
@@ -579,7 +556,6 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
         const addSolReq = (ReqClass: typeof req.Requirement, props: any) => {
             const req = em.create(ReqClass, {
                 ...props,
-                isSilence: true,
                 lastModified: new Date(),
                 modifiedBy: appUser,
                 createdBy: appUser

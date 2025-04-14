@@ -13,13 +13,17 @@ export class AppUserSeeder extends Seeder {
         const name = props.id === SYSTEM_USER_ID ? 'System Admin' : props.name ?? '{Unknown}',
             email = props.id === SYSTEM_USER_ID ? 'admin@example.com' : props.email ?? 'unknown@example.com'
 
-        const sysAdminUserStatic = await em.findOne(AppUserModel, {
-            id: props.id
-        }),
-            latestVersion = await sysAdminUserStatic?.latestVersion,
-            effectiveFrom = new Date()
+        const effectiveFrom = new Date(),
+            latestSysAdminVersion = await em.findOne(AppUserVersionsModel, {
+                appUser: { id: props.id },
+                isSystemAdmin: true
+            }, {
+                orderBy: {
+                    effectiveFrom: 'desc'
+                }
+            })
 
-        if (!sysAdminUserStatic) {
+        if (!latestSysAdminVersion || latestSysAdminVersion.isDeleted) {
             em.create(AppUserVersionsModel, {
                 appUser: em.create(AppUserModel, {
                     id: props.id,
@@ -32,16 +36,6 @@ export class AppUserSeeder extends Seeder {
                 isSystemAdmin: true,
                 isDeleted: false,
                 modifiedBy: SYSTEM_USER_ID
-            })
-        } else if (latestVersion && !latestVersion.isSystemAdmin) {
-            em.create(AppUserVersionsModel, {
-                appUser: sysAdminUserStatic,
-                isDeleted: false,
-                effectiveFrom,
-                email: email || latestVersion.email,
-                isSystemAdmin: true,
-                modifiedBy: SYSTEM_USER_ID,
-                name: name || latestVersion.name
             })
         } else {
             // System admin already exists

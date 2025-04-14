@@ -1,13 +1,11 @@
-import { Collection, Entity, ManyToOne, Property, types } from '@mikro-orm/core';
+import { Entity, ManyToOne, Property, types } from '@mikro-orm/core';
 import { ReqType } from "../../../../shared/domain/requirements/ReqType.js";
 import { ScenarioModel, ScenarioVersionsModel } from './ScenarioModel.js';
 import { AssumptionModel } from './AssumptionModel.js';
 import { EffectModel } from './EffectModel.js';
 
 @Entity({ discriminatorValue: ReqType.USE_CASE })
-export class UseCaseModel extends ScenarioModel {
-    declare readonly versions: Collection<UseCaseVersionsModel, object>;
-}
+export class UseCaseModel extends ScenarioModel { }
 
 @Entity({ discriminatorValue: ReqType.USE_CASE })
 export class UseCaseVersionsModel extends ScenarioVersionsModel {

@@ -1,8 +1,8 @@
 import { z } from "zod"
 import { AppUser, Organization } from "#shared/domain"
 import { getServerSession } from '#auth'
-import { OrganizationInteractor } from "~/application"
-import { OrganizationRepository, AppUserRepository } from "~/server/data/repositories";
+import { OrganizationCollectionInteractor } from "~/application"
+import { AppUserRepository, OrganizationCollectionRepository } from "~/server/data/repositories";
 import { AppUserInteractor } from "~/application/AppUserInteractor";
 import handleDomainException from "~/server/utils/handleDomainException";
 
@@ -28,17 +28,15 @@ export default defineEventHandler(async (event) => {
                 em: event.context.em
             })
         }),
-        organizationInteractor = new OrganizationInteractor({
+        organizationInteractor = new OrganizationCollectionInteractor({
             userId: session.id,
-            repository: new OrganizationRepository({
-                em: event.context.em,
-                organizationId,
-                organizationSlug
+            repository: new OrganizationCollectionRepository({
+                em: event.context.em
             })
         })
 
     try {
-        const orgId = organizationId ?? (await organizationInteractor.getOrganization())!.id,
+        const orgId = organizationId ?? (await organizationInteractor.findOrganizations({ slug: organizationSlug }))[0]?.id,
             appUser = (await appUserInteractor.getAppUserByEmail(email))!
 
         return await organizationInteractor.addAppUserOrganizationRole({

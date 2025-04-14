@@ -1,12 +1,10 @@
-import { Collection, Entity, Enum, Property, types } from '@mikro-orm/core';
+import { Entity, Enum, Property, types } from '@mikro-orm/core';
 import { StakeholderCategory, StakeholderSegmentation } from '../../../../shared/domain/requirements/enums.js';
 import { ComponentModel, ComponentVersionsModel } from './ComponentModel.js';
 import { ReqType } from "../../../../shared/domain/requirements/ReqType.js";
 
 @Entity({ discriminatorValue: ReqType.STAKEHOLDER })
-export class StakeholderModel extends ComponentModel {
-    declare readonly versions: Collection<StakeholderVersionsModel, object>;
-}
+export class StakeholderModel extends ComponentModel { }
 
 @Entity({ discriminatorValue: ReqType.STAKEHOLDER })
 export class StakeholderVersionsModel extends ComponentVersionsModel {

@@ -3,7 +3,7 @@ import { Organization, AppUserOrganizationRole, AppUser, DuplicateEntityExceptio
 import { slugify } from "#shared/utils";
 import { Repository } from "./Repository";
 import { OrganizationRepository } from "./OrganizationRepository";
-import { AppUserModel, AppUserOrganizationRoleModel, AppUserOrganizationRoleVersionsModel, OrganizationModel, OrganizationVersionsModel } from "../models";
+import { AppUserOrganizationRoleModel, AppUserOrganizationRoleVersionsModel, OrganizationModel, OrganizationVersionsModel } from "../models";
 import { DataModelToDomainModel, ReqQueryToModelQuery } from "../mappers";
 import { v7 as uuid7 } from 'uuid'
 import { type CreationInfo } from "./CreationInfo";
@@ -20,18 +20,18 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
      */
     async addAppUserOrganizationRole(auor: { appUserId: string, organizationId: string, role: AppRole } & CreationInfo): Promise<void> {
         const em = this._em,
-            existingAuor = await em.findOne(AppUserOrganizationRoleModel, {
+            staticModel = await em.findOneOrFail(AppUserOrganizationRoleModel, {
                 appUser: auor.appUserId,
                 organization: auor.organizationId
             }),
-            latestVersion = await existingAuor?.latestVersion,
+            latestVersion = await staticModel.getLatestVersion(auor.effectiveDate),
             existingRole = latestVersion?.role
 
         if (existingRole === auor.role)
             throw new DuplicateEntityException('App user organization role already exists with the same role')
 
         em.create(AppUserOrganizationRoleVersionsModel, {
-            appUserOrganizationRole: existingAuor ?? em.create(AppUserOrganizationRoleModel, {
+            appUserOrganizationRole: latestVersion?.appUserOrganizationRole ?? em.create(AppUserOrganizationRoleModel, {
                 appUser: auor.appUserId,
                 organization: auor.organizationId,
                 createdBy: auor.createdById,
@@ -57,28 +57,26 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
      */
     async createOrganization(props: Pick<z.infer<typeof Organization>, 'name' | 'description'> & CreationInfo): Promise<z.infer<typeof Organization>['id']> {
         const em = this._em,
-            latestVersion = await em.findOne(OrganizationVersionsModel, {
-                slug: slugify(props.name),
-            }, { populate: ['requirement'], orderBy: { effectiveFrom: 'desc' } })
+            orgRepo = new OrganizationRepository({ em, organizationSlug: slugify(props.name) }),
+            existingOrg = await orgRepo.getOrganization()
 
-        if (latestVersion && !latestVersion.isDeleted)
+        if (existingOrg)
             throw new DuplicateEntityException('Organization already exists with the same name')
 
         const newId = uuid7()
 
         em.create(OrganizationVersionsModel, {
-            isDeleted: false,
-            effectiveFrom: props.effectiveDate,
-            isSilence: false,
-            slug: slugify(props.name),
-            name: props.name,
-            description: props.description,
-            modifiedBy: props.createdById,
             requirement: em.create(OrganizationModel, {
                 id: newId,
                 createdBy: props.createdById,
-                creationDate: props.effectiveDate
-            })
+                creationDate: props.effectiveDate,
+            }),
+            isDeleted: false,
+            effectiveFrom: props.effectiveDate,
+            slug: slugify(props.name),
+            name: props.name,
+            description: props.description,
+            modifiedBy: props.createdById
         })
 
         await em.flush()
@@ -93,20 +91,17 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
      */
     async deleteOrganization(props: Pick<z.infer<typeof Organization>, 'id'> & DeletionInfo): Promise<void> {
         const em = this._em,
-            orgRepo = new OrganizationRepository({
-                em: this._em,
-                organizationId: props.id
-            }),
-            { id, slug, name, description } = (await this.findOrganizations({ id: props.id }))[0],
-            existingOrg = await em.findOne(OrganizationModel, { id }, { populate: ['createdBy'] })
+            orgRepo = new OrganizationRepository({ em, organizationId: props.id }),
+            existingOrg = await orgRepo.getOrganization(),
+            { slug, name, description } = existingOrg
 
         if (!existingOrg)
             throw new NotFoundException('Organization does not exist')
 
-        // delete all solutions associated with the organization
-        const orgSolutions = await orgRepo.findSolutions({})
+        const solutions = await orgRepo.findSolutions({})
 
-        for (const sol of orgSolutions) {
+        // delete all solutions associated with the organization
+        for (const sol of solutions) {
             await orgRepo.deleteSolutionBySlug({
                 deletedById: props.deletedById,
                 slug: sol.slug,
@@ -128,12 +123,11 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
         em.create(OrganizationVersionsModel, {
             isDeleted: true,
             effectiveFrom: props.deletedDate,
-            isSilence: false,
             slug,
             name,
             description,
             modifiedBy: props.deletedById,
-            requirement: existingOrg
+            requirement: existingOrg.id
         })
 
         await em.flush()
@@ -145,51 +139,24 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
      * @returns The organizations that match the query parameters
      */
     async findOrganizations(query: Partial<z.infer<typeof Organization>>): Promise<z.infer<typeof Organization>[]> {
-        const em = this._em,
-            modelQuery = Object.entries(await new ReqQueryToModelQuery().map(query))
+        const { id, createdBy, creationDate } = query,
+            effectiveDate = new Date(),
+            volatileQuery = new ReqQueryToModelQuery().map(query)
 
-        const organizationEntities = await em.find(OrganizationModel, {
-            ...(query.id ? { id: query.id } : {}),
-        }, { populate: ['createdBy'] });
+        const orgModels = await this._em.find(OrganizationModel, {
+            id,
+            createdBy,
+            creationDate
+        }, { populate: ['createdBy'] })
 
-        const organizations: z.infer<typeof Organization>[] = []
-        for (const org of organizationEntities) {
-            const latestVersion = await org.latestVersion
-            if (!latestVersion)
-                continue
+        const mapper = new DataModelToDomainModel(),
+            organizations = await Promise.all(orgModels.map(async org => {
+                const latestVersion = await org.getLatestVersion(effectiveDate, volatileQuery)
 
-            const domainOrg = Organization.parse(await new DataModelToDomainModel().map(
-                Object.assign({}, org, latestVersion)
-            ))
-
-            if (modelQuery.every(([key, value]) => (domainOrg as any)[key] === value))
-                organizations.push(domainOrg)
-        }
-
-        return organizations
-    }
-
-    /**
-     * Gets all organizations
-     * @returns The organizations
-     */
-    async getAllOrganizations(): Promise<z.infer<typeof Organization>[]> {
-        const em = this._em
-        const organizations: z.infer<typeof Organization>[] = []
-
-        const organizationEntities = await em.find(OrganizationModel, {})
-
-        for await (const org of organizationEntities) {
-            const latestVersion = await org.latestVersion
-            if (!latestVersion)
-                continue
-
-            const domainOrg = Organization.parse(await new DataModelToDomainModel().map(
-                Object.assign({}, org, latestVersion)
-            ))
-
-            organizations.push(domainOrg)
-        }
+                return Organization.parse({
+                    ...mapper.map({ ...org, ...latestVersion })
+                })
+            }))
 
         return organizations
     }
@@ -202,31 +169,34 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
      * @throws {NotFoundException} If the app user organization role does not exist
      */
     async getAppUserOrganizationRole({ organizationId, userId }: { organizationId: z.infer<typeof Organization>['id'], userId: z.infer<typeof AppUser>['id'] }): Promise<z.infer<typeof AppUserOrganizationRole>> {
-        const em = this._em
-
-        const auor = await em.findOne(AppUserOrganizationRoleModel, {
-            appUser: userId,
-            organization: organizationId
-        }, { populate: ['appUser', 'organization'] }),
-            auorv = await auor?.latestVersion
+        const em = this._em,
+            effectiveDate = new Date(),
+            orgStatic = await em.findOneOrFail(OrganizationModel, {
+                id: organizationId
+            }, { populate: ['createdBy'] }),
+            orgLatestVersion = await orgStatic.getLatestVersion(effectiveDate),
+            auor = await em.findOne(AppUserOrganizationRoleModel, {
+                appUser: userId,
+                organization: organizationId
+            }, { populate: ['appUser', 'createdBy'] }),
+            auorv = await auor?.getLatestVersion(effectiveDate)
 
         if (!auor || !auorv)
             throw new NotFoundException('App user organization role does not exist')
 
-        const createdBy = await em.findOne(AppUserModel, { id: auor.createdBy.id }),
-            createdByVersion = await createdBy?.latestVersion,
-            modifiedBy = await em.findOne(AppUserModel, { id: auorv.modifiedBy.id }),
-            modifiedByVersion = await modifiedBy?.latestVersion,
-            appUserVersion = (await auor.appUser.latestVersion)!,
-            organizationVersion = (await auor.organization.load()
-                .then(org => org!.latestVersion))!
+        const appUser = auor.appUser,
+            latestAppUser = await appUser.getLatestVersion(effectiveDate),
+            createdBy = auor.createdBy,
+            createdByVersion = await createdBy.getLatestVersion(effectiveDate),
+            modifiedBy = auorv.modifiedBy,
+            modifiedByVersion = await modifiedBy.getLatestVersion(effectiveDate)
 
         return AppUserOrganizationRole.parse({
-            appUser: { id: userId, name: appUserVersion.name },
-            organization: { id: organizationId, name: organizationVersion.name },
+            appUser: { id: appUser.id, name: latestAppUser!.name },
+            organization: { id: organizationId, name: orgLatestVersion!.name },
             role: auorv.role,
             isDeleted: auorv.isDeleted,
-            createdBy: { id: auor.createdBy.id, name: createdByVersion!.name },
+            createdBy: { id: createdByVersion!.appUser.id, name: createdByVersion!.name },
             modifiedBy: { id: auorv.modifiedBy.id, name: modifiedByVersion!.name },
             creationDate: auor.creationDate,
             lastModified: auorv.effectiveFrom
@@ -243,32 +213,33 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
      * @throws {NotFoundException} If the app user does not exist in the organization
      */
     async getOrganizationAppUserById({ organizationId, userId }: { organizationId: z.infer<typeof Organization>['id'], userId: z.infer<typeof AppUser>['id'] }): Promise<z.infer<typeof AppUser>> {
-        const em = this._em
-
-        const auor = await em.findOne(AppUserOrganizationRoleModel, {
-            appUser: userId,
-            organization: organizationId
-        }),
-            auorv = await auor?.latestVersion
+        const em = this._em,
+            auor = await em.findOne(AppUserOrganizationRoleModel, {
+                appUser: userId,
+                organization: organizationId
+            }, {
+                populate: ['appUser', 'createdBy']
+            }),
+            auorv = await auor?.getLatestVersion(new Date())
 
         if (!auor || !auorv)
-            throw new NotFoundException('App user does not exist in the organization')
+            throw new NotFoundException('App user organization role does not exist')
 
-        const user = await em.findOne(AppUserModel, { id: userId }),
-            userv = await user?.latestVersion
+        const appUser = auor.appUser,
+            appUserv = await appUser.getLatestVersion(new Date())
 
-        if (!user || !userv)
+        if (!appUserv)
             throw new NotFoundException('App user does not exist')
 
         return AppUser.parse({
             id: userId,
-            name: userv.name,
-            email: userv.email,
-            isSystemAdmin: userv.isSystemAdmin,
-            lastLoginDate: userv.lastLoginDate,
-            creationDate: user.creationDate,
+            name: appUserv.name,
+            email: appUserv.email,
+            isSystemAdmin: appUserv.isSystemAdmin,
+            lastLoginDate: appUserv.lastLoginDate,
+            creationDate: appUser.creationDate,
             lastModified: auorv.effectiveFrom,
-            isDeleted: auorv.isDeleted,
+            isDeleted: appUserv.isDeleted,
             role: auorv.role
         } as z.infer<typeof AppUser>)
     }
@@ -281,25 +252,20 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
      */
     async updateOrganizationById(id: z.infer<typeof Organization>['id'], props: Pick<Partial<z.infer<typeof Organization>>, 'name' | 'description'> & UpdationInfo): Promise<void> {
         const em = this._em,
-            organization = (await this.findOrganizations({ id }))[0]
+            organization = await em.findOne(OrganizationModel, { id }),
+            orgLatestVersion = await organization?.getLatestVersion(props.modifiedDate) as OrganizationVersionsModel | undefined
 
-        if (!organization)
-            throw new NotFoundException('Organization does not exist')
-
-        const existingOrgModel = await em.findOne(OrganizationModel, { id: organization.id })
-
-        if (!existingOrgModel)
+        if (!organization || !orgLatestVersion)
             throw new NotFoundException('Organization does not exist')
 
         em.create(OrganizationVersionsModel, {
             isDeleted: false,
             effectiveFrom: props.modifiedDate,
-            isSilence: false,
-            slug: props.name ? slugify(props.name) : organization.slug,
-            name: props.name ?? organization.name,
-            description: props.description ?? organization.description,
+            slug: props.name ? slugify(props.name) : orgLatestVersion.slug,
+            name: props.name ?? orgLatestVersion.name,
+            description: props.description ?? orgLatestVersion.description,
             modifiedBy: props.modifiedById,
-            requirement: existingOrgModel
+            requirement: organization
         })
 
         await em.flush()

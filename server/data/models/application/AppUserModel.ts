@@ -1,15 +1,13 @@
-import { Collection, Entity, ManyToOne, OneToMany, OptionalProps, Property, types } from "@mikro-orm/core";
+import { Collection, Entity, ManyToOne, OneToMany, Property, types } from "@mikro-orm/core";
 import { StaticAuditModel, VolatileAuditModel } from "../index.js";
 
 // static properties
 @Entity({ tableName: 'app_user' })
 export class AppUserModel extends StaticAuditModel<AppUserVersionsModel> {
-    [OptionalProps]?: 'latestVersion'
-
     @Property({ type: types.uuid, primary: true })
     readonly id!: string
 
-    @OneToMany({ mappedBy: 'appUser', entity: () => AppUserVersionsModel })
+    @OneToMany(() => AppUserVersionsModel, (e) => e.appUser, { orderBy: { effectiveFrom: 'desc' } })
     readonly versions = new Collection<AppUserVersionsModel>(this);
 }
 

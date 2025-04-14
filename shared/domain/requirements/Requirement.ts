@@ -13,8 +13,6 @@ export const Requirement = AuditMetadata.extend({
         .describe('The name'),
     description: z.string().max(1000)
         .describe('A human-readable explanation of the Requirement'),
-    isSilence: z.boolean()
-        .describe('Whether the Requirement is a silence requirement; i.e. not included in the solution'),
     // This is optional because MetaRequirements, Silence, and Noise do not have a reqId
     // It may also be undefined if the requirement has not been added to a solution
     reqId: z.string().regex(reqIdPattern, 'Format must be [P|E|G|S|0].[number].[number]').optional()

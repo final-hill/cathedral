@@ -23,6 +23,26 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
     }
 
     /**
+     * Add an appuser to the organization with a role
+     *
+     * @param props.appUserId The id of the app user to invite
+     * @param props.organizationId The id of the organization to add the app user to
+     * @param props.role The role to assign to the app user
+     * @throws {PermissionDeniedException} If the user is not an admin of the organization
+     * @throws {DuplicateEntityException} If the target app user is already associated with the organization
+     */
+    async addAppUserOrganizationRole(props: { appUserId: string, organizationId: string, role: AppRole }): Promise<void> {
+        if (!await this.isOrganizationAdmin(props.organizationId))
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
+
+        this.repository.addAppUserOrganizationRole({
+            createdById: this._userId,
+            effectiveDate: new Date(),
+            ...props
+        })
+    }
+
+    /**
      * Creates a new organization in the database and sets the creator as an admin
      *
      * @param props.name The name of the organization
@@ -100,22 +120,26 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      * @returns Whether the user is an admin of the organization
      */
     async isOrganizationAdmin(id: z.infer<typeof Organization>['id']): Promise<boolean> {
-        const appUser = await this.repository.getOrganizationAppUserById({
-            organizationId: id,
-            userId: this._userId
-        })
+        try {
+            const appUser = await this.repository.getOrganizationAppUserById({
+                organizationId: id,
+                userId: this._userId
+            })
 
-        if (appUser.isSystemAdmin) return true
+            if (appUser.isSystemAdmin) return true
 
-        const auor = await this.repository.getAppUserOrganizationRole({
-            organizationId: id,
-            userId: appUser.id
-        }),
-            isOrgAdmin = auor?.role ?
-                [AppRole.ORGANIZATION_ADMIN].includes(auor.role)
-                : false
+            const auor = await this.repository.getAppUserOrganizationRole({
+                organizationId: id,
+                userId: appUser.id
+            }),
+                isOrgAdmin = auor?.role ?
+                    [AppRole.ORGANIZATION_ADMIN].includes(auor.role)
+                    : false
 
-        return isOrgAdmin
+            return isOrgAdmin
+        } catch (error) {
+            return false
+        }
     }
 
     /**
@@ -124,22 +148,26 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      * @returns Whether the user is a contributor of the organization
      */
     async isOrganizationContributor(id: z.infer<typeof Organization>['id']): Promise<boolean> {
-        const appUser = await this.repository.getOrganizationAppUserById({
-            organizationId: id,
-            userId: this._userId
-        })
+        try {
+            const appUser = await this.repository.getOrganizationAppUserById({
+                organizationId: id,
+                userId: this._userId
+            })
 
-        if (appUser.isSystemAdmin) return true
+            if (appUser.isSystemAdmin) return true
 
-        const auor = await this.repository.getAppUserOrganizationRole({
-            organizationId: id,
-            userId: appUser.id
-        }),
-            isOrgContributor = auor?.role ?
-                [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR].includes(auor.role)
-                : false
+            const auor = await this.repository.getAppUserOrganizationRole({
+                organizationId: id,
+                userId: appUser.id
+            }),
+                isOrgContributor = auor?.role ?
+                    [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR].includes(auor.role)
+                    : false
 
-        return isOrgContributor
+            return isOrgContributor
+        } catch (error) {
+            return false
+        }
     }
 
     /**
@@ -148,22 +176,26 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      * @returns Whether the user is a reader of the organization
      */
     async isOrganizationReader(id: z.infer<typeof Organization>['id']): Promise<boolean> {
-        const appUser = await this.repository.getOrganizationAppUserById({
-            organizationId: id,
-            userId: this._userId
-        })
+        try {
+            const appUser = await this.repository.getOrganizationAppUserById({
+                organizationId: id,
+                userId: this._userId
+            })
 
-        if (appUser.isSystemAdmin) return true
+            if (appUser.isSystemAdmin) return true
 
-        const auor = await this.repository.getAppUserOrganizationRole({
-            organizationId: id,
-            userId: appUser.id
-        }),
-            isOrgReader = auor?.role ?
-                [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR, AppRole.ORGANIZATION_READER].includes(auor.role)
-                : false
+            const auor = await this.repository.getAppUserOrganizationRole({
+                organizationId: id,
+                userId: appUser.id
+            }),
+                isOrgReader = auor?.role ?
+                    [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR, AppRole.ORGANIZATION_READER].includes(auor.role)
+                    : false
 
-        return isOrgReader
+            return isOrgReader
+        } catch (error) {
+            return false
+        }
     }
 
     /**

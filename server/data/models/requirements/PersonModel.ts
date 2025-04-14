@@ -1,11 +1,9 @@
-import { Collection, Entity, Property, types } from '@mikro-orm/core';
+import { Entity, Property, types } from '@mikro-orm/core';
 import { ReqType } from "../../../../shared/domain/requirements/ReqType.js";
 import { ActorModel, ActorVersionsModel } from './ActorModel.js';
 
 @Entity({ discriminatorValue: ReqType.PERSON })
-export class PersonModel extends ActorModel {
-    declare readonly versions: Collection<PersonVersionsModel, object>;
-}
+export class PersonModel extends ActorModel { }
 
 @Entity({ discriminatorValue: ReqType.PERSON })
 export class PersonVersionsModel extends ActorVersionsModel {
