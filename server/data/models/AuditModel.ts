@@ -1,4 +1,4 @@
-import { Collection, type FilterQuery, ManyToOne, PrimaryKey, Property, type QueryOrderMap, type Rel, types } from "@mikro-orm/core"
+import { type Collection, type FilterQuery, ManyToOne, type OrderDefinition, PrimaryKey, Property, type Rel, types } from "@mikro-orm/core"
 import { AppUserModel } from "./index.js"
 
 export abstract class StaticAuditModel<V extends VolatileAuditModel> {
@@ -10,18 +10,16 @@ export abstract class StaticAuditModel<V extends VolatileAuditModel> {
 
     abstract readonly versions: Collection<V, object>;
 
-    /**
-     * The latest version of the requirement (effective_from <= now())
-     */
-    get latestVersion(): Promise<V | undefined> {
-        return this.versions.loadItems({
-            where: {
-                effectiveFrom: { $lte: new Date() }
-            } as FilterQuery<V>,
-            orderBy: {
-                effectiveFrom: 'desc'
-            } as QueryOrderMap<V>,
-        }).then(items => items[0].isDeleted ? undefined : items[0])
+    async getLatestVersion(effectiveDate: Date, filter: FilterQuery<V> = {}): Promise<V | undefined> {
+        const latestVersion = (await this.versions.matching({
+            where: { effectiveFrom: { $lte: effectiveDate }, ...filter } as FilterQuery<V>,
+            orderBy: { effectiveFrom: 'desc' } as OrderDefinition<V>,
+            limit: 1,
+            // @ts-ignore
+            populate: ['*']
+        }))[0]
+
+        return latestVersion && !latestVersion.isDeleted ? latestVersion : undefined
     }
 }
 

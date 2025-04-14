@@ -520,269 +520,6 @@
     },
     {
       "columns": {
-        "left_id": {
-          "name": "left_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "right_id": {
-          "name": "right_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "created_by_id": {
-          "name": "created_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "creation_date": {
-          "name": "creation_date",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "rel_type": {
-          "name": "rel_type",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "enumItems": [
-            "belongs",
-            "characterizes",
-            "constrains",
-            "contradicts",
-            "details",
-            "disjoins",
-            "duplicates",
-            "excepts",
-            "explains",
-            "extends",
-            "follows",
-            "relation",
-            "repeats",
-            "shares"
-          ],
-          "mappedType": "enum"
-        }
-      },
-      "name": "requirement_relation",
-      "schema": "public",
-      "indexes": [
-        {
-          "columnNames": [
-            "rel_type"
-          ],
-          "composite": false,
-          "keyName": "requirement_relation_rel_type_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "keyName": "requirement_relation_pkey",
-          "columnNames": [
-            "left_id",
-            "right_id"
-          ],
-          "composite": true,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "requirement_relation_left_id_foreign": {
-          "constraintName": "requirement_relation_left_id_foreign",
-          "columnNames": [
-            "left_id"
-          ],
-          "localTableName": "public.requirement_relation",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.requirement",
-          "updateRule": "cascade"
-        },
-        "requirement_relation_right_id_foreign": {
-          "constraintName": "requirement_relation_right_id_foreign",
-          "columnNames": [
-            "right_id"
-          ],
-          "localTableName": "public.requirement_relation",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.requirement",
-          "updateRule": "cascade"
-        },
-        "requirement_relation_created_by_id_foreign": {
-          "constraintName": "requirement_relation_created_by_id_foreign",
-          "columnNames": [
-            "created_by_id"
-          ],
-          "localTableName": "public.requirement_relation",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "effective_from": {
-          "name": "effective_from",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "rel_type": {
-          "name": "rel_type",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "enumItems": [
-            "belongs",
-            "characterizes",
-            "constrains",
-            "contradicts",
-            "details",
-            "disjoins",
-            "duplicates",
-            "excepts",
-            "explains",
-            "extends",
-            "follows",
-            "relation",
-            "repeats",
-            "shares"
-          ],
-          "mappedType": "enum"
-        },
-        "requirement_relation_left_id": {
-          "name": "requirement_relation_left_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "requirement_relation_right_id": {
-          "name": "requirement_relation_right_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "is_deleted": {
-          "name": "is_deleted",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "boolean"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "requirement_relation_versions",
-      "schema": "public",
-      "indexes": [
-        {
-          "columnNames": [
-            "rel_type"
-          ],
-          "composite": false,
-          "keyName": "requirement_relation_versions_rel_type_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "keyName": "requirement_relation_versions_pkey",
-          "columnNames": [
-            "effective_from",
-            "rel_type",
-            "requirement_relation_left_id",
-            "requirement_relation_right_id"
-          ],
-          "composite": true,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "requirement_relation_versions_requirement_relati_2b2b8_foreign": {
-          "constraintName": "requirement_relation_versions_requirement_relati_2b2b8_foreign",
-          "columnNames": [
-            "requirement_relation_left_id",
-            "requirement_relation_right_id"
-          ],
-          "localTableName": "public.requirement_relation_versions",
-          "referencedColumnNames": [
-            "left_id",
-            "right_id"
-          ],
-          "referencedTableName": "public.requirement_relation",
-          "updateRule": "cascade"
-        },
-        "requirement_relation_versions_modified_by_id_foreign": {
-          "constraintName": "requirement_relation_versions_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.requirement_relation_versions",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
         "effective_from": {
           "name": "effective_from",
           "type": "timestamptz",
@@ -871,6 +608,15 @@
           ],
           "mappedType": "enum"
         },
+        "solution_id": {
+          "name": "solution_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
         "name": {
           "name": "name",
           "type": "varchar(100)",
@@ -901,16 +647,6 @@
           "length": 255,
           "mappedType": "string"
         },
-        "is_silence": {
-          "name": "is_silence",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
-        },
         "priority": {
           "name": "priority",
           "type": "text",
@@ -925,6 +661,26 @@
             "WONT"
           ],
           "mappedType": "enum"
+        },
+        "parent_component_effective_from": {
+          "name": "parent_component_effective_from",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "parent_component_requirement_id": {
+          "name": "parent_component_requirement_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "uuid"
         },
         "email": {
           "name": "email",
@@ -963,6 +719,15 @@
           "nullable": true,
           "length": 255,
           "mappedType": "string"
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
         },
         "segmentation": {
           "name": "segmentation",
@@ -1141,6 +906,34 @@
           "referencedTableName": "public.app_user",
           "updateRule": "cascade"
         },
+        "requirement_versions_solution_id_foreign": {
+          "constraintName": "requirement_versions_solution_id_foreign",
+          "columnNames": [
+            "solution_id"
+          ],
+          "localTableName": "public.requirement_versions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_versions_parent_component_effective__e6046_foreign": {
+          "constraintName": "requirement_versions_parent_component_effective__e6046_foreign",
+          "columnNames": [
+            "parent_component_effective_from",
+            "parent_component_requirement_id"
+          ],
+          "localTableName": "public.requirement_versions",
+          "referencedColumnNames": [
+            "effective_from",
+            "requirement_id"
+          ],
+          "referencedTableName": "public.requirement_versions",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
         "requirement_versions_primary_actor_id_foreign": {
           "constraintName": "requirement_versions_primary_actor_id_foreign",
           "columnNames": [
@@ -1158,6 +951,19 @@
           "constraintName": "requirement_versions_outcome_id_foreign",
           "columnNames": [
             "outcome_id"
+          ],
+          "localTableName": "public.requirement_versions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_versions_organization_id_foreign": {
+          "constraintName": "requirement_versions_organization_id_foreign",
+          "columnNames": [
+            "organization_id"
           ],
           "localTableName": "public.requirement_versions",
           "referencedColumnNames": [

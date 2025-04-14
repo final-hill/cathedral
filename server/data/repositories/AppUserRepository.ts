@@ -1,6 +1,6 @@
 import { AppUser, Organization, DuplicateEntityException, NotFoundException } from "#shared/domain";
 import { Repository } from "./Repository";
-import { AppUserModel, AppUserOrganizationRoleModel, AppUserVersionsModel, OrganizationModel } from "../models";
+import { AppUserModel, AppUserOrganizationRoleModel, AppUserVersionsModel } from "../models";
 import { type CreationInfo } from "./CreationInfo";
 import { type UpdationInfo } from "./UpdationInfo";
 import { z } from "zod";
@@ -15,9 +15,9 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
     async createAppUser(props: z.infer<typeof AppUser> & CreationInfo): Promise<z.infer<typeof AppUser>['id']> {
         const em = this._em,
             existingUserStatic = await em.findOne(AppUserModel, { id: props.id }),
-            latestVersion = await existingUserStatic?.latestVersion
+            existingUserLatestVersion = await existingUserStatic?.getLatestVersion(props.creationDate)
 
-        if (latestVersion)
+        if (existingUserLatestVersion)
             throw new DuplicateEntityException(`User with id ${props.id} already exists`)
 
         em.create(AppUserVersionsModel, {
@@ -50,17 +50,17 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
     async getUserByEmail(email: z.infer<typeof AppUser>['email']): Promise<z.infer<typeof AppUser>> {
         const em = this._em
 
-        const userVersions = await em.findOne(AppUserVersionsModel, {
+        const maybeLatestVersion = await em.findOne(AppUserVersionsModel, {
             email,
-            isDeleted: false
+            effectiveFrom: { $lte: new Date() }
         }, {
             orderBy: { effectiveFrom: 'desc' },
             populate: ['appUser']
-        })
-        const user = userVersions?.appUser,
-            latestVersion = await userVersions?.appUser.latestVersion
+        }),
+            latestVersion = maybeLatestVersion?.isDeleted ? undefined : maybeLatestVersion,
+            user = latestVersion?.appUser
 
-        if (!user || !latestVersion)
+        if (!user)
             throw new NotFoundException(`User with email ${email} does not exist`)
 
         return AppUser.parse({
@@ -85,10 +85,9 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
      * @throws {NotFoundException} If the user does not exist
      */
     async getUserById(id: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof AppUser>> {
-        const em = this._em
-
-        const user = await em.findOne(AppUserModel, { id }),
-            latestVersion = await user?.latestVersion
+        const em = this._em,
+            user = await em.findOne(AppUserModel, { id }),
+            latestVersion = await user?.getLatestVersion(new Date()) as AppUserVersionsModel | undefined
 
         if (!user || !latestVersion)
             throw new NotFoundException(`User with id ${id} does not exist`)
@@ -113,17 +112,18 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
      * @returns The organizations associated with the app user
      */
     async getUserOrganizationIds(appUserId: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof Organization>['id'][]> {
-        const em = this._em
+        const em = this._em,
+            effectiveDate = new Date(),
+            auors = await em.find(AppUserOrganizationRoleModel, {
+                appUser: { id: appUserId },
+            }),
+            orgIds = (await Promise.all(auors.map(async (auor) => {
+                const latestVersion = await auor.getLatestVersion(effectiveDate, {})
 
-        const auors = (await em.find(AppUserOrganizationRoleModel, { appUser: appUserId }))
-            .filter(async auor => (await auor.latestVersion) != undefined)
+                return latestVersion ? auor.organization.id : undefined
+            }))).filter((orgId) => orgId != undefined)
 
-        const organizationIds = auors.map(auor => auor.organization.id)
-
-        const organizations = (await em.find(OrganizationModel, { id: { $in: organizationIds } }))
-            .filter(async org => (await org.latestVersion) != undefined)
-
-        return organizations.map(org => org.id)
+        return orgIds
     }
 
     /**
@@ -131,9 +131,10 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
      */
     async hasUser(id: z.infer<typeof AppUser>['id']): Promise<boolean> {
         const em = this._em,
-            user = await em.findOne(AppUserModel, { id })
+            userStatic = await em.findOne(AppUserModel, { id }),
+            latestUserVersion = await userStatic?.getLatestVersion(new Date())
 
-        return user != undefined && (await user.latestVersion) != undefined
+        return latestUserVersion != undefined
     }
 
     /**
@@ -143,14 +144,14 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
      */
     async updateAppUser(props: Pick<z.infer<typeof AppUser>, 'id' | 'name' | 'email' | 'lastLoginDate'> & UpdationInfo): Promise<void> {
         const em = this._em,
-            user = await em.findOneOrFail(AppUserModel, { id: props.id }),
-            latestVersion = (await user.latestVersion)
+            userStatic = await em.findOne(AppUserModel, { id: props.id }),
+            latestVersion = await userStatic?.getLatestVersion(props.modifiedDate)
 
-        if (latestVersion == undefined)
+        if (!latestVersion)
             throw new NotFoundException(`User with id ${props.id} does not exist`)
 
         em.create(AppUserVersionsModel, {
-            appUser: user,
+            appUser: latestVersion.appUser,
             effectiveFrom: props.modifiedDate,
             email: props.email,
             isDeleted: latestVersion.isDeleted,
