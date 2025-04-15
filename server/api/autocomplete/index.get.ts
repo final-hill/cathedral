@@ -23,6 +23,6 @@ export default defineEventHandler(async (event) => {
     return await organizationInteractor.findSolutionRequirements({
         solutionSlug,
         query: { reqType }
-    }).then(requirements => requirements.map(req => ({ label: req.name, value: req.id })))
+    }).then(requirements => requirements.map(req => ({ label: req.name, value: { id: req.id, name: req.name } })))
         .catch(handleDomainException)
 })

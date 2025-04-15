@@ -1,6 +1,7 @@
 import { AuditMetadata } from "../AuditMetadata.js";
 import { z } from 'zod';
 import { AppRole } from "./AppRole.js";
+import { ReqType } from "../requirements/ReqType.js";
 
 export const AppUserOrganizationRole = AuditMetadata.extend({
     appUser: z.object({
@@ -10,6 +11,7 @@ export const AppUserOrganizationRole = AuditMetadata.extend({
             .describe('The name of the AppUser associated with the OrganizationRole')
     }).describe('The user associated with the OrganizationRole'),
     organization: z.object({
+        reqType: z.nativeEnum(ReqType).default(ReqType.ORGANIZATION),
         id: z.string().uuid()
             .describe('The id of the Organization associated with the OrganizationRole'),
         name: z.string()

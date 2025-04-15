@@ -21,15 +21,7 @@ export const Solution = Requirement.extend({
             .describe('The id of the organization'),
         name: z.string()
             .describe('The name of the organization')
-    }).describe('The organization that the solution belongs to'),
-    requirements: z.array(z.object({
-        reqType: z.nativeEnum(ReqType),
-        id: z.string().uuid()
-            .describe('The id of the requirement'),
-        name: z.string()
-            .describe('The name of the requirement')
-    })).default([])
-        .describe('The requirements that the solution belongs to')
+    }).describe('The organization that the solution belongs to')
 }).refine(
     value => value.slug === slugify(value.name),
     'The slug must be the slugified version of the name'
