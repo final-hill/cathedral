@@ -72,7 +72,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
         if (!solution)
             throw new NotFoundException('Solution does not exist')
 
-        const { reqIdPrefix, ...mappedProps } = new ReqQueryToModelQuery().map(reqProps) as any
+        const { reqIdPrefix, ...mappedProps } = await new ReqQueryToModelQuery().map(reqProps) as any
 
         const newId = uuid7()
 
@@ -286,7 +286,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
     async findSolutions(query: Partial<z.infer<typeof req.Solution>>): Promise<z.infer<typeof req.Solution>[]> {
         const em = this._em,
             { id, createdBy, creationDate, ...volatileQuery } = query,
-            modelQuery = new ReqQueryToModelQuery().map(volatileQuery)
+            modelQuery = await new ReqQueryToModelQuery().map(volatileQuery)
 
         const solutionModels = (await em.find(reqModels.SolutionModel, {
             id,
@@ -296,11 +296,10 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
 
         const mapper = new DataModelToDomainModel(),
             solutions = await Promise.all(solutionModels.map(async sol => {
-                const latestVersion = await sol.getLatestVersion(new Date(), modelQuery)
-
+                const latestVersion = await sol.getLatestVersion(new Date(), modelQuery);
                 return req.Solution.parse(
-                    mapper.map({ ...sol, ...latestVersion })
-                )
+                    await mapper.map({ ...sol, ...latestVersion })
+                );
             }));
 
         return solutions;
@@ -352,7 +351,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
         query: Partial<z.infer<typeof req[R]>> & { reqType: ReqType }
     }): Promise<z.infer<typeof req[R]>[]> {
         const { reqType, createdBy, creationDate, ...query } = props.query,
-            modelQuery = new ReqQueryToModelQuery().map(query),
+            modelQuery = await new ReqQueryToModelQuery().map(query),
             ReqTypePascal = snakeCaseToPascalCase(reqType) as keyof typeof req,
             solution = await this.getSolutionBySlug(props.solutionSlug)
 
@@ -369,7 +368,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
         const mapper = new DataModelToDomainModel(),
             requirements = await Promise.all(reqVs.map(async r => {
                 return req[ReqTypePascal].parse(
-                    mapper.map({ ...r.requirement, ...r })
+                    await mapper.map({ ...r.requirement, ...r })
                 )
             }));
 
@@ -401,18 +400,18 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
         if (!auor || !auorv)
             throw new NotFoundException('App user organization role does not exist');
 
-        const appUserVersion = await auor.appUser.getLatestVersion(auorv.effectiveFrom) as AppUserVersionsModel,
-            createdByVersion = await auor.createdBy.getLatestVersion(auorv.effectiveFrom) as AppUserVersionsModel,
-            modifiedByVersion = await auorv.modifiedBy.getLatestVersion(auorv.effectiveFrom) as AppUserVersionsModel,
+        const appUserVersion = await auor.appUser.getLatestVersion(auorv.effectiveFrom),
+            createdByVersion = await auor.createdBy.getLatestVersion(auorv.effectiveFrom),
+            modifiedByVersion = await auorv.modifiedBy.getLatestVersion(auorv.effectiveFrom),
             orgVersion = await auor.organization.load().then(org => org!.getLatestVersion(auorv.effectiveFrom)) as reqModels.OrganizationVersionsModel;
 
         return AppUserOrganizationRole.parse({
-            appUser: { id: appUserId, name: appUserVersion.name },
+            appUser: { id: appUserId, name: appUserVersion!.name },
             organization: { id: orgVersion.requirement.id, name: orgVersion.name },
             role: auorv.role,
             isDeleted: auorv.isDeleted,
-            createdBy: { id: createdByVersion.appUser.id, name: createdByVersion.name },
-            modifiedBy: { id: modifiedByVersion.appUser.id, name: modifiedByVersion.name },
+            createdBy: { id: createdByVersion!.appUser.id, name: createdByVersion!.name },
+            modifiedBy: { id: modifiedByVersion!.appUser.id, name: modifiedByVersion!.name },
             creationDate: auorv.appUserOrganizationRole.creationDate,
             lastModified: auorv.effectiveFrom
         } as z.infer<typeof AppUserOrganizationRole>);
@@ -457,7 +456,8 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
         if (organizationSlug && latestVersion.slug !== organizationSlug)
             throw new NotFoundException('Organization does not exist')
 
-        const dataModel = new DataModelToDomainModel().map(Object.assign({}, result, latestVersion))
+        const mapper = new DataModelToDomainModel(),
+            dataModel = await mapper.map({ ...result, ...latestVersion })
 
         return req.Organization.parse(dataModel)
     }
@@ -689,7 +689,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
         if (!existingReqv)
             throw new NotFoundException(`Requirement does not exist with id ${props.requirementId}`)
 
-        const { reqIdPrefix, ...mappedProps } = new ReqQueryToModelQuery().map(reqProps);
+        const { reqIdPrefix, ...mappedProps } = await new ReqQueryToModelQuery().map(reqProps);
 
         if (reqId && reqId !== existingReqv.reqId) {
             const [prefix, suffix] = reqId.match(reqIdPattern)?.slice(1) ?? [undefined, undefined];

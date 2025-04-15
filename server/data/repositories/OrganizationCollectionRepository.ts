@@ -141,7 +141,7 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
     async findOrganizations(query: Partial<z.infer<typeof Organization>>): Promise<z.infer<typeof Organization>[]> {
         const { id, createdBy, creationDate } = query,
             effectiveDate = new Date(),
-            volatileQuery = new ReqQueryToModelQuery().map(query)
+            volatileQuery = await new ReqQueryToModelQuery().map(query)
 
         const orgModels = await this._em.find(OrganizationModel, {
             id,
@@ -151,11 +151,10 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
 
         const mapper = new DataModelToDomainModel(),
             organizations = await Promise.all(orgModels.map(async org => {
-                const latestVersion = await org.getLatestVersion(effectiveDate, volatileQuery)
-
-                return Organization.parse({
-                    ...mapper.map({ ...org, ...latestVersion })
-                })
+                const latestVersion = await org.getLatestVersion(effectiveDate, volatileQuery);
+                return Organization.parse(
+                    await mapper.map({ ...org, ...latestVersion })
+                );
             }))
 
         return organizations

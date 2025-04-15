@@ -55,7 +55,6 @@ const onCreate = async (epic: z.infer<typeof createSchema>) => {
             ...epic,
             solutionSlug,
             organizationSlug,
-            description: '',
             priority: MoscowPriority.MUST
         }
     }).catch((e) => $eventBus.$emit('page-error', e));

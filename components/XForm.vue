@@ -20,8 +20,8 @@ const form = useTemplateRef('form'),
     backupState = reactive(Object.create(props.state)),
     toast = useToast()
 
-const onSubmit = ({ data }: FormSubmitEvent<z.infer<F>>) => {
-    props.onSubmit(data)
+const onSubmit = async ({ data }: FormSubmitEvent<z.infer<F>>) => {
+    await props.onSubmit(data)
     toast.add({
         icon: 'i-lucide-check',
         title: 'Success',
@@ -92,7 +92,7 @@ const autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field
                 <USelect v-else-if="field.isEnum" v-model="props.state[field.key]" :items="field.enumOptions"
                     class="w-full" />
                 <UInputMenu v-else-if="field.isObject" v-model="props.state[field.key]"
-                    :items="(autocompleteFetchObjects[field.key].data.value || []) as any"
+                    :items="(autocompleteFetchObjects[field.key].data.value || []) as any" value-key="value"
                     :loading="(autocompleteFetchObjects[field.key].status as any) === 'pending'" class="w-full"
                     placeholder="Search for an item" />
                 <UInput type="email" v-else-if="field.innerType instanceof z.ZodString && field.isEmail"
