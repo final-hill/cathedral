@@ -1,8 +1,8 @@
 import { NuxtAuthHandler } from '#auth'
 import AzureADB2CProvider, { type AzureB2CProfile } from "next-auth/providers/azure-ad-b2c";
 import { getConnection } from "~/mikro-orm.config"
-import { AppUserInteractor } from '~/application/AppUserInteractor';
-import { AppUserRepository } from '~/server/data/repositories/AppUserRepository';
+import { AppUserInteractor, PermissionInteractor } from '~/application';
+import { AppUserRepository, PermissionRepository } from '~/server/data/repositories';
 import { NIL as SYSTEM_USER_ID } from 'uuid'
 import { AppUser } from "#shared/domain";
 import handleDomainException from '~/server/utils/handleDomainException';
@@ -36,11 +36,13 @@ export default NuxtAuthHandler({
             if (account) {
                 const p = profile as AzureB2CProfile,
                     effectiveDate = new Date(),
+                    em = (await getConnection()).em.fork({ useContext: true }) as SqlEntityManager<PostgreSqlDriver>,
                     appUserInteractor = new AppUserInteractor({
-                        userId: SYSTEM_USER_ID,
-                        repository: new AppUserRepository({
-                            em: (await getConnection()).em.fork({ useContext: true }) as SqlEntityManager<PostgreSqlDriver>
-                        })
+                        permissionInteractor: new PermissionInteractor({
+                            userId: SYSTEM_USER_ID,
+                            repository: new PermissionRepository({ em })
+                        }),
+                        repository: new AppUserRepository({ em })
                     })
 
                 if (p.oid === SYSTEM_USER_ID)
@@ -61,10 +63,10 @@ export default NuxtAuthHandler({
                             email: p.emails[0],
                             lastModified: effectiveDate,
                             isDeleted: false,
-                            role: undefined
+                            organizations: []
                         }))!
 
-                        appUser = (await appUserInteractor.getAppUserById(newUserId))!
+                        appUser = (await appUserInteractor.getUserById(newUserId))!
                     } catch (error: any) {
                         handleDomainException(error)
                     }

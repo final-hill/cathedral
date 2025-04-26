@@ -1,9 +1,8 @@
 import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, PrimaryKey, Property, types } from '@mikro-orm/core';
 import { StaticAuditModel, VolatileAuditModel } from '../index.js';
-import { ReqType } from '../../../../shared/domain/requirements/ReqType.js';
+import { ReqType, WorkflowState } from '../../../../shared/domain/requirements/enums.js';
 import { type ReqId } from '../../../../shared/domain/requirements/Requirement.js';
 
-// static properties
 @Entity({ abstract: true, tableName: 'requirement', discriminatorColumn: 'req_type', discriminatorValue: ReqType.REQUIREMENT })
 export abstract class RequirementModel extends StaticAuditModel<RequirementVersionsModel> {
     [OptionalProps]?: 'req_type'
@@ -16,9 +15,29 @@ export abstract class RequirementModel extends StaticAuditModel<RequirementVersi
 
     @OneToMany(() => RequirementVersionsModel, (e) => e.requirement, { orderBy: { effectiveFrom: 'desc' } })
     readonly versions = new Collection<RequirementVersionsModel>(this);
+
+    async getLatestActiveVersion(): Promise<RequirementVersionsModel | undefined> {
+        const versions = await this.versions.matching({
+            where: {
+                effectiveFrom: { $lte: new Date() },
+                workflowState: { $in: [WorkflowState.Active, WorkflowState.Removed] },
+                isDeleted: false
+            },
+            orderBy: { effectiveFrom: 'desc' },
+            limit: 2, // Retrieve the most recent Active and Removed versions
+            populate: ['*']
+        }),
+            latestActive = versions.find(v => v.workflowState === WorkflowState.Active),
+            latestRemoved = versions.find(v => v.workflowState === WorkflowState.Removed);
+
+        // Compare effectiveFrom dates to determine validity
+        if (latestRemoved && (!latestActive || latestRemoved.effectiveFrom > latestActive.effectiveFrom))
+            return undefined; // A newer Removed version exists, so no Active version is valid
+
+        return latestActive; // Return the latest Active version if no newer Removed version exists
+    }
 }
 
-//volatile properties
 @Entity({ abstract: true, tableName: 'requirement_versions', discriminatorColumn: 'req_type', discriminatorValue: ReqType.REQUIREMENT })
 export abstract class RequirementVersionsModel extends VolatileAuditModel {
     [OptionalProps]?: 'req_type'
@@ -26,13 +45,12 @@ export abstract class RequirementVersionsModel extends VolatileAuditModel {
     @Enum({ items: () => ReqType })
     readonly req_type!: ReqType;
 
+    @Enum({ items: () => WorkflowState, default: WorkflowState.Proposed })
+    readonly workflowState!: WorkflowState;
+
     @ManyToOne({ primary: true, entity: () => RequirementModel })
     readonly requirement!: RequirementModel;
 
-    /**
-     * The solution that this requirement belongs to.
-     * This is nullable because an Organization and Solution are both requirements but do not have an owning solution.
-     */
     @ManyToOne({ entity: () => RequirementModel, nullable: true })
     readonly solution?: RequirementModel;
 

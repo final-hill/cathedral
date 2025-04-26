@@ -1,9 +1,9 @@
 import { Entity } from "@mikro-orm/core";
 import { ReqType } from "../../../../shared/domain/requirements/ReqType.js";
-import { ObstacleModel, ObstacleVersionsModel } from "./ObstacleModel.js";
+import { GoalModel, GoalVersionsModel } from "./GoalModel.js";
 
 @Entity({ discriminatorValue: ReqType.SITUATION })
-export class SituationModel extends ObstacleModel { }
+export class SituationModel extends GoalModel { }
 
 @Entity({ discriminatorValue: ReqType.SITUATION })
-export class SituationVersionsModel extends ObstacleVersionsModel { }
+export class SituationVersionsModel extends GoalVersionsModel { }

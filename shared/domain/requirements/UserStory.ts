@@ -4,7 +4,7 @@ import { dedent } from "../../../shared/utils/dedent.js";
 import { ReqType } from "./ReqType.js";
 
 export const UserStory = Scenario.extend({
-    reqId: z.string().regex(/^S\.4\.\d+$/, 'Format must be S.4.#')
+    reqId: z.string().regex(/^S\.4\.\d+$/, 'Format must be S.4.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('S.4.').default('S.4.'),
     functionalBehavior: z.object({

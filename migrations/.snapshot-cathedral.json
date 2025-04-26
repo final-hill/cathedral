@@ -608,6 +608,23 @@
           ],
           "mappedType": "enum"
         },
+        "workflow_state": {
+          "name": "workflow_state",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "'Proposed'",
+          "enumItems": [
+            "Proposed",
+            "Rejected",
+            "Removed",
+            "Review",
+            "Active"
+          ],
+          "mappedType": "enum"
+        },
         "solution_id": {
           "name": "solution_id",
           "type": "uuid",

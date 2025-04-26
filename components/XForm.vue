@@ -7,6 +7,7 @@ export type FormSchema = z.ZodObject<{ [key: string]: z.ZodTypeAny }>
 
 const props = defineProps<{
     id?: string,
+    disabled?: boolean,
     class?: string,
     schema: F,
     state: z.infer<F>,
@@ -58,7 +59,8 @@ const autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field
 
 <template>
     <UForm ref="form" :id="props.id" :state="props.state" :schema="props.schema"
-        :class="`gap-4 flex flex-col ${props.class}`" @submit="onSubmit" autocomplete="off">
+        :class="`gap-4 flex flex-col ${props.class}`" @submit="onSubmit" autocomplete="off" :disabled="props.disabled"
+        :aria-disabled="props.disabled ? 'true' : undefined">
         <template v-for="field of schemaFields" :key="field.key">
             <UInput v-if="field.key === 'id'" type="hidden" v-model="props.state.id" name="id" />
             <UFormField v-if="field.key !== 'id'" :label="field.label" :name="field.key" :field="field.key"
@@ -101,7 +103,7 @@ const autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field
             </UFormField>
         </template>
 
-        <div class="flex gap-2">
+        <div class="flex gap-2" v-if="!props.disabled">
             <UButton label="Submit" type="submit" color="primary" />
             <UButton label="Cancel" type="reset" @click="onCancel" color="neutral" />
         </div>

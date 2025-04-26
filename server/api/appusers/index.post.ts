@@ -1,15 +1,16 @@
 import { z } from "zod"
-import { AppUser, Organization } from "#shared/domain"
+import { AppUser, AppUserOrganizationRole, Organization } from "#shared/domain"
 import { getServerSession } from '#auth'
-import { OrganizationCollectionInteractor } from "~/application"
-import { AppUserRepository, OrganizationCollectionRepository } from "~/server/data/repositories";
+import { OrganizationCollectionInteractor, PermissionInteractor } from "~/application"
+import { AppUserRepository, OrganizationCollectionRepository, PermissionRepository } from "~/server/data/repositories";
 import { AppUserInteractor } from "~/application/AppUserInteractor";
 import handleDomainException from "~/server/utils/handleDomainException";
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
 const bodySchema = z.object({
-    ...AppUser.pick({ email: true, role: true }).required().shape,
+    ...AppUser.pick({ email: true }).required().shape,
+    ...AppUserOrganizationRole.pick({ role: true }).required().shape,
     organizationId,
     organizationSlug
 }).refine((value) => {
@@ -22,24 +23,24 @@ const bodySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { email, organizationId, organizationSlug, role } = await validateEventBody(event, bodySchema),
         session = (await getServerSession(event))!,
-        appUserInteractor = new AppUserInteractor({
+        permissionInteractor = new PermissionInteractor({
             userId: session.id,
-            repository: new AppUserRepository({
-                em: event.context.em
-            })
+            repository: new PermissionRepository({ em: event.context.em })
+        }),
+        appUserInteractor = new AppUserInteractor({
+            permissionInteractor,
+            repository: new AppUserRepository({ em: event.context.em })
         }),
         organizationInteractor = new OrganizationCollectionInteractor({
-            userId: session.id,
-            repository: new OrganizationCollectionRepository({
-                em: event.context.em
-            })
+            permissionInteractor,
+            repository: new OrganizationCollectionRepository({ em: event.context.em })
         })
 
     try {
         const orgId = organizationId ?? (await organizationInteractor.findOrganizations({ slug: organizationSlug }))[0]?.id,
             appUser = (await appUserInteractor.getAppUserByEmail(email))!
 
-        return await organizationInteractor.addAppUserOrganizationRole({
+        return await permissionInteractor.addAppUserOrganizationRole({
             appUserId: appUser.id,
             organizationId: orgId,
             role

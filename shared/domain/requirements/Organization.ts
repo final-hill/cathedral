@@ -1,9 +1,9 @@
 import { slugify } from "../../../shared/utils/slugify.js";
 import { z } from "zod";
-import { Requirement } from "./Requirement.js";
+import { MetaRequirement } from "./MetaRequirement.js";
 import { ReqType } from "./ReqType.js";
 
-export const Organization = Requirement.extend({
+export const Organization = MetaRequirement.extend({
     slug: z.string().nonempty().refine(
         value => value === slugify(value),
         'The slug must be a slugified string'

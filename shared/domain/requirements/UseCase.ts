@@ -3,7 +3,7 @@ import { Scenario } from "./Scenario.js";
 import { ReqType } from "./ReqType.js";
 
 export const UseCase = Scenario.extend({
-    reqId: z.string().regex(/^S\.4\.\d+$/, 'Format must be S.4.#')
+    reqId: z.string().regex(/^S\.4\.\d+$/, 'Format must be S.4.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('S.4.').default('S.4.'),
     // TODO: <https://github.com/final-hill/cathedral/issues/154>
@@ -20,7 +20,8 @@ export const UseCase = Scenario.extend({
             .describe('The name of the precondition')
     }),
     trigger: z.object({
-        // FIXME: What is the ReqType of the trigger?
+        // TODO: The trigger is some form of event that starts the use case.
+        // But how do we represent this in the system?
         reqType: z.nativeEnum(ReqType),
         id: z.string().uuid()
             .describe('The id of the trigger'),

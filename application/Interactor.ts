@@ -11,7 +11,6 @@ import type { Repository } from "~/server/data/repositories/Repository"
 // Though more accurately, should be a type that implements Equatable
 export abstract class Interactor<E> {
     protected readonly _repository
-    protected readonly _userId
 
     /**
      * Create a new Interactor
@@ -21,9 +20,7 @@ export abstract class Interactor<E> {
      */
     constructor(props: {
         repository: Repository<E>,
-        userId: z.infer<typeof AppUser>['id']
     }) {
         this._repository = props.repository
-        this._userId = props.userId
     }
 }

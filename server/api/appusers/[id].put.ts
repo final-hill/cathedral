@@ -1,9 +1,9 @@
 import { z } from "zod"
 import { getServerSession } from '#auth'
-import { OrganizationInteractor } from "~/application"
-import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository"
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from "~/application"
+import { AppUserRepository, OrganizationRepository, PermissionRepository } from "~/server/data/repositories"
 import handleDomainException from "~/server/utils/handleDomainException"
-import { AppUser, Organization } from "#shared/domain"
+import { AppUser, AppUserOrganizationRole, Organization } from "#shared/domain"
 
 const paramSchema = AppUser.pick({ id: true }),
     { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
@@ -11,7 +11,7 @@ const paramSchema = AppUser.pick({ id: true }),
 const bodySchema = z.object({
     organizationId,
     organizationSlug,
-    ...AppUser.pick({ role: true }).required().shape
+    ...AppUserOrganizationRole.pick({ role: true }).required().shape
 }).refine((value) => {
     return value.organizationId !== undefined || value.organizationSlug !== undefined;
 }, "At least one of organizationId or organizationSlug should be provided");
@@ -23,14 +23,24 @@ export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
         { organizationId, organizationSlug, role } = await validateEventBody(event, bodySchema),
         session = (await getServerSession(event))!,
-        organizationInteractor = new OrganizationInteractor({
+        permissionInteractor = new PermissionInteractor({
             userId: session.id,
+            repository: new PermissionRepository({ em: event.context.em })
+        }),
+        organizationInteractor = new OrganizationInteractor({
+            permissionInteractor,
+            appUserInteractor: new AppUserInteractor({
+                permissionInteractor,
+                repository: new AppUserRepository({ em: event.context.em })
+            }),
             repository: new OrganizationRepository({
                 em: event.context.em,
                 organizationId,
                 organizationSlug
             })
-        })
+        }),
+        orgId = (await organizationInteractor.getOrganization()).id
 
-    return await organizationInteractor.updateAppUserRole(id, role).catch(handleDomainException)
+    return await permissionInteractor.updateAppUserRole({ appUserId: id, organizationId: orgId, role })
+        .catch(handleDomainException)
 })

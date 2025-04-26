@@ -5,8 +5,23 @@ import { StakeholderSegmentation } from "./StakeholderSegmentation.js";
 import { dedent } from "../../../shared/utils/dedent.js";
 import { ReqType } from "./ReqType.js";
 
+const computeInterestAndInfluence = (category: StakeholderCategory) => {
+    switch (category) {
+        case StakeholderCategory['Fellow Traveler']:
+            return { interest: 25, influence: 25 };
+        case StakeholderCategory['Observer']:
+            return { interest: 75, influence: 25 };
+        case StakeholderCategory['Shadow Influencer']:
+            return { interest: 25, influence: 75 };
+        case StakeholderCategory['Key Stakeholder']:
+            return { interest: 75, influence: 75 };
+        default:
+            return { interest: 0, influence: 0 };
+    }
+}
+
 export const Stakeholder = Component.extend({
-    reqId: z.string().regex(/^G\.7\.\d+$/, 'Format must be G.7.#')
+    reqId: z.string().regex(/^G\.7\.\d+$/, 'Format must be G.7.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('G.7.').default('G.7.'),
     segmentation: z.nativeEnum(StakeholderSegmentation)
@@ -22,4 +37,7 @@ export const Stakeholder = Component.extend({
     A Stakeholder is a human actor who may affect or be affected by a Project or its associated System.
     These are not individuals, but rather groups or roles.
     Example: instead of "Jane Doe", use "Project Manager".
-`));
+`)).transform((data) => ({
+    ...data,
+    ...computeInterestAndInfluence(data.category)
+}))

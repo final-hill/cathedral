@@ -1,7 +1,7 @@
 import { getServerSession } from '#auth'
 import { z } from "zod"
-import { OrganizationInteractor } from '~/application'
-import { OrganizationRepository } from '~/server/data/repositories/OrganizationRepository'
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~/application'
+import { AppUserRepository, OrganizationRepository, PermissionRepository } from '~/server/data/repositories'
 import handleDomainException from '~/server/utils/handleDomainException'
 import { Organization, Solution } from '#shared/domain'
 
@@ -25,9 +25,19 @@ export default defineEventHandler(async (event) => {
     const { slug } = await validateEventParams(event, paramSchema),
         { organizationId, organizationSlug } = await validateEventBody(event, bodySchema),
         session = (await getServerSession(event))!,
-        organizationInteractor = new OrganizationInteractor({
+        permissionInteractor = new PermissionInteractor({
             userId: session.id,
-            repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug })
+            repository: new PermissionRepository({ em: event.context.em })
+        }),
+        organizationInteractor = new OrganizationInteractor({
+            permissionInteractor,
+            repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug }),
+            appUserInteractor: new AppUserInteractor({
+                permissionInteractor,
+                repository: new AppUserRepository({
+                    em: event.context.em
+                })
+            })
         })
 
     await organizationInteractor.deleteSolutionBySlug(slug).catch(handleDomainException)

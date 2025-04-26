@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { ReqType } from "./ReqType.js";
 
 export const SystemComponent = Component.extend({
-    reqId: z.string().regex(/^S\.1\.\d+$/, 'Format must be S.1.#')
+    reqId: z.string().regex(/^S\.1\.\d+$/, 'Format must be S.1.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('S.1.').default('S.1.'),
     reqType: z.nativeEnum(ReqType).default(ReqType.SYSTEM_COMPONENT),
