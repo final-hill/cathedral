@@ -75,7 +75,7 @@ const autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field
                     v-model.trim="props.state[field.key]" class="w-full" aria-describedby="character-count"
                     :ui="{ trailing: 'pointer-events-none' }">
                     <template #trailing>
-                        <div id="character-count" class="text-xs text-(--ui-text-muted) tabular-nums" aria-live="polite"
+                        <div id="character-count" class="text-xs text-muted tabular-nums" aria-live="polite"
                             role="status">
                             {{ props.state[field.key]?.length ?? 0 }}/{{ field.maxLength }}
                         </div>

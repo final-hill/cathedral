@@ -363,7 +363,7 @@ const getActionItems = (item: SchemaType): DropdownMenuItem[] => {
                 onSelect: async () => {
                     const result = await confirmRemoveModal.open({
                         title: `Are you sure you want to remove requirement '${item.name}'?`,
-                    });
+                    }).result;
                     if (result) {
                         $fetch(`/api/requirements/${props.reqType}/proposed/${item.id}/remove`, {
                             method: 'POST',
@@ -400,7 +400,7 @@ const getActionItems = (item: SchemaType): DropdownMenuItem[] => {
                 onSelect: async () => {
                     const result = await confirmRemoveModal.open({
                         title: `Are you sure you want to remove requirement '${item.name}'?`,
-                    });
+                    }).result;
                     if (result) {
                         $fetch(`/api/requirements/${props.reqType}/rejected/${item.id}/remove`, {
                             method: 'POST',
@@ -450,7 +450,7 @@ const getActionItems = (item: SchemaType): DropdownMenuItem[] => {
                 onSelect: async () => {
                     const result = await confirmRemoveModal.open({
                         title: `Are you sure you want to remove requirement '${item.name}'?`,
-                    });
+                    }).result;
                     if (result) {
                         $fetch(`/api/requirements/${props.reqType}/active/${item.id}/remove`, {
                             method: 'POST',
@@ -541,7 +541,7 @@ const onCreateModalReset = () => {
             @update:model-value="workflowTable?.tableApi?.getColumn('workflowState')?.setFilterValue($event)"
             placeholder="Filter by Workflow State...">
             <template #leading="{ modelValue, ui }">
-                <UChip v-if="modelValue" v-bind="getChip(modelValue)" inset standalone
+                <UChip v-if="modelValue" v-bind="getChip(modelValue as WorkflowState)" inset standalone
                     :size="(ui.itemLeadingChipSize() as ChipProps['size'])" :class="ui.itemLeadingChip()" />
             </template>
         </USelect>
