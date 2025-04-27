@@ -40,7 +40,7 @@ export class DataModelToDomainModel<
                 return ['lastModified', value];
             else if (objectSchema.safeParse(value).success)
                 return [key, objectSchema.parse(value)];
-            else if (value === null)
+            else if (value == null)
                 return [key, undefined]; // convert null to undefined
             else
                 return [key, value];

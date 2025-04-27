@@ -14,14 +14,11 @@ export class AppUserSeeder extends Seeder {
             email = props.id === SYSTEM_USER_ID ? 'admin@example.com' : props.email ?? 'unknown@example.com'
 
         const effectiveFrom = new Date(),
-            latestSysAdminVersion = await em.findOne(AppUserVersionsModel, {
-                appUser: { id: props.id },
-                isSystemAdmin: true
-            }, {
-                orderBy: {
-                    effectiveFrom: 'desc'
-                }
-            })
+            existingSysAdmin = await em.findOne(AppUserModel, {
+                id: props.id,
+                versions: { isSystemAdmin: true }
+            }),
+            latestSysAdminVersion = await existingSysAdmin?.getLatestVersion(new Date(), { isSystemAdmin: true })
 
         if (!latestSysAdminVersion || latestSysAdminVersion.isDeleted) {
             em.create(AppUserVersionsModel, {

@@ -1,28 +1,38 @@
 import type { z } from "zod";
 import { validate as validateUuid } from 'uuid'
 import * as req from "#shared/domain/requirements";
-import { ReqType } from "#shared/domain/requirements/ReqType";
-import { AppRole, type AppUser } from "#shared/domain/application";
+import { ReqType, WorkflowState } from "#shared/domain/requirements/enums";
+import { AppRole, AppUser } from "#shared/domain/application";
 import type { AuditMetadata } from "#shared/domain/AuditMetadata";
-import { MismatchException, NotFoundException, PermissionDeniedException } from "#shared/domain/exceptions";
+import { MismatchException, PermissionDeniedException } from "#shared/domain/exceptions";
 import type { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository";
 import { Interactor } from "./Interactor";
+import { PermissionInteractor } from "./PermissionInteractor";
+import type { AppUserInteractor } from "./AppUserInteractor";
 
 /**
  * The OrganizationInteractor class contains the business logic for interacting with an organization.
  */
 export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organization>> {
+    private readonly _permissionInteractor: PermissionInteractor;
+    private readonly _appUserInteractor: AppUserInteractor;
+
     /**
      * Create a new OrganizationInteractor
      *
      * @param props.repository - The repository to use
-     * @param props.userId - The id of the user to utilize
+     * @param props.permissionInteractor - The PermissionInteractor instance
      */
     constructor(props: {
         // TODO: This should be Repository<Organization>
         repository: OrganizationRepository,
-        userId: z.infer<typeof AppUser>['id']
-    }) { super(props) }
+        permissionInteractor: PermissionInteractor,
+        appUserInteractor: AppUserInteractor
+    }) {
+        super(props);
+        this._permissionInteractor = props.permissionInteractor;
+        this._appUserInteractor = props.appUserInteractor;
+    }
 
     // FIXME: this shouldn't be necessary
     get repository(): OrganizationRepository {
@@ -38,7 +48,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
      * @throws {MismatchException} If a referenced requirement does not belong to the solution
      * @throws {NotFoundException} If the solution does not exist
-     */
+     * /
     async addRequirement<R extends keyof typeof req>({
         solutionSlug, reqProps
     }: {
@@ -48,18 +58,20 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
             reqIdPrefix: req.ReqIdPrefix | undefined
         }
     }): Promise<z.infer<typeof req[R]>['id']> {
-        if (!this.isOrganizationContributor())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
+        const organization = await this.repository.getOrganization(),
+            currentUserId = this._permissionInteractor.userId;
 
-        await this._assertReferencedRequirementsBelongToSolution({ solutionSlug, reqProps })
+        await this._permissionInteractor.assertOrganizationContributor(organization.id);
+        await this._assertReferencedRequirementsBelongToSolution({ solutionSlug, reqProps });
 
         return await this.repository.addRequirement({
             solutionSlug,
             reqProps,
-            createdById: this._userId,
-            effectiveDate: new Date()
-        })
+            createdById: currentUserId,
+            creationDate: new Date()
+        });
     }
+    */
 
     /**
      * Add a solution to an organization
@@ -70,29 +82,19 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {NotFoundException} If the organization does not exist
      */
     async addSolution({ name, description }: Pick<z.infer<typeof req.Solution>, 'name' | 'description'>): Promise<z.infer<typeof req.Solution>['id']> {
+        const organization = await this.repository.getOrganization(),
+            currentUserId = this._permissionInteractor.userId;
+
+        await this._permissionInteractor.assertOrganizationAdmin(organization.id);
+
         const repo = this.repository,
-            effectiveDate = new Date()
+            effectiveDate = new Date();
 
-        if (!await this.isOrganizationAdmin())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
+        await this._assertSolutionSlugIsUnique(name);
 
-        await this._assertSolutionSlugIsUnique(name)
+        const newSolutionId = await repo.addSolution({ name, description, creationDate: effectiveDate, createdById: currentUserId });
 
-        const newSolutionId = await repo.addSolution({ name, description, effectiveDate, createdById: this._userId }),
-            newSolution = await repo.getSolutionById(newSolutionId)
-
-        // create initial requirements for the solution
-        await this.addRequirement({
-            solutionSlug: newSolution.slug,
-            reqProps: { reqType: ReqType.CONTEXT_AND_OBJECTIVE, reqIdPrefix: undefined, name: 'Context And Objective', description: 'Context and Objective' }
-        })
-
-        await this.addRequirement({
-            solutionSlug: newSolution.slug,
-            reqProps: { reqType: ReqType.SITUATION, reqIdPrefix: undefined, name: 'Situation', description: 'Situation' }
-        })
-
-        return newSolutionId
+        return newSolutionId;
     }
 
     /**
@@ -104,54 +106,29 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {NotFoundException} If the target app user does not exist
      */
     async deleteAppUser(id: z.infer<typeof AppUser>['id']): Promise<void> {
-        if (!this.isOrganizationAdmin() && id !== this._userId)
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
+        const organization = await this.repository.getOrganization(),
+            pi = this._permissionInteractor,
+            currentUserId = pi.userId;
 
-        const targetUser = await this.getAppUserById(id),
-            orgAdminCount = (await this.repository.findAppUserOrganizationRoles({
-                role: AppRole.ORGANIZATION_ADMIN
-            })).length
+        if (!(await pi.isOrganizationAdmin(organization.id)) && id !== currentUserId)
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action');
 
-        if (targetUser.role === AppRole.ORGANIZATION_ADMIN && orgAdminCount === 1)
-            throw new PermissionDeniedException('Forbidden: You cannot delete the last organization admin.')
-
-        return this.repository.deleteAppUserOrganizationRole({
+        const targetUserAuor = await pi.getAppUserOrganizationRole({
             appUserId: id,
-            deletedById: this._userId,
-            deletedDate: new Date()
-        })
-    }
+            organizationId: organization.id
+        }),
+            orgAdminCount = await pi.findAppUserOrganizationRoles({
+                organizationId: organization.id,
+                role: AppRole.ORGANIZATION_ADMIN
+            }).then((roles) => roles.length)
 
-    /**
-     * Delete a requirement by id from the specified solution
-     *
-     * @param props.id - The id of the requirement to delete
-     * @param props.solutionId - The id of the solution that the requirement belongs to
-     * @param props.reqType - The type of the requirement to delete
-     * @throws {NotFoundException} If the solution does not exist
-     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
-     * @throws {NotFoundException} If the requirement does not exist
-     * @throws {MismatchException} If the requirement does not belong to the solution
-     */
-    async deleteRequirement(props: {
-        id: z.infer<typeof req.Requirement>['id'],
-        solutionSlug: z.infer<typeof req.Solution>['slug'],
-        reqType: ReqType
-    }): Promise<void> {
-        if (!this.isOrganizationContributor())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
+        if (targetUserAuor.role === AppRole.ORGANIZATION_ADMIN && orgAdminCount === 1)
+            throw new PermissionDeniedException('Forbidden: You cannot delete the last organization admin.');
 
-        const solution = await this.repository.getSolutionBySlug(props.solutionSlug)
-
-        await this.repository.deleteSolutionRequirementById({
-            deletedById: this._userId,
-            deletedDate: new Date(),
-            reqType: props.reqType,
-            id: props.id,
-            solutionId: solution.id
-        })
-
-        // TODO: decrement the reqId of all requirements that have a reqId greater than the deleted requirement
+        return pi.deleteAppUserOrganizationRole({
+            appUserId: id,
+            organizationId: organization.id
+        });
     }
 
     /**
@@ -163,33 +140,18 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {MismatchException} If the solution does not belong to the organization
      */
     async deleteSolutionBySlug(slug: z.infer<typeof req.Solution>['slug']): Promise<void> {
-        if (!await this.isOrganizationAdmin())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
+        const organization = await this.repository.getOrganization(),
+            currentUserId = this._permissionInteractor.userId;
+
+        await this._permissionInteractor.assertOrganizationAdmin(organization.id);
 
         return this.repository.deleteSolutionBySlug({
-            deletedById: this._userId,
+            deletedById: currentUserId,
             deletedDate: new Date(),
             slug
-        })
+        });
     }
 
-    /**
-     * Find requirements that match the query parameters for a solution
-     *
-     * @param props.solutionSlug - The slug of the solution to find the requirements for
-     * @param props.query - The query parameters to filter requirements by
-     * @returns The requirements that match the query parameters
-     * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
-     */
-    async findSolutionRequirements<R extends keyof typeof req>(props: {
-        solutionSlug: z.infer<typeof req.Solution>['slug'],
-        query: Partial<z.infer<typeof req[R]>> & { reqType: ReqType }
-    }): Promise<z.infer<typeof req[R]>[]> {
-        if (!this.isOrganizationReader())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
-
-        return this.repository.findSolutionRequirements(props)
-    }
 
     /**
      * Find solutions that match the query parameters for an organization
@@ -200,10 +162,22 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {NotFoundException} If the organization does not exist
      */
     async findSolutions(query: Partial<z.infer<typeof req.Solution>> = {}): Promise<z.infer<typeof req.Solution>[]> {
-        if (!await this.isOrganizationReader())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
+        const organization = await this.repository.getOrganization()
 
-        return this.repository.findSolutions(query)
+        await this._permissionInteractor.assertOrganizationReader(organization.id);
+        return this.repository.findSolutions(query);
+    }
+
+    /**
+     * Returns the organization that the user is associated with
+     *
+     * @returns The organization
+     * @throws {NotFoundException} If the organization does not exist
+     */
+    async getOrganization(): Promise<z.infer<typeof req.Organization>> {
+        const org = await this.repository.getOrganization()
+        await this._permissionInteractor.assertOrganizationReader(org.id);
+        return org;
     }
 
     /**
@@ -216,21 +190,25 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {PermissionDeniedException} If the user is trying to get an app user that is not in the same organization
      */
     async getAppUserById(id: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof AppUser>> {
-        if (!this.isOrganizationReader())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
-        return this.repository.getOrganizationAppUserById(id)
-    }
+        const org = await this.repository.getOrganization(),
+            pi = this._permissionInteractor,
+            aui = this._appUserInteractor;
 
-    /**
-     * Returns the organization that the user is associated with
-     *
-     * @returns The organization
-     * @throws {NotFoundException} If the organization does not exist
-     */
-    async getOrganization(): Promise<z.infer<typeof req.Organization>> {
-        if (!this.isOrganizationReader())
-            throw new NotFoundException('Forbidden: You do not have permission to perform this action')
-        return this.repository.getOrganization()
+        await pi.assertOrganizationReader(org.id);
+        const auor = await pi.getAppUserOrganizationRole({
+            appUserId: id,
+            organizationId: org.id
+        });
+
+        return AppUser.parse({
+            ...await aui.getUserById(auor.appUser.id),
+            role: auor.role,
+            organizations: [{
+                reqType: ReqType.ORGANIZATION,
+                id: org.id,
+                name: org.name
+            }]
+        });
     }
 
     /**
@@ -239,11 +217,28 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @returns The app users with their associated roles
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
-    async getOrganizationAppUsers(): Promise<z.infer<typeof AppUser>[]> {
-        if (!this.isOrganizationReader())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
+    async getAppUsers(): Promise<z.infer<typeof AppUser>[]> {
+        const org = await this.repository.getOrganization(),
+            pi = this._permissionInteractor,
+            aui = this._appUserInteractor;
 
-        return this.repository.getOrganizationAppUsers()
+        await pi.assertOrganizationReader(org.id);
+
+        const auors = await pi.findAppUserOrganizationRoles({
+            organizationId: org.id
+        });
+
+        const appUsers = Promise.all(auors.map(async (auor) => AppUser.parse({
+            ...await aui.getUserById(auor.appUser.id),
+            role: auor.role,
+            organizations: [{
+                reqType: ReqType.ORGANIZATION,
+                id: org.id,
+                name: org.name
+            }]
+        })))
+
+        return appUsers
     }
 
     /**
@@ -256,10 +251,9 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {MismatchException} If the solution does not belong to the organization
      */
     async getSolutionById(solutionId: z.infer<typeof req.Solution>['id']): Promise<z.infer<typeof req.Solution>> {
-        if (!await this.isOrganizationReader())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
-
-        return this.repository.getSolutionById(solutionId)
+        const org = await this.repository.getOrganization()
+        await this._permissionInteractor.assertOrganizationReader(org.id);
+        return this.repository.getSolutionById(solutionId);
     }
 
     /**
@@ -272,153 +266,9 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {MismatchException} If the solution does not belong to the organization
      */
     async getSolutionBySlug(slug: z.infer<typeof req.Solution>['slug']): Promise<z.infer<typeof req.Solution>> {
-        if (!await this.isOrganizationReader())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
-
-        return this.repository.getSolutionBySlug(slug)
-    }
-
-    /**
-     * Get a requirement by id
-     *
-     * @param props.reqType The type of the requirement to get
-     * @param props.id The id of the requirement to get
-     * @param props.solutionSlug The slug of the solution that the requirement belongs to
-     * @returns The requirement
-     * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
-     * @throws {NotFoundException} If the requirement does not exist in the organization nor the solution
-     */
-    async getSolutionRequirementById<R extends keyof typeof req>(props: {
-        reqType: ReqType,
-        solutionSlug: z.infer<typeof req.Solution>['slug'],
-        id: z.infer<typeof req.Requirement>['id']
-    }): Promise<z.infer<typeof req[R]>> {
-        if (!this.isOrganizationReader())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
-
-        return await this.repository.getSolutionRequirementById({
-            reqType: props.reqType,
-            solutionSlug: props.solutionSlug,
-            id: props.id
-        })
-    }
-
-    /**
-     * Check if the current user is an admin of the organization or a system admin
-     * @returns The result of the check
-     */
-    async isOrganizationAdmin(): Promise<boolean> {
-        const appUser = await this.repository.getOrganizationAppUserById(this._userId);
-
-        if (appUser.isSystemAdmin) return true;
-
-        const auor = await this.repository.getAppUserOrganizationRole(appUser.id),
-            isOrgAdmin = auor?.role ?
-                [AppRole.ORGANIZATION_ADMIN].includes(auor.role)
-                : false;
-
-        return isOrgAdmin;
-    }
-
-    /**
-     * Check if the current user is a contributor of the organization or a system admin
-     * @returns The result of the check
-     * @throws {NotFoundException} If the organization does not exist
-     * @throws {NotFoundException} If the app user does not exist in the organization
-     * @throws {NotFoundException} If the app user organization role does not exist
-     */
-    async isOrganizationContributor(): Promise<boolean> {
-        const appUser = await this.repository.getOrganizationAppUserById(this._userId)
-
-        if (appUser.isSystemAdmin) return true
-
-        const auor = await this.repository.getAppUserOrganizationRole(appUser.id),
-            isOrgContributor = auor?.role ?
-                [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR].includes(auor.role)
-                : false
-
-        return isOrgContributor
-    }
-
-    /**
-     * Check if the current user is a reader of the organization or a system admin
-     * @returns The result of the check
-     * @throws {NotFoundException} If the organization does not exist
-     * @throws {NotFoundException} If the app user does not exist in the organization
-     * @throws {NotFoundException} If the app user organization role does not exist
-     */
-    async isOrganizationReader(): Promise<boolean> {
-        const appUser = await this.repository.getOrganizationAppUserById(this._userId)
-
-        if (appUser.isSystemAdmin) return true
-
-        const auor = await this.repository.getAppUserOrganizationRole(appUser.id),
-            isOrgReader = auor?.role ?
-                [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR, AppRole.ORGANIZATION_READER].includes(auor.role)
-                : false
-
-        return isOrgReader
-    }
-
-    /**
-     * Update a target user by id in a given organization to have a new role
-     *
-     * @param id The id of the target user to update
-     * @param role The new role to assign to the target user
-     * @throws {PermissionDeniedException} If the current user is not an admin of the organization
-     * @throws {NotFoundException} If the target user does not exist
-     * @throws {PermissionDeniedException} If the target user is not in the same organization
-     * @throws {PermissionDeniedException} If the target user is the last admin of the organization and the new role is not an admin
-     * @throws {PermissionDeniedException} If the target user is trying to update themselves
-     */
-    async updateAppUserRole(id: z.infer<typeof AppUser>['id'], role: AppRole): Promise<void> {
-        if (!this.isOrganizationAdmin())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
-
-        const targetUser = await this.getAppUserById(id)
-
-        if (targetUser.id === this._userId)
-            throw new PermissionDeniedException('Forbidden: You cannot update your own role.')
-
-        if (targetUser.role === AppRole.ORGANIZATION_ADMIN && role !== AppRole.ORGANIZATION_ADMIN)
-            throw new PermissionDeniedException('Forbidden: You cannot remove the last organization admin.')
-
-        await this.repository.updateAppUserRole({
-            appUserId: id,
-            role,
-            modifiedById: this._userId,
-            modifiedDate: new Date
-        })
-    }
-
-    /**
-     * Assert that all requirement references (uuid properties) belong to the same solution.
-     * This is to prevent a requirement from another solution being added to the current solution.
-     * This is a security measure to prevent unauthorized access to requirements
-     * @param props.solutionSlug The slug of the solution that the requirements belong to
-     * @param props.reqProps The properties of the requirements to check
-     * @throws {MismatchException} If a referenced requirement does not belong to the solution
-     */
-    private async _assertReferencedRequirementsBelongToSolution(props: {
-        solutionSlug: z.infer<typeof req.Solution>['slug'],
-        reqProps: Partial<Omit<z.infer<typeof req.Requirement>, 'reqId' | keyof z.infer<typeof AuditMetadata>>>
-    }) {
-        for (const [_, value] of Object.entries(props.reqProps) as [keyof typeof props.reqProps, string][]) {
-            const { id, reqType } = typeof value === 'string' && validateUuid(value) ? { id: value, reqType: undefined } :
-                typeof value === 'object' && value != null ? value : { id: undefined, reqType: undefined };
-
-            if (!id || !reqType) continue;
-
-            try {
-                await this.repository.getSolutionRequirementById({
-                    id,
-                    solutionSlug: props.solutionSlug,
-                    reqType
-                });
-            } catch (error) {
-                throw new MismatchException(`Requirement with id ${value} does not belong to the solution`);
-            }
-        }
+        const org = await this.repository.getOrganization()
+        await this._permissionInteractor.assertOrganizationReader(org.id);
+        return this.repository.getSolutionBySlug(slug);
     }
 
     /**
@@ -427,44 +277,10 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {MismatchException} If the solution slug is not unique within the organization
      */
     private async _assertSolutionSlugIsUnique(slug: z.infer<typeof req.Solution>['slug']): Promise<void> {
-        const solutions = (await this.findSolutions({ slug }))
+        const solutions = (await this.findSolutions({ slug }));
 
         if (solutions.length > 0)
-            throw new MismatchException(`Solution with slug ${slug} already exists in the organization`)
-    }
-
-    /**
-     * Update a requirement by id for a solution with the given properties
-     *
-     * @param props.id The id of the requirement to update
-     * @param props.solutionSlug The slug of the solution that the requirement belongs to
-     * @param props.reqProps The properties to update
-     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
-     * @throws {NotFoundException} If the requirement does not exist
-     * @throws {NotFoundException} If the solution does not exist
-     * @throws {MismatchException} If the requirement is not owned by the solution
-     * @throws {MismatchException} If a referenced requirement does not belong to the solution
-     */
-    async updateSolutionRequirement<R extends keyof typeof req>(props: {
-        id: z.infer<typeof req[R]>['id'],
-        solutionSlug: z.infer<typeof req.Solution>['slug'],
-        reqProps: Partial<Omit<z.infer<typeof req[R]>, 'id' | keyof z.infer<typeof AuditMetadata>>> & { reqType: ReqType }
-    }): Promise<void> {
-        if (!this.isOrganizationContributor())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
-
-        await this._assertReferencedRequirementsBelongToSolution({
-            solutionSlug: props.solutionSlug,
-            reqProps: props.reqProps
-        })
-
-        await this.repository.updateSolutionRequirement({
-            modifiedById: this._userId,
-            modifiedDate: new Date(),
-            requirementId: props.id,
-            solutionSlug: props.solutionSlug,
-            reqProps: props.reqProps
-        })
+            throw new MismatchException(`Solution with slug ${slug} already exists in the organization`);
     }
 
     /**
@@ -477,180 +293,18 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {MismatchException} If the solution does not belong to the organization
      */
     async updateSolutionBySlug(slug: z.infer<typeof req.Solution>['slug'], props: Pick<Partial<z.infer<typeof req.Solution>>, 'name' | 'description'>): Promise<void> {
-        if (!await this.isOrganizationContributor())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
+        const org = await this.repository.getOrganization(),
+            currentUserId = this._permissionInteractor.userId;
+
+        await this._permissionInteractor.assertOrganizationContributor(org.id);
 
         if (props.name)
-            await this._assertSolutionSlugIsUnique(props.name)
+            await this._assertSolutionSlugIsUnique(props.name);
 
         await this.repository.updateSolutionBySlug(slug, {
-            modifiedById: this._userId,
+            modifiedById: currentUserId,
             modifiedDate: new Date(),
             ...props
-        })
-    }
-
-    /**
-     * Get all unapproved (isSilence) requirements that follow from the specified ParsedRequirement for a Solution
-     * @param props.solutionId The id of the solution that the requirement belongs to
-     * @param props.id The id of the ParsedRequirement to get the requirements that follow from it
-     * @returns The requirements that follow from the specified ParsedRequirement
-     * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
-     * @throws {NotFoundException} If the ParsedRequirement does not exist
-     * @throws {MismatchException} If the ParsedRequirement does not belong to the solution
-     * /
-    // TODO: refactor to use the repository
-    async getFollowingParsedSilenceRequirements({ solutionId, id }: { solutionId: req.Solution['id'], id: req.Requirement['id'] }): Promise<Partial<Record<ReqType, Requirement[]>>> {
-        if (!this.isOrganizationReader())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
-
-        const parsedRequirement = await this.getSolutionRequirementById({ solutionId, ReqClass: ParsedRequirement, id })
-
-        if (!parsedRequirement)
-            throw new Error('Not Found: The ParsedRequirement does not exist.')
-
-        // Get all unapproved requirements that follow from the specified ParsedRequirement
-        const requirements = await parsedRequirement.followedByIds.loadItems<Requirement>({})
-
-        // Group the results by the requirement type
-        return Object.groupBy(requirements, ({ req_type }) => req_type)
-    }
-    */
-
-    /**
-     * Parse requirements from a statement, save the parsed requirements to the database
-     *
-     * @param props.solutionId The id of the solution to add the requirements to
-     * @param props.statement The statement to parse requirements from
-     * @param props.parsingService The parsing service to use
-     * @returns The number of requirements parsed
-     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
-     * @throws {MismatchException} If the Solution does not belong to the organization
-     * /
-    async parseRequirement({ solutionId, statement, parsingService }: {
-        solutionId: req.Solution['id'],
-        statement: string,
-        // FIXME: This should no be the explicit service but a generic service
-        parsingService: NaturalLanguageToRequirementService
-    }): Promise<number> {
-        if (!this.isOrganizationContributor())
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
-
-        const appUser = await this._userId,
-            em = this.getEntityManager(),
-            solution = await this.getSolutionById(solutionId)
-
-        const groupedResult = await parsingService.parse(statement)
-
-        const parsedRequirement = em.create(req.ParsedRequirement, {
-            name: '{LLM Parsed Requirement}',
-            description: statement,
-            createdBy: appUser,
-            modifiedBy: appUser,
-            lastModified: new Date(),
-        })
-
-        em.create(Belongs, { left: parsedRequirement, right: solution })
-
-        // FIXME: need a better type than 'any'
-        const addSolReq = (ReqClass: typeof req.Requirement, props: any) => {
-            const req = em.create(ReqClass, {
-                ...props,
-                lastModified: new Date(),
-                modifiedBy: appUser,
-                createdBy: appUser
-            })
-
-            em.create(Belongs, { left: req, right: solution })
-
-            return req
-        }
-
-        // FIXME: need a better type than 'any'
-        const addParsedReq = (ReqClass: typeof req.Requirement, props: any) => {
-            const req = addSolReq(ReqClass, props)
-            em.create(Follows, { left: req, right: parsedRequirement })
-
-            return req
-        };
-
-        groupedResult.Assumption?.forEach((item) => addParsedReq(req.Assumption, item));
-        groupedResult.Constraint?.forEach((item) => addParsedReq(req.Constraint, item));
-        groupedResult.Effect?.forEach((item) => addParsedReq(req.Effect, item));
-        groupedResult.EnvironmentComponent?.forEach((item) => addParsedReq(req.EnvironmentComponent, item));
-        groupedResult.FunctionalBehavior?.forEach((item) => addParsedReq(req.FunctionalBehavior, item));
-        groupedResult.GlossaryTerm?.forEach((item) => addParsedReq(req.GlossaryTerm, item));
-        groupedResult.Invariant?.forEach((item) => addParsedReq(req.Invariant, item));
-        groupedResult.Justification?.forEach((item) => addParsedReq(req.Justification, item));
-        groupedResult.Limit?.forEach((item) => addParsedReq(req.Limit, item));
-        groupedResult.NonFunctionalBehavior?.forEach((item) => addParsedReq(req.NonFunctionalBehavior, item));
-        groupedResult.Obstacle?.forEach((item) => addParsedReq(req.Obstacle, item));
-        groupedResult.Outcome?.forEach((item) => addParsedReq(req.Outcome, item));
-        groupedResult.Person?.forEach((item) => addParsedReq(req.Person, item));
-        groupedResult.Stakeholder?.forEach((item) => addParsedReq(req.Stakeholder, item));
-        groupedResult.SystemComponent?.forEach((item) => addParsedReq(req.SystemComponent, item));
-        groupedResult.UseCase?.forEach((item) => {
-            addParsedReq(req.UseCase, {
-                extensions: item.extensions,
-                outcome: addSolReq(req.Outcome, {
-                    name: item.name,
-                    description: item.outcome
-                }),
-                level: item.level,
-                mainSuccessScenario: item.mainSuccessScenario,
-                scope: item.scope,
-                name: item.name,
-                description: '',
-                priority: item.moscowPriority as req.MoscowPriority ?? req.MoscowPriority.MUST,
-                // triggerId: undefined,
-                precondition: addSolReq(req.Assumption, {
-                    name: item.name,
-                    description: item.precondition
-                }),
-                successGuarantee: addSolReq(req.Effect, {
-                    name: item.name,
-                    description: item.successGuarantee
-                }),
-                primaryActor: addSolReq(req.Stakeholder, {
-                    name: item.primaryActor,
-                    interest: 50,
-                    influence: 50,
-                    description: '',
-                    category: req.StakeholderCategory.KEY_STAKEHOLDER,
-                    segmentation: req.StakeholderSegmentation.VENDOR,
-                })
-            })
         });
-        (groupedResult.UserStory ?? []).forEach((item) => {
-            addParsedReq(req.UserStory, {
-                priority: item.moscowPriority as req.MoscowPriority ?? req.MoscowPriority.MUST,
-                name: item.name,
-                description: '',
-                functionalBehavior: addSolReq(req.FunctionalBehavior, {
-                    priority: item.moscowPriority as req.MoscowPriority ?? req.MoscowPriority.MUST,
-                    name: item.functionalBehavior,
-                    description: item.functionalBehavior
-                }),
-                outcome: addSolReq(req.Outcome, {
-                    name: item.outcome,
-                    description: item.outcome
-                }),
-                primaryActor: addSolReq(req.Stakeholder, {
-                    name: item.role,
-                    interest: 50,
-                    influence: 50,
-                    description: '',
-                    category: req.StakeholderCategory.KEY_STAKEHOLDER,
-                    segmentation: req.StakeholderSegmentation.VENDOR
-                })
-            })
-        });
-
-        await em.flush()
-
-        const reqCount = Object.values(groupedResult).reduce((acc, val) => acc + val.length, 0)
-
-        return reqCount
     }
-    */
 }

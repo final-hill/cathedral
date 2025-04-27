@@ -1,37 +1,32 @@
 import type { AppUserRepository } from "~/server/data/repositories/AppUserRepository";
 import { Interactor } from "./Interactor";
-import { AppUser, NotFoundException, PermissionDeniedException } from "#shared/domain";
-import { NIL as SYSTEM_USER_ID } from 'uuid'
+import { AppUser, PermissionDeniedException } from "#shared/domain";
 import type { z } from "zod";
+import type { PermissionInteractor } from "./PermissionInteractor";
 
 /**
  * Interactor for the AppUser
  */
 export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
+    private readonly _permissionInteractor: PermissionInteractor;
+
     /**
      * Create a new AppUserInteractor
-     * @param props.userId - The id of the accessing user whose permissions are being checked
-     * @param props.repository - The repository for the AppUser
+     *
+     * @param props.repository - The repository to use
+     * @param props.permissionInteractor - The PermissionInteractor instance
      */
     constructor(props: {
         // TODO: This should be Repository<AppUser>
         repository: AppUserRepository,
-        userId: z.infer<typeof AppUser>['id']
+        permissionInteractor: PermissionInteractor
     }) {
-        super({ repository: props.repository, userId: props.userId })
-    }
-
-    protected async _isSystemAdmin(): Promise<boolean> {
-        // The EMPTY_UUID is used to represent the system itself
-        // see usage in: /server/api/auth/[...].ts
-        if (this._userId === SYSTEM_USER_ID)
-            return true
-
-        const currentUser = await this.getAppUserById(this._userId)
-        return currentUser.isSystemAdmin
+        super(props);
+        this._permissionInteractor = props.permissionInteractor;
     }
 
     // TODO: This should not be necessary
+    // This should be inferred as Repository<AppUser>
     get repository(): AppUserRepository {
         return this._repository as AppUserRepository
     }
@@ -42,16 +37,17 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
      * @returns The id of the created app user
      * @throws {PermissionDeniedException} If the current user is not a system admin
      */
-    async createAppUser(props: z.infer<typeof AppUser>): Promise<z.infer<typeof AppUser>['id']> {
-        if (!this._isSystemAdmin())
-            throw new PermissionDeniedException(`User with id ${this._userId} does not have permission to create users`)
-        const effectiveDate = new Date()
+    async createAppUser(props: Omit<z.infer<typeof AppUser>, 'role'>): Promise<z.infer<typeof AppUser>['id']> {
+        const currentUserId = this._permissionInteractor.userId;
+
+        if (!this._permissionInteractor.isSystemAdmin())
+            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to create users`);
+
         return this.repository.createAppUser({
             ...props,
-            createdById: this._userId,
-            creationDate: effectiveDate,
-            effectiveDate
-        })
+            createdById: currentUserId,
+            creationDate: new Date()
+        });
     }
 
     /**
@@ -61,10 +57,12 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
      * @throws {NotFoundException} If the user does not exist
      * @throws {PermissionDeniedException} If the current user is not a system admin or the user being queried is not the current user
      */
-    async getAppUserById(id: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof AppUser>> {
-        if (id !== this._userId && !this._isSystemAdmin())
-            throw new PermissionDeniedException(`User with id ${this._userId} does not have permission to get user with id ${id}`)
-        return this.repository.getUserById(id)
+    async getUserById(id: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof AppUser>> {
+        const currentUserId = this._permissionInteractor.userId;
+        if (id !== currentUserId && !this._permissionInteractor.isSystemAdmin())
+            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to get user with id ${id}`);
+
+        return this.repository.getUserById(id);
     }
 
     /**
@@ -75,26 +73,12 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
      * @throws {PermissionDeniedException} If the current user is not a system admin or the user being queried is not the current user
      */
     async getAppUserByEmail(email: z.infer<typeof AppUser>['email']): Promise<z.infer<typeof AppUser>> {
-        const currentUser = await this.getAppUserById(this._userId)
-        if (currentUser.email !== email && !this._isSystemAdmin())
-            throw new PermissionDeniedException(`User with id ${this._userId} does not have permission to get user with email ${email}`)
+        const currentUserId = this._permissionInteractor.userId,
+            currentUser = await this.getUserById(currentUserId)
+        if (email !== currentUser.email && !currentUser.isSystemAdmin)
+            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to get user with email ${email}`);
+
         return this.repository.getUserByEmail(email)
-    }
-
-    /**
-     * Get the organization ids associated with the app user
-     * @param id - The id of the app user
-     * @returns The organization ids associated with the app user
-     * @throws {NotFoundException} If the user does not exist
-     * @throws {PermissionDeniedException} If the current user is not a system admin or the user being queried is not the current user
-     */
-    async getUserOrganizationIds(id: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof AppUser>['id'][]> {
-        if (!(await this.repository.hasUser(id)))
-            throw new NotFoundException(`User with id ${id} does not exist`)
-        if (id !== this._userId && !this._isSystemAdmin())
-            throw new PermissionDeniedException(`User with id ${this._userId} does not have permission to get organization ids for user with id ${id}`)
-
-        return this.repository.getUserOrganizationIds(id)
     }
 
     /**
@@ -104,8 +88,11 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
      * @throws {PermissionDeniedException} If the current user is not a system admin or the user being queried is not the current user
      */
     async hasUser(id: z.infer<typeof AppUser>['id']): Promise<boolean> {
-        if (id !== this._userId && !this._isSystemAdmin())
-            throw new PermissionDeniedException(`User with id ${this._userId} does not have permission to check if user with id ${id} exists`)
+        const currentUserId = this._permissionInteractor.userId,
+            currentUser = await this.getUserById(currentUserId)
+        if (id !== currentUser.id && !currentUser.isSystemAdmin)
+            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to check if user with id ${id} exists`);
+
         return this.repository.hasUser(id)
     }
 
@@ -116,14 +103,15 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
      * @throws {NotFoundException} If the user does not exist
      */
     async updateAppUser(props: Pick<z.infer<typeof AppUser>, 'id' | 'name' | 'email' | 'lastLoginDate'>): Promise<void> {
-        if (props.id !== this._userId && !this._isSystemAdmin())
-            throw new PermissionDeniedException(`User with id ${this._userId} does not have permission to update user with id ${props.id}`)
-        const modifiedDate = new Date()
+        const currentUserId = this._permissionInteractor.userId,
+            currentUser = await this.getUserById(currentUserId)
+        if (props.id !== currentUser.id && !currentUser.isSystemAdmin)
+            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to update user with id ${props.id}`);
 
         return this.repository.updateAppUser({
             ...props,
-            modifiedById: this._userId,
-            modifiedDate
+            modifiedById: currentUserId,
+            modifiedDate: new Date()
         })
     }
 }

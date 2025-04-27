@@ -1,0 +1,441 @@
+import type { z } from "zod";
+import { validate as validateUuid } from 'uuid'
+import { Interactor } from "./Interactor";
+import * as req from "#shared/domain/requirements";
+import { ReqType, WorkflowState } from "#shared/domain/requirements/enums";
+import { InvalidWorkflowStateException, MismatchException } from "#shared/domain/exceptions";
+import type { PermissionInteractor } from "./PermissionInteractor";
+import type { AuditMetadata } from "~/shared/domain";
+import type { RequirementRepository } from "~/server/data/repositories/RequirementRepository";
+
+type ReqTypeName = keyof typeof req
+
+export class RequirementInteractor extends Interactor<z.infer<typeof req.Requirement>> {
+    private readonly _permissionInteractor: PermissionInteractor;
+    private readonly _solutionId: string;
+    private readonly _organizationId: string;
+
+    /**
+     * Create a new RequirementInteractor
+     *
+     * @param props.repository - The repository to use
+     * @param props.permissionInteractor - The PermissionInteractor instance
+     */
+    constructor(props: {
+        // FIXME: Repository<z.infer<typeof req.Requirement>>
+        repository: RequirementRepository,
+        permissionInteractor: PermissionInteractor,
+        solutionId: string,
+        organizationId: string,
+    }) {
+        super(props);
+        this._organizationId = props.organizationId;
+        this._solutionId = props.solutionId;
+        this._permissionInteractor = props.permissionInteractor;
+
+        // TODO: assert that the solution is in the organization
+    }
+
+    // FIXME: this shouldn't be necessary
+    get repository(): RequirementRepository {
+        return this._repository as RequirementRepository
+    }
+
+    /**
+     * Assert that all requirement references (uuid properties) belong to the same solution.
+     * This is to prevent a requirement from another solution being added to the current solution.
+     * This is a security measure to prevent unauthorized access to requirements
+     * @param reqProps The properties of the requirements to check
+     * @throws {MismatchException} If a referenced requirement does not belong to the solution
+     */
+    private async _assertReferencedRequirementsBelongToSolution(
+        reqProps: Partial<Omit<z.infer<typeof req.Requirement>, 'reqId' | keyof z.infer<typeof AuditMetadata>>>
+    ) {
+        for (const [key, value] of Object.entries(reqProps) as [keyof typeof reqProps, string | { id: string }][]) {
+            const id = typeof value === 'string' && validateUuid(value) ? value :
+                typeof value === 'object' && 'id' in value ? value.id : undefined;
+
+            if (!id) continue;
+
+            try {
+                const result = await this.repository.getById(id);
+
+                if (key === 'solution') {
+                    if (result.id !== this._solutionId)
+                        throw new MismatchException(`Requirement with id ${reqProps['id']} does not belong to the solution`);
+                }
+            } catch (error) {
+                throw new MismatchException(`Requirement with id ${value} does not belong to the solution`);
+            }
+        }
+    }
+
+    /**
+     * Get the current active requirements of a given type.
+     * @param reqType - The type of the requirements to get
+     * @returns The current active requirements of the given type
+     * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
+     */
+    async getCurrentActiveRequirementsByType<R extends ReqTypeName>(reqType: ReqType): Promise<z.infer<typeof req[R]>[]> {
+        await this._permissionInteractor.assertOrganizationReader(this._organizationId)
+
+        return this.repository.getAllActive({
+            solutionId: this._solutionId,
+            reqType: reqType as ReqType
+        })
+    }
+
+    /**
+     * Get all requirements in a given state.
+     * @param props.workflowState - The state of the requirements to get
+     * @param props.reqType - The type of the requirements to get
+     * @returns The requirements in the given state
+     * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
+     * @returns The requirements in the given state
+     */
+    async getLatestRequirementsByType<R extends ReqTypeName>(props: {
+        workflowState: WorkflowState,
+        reqType: ReqType,
+    }): Promise<z.infer<typeof req[R]>[]> {
+        await this._permissionInteractor.assertOrganizationReader(this._organizationId)
+
+        return this.repository.getAllLatest({
+            solutionId: this._solutionId,
+            reqType: props.reqType,
+            workflowState: props.workflowState
+        })
+    }
+
+    /**
+     * Get all requirements of a given type across all workflow states.
+     * @param reqType - The type of the requirements to get
+     * @returns The requirements of the given type across all workflow states
+     * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
+     */
+    async getAllRequirementsByType<R extends ReqTypeName>(reqType: ReqType): Promise<z.infer<typeof req[R]>[]> {
+        await this._permissionInteractor.assertOrganizationReader(this._organizationId);
+
+        return this.repository.getAll({
+            solutionId: this._solutionId,
+            reqType
+        });
+    }
+
+    /**
+     * Creates a new requirement in the Proposed state.
+     * @param props - The properties of the requirement to create
+     * @returns The id of the created requirement
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {MismatchException} If a referenced requirement does not belong to the solution
+     */
+    async proposeRequirement<R extends ReqTypeName>(
+        props: Omit<z.infer<typeof req[R]>, 'reqId' | 'reqIdPrefix' | 'id' | 'workflowState' | 'solution' | keyof z.infer<typeof AuditMetadata>>
+    ): Promise<z.infer<typeof req.Requirement>['id']> {
+        await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+        await this._assertReferencedRequirementsBelongToSolution(props);
+
+        const currentUserId = this._permissionInteractor.userId;
+
+        return this.repository.add({
+            reqProps: {
+                ...props,
+                solution: { id: this._solutionId, name: '', reqType: ReqType.SOLUTION },
+                workflowState: WorkflowState.Proposed
+            },
+            createdById: currentUserId,
+            creationDate: new Date()
+        })
+    }
+
+    /**
+     * Updates a requirement currently in the Proposed state.
+     * @param reqProps - The properties of the requirement to update
+     * @throws {InvalidWorkflowStateException} If the requirement is not currently in the Proposed state.
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {NotFoundException} If the requirement does not exist
+     * @throws {MismatchException} If a referenced requirement does not belong to the solution
+     */
+    async updateProposedRequirement<R extends ReqTypeName>(
+        reqProps: Partial<Omit<z.infer<typeof req[R]>, 'reqIdPrefix' | 'workflowState' | 'solution' | keyof z.infer<typeof AuditMetadata>>> & { id: z.infer<typeof req.Requirement>['id'] }
+    ) {
+        await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+        await this._assertReferencedRequirementsBelongToSolution(reqProps);
+
+        const currentRequirement = await this.repository.getById(reqProps.id),
+            currentUserId = this._permissionInteractor.userId;
+
+        if (currentRequirement.workflowState !== WorkflowState.Proposed)
+            throw new InvalidWorkflowStateException(`Requirement with id ${reqProps.id} is not in the Proposed state`);
+
+        return this.repository.update({
+            reqProps: {
+                ...reqProps,
+                reqType: currentRequirement.reqType,
+                solution: currentRequirement.solution,
+                workflowState: currentRequirement.workflowState
+            },
+            modifiedById: currentUserId,
+            modifiedDate: new Date()
+        })
+    }
+
+    /**
+     * Removes a requirement currently in the Proposed state.
+     * This will change the state to Removed.
+     * @param id - The id of the requirement to remove
+     * @throws {InvalidWorkflowStateException} If the requirement is not currently in the Proposed state.
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {NotFoundException} If the requirement does not exist
+     */
+    async removeProposedRequirement(
+        id: z.infer<typeof req.Requirement>['id']
+    ): Promise<void> {
+        await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+
+        const currentRequirement = await this.repository.getById(id)
+
+        if (currentRequirement.workflowState !== WorkflowState.Proposed)
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Proposed state`);
+
+        return this.repository.update({
+            reqProps: {
+                id,
+                reqType: currentRequirement.reqType,
+                workflowState: WorkflowState.Removed
+            },
+            modifiedById: this._permissionInteractor.userId,
+            modifiedDate: new Date()
+        })
+    }
+
+    /**
+     * Submits a requirement for review.
+     * This will change the state to Review.
+     * @param id - The id of the requirement to submit
+     * @throws {InvalidWorkflowStateException} If the requirement is not currently in the Proposed state.
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {NotFoundException} If the requirement does not exist
+     */
+    async reviewRequirement(
+        id: z.infer<typeof req.Requirement>['id']
+    ): Promise<void> {
+        await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+
+        const currentRequirement = await this.repository.getById(id)
+
+        if (currentRequirement.workflowState !== WorkflowState.Proposed)
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Proposed state`);
+
+        return this.repository.update({
+            reqProps: {
+                id,
+                reqType: currentRequirement.reqType,
+                workflowState: WorkflowState.Review,
+            },
+            modifiedById: this._permissionInteractor.userId,
+            modifiedDate: new Date()
+        })
+    }
+
+    /**
+     * Rejects a requirement currently in the Review state.
+     * This will change the state to Rejected.
+     * @param id - The id of the requirement to reject
+     * @throws {InvalidWorkflowStateException} If the requirement is not currently in the Review state.
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {NotFoundException} If the requirement does not exist
+     */
+    async rejectRequirement(
+        id: z.infer<typeof req.Requirement>['id']
+    ): Promise<void> {
+        await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+
+        const currentRequirement = await this.repository.getById(this._solutionId)
+
+        if (currentRequirement.workflowState !== WorkflowState.Review)
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Review state`);
+
+        return this.repository.update({
+            reqProps: {
+                id,
+                reqType: currentRequirement.reqType,
+                workflowState: WorkflowState.Rejected,
+            },
+            modifiedById: this._permissionInteractor.userId,
+            modifiedDate: new Date()
+        })
+    }
+
+    /**
+     * Approves a requirement currently in the Review state.
+     * This will change the state to Active.
+     * @param id - The id of the requirement to approve
+     * @throws {InvalidWorkflowStateException} If the requirement is not currently in the Review state.
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {NotFoundException} If the requirement does not exist
+     */
+    async approveRequirement(
+        id: z.infer<typeof req.Requirement>['id']
+    ): Promise<void> {
+        await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+
+        const currentRequirement = await this.repository.getById(id)
+
+        if (currentRequirement.workflowState !== WorkflowState.Review)
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Review state`);
+
+        return this.repository.update({
+            reqProps: {
+                id,
+                reqType: currentRequirement.reqType,
+                workflowState: WorkflowState.Active,
+            },
+            modifiedById: this._permissionInteractor.userId,
+            modifiedDate: new Date()
+        })
+    }
+
+    /**
+     * Revises a requirement currently in the Rejected state.
+     * This will change the state to Proposed.
+     * @param id - The id of the requirement to revise
+     * @throws {InvalidWorkflowStateException} If the requirement is not currently in the Rejected state.
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {NotFoundException} If the requirement does not exist
+     */
+    async reviseRejectedRequirement(
+        id: z.infer<typeof req.Requirement>['id']
+    ): Promise<void> {
+        await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+
+        const currentRequirement = await this.repository.getById(id)
+
+        if (currentRequirement.workflowState !== WorkflowState.Rejected)
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Rejected state`);
+
+        return this.repository.update({
+            reqProps: {
+                id,
+                reqType: currentRequirement.reqType,
+                workflowState: WorkflowState.Proposed,
+            },
+            modifiedById: this._permissionInteractor.userId,
+            modifiedDate: new Date()
+        })
+    }
+
+    /**
+     * Removes a requirement currently in the Rejected state.
+     * This will change the state to Removed.
+     * @param id - The id of the requirement to remove
+     * @throws {InvalidWorkflowStateException} If the requirement is not currently in the Rejected state.
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {NotFoundException} If the requirement does not exist
+     */
+    async removeRejectedRequirement(
+        id: z.infer<typeof req.Requirement>['id']
+    ): Promise<void> {
+        await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+
+        const currentRequirement = await this.repository.getById(id)
+
+        if (currentRequirement.workflowState !== WorkflowState.Rejected)
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Rejected state`);
+
+        return this.repository.update({
+            reqProps: {
+                id,
+                reqType: currentRequirement.reqType,
+                workflowState: WorkflowState.Removed,
+            },
+            modifiedById: this._permissionInteractor.userId,
+            modifiedDate: new Date()
+        })
+    }
+
+    /**
+     * Restores a requirement currently in the Removed state.
+     * This will change the state to Proposed.
+     * @param id - The id of the requirement to restore
+     * @throws {InvalidWorkflowStateException} If the requirement is not currently in the Removed state.
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {NotFoundException} If the requirement does not exist
+     */
+    async restoreRemovedRequirement(
+        id: z.infer<typeof req.Requirement>['id']
+    ): Promise<void> {
+        await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+
+        const currentRequirement = await this.repository.getById(id)
+
+        if (currentRequirement.workflowState !== WorkflowState.Removed)
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Removed state`);
+
+        return this.repository.update({
+            reqProps: {
+                id,
+                reqType: currentRequirement.reqType,
+                workflowState: WorkflowState.Proposed,
+            },
+            modifiedById: this._permissionInteractor.userId,
+            modifiedDate: new Date()
+        })
+    }
+
+    /**
+     * Creates a new version of a requirement currently in the Active state.
+     * The new version will be in the Proposed state.
+     * @throws {InvalidWorkflowStateException} If the requirement is not currently in the Active state.
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {NotFoundException} If the requirement does not exist
+     */
+    async editActiveRequirement(
+        id: z.infer<typeof req.Requirement>['id']
+    ): Promise<void> {
+        await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+
+        const currentRequirement = await this.repository.getById(id)
+
+        if (currentRequirement.workflowState !== WorkflowState.Active)
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Active state`);
+
+        return this.repository.update({
+            reqProps: {
+                id,
+                reqType: currentRequirement.reqType,
+                workflowState: WorkflowState.Proposed,
+            },
+            modifiedById: this._permissionInteractor.userId,
+            modifiedDate: new Date()
+        })
+    }
+
+    /**
+     * Removes a requirement currently in the Active state.
+     * This will change the state to Removed.
+     * @param id - The id of the requirement to remove
+     * @throws {InvalidWorkflowStateException} If the requirement is not currently in the Active state.
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {NotFoundException} If the requirement does not exist
+     */
+    async removeActiveRequirement(
+        id: z.infer<typeof req.Requirement>['id']
+    ): Promise<void> {
+        await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+
+        const currentRequirement = await this.repository.getById(id)
+
+        if (currentRequirement.workflowState !== WorkflowState.Active)
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Active state`);
+
+        return this.repository.update({
+            reqProps: {
+                id,
+                reqType: currentRequirement.reqType,
+                workflowState: WorkflowState.Removed,
+            },
+            modifiedById: this._permissionInteractor.userId,
+            modifiedDate: new Date()
+        })
+    }
+}

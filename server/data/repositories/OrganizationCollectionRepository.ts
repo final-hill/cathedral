@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Organization, AppUserOrganizationRole, AppUser, DuplicateEntityException, NotFoundException, AppRole } from "#shared/domain";
+import { Organization, DuplicateEntityException, NotFoundException, WorkflowState, AppUser } from "#shared/domain";
 import { slugify } from "#shared/utils";
 import { Repository } from "./Repository";
 import { OrganizationRepository } from "./OrganizationRepository";
@@ -11,36 +11,35 @@ import { type DeletionInfo } from "./DeletionInfo";
 import { type UpdationInfo } from "./UpdationInfo";
 
 export class OrganizationCollectionRepository extends Repository<z.infer<typeof Organization>> {
-    /**
-     * Associates an app user with the organization with the specified role
-     * @param auor.appUserId - The id of the app user
-     * @param auor.organizationId - The id of the organization
-     * @param auor.role - The role of the app user in the organization
-     * @throws {DuplicateEntityException} If the app user organization role already exists
-     */
-    async addAppUserOrganizationRole(auor: { appUserId: string, organizationId: string, role: AppRole } & CreationInfo): Promise<void> {
-        const em = this._em,
-            staticModel = await em.findOneOrFail(AppUserOrganizationRoleModel, {
-                appUser: auor.appUserId,
-                organization: auor.organizationId
-            }),
-            latestVersion = await staticModel.getLatestVersion(auor.effectiveDate),
-            existingRole = latestVersion?.role
 
-        if (existingRole === auor.role)
-            throw new DuplicateEntityException('App user organization role already exists with the same role')
+    async addInitialAppuserOrganizationRole(props: {
+        appUserId: z.infer<typeof Organization>['id'],
+        organizationId: z.infer<typeof Organization>['id'],
+        role: NonNullable<z.infer<typeof AppUser>['role']>
+    }): Promise<void> {
+        const em = this._em,
+            creationDate = new Date(),
+            existingAuorStaticModel = await em.findOne(AppUserOrganizationRoleModel, {
+                appUser: props.appUserId,
+                organization: props.organizationId
+            }),
+            existingLatestVersion = await existingAuorStaticModel?.getLatestVersion(creationDate),
+            existingRole = existingLatestVersion?.role
+
+        if (existingAuorStaticModel || existingRole)
+            throw new DuplicateEntityException('App user organization role already exists')
 
         em.create(AppUserOrganizationRoleVersionsModel, {
-            appUserOrganizationRole: latestVersion?.appUserOrganizationRole ?? em.create(AppUserOrganizationRoleModel, {
-                appUser: auor.appUserId,
-                organization: auor.organizationId,
-                createdBy: auor.createdById,
-                creationDate: auor.effectiveDate
+            appUserOrganizationRole: em.create(AppUserOrganizationRoleModel, {
+                appUser: props.appUserId,
+                organization: props.organizationId,
+                createdBy: props.appUserId,
+                creationDate: creationDate
             }),
-            role: auor.role,
+            role: props.role,
             isDeleted: false,
-            effectiveFrom: auor.effectiveDate,
-            modifiedBy: auor.appUserId
+            effectiveFrom: creationDate,
+            modifiedBy: props.appUserId
         })
 
         await em.flush()
@@ -58,7 +57,7 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
     async createOrganization(props: Pick<z.infer<typeof Organization>, 'name' | 'description'> & CreationInfo): Promise<z.infer<typeof Organization>['id']> {
         const em = this._em,
             orgRepo = new OrganizationRepository({ em, organizationSlug: slugify(props.name) }),
-            existingOrg = await orgRepo.getOrganization()
+            existingOrg = await orgRepo.getOrganization().catch(() => undefined)
 
         if (existingOrg)
             throw new DuplicateEntityException('Organization already exists with the same name')
@@ -69,14 +68,15 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
             requirement: em.create(OrganizationModel, {
                 id: newId,
                 createdBy: props.createdById,
-                creationDate: props.effectiveDate,
+                creationDate: props.creationDate,
             }),
             isDeleted: false,
-            effectiveFrom: props.effectiveDate,
+            effectiveFrom: props.creationDate,
             slug: slugify(props.name),
             name: props.name,
             description: props.description,
-            modifiedBy: props.createdById
+            modifiedBy: props.createdById,
+            workflowState: WorkflowState.Active
         })
 
         await em.flush()
@@ -109,17 +109,6 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
             });
         }
 
-        // delete all AppUserOrganizationRoles associated with the organization
-        const orgUsers = await orgRepo.getOrganizationAppUsers()
-
-        for (const user of orgUsers) {
-            await orgRepo.deleteAppUserOrganizationRole({
-                appUserId: user.id,
-                deletedById: props.deletedById,
-                deletedDate: props.deletedDate
-            });
-        }
-
         em.create(OrganizationVersionsModel, {
             isDeleted: true,
             effectiveFrom: props.deletedDate,
@@ -127,7 +116,8 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
             name,
             description,
             modifiedBy: props.deletedById,
-            requirement: existingOrg.id
+            requirement: existingOrg.id,
+            workflowState: WorkflowState.Removed
         })
 
         await em.flush()
@@ -147,7 +137,7 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
             id,
             createdBy,
             creationDate
-        }, { populate: ['createdBy'] })
+        }, { populate: ['*'] })
 
         const mapper = new DataModelToDomainModel(),
             organizations = await Promise.all(orgModels.map(async org => {
@@ -158,89 +148,6 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
             }))
 
         return organizations
-    }
-
-    /**
-     * Returns the AppUserOrganizationRole for the given app user and organization
-     * @param props.userId - The id of the app user
-     * @param props.organizationId - The id of the organization
-     * @returns The AppUserOrganizationRole
-     * @throws {NotFoundException} If the app user organization role does not exist
-     */
-    async getAppUserOrganizationRole({ organizationId, userId }: { organizationId: z.infer<typeof Organization>['id'], userId: z.infer<typeof AppUser>['id'] }): Promise<z.infer<typeof AppUserOrganizationRole>> {
-        const em = this._em,
-            effectiveDate = new Date(),
-            orgStatic = await em.findOneOrFail(OrganizationModel, {
-                id: organizationId
-            }, { populate: ['createdBy'] }),
-            orgLatestVersion = await orgStatic.getLatestVersion(effectiveDate),
-            auor = await em.findOne(AppUserOrganizationRoleModel, {
-                appUser: userId,
-                organization: organizationId
-            }, { populate: ['appUser', 'createdBy'] }),
-            auorv = await auor?.getLatestVersion(effectiveDate)
-
-        if (!auor || !auorv)
-            throw new NotFoundException('App user organization role does not exist')
-
-        const appUser = auor.appUser,
-            latestAppUser = await appUser.getLatestVersion(effectiveDate),
-            createdBy = auor.createdBy,
-            createdByVersion = await createdBy.getLatestVersion(effectiveDate),
-            modifiedBy = auorv.modifiedBy,
-            modifiedByVersion = await modifiedBy.getLatestVersion(effectiveDate)
-
-        return AppUserOrganizationRole.parse({
-            appUser: { id: appUser.id, name: latestAppUser!.name },
-            organization: { id: organizationId, name: orgLatestVersion!.name },
-            role: auorv.role,
-            isDeleted: auorv.isDeleted,
-            createdBy: { id: createdByVersion!.appUser.id, name: createdByVersion!.name },
-            modifiedBy: { id: auorv.modifiedBy.id, name: modifiedByVersion!.name },
-            creationDate: auor.creationDate,
-            lastModified: auorv.effectiveFrom
-        } as z.infer<typeof AppUserOrganizationRole>)
-    }
-
-    /**
-     * Get an organization user by id
-     *
-     * @param props.userId The id of the app user to get
-     * @param props.organizationId The id of the organization
-     * @returns The app user
-     * @throws {NotFoundException} If the organization does not exist
-     * @throws {NotFoundException} If the app user does not exist in the organization
-     */
-    async getOrganizationAppUserById({ organizationId, userId }: { organizationId: z.infer<typeof Organization>['id'], userId: z.infer<typeof AppUser>['id'] }): Promise<z.infer<typeof AppUser>> {
-        const em = this._em,
-            auor = await em.findOne(AppUserOrganizationRoleModel, {
-                appUser: userId,
-                organization: organizationId
-            }, {
-                populate: ['appUser', 'createdBy']
-            }),
-            auorv = await auor?.getLatestVersion(new Date())
-
-        if (!auor || !auorv)
-            throw new NotFoundException('App user organization role does not exist')
-
-        const appUser = auor.appUser,
-            appUserv = await appUser.getLatestVersion(new Date())
-
-        if (!appUserv)
-            throw new NotFoundException('App user does not exist')
-
-        return AppUser.parse({
-            id: userId,
-            name: appUserv.name,
-            email: appUserv.email,
-            isSystemAdmin: appUserv.isSystemAdmin,
-            lastLoginDate: appUserv.lastLoginDate,
-            creationDate: appUser.creationDate,
-            lastModified: auorv.effectiveFrom,
-            isDeleted: appUserv.isDeleted,
-            role: auorv.role
-        } as z.infer<typeof AppUser>)
     }
 
     /**
@@ -264,7 +171,8 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
             name: props.name ?? orgLatestVersion.name,
             description: props.description ?? orgLatestVersion.description,
             modifiedBy: props.modifiedById,
-            requirement: organization
+            requirement: organization,
+            workflowState: orgLatestVersion.workflowState
         })
 
         await em.flush()

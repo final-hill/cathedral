@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { getServerSession } from '#auth'
 import handleDomainException from "~/server/utils/handleDomainException"
-import { OrganizationInteractor } from "~/application";
-import { OrganizationRepository } from "~/server/data/repositories";
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from "~/application";
+import { AppUserRepository, OrganizationRepository, PermissionRepository, RequirementRepository } from "~/server/data/repositories";
 import { ReqType } from "#shared/domain/requirements/ReqType";
 import { Organization, Solution } from "#shared/domain";
 
@@ -15,14 +15,28 @@ const querySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { solutionSlug, organizationSlug, reqType } = await validateEventQuery(event, querySchema),
         session = (await getServerSession(event))!,
+        permissionInteractor = new PermissionInteractor({
+            userId: session.id,
+            repository: new PermissionRepository({ em: event.context.em })
+        }),
         organizationInteractor = new OrganizationInteractor({
             repository: new OrganizationRepository({ em: event.context.em, organizationSlug }),
-            userId: session.id
+            appUserInteractor: new AppUserInteractor({
+                permissionInteractor,
+                repository: new AppUserRepository({ em: event.context.em })
+            }),
+            permissionInteractor
+        }),
+        org = await organizationInteractor.getOrganization(),
+        solution = await organizationInteractor.getSolutionBySlug(solutionSlug),
+        requirementInteractor = new RequirementInteractor({
+            repository: new RequirementRepository({ em: event.context.em }),
+            permissionInteractor,
+            organizationId: org.id,
+            solutionId: solution.id
         })
 
-    return await organizationInteractor.findSolutionRequirements({
-        solutionSlug,
-        query: { reqType }
-    }).then(requirements => requirements.map(req => ({ label: req.name, value: { id: req.id, name: req.name } })))
+    return await requirementInteractor.getCurrentActiveRequirementsByType(reqType)
+        .then(requirements => requirements.map(req => ({ label: req.name, value: { id: req.id, name: req.name } })))
         .catch(handleDomainException)
 })

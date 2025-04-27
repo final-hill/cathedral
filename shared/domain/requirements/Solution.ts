@@ -1,9 +1,9 @@
 import { slugify } from '../../../shared/utils/slugify.js';
 import { z } from 'zod';
-import { Requirement } from './Requirement.js';
 import { ReqType } from "./ReqType.js";
+import { MetaRequirement } from './MetaRequirement.js';
 
-export const Solution = Requirement.extend({
+export const Solution = MetaRequirement.extend({
     name: z.string().max(100).nonempty()
         .refine(
             value => !["new-solution", "edit-entry", "users"].includes(slugify(value)),

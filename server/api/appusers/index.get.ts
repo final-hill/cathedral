@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { getServerSession } from '#auth'
-import { OrganizationInteractor } from "~/application"
-import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository";
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from "~/application"
+import { AppUserRepository, OrganizationRepository, PermissionRepository } from "~/server/data/repositories";
 import handleDomainException from "~/server/utils/handleDomainException";
 import { Organization } from "#shared/domain";
 
@@ -15,13 +15,21 @@ const querySchema = z.object({
 }, "At least one of organizationId or organizationSlug should be provided");
 
 /**
- * Returns all appusers for the organization with their associated roles
+ * Returns all appusers for the organization with their associated role
  */
 export default defineEventHandler(async (event) => {
     const { organizationId, organizationSlug } = await validateEventQuery(event, querySchema),
         session = (await getServerSession(event))!,
-        organizationInteractor = new OrganizationInteractor({
+        permissionInteractor = new PermissionInteractor({
             userId: session.id,
+            repository: new PermissionRepository({ em: event.context.em })
+        }),
+        organizationInteractor = new OrganizationInteractor({
+            permissionInteractor,
+            appUserInteractor: new AppUserInteractor({
+                permissionInteractor,
+                repository: new AppUserRepository({ em: event.context.em })
+            }),
             repository: new OrganizationRepository({
                 em: event.context.em,
                 organizationId,
@@ -29,5 +37,5 @@ export default defineEventHandler(async (event) => {
             })
         })
 
-    return await organizationInteractor.getOrganizationAppUsers().catch(handleDomainException)
+    return await organizationInteractor.getAppUsers().catch(handleDomainException)
 })

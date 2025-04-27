@@ -1,6 +1,6 @@
-import { AppUser, Organization, DuplicateEntityException, NotFoundException } from "#shared/domain";
+import { AppUser, DuplicateEntityException, NotFoundException, ReqType } from "#shared/domain";
 import { Repository } from "./Repository";
-import { AppUserModel, AppUserOrganizationRoleModel, AppUserVersionsModel } from "../models";
+import { AppUserModel, AppUserVersionsModel } from "../models";
 import { type CreationInfo } from "./CreationInfo";
 import { type UpdationInfo } from "./UpdationInfo";
 import { z } from "zod";
@@ -12,7 +12,7 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
      * @returns The id of the created app user
      * @throws {DuplicateEntityException} If the user already exists
      */
-    async createAppUser(props: z.infer<typeof AppUser> & CreationInfo): Promise<z.infer<typeof AppUser>['id']> {
+    async createAppUser(props: Omit<z.infer<typeof AppUser>, 'role'> & CreationInfo): Promise<z.infer<typeof AppUser>['id']> {
         const em = this._em,
             existingUserStatic = await em.findOne(AppUserModel, { id: props.id }),
             existingUserLatestVersion = await existingUserStatic?.getLatestVersion(props.creationDate)
@@ -50,80 +50,72 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
     async getUserByEmail(email: z.infer<typeof AppUser>['email']): Promise<z.infer<typeof AppUser>> {
         const em = this._em
 
-        const maybeLatestVersion = await em.findOne(AppUserVersionsModel, {
-            email,
-            effectiveFrom: { $lte: new Date() }
-        }, {
-            orderBy: { effectiveFrom: 'desc' },
-            populate: ['appUser']
-        }),
-            latestVersion = maybeLatestVersion?.isDeleted ? undefined : maybeLatestVersion,
-            user = latestVersion?.appUser
+        const userStatic = await em.findOne(AppUserModel, { versions: { email } }),
+            userLatestVersion = await userStatic?.getLatestVersion(new Date())
 
-        if (!user)
+        if (!userStatic || !userLatestVersion)
             throw new NotFoundException(`User with email ${email} does not exist`)
 
+        const orgStatics = await userLatestVersion.appUser.organizations.loadItems(),
+            maybeOrgs = await Promise.all(orgStatics.map(async (org) => {
+                const orgLatestVersion = await org.getLatestVersion(new Date())
+                return orgLatestVersion ? {
+                    reqType: ReqType.ORGANIZATION,
+                    id: org.id,
+                    name: orgLatestVersion.name
+                } : undefined
+            })),
+            organizations = maybeOrgs.filter((org) => org != undefined)
+
         return AppUser.parse({
-            id: user.id,
-            creationDate: user.creationDate,
-            lastLoginDate: latestVersion.lastLoginDate,
-            lastModified: latestVersion.effectiveFrom,
-            email: latestVersion.email,
-            isDeleted: latestVersion.isDeleted,
-            isSystemAdmin: latestVersion.isSystemAdmin,
-            name: latestVersion.name,
-            // Roles are associated with organizations, not users
-            role: undefined
+            id: userStatic.id,
+            creationDate: userStatic.creationDate,
+            lastLoginDate: userLatestVersion.lastLoginDate,
+            lastModified: userLatestVersion.effectiveFrom,
+            email: userLatestVersion.email,
+            isDeleted: userLatestVersion.isDeleted,
+            isSystemAdmin: userLatestVersion.isSystemAdmin,
+            name: userLatestVersion.name,
+            organizations
         } as z.infer<typeof AppUser>)
     }
 
     /**
      * Get the app user by id.
-     * Note: The 'role' will not be populated. Use the OrganizationInteractor methods if you need the associated role.
      * @param id - The id of the app user
      * @returns The app user
      * @throws {NotFoundException} If the user does not exist
      */
     async getUserById(id: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof AppUser>> {
         const em = this._em,
-            user = await em.findOne(AppUserModel, { id }),
-            latestVersion = await user?.getLatestVersion(new Date()) as AppUserVersionsModel | undefined
+            userStatic = await em.findOne(AppUserModel, { id }),
+            userLatestVersion = await userStatic?.getLatestVersion(new Date()) as AppUserVersionsModel | undefined
 
-        if (!user || !latestVersion)
+        if (!userStatic || !userLatestVersion)
             throw new NotFoundException(`User with id ${id} does not exist`)
 
+        const orgStatics = await userLatestVersion.appUser.organizations.loadItems(),
+            maybeOrgs = await Promise.all(orgStatics.map(async (org) => {
+                const orgLatestVersion = await org.getLatestVersion(new Date())
+                return orgLatestVersion ? {
+                    reqType: ReqType.ORGANIZATION,
+                    id: org.id,
+                    name: orgLatestVersion.name
+                } : undefined
+            })),
+            organizations = maybeOrgs.filter((org) => org != undefined)
+
         return AppUser.parse({
-            id: user.id,
-            creationDate: user.creationDate,
-            lastLoginDate: latestVersion.lastLoginDate,
-            lastModified: latestVersion.effectiveFrom,
-            email: latestVersion.email,
-            isDeleted: latestVersion.isDeleted,
-            isSystemAdmin: latestVersion.isSystemAdmin,
-            name: latestVersion.name,
-            // Roles are associated with organizations, not users
-            role: undefined
+            id: userStatic.id,
+            creationDate: userStatic.creationDate,
+            lastLoginDate: userLatestVersion.lastLoginDate,
+            lastModified: userLatestVersion.effectiveFrom,
+            email: userLatestVersion.email,
+            isDeleted: userLatestVersion.isDeleted,
+            isSystemAdmin: userLatestVersion.isSystemAdmin,
+            name: userLatestVersion.name,
+            organizations
         } as z.infer<typeof AppUser>)
-    }
-
-    /**
-     * Returns all organization ids associated with the app user
-     * @param appUserId - The id of the app user
-     * @returns The organizations associated with the app user
-     */
-    async getUserOrganizationIds(appUserId: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof Organization>['id'][]> {
-        const em = this._em,
-            effectiveDate = new Date(),
-            auors = await em.find(AppUserOrganizationRoleModel, {
-                appUser: { id: appUserId },
-            }),
-            orgIds = (await Promise.all(auors.map(async (auor) => {
-                const latestVersion = await auor.getLatestVersion(effectiveDate, {})
-
-                return latestVersion ? auor.organization.id : undefined
-            }))).filter((orgId) => orgId != undefined)
-
-        return orgIds
     }
 
     /**

@@ -1,6 +1,6 @@
 import { getServerSession } from '#auth'
-import { OrganizationCollectionInteractor } from "~/application/index"
-import { OrganizationCollectionRepository } from "~/server/data/repositories"
+import { OrganizationCollectionInteractor, PermissionInteractor } from "~/application/index"
+import { OrganizationCollectionRepository, PermissionRepository } from "~/server/data/repositories"
 import handleDomainException from "~/server/utils/handleDomainException"
 import { Organization } from "#shared/domain"
 
@@ -14,7 +14,10 @@ export default defineEventHandler(async (event) => {
         session = (await getServerSession(event))!,
         organizationCollectionInteractor = new OrganizationCollectionInteractor({
             repository: new OrganizationCollectionRepository({ em: event.context.em }),
-            userId: session.id
+            permissionInteractor: new PermissionInteractor({
+                userId: session.id,
+                repository: new PermissionRepository({ em: event.context.em })
+            })
         })
 
     try {

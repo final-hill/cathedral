@@ -4,20 +4,18 @@ import { StaticAuditModel, VolatileAuditModel } from "../AuditModel.js";
 import { AppUserModel, } from "./index.js"
 import { OrganizationModel } from "../requirements/index.js";
 
-// static properties
 @Entity({ tableName: 'app_user_organization_role' })
 export class AppUserOrganizationRoleModel extends StaticAuditModel<AppUserOrganizationRoleVersionsModel> {
     @ManyToOne({ primary: true, entity: () => AppUserModel })
     readonly appUser!: AppUserModel;
 
-    @ManyToOne({ primary: true, ref: true, entity: () => OrganizationModel })
+    @ManyToOne({ primary: true, entity: () => OrganizationModel, ref: true })
     readonly organization!: Ref<OrganizationModel>;
 
     @OneToMany(() => AppUserOrganizationRoleVersionsModel, (e) => e.appUserOrganizationRole, { orderBy: { effectiveFrom: 'desc' } })
     readonly versions = new Collection<AppUserOrganizationRoleVersionsModel>(this);
 }
 
-// volatile properties
 @Entity({ tableName: 'app_user_organization_role_versions' })
 export class AppUserOrganizationRoleVersionsModel extends VolatileAuditModel {
     @ManyToOne({ primary: true, entity: () => AppUserOrganizationRoleModel })

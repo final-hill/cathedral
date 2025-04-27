@@ -1,45 +1,32 @@
 import { z } from 'zod'
-import { AppUser, AppRole, Organization, DuplicateEntityException, NotFoundException, PermissionDeniedException } from "#shared/domain";
+import { AppRole, Organization, DuplicateEntityException, NotFoundException, PermissionDeniedException } from "#shared/domain";
 import { slugify } from "#shared/utils";
 import { Interactor } from "./Interactor";
+import { PermissionInteractor } from "./PermissionInteractor";
 import { type OrganizationCollectionRepository } from "~/server/data/repositories";
+import { throws } from 'assert';
 
 export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof Organization>> {
+    private readonly _permissionInteractor: PermissionInteractor;
+
     /**
      * Create a new OrganizationCollectionInteractor
      *
      * @param props.repository - The repository to use
-     * @param props.userId - The id of the user to utilize
+     * @param props.permissionInteractor - The PermissionInteractor instance
      */
     constructor(props: {
         // TODO: This should be Repository<Organization>
         repository: OrganizationCollectionRepository,
-        userId: z.infer<typeof AppUser>['id']
-    }) { super(props) }
+        permissionInteractor: PermissionInteractor
+    }) {
+        super(props);
+        this._permissionInteractor = props.permissionInteractor;
+    }
 
     // FIXME: this shouldn't be necessary
     get repository(): OrganizationCollectionRepository {
         return this._repository as OrganizationCollectionRepository
-    }
-
-    /**
-     * Add an appuser to the organization with a role
-     *
-     * @param props.appUserId The id of the app user to invite
-     * @param props.organizationId The id of the organization to add the app user to
-     * @param props.role The role to assign to the app user
-     * @throws {PermissionDeniedException} If the user is not an admin of the organization
-     * @throws {DuplicateEntityException} If the target app user is already associated with the organization
-     */
-    async addAppUserOrganizationRole(props: { appUserId: string, organizationId: string, role: AppRole }): Promise<void> {
-        if (!await this.isOrganizationAdmin(props.organizationId))
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
-
-        this.repository.addAppUserOrganizationRole({
-            createdById: this._userId,
-            effectiveDate: new Date(),
-            ...props
-        })
     }
 
     /**
@@ -53,15 +40,13 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      */
     async createOrganization(props: Pick<z.infer<typeof Organization>, 'name' | 'description'>): Promise<z.infer<typeof Organization>['id']> {
         const repo = this.repository,
-            effectiveDate = new Date(),
-            newOrgId = await repo.createOrganization({ ...props, createdById: this._userId, effectiveDate })
+            currentUserId = this._permissionInteractor.userId,
+            newOrgId = await repo.createOrganization({ ...props, createdById: currentUserId, creationDate: new Date() })
 
-        await repo.addAppUserOrganizationRole({
-            effectiveDate,
-            appUserId: this._userId,
+        await this.repository.addInitialAppuserOrganizationRole({
+            appUserId: currentUserId,
             organizationId: newOrgId,
-            role: AppRole.ORGANIZATION_ADMIN,
-            createdById: this._userId
+            role: AppRole.ORGANIZATION_ADMIN
         })
 
         return newOrgId
@@ -74,14 +59,13 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      * @throws {NotFoundException} If the organization does not exist
      */
     async deleteOrganizationById(id: z.infer<typeof Organization>['id']): Promise<void> {
-        if (!await this.isOrganizationAdmin(id))
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
-
+        const currentUserId = this._permissionInteractor.userId
+        await this._permissionInteractor.assertOrganizationAdmin(id);
         return this.repository.deleteOrganization({
-            deletedById: this._userId,
+            deletedById: currentUserId,
             deletedDate: new Date(),
             id
-        })
+        });
     }
 
     /**
@@ -91,15 +75,13 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      * @throws {NotFoundException} If the organization does not exist
      */
     async deleteOrganizationBySlug(slug: z.infer<typeof Organization>['slug']): Promise<void> {
-        const org = (await this.repository.findOrganizations({ slug }))[0]
+        const org = (await this.repository.findOrganizations({ slug }))[0];
 
         if (!org)
-            throw new NotFoundException('Organization not found')
+            throw new NotFoundException('Organization not found');
 
-        if (!await this.isOrganizationAdmin(org.id))
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
-
-        return this.deleteOrganizationById(org.id)
+        await this._permissionInteractor.assertOrganizationAdmin(org.id);
+        return this.deleteOrganizationById(org.id);
     }
 
     /**
@@ -109,93 +91,9 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      * @returns The organizations that match the query parameters
      */
     async findOrganizations(query: Partial<z.infer<typeof Organization>> = {}): Promise<z.infer<typeof Organization>[]> {
-        const orgs = await this.repository.findOrganizations(query)
+        const orgs = await this.repository.findOrganizations(query);
 
-        return orgs.filter(async org => await this.isOrganizationReader(org.id))
-    }
-
-    /**
-     * Check if the current user is an admin of the organization or a system admin
-     * @param id The id of the organization
-     * @returns Whether the user is an admin of the organization
-     */
-    async isOrganizationAdmin(id: z.infer<typeof Organization>['id']): Promise<boolean> {
-        try {
-            const appUser = await this.repository.getOrganizationAppUserById({
-                organizationId: id,
-                userId: this._userId
-            })
-
-            if (appUser.isSystemAdmin) return true
-
-            const auor = await this.repository.getAppUserOrganizationRole({
-                organizationId: id,
-                userId: appUser.id
-            }),
-                isOrgAdmin = auor?.role ?
-                    [AppRole.ORGANIZATION_ADMIN].includes(auor.role)
-                    : false
-
-            return isOrgAdmin
-        } catch (error) {
-            return false
-        }
-    }
-
-    /**
-     * Check if the current user is a contributor of the organization or a system admin
-     * @param id The id of the organization
-     * @returns Whether the user is a contributor of the organization
-     */
-    async isOrganizationContributor(id: z.infer<typeof Organization>['id']): Promise<boolean> {
-        try {
-            const appUser = await this.repository.getOrganizationAppUserById({
-                organizationId: id,
-                userId: this._userId
-            })
-
-            if (appUser.isSystemAdmin) return true
-
-            const auor = await this.repository.getAppUserOrganizationRole({
-                organizationId: id,
-                userId: appUser.id
-            }),
-                isOrgContributor = auor?.role ?
-                    [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR].includes(auor.role)
-                    : false
-
-            return isOrgContributor
-        } catch (error) {
-            return false
-        }
-    }
-
-    /**
-     * Check if the current user is a reader of the organization or a system admin
-     * @param id The id of the organization
-     * @returns Whether the user is a reader of the organization
-     */
-    async isOrganizationReader(id: z.infer<typeof Organization>['id']): Promise<boolean> {
-        try {
-            const appUser = await this.repository.getOrganizationAppUserById({
-                organizationId: id,
-                userId: this._userId
-            })
-
-            if (appUser.isSystemAdmin) return true
-
-            const auor = await this.repository.getAppUserOrganizationRole({
-                organizationId: id,
-                userId: appUser.id
-            }),
-                isOrgReader = auor?.role ?
-                    [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR, AppRole.ORGANIZATION_READER].includes(auor.role)
-                    : false
-
-            return isOrgReader
-        } catch (error) {
-            return false
-        }
+        return Promise.all(orgs.filter(async org => await this._permissionInteractor.isOrganizationReader(org.id)));
     }
 
     /**
@@ -208,24 +106,25 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      * @throws {DuplicateEntityException} If an organization already exists with the new name
      */
     async updateOrganizationBySlug(slug: z.infer<typeof Organization>['slug'], props: Pick<Partial<z.infer<typeof Organization>>, 'name' | 'description'>): Promise<void> {
-        const existingOrg = (await this.repository.findOrganizations({ slug }))[0],
-            newSlug = props.name ? slugify(props.name) : existingOrg.slug
+        const currentUserId = this._permissionInteractor.userId,
+            existingOrg = (await this.repository.findOrganizations({ slug }))[0],
+            newSlug = props.name ? slugify(props.name) : existingOrg.slug;
 
         if (!existingOrg)
-            throw new NotFoundException(`Organization not found with slug: ${slug}`)
+            throw new NotFoundException(`Organization not found with slug: ${slug}`);
 
-        if (!await this.isOrganizationContributor(existingOrg.id))
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
+        if (!await this._permissionInteractor.isOrganizationContributor(existingOrg.id))
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action');
 
-        const existingSlugOrg = (await this.repository.findOrganizations({ slug: newSlug }))[0]
+        const existingSlugOrg = (await this.repository.findOrganizations({ slug: newSlug }))[0];
 
         if (existingSlugOrg && existingSlugOrg.id !== existingOrg.id)
-            throw new DuplicateEntityException('Organization already exists with that name')
+            throw new DuplicateEntityException('Organization already exists with that name');
 
         await this.repository.updateOrganizationById(existingOrg.id, {
-            modifiedById: this._userId,
+            modifiedById: currentUserId,
             modifiedDate: new Date(),
             ...props
-        })
+        });
     }
 }
