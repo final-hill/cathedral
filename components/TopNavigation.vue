@@ -41,8 +41,7 @@ const menuItems = ref<DropdownMenuItem[][]>([
 </script>
 
 <template>
-    <nav
-        class="top-nav p-2 grid gap-4 items-center ring ring-(--ui-border) rounded-[calc(var(--ui-radius)*2)] bg-(--ui-bg-elevated)/50">
+    <nav class="top-nav p-2 grid gap-4 items-center ring ring-default rounded-lg bg-elevated/50">
         <NuxtLink to="/" class="site-logo w-8 h-8 justify-self-center">
             <img src="/logo.png" alt="Cathedral Logo" title="Cathedral" />
         </NuxtLink>
@@ -58,7 +57,6 @@ const menuItems = ref<DropdownMenuItem[][]>([
     grid-template-columns: 0.5in 1fr 0.5in;
     grid-template-rows: 1fr;
     grid-template-areas: "logo crumbs profile-menu";
-    /* border: var(--ui-border); */
 
     &>.site-logo {
         grid-area: logo;
