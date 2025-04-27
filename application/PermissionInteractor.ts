@@ -194,10 +194,12 @@ export class PermissionInteractor {
         if (targetUserAuor.role === AppRole.ORGANIZATION_ADMIN && props.role !== AppRole.ORGANIZATION_ADMIN)
             throw new PermissionDeniedException('Forbidden: You cannot remove the last organization admin.');
 
-        await this.updateAppUserRole({
+        await this._repository.updateAppUserRole({
             appUserId: props.appUserId,
             organizationId: props.organizationId,
-            role: props.role
-        });
+            role: props.role,
+            modifiedById: this._userId,
+            modifiedDate: new Date()
+        })
     }
 }

@@ -93,7 +93,7 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
     async findOrganizations(query: Partial<z.infer<typeof Organization>> = {}): Promise<z.infer<typeof Organization>[]> {
         const orgs = await this.repository.findOrganizations(query);
 
-        return orgs.filter(async org => await this._permissionInteractor.isOrganizationReader(org.id));
+        return Promise.all(orgs.filter(async org => await this._permissionInteractor.isOrganizationReader(org.id)));
     }
 
     /**
