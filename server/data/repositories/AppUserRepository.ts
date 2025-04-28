@@ -4,6 +4,7 @@ import { AppUserModel, AppUserVersionsModel } from "../models";
 import { type CreationInfo } from "./CreationInfo";
 import { type UpdationInfo } from "./UpdationInfo";
 import { z } from "zod";
+import { DataModelToDomainModel } from "../mappers";
 
 export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
     /**
@@ -48,36 +49,33 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
      * @throws {NotFoundException} If the user does not exist
      */
     async getUserByEmail(email: z.infer<typeof AppUser>['email']): Promise<z.infer<typeof AppUser>> {
-        const em = this._em
+        const em = this._em;
 
         const userStatic = await em.findOne(AppUserModel, { versions: { email } }),
-            userLatestVersion = await userStatic?.getLatestVersion(new Date())
+            userLatestVersion = await userStatic?.getLatestVersion(new Date());
 
         if (!userStatic || !userLatestVersion)
-            throw new NotFoundException(`User with email ${email} does not exist`)
+            throw new NotFoundException(`User with email ${email} does not exist`);
 
         const orgStatics = await userLatestVersion.appUser.organizations.loadItems(),
             maybeOrgs = await Promise.all(orgStatics.map(async (org) => {
-                const orgLatestVersion = await org.getLatestVersion(new Date())
+                const orgLatestVersion = await org.getLatestVersion(new Date());
                 return orgLatestVersion ? {
                     reqType: ReqType.ORGANIZATION,
                     id: org.id,
                     name: orgLatestVersion.name
-                } : undefined
+                } : undefined;
             })),
-            organizations = maybeOrgs.filter((org) => org != undefined)
+            organizations = maybeOrgs.filter((org) => org != undefined);
 
-        return AppUser.parse({
-            id: userStatic.id,
-            creationDate: userStatic.creationDate,
-            lastLoginDate: userLatestVersion.lastLoginDate,
-            lastModified: userLatestVersion.effectiveFrom,
-            email: userLatestVersion.email,
-            isDeleted: userLatestVersion.isDeleted,
-            isSystemAdmin: userLatestVersion.isSystemAdmin,
-            name: userLatestVersion.name,
+        const mapper = new DataModelToDomainModel()
+
+        return AppUser.parse(await mapper.map({
+            ...userStatic,
+            ...userLatestVersion,
+            // @ts-ignore: this exists in the subclass
             organizations
-        } as z.infer<typeof AppUser>)
+        }));
     }
 
     /**
@@ -89,33 +87,30 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
     async getUserById(id: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof AppUser>> {
         const em = this._em,
             userStatic = await em.findOne(AppUserModel, { id }),
-            userLatestVersion = await userStatic?.getLatestVersion(new Date()) as AppUserVersionsModel | undefined
+            userLatestVersion = await userStatic?.getLatestVersion(new Date()) as AppUserVersionsModel | undefined;
 
         if (!userStatic || !userLatestVersion)
-            throw new NotFoundException(`User with id ${id} does not exist`)
+            throw new NotFoundException(`User with id ${id} does not exist`);
 
         const orgStatics = await userLatestVersion.appUser.organizations.loadItems(),
             maybeOrgs = await Promise.all(orgStatics.map(async (org) => {
-                const orgLatestVersion = await org.getLatestVersion(new Date())
+                const orgLatestVersion = await org.getLatestVersion(new Date());
                 return orgLatestVersion ? {
                     reqType: ReqType.ORGANIZATION,
                     id: org.id,
                     name: orgLatestVersion.name
-                } : undefined
+                } : undefined;
             })),
-            organizations = maybeOrgs.filter((org) => org != undefined)
+            organizations = maybeOrgs.filter((org) => org != undefined);
 
-        return AppUser.parse({
-            id: userStatic.id,
-            creationDate: userStatic.creationDate,
-            lastLoginDate: userLatestVersion.lastLoginDate,
-            lastModified: userLatestVersion.effectiveFrom,
-            email: userLatestVersion.email,
-            isDeleted: userLatestVersion.isDeleted,
-            isSystemAdmin: userLatestVersion.isSystemAdmin,
-            name: userLatestVersion.name,
+        const mapper = new DataModelToDomainModel();
+
+        return AppUser.parse(await mapper.map({
+            ...userStatic,
+            ...userLatestVersion,
+            // @ts-ignore: this exists in the subclass
             organizations
-        } as z.infer<typeof AppUser>)
+        }));
     }
 
     /**
