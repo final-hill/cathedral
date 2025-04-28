@@ -363,7 +363,7 @@ const getActionItems = (item: SchemaType): DropdownMenuItem[] => {
                 onSelect: async () => {
                     const result = await confirmRemoveModal.open({
                         title: `Are you sure you want to remove requirement '${item.name}'?`,
-                    });
+                    }).result;
                     if (result) {
                         $fetch(`/api/requirements/${props.reqType}/proposed/${item.id}/remove`, {
                             method: 'POST',
@@ -400,7 +400,7 @@ const getActionItems = (item: SchemaType): DropdownMenuItem[] => {
                 onSelect: async () => {
                     const result = await confirmRemoveModal.open({
                         title: `Are you sure you want to remove requirement '${item.name}'?`,
-                    });
+                    }).result;
                     if (result) {
                         $fetch(`/api/requirements/${props.reqType}/rejected/${item.id}/remove`, {
                             method: 'POST',
@@ -450,7 +450,7 @@ const getActionItems = (item: SchemaType): DropdownMenuItem[] => {
                 onSelect: async () => {
                     const result = await confirmRemoveModal.open({
                         title: `Are you sure you want to remove requirement '${item.name}'?`,
-                    });
+                    }).result;
                     if (result) {
                         $fetch(`/api/requirements/${props.reqType}/active/${item.id}/remove`, {
                             method: 'POST',
