@@ -541,7 +541,7 @@ const onCreateModalReset = () => {
             @update:model-value="workflowTable?.tableApi?.getColumn('workflowState')?.setFilterValue($event)"
             placeholder="Filter by Workflow State...">
             <template #leading="{ modelValue, ui }">
-                <UChip v-if="modelValue" v-bind="getChip(modelValue)" inset standalone
+                <UChip v-if="modelValue" v-bind="getChip(modelValue as WorkflowState)" inset standalone
                     :size="(ui.itemLeadingChipSize() as ChipProps['size'])" :class="ui.itemLeadingChip()" />
             </template>
         </USelect>
