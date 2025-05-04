@@ -1,32 +1,38 @@
 import { Collection, Entity, ManyToMany, ManyToOne, OneToMany, Property, types } from "@mikro-orm/core";
-import { AppUserOrganizationRoleModel, OrganizationModel, StaticAuditModel, VolatileAuditModel } from "../index.js";
+import { AppCredentialsModel, AppUserOrganizationRoleModel, OrganizationModel } from "../index.js";
 
 @Entity({ tableName: 'app_user' })
-export class AppUserModel extends StaticAuditModel<AppUserVersionsModel> {
+export class AppUserModel {
     @Property({ type: types.uuid, primary: true })
     readonly id!: string
 
     @ManyToMany({ entity: () => OrganizationModel, owner: true, pivotEntity: () => AppUserOrganizationRoleModel })
     readonly organizations = new Collection<OrganizationModel>(this);
 
-    @OneToMany(() => AppUserVersionsModel, (e) => e.appUser, { orderBy: { effectiveFrom: 'desc' } })
-    readonly versions = new Collection<AppUserVersionsModel>(this);
-}
+    @ManyToOne({ entity: () => AppUserModel })
+    readonly createdBy!: AppUserModel;
 
-@Entity({ tableName: 'app_user_versions' })
-export class AppUserVersionsModel extends VolatileAuditModel {
-    @ManyToOne({ entity: () => AppUserModel, primary: true })
-    readonly appUser!: AppUserModel;
+    @Property({ type: types.datetime })
+    readonly creationDate!: Date;
+
+    @ManyToOne({ entity: () => AppUserModel })
+    readonly modifiedBy!: AppUserModel;
 
     @Property({ type: types.string, length: 254 })
     readonly name!: string;
 
-    @Property({ type: types.string, length: 254 })
+    @Property({ type: types.string, length: 254, unique: true })
     readonly email!: string;
 
     @Property({ type: types.datetime, nullable: true })
     readonly lastLoginDate?: Date
 
+    @Property({ type: types.datetime, nullable: true })
+    readonly lastModified?: Date
+
     @Property({ type: types.boolean })
     readonly isSystemAdmin!: boolean
+
+    @OneToMany({ entity: () => AppCredentialsModel, mappedBy: 'appUser' })
+    credentials = new Collection<AppCredentialsModel>(this);
 }

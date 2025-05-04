@@ -13,11 +13,17 @@
 
 ## Project Setup
 
-1. Start Docker Desktop.
-2. Open the project in VS Code.
-3. The project should automatically detect the `.devcontainer` folder and ask you to reopen the project in a container. Before doing so, Copy the `.env.example` file to `.env` and fill in the necessary values.
-4. Reopen the project in the dev container. (You can also do this by clicking on the blue button in the bottom left corner of the window.)
-5. The project will now start downloading the necessary dependencies and setting up the environment.
+1. Update your local machine hosts file to include the following entry:
+
+```
+127.0.0.1 cathedral.local
+```
+
+2. Start Docker Desktop.
+3. Open the project in VS Code.
+4. The project should automatically detect the `.devcontainer` folder and ask you to reopen the project in a container. Before doing so, Copy the `.env.example` file to `.env` and fill in the necessary values.
+5. Reopen the project in the dev container. (You can also do this by clicking on the blue button in the bottom left corner of the window.)
+6. The project will now start downloading the necessary dependencies and setting up the environment.
   1. Docker images
   2. Node modules
   3. VS Code extensions
@@ -32,24 +38,9 @@ There are a number of commands defined in `package.json` that can be run to popu
 
 ## Running the project
 
-The project can be run in debug mode via: `npm run dev`. You can then access the application at `https://localhost:3000`.
+The project can be run in debug mode via: `npm run dev`. You can then access the application at `https://cathedral.local`.
 
-A production build can be run via: `npm run build` followed by `npm run preview`. You can then access the application at `https://localhost:3000`.
-
-## Application Infrastructure
-
-The application is built using the following primary technologies:
-
-- [Nuxt.js](https://nuxtjs.org/)
-  - [TypeScript](https://www.typescriptlang.org/)
-  - [PrimeVue](https://primevue.org/)
-  - [PrimeFlex](https://primeflex.org/)
-  - [Zod](https://zod.dev/)
-- [@azure/msal-node](https://www.npmjs.com/package/@azure/msal-node)
-- [Node.js](http://nodejs.org/)
-- [PostgreSQL](https://www.postgresql.org/)
-  - [MikroORM](https://mikro-orm.io/)
-- [Docker](https://www.docker.com/)
+A production build can be run via: `npm run build` followed by `npm run preview`. You can then access the application at `https://cathedral.local`.
 
 ## Data model
 

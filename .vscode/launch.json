@@ -8,12 +8,11 @@
             "request": "launch",
             "name": "Brave",
             "runtimeExecutable": "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
-            // "runtimeExecutable": "C:\\Program Files (x86)\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
             "runtimeArgs": [
                 "--remote-debugging-port=9222"
             ],
             "userDataDir": true,
-            "url": "https://localhost:3000",
+            "url": "https://cathedral.localhost",
             "webRoot": "${workspaceFolder}"
         },
         {

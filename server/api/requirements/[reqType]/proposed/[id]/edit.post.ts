@@ -1,5 +1,4 @@
 // Description: This file handles the editing of a proposed requirement in the system. It validates the request parameters and body, checks permissions, and updates the requirement in the database.
-import { getServerSession } from '#auth'
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from "~/application"
 import { AppUserRepository, OrganizationRepository, PermissionRepository, RequirementRepository } from '~/server/data/repositories'
 import { Organization, ReqType, Solution } from '~/shared/domain'
@@ -36,9 +35,9 @@ export default defineEventHandler(async (event) => {
             return value.organizationId !== undefined || value.organizationSlug !== undefined;
         }, "At least one of organizationId or organizationSlug should be provided"),
         { solutionSlug, organizationId: orgId, organizationSlug: orgSlug, ...reqProps } = await validateEventBody(event, bodySchema),
-        session = (await getServerSession(event))!,
+        session = (await requireUserSession(event))!,
         permissionInteractor = new PermissionInteractor({
-            userId: session.id,
+            userId: session.user.id,
             repository: new PermissionRepository({ em: event.context.em })
         }),
         organizationInteractor = new OrganizationInteractor({

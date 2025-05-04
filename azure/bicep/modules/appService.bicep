@@ -98,7 +98,7 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
       }
     ]
     siteConfig: {
-      linuxFxVersion: 'NODE|20-lts'
+      linuxFxVersion: 'NODE|22-lts'
       appCommandLine: 'node server/index.mjs'
       ftpsState: 'Disabled'
       http20Enabled: true

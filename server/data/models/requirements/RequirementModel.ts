@@ -1,5 +1,5 @@
 import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, PrimaryKey, Property, types } from '@mikro-orm/core';
-import { StaticAuditModel, VolatileAuditModel } from '../index.js';
+import { StaticAuditModel, VolatileAuditModel } from './AuditModel.js';
 import { ReqType, WorkflowState } from '../../../../shared/domain/requirements/enums.js';
 import { type ReqId } from '../../../../shared/domain/requirements/Requirement.js';
 

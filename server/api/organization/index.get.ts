@@ -1,6 +1,5 @@
 import { OrganizationCollectionInteractor, PermissionInteractor } from '~/application'
 import { OrganizationCollectionRepository, PermissionRepository } from "~/server/data/repositories"
-import { getServerSession } from '#auth'
 import handleDomainException from "~/server/utils/handleDomainException"
 import { Organization } from "#shared/domain"
 
@@ -11,11 +10,11 @@ const querySchema = Organization.innerType().partial()
  */
 export default defineEventHandler(async (event) => {
     const query = await validateEventParams(event, querySchema),
-        session = (await getServerSession(event))!,
+        session = (await requireUserSession(event))!,
         orgColInt = new OrganizationCollectionInteractor({
             repository: new OrganizationCollectionRepository({ em: event.context.em }),
             permissionInteractor: new PermissionInteractor({
-                userId: session.id,
+                userId: session.user.id,
                 repository: new PermissionRepository({ em: event.context.em })
             })
         })

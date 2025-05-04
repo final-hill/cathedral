@@ -3,7 +3,7 @@ import { Organization, DuplicateEntityException, NotFoundException, WorkflowStat
 import { slugify } from "#shared/utils";
 import { Repository } from "./Repository";
 import { OrganizationRepository } from "./OrganizationRepository";
-import { AppUserOrganizationRoleModel, AppUserOrganizationRoleVersionsModel, OrganizationModel, OrganizationVersionsModel } from "../models";
+import { AppUserOrganizationRoleModel, OrganizationModel, OrganizationVersionsModel } from "../models";
 import { DataModelToDomainModel, ReqQueryToModelQuery } from "../mappers";
 import { v7 as uuid7 } from 'uuid'
 import { type CreationInfo } from "./CreationInfo";
@@ -19,26 +19,22 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
     }): Promise<void> {
         const em = this._em,
             creationDate = new Date(),
-            existingAuorStaticModel = await em.findOne(AppUserOrganizationRoleModel, {
+            existingAuorModel = await em.findOne(AppUserOrganizationRoleModel, {
                 appUser: props.appUserId,
                 organization: props.organizationId
             }),
-            existingLatestVersion = await existingAuorStaticModel?.getLatestVersion(creationDate),
-            existingRole = existingLatestVersion?.role
+            existingRole = existingAuorModel?.role
 
-        if (existingAuorStaticModel || existingRole)
+        if (existingAuorModel || existingRole)
             throw new DuplicateEntityException('App user organization role already exists')
 
-        em.create(AppUserOrganizationRoleVersionsModel, {
-            appUserOrganizationRole: em.create(AppUserOrganizationRoleModel, {
-                appUser: props.appUserId,
-                organization: props.organizationId,
-                createdBy: props.appUserId,
-                creationDate: creationDate
-            }),
+        em.create(AppUserOrganizationRoleModel, {
+            appUser: props.appUserId,
+            organization: props.organizationId,
+            createdBy: props.appUserId,
+            creationDate: creationDate,
             role: props.role,
-            isDeleted: false,
-            effectiveFrom: creationDate,
+            lastModified: creationDate,
             modifiedBy: props.appUserId
         })
 

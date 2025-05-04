@@ -1,6 +1,5 @@
 import { z } from "zod"
 import { AppUser, AppUserOrganizationRole, Organization } from "#shared/domain"
-import { getServerSession } from '#auth'
 import { OrganizationCollectionInteractor, PermissionInteractor } from "~/application"
 import { AppUserRepository, OrganizationCollectionRepository, PermissionRepository } from "~/server/data/repositories";
 import { AppUserInteractor } from "~/application/AppUserInteractor";
@@ -22,9 +21,9 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { email, organizationId, organizationSlug, role } = await validateEventBody(event, bodySchema),
-        session = (await getServerSession(event))!,
+        session = (await requireUserSession(event))!,
         permissionInteractor = new PermissionInteractor({
-            userId: session.id,
+            userId: session.user.id,
             repository: new PermissionRepository({ em: event.context.em })
         }),
         appUserInteractor = new AppUserInteractor({
@@ -38,7 +37,7 @@ export default defineEventHandler(async (event) => {
 
     try {
         const orgId = organizationId ?? (await organizationInteractor.findOrganizations({ slug: organizationSlug }))[0]?.id,
-            appUser = (await appUserInteractor.getAppUserByEmail(email))!
+            appUser = (await appUserInteractor.getUserByEmail(email))!
 
         return await permissionInteractor.addAppUserOrganizationRole({
             appUserId: appUser.id,

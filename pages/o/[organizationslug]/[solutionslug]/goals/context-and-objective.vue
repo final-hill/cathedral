@@ -2,7 +2,7 @@
 import { ContextAndObjective, ReqType } from '#shared/domain';
 
 useHead({ title: 'Context and Objective' })
-definePageMeta({ name: 'Context and Objective' })
+definePageMeta({ name: 'Context and Objective', middleware: 'auth' })
 
 const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute('Context and Objective').params
 </script>

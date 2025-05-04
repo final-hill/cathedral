@@ -1,4 +1,3 @@
-import { getServerSession } from '#auth'
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from "~/application"
 import { AppUserRepository, OrganizationRepository, PermissionRepository } from "~/server/data/repositories"
 import handleDomainException from "~/server/utils/handleDomainException"
@@ -11,9 +10,9 @@ const paramSchema = Organization.innerType().pick({ slug: true })
  */
 export default defineEventHandler(async (event) => {
     const { slug } = await validateEventParams(event, paramSchema),
-        session = (await getServerSession(event))!,
+        session = (await requireUserSession(event))!,
         permissionInteractor = new PermissionInteractor({
-            userId: session.id,
+            userId: session.user.id,
             repository: new PermissionRepository({ em: event.context.em })
         }),
         organizationInteractor = new OrganizationInteractor({

@@ -1,4 +1,3 @@
-import { getServerSession } from '#auth'
 import { OrganizationCollectionInteractor, PermissionInteractor } from "~/application/index"
 import { OrganizationCollectionRepository, PermissionRepository } from "~/server/data/repositories"
 import handleDomainException from "~/server/utils/handleDomainException"
@@ -11,14 +10,16 @@ const bodySchema = Organization.innerType().pick({ name: true, description: true
  */
 export default defineEventHandler(async (event) => {
     const { name, description } = await validateEventBody(event, bodySchema),
-        session = (await getServerSession(event))!,
+        session = (await requireUserSession(event))!,
         organizationCollectionInteractor = new OrganizationCollectionInteractor({
             repository: new OrganizationCollectionRepository({ em: event.context.em }),
             permissionInteractor: new PermissionInteractor({
-                userId: session.id,
+                userId: session.user.id,
                 repository: new PermissionRepository({ em: event.context.em })
             })
         })
+
+    console.log("Creating organization. with session: ", session)
 
     try {
         const newOrgId = await organizationCollectionInteractor.createOrganization({ name, description }),

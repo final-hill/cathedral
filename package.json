@@ -1,6 +1,6 @@
 {
     "name": "@final-hill/cathedral",
-    "version": "0.23.1",
+    "version": "0.24.0",
     "description": "Requirements management system",
     "keywords": [],
     "private": true,
@@ -42,12 +42,15 @@
         "@mikro-orm/reflection": "^6.4.13",
         "@mikro-orm/seeder": "^6.4.13",
         "@nuxt/ui": "^3.1.0",
-        "@sidebase/nuxt-auth": "^0.10.1",
+        "@simplewebauthn/browser": "^11.0.0",
+        "@simplewebauthn/server": "^11.0.0",
         "@slack/web-api": "^7.9.1",
         "@vite-pwa/nuxt": "^1.0.0",
         "mermaid": "^11.6.0",
         "mitt": "^3.0.1",
+        "node-cache": "^5.1.2",
         "nuxt": "^3.16.2",
+        "nuxt-auth-utils": "^0.5.20",
         "nuxt-security": "^2.2.0",
         "openai": "^4.96.0",
         "pg": "^8.15.6",
@@ -72,6 +75,7 @@
         "ts-node": "^10.9.2",
         "tsx": "^4.19.3",
         "typescript": "^5.8.3",
+        "vite-plugin-devtools-json": "^0.0.3",
         "vitest": "^3.1.2",
         "vue-tsc": "^2.2.10"
     }

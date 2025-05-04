@@ -2,9 +2,7 @@
 <script setup lang="ts">
 import type { NuxtError } from '#app'
 
-definePageMeta({
-    auth: { unauthenticatedOnly: true, navigateAuthenticatedTo: '/' }
-})
+definePageMeta({ middleware: 'guest' })
 
 const props = defineProps({
     error: Object as () => NuxtError

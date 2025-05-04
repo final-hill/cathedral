@@ -1,41 +1,33 @@
 import type { EntityManager } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
-import { AppUserModel, AppUserVersionsModel } from '../server/data/models/application/index.js';
+import { AppUserModel } from '../server/data/models/application/index.js';
 import { NIL as SYSTEM_USER_ID } from 'uuid'
 
 export class AppUserSeeder extends Seeder {
     private async _createSysAdmin(
         em: EntityManager,
-        props: Pick<AppUserModel, "id"> & Partial<Pick<AppUserVersionsModel, 'name' | 'email'>>
+        props: Pick<AppUserModel, 'id' | 'name' | 'email'>
     ): Promise<void> {
         console.log(`Creating system admin user with id: ${props.id}`)
-
-        const name = props.id === SYSTEM_USER_ID ? 'System Admin' : props.name ?? '{Unknown}',
-            email = props.id === SYSTEM_USER_ID ? 'admin@example.com' : props.email ?? 'unknown@example.com'
 
         const effectiveFrom = new Date(),
             existingSysAdmin = await em.findOne(AppUserModel, {
                 id: props.id,
-                versions: { isSystemAdmin: true }
-            }),
-            latestSysAdminVersion = await existingSysAdmin?.getLatestVersion(new Date(), { isSystemAdmin: true })
+                isSystemAdmin: true
+            })
 
-        if (!latestSysAdminVersion || latestSysAdminVersion.isDeleted) {
-            em.create(AppUserVersionsModel, {
-                appUser: em.create(AppUserModel, {
-                    id: props.id,
-                    createdBy: SYSTEM_USER_ID,
-                    creationDate: effectiveFrom
-                }),
-                effectiveFrom,
-                name,
-                email,
+        if (!existingSysAdmin) {
+            em.create(AppUserModel, {
+                id: props.id,
+                createdBy: SYSTEM_USER_ID,
+                creationDate: effectiveFrom,
+                lastModified: effectiveFrom,
+                name: props.name,
+                email: props.email,
                 isSystemAdmin: true,
-                isDeleted: false,
                 modifiedBy: SYSTEM_USER_ID
             })
         } else {
-            // System admin already exists
             return
         }
 
@@ -43,16 +35,10 @@ export class AppUserSeeder extends Seeder {
     }
 
     async run(em: EntityManager): Promise<void> {
-        const isDev = process.env.NODE_ENV === 'development';
-
         await this._createSysAdmin(em, {
             id: SYSTEM_USER_ID,
-            name: 'System Admin'
+            name: 'System Admin',
+            email: 'admin@example.com'
         })
-
-        if (isDev) {
-            const mlHaufeId = '561eec8c-55b8-4857-bab1-4e11265251cd'
-            await this._createSysAdmin(em, { id: mlHaufeId })
-        }
     }
 }

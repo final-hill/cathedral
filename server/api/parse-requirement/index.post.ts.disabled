@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { getServerSession } from '#auth'
 import ormConfig from "~/mikro-orm.config";
 import { OrganizationInteractor } from "~/application/OrganizationInteractor.js";
 import NaturalLanguageToRequirementService from "~/server/data/services/NaturalLanguageToRequirementService.js";
@@ -19,9 +18,9 @@ const appConfig = useRuntimeConfig()
  */
 export default defineEventHandler(async (event) => {
     const { statement, solutionId, organizationSlug } = await validateEventBody(event, bodySchema),
-        session = (await getServerSession(event))!,
+        session = (await requireUserSession(event))!,
         organizationInteractor = new OrganizationInteractor({
-            userId: session.id,
+            userId: session.user.id,
             repository: new OrganizationRepository({ config: ormConfig, organizationSlug })
         }),
         naturalLanguageToRequirementService = new NaturalLanguageToRequirementService({

@@ -1,4 +1,3 @@
-import { getServerSession } from '#auth'
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from "~/application"
 import { AppUserRepository, OrganizationRepository, PermissionRepository, RequirementRepository } from '~/server/data/repositories'
 import handleDomainException from '../handleDomainException'
@@ -20,9 +19,9 @@ export default function getLatestByType(workflowState: WorkflowState) {
     return defineEventHandler(async (event) => {
         const { reqType } = await validateEventParams(event, paramSchema),
             { solutionSlug, organizationId, organizationSlug } = await validateEventQuery(event, validatedQuerySchema),
-            session = (await getServerSession(event))!,
+            session = (await requireUserSession(event))!,
             permissionInteractor = new PermissionInteractor({
-                userId: session.id,
+                userId: session.user.id,
                 repository: new PermissionRepository({ em: event.context.em })
             }),
             organizationInteractor = new OrganizationInteractor({

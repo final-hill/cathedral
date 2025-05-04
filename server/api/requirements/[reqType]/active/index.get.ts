@@ -1,5 +1,4 @@
 // Get the current Active requirements by type
-import { getServerSession } from '#auth'
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from "~/application"
 import { AppUserRepository, OrganizationRepository, PermissionRepository, RequirementRepository } from '~/server/data/repositories'
 import { Organization, ReqType, Solution } from '~/shared/domain'
@@ -20,9 +19,9 @@ const querySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { reqType } = await validateEventParams(event, paramSchema),
         { solutionSlug, organizationId, organizationSlug } = await validateEventQuery(event, querySchema),
-        session = (await getServerSession(event))!,
+        session = (await requireUserSession(event))!,
         permissionInteractor = new PermissionInteractor({
-            userId: session.id,
+            userId: session.user.id,
             repository: new PermissionRepository({ em: event.context.em })
         }),
         organizationInteractor = new OrganizationInteractor({
