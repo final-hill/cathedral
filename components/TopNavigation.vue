@@ -2,8 +2,11 @@
 import { deSlugify } from '#shared/utils';
 import type { DropdownMenuItem } from '@nuxt/ui';
 
-const { data, signIn, signOut } = useAuth(),
-    user = data.value?.user,
+const { loggedIn, user, session, fetch, clear, openInPopup } = useUserSession(),
+    { register, authenticate } = useWebAuthn({
+        registerEndpoint: '/api/webauthn/register',
+        authenticateEndpoint: '/api/webauthn/authenticate',
+    }),
     router = useRouter()
 
 let getCrumbs = () => {
@@ -30,14 +33,34 @@ const avatarFallback = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
 const menuItems = ref<DropdownMenuItem[][]>([
     [{
         type: 'label',
-        label: user?.name ?? 'Guest',
-        avatar: { src: user?.image ?? avatarFallback }
+        label: user.value?.name ?? 'Anonymous',
+        avatar: { src: avatarFallback }
     }], [{
-        label: user ? 'Sign Out' : 'Sign In',
-        icon: user ? 'i-lucide-user-round-x' : 'i-lucide-user-check',
-        onSelect: user ? () => signOut() : () => signIn(undefined)
+        type: 'label',
+        label: user.value?.email ?? 'anonymous@example.com'
+    }], [{
+        label: loggedIn ? 'Sign Out' : 'Sign In',
+        icon: loggedIn ? 'i-lucide-user-round-x' : 'i-lucide-user-check',
+        onSelect: async () => loggedIn ? await clear() : openInPopup('/auth/webauthn')
     }]
-])
+]);
+
+watch(user, () => {
+    menuItems.value = [
+        [{
+            type: 'label',
+            label: user.value?.name ?? 'Anonymous',
+            avatar: { src: avatarFallback }
+        }], [{
+            type: 'label',
+            label: user.value?.email ?? 'anonymous@example.com'
+        }], [{
+            label: loggedIn ? 'Sign Out' : 'Sign In',
+            icon: loggedIn ? 'i-lucide-user-round-x' : 'i-lucide-user-check',
+            onSelect: async () => loggedIn ? await clear() : openInPopup('/auth/webauthn')
+        }]
+    ];
+});
 </script>
 
 <template>
@@ -47,9 +70,11 @@ const menuItems = ref<DropdownMenuItem[][]>([
         </NuxtLink>
         <UBreadcrumb :items="crumbs" class="breadcrumb" />
 
-        <UDropdownMenu :items="menuItems" class="profile-menu">
-            <UButton icon="i-lucide-user" variant="outline" color="primary" size="xl" class="justify-self-center" />
-        </UDropdownMenu>
+        <AuthState v-slot="{ loggedIn }">
+            <UDropdownMenu :items="menuItems" class="profile-menu" v-if="loggedIn">
+                <UButton icon="i-lucide-user" variant="outline" color="primary" size="xl" class="justify-self-center" />
+            </UDropdownMenu>
+        </AuthState>
     </nav>
 </template>
 <style>

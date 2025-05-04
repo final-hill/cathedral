@@ -1,5 +1,5 @@
 import { AppUserOrganizationRole, AppRole, NotFoundException, Organization, AppUser, ReqType, DuplicateEntityException } from "#shared/domain";
-import { AppUserModel, AppUserOrganizationRoleModel, AppUserOrganizationRoleVersionsModel, AppUserVersionsModel } from "../models";
+import { AppUserModel, AppUserOrganizationRoleModel } from "../models";
 import { type CreationInfo } from "./CreationInfo";
 import { type DeletionInfo } from "./DeletionInfo";
 import { type UpdationInfo } from "./UpdationInfo";
@@ -16,26 +16,22 @@ export class PermissionRepository extends Repository<z.infer<typeof AppUserOrgan
      */
     async addAppUserOrganizationRole(auor: { appUserId: string, organizationId: string, role: AppRole } & CreationInfo): Promise<void> {
         const em = this._em,
-            staticModel = await em.findOneOrFail(AppUserOrganizationRoleModel, {
+            auorModel = await em.findOneOrFail(AppUserOrganizationRoleModel, {
                 appUser: auor.appUserId,
                 organization: auor.organizationId
             }),
-            latestVersion = await staticModel.getLatestVersion(auor.creationDate),
-            existingRole = latestVersion?.role
+            existingRole = auorModel?.role
 
         if (existingRole === auor.role)
             throw new DuplicateEntityException('App user organization role already exists with the same role')
 
-        em.create(AppUserOrganizationRoleVersionsModel, {
-            appUserOrganizationRole: latestVersion?.appUserOrganizationRole ?? em.create(AppUserOrganizationRoleModel, {
-                appUser: auor.appUserId,
-                organization: auor.organizationId,
-                createdBy: auor.createdById,
-                creationDate: auor.creationDate
-            }),
+        em.create(AppUserOrganizationRoleModel, {
+            appUser: auor.appUserId,
+            organization: auor.organizationId,
+            createdBy: auor.createdById,
+            creationDate: auor.creationDate,
             role: auor.role,
-            isDeleted: false,
-            effectiveFrom: auor.creationDate,
+            lastModified: auor.creationDate,
             modifiedBy: auor.appUserId
         })
 
@@ -52,23 +48,15 @@ export class PermissionRepository extends Repository<z.infer<typeof AppUserOrgan
      */
     async deleteAppUserOrganizationRole(auor: { appUserId: string, organizationId: z.infer<typeof Organization>['id'] } & DeletionInfo): Promise<void> {
         const em = this._em,
-            auors = await em.findOne(AppUserOrganizationRoleModel, {
+            auorModel = await em.findOne(AppUserOrganizationRoleModel, {
                 appUser: auor.appUserId,
                 organization: auor.organizationId,
-            }),
-            auorv = await auors?.getLatestVersion(auor.deletedDate)
+            })
 
-        if (!auors || !auorv)
+        if (!auorModel)
             throw new NotFoundException('App user organization role does not exist')
 
-        em.create(AppUserOrganizationRoleVersionsModel, {
-            ...auorv,
-            isDeleted: true,
-            effectiveFrom: auor.deletedDate,
-            modifiedBy: auor.deletedById
-        })
-
-        await em.flush()
+        em.removeAndFlush(auorModel)
     }
 
     /**
@@ -81,29 +69,25 @@ export class PermissionRepository extends Repository<z.infer<typeof AppUserOrgan
      */
     async findAppUserOrganizationRoles(filter: { appUserId?: string, organizationId?: string, role?: AppRole }): Promise<z.infer<typeof AppUserOrganizationRole>[]> {
         const em = this._em,
-            auors = await em.find(AppUserOrganizationRoleModel, {
+            auorModels = await em.find(AppUserOrganizationRoleModel, {
                 organization: filter.organizationId,
                 appUser: filter.appUserId
-            }, { populate: ['appUser', 'createdBy'] });
+            }, { populate: ['appUser', 'createdBy', 'organization'] });
 
-        return Promise.all(auors.map(async auor => {
-            const auorv = await auor.getLatestVersion(new Date(), { role: filter.role });
-            if (!auorv) return null;
+        return Promise.all(auorModels.map(async auor => {
+            if (auor.role !== filter.role)
+                return null;
 
-            const appUserVersion = await auor.appUser.getLatestVersion(new Date()),
-                createdByVersion = await auor.createdBy.getLatestVersion(new Date()),
-                modifiedByVersion = await auorv.modifiedBy.getLatestVersion(new Date()),
-                orgVersion = await auor.organization.load().then(org => org?.getLatestVersion(new Date()))
+            const orgLatestVersion = await auor.organization.load().then(org => org?.getLatestVersion(new Date()));
 
             return AppUserOrganizationRole.parse({
-                appUser: { id: auor.appUser.id, name: appUserVersion!.name },
-                organization: { id: auor.organization.id, name: orgVersion!.name },
-                role: auorv.role,
-                isDeleted: auorv.isDeleted,
-                createdBy: { id: auor.createdBy.id, name: createdByVersion!.name },
-                modifiedBy: { id: auorv.modifiedBy.id, name: modifiedByVersion!.name },
+                appUser: { id: auor.appUser.id, name: auor.appUser!.name },
+                organization: { id: auor.organization.id, name: orgLatestVersion!.name },
+                role: auor.role,
+                createdBy: { id: auor.createdBy.id, name: auor.createdBy!.name },
+                modifiedBy: { id: auor.modifiedBy.id, name: auor.modifiedBy!.name },
                 creationDate: auor.creationDate,
-                lastModified: auorv.effectiveFrom
+                lastModified: auor.lastModified
             });
         })).then(results => results.filter(Boolean) as z.infer<typeof AppUserOrganizationRole>[]);
     }
@@ -117,29 +101,24 @@ export class PermissionRepository extends Repository<z.infer<typeof AppUserOrgan
      */
     async getAppUserOrganizationRole(appUserId: z.infer<typeof AppUser>['id'], organizationId: z.infer<typeof Organization>['id']): Promise<z.infer<typeof AppUserOrganizationRole>> {
         const em = this._em,
-            auor = await em.findOne(AppUserOrganizationRoleModel, {
+            auorModel = await em.findOne(AppUserOrganizationRoleModel, {
                 appUser: appUserId,
                 organization: organizationId
-            }, { populate: ['appUser', 'organization', 'createdBy'] }),
-            auorv = await auor?.getLatestVersion(new Date());
+            }, { populate: ['appUser', 'organization', 'createdBy'] })
 
-        if (!auor || !auorv)
+        if (!auorModel)
             throw new NotFoundException('App user organization role does not exist');
 
-        const appUserVersion = await auor.appUser.getLatestVersion(new Date()),
-            createdByVersion = await auor.createdBy.getLatestVersion(new Date()),
-            modifiedByVersion = await auorv.modifiedBy.getLatestVersion(new Date()),
-            orgVersion = await auor.organization.load().then(org => org?.getLatestVersion(new Date()))
+        const orgLatestVersion = await auorModel.organization.load().then(org => org?.getLatestVersion(new Date()))
 
         return AppUserOrganizationRole.parse({
-            appUser: { id: auor.appUser.id, name: appUserVersion!.name },
-            organization: { id: auor.organization.id, name: orgVersion!.name },
-            role: auorv.role,
-            isDeleted: auorv.isDeleted,
-            createdBy: { id: auor.createdBy.id, name: createdByVersion!.name },
-            modifiedBy: { id: auorv.modifiedBy.id, name: modifiedByVersion!.name },
-            creationDate: auor.creationDate,
-            lastModified: auorv.effectiveFrom
+            appUser: { id: auorModel.appUser.id, name: auorModel.appUser!.name },
+            organization: { id: auorModel.organization.id, name: orgLatestVersion!.name },
+            role: auorModel.role,
+            createdBy: { id: auorModel.createdBy.id, name: auorModel.createdBy!.name },
+            modifiedBy: { id: auorModel.modifiedBy.id, name: auorModel.modifiedBy!.name },
+            creationDate: auorModel.creationDate,
+            lastModified: auorModel.lastModified
         });
     }
 
@@ -152,13 +131,12 @@ export class PermissionRepository extends Repository<z.infer<typeof AppUserOrgan
     // TODO: this is duplicated with the AppUserRepository
     async getUserById(id: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof AppUser>> {
         const em = this._em,
-            userStatic = await em.findOne(AppUserModel, { id }),
-            userLatestVersion = await userStatic?.getLatestVersion(new Date()) as AppUserVersionsModel | undefined
+            userModel = await em.findOne(AppUserModel, { id })
 
-        if (!userStatic || !userLatestVersion)
+        if (!userModel)
             throw new NotFoundException(`User with id ${id} does not exist`)
 
-        const orgStatics = await userLatestVersion.appUser.organizations.loadItems(),
+        const orgStatics = await userModel.organizations.loadItems(),
             maybeOrgs = await Promise.all(orgStatics.map(async (org) => {
                 const orgLatestVersion = await org.getLatestVersion(new Date())
                 return orgLatestVersion ? {
@@ -170,14 +148,13 @@ export class PermissionRepository extends Repository<z.infer<typeof AppUserOrgan
             organizations = maybeOrgs.filter((org) => org != undefined)
 
         return AppUser.parse({
-            id: userStatic.id,
-            creationDate: userStatic.creationDate,
-            lastLoginDate: userLatestVersion.lastLoginDate,
-            lastModified: userLatestVersion.effectiveFrom,
-            email: userLatestVersion.email,
-            isDeleted: userLatestVersion.isDeleted,
-            isSystemAdmin: userLatestVersion.isSystemAdmin,
-            name: userLatestVersion.name,
+            id: userModel.id,
+            creationDate: userModel.creationDate,
+            lastLoginDate: userModel.lastLoginDate,
+            lastModified: userModel.lastModified,
+            email: userModel.email,
+            isSystemAdmin: userModel.isSystemAdmin,
+            name: userModel.name,
             organizations
         } as z.infer<typeof AppUser>)
     }
@@ -193,19 +170,17 @@ export class PermissionRepository extends Repository<z.infer<typeof AppUserOrgan
      */
     async updateAppUserRole(props: { appUserId: z.infer<typeof AppUser>['id'], organizationId: z.infer<typeof Organization>['id'], role: AppRole } & UpdationInfo): Promise<void> {
         const em = this._em,
-            auor = await em.findOne(AppUserOrganizationRoleModel, {
+            auorModel = await em.findOne(AppUserOrganizationRoleModel, {
                 appUser: props.appUserId,
                 organization: props.organizationId
             });
 
-        if (!auor)
+        if (!auorModel)
             throw new NotFoundException('App user organization role does not exist');
 
-        em.create(AppUserOrganizationRoleVersionsModel, {
-            appUserOrganizationRole: auor,
+        em.assign(auorModel, {
             role: props.role,
-            isDeleted: false,
-            effectiveFrom: props.modifiedDate,
+            lastModified: props.modifiedDate,
             modifiedBy: props.modifiedById
         });
 

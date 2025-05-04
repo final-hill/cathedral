@@ -3,7 +3,7 @@ import { slugify } from '#shared/utils';
 import { z } from 'zod';
 import { Organization } from '#shared/domain';
 
-definePageMeta({ name: 'New Organization' })
+definePageMeta({ name: 'New Organization', middleware: 'auth' })
 useHead({ title: 'New Organization' })
 
 const router = useRouter(),

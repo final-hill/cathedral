@@ -1,3 +1,5 @@
+import devtoolsJson from 'vite-plugin-devtools-json';
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     compatibilityDate: '2025-04-14',
@@ -9,10 +11,11 @@ export default defineNuxtConfig({
             key: './cert/localhost.key',
             cert: './cert/localhost.crt'
         },
-        // Below should be used when local development is done with a custom domain
-        // cors: {
-        //     origin: ['https://example.com'],
-        // }
+        cors: {
+            origin: ['https://cathedral.localhost'],
+        },
+        host: 'cathedral.localhost',
+        url: 'https://cathedral.localhost'
     },
     experimental: {
         decorators: true,
@@ -28,14 +31,14 @@ export default defineNuxtConfig({
         dirs: ['~/components']
     },
     // https://vite-pwa-org.netlify.app/frameworks/nuxt
-    // https://sidebase.io/nuxt-auth/getting-started
     // https://icones.js.org/collection/lucide
+    // https://nuxt.com/modules/auth-utils
     modules: [
         '@nuxt/ui',
         '@vite-pwa/nuxt',
-        '@sidebase/nuxt-auth',
         'nuxt-security',
-        '@nuxt/test-utils/module'
+        '@nuxt/test-utils/module',
+        'nuxt-auth-utils'
     ],
     runtimeConfig: {
         // The private keys which are only available within server-side
@@ -68,21 +71,8 @@ export default defineNuxtConfig({
         // The public keys which are available both client-side and server-side
         public: {}
     },
-    // https://auth.sidebase.io/guide/application-side/configuration
-    // https://sidebase.io/nuxt-auth/configuration/nuxt-config
     auth: {
-        isEnabled: true,
-        disableServerSideAuth: false,
-        baseURL: `${process.env.NUXT_ORIGIN}/api/auth`,
-        // https://auth.sidebase.io/guide/application-side/protecting-pages#global-middleware
-        globalAppMiddleware: true,
-        provider: {
-            type: 'authjs',
-        },
-        sessionRefresh: {
-            enableOnWindowFocus: true,
-            enablePeriodically: 30000
-        }
+        webAuthn: true
     },
     // https://nuxt.com/modules/security
     security: {
@@ -144,6 +134,10 @@ export default defineNuxtConfig({
                 }
             }
         },
+        plugins: [
+            // https://github.com/ChromeDevTools/vite-plugin-devtools-json
+            devtoolsJson()
+        ],
         server: {
             hmr: {
                 protocol: 'wss',

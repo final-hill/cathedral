@@ -5,7 +5,7 @@ import { DuplicateEntityException, MismatchException, NotFoundException, Permiss
  * @param error The domain exception
  * @throws {Error} The HTTP error
  */
-export default function handleDomainException(error: Error) {
+export default function handleDomainException(error: Error): never {
     if (error instanceof DuplicateEntityException)
         throw createError({ status: 409, statusMessage: `Conflict: ${error.message}`, ...error })
     else if (error instanceof NotFoundException)

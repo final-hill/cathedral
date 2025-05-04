@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 useHead({ title: 'Solution' })
-definePageMeta({ name: 'Solution' })
+definePageMeta({ name: 'Solution', middleware: 'auth' })
 
 const { $eventBus } = useNuxtApp(),
     { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Solution').params,

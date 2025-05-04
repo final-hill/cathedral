@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { getServerSession } from '#auth'
 import { OrganizationInteractor } from "~/application"
 import { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository"
 
@@ -14,9 +13,9 @@ const querySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { solutionId, id, organizationSlug } = await validateEventQuery(event, querySchema),
-        session = (await getServerSession(event))!,
+        session = (await requireUserSession(event))!,
         organizationInteractor = new OrganizationInteractor({
-            userId: session.id,
+            userId: session.user.id,
             repository: new OrganizationRepository({ config, organizationSlug })
         })
 

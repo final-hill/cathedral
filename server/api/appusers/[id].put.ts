@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { getServerSession } from '#auth'
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from "~/application"
 import { AppUserRepository, OrganizationRepository, PermissionRepository } from "~/server/data/repositories"
 import handleDomainException from "~/server/utils/handleDomainException"
@@ -22,9 +21,9 @@ const bodySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
         { organizationId, organizationSlug, role } = await validateEventBody(event, bodySchema),
-        session = (await getServerSession(event))!,
+        session = (await requireUserSession(event))!,
         permissionInteractor = new PermissionInteractor({
-            userId: session.id,
+            userId: session.user.id,
             repository: new PermissionRepository({ em: event.context.em })
         }),
         organizationInteractor = new OrganizationInteractor({
