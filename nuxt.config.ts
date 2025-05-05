@@ -30,6 +30,7 @@ export default defineNuxtConfig({
         global: true,
         dirs: ['~/components']
     },
+    ssr: false,
     // https://vite-pwa-org.netlify.app/frameworks/nuxt
     // https://icones.js.org/collection/lucide
     // https://nuxt.com/modules/auth-utils
