@@ -33,8 +33,6 @@ jobs:
           resourceGroupName: ${{ secrets.AZURE_RG }}
           template: ./azure/bicep/main.bicep
           parameters: >
-            ghClientId="${{ secrets.GH_CLIENT_ID }}"
-            ghClientSecret="${{ secrets.GH_CLIENT_SECRET }}"
             postgresDb="${{ secrets.POSTGRES_DB }}"
             postgresHost="${{ secrets.POSTGRES_HOST }}"
             postgresPassword="${{ secrets.POSTGRES_PASSWORD }}"
@@ -45,12 +43,6 @@ jobs:
             slackSigningSecret="${{ secrets.SLACK_SIGNING_SECRET }}"
             nuxtOrigin="${{ secrets.NUXT_ORIGIN }}"
             nuxtSessionPassword="${{ secrets.NUXT_SESSION_PASSWORD }}"
-            nuxtAuthClientId="${{ secrets.NUXT_AUTH_CLIENT_ID }}"
-            nuxtAuthClientSecret="${{ secrets.NUXT_AUTH_CLIENT_SECRET }}"
-            nuxtAuthTenantName="${{ secrets.NUXT_AUTH_TENANT_NAME }}"
-            nuxtAuthTenantId="${{ secrets.NUXT_AUTH_TENANT_ID }}"
-            nuxtAuthAuthorityDomain="${{ secrets.NUXT_AUTH_AUTHORITY_DOMAIN }}"
-            nuxtAuthPrimaryUserFlow="${{ secrets.NUXT_AUTH_PRIMARY_USER_FLOW }}"
             nuxtAzureOpenaiApiKey="${{ secrets.NUXT_AZURE_OPENAI_API_KEY }}"
             nuxtAzureOpenaiApiVersion="${{ secrets.NUXT_AZURE_OPENAI_API_VERSION }}"
             nuxtAzureOpenaiEndpoint="${{ secrets.NUXT_AZURE_OPENAI_ENDPOINT }}"
@@ -94,12 +86,6 @@ jobs:
           echo "NODE_ENV=production" >> .env
           echo "NUXT_ORIGIN=${{secrets.NUXT_ORIGIN}}" >> .env
           echo "NUXT_SESSION_PASSWORD=${{secrets.NUXT_SESSION_PASSWORD}}" >> .env
-          echo "NUXT_AUTH_CLIENT_ID=${{secrets.NUXT_AUTH_CLIENT_ID}}" >> .env
-          echo "NUXT_AUTH_CLIENT_SECRET=${{secrets.NUXT_AUTH_CLIENT_SECRET}}" >> .env
-          echo "NUXT_AUTH_TENANT_NAME=${{secrets.NUXT_AUTH_TENANT_NAME}}" >> .env
-          echo "NUXT_AUTH_TENANT_ID=${{secrets.NUXT_AUTH_TENANT_ID}}" >> .env
-          echo "NUXT_AUTH_AUTHORITY_DOMAIN=${{secrets.NUXT_AUTH_AUTHORITY_DOMAIN}}" >> .env
-          echo "NUXT_AUTH_PRIMARY_USER_FLOW=${{secrets.NUXT_AUTH_PRIMARY_USER_FLOW}}" >> .env
           echo "SLACK_ADMIN_MEMBER_ID=${{secrets.SLACK_ADMIN_MEMBER_ID}}" >> .env
           echo "SLACK_BOT_TOKEN=${{secrets.SLACK_BOT_TOKEN}}" >> .env
           echo "SLACK_SIGNING_SECRET=${{secrets.SLACK_SIGNING_SECRET}}" >> .env
@@ -154,12 +140,6 @@ jobs:
             slackSigningSecret="${{ secrets.SLACK_SIGNING_SECRET }}"
             nuxtOrigin="${{ secrets.NUXT_ORIGIN }}"
             nuxtSessionPassword="${{ secrets.NUXT_SESSION_PASSWORD }}"
-            nuxtAuthClientId="${{ secrets.NUXT_AUTH_CLIENT_ID }}"
-            nuxtAuthClientSecret="${{ secrets.NUXT_AUTH_CLIENT_SECRET }}"
-            nuxtAuthTenantName="${{ secrets.NUXT_AUTH_TENANT_NAME }}"
-            nuxtAuthTenantId="${{ secrets.NUXT_AUTH_TENANT_ID }}"
-            nuxtAuthAuthorityDomain="${{ secrets.NUXT_AUTH_AUTHORITY_DOMAIN }}"
-            nuxtAuthPrimaryUserFlow="${{ secrets.NUXT_AUTH_PRIMARY_USER_FLOW }}"
             nuxtAzureOpenaiApiKey="${{ secrets.NUXT_AZURE_OPENAI_API_KEY }}"
             nuxtAzureOpenaiApiVersion="${{ secrets.NUXT_AZURE_OPENAI_API_VERSION }}"
             nuxtAzureOpenaiEndpoint="${{ secrets.NUXT_AZURE_OPENAI_ENDPOINT }}"
@@ -223,12 +203,6 @@ jobs:
           echo "NODE_ENV=production" >> .env
           echo "NUXT_ORIGIN=${{secrets.NUXT_ORIGIN}}" >> .env
           echo "NUXT_SESSION_PASSWORD=${{secrets.NUXT_SESSION_PASSWORD}}" >> .env
-          echo "NUXT_AUTH_CLIENT_ID=${{secrets.NUXT_AUTH_CLIENT_ID}}" >> .env
-          echo "NUXT_AUTH_CLIENT_SECRET=${{secrets.NUXT_AUTH_CLIENT_SECRET}}" >> .env
-          echo "NUXT_AUTH_TENANT_NAME=${{secrets.NUXT_AUTH_TENANT_NAME}}" >> .env
-          echo "NUXT_AUTH_TENANT_ID=${{secrets.NUXT_AUTH_TENANT_ID}}" >> .env
-          echo "NUXT_AUTH_AUTHORITY_DOMAIN=${{secrets.NUXT_AUTH_AUTHORITY_DOMAIN}}" >> .env
-          echo "NUXT_AUTH_PRIMARY_USER_FLOW=${{secrets.NUXT_AUTH_PRIMARY_USER_FLOW}}" >> .env
           echo "SLACK_ADMIN_MEMBER_ID=${{secrets.SLACK_ADMIN_MEMBER_ID}}" >> .env
           echo "SLACK_BOT_TOKEN=${{secrets.SLACK_BOT_TOKEN}}" >> .env
           echo "SLACK_SIGNING_SECRET=${{secrets.SLACK_SIGNING_SECRET}}" >> .env

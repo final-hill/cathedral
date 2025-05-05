@@ -47,15 +47,6 @@ export default defineNuxtConfig({
         // The private keys which are only available within server-side
 
         // These values are overwritten by the associated NUXT_ environment variables in the .env file
-        authClientId: '',
-        authClientSecret: '',
-        authRedirectUri: '',
-        authAuthorityDomain: '',
-        authSignUpSignInAuthority: '',
-        authEditProfileAuthority: '',
-        authTenantName: '',
-        authTenantId: '',
-        authPrimaryUserFlow: '',
         sessionPassword: '',
         origin: '',
         port: '',
