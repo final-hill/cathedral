@@ -30,6 +30,8 @@ export default defineNuxtConfig({
         global: true,
         dirs: ['~/components']
     },
+    // SSR is disabled because this application is designed as a Single Page Application (SPA),
+    // and server-side rendering is not required for its functionality.
     ssr: false,
     // https://vite-pwa-org.netlify.app/frameworks/nuxt
     // https://icones.js.org/collection/lucide
