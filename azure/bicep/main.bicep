@@ -8,10 +8,6 @@ param location string = resourceGroup().location
 param name string = 'cathedral'
 
 @secure()
-param ghClientId string
-@secure()
-param ghClientSecret string
-@secure()
 param postgresDb string
 @secure()
 param postgresHost string
@@ -31,18 +27,6 @@ param slackSigningSecret string
 param nuxtOrigin string
 @secure()
 param nuxtSessionPassword string
-@secure()
-param nuxtAuthClientId string
-@secure()
-param nuxtAuthClientSecret string
-@secure()
-param nuxtAuthTenantName string
-@secure()
-param nuxtAuthTenantId string
-@secure()
-param nuxtAuthAuthorityDomain string
-@secure()
-param nuxtAuthPrimaryUserFlow string
 @secure()
 param nuxtAzureOpenaiApiKey string
 @secure()
@@ -80,8 +64,6 @@ module appService './modules/appService.bicep' = {
     appInsightsInstrumentationKey: appInsights.outputs.appInsightsInstrumentationKey
     appInsightsConnectionString: appInsights.outputs.appInsightsConnectionString
     name: name
-    ghClientId: ghClientId
-    ghClientSecret: ghClientSecret
     postgresDb: postgresDb
     postgresHost: postgresHost
     postgresPassword: postgresPassword
@@ -91,12 +73,6 @@ module appService './modules/appService.bicep' = {
     slackBotToken: slackBotToken
     slackSigningSecret: slackSigningSecret
     nodeEnv: 'production'
-    nuxtAuthAuthorityDomain: nuxtAuthAuthorityDomain
-    nuxtAuthClientId: nuxtAuthClientId
-    nuxtAuthClientSecret: nuxtAuthClientSecret
-    nuxtAuthPrimaryUserFlow: nuxtAuthPrimaryUserFlow
-    nuxtAuthTenantId: nuxtAuthTenantId
-    nuxtAuthTenantName: nuxtAuthTenantName
     nuxtOrigin: nuxtOrigin
     nuxtSessionPassword: nuxtSessionPassword
     nuxtAzureOpenaiApiKey: nuxtAzureOpenaiApiKey

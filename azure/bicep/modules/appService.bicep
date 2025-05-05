@@ -5,10 +5,6 @@ param nodeEnv string
 @secure()
 param appInsightsConnectionString string
 @secure()
-param ghClientId string
-@secure()
-param ghClientSecret string
-@secure()
 param postgresDb string
 @secure()
 param postgresHost string
@@ -28,18 +24,6 @@ param slackSigningSecret string
 param nuxtOrigin string
 @secure()
 param nuxtSessionPassword string
-@secure()
-param nuxtAuthClientId string
-@secure()
-param nuxtAuthClientSecret string
-@secure()
-param nuxtAuthTenantName string
-@secure()
-param nuxtAuthTenantId string
-@secure()
-param nuxtAuthAuthorityDomain string
-@secure()
-param nuxtAuthPrimaryUserFlow string
 @secure()
 param nuxtAzureOpenaiApiKey string
 @secure()
@@ -112,14 +96,6 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
           value: appInsightsConnectionString
         }
         {
-          name: 'GH_CLIENT_ID'
-          value: ghClientId
-        }
-        {
-          name: 'GH_CLIENT_SECRET'
-          value: ghClientSecret
-        }
-        {
           name: 'POSTGRES_DB'
           value: postgresDb
         }
@@ -162,30 +138,6 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'NUXT_SESSION_PASSWORD'
           value: nuxtSessionPassword
-        }
-        {
-          name: 'NUXT_AUTH_CLIENT_ID'
-          value: nuxtAuthClientId
-        }
-        {
-          name: 'NUXT_AUTH_CLIENT_SECRET'
-          value: nuxtAuthClientSecret
-        }
-        {
-          name: 'NUXT_AUTH_TENANT_NAME'
-          value: nuxtAuthTenantName
-        }
-        {
-          name: 'NUXT_AUTH_TENANT_ID'
-          value: nuxtAuthTenantId
-        }
-        {
-          name: 'NUXT_AUTH_AUTHORITY_DOMAIN'
-          value: nuxtAuthAuthorityDomain
-        }
-        {
-          name: 'NUXT_AUTH_PRIMARY_USER_FLOW'
-          value: nuxtAuthPrimaryUserFlow
         }
         {
           name: 'NUXT_AZURE_OPENAI_API_KEY'
