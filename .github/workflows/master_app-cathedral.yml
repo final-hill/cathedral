@@ -4,9 +4,8 @@
 name: Build and deploy Node.js app to Azure Web App - app-cathedral
 
 on:
-  push:
-    branches:
-      - master
+  release:
+    types: [created]
   workflow_dispatch:
 
 jobs:
@@ -23,11 +22,39 @@ jobs:
         with:
           node-version: '22.x'
 
+      - name: Restore Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: npm install, build, and test
         run: |
           npm install
-          npm run build --if-present
-          npm run test --if-present
+          npm run build
+          npm run generate-pwa-assets
+          npm run test
+
+      - name: 'Create env file'
+        run: |
+          touch .env
+          echo "POSTGRES_USER=${{secrets.POSTGRES_USER}}" > .env
+          echo "POSTGRES_PASSWORD=${{secrets.POSTGRES_PASSWORD}}" >> .env
+          echo "POSTGRES_HOST=${{secrets.POSTGRES_HOST}}" >> .env
+          echo "POSTGRES_PORT=${{secrets.POSTGRES_PORT}}" >> .env
+          echo "POSTGRES_DB=${{secrets.POSTGRES_DB}}" >> .env
+          echo "NODE_ENV=production" >> .env
+          echo "NUXT_ORIGIN=${{secrets.NUXT_ORIGIN}}" >> .env
+          echo "NUXT_SESSION_PASSWORD=${{secrets.NUXT_SESSION_PASSWORD}}" >> .env
+          echo "SLACK_ADMIN_MEMBER_ID=${{secrets.SLACK_ADMIN_MEMBER_ID}}" >> .env
+          echo "SLACK_BOT_TOKEN=${{secrets.SLACK_BOT_TOKEN}}" >> .env
+          echo "SLACK_SIGNING_SECRET=${{secrets.SLACK_SIGNING_SECRET}}" >> .env
+          echo "NUXT_AZURE_OPENAI_API_KEY=${{secrets.NUXT_AZURE_OPENAI_API_KEY}}" >> .env
+          echo "NUXT_AZURE_OPENAI_API_VERSION=${{secrets.NUXT_AZURE_OPENAI_API_VERSION}}" >> .env
+          echo "NUXT_AZURE_OPENAI_ENDPOINT=${{secrets.NUXT_AZURE_OPENAI_ENDPOINT}}" >> .env
+          echo "NUXT_AZURE_OPENAI_DEPLOYMENT_ID=${{secrets.NUXT_AZURE_OPENAI_DEPLOYMENT_ID}}" >> .env
 
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
@@ -56,13 +83,20 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: unzip release.zip
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_985E9C75492E4188BDF2F8E816CBDC69 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_50BCE71D2A254EA5BD09D7AB3B88DECA }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C8D8DB3FA67B4820BFBCDEC11FF455DC }}
+
+      - name: Deploy Database
+        run: |
+          npm run orm-debug
+          npm run orm-list-pending-migrations
+          npm run orm-run-pending-migrations
+          npm run orm-seed-users
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
@@ -71,4 +105,3 @@ jobs:
           app-name: 'app-cathedral'
           slot-name: 'Production'
           package: .
-          
