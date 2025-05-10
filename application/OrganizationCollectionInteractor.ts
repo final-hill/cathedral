@@ -4,7 +4,6 @@ import { slugify } from "#shared/utils";
 import { Interactor } from "./Interactor";
 import { PermissionInteractor } from "./PermissionInteractor";
 import { type OrganizationCollectionRepository } from "~/server/data/repositories";
-import { throws } from 'assert';
 
 export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof Organization>> {
     private readonly _permissionInteractor: PermissionInteractor;

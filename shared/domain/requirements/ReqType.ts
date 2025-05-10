@@ -24,7 +24,7 @@ export enum ReqType {
     SITUATION = 'situation',
     ORGANIZATION = 'organization',
     OUTCOME = 'outcome',
-    PARSED_REQUIREMENT = 'parsed_requirement',
+    PARSED_REQUIREMENTS = 'parsed_requirements',
     PERSON = 'person',
     PRODUCT = 'product',
     REQUIREMENT = 'requirement',

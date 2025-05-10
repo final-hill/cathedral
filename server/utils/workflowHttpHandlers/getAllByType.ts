@@ -11,14 +11,15 @@ export default function getAllByType() {
         validatedQuerySchema = z.object({
             solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
             organizationId,
-            organizationSlug
+            organizationSlug,
+            parsedReqParentId: z.string().optional()
         }).refine((value) => {
             return value.organizationId !== undefined || value.organizationSlug !== undefined;
         }, "At least one of organizationId or organizationSlug should be provided");
 
     return defineEventHandler(async (event) => {
         const { reqType } = await validateEventParams(event, paramSchema),
-            { solutionSlug, organizationId, organizationSlug } = await validateEventQuery(event, validatedQuerySchema),
+            { solutionSlug, organizationId, organizationSlug, parsedReqParentId } = await validateEventQuery(event, validatedQuerySchema),
             session = (await requireUserSession(event))!,
             permissionInteractor = new PermissionInteractor({
                 userId: session.user.id,
@@ -41,6 +42,12 @@ export default function getAllByType() {
                 solutionId: solution.id
             });
 
-        return requirementInteractor.getAllRequirementsByType(reqType).catch(handleDomainException);
+        return requirementInteractor.getAllRequirementsByType({
+            reqType,
+            staticQuery: {
+                // @ts-ignore:
+                parsedRequirements: parsedReqParentId
+            }
+        }).catch(handleDomainException)
     });
 }

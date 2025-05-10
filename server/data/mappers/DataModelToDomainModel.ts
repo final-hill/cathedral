@@ -41,18 +41,17 @@ export class DataModelToDomainModel<
                 return [key, undefined]; // skip
             else if (key === 'effectiveFrom')
                 return ['lastModified', value];
-            else if (value instanceof Collection)
-                return [key, await value.loadItems().then(async items => {
-                    items.map(async item => {
-                        if (item instanceof RequirementModel) {
-                            const latestVersion = await item.getLatestVersion(new Date());
-                            return { id: item.id, name: latestVersion?.name };
-                        } else if (item instanceof AppUserModel) {
-                            return { id: item.id, name: item.name };
-                        }
-                    })
-                })];
-            else if (value instanceof AppUserModel)
+            else if (value instanceof Collection) {
+                const items = await value.loadItems();
+                return [key, await Promise.all(items.map(async item => {
+                    if (item instanceof RequirementModel) {
+                        const latestVersion = await item.getLatestVersion(new Date());
+                        return { id: item.id, name: latestVersion?.name, reqType: item.req_type };
+                    } else if (item instanceof AppUserModel) {
+                        return { id: item.id, name: item.name };
+                    }
+                }))];
+            } else if (value instanceof AppUserModel)
                 return [key, { id: value.id, name: value.name }];
             else if (objectSchema.safeParse(value).success)
                 return [key, objectSchema.parse(value)];

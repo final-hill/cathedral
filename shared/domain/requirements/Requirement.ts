@@ -21,6 +21,14 @@ export const Requirement = AuditMetadata.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.REQUIREMENT),
     workflowState: z.nativeEnum(WorkflowState)
         .describe('The current state of the Requirement'),
+    parsedRequirements: z.object({
+        reqType: z.nativeEnum(ReqType).default(ReqType.PARSED_REQUIREMENTS),
+        id: z.string().uuid()
+            .describe('The id of the parsed requirement'),
+        name: z.string()
+            .describe('The name of the parsed requirement'),
+    }).optional()
+        .describe('The ParsedRequirements container that this requirement is derived from'),
     solution: z.object({
         reqType: z.nativeEnum(ReqType).default(ReqType.SOLUTION),
         id: z.string().uuid()

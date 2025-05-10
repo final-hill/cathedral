@@ -5,10 +5,13 @@ import { Organization, ReqType, Solution } from '~/shared/domain'
 import { snakeCaseToPascalCase } from '~/shared/utils';
 import * as req from "#shared/domain/requirements";
 import { z } from 'zod'
+import NaturalLanguageToRequirementService from "~/server/data/services/NaturalLanguageToRequirementService";
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
 const paramSchema = z.object({ reqType: z.nativeEnum(ReqType) })
+
+const appConfig = useRuntimeConfig()
 
 export default defineEventHandler(async (event) => {
     const { reqType } = await validateEventParams(event, paramSchema),
@@ -59,8 +62,22 @@ export default defineEventHandler(async (event) => {
             solutionId: solution.id
         })
 
-    return requirementInteractor.proposeRequirement({
-        reqType,
-        ...reqProps
-    }).catch(handleDomainException)
+    if (reqType === ReqType.PARSED_REQUIREMENTS) {
+        const naturalLanguageToRequirementService = new NaturalLanguageToRequirementService({
+            apiKey: appConfig.azureOpenaiApiKey,
+            apiVersion: appConfig.azureOpenaiApiVersion,
+            endpoint: appConfig.azureOpenaiEndpoint,
+            deployment: appConfig.azureOpenaiDeploymentId
+        })
+
+        return requirementInteractor.parseRequirements({
+            service: naturalLanguageToRequirementService,
+            statement: reqProps.description
+        })
+    } else {
+        return requirementInteractor.proposeRequirement({
+            reqType,
+            ...reqProps
+        }).catch(handleDomainException)
+    }
 })

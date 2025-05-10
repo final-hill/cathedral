@@ -8,7 +8,7 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
 </script>
 
 <template>
-    <h1>Scenarios</h1>
+    <h1>G.5 Scenarios</h1>
 
     <p> {{ Epic.description }} </p>
     <p>

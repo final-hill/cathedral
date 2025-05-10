@@ -65,9 +65,13 @@ const autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field
             <UInput v-if="field.key === 'id'" type="hidden" v-model="props.state.id" name="id" />
             <UFormField v-if="field.key !== 'id'" :label="field.label" :name="field.key" :field="field.key"
                 :required="!field.isOptional" :description="field.description"
-                :hint="field.isReadOnly ? '(Read Only)' : undefined" size="xl" class="w-full"
-                :help="field.innerType instanceof z.ZodString && field.maxLength && field.maxLength > 254 ? `Max length: ${props.state[field.key]?.length ?? 0}/${field.maxLength}` : undefined">
-
+                :hint="field.isReadOnly ? '(Read Only)' : undefined" size="xl" class="w-full">
+                <template #help>
+                    <span v-if="field.innerType instanceof z.ZodString && field.maxLength && field.maxLength > 254"
+                        :class="{ 'text-error': props.state[field.key]?.length ?? 0 > field.maxLength! }">
+                        Max length: {{ props.state[field.key]?.length ?? 0 }}/{{ field.maxLength }}
+                    </span>
+                </template>
                 <UCheckbox v-if="field.innerType instanceof z.ZodBoolean" v-model="props.state[field.key]"
                     class="w-full" />
                 <UInput type="text"

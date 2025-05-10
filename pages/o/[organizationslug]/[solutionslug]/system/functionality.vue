@@ -13,7 +13,7 @@ const tabs = [
 </script>
 
 <template>
-    <h1>Functionality</h1>
+    <h1>S.2 Functionality</h1>
     <p>{{ Functionality.description }}</p>
 
     <UTabs :items="tabs">

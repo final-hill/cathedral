@@ -4,11 +4,13 @@ import { Repository } from "./Repository";
 import { Requirement } from "#shared/domain/requirements";
 import * as req from "#shared/domain/requirements";
 import * as reqModels from "../models/requirements";
-import { AuditMetadata, NotFoundException, ReqType, WorkflowState } from "~/shared/domain";
+import { AuditMetadata, MoscowPriority, NotFoundException, ReqType, StakeholderCategory, StakeholderSegmentation, WorkflowState } from "~/shared/domain";
 import { snakeCaseToPascalCase } from "~/shared/utils";
 import { DataModelToDomainModel, ReqQueryToModelQuery } from "../mappers";
 import { type CreationInfo } from "./CreationInfo";
 import { type UpdationInfo } from "./UpdationInfo";
+import { llmRequirementSchema } from "../llm-zod-schemas";
+import { type ObjectQuery } from "@mikro-orm/core";
 
 type RequirementType = z.infer<typeof Requirement>;
 
@@ -49,6 +51,170 @@ export class RequirementRepository extends Repository<RequirementType> {
         return newId
     }
 
+    async addParsedRequirements(props: CreationInfo & {
+        solutionId: string,
+        statement: string,
+        reqData: z.infer<typeof llmRequirementSchema>[],
+    }): Promise<reqModels.ParsedRequirementsModel['id']> {
+        const em = this._em,
+            parsedReqsId = uuid7()
+
+        em.create(reqModels.ParsedRequirementsVersionsModel, {
+            requirement: em.create(reqModels.ParsedRequirementsModel, {
+                id: parsedReqsId,
+                createdBy: props.createdById,
+                creationDate: props.creationDate,
+            }),
+            isDeleted: false,
+            effectiveFrom: props.creationDate,
+            modifiedBy: props.createdById,
+            workflowState: WorkflowState.Proposed,
+            solution: props.solutionId,
+            name: 'Free-form requirements',
+            description: props.statement,
+        })
+
+        for (const req of props.reqData) {
+            const reqTypePascal = snakeCaseToPascalCase(req.reqType) as keyof typeof req,
+                ReqStaticModel = reqModels[`${reqTypePascal}Model` as keyof typeof reqModels] as typeof reqModels.RequirementModel,
+                ReqVersionsModel = reqModels[`${reqTypePascal}VersionsModel` as keyof typeof reqModels] as typeof reqModels.RequirementVersionsModel,
+                newId = uuid7()
+
+            const newPrimaryActorId = req.primaryActorName ? uuid7() : undefined
+            if (newPrimaryActorId) {
+                em.create(reqModels.StakeholderVersionsModel, {
+                    requirement: em.create(reqModels.StakeholderModel, {
+                        id: newPrimaryActorId,
+                        createdBy: props.createdById,
+                        creationDate: props.creationDate,
+                        parsedRequirements: parsedReqsId
+                    }),
+                    isDeleted: false,
+                    effectiveFrom: props.creationDate,
+                    modifiedBy: props.createdById,
+                    workflowState: WorkflowState.Proposed,
+                    solution: props.solutionId,
+                    name: req.primaryActorName!,
+                    description: req.primaryActorName!,
+                    category: StakeholderCategory["Key Stakeholder"],
+                    segmentation: StakeholderSegmentation.Vendor,
+                    interest: 75,
+                    influence: 75,
+                })
+            }
+
+            const newOutcomeId = req.outcomeName ? uuid7() : undefined
+            if (newOutcomeId) {
+                em.create(reqModels.OutcomeVersionsModel, {
+                    requirement: em.create(reqModels.OutcomeModel, {
+                        id: newOutcomeId,
+                        createdBy: props.createdById,
+                        creationDate: props.creationDate,
+                        parsedRequirements: parsedReqsId
+                    }),
+                    isDeleted: false,
+                    effectiveFrom: props.creationDate,
+                    modifiedBy: props.createdById,
+                    workflowState: WorkflowState.Proposed,
+                    solution: props.solutionId,
+                    name: req.outcomeName!,
+                    description: req.outcomeName!,
+                })
+            }
+
+            const newPreconditionId = req.useCasePreconditionName ? uuid7() : undefined
+            if (newPreconditionId) {
+                em.create(reqModels.AssumptionVersionsModel, {
+                    requirement: em.create(reqModels.AssumptionModel, {
+                        id: newPreconditionId,
+                        createdBy: props.createdById,
+                        creationDate: props.creationDate,
+                        parsedRequirements: parsedReqsId
+                    }),
+                    isDeleted: false,
+                    effectiveFrom: props.creationDate,
+                    modifiedBy: props.createdById,
+                    workflowState: WorkflowState.Proposed,
+                    solution: props.solutionId,
+                    name: req.useCasePreconditionName!,
+                    description: req.useCasePreconditionName!,
+                })
+            }
+
+            const newSuccessGuaranteeId = req.useCaseSuccessGuaranteeName ? uuid7() : undefined
+            if (newSuccessGuaranteeId) {
+                em.create(reqModels.EffectVersionsModel, {
+                    requirement: em.create(reqModels.EffectModel, {
+                        id: newSuccessGuaranteeId,
+                        createdBy: props.createdById,
+                        creationDate: props.creationDate,
+                        parsedRequirements: parsedReqsId
+                    }),
+                    isDeleted: false,
+                    effectiveFrom: props.creationDate,
+                    modifiedBy: props.createdById,
+                    workflowState: WorkflowState.Proposed,
+                    solution: props.solutionId,
+                    name: req.useCaseSuccessGuaranteeName!,
+                    description: req.useCaseSuccessGuaranteeName!,
+                })
+            }
+
+            const newFunctionalBehaviorId = req.userStoryFunctionalBehaviorName ? uuid7() : undefined
+            if (newFunctionalBehaviorId) {
+                em.create(reqModels.FunctionalBehaviorVersionsModel, {
+                    requirement: em.create(reqModels.FunctionalBehaviorModel, {
+                        id: newFunctionalBehaviorId,
+                        createdBy: props.createdById,
+                        creationDate: props.creationDate,
+                        parsedRequirements: parsedReqsId,
+                    }),
+                    isDeleted: false,
+                    effectiveFrom: props.creationDate,
+                    modifiedBy: props.createdById,
+                    description: req.userStoryFunctionalBehaviorName!,
+                    workflowState: WorkflowState.Proposed,
+                    solution: props.solutionId,
+                    name: req.userStoryFunctionalBehaviorName!,
+                    priority: MoscowPriority.MUST
+                })
+            }
+
+            em.create(ReqVersionsModel, {
+                requirement: em.create(ReqStaticModel, {
+                    id: newId,
+                    createdBy: props.createdById,
+                    creationDate: props.creationDate,
+                    parsedRequirements: parsedReqsId,
+                }),
+                isDeleted: false,
+                effectiveFrom: props.creationDate,
+                modifiedBy: props.createdById,
+                workflowState: WorkflowState.Proposed,
+                solution: props.solutionId,
+                description: req.description,
+                name: req.name,
+                ...(req.moscowPriority && { priority: req.moscowPriority }),
+                ...(req.email && { email: req.email }),
+                ...(req.primaryActorName && { primaryActor: newPrimaryActorId }),
+                ...(req.outcomeName && { outcome: newOutcomeId }),
+                ...(req.stakeholderSegmentation && { segmentation: req.stakeholderSegmentation }),
+                ...(req.stakeholderCategory && { category: req.stakeholderCategory }),
+                ...(req.useCaseScope && { scope: req.useCaseScope }),
+                ...(req.useCaseLevel && { level: req.useCaseLevel }),
+                ...(req.useCasePreconditionName && { precondition: newPreconditionId }),
+                ...(req.useCaseMainSuccessScenario && { mainSuccessScenario: req.useCaseMainSuccessScenario }),
+                ...(req.useCaseSuccessGuaranteeName && { successGuarantee: newSuccessGuaranteeId }),
+                ...(req.useCaseExtensions && { extensions: req.useCaseExtensions }),
+                ...(req.userStoryFunctionalBehaviorName && { functionalBehavior: newFunctionalBehaviorId }),
+            })
+        }
+
+        await em.flush()
+
+        return parsedReqsId
+    }
+
     /**
      * Get all active requirements with the given solution id.
      * @param props.solutionId The id of the solution to find requirements for
@@ -70,6 +236,8 @@ export class RequirementRepository extends Repository<RequirementType> {
                 effectiveFrom: { $lte: new Date() },
                 isDeleted: false
             }
+        }, {
+            populate: ['parsedRequirements']
         }))
 
         const requirements = await Promise.all(reqStatics.map(async (reqStatic) => {
@@ -124,6 +292,8 @@ export class RequirementRepository extends Repository<RequirementType> {
                 effectiveFrom: { $lte: new Date() },
                 isDeleted: false
             }
+        }, {
+            populate: ['parsedRequirements']
         }))
 
         const requirements = await Promise.all(reqStatics.map(async (reqStatic) => {
@@ -155,11 +325,13 @@ export class RequirementRepository extends Repository<RequirementType> {
      * Get all requirements with the given solution id across all workflow states.
      * @param props.solutionId The id of the solution to find requirements for
      * @param props.reqType The type of requirement to find
+     * @param props.staticQuery The optional static query to use to find requirements
      * @returns The requirements across all workflow states
      */
     async getAll<R extends RequirementType>(props: {
         solutionId: string,
         reqType: ReqType
+        staticQuery?: ObjectQuery<reqModels.RequirementModel>
     }): Promise<R[]> {
         const em = this._em,
             reqTypePascal = snakeCaseToPascalCase(props.reqType) as keyof typeof req,
@@ -167,14 +339,17 @@ export class RequirementRepository extends Repository<RequirementType> {
             mapper = new DataModelToDomainModel();
 
         const reqStatics = (await em.find(ReqStaticModel, {
+            ...(props.staticQuery ?? {}),
             versions: {
                 solution: { id: props.solutionId },
                 effectiveFrom: { $lte: new Date() },
                 isDeleted: false
             }
+        }, {
+            populate: ['parsedRequirements']
         }));
 
-        const requirements = await Promise.all(reqStatics.map(async (reqStatic) => {
+        const requirements = await Promise.all(reqStatics.map(async (reqStatic, i) => {
             const versions = await reqStatic.versions.matching({
                 where: {
                     solution: { id: props.solutionId },
@@ -205,16 +380,8 @@ export class RequirementRepository extends Repository<RequirementType> {
      */
     async getById<R extends RequirementType>(id: z.infer<typeof Requirement>['id']): Promise<R> {
         const em = this._em,
-            // TODO: can this be replaced with em.findOne(RequirementModel, { id })?
-            // Will it become the appropriate subtype?
             reqStatic = await em.findOne(reqModels.RequirementModel, { id }),
             reqLatestVersion = await reqStatic?.getLatestVersion(new Date())
-        // result = await em.getConnection().execute(em.getKnex()
-        //     .select('*')
-        //     .from('requirement')
-        //     .where('id', id)
-        //     .first()
-        // );
 
         if (!reqStatic || !reqLatestVersion)
             throw new NotFoundException(`Requirement with id ${id} not found`);

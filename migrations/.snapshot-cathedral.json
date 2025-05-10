@@ -300,7 +300,7 @@
             "situation",
             "organization",
             "outcome",
-            "parsed_requirement",
+            "parsed_requirements",
             "person",
             "product",
             "requirement",
@@ -317,6 +317,15 @@
             "user_story"
           ],
           "mappedType": "enum"
+        },
+        "parsed_requirements_id": {
+          "name": "parsed_requirements_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
         }
       },
       "name": "requirement",
@@ -355,6 +364,19 @@
             "id"
           ],
           "referencedTableName": "public.app_user",
+          "updateRule": "cascade"
+        },
+        "requirement_parsed_requirements_id_foreign": {
+          "constraintName": "requirement_parsed_requirements_id_foreign",
+          "columnNames": [
+            "parsed_requirements_id"
+          ],
+          "localTableName": "public.requirement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
           "updateRule": "cascade"
         }
       },
@@ -573,7 +595,7 @@
             "situation",
             "organization",
             "outcome",
-            "parsed_requirement",
+            "parsed_requirements",
             "person",
             "product",
             "requirement",

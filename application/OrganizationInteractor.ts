@@ -1,9 +1,7 @@
 import type { z } from "zod";
-import { validate as validateUuid } from 'uuid'
 import * as req from "#shared/domain/requirements";
-import { ReqType, WorkflowState } from "#shared/domain/requirements/enums";
+import { ReqType } from "#shared/domain/requirements/enums";
 import { AppRole, AppUser } from "#shared/domain/application";
-import type { AuditMetadata } from "#shared/domain/AuditMetadata";
 import { MismatchException, PermissionDeniedException } from "#shared/domain/exceptions";
 import type { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository";
 import { Interactor } from "./Interactor";
@@ -38,40 +36,6 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
     get repository(): OrganizationRepository {
         return this._repository as OrganizationRepository
     }
-
-    /**
-     * Add a new requirement to a solution and assign it a new requirement id
-     *
-     * @param props.solutionSlug - The slug of the solution to add the requirement to
-     * @param props.reqProps - The requirement data to add
-     * @returns The id of the new requirement
-     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
-     * @throws {MismatchException} If a referenced requirement does not belong to the solution
-     * @throws {NotFoundException} If the solution does not exist
-     * /
-    async addRequirement<R extends keyof typeof req>({
-        solutionSlug, reqProps
-    }: {
-        solutionSlug: z.infer<typeof req.Solution>['slug'],
-        reqProps: Omit<z.infer<typeof req[R]>, 'reqId' | 'id' | keyof z.infer<typeof AuditMetadata>> & {
-            reqType: ReqType,
-            reqIdPrefix: req.ReqIdPrefix | undefined
-        }
-    }): Promise<z.infer<typeof req[R]>['id']> {
-        const organization = await this.repository.getOrganization(),
-            currentUserId = this._permissionInteractor.userId;
-
-        await this._permissionInteractor.assertOrganizationContributor(organization.id);
-        await this._assertReferencedRequirementsBelongToSolution({ solutionSlug, reqProps });
-
-        return await this.repository.addRequirement({
-            solutionSlug,
-            reqProps,
-            createdById: currentUserId,
-            creationDate: new Date()
-        });
-    }
-    */
 
     /**
      * Add a solution to an organization

@@ -11,14 +11,18 @@ const paramSchema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-    const { id } = await validateEventParams(event, paramSchema),
-        bodySchema = z.object({
-            solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
-            organizationId,
-            organizationSlug
-        }).refine((value) => {
-            return value.organizationId !== undefined || value.organizationSlug !== undefined;
-        }, "At least one of organizationId or organizationSlug should be provided"),
+    const { id, reqType } = await validateEventParams(event, paramSchema);
+
+    if (reqType === ReqType.PARSED_REQUIREMENTS)
+        throw createError({ statusCode: 400, message: "PARSED_REQUIREMENTS is not a valid reqType for this operation." });
+
+    const bodySchema = z.object({
+        solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
+        organizationId,
+        organizationSlug
+    }).refine((value) => {
+        return value.organizationId !== undefined || value.organizationSlug !== undefined;
+    }, "At least one of organizationId or organizationSlug should be provided"),
         { solutionSlug, organizationId: orgId, organizationSlug: orgSlug } = await validateEventBody(event, bodySchema),
         session = (await requireUserSession(event))!,
         permissionInteractor = new PermissionInteractor({

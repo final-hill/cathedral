@@ -8,7 +8,7 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
 </script>
 
 <template>
-    <h1>Constraints</h1>
+    <h1>E.3 Constraints</h1>
     <p>{{ Constraint.description }}</p>
 
     <XWorkflow :organization-slug="organizationSlug" :req-type="ReqType.CONSTRAINT" :solution-slug="solutionSlug" />
