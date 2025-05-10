@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy Node.js app to Azure Web App - app-cathedral
+name: Build and deploy Azure
 
 on:
   release:
@@ -76,6 +76,11 @@ jobs:
       contents: read #This is required for actions/checkout
 
     steps:
+      - name: Set up Node.js version
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.x'
+
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
