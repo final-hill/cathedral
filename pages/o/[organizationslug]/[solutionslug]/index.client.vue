@@ -56,4 +56,6 @@ const handleSolutionEdit = () => {
             </section>
         </template>
     </PegsLanding>
+
+    <FreeFormRequirements :solutionSlug="slug" :organizationSlug="organizationSlug" />
 </template>

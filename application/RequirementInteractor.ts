@@ -7,6 +7,7 @@ import { InvalidWorkflowStateException, MismatchException } from "#shared/domain
 import type { PermissionInteractor } from "./PermissionInteractor";
 import type { AuditMetadata } from "~/shared/domain";
 import type { RequirementRepository } from "~/server/data/repositories/RequirementRepository";
+import type NaturalLanguageToRequirementService from "~/server/data/services/NaturalLanguageToRequirementService";
 
 type ReqTypeName = keyof typeof req
 
@@ -33,7 +34,8 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         this._solutionId = props.solutionId;
         this._permissionInteractor = props.permissionInteractor;
 
-        // TODO: assert that the solution is in the organization
+        // TODO: Implement, or update to only rely on the solutionId as a dependency
+        // this._assertSolutionBelongsToOrganization();
     }
 
     // FIXME: this shouldn't be necessary
@@ -68,6 +70,25 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
                 throw new MismatchException(`Requirement with id ${value} does not belong to the solution`);
             }
         }
+    }
+
+    /**
+     * Get a requirement by its id.
+     * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
+     * @throws {NotFoundException} If the requirement does not exist
+     * @throws {MismatchException} If the requirement is not of the given type
+     * @param id - The id of the requirement to get
+     * @returns The requirement with the given id
+     */
+    async getRequirementTypeById<R extends z.infer<typeof req.Requirement>>({ id, reqType }: { id: R['id'], reqType: ReqType }): Promise<R> {
+        await this._permissionInteractor.assertOrganizationReader(this._organizationId)
+
+        const result = await this.repository.getById(id)
+
+        if (result.reqType !== reqType)
+            throw new MismatchException(`Requirement with id ${id} is not of type ${reqType}`);
+
+        return result as R
     }
 
     /**
@@ -109,16 +130,48 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
     /**
      * Get all requirements of a given type across all workflow states.
      * @param reqType - The type of the requirements to get
+     * @param staticQuery - The optional static query to use to filter the requirements
      * @returns The requirements of the given type across all workflow states
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
-    async getAllRequirementsByType<R extends ReqTypeName>(reqType: ReqType): Promise<z.infer<typeof req[R]>[]> {
+    async getAllRequirementsByType<R extends ReqTypeName>(props: { reqType: ReqType, staticQuery?: Partial<z.infer<typeof req[R]>> }): Promise<z.infer<typeof req[R]>[]> {
         await this._permissionInteractor.assertOrganizationReader(this._organizationId);
 
         return this.repository.getAll({
             solutionId: this._solutionId,
-            reqType
+            ...props
         });
+    }
+
+    /**
+     * Parse a natural language statement into requirements.
+     * @param props.service - The LLM service to use for parsing
+     * @param props.statement - The natural language statement to parse
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {MismatchException} If no requirements are found in the statement
+     * @returns The statistics of the parsed requirements with the id of the newly parsed requirements collection
+     */
+    async parseRequirements(props: {
+        service: NaturalLanguageToRequirementService,
+        statement: string
+    }): Promise<z.infer<typeof req.ParsedRequirements>['id']> {
+        await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+
+        const currentUserId = this._permissionInteractor.userId,
+            results = await props.service.parse(props.statement);
+
+        if (!results || results.length === 0)
+            throw new MismatchException('No requirements found in the statement');
+
+        const newId = await this.repository.addParsedRequirements({
+            createdById: currentUserId,
+            creationDate: new Date(),
+            solutionId: this._solutionId,
+            statement: props.statement,
+            reqData: results
+        })
+
+        return newId
     }
 
     /**

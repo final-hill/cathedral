@@ -1,59 +1,80 @@
 import { AzureOpenAI } from "openai";
 import { v7 as uuidv7 } from 'uuid';
 import zodToJsonSchema from "zod-to-json-schema";
-import zodSchema from '../llm-zod-schemas/index.js'
+import zodSchema, { llmRequirementSchema } from '../llm-zod-schemas/index.js'
 import { zodResponseFormat } from "openai/helpers/zod";
 import { dedent } from "../../../shared/utils/dedent.js";
 import { z } from "zod";
+import { ReqType } from "~/shared/domain/index.js";
+import * as reqs from '~/shared/domain/requirements/index.js';
+import { snakeCaseToPascalCase } from "~/shared/utils/snakeCaseToPascalCase.js";
 
-type LLMResponseType = z.infer<typeof zodSchema>['requirements']
-type ArrayToUnion<T> = T extends (infer U)[] ? U : never
-type ExtractGroupItem<T extends string> = Extract<ArrayToUnion<LLMResponseType>, { type: T }> & { id: string }
-export type ParsedRequirementGroup = {
-    [K in ArrayToUnion<LLMResponseType>['type']]?: ExtractGroupItem<K>[]
-}
 
 export default class NaturalLanguageToRequirementService {
     private _aiClient: AzureOpenAI;
     private _modelId: string;
 
-    constructor(props: { apiKey: string, apiVersion: string, endpoint: string, modelId: string }) {
+    constructor(props: { apiKey: string, apiVersion: string, endpoint: string, deployment: string }) {
         this._aiClient = new AzureOpenAI(props)
-        this._modelId = props.modelId
+        this._modelId = props.deployment
     }
 
-    async parse(statement: string): Promise<ParsedRequirementGroup> {
+    async parse(statement: string): Promise<z.infer<typeof llmRequirementSchema>[]> {
         // https://techcommunity.microsoft.com/t5/ai-azure-ai-services-blog/introducing-gpt-4o-2024-08-06-api-with-structured-outputs-on/ba-p/4232684
         // https://hooshmand.net/zod-zodresponseformat-structured-outputs-openai/
         // https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/structured-outputs?tabs=python-secure
-        const completion = await this._aiClient.beta.chat.completions.parse({
+        const completion = await this._aiClient.chat.completions.create({
             // temperature: 0,
             model: this._modelId,
-            messages: [
-                {
-                    role: "system",
-                    content: dedent(`
-                    Your role is to parse Requirements from user input and derive any strongly implied requirements.
-                    Requirements are defined by the following json schema:
+            messages: [{
+                role: 'system', content: dedent(`
+                Your role is to distill requirements from user input.
+                The Requirements fall into the following categories:
 
-                    """
-                    ${zodToJsonSchema(zodSchema, 'requirements')}
-                    """
+                """
+                ${Object.values(ReqType)
+                        .filter((reqType) => ![
+                            ReqType.COMPONENT,
+                            ReqType.CONTEXT_AND_OBJECTIVE,
+                            ReqType.FUNCTIONALITY,
+                            ReqType.META_REQUIREMENT,
+                            ReqType.ORGANIZATION,
+                            ReqType.PARSED_REQUIREMENTS,
+                            ReqType.REQUIREMENT,
+                            ReqType.SOLUTION,
+                        ].includes(reqType))
+                        .map((reqType) => {
+                            const ReqTypePascal = snakeCaseToPascalCase(reqType) as keyof typeof reqs
+                            return { reqType, description: reqs[ReqTypePascal].description }
+                        })
+                        .map(({ reqType, description }) => `- ${reqType}: ${description}`)
+                        .join('\n')
+                    }
+                """
 
-                    Any statement or substatement that can not be expressed or understood should be considered a Silence.
-                `)
-                },
-                {
-                    role: "user",
-                    content: statement
-                }
-            ],
+                Any statement or substatement that can not be expressed or understood as a requirement should be considered a 'silence' requirement.
+                Set the description of the silence requirement to the offending statement.
+
+                The requirements should be a json object. The provided schema represented in a form analagous to
+                Single Table Inheritance (STI) in database design; A number of fields are common to all requirements,
+                and some fields are specific to each requirement type and should be left as null if not applicable
+                to the requirement type.
+            `)
+            }, {
+                role: 'user', content: statement
+            }],
             response_format: zodResponseFormat(zodSchema, 'requirements')
+
         })
 
-        const result = (completion.choices[0].message.parsed?.requirements ?? [])
-            .map((req) => ({ ...req, id: uuidv7() }));
+        const result = completion.choices[0].message
 
-        return Object.groupBy(result, ({ type }) => type) as ParsedRequirementGroup
+        if (result.refusal)
+            throw new Error(result.refusal)
+
+        if (!result.content)
+            throw null
+
+        return JSON.parse(result.content).requirements
     }
 }

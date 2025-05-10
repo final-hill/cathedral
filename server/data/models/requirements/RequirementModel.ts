@@ -1,7 +1,8 @@
-import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, PrimaryKey, Property, types } from '@mikro-orm/core';
+import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, PrimaryKey, Property, type Rel, types } from '@mikro-orm/core';
 import { StaticAuditModel, VolatileAuditModel } from './AuditModel.js';
 import { ReqType, WorkflowState } from '../../../../shared/domain/requirements/enums.js';
 import { type ReqId } from '../../../../shared/domain/requirements/Requirement.js';
+import { ParsedRequirementsModel } from '../index.js';
 
 @Entity({ abstract: true, tableName: 'requirement', discriminatorColumn: 'req_type', discriminatorValue: ReqType.REQUIREMENT })
 export abstract class RequirementModel extends StaticAuditModel<RequirementVersionsModel> {
@@ -15,6 +16,9 @@ export abstract class RequirementModel extends StaticAuditModel<RequirementVersi
 
     @OneToMany(() => RequirementVersionsModel, (e) => e.requirement, { orderBy: { effectiveFrom: 'desc' } })
     readonly versions = new Collection<RequirementVersionsModel>(this);
+
+    @ManyToOne({ entity: () => ParsedRequirementsModel, nullable: true, inversedBy: (e) => e.requirements })
+    readonly parsedRequirements?: Rel<ParsedRequirementsModel>
 
     async getLatestActiveVersion(): Promise<RequirementVersionsModel | undefined> {
         const versions = await this.versions.matching({

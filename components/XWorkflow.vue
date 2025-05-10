@@ -11,10 +11,13 @@ const props = defineProps<{
     reqType: ReqType,
     organizationSlug: string,
     solutionSlug: string,
-    disableNewRequirement?: boolean // New prop added
+    disableNewRequirement?: boolean
+    // TODO: this is hacky
+    parsedReqParentId?: string
 }>()
 
-const reqTypePascal = snakeCaseToPascalCase(props.reqType) as keyof typeof req,
+const router = useRouter(),
+    reqTypePascal = snakeCaseToPascalCase(props.reqType) as keyof typeof req,
     RequirementSchema = req[reqTypePascal],
     innerSchema = RequirementSchema instanceof z.ZodEffects
         ? RequirementSchema._def.schema
@@ -36,7 +39,8 @@ const { $eventBus } = useNuxtApp(),
 const { data, refresh, status, error } = await useFetch<SchemaType[]>(`/api/requirements/${props.reqType}`, {
     query: {
         solutionSlug: props.solutionSlug,
-        organizationSlug: props.organizationSlug
+        organizationSlug: props.organizationSlug,
+        ...(props.parsedReqParentId ? { parsedReqParentId: props.parsedReqParentId } : {})
     },
     transform: (data) => data.map((item) => req[reqTypePascal].parse({
         ...item,
@@ -50,55 +54,68 @@ if (error.value)
 
 // Emit events for WorkflowState.Active and non-Active items
 if (data.value) {
-    const activeItems = data.value.filter(item => item.workflowState === WorkflowState.Active);
-    const nonActiveItems = data.value.filter(item => item.workflowState !== WorkflowState.Active);
+    const activeItems = data.value.filter(item => item.workflowState === WorkflowState.Active),
+        nonActiveItems = data.value.filter(item => item.workflowState !== WorkflowState.Active);
 
     emit('workflow-active-items', activeItems);
     emit('workflow-non-active-items', nonActiveItems);
 }
 
-const createSchema = (innerSchema as typeof req.Requirement).omit({
-    workflowState: true,
-    reqId: true,
-    // @ts-ignore: this property exists on some subtypes of Requirement
-    reqIdPrefix: true,
-    createdBy: true,
-    creationDate: true,
-    lastModified: true,
-    id: true,
-    reqType: true,
-    isDeleted: true,
-    modifiedBy: true,
-    solution: true
-})
+const createSchema = props.reqType === ReqType.PARSED_REQUIREMENTS ?
+    req.ParsedRequirements.pick({
+        description: true
+    })
+    : (innerSchema as typeof req.Requirement).omit({
+        reqId: true,
+        // @ts-ignore: this property exists on some subtypes of Requirement
+        reqIdPrefix: true,
+        createdBy: true,
+        creationDate: true,
+        lastModified: true,
+        id: true,
+        reqType: true,
+        isDeleted: true,
+        modifiedBy: true,
+        solution: true
+    })
 
-const viewSchema = (innerSchema as typeof req.Requirement).omit({
-    reqType: true,
-    // @ts-ignore: this property exists on some subtypes of Requirement
-    reqIdPrefix: true,
-    createdBy: true,
-    creationDate: true,
-    lastModified: true,
-    id: true,
-    isDeleted: true,
-    modifiedBy: true,
-    solution: true
-})
+const viewSchema = props.reqType === ReqType.PARSED_REQUIREMENTS ?
+    req.ParsedRequirements.pick({
+        workflowState: true,
+        description: true,
+        requirements: true
+    })
+    : (innerSchema as typeof req.Requirement).omit({
+        reqType: true,
+        // @ts-ignore: this property exists on some subtypes of Requirement
+        reqIdPrefix: true,
+        createdBy: true,
+        creationDate: true,
+        lastModified: true,
+        id: true,
+        isDeleted: true,
+        modifiedBy: true,
+        solution: true
+    })
 
-const editSchema = (innerSchema as typeof req.Requirement).omit({
-    workflowState: true,
-    reqId: true,
-    // @ts-ignore: this property exists on some subtypes of Requirement
-    reqIdPrefix: true,
-    createdBy: true,
-    creationDate: true,
-    lastModified: true,
-    id: true,
-    reqType: true,
-    isDeleted: true,
-    modifiedBy: true,
-    solution: true
-})
+const editSchema = props.reqType === ReqType.PARSED_REQUIREMENTS ?
+    req.ParsedRequirements.pick({
+        description: true
+    })
+    : (innerSchema as typeof req.Requirement).omit({
+        workflowState: true,
+        reqId: true,
+        // @ts-ignore: this property exists on some subtypes of Requirement
+        reqIdPrefix: true,
+        createdBy: true,
+        creationDate: true,
+        lastModified: true,
+        id: true,
+        reqType: true,
+        isDeleted: true,
+        modifiedBy: true,
+        solution: true
+    })
 
 const workflowColorMap: Record<WorkflowState, BadgeProps['color']> = {
     [WorkflowState.Proposed]: 'info',
@@ -115,7 +132,7 @@ const priorityColorMap: Record<MoscowPriority, BadgeProps['color']> = {
     [MoscowPriority.WONT]: 'neutral'
 };
 
-const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label, innerType }) => {
+const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
     const column: TableColumn<SchemaType> = {
         accessorKey: key,
         header: ({ column }) => {
@@ -148,13 +165,15 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label, innerType
                     return <UBadge color={priorityColorMap[cellValue as MoscowPriority]} label={cellValue} />;
                 case typeof cellValue === 'string':
                 case typeof cellValue === 'number':
-                    return cellValue;
+                    return <p class="max-w-2xl truncate">{cellValue}</p>;
                 case cellValue instanceof Date:
                     return <time datetime={cellValue.toISOString()}>{cellValue.toLocaleString()}</time>;
                 case typeof cellValue === 'boolean':
                     return <UCheckbox modelValue={cellValue} disabled />;
                 case typeof cellValue === 'object' && cellValue !== null && 'id' in cellValue && 'name' in cellValue:
                     return cellValue.name;
+                case props.reqType === ReqType.PARSED_REQUIREMENTS && key === 'requirements':
+                    return <span class="text-sm">{cellValue.length} requirements</span>;
                 default:
                     return cellValue;
             }
@@ -174,7 +193,9 @@ const actionColumn: TableColumn<SchemaType> = {
     header: 'Actions',
     cell: ({ row }) => {
         const item = row.original,
-            actionItems = getActionItems(item);
+            actionItems = props.reqType === ReqType.PARSED_REQUIREMENTS
+                ? getParsedReqsActionItems(item)
+                : getDefaultActionItems(item);
 
         return (
             <div class="text-left">
@@ -330,7 +351,33 @@ const onReviewReject = async () => {
     });
 }
 
-const getActionItems = (item: SchemaType): DropdownMenuItem[] => {
+const getParsedReqsActionItems = (item: SchemaType): DropdownMenuItem[] => {
+    const items: DropdownMenuItem[] = [{
+        label: 'View',
+        icon: 'i-lucide-eye',
+        color: 'info',
+        onSelect: () => {
+            router.push({
+                name: 'Parsed Requirements Details',
+                params: {
+                    organizationslug: props.organizationSlug,
+                    solutionslug: props.solutionSlug,
+                    id: item.id
+                }
+            });
+        }
+    }]
+    switch (item.workflowState) {
+        case WorkflowState.Proposed:
+        case WorkflowState.Review:
+        case WorkflowState.Rejected:
+        case WorkflowState.Removed:
+        case WorkflowState.Active:
+            return items
+    }
+}
+
+const getDefaultActionItems = (item: SchemaType): DropdownMenuItem[] => {
     switch (item.workflowState) {
         case WorkflowState.Proposed:
             return [{

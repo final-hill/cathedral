@@ -50,7 +50,7 @@ renderChart();
 </script>
 
 <template>
-    <h1>Stakeholders</h1>
+    <h1>G.7 Stakeholders</h1>
     <p> {{ Stakeholder.description }} </p>
 
     <UTabs :items="tabs" @update:open="renderChart">
