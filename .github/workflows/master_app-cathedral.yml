@@ -6,7 +6,7 @@ name: Build and deploy Azure
 on:
   release:
     types: [created]
-  workflow_dispatch:
+  # workflow_dispatch:
 
 jobs:
   build:
@@ -39,25 +39,26 @@ jobs:
 
       - name: 'Create env file'
         run: |
-          touch .env
-          echo "POSTGRES_USER=${{secrets.POSTGRES_USER}}" > .env
-          echo "POSTGRES_PASSWORD=${{secrets.POSTGRES_PASSWORD}}" >> .env
-          echo "POSTGRES_HOST=${{secrets.POSTGRES_HOST}}" >> .env
-          echo "POSTGRES_PORT=${{secrets.POSTGRES_PORT}}" >> .env
-          echo "POSTGRES_DB=${{secrets.POSTGRES_DB}}" >> .env
-          echo "NODE_ENV=production" >> .env
-          echo "NUXT_ORIGIN=${{secrets.NUXT_ORIGIN}}" >> .env
-          echo "NUXT_SESSION_PASSWORD=${{secrets.NUXT_SESSION_PASSWORD}}" >> .env
-          echo "SLACK_ADMIN_MEMBER_ID=${{secrets.SLACK_ADMIN_MEMBER_ID}}" >> .env
-          echo "SLACK_BOT_TOKEN=${{secrets.SLACK_BOT_TOKEN}}" >> .env
-          echo "SLACK_SIGNING_SECRET=${{secrets.SLACK_SIGNING_SECRET}}" >> .env
-          echo "NUXT_AZURE_OPENAI_API_KEY=${{secrets.NUXT_AZURE_OPENAI_API_KEY}}" >> .env
-          echo "NUXT_AZURE_OPENAI_API_VERSION=${{secrets.NUXT_AZURE_OPENAI_API_VERSION}}" >> .env
-          echo "NUXT_AZURE_OPENAI_ENDPOINT=${{secrets.NUXT_AZURE_OPENAI_ENDPOINT}}" >> .env
-          echo "NUXT_AZURE_OPENAI_DEPLOYMENT_ID=${{secrets.NUXT_AZURE_OPENAI_DEPLOYMENT_ID}}" >> .env
+          mkdir -p .output
+          touch .output/.env
+          echo "POSTGRES_USER=${{secrets.POSTGRES_USER}}" > .output/.env
+          echo "POSTGRES_PASSWORD=${{secrets.POSTGRES_PASSWORD}}" >> .output/.env
+          echo "POSTGRES_HOST=${{secrets.POSTGRES_HOST}}" >> .output/.env
+          echo "POSTGRES_PORT=${{secrets.POSTGRES_PORT}}" >> .output/.env
+          echo "POSTGRES_DB=${{secrets.POSTGRES_DB}}" >> .output/.env
+          echo "NODE_ENV=production" >> .output/.env
+          echo "NUXT_ORIGIN=${{secrets.NUXT_ORIGIN}}" >> .output/.env
+          echo "NUXT_SESSION_PASSWORD=${{secrets.NUXT_SESSION_PASSWORD}}" >> .output/.env
+          echo "SLACK_ADMIN_MEMBER_ID=${{secrets.SLACK_ADMIN_MEMBER_ID}}" >> .output/.env
+          echo "SLACK_BOT_TOKEN=${{secrets.SLACK_BOT_TOKEN}}" >> .output/.env
+          echo "SLACK_SIGNING_SECRET=${{secrets.SLACK_SIGNING_SECRET}}" >> .output/.env
+          echo "NUXT_AZURE_OPENAI_API_KEY=${{secrets.NUXT_AZURE_OPENAI_API_KEY}}" >> .output/.env
+          echo "NUXT_AZURE_OPENAI_API_VERSION=${{secrets.NUXT_AZURE_OPENAI_API_VERSION}}" >> .output/.env
+          echo "NUXT_AZURE_OPENAI_ENDPOINT=${{secrets.NUXT_AZURE_OPENAI_ENDPOINT}}" >> .output/.env
+          echo "NUXT_AZURE_OPENAI_DEPLOYMENT_ID=${{secrets.NUXT_AZURE_OPENAI_DEPLOYMENT_ID}}" >> .output/.env
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        run: zip release.zip .output/* -r
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -82,10 +83,10 @@ jobs:
           name: node-app
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip
+        run: unzip release.zip -d app
 
-      - name: Show directory contents
-        run: ls -la
+      - name: Show contents of 'app' folder
+        run: ls -la app
 
       - name: Set up Node.js version
         uses: actions/setup-node@v3
@@ -101,10 +102,12 @@ jobs:
 
       - name: Deploy Database
         run: |
+          cd app
           npm run orm-debug
           npm run orm-list-pending-migrations
           npm run orm-run-pending-migrations
           npm run orm-seed-users
+          cd ..
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
@@ -112,4 +115,4 @@ jobs:
         with:
           app-name: 'app-cathedral'
           slot-name: 'Production'
-          package: .
+          package: release.zip
