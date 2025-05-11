@@ -11,6 +11,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: azure-prod
     permissions:
       contents: read #This is required for actions/checkout
 
