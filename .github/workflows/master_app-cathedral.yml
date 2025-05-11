@@ -80,21 +80,34 @@ jobs:
       contents: read #This is required for actions/checkout
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: node-app
 
-      - name: Unzip artifact for deployment
-        run: unzip release.zip -d app
-
-      - name: Show contents of 'app' folder
-        run: ls -la app
+      - name: Extract .env file
+        run: |
+          unzip release.zip .output/.env -d .
+          mv .output/.env .env
 
       - name: Set up Node.js version
         uses: actions/setup-node@v3
         with:
           node-version: '22.x'
+
+      - name: Restore Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: npm install
+        run: |
+          npm install
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -105,12 +118,10 @@ jobs:
 
       - name: Deploy Database
         run: |
-          cd app
           npm run orm-debug
           npm run orm-list-pending-migrations
           npm run orm-run-pending-migrations
           npm run orm-seed-users
-          cd ..
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
