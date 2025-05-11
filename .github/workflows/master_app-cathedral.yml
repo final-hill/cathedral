@@ -6,7 +6,7 @@ name: Build and deploy Azure
 on:
   release:
     types: [created]
-  # workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   build:
