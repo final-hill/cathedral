@@ -89,8 +89,7 @@ jobs:
 
       - name: Extract .env file
         run: |
-          unzip release.zip .output/.env -d .
-          mv .output/.env .env
+          unzip -p release.zip .env > .env
 
       - name: Set up Node.js version
         uses: actions/setup-node@v3
