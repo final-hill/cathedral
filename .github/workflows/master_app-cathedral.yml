@@ -33,7 +33,7 @@ jobs:
 
       - name: npm install, build, and test
         run: |
-          npm install
+          npm ci
           npm run build
           npm run generate-pwa-assets
           npm run test
@@ -42,11 +42,14 @@ jobs:
         run: |
           mkdir -p .output
           echo "${{ secrets.ENV_FILE }}" > .output/.env
+          echo "Environment file created with $(wc -l < .output/.env) lines"
 
       - name: Zip artifact for deployment
         run: |
           cd .output
-          zip -r ../release.zip ./* .?*
+          zip -r ../release.zip ./* .env
+          echo "Archive contents:"
+          unzip -l ../release.zip | grep -E '\.(env|mjs|js)$'
           cd ..
 
       - name: Upload artifact for deployment job
@@ -76,6 +79,9 @@ jobs:
       - name: Extract .env file
         run: |
           unzip -p release.zip .env > .env
+          echo "Environment file extracted with $(wc -l < .env) lines"
+          echo "First few lines (redacted):"
+          head -3 .env | sed 's/=.*/=***/'
 
       - name: Set up Node.js version
         uses: actions/setup-node@v3
@@ -92,7 +98,7 @@ jobs:
 
       - name: npm install
         run: |
-          npm install
+          npm ci --production
 
       - name: Login to Azure
         uses: azure/login@v2
