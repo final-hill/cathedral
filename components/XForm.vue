@@ -10,8 +10,8 @@ const props = defineProps<{
     disabled?: boolean,
     class?: string,
     schema: F,
-    state: z.infer<F>,
-    onSubmit: (data: z.infer<F>) => Promise<void>,
+    state: Partial<z.output<F>>,
+    onSubmit: (data: z.output<F>) => Promise<void>,
     onCancel?: () => void
 }>()
 
@@ -21,7 +21,7 @@ const form = useTemplateRef('form'),
     backupState = reactive(Object.create(props.state)),
     toast = useToast()
 
-const onSubmit = async ({ data }: FormSubmitEvent<z.infer<F>>) => {
+const onSubmit = async ({ data }: FormSubmitEvent<z.output<F>>) => {
     await props.onSubmit(data)
     toast.add({
         icon: 'i-lucide-check',
@@ -58,7 +58,7 @@ const autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field
 </script>
 
 <template>
-    <UForm ref="form" :id="props.id" :state="props.state" :schema="props.schema"
+    <UForm ref="form" :id="props.id" :state="props.state" :schema="props.schema as any"
         :class="`gap-4 flex flex-col ${props.class}`" @submit="onSubmit" autocomplete="off" :disabled="props.disabled"
         :aria-disabled="props.disabled ? 'true' : undefined">
         <template v-for="field of schemaFields" :key="field.key">

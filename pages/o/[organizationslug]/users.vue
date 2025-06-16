@@ -226,7 +226,7 @@ const onAddModalSubmit = async () => {
         <UButton label="Add User" color="success" @click="openAddModal" size="xl" />
     </section>
 
-    <UTable sticky :data="users" :columns="userColumns" v-model:column-pinning="columnPinning"
+    <UTable sticky :data="users || []" :columns="userColumns" v-model:column-pinning="columnPinning"
         :loading="status === 'pending'" :empty-state="{ icon: 'i-lucide-database', label: 'No items.' }" />
 
     <UModal v-model:open="addModalOpenState" title="Add User">
