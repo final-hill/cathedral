@@ -1,4 +1,23 @@
-import devtoolsJson from 'vite-plugin-devtools-json';
+// Safely load dev-only plugins
+function getDevPlugins() {
+    if (process.env.NODE_ENV !== 'development') {
+        return [];
+    }
+    
+    try {
+        // @ts-ignore - This is a dev dependency and won't be available in production
+        const devtoolsJson = require('vite-plugin-devtools-json');
+        return [devtoolsJson.default()];
+    } catch {
+        // If the plugin is not available, just return empty array
+        return [];
+    }
+}
+
+// Get dev-only modules
+function getDevModules() {
+    return process.env.NODE_ENV === 'development' ? ['@nuxt/test-utils/module'] : [];
+}
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -40,8 +59,8 @@ export default defineNuxtConfig({
         '@nuxt/ui',
         '@vite-pwa/nuxt',
         'nuxt-security',
-        '@nuxt/test-utils/module',
-        'nuxt-auth-utils'
+        'nuxt-auth-utils',
+        ...getDevModules()
     ],
     runtimeConfig: {
         // The private keys which are only available within server-side
@@ -130,7 +149,8 @@ export default defineNuxtConfig({
         },
         plugins: [
             // https://github.com/ChromeDevTools/vite-plugin-devtools-json
-            devtoolsJson()
+            // Only load in development mode to avoid dependency issues in production
+            ...getDevPlugins()
         ],
         server: {
             hmr: {
