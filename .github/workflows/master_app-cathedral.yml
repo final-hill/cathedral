@@ -54,6 +54,7 @@ jobs:
           echo "NUXT_SLACK_CLIENT_ID=${{secrets.NUXT_SLACK_CLIENT_ID}}" >> .output/.env
           echo "NUXT_SLACK_CLIENT_SECRET=${{secrets.NUXT_SLACK_CLIENT_SECRET}}" >> .output/.env
           echo "NUXT_SLACK_SIGNING_SECRET=${{secrets.NUXT_SLACK_SIGNING_SECRET}}" >> .output/.env
+          echo "NUXT_SLACK_LINK_SECRET=${{secrets.NUXT_SLACK_LINK_SECRET}}" >> .output/.env
           echo "NUXT_SLACK_BOT_TOKEN=${{secrets.NUXT_SLACK_BOT_TOKEN}}" >> .output/.env
           echo "NUXT_AZURE_OPENAI_API_KEY=${{secrets.NUXT_AZURE_OPENAI_API_KEY}}" >> .output/.env
           echo "NUXT_AZURE_OPENAI_API_VERSION=${{secrets.NUXT_AZURE_OPENAI_API_VERSION}}" >> .output/.env
