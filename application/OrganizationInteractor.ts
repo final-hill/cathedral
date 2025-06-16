@@ -3,10 +3,8 @@ import * as req from "#shared/domain/requirements";
 import { ReqType } from "#shared/domain/requirements/enums";
 import { AppRole, AppUser } from "#shared/domain/application";
 import { MismatchException, PermissionDeniedException } from "#shared/domain/exceptions";
-import type { OrganizationRepository } from "~/server/data/repositories/OrganizationRepository";
-import { Interactor } from "./Interactor";
-import { PermissionInteractor } from "./PermissionInteractor";
-import type { AppUserInteractor } from "./AppUserInteractor";
+import { type OrganizationRepository } from "~/server/data/repositories";
+import { Interactor, type AppUserInteractor, PermissionInteractor } from "./";
 
 /**
  * The OrganizationInteractor class contains the business logic for interacting with an organization.

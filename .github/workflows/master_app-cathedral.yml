@@ -50,9 +50,12 @@ jobs:
           echo "NODE_ENV=production" >> .output/.env
           echo "NUXT_ORIGIN=${{secrets.NUXT_ORIGIN}}" >> .output/.env
           echo "NUXT_SESSION_PASSWORD=${{secrets.NUXT_SESSION_PASSWORD}}" >> .output/.env
-          echo "SLACK_ADMIN_MEMBER_ID=${{secrets.SLACK_ADMIN_MEMBER_ID}}" >> .output/.env
-          echo "SLACK_BOT_TOKEN=${{secrets.SLACK_BOT_TOKEN}}" >> .output/.env
-          echo "SLACK_SIGNING_SECRET=${{secrets.SLACK_SIGNING_SECRET}}" >> .output/.env
+          echo "NUXT_SLACK_APP_ID=${{secrets.NUXT_SLACK_APP_ID}}" >> .output/.env
+          echo "NUXT_SLACK_CLIENT_ID=${{secrets.NUXT_SLACK_CLIENT_ID}}" >> .output/.env
+          echo "NUXT_SLACK_CLIENT_SECRET=${{secrets.NUXT_SLACK_CLIENT_SECRET}}" >> .output/.env
+          echo "NUXT_SLACK_SIGNING_SECRET=${{secrets.NUXT_SLACK_SIGNING_SECRET}}" >> .output/.env
+          echo "NUXT_SLACK_LINK_SECRET=${{secrets.NUXT_SLACK_LINK_SECRET}}" >> .output/.env
+          echo "NUXT_SLACK_BOT_TOKEN=${{secrets.NUXT_SLACK_BOT_TOKEN}}" >> .output/.env
           echo "NUXT_AZURE_OPENAI_API_KEY=${{secrets.NUXT_AZURE_OPENAI_API_KEY}}" >> .output/.env
           echo "NUXT_AZURE_OPENAI_API_VERSION=${{secrets.NUXT_AZURE_OPENAI_API_VERSION}}" >> .output/.env
           echo "NUXT_AZURE_OPENAI_ENDPOINT=${{secrets.NUXT_AZURE_OPENAI_ENDPOINT}}" >> .output/.env

@@ -1,12 +1,12 @@
 import { type WebAuthnUser } from '#auth-utils';
 import { z } from 'zod';
-import { NIL as SYSTEM_USER_ID } from 'uuid'
 import cache from '~/server/utils/cache';
 import { AppUser, DuplicateEntityException, MismatchException } from '~/shared/domain';
 import { getConnection } from "~/mikro-orm.config"
 import { AppUserInteractor, PermissionInteractor } from '~/application';
 import { AppUserRepository, PermissionRepository } from '~/server/data/repositories';
 import { PostgreSqlDriver, SqlEntityManager } from '@mikro-orm/postgresql';
+import { SYSTEM_USER_ID } from '~/shared/constants.js';
 
 export default defineWebAuthnRegisterEventHandler({
     /**

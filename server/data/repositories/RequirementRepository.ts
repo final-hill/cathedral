@@ -4,8 +4,8 @@ import { Repository } from "./Repository";
 import { Requirement } from "#shared/domain/requirements";
 import * as req from "#shared/domain/requirements";
 import * as reqModels from "../models/requirements";
-import { AuditMetadata, MoscowPriority, NotFoundException, ReqType, StakeholderCategory, StakeholderSegmentation, WorkflowState } from "~/shared/domain";
-import { snakeCaseToPascalCase } from "~/shared/utils";
+import { AuditMetadata, ConstraintCategory, MoscowPriority, NotFoundException, ReqType, StakeholderCategory, StakeholderSegmentation, WorkflowState } from "~/shared/domain";
+import { snakeCaseToPascalCase, resolveReqTypeFromModel } from "~/shared/utils";
 import { DataModelToDomainModel, ReqQueryToModelQuery } from "../mappers";
 import { type CreationInfo } from "./CreationInfo";
 import { type UpdationInfo } from "./UpdationInfo";
@@ -53,6 +53,7 @@ export class RequirementRepository extends Repository<RequirementType> {
 
     async addParsedRequirements(props: CreationInfo & {
         solutionId: string,
+        name: string,
         statement: string,
         reqData: z.infer<typeof llmRequirementSchema>[],
     }): Promise<reqModels.ParsedRequirementsModel['id']> {
@@ -70,7 +71,7 @@ export class RequirementRepository extends Repository<RequirementType> {
             modifiedBy: props.createdById,
             workflowState: WorkflowState.Proposed,
             solution: props.solutionId,
-            name: 'Free-form requirements',
+            name: props.name,
             description: props.statement,
         })
 
@@ -196,17 +197,18 @@ export class RequirementRepository extends Repository<RequirementType> {
                 name: req.name,
                 ...(req.moscowPriority && { priority: req.moscowPriority }),
                 ...(req.email && { email: req.email }),
-                ...(req.primaryActorName && { primaryActor: newPrimaryActorId }),
-                ...(req.outcomeName && { outcome: newOutcomeId }),
+                ...(newPrimaryActorId && { primaryActor: newPrimaryActorId }),
+                ...(newOutcomeId && { outcome: newOutcomeId }),
                 ...(req.stakeholderSegmentation && { segmentation: req.stakeholderSegmentation }),
                 ...(req.stakeholderCategory && { category: req.stakeholderCategory }),
+                ...(req.reqType === ReqType.CONSTRAINT && { category: req.constraintCategory || ConstraintCategory['Business Rule'] }),
                 ...(req.useCaseScope && { scope: req.useCaseScope }),
                 ...(req.useCaseLevel && { level: req.useCaseLevel }),
-                ...(req.useCasePreconditionName && { precondition: newPreconditionId }),
+                ...(newPreconditionId && { precondition: newPreconditionId }),
                 ...(req.useCaseMainSuccessScenario && { mainSuccessScenario: req.useCaseMainSuccessScenario }),
-                ...(req.useCaseSuccessGuaranteeName && { successGuarantee: newSuccessGuaranteeId }),
+                ...(newSuccessGuaranteeId && { successGuarantee: newSuccessGuaranteeId }),
                 ...(req.useCaseExtensions && { extensions: req.useCaseExtensions }),
-                ...(req.userStoryFunctionalBehaviorName && { functionalBehavior: newFunctionalBehaviorId }),
+                ...(newFunctionalBehaviorId && { functionalBehavior: newFunctionalBehaviorId }),
             })
         }
 
@@ -381,13 +383,15 @@ export class RequirementRepository extends Repository<RequirementType> {
     async getById<R extends RequirementType>(id: z.infer<typeof Requirement>['id']): Promise<R> {
         const em = this._em,
             reqStatic = await em.findOne(reqModels.RequirementModel, { id }),
-            reqLatestVersion = await reqStatic?.getLatestVersion(new Date())
+            reqLatestVersion = await reqStatic?.getLatestVersion(new Date());
 
         if (!reqStatic || !reqLatestVersion)
             throw new NotFoundException(`Requirement with id ${id} not found`);
 
-        const req_type: ReqType = reqStatic.req_type,
-            reqTypePascal = snakeCaseToPascalCase(req_type) as keyof typeof req,
+        // Use utility function to resolve req_type from the model instance
+        const req_type = resolveReqTypeFromModel(reqStatic);
+
+        const reqTypePascal = snakeCaseToPascalCase(req_type) as keyof typeof req,
             mapper = new DataModelToDomainModel()
 
         return req[reqTypePascal].parse(

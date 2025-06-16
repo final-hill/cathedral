@@ -1,6 +1,7 @@
 import { AppRole, AppUserOrganizationRole, NotFoundException, Organization, PermissionDeniedException, type AppUser } from "#shared/domain";
 import type { PermissionRepository } from "~/server/data/repositories/PermissionRepository";
 import type { z } from "zod";
+import { SYSTEM_SLACK_USER_ID } from "~/shared/constants.js";
 
 /**
  * Interactor for checking permissions
@@ -17,6 +18,15 @@ export class PermissionInteractor {
 
     get userId(): z.infer<typeof AppUser>['id'] {
         return this._userId;
+    }
+
+    /**
+     * Check if the user is the Slack bot
+     * @throws {PermissionDeniedException} If the user is not the Slack bot and not a system admin
+     */
+    async assertSlackBot(): Promise<void> {
+        if (!this.isSlackBot() && !await this.isSystemAdmin())
+            throw new PermissionDeniedException('Forbidden: You do not have permissions to perform this action.');
     }
 
     /**
@@ -126,6 +136,10 @@ export class PermissionInteractor {
         const appUser = await this._repository.getUserById(this._userId);
 
         return appUser.isSystemAdmin;
+    }
+
+    async isSlackBot(): Promise<boolean> {
+        return this._userId === SYSTEM_SLACK_USER_ID
     }
 
     /**

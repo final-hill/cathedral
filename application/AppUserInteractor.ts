@@ -1,4 +1,4 @@
-import type { AppUserRepository } from "~/server/data/repositories/AppUserRepository";
+import { type AppUserRepository } from "~/server/data/repositories";
 import { Interactor } from "./Interactor";
 import { AppUser, MismatchException, PermissionDeniedException } from "#shared/domain";
 import type { z } from "zod";
@@ -178,7 +178,7 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
     }
 
     /**
-     * Get a credential by its ID
+     * Get a WebAuth credential by its ID
      * @param credentialId - The ID of the credential
      * @returns The credential
      * @throws {NotFoundException} If the credential does not exist

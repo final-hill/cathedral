@@ -5,6 +5,7 @@ export * from './dedent';
 export * from './deSlugify';
 export * from './getSchemaFields';
 export * from './pascalCaseToSnakeCase'
+export * from './resolveReqTypeFromModel';
 export * from './slugify';
 export * from './snakeCaseToCamelCase';
 export * from './snakeCaseToPascalCase';

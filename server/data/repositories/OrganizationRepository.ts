@@ -1,20 +1,17 @@
 import { v7 as uuid7 } from 'uuid'
 import { z } from "zod";
 import { type FilterQuery } from "@mikro-orm/core";
-import { snakeCaseToPascalCase, slugify } from "#shared/utils";
-import { AuditMetadata, WorkflowState } from "#shared/domain";
+import { slugify } from "#shared/utils";
+import { WorkflowState } from "#shared/domain";
 import * as req from "#shared/domain/requirements";
 import * as reqModels from "../models/requirements";
 import { ReqType } from "#shared/domain/requirements/ReqType";
-import { reqIdPattern } from "#shared/domain/requirements/reqIdPattern";
 import { NotFoundException } from "#shared/domain/exceptions";
 import { Repository } from "./Repository";
 import { DataModelToDomainModel, ReqQueryToModelQuery } from "../mappers";
 import { type CreationInfo } from "./CreationInfo";
 import { type UpdationInfo } from "./UpdationInfo";
 import { type DeletionInfo } from "./DeletionInfo";
-
-const rePrefixFilter = (prefix: string) => ({ reqId: new RegExp(`^${prefix}(?!0)`) })
 
 // TODO: parameterize the repository type
 export class OrganizationRepository extends Repository<z.infer<typeof req.Organization>> {
@@ -31,10 +28,10 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
      * @param [props.organizationId] - The id of the organization to utilize
      * @param [props.organizationSlug] - The slug of the organization to utilize
      */
-    constructor(options: ConstructorParameters<typeof Repository>[0] & {
+    constructor(options: ConstructorParameters<typeof Repository>[0] & ({
         organizationId?: z.infer<typeof req.Organization>['id'],
         organizationSlug?: z.infer<typeof req.Organization>['slug']
-    }) {
+    })) {
         super({ em: options.em })
 
         const { organizationId, organizationSlug } = options

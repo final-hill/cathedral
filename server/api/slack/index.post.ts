@@ -1,163 +1,47 @@
-import { WebClient } from "@slack/web-api"
-import crypto from 'crypto'
-import { z } from "zod"
+import { NaturalLanguageToRequirementService, SlackService } from "~/server/data/services";
+import { SlackRepository, PermissionRepository } from '~/server/data/repositories';
+import { SlackInteractor, PermissionInteractor } from "~/application";
+import { SYSTEM_SLACK_USER_ID } from "~/shared/constants.js";
+import { slackBodySchema } from "~/server/data/slack-zod-schemas";
 
-// https://api.slack.com/events
-const urlVerificationSchema = z.object({
-    token: z.string(),
-    challenge: z.string(),
-    type: z.literal("url_verification")
-})
+const config = useRuntimeConfig()
 
-const appMentionSchema = z.object({
-    type: z.literal("app_mention"),
-    user: z.string(),
-    bot_id: z.string().optional(),
-    text: z.string(),
-    ts: z.string(),
-    channel: z.string(),
-    event_ts: z.string(),
-})
-
-const messageSchema = z.object({
-    type: z.literal("message"),
-    bot_id: z.string().optional(),
-    user: z.string(),
-    text: z.string(),
-    ts: z.string(),
-    channel: z.string(),
-    event_ts: z.string()
-})
-
-const eventCallbackSchema = z.object({
-    token: z.string(),
-    team_id: z.string(),
-    api_app_id: z.string(),
-    event: z.union([appMentionSchema, messageSchema]),
-    type: z.literal('event_callback'),
-    event_id: z.string(),
-    event_time: z.number(),
-    authorizations: z.array(z.object({
-        enterprise_id: z.string().nullable(),
-        team_id: z.string(),
-        user_id: z.string(),
-        is_bot: z.boolean(),
-        is_enterprise_install: z.boolean()
-    })),
-    is_ext_shared_channel: z.boolean(),
-    event_context: z.string()
-});
-
-const bodySchema = z.union([urlVerificationSchema, eventCallbackSchema])
-
-const config = useRuntimeConfig(),
-    slack = new WebClient(config.slackBotToken)
-
-async function sendResponse(slackEvent: z.infer<typeof eventCallbackSchema>['event']) {
-    try {
-        // const thread = await slack.conversations.replies({
-        //     channel,
-        //     ts,
-        //     // inclusive: true,
-        // })
-
-        // const prompts = await generatePromptFromThread(thread)
-        // const llmResponse = await getLlmResponse(prompts)
-
-        const result = await slack.chat.postMessage({
-            channel: slackEvent.channel,
-            text: 'Message received. I do not have a response yet.',
-            thread_ts: slackEvent.ts,
-        })
-    } catch (error) {
-        throw createError({
-            statusCode: 500,
-            statusMessage: 'Internal Server Error',
-            message: 'Failed to send response to Slack',
-            data: { error }
-        })
-    }
-}
-
-// https://api.slack.com/authentication/verifying-requests-from-slack#validating-a-request
-function isValidSlackRequest(headers: Headers, rawBody: string) {
-    const signingSecret = config.slackSigningSecret,
-        timestamp = headers.get('X-Slack-Request-Timestamp')!
-
-    // Prevent replay attacks by checking the timestamp
-    // to verify that it does not differ from local time by more than five minutes.
-    const curTimestamp = Math.floor(Date.now() / 1000),
-        reqTimestamp = parseInt(timestamp, 10);
-
-    if (Math.abs(curTimestamp - reqTimestamp) > 300) {
-        throw createError({
-            statusCode: 403,
-            statusMessage: 'Forbidden',
-            message: 'Invalid Slack request timestamp'
-        });
-    }
-
-    const slackSignature = headers.get('X-Slack-Signature')!,
-        base = `v0:${timestamp}:${rawBody}`,
-        hmac = crypto
-            .createHmac('sha256', signingSecret)
-            .update(base)
-            .digest('hex'),
-        computedSignature = `v0=${hmac}`
-
-    return computedSignature === slackSignature
-}
+const slackService = new SlackService(config.slackBotToken, config.slackSigningSecret),
+    nlrService = new NaturalLanguageToRequirementService({
+        apiKey: config.azureOpenaiApiKey,
+        apiVersion: config.azureOpenaiApiVersion,
+        endpoint: config.azureOpenaiEndpoint,
+        deployment: config.azureOpenaiDeploymentId
+    })
 
 export default defineEventHandler(async (event) => {
-    const rawBody = (await readRawBody(event))!
+    try {
+        const rawBody = (await readRawBody(event))!,
+            data = await validateEventBody(event, slackBodySchema),
+            headers = event.headers,
+            em = event.context.em,
+            slackInteractor = new SlackInteractor({
+                repository: new SlackRepository({ em }),
+                permissionInteractor: new PermissionInteractor({
+                    userId: SYSTEM_SLACK_USER_ID,
+                    repository: new PermissionRepository({ em })
+                }),
+                nlrService,
+                slackService
+            });
 
-    const body = await readValidatedBody(event, (b) => bodySchema.safeParse(b)),
-        headers = event.headers
+        slackService.assertValidSlackRequest(headers, rawBody)
 
-    if (!body.success)
+        return slackInteractor.handleEvent(data)
+    } catch (error) {
+        // Log the full error for debugging
+        console.error('Slack webhook error:', error);
+        
+        // Return a minimal error response to Slack
+        // Note: Slack expects a 200 response even for errors to prevent retries
         throw createError({
-            statusCode: 400,
-            statusMessage: 'Bad Request',
-            message: 'Invalid request body'
-        })
-
-    if (!isValidSlackRequest(headers, rawBody))
-        throw createError({
-            statusCode: 403,
-            statusMessage: 'Forbidden',
-            message: 'Invalid Slack request signature'
-        })
-
-    const requestType = body.data?.type
-
-    if (!body.data)
-        return {}
-
-    switch (requestType) {
-        case 'url_verification':
-            return { challenge: body.data.challenge }
-        case 'event_callback':
-            const eventType = body.data.event.type
-            switch (eventType) {
-                case 'app_mention':
-                case 'message':
-                    // prevent infinite loop by ignoring messages from bots
-                    // Including messages from our own bot
-                    if (body.data.event.bot_id)
-                        return {}
-                    return await sendResponse(body.data.event)
-                default:
-                    throw createError({
-                        statusCode: 400,
-                        statusMessage: 'Bad Request: Invalid event type',
-                        message: `Unhandled event type: ${eventType}`
-                    })
-            }
-        default:
-            throw createError({
-                statusCode: 400,
-                statusMessage: 'Bad Request: Invalid request type',
-                message: `Unhandled request type: ${requestType}`
-            })
+            statusCode: 200,
+            statusMessage: 'Internal server error'
+        });
     }
-})
+});

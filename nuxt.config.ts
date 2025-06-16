@@ -51,11 +51,13 @@ export default defineNuxtConfig({
         origin: '',
         port: '',
 
+        slackAppId: '',
         slackAppToken: '',
         slackSigningSecret: '',
         slackClientId: '',
         slackClientSecret: '',
         slackBotToken: '',
+        slackLinkSecret: '',
 
         azureOpenaiApiKey: '',
         azureOpenaiApiVersion: '',

@@ -1,5 +1,6 @@
 import { Collection, Entity, ManyToMany, ManyToOne, OneToMany, Property, types } from "@mikro-orm/core";
 import { AppCredentialsModel, AppUserOrganizationRoleModel, OrganizationModel } from "../index.js";
+import { SlackUserMetaModel } from "./SlackUserMetaModel.js";
 
 @Entity({ tableName: 'app_user' })
 export class AppUserModel {
@@ -35,4 +36,7 @@ export class AppUserModel {
 
     @OneToMany({ entity: () => AppCredentialsModel, mappedBy: 'appUser' })
     credentials = new Collection<AppCredentialsModel>(this);
+
+    @OneToMany({ entity: () => SlackUserMetaModel, mappedBy: 'appUser' })
+    slackUserMeta = new Collection<SlackUserMetaModel>(this);
 }

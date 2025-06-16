@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { dedent } from '~/shared/utils';
+import { dedent } from '../../utils/dedent.js';
 
 /**
  * The AppCredentials schema defines the structure of the credentials used by the application.

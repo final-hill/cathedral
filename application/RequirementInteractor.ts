@@ -7,7 +7,7 @@ import { InvalidWorkflowStateException, MismatchException } from "#shared/domain
 import type { PermissionInteractor } from "./PermissionInteractor";
 import type { AuditMetadata } from "~/shared/domain";
 import type { RequirementRepository } from "~/server/data/repositories/RequirementRepository";
-import type NaturalLanguageToRequirementService from "~/server/data/services/NaturalLanguageToRequirementService";
+import type { NaturalLanguageToRequirementService } from "~/server/data/services/NaturalLanguageToRequirementService";
 
 type ReqTypeName = keyof typeof req
 
@@ -153,6 +153,7 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
      */
     async parseRequirements(props: {
         service: NaturalLanguageToRequirementService,
+        name: string,
         statement: string
     }): Promise<z.infer<typeof req.ParsedRequirements>['id']> {
         await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
@@ -167,6 +168,7 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
             createdById: currentUserId,
             creationDate: new Date(),
             solutionId: this._solutionId,
+            name: props.name,
             statement: props.statement,
             reqData: results
         })

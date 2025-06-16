@@ -5,7 +5,7 @@ import { Organization, ReqType, Solution } from '~/shared/domain'
 import { snakeCaseToPascalCase } from '~/shared/utils';
 import * as req from "#shared/domain/requirements";
 import { z } from 'zod'
-import NaturalLanguageToRequirementService from "~/server/data/services/NaturalLanguageToRequirementService";
+import { NaturalLanguageToRequirementService } from "~/server/data/services/NaturalLanguageToRequirementService";
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
@@ -72,6 +72,7 @@ export default defineEventHandler(async (event) => {
 
         return requirementInteractor.parseRequirements({
             service: naturalLanguageToRequirementService,
+            name: 'Free-form requirements',
             statement: reqProps.description
         })
     } else {
