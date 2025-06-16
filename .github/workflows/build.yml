@@ -1,6 +1,9 @@
 # Reference: <https://help.github.com/en/actions/language-and-framework-guides/using-nodejs-with-github-actions>
 name: Build
 
+permissions:
+  contents: read
+
 on:
   pull_request:
     branches: [ master ]
