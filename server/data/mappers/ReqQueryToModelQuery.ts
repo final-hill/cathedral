@@ -1,11 +1,12 @@
 import { Requirement } from "#shared/domain/requirements"
+import { z } from "zod"
 import { type Mapper } from "./Mapper"
 
 /**
  * Converts a Requirement query to a model query
  */
-export class ReqQueryToModelQuery implements Mapper<Partial<Zod.infer<typeof Requirement>>, Record<string, any>> {
-    async map(query: Partial<Zod.infer<typeof Requirement>>): Promise<Record<string, any>> {
+export class ReqQueryToModelQuery implements Mapper<Partial<z.infer<typeof Requirement>>, Record<string, any>> {
+    async map(query: Partial<z.infer<typeof Requirement>>): Promise<Record<string, any>> {
         return Object.entries(query).reduce((acc, [key, value]: [string, any]) => {
             if (['createdBy', 'creationDate', 'id'].includes(key))
                 return acc

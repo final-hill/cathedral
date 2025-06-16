@@ -97,8 +97,7 @@ export default defineNuxtConfig({
                     compilerOptions: {
                         experimentalDecorators: true,
                         // @ts-ignore
-                        emitDecoratorMetadata: true,
-                        declaration: true
+                        emitDecoratorMetadata: true
                     }
                 }
             }
@@ -125,8 +124,7 @@ export default defineNuxtConfig({
                 compilerOptions: {
                     experimentalDecorators: true,
                     // @ts-ignore
-                    emitDecoratorMetadata: true,
-                    declaration: true
+                    emitDecoratorMetadata: true
                 }
             }
         },
