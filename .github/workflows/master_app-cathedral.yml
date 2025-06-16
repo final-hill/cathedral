@@ -98,7 +98,7 @@ jobs:
 
       - name: npm install
         run: |
-          npm ci --omit=dev
+          npm ci
 
       - name: Login to Azure
         uses: azure/login@v2
