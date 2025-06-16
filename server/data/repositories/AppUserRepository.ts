@@ -1,4 +1,4 @@
-import { AppUser, DuplicateEntityException, NotFoundException, ReqType } from "#shared/domain";
+import { AppUser, DuplicateEntityException, NotFoundException, ReqType, AppCredentials } from "#shared/domain";
 import { Repository } from "./Repository";
 import { AppUserModel, AppCredentialsModel } from "../models";
 import { v7 as uuid7 } from 'uuid'
@@ -6,7 +6,6 @@ import { type CreationInfo } from "./CreationInfo";
 import { type UpdationInfo } from "./UpdationInfo";
 import { z } from "zod";
 import { DataModelToDomainModel } from "../mappers";
-import { AppCredentials } from "~/shared/domain/application/AppCredentials";
 
 export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
     /**

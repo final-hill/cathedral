@@ -4,6 +4,7 @@ import { ReqType } from "#shared/domain/requirements/ReqType"
 import { AppUserModel, RequirementModel, RequirementVersionsModel } from "../models"
 import { type Mapper } from "./Mapper"
 import { Collection } from "@mikro-orm/core"
+import { resolveReqTypeFromModel } from "~/shared/utils"
 
 const objectSchema = z.object({
     id: z.string().uuid(),
@@ -45,8 +46,9 @@ export class DataModelToDomainModel<
                 const items = await value.loadItems();
                 return [key, await Promise.all(items.map(async item => {
                     if (item instanceof RequirementModel) {
-                        const latestVersion = await item.getLatestVersion(new Date());
-                        return { id: item.id, name: latestVersion?.name, reqType: item.req_type };
+                        const latestVersion = await item.getLatestVersion(new Date()),
+                            reqType = resolveReqTypeFromModel(item);
+                        return { id: item.id, name: latestVersion?.name, reqType };
                     } else if (item instanceof AppUserModel) {
                         return { id: item.id, name: item.name };
                     }

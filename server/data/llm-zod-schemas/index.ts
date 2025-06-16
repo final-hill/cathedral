@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { MoscowPriority, ReqType, StakeholderCategory, StakeholderSegmentation, UseCase } from "~/shared/domain"
+import { ConstraintCategory, MoscowPriority, ReqType, StakeholderCategory, StakeholderSegmentation, UseCase } from "~/shared/domain"
 
 export const llmRequirementSchema = z.object({
     reqType: z.nativeEnum(ReqType),
@@ -15,6 +15,7 @@ export const llmRequirementSchema = z.object({
     ).or(z.null()),
     stakeholderSegmentation: z.nativeEnum(StakeholderSegmentation).describe('The segmentation of the stakeholder').or(z.null()),
     stakeholderCategory: z.nativeEnum(StakeholderCategory).describe('The category of the stakeholder').or(z.null()),
+    constraintCategory: z.nativeEnum(ConstraintCategory).describe('The category of the constraint').or(z.null()),
     useCaseScope: z.string().describe(UseCase.shape.scope.description!).or(z.null()),
     useCaseLevel: z.string().describe(UseCase.shape.level.description!).or(z.null()),
     useCasePreconditionName: z.string().describe(

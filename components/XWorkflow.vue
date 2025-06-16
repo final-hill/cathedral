@@ -595,7 +595,7 @@ const onCreateModalReset = () => {
     </section>
     <UTable ref="workflowTable" sticky v-model:column-filters="workflowColumnFilters" :data="data ?? []"
         :columns="workflowColumns" v-model:column-pinning="columnPinning" :loading="status === 'pending'"
-        :empty-state="{ icon: 'i-lucide-database', label: 'No items.' }" />
+        :empty-state="{ icon: 'i-lucide-database', label: 'No items.' }" class="min-h-fit" />
 
     <UModal v-model:open="createModalOpenState" title="New Requirement">
         <template #body>

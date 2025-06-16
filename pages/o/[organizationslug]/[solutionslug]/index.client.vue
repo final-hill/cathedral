@@ -54,6 +54,10 @@ const handleSolutionEdit = () => {
                     </template>
                 </UModal>
             </section>
+
+            <section class="mt-4">
+                <SlackChannelManager :organization-slug="organizationSlug" :solution-slug="slug" />
+            </section>
         </template>
     </PegsLanding>
 

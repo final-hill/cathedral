@@ -1,9 +1,9 @@
 import { PostgreSqlDriver, SqlEntityManager } from "@mikro-orm/postgresql";
-import { NIL as SYSTEM_USER_ID } from 'uuid'
 import { AppUserInteractor, PermissionInteractor } from "~/application";
 import { getConnection } from "~/mikro-orm.config"
 import { AppUserRepository, PermissionRepository } from "~/server/data/repositories";
 import cache from '~/server/utils/cache';
+import { SYSTEM_USER_ID } from "~/shared/constants.js";
 import { MismatchException } from '~/shared/domain';
 
 export default defineWebAuthnAuthenticateEventHandler({

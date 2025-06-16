@@ -1,6 +1,4 @@
 import { AzureOpenAI } from "openai";
-import { v7 as uuidv7 } from 'uuid';
-import zodToJsonSchema from "zod-to-json-schema";
 import zodSchema, { llmRequirementSchema } from '../llm-zod-schemas/index.js'
 import { zodResponseFormat } from "openai/helpers/zod";
 import { dedent } from "../../../shared/utils/dedent.js";
@@ -9,8 +7,7 @@ import { ReqType } from "~/shared/domain/index.js";
 import * as reqs from '~/shared/domain/requirements/index.js';
 import { snakeCaseToPascalCase } from "~/shared/utils/snakeCaseToPascalCase.js";
 
-
-export default class NaturalLanguageToRequirementService {
+export class NaturalLanguageToRequirementService {
     private _aiClient: AzureOpenAI;
     private _modelId: string;
 
