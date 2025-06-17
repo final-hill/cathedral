@@ -11,13 +11,20 @@ on:
 
 jobs:
   build:
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-latest
+    environment: azure-prod
+    permissions:
+      contents: read
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_240BB00AEDEA4310B2B60EE43FFA47F0 }}
+        password: ${{ secrets.AZUREAPPSERVICE_CONTAINERPASSWORD_82F4C2BC442F4F1FBAB30E1FC45F9B21 }}
 
     - name: Log in to registry
       uses: docker/login-action@v2
@@ -39,13 +46,48 @@ jobs:
     environment:
       name: 'production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    permissions:
+      contents: read
 
     steps:
-    - name: Deploy to Azure Web App
-      id: deploy-to-webapp
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: 'app-cathedral'
-        slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_c9008987f6d9497996601dadea55033e }}
-        images: 'ghcr.io/${{ secrets.AzureAppService_ContainerUsername_240bb00aedea4310b2b60ee43ffa47f0 }}/final-hill/cathedral:${{ github.sha }}'
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js for database migrations
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.15.0'
+          cache: 'npm'
+
+      - name: Create environment file for migrations
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+          echo "Environment file created with $(wc -l < .env) lines"
+
+      - name: Install dependencies for migrations
+        run: npm ci
+
+      - name: Run database migrations
+        run: |
+          echo "Running database debug check..."
+          npm run orm-debug
+
+          echo "Listing pending migrations..."
+          npm run orm-list-pending-migrations
+
+          echo "Running pending migrations..."
+          npm run orm-run-pending-migrations
+
+          echo "Seeding users..."
+          npm run orm-seed-users
+
+          echo "Database migrations completed successfully"
+
+      - name: Deploy to Azure Web App for Containers
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'app-cathedral'
+          slot-name: 'Production'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C9008987F6D9497996601DADEA55033E }}
+          images: ghcr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_240BB00AEDEA4310B2B60EE43FFA47F0 }}/final-hill/cathedral:${{ github.sha }}
