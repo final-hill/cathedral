@@ -1,0 +1,50 @@
+# Dependencies
+node_modules
+npm-debug.log*
+
+# Build output (will be generated during build)
+.output
+.nuxt
+dist
+
+# Environment files (will be provided by Azure)
+.env
+.env.local
+.env.example
+
+# Development files
+.devcontainer
+.vscode
+.git
+.gitignore
+README.md
+CONTRIBUTING.md
+
+# Test files
+e2e
+**/*.test.js
+**/*.test.ts
+
+# Logs
+logs
+*.log
+
+# Documentation
+docs
+_docs
+
+# Local dev certificates
+cert
+
+# Docker files
+Dockerfile*
+docker-compose*
+compose*
+
+# Temporary files
+.tmp
+.temp
+
+# OS generated files
+.DS_Store
+Thumbs.db

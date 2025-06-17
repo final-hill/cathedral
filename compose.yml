@@ -1,7 +1,0 @@
-services:
-  web:
-    image: node:22.5.1-bookworm
-    restart: unless-stopped
-    volumes:
-      - ${WEBAPP_STORAGE_HOME}/site/wwwroot:/home/site/wwwroot
-    command: node /home/site/wwwroot/server/index.mjs
