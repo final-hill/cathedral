@@ -4,9 +4,8 @@
 name: Build and deploy container app to Azure Web App - app-cathedral
 
 on:
-  push:
-    branches:
-      - master
+  release:
+    types: [created]
   workflow_dispatch:
 
 jobs:
