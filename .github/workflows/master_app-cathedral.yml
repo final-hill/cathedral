@@ -65,11 +65,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    environment: 
+    environment:
       name: azure-prod
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
       contents: read
+      id-token: write # Required for Azure federated authentication
 
     steps:
       - name: Checkout repository
@@ -78,9 +79,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_985E9C75492E4188BDF2F8E816CBDC69 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_50BCE71D2A254EA5BD09D7AB3B88DECA }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C8D8DB3FA67B4820BFBCDEC11FF455DC }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Set up Node.js for database migrations
         uses: actions/setup-node@v4
