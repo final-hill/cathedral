@@ -17,7 +17,7 @@ services:
     networks:
       - app-network
   web:
-    image: node:22.5.1-bookworm
+    image: node:22.15.0-bookworm
     depends_on:
       - db
     restart: unless-stopped

@@ -42,7 +42,7 @@ async function submitRequirements({ data: { description } }: FormSubmitEvent<Req
 
         isLoading.value = true;
 
-        const parsedResultId = await $fetch<string>(`/api/requirements/${ReqType.PARSED_REQUIREMENTS}/propose`, {
+        const parsedResultId = await $fetch(`/api/requirements/${ReqType.PARSED_REQUIREMENTS}/propose`, {
             method: 'PUT',
             body: {
                 solutionSlug: props.solutionSlug,
@@ -50,15 +50,15 @@ async function submitRequirements({ data: { description } }: FormSubmitEvent<Req
                 name: 'Free-Form Requirements',
                 description
             }
-        });
+        }) as string;
 
-        const parsedResult = await $fetch<z.infer<typeof ParsedRequirements>>(`/api/requirements/${ReqType.PARSED_REQUIREMENTS}/${parsedResultId}`, {
+        const parsedResult = await $fetch(`/api/requirements/${ReqType.PARSED_REQUIREMENTS}/${parsedResultId}`, {
             method: 'GET',
             params: {
                 solutionSlug: props.solutionSlug,
                 organizationSlug: props.organizationSlug
             }
-        }),
+        }) as z.infer<typeof ParsedRequirements>,
             parsedReq = ParsedRequirements.parse({
                 ...parsedResult,
                 creationDate: new Date(parsedResult.creationDate),
