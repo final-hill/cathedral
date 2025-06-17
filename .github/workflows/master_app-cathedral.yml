@@ -40,8 +40,8 @@ jobs:
           type=ref,event=branch
           type=ref,event=pr
           type=semver,pattern={{version}}                    # Creates: v0.26.0 (exact version from release tag)
-          type=semver,pattern={{major}}.{{minor}}            # Creates: 0.26 (major.minor version)
           type=raw,value=latest,enable={{is_default_branch}} # Creates: latest (for default branch releases)
+          type=sha,format=long                               # Creates: full commit SHA that Azure expects
 
     - name: Create environment file
       run: |
@@ -64,6 +64,9 @@ jobs:
         cache-from: type=gha
         # Write Docker layer cache to GitHub Actions cache (max mode stores all layers)
         cache-to: type=gha,mode=max
+        # Disable attestations to avoid multi-manifest confusion with Azure
+        provenance: false
+        sbom: false
 
   deploy:
     runs-on: ubuntu-latest
