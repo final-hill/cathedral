@@ -32,18 +32,45 @@ jobs:
         username: ${{ secrets.AzureAppService_ContainerUsername_240bb00aedea4310b2b60ee43ffa47f0 }}
         password: ${{ secrets.AzureAppService_ContainerPassword_82f4c2bc442f4f1fbab30e1fc45f9b21 }}
 
-    - name: Build and push container image to registry
-      uses: docker/build-push-action@v3
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
       with:
+        images: ghcr.io/final-hill/cathedral
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}                    # Creates: v0.26.0 (exact version from release tag)
+          type=semver,pattern={{major}}.{{minor}}            # Creates: 0.26 (major.minor version)
+          type=raw,value=latest,enable={{is_default_branch}} # Creates: latest (for default branch releases)
+
+    - name: Create environment file
+      run: |
+        echo "${{ secrets.ENV_FILE }}" > .env
+        echo "Environment file created with $(wc -l < .env) lines"
+
+    - name: Build and push container image to registry
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./.devcontainer/Dockerfile
+        platforms: linux/amd64
         push: true
-        tags: ghcr.io/${{ secrets.AzureAppService_ContainerUsername_240bb00aedea4310b2b60ee43ffa47f0 }}/final-hill/cathedral:${{ github.sha }}
-        file: ./Dockerfile
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        build-args: |
+          NODE_VERSION=22.15.0
+          NODE_ENV=production
+        # Read Docker layer cache from GitHub Actions cache
+        cache-from: type=gha
+        # Write Docker layer cache to GitHub Actions cache (max mode stores all layers)
+        cache-to: type=gha,mode=max
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     environment:
-      name: 'production'
+      name: azure-prod
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
       contents: read
@@ -89,4 +116,4 @@ jobs:
           app-name: 'app-cathedral'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C9008987F6D9497996601DADEA55033E }}
-          images: ghcr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_240BB00AEDEA4310B2B60EE43FFA47F0 }}/final-hill/cathedral:${{ github.sha }}
+          images: ghcr.io/final-hill/cathedral:${{ github.sha }}
