@@ -14,6 +14,7 @@ jobs:
     environment: azure-prod
     permissions:
       contents: read
+      packages: write # Required for GitHub Container Registry
 
     steps:
     - uses: actions/checkout@v4
@@ -27,8 +28,8 @@ jobs:
       uses: docker/login-action@v3
       with:
         registry: ghcr.io
-        username: ${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_240BB00AEDEA4310B2B60EE43FFA47F0 }}
-        password: ${{ secrets.AZUREAPPSERVICE_CONTAINERPASSWORD_82F4C2BC442F4F1FBAB30E1FC45F9B21 }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Extract metadata
       id: meta
