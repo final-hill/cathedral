@@ -69,6 +69,25 @@ jobs:
         echo "Build completed - checking output..."
         ls -la .output/server/
 
+    - name: Run database migrations
+      env:
+        NODE_ENV: production
+        POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+        POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+        POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      run: |
+        echo "Running database migrations..."
+        npm run orm-debug
+        echo "Checking for pending migrations..."
+        npm run orm-list-pending-migrations
+        echo "Running pending migrations..."
+        npm run orm-run-pending-migrations
+        echo "Seeding users..."
+        npm run orm-seed-users || echo "User seeding failed or users already exist - continuing..."
+        echo "Database migrations completed successfully"
+
     - name: Build and push container image to registry
       uses: docker/build-push-action@v5
       with:
