@@ -16,6 +16,14 @@ RUN npm ci
 COPY scripts/startup.sh ./scripts/startup.sh
 RUN chmod +x ./scripts/startup.sh
 
+# Copy TypeScript configuration and ORM config (needed for migrations)
+COPY tsconfig.json ./
+COPY mikro-orm.config.ts ./
+
+# Copy migration files and seeders (needed for ORM operations)
+COPY migrations/ ./migrations/
+COPY seeders/ ./seeders/
+
 # Copy pre-built application (built in CI/CD)
 COPY .output ./.output
 
