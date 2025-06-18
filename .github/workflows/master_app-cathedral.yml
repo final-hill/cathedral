@@ -43,18 +43,43 @@ jobs:
           type=raw,value=latest,enable={{is_default_branch}} # Creates: latest (for default branch releases)
           type=sha,format=long,prefix=                       # Creates: full commit SHA without prefix (Azure expects this)
 
+    - name: Set up Node.js for build
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        cache: 'npm'
+
+    - name: Restore Cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build application
+      env:
+        NODE_ENV: production
+      run: |
+        npm run build
+        npm run generate-pwa-assets
+        echo "Build completed - checking output..."
+        ls -la .output/server/
+
     - name: Build and push container image to registry
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./.devcontainer/Dockerfile
+        file: ./Dockerfile
         platforms: linux/amd64
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
           NODE_VERSION=22.15.0
-          NODE_ENV=production
         # Read Docker layer cache from GitHub Actions cache
         cache-from: type=gha
         # Write Docker layer cache to GitHub Actions cache (max mode stores all layers)
