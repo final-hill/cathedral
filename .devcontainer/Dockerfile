@@ -16,6 +16,9 @@ RUN npm ci
 # Copy the rest of the application
 COPY . .
 
+# Make startup script executable
+RUN chmod +x /app/scripts/startup.sh
+
 # Set NODE_ENV from build argument (make it available for RUN commands)
 ENV NODE_ENV=${NODE_ENV}
 
@@ -28,5 +31,6 @@ RUN if [ "$NODE_ENV" = "production" ]; then \
 # Expose the port that Nuxt/Nitro will run on
 EXPOSE 3000
 
-# Default command for production (can be overridden in compose)
+# Use startup script as entrypoint with the application command as argument
+ENTRYPOINT ["/app/scripts/startup.sh"]
 CMD ["node", ".output/server/index.mjs"]
