@@ -43,11 +43,6 @@ jobs:
           type=raw,value=latest,enable={{is_default_branch}} # Creates: latest (for default branch releases)
           type=sha,format=long,prefix=                       # Creates: full commit SHA without prefix (Azure expects this)
 
-    - name: Create environment file
-      run: |
-        echo "${{ secrets.ENV_FILE }}" > .env
-        echo "Environment file created with $(wc -l < .env) lines"
-
     - name: Build and push container image to registry
       uses: docker/build-push-action@v5
       with:
@@ -78,39 +73,6 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js for database migrations
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.15.0'
-          cache: 'npm'
-
-      - name: Create environment file for migrations
-        run: |
-          echo "${{ secrets.ENV_FILE }}" > .env
-          echo "Environment file created with $(wc -l < .env) lines"
-
-      - name: Install dependencies for migrations
-        run: npm ci
-
-      - name: Run database migrations
-        run: |
-          echo "Running database debug check..."
-          npm run orm-debug
-
-          echo "Listing pending migrations..."
-          npm run orm-list-pending-migrations
-
-          echo "Running pending migrations..."
-          npm run orm-run-pending-migrations
-
-          echo "Seeding users..."
-          npm run orm-seed-users
-
-          echo "Database migrations completed successfully"
-
       - name: Deploy to Azure Web App for Containers
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
