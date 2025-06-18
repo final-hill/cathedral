@@ -41,7 +41,7 @@ jobs:
           type=ref,event=pr
           type=semver,pattern={{version}}                    # Creates: v0.26.0 (exact version from release tag)
           type=raw,value=latest,enable={{is_default_branch}} # Creates: latest (for default branch releases)
-          type=sha,format=long                               # Creates: full commit SHA that Azure expects
+          type=sha,format=long,prefix=                       # Creates: full commit SHA without prefix (Azure expects this)
 
     - name: Create environment file
       run: |
