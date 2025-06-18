@@ -9,20 +9,8 @@ WORKDIR /app
 # Copy package files first for better Docker layer caching
 COPY package*.json ./
 
-# Install all dependencies (needed for migration scripts)
+# Install all dependencies (some dev dependencies needed for Nuxt runtime)
 RUN npm ci
-
-# Copy the startup script
-COPY scripts/startup.sh ./scripts/startup.sh
-RUN chmod +x ./scripts/startup.sh
-
-# Copy TypeScript configuration and ORM config (needed for migrations)
-COPY tsconfig.json ./
-COPY mikro-orm.config.ts ./
-
-# Copy migration files and seeders (needed for ORM operations)
-COPY migrations/ ./migrations/
-COPY seeders/ ./seeders/
 
 # Copy pre-built application (built in CI/CD)
 COPY .output ./.output
@@ -33,6 +21,5 @@ ENV NODE_ENV=production
 # Expose the port that Nuxt/Nitro will run on
 EXPOSE 3000
 
-# Use startup script as entrypoint with the application command as argument
-ENTRYPOINT ["./scripts/startup.sh"]
+# Start the application directly (no migrations)
 CMD ["node", ".output/server/index.mjs"]
