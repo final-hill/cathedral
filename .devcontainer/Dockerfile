@@ -16,9 +16,6 @@ RUN npm ci
 # Copy the rest of the application
 COPY . .
 
-# Make startup script executable
-RUN chmod +x /app/scripts/startup.sh
-
 # Set NODE_ENV from build argument (make it available for RUN commands)
 ENV NODE_ENV=${NODE_ENV}
 
