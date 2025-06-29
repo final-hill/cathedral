@@ -151,8 +151,9 @@ export class PermissionInteractor {
         if (await this.isSystemAdmin()) return true;
 
         const auor = await this._repository.getAppUserOrganizationRole(this._userId, organizationId)
+            .catch(error => error instanceof NotFoundException ? null : Promise.reject(error));
 
-        return auor.role === AppRole.ORGANIZATION_ADMIN;
+        return auor?.role === AppRole.ORGANIZATION_ADMIN;
     }
 
     /**
@@ -164,8 +165,9 @@ export class PermissionInteractor {
         if (await this.isSystemAdmin()) return true;
 
         const role = await this._repository.getAppUserOrganizationRole(this._userId, organizationId)
+            .catch(error => error instanceof NotFoundException ? null : Promise.reject(error));
 
-        return [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR].includes(role?.role);
+        return role?.role ? [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR].includes(role.role) : false;
     }
 
     /**
@@ -176,9 +178,10 @@ export class PermissionInteractor {
     async isOrganizationReader(organizationId: z.infer<typeof Organization>['id']): Promise<boolean> {
         if (await this.isSystemAdmin()) return true;
 
-        const role = await this._repository.getAppUserOrganizationRole(this._userId, organizationId);
+        const role = await this._repository.getAppUserOrganizationRole(this._userId, organizationId)
+            .catch(error => error instanceof NotFoundException ? null : Promise.reject(error));
 
-        return [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR, AppRole.ORGANIZATION_READER].includes(role?.role);
+        return role?.role ? [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR, AppRole.ORGANIZATION_READER].includes(role.role) : false;
     }
 
     /**
