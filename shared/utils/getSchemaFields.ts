@@ -2,7 +2,7 @@ import { z } from "zod"
 import { camelCaseToTitleCase } from "./camelCaseToTitleCase"
 
 const enumToLabelValue = (enumObject: Record<string, string>) =>
-    Object.entries(enumObject).map(([value, label]) => ({ value, label }))
+    Object.entries(enumObject).map(([key, value]) => ({ value, label: value }))
 
 /**
  * Get the fields of a Zod schema as an array of objects with metadata

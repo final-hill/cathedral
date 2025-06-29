@@ -19,7 +19,7 @@ export const AppUser = z.object({
             .describe('The name of the organization')
     })).default([]).describe('The organizations the app user is associated with'),
     credentials: z.array(z.object({
-        id: z.string().uuid()
+        id: z.string()
             .describe('The id of the credentials')
     })).optional().describe('The credentials of the app user'),
 }).describe('The users of the application');

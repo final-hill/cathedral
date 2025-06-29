@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { Requirement } from "#shared/domain/requirements"
 import { ReqType } from "#shared/domain/requirements/ReqType"
-import { AppUserModel, RequirementModel, RequirementVersionsModel } from "../models"
+import { AppUserModel, AppCredentialsModel, RequirementModel, RequirementVersionsModel } from "../models"
 import { type Mapper } from "./Mapper"
 import { Collection } from "@mikro-orm/core"
 import { resolveReqTypeFromModel } from "~/shared/utils"
@@ -21,6 +21,19 @@ async function replaceReferenceMembers<M extends Partial<Omit<RequirementModel, 
             Reflect.set(updatedModel, key, { id: value.id, name: latestVersion?.name });
         } else if (value instanceof AppUserModel) {
             Reflect.set(updatedModel, key, { id: value.id, name: value.name });
+        } else if (value instanceof AppCredentialsModel) {
+            Reflect.set(updatedModel, key, {
+                id: value.id,
+                appUser: {
+                    id: value.appUser.id,
+                    name: value.appUser.name,
+                    email: value.appUser.email
+                },
+                publicKey: value.publicKey,
+                counter: value.counter,
+                backedUp: value.backedUp,
+                transports: value.transports || []
+            });
         }
     }
 
@@ -44,17 +57,47 @@ export class DataModelToDomainModel<
                 return ['lastModified', value];
             else if (value instanceof Collection) {
                 const items = await value.loadItems();
-                return [key, await Promise.all(items.map(async item => {
+                const processedItems = await Promise.all(items.map(async item => {
                     if (item instanceof RequirementModel) {
                         const latestVersion = await item.getLatestVersion(new Date()),
                             reqType = resolveReqTypeFromModel(item);
                         return { id: item.id, name: latestVersion?.name, reqType };
                     } else if (item instanceof AppUserModel) {
                         return { id: item.id, name: item.name };
+                    } else if (item instanceof AppCredentialsModel) {
+                        return {
+                            id: item.id,
+                            appUser: {
+                                id: item.appUser.id,
+                                name: item.appUser.name,
+                                email: item.appUser.email
+                            },
+                            publicKey: item.publicKey,
+                            counter: item.counter,
+                            backedUp: item.backedUp,
+                            transports: item.transports || []
+                        };
                     }
-                }))];
+                    // This should not happen if all model types are handled
+                    throw new Error(`Unhandled model type in collection: ${item.constructor.name}`);
+                }));
+                // Filter out any undefined/null values
+                return [key, processedItems.filter(Boolean)];
             } else if (value instanceof AppUserModel)
                 return [key, { id: value.id, name: value.name }];
+            else if (value instanceof AppCredentialsModel)
+                return [key, {
+                    id: value.id,
+                    appUser: {
+                        id: value.appUser.id,
+                        name: value.appUser.name,
+                        email: value.appUser.email
+                    },
+                    publicKey: value.publicKey,
+                    counter: value.counter,
+                    backedUp: value.backedUp,
+                    transports: value.transports || []
+                }];
             else if (objectSchema.safeParse(value).success)
                 return [key, objectSchema.parse(value)];
             else if (value == null)

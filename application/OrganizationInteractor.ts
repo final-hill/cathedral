@@ -190,7 +190,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
             organizationId: org.id
         });
 
-        const appUsers = Promise.all(auors.map(async (auor) => AppUser.parse({
+        const appUsers = await Promise.all(auors.map(async (auor) => AppUser.parse({
             ...await aui.getUserById(auor.appUser.id),
             role: auor.role,
             organizations: [{

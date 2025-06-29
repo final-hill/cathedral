@@ -75,7 +75,7 @@ export class PermissionRepository extends Repository<z.infer<typeof AppUserOrgan
             }, { populate: ['appUser', 'createdBy', 'organization'] });
 
         return Promise.all(auorModels.map(async auor => {
-            if (auor.role !== filter.role)
+            if (filter.role && auor.role !== filter.role)
                 return null;
 
             const orgLatestVersion = await auor.organization.load().then(org => org?.getLatestVersion(new Date()));
