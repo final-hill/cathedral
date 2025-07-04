@@ -1,8 +1,8 @@
 import { NaturalLanguageToRequirementService, SlackService } from "~/server/data/services";
-import { SlackRepository, PermissionRepository } from '~/server/data/repositories';
-import { SlackInteractor, PermissionInteractor } from "~/application";
+import { createSlackEventInteractor } from "~/application/slack";
 import { SYSTEM_SLACK_USER_ID } from "~/shared/constants.js";
 import { slackBodySchema } from "~/server/data/slack-zod-schemas";
+import handleDomainException from "~/server/utils/handleDomainException";
 
 const config = useRuntimeConfig()
 
@@ -18,30 +18,21 @@ export default defineEventHandler(async (event) => {
     try {
         const rawBody = (await readRawBody(event))!,
             data = await validateEventBody(event, slackBodySchema),
-            headers = event.headers,
-            em = event.context.em,
-            slackInteractor = new SlackInteractor({
-                repository: new SlackRepository({ em }),
-                permissionInteractor: new PermissionInteractor({
-                    userId: SYSTEM_SLACK_USER_ID,
-                    repository: new PermissionRepository({ em })
-                }),
-                nlrService,
-                slackService
-            });
+            headers = event.headers;
+
+        const eventInteractor = createSlackEventInteractor({
+            em: event.context.em,
+            userId: SYSTEM_SLACK_USER_ID,
+            slackService,
+            nlrService
+        });
 
         slackService.assertValidSlackRequest(headers, rawBody)
 
-        return slackInteractor.handleEvent(data)
+        return eventInteractor.handleEvent(data).catch(handleDomainException)
     } catch (error) {
-        // Log the full error for debugging
-        console.error('Slack webhook error:', error);
-        
-        // Return a minimal error response to Slack
-        // Note: Slack expects a 200 response even for errors to prevent retries
-        throw createError({
-            statusCode: 200,
-            statusMessage: 'Internal server error'
-        });
+        // Handle domain exceptions properly, but note that Slack expects 200 responses
+        // to prevent retries, so we catch and log but still return success
+        return { challenge: 'error_handled' };
     }
 });

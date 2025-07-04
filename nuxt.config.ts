@@ -51,13 +51,12 @@ export default defineNuxtConfig({
         origin: '',
         port: '',
 
-        slackAppId: '',
         slackAppToken: '',
         slackSigningSecret: '',
-        slackClientId: '',
         slackClientSecret: '',
         slackBotToken: '',
         slackLinkSecret: '',
+        slackOauthOrigin: '', // For OAuth callbacks (supports ngrok tunneling)
 
         azureOpenaiApiKey: '',
         azureOpenaiApiVersion: '',
@@ -65,7 +64,11 @@ export default defineNuxtConfig({
         azureOpenaiDeploymentId: '',
 
         // The public keys which are available both client-side and server-side
-        public: {}
+        // These values are overwritten by the associated NUXT_PUBLIC_ environment variables in the .env file
+        public: {
+            slackAppId: '',
+            slackClientId: ''
+        }
     },
     auth: {
         webAuthn: true
@@ -75,13 +78,18 @@ export default defineNuxtConfig({
         headers: {
             crossOriginEmbedderPolicy: process.env.NODE_ENV === 'development' ? 'unsafe-none' : 'require-corp',
             contentSecurityPolicy: {
-                'img-src': ["'self'", 'data:', 'blob:', 'https://avatars.githubusercontent.com'],
+                'img-src': ["'self'", 'data:', 'blob:', 'https://avatars.githubusercontent.com', 'https://platform.slack-edge.com'],
             }
         },
         rateLimiter: false
     },
     routeRules: {
         '/api/slack': {
+            security: {
+                xssValidator: false
+            }
+        },
+        '/api/slack/oauth/**': {
             security: {
                 xssValidator: false
             }

@@ -5,7 +5,9 @@ import { DuplicateEntityException, MismatchException, NotFoundException, Permiss
  * @param error The domain exception
  * @throws {Error} The HTTP error
  */
-export default function handleDomainException(error: Error): never {
+export default function handleDomainException(error: unknown): never {
+    console.error('Handling domain exception:', error);
+
     if (error instanceof DuplicateEntityException)
         throw createError({ status: 409, statusMessage: `Conflict: ${error.message}`, ...error })
     else if (error instanceof NotFoundException)
@@ -15,5 +17,5 @@ export default function handleDomainException(error: Error): never {
     else if (error instanceof MismatchException)
         throw createError({ status: 400, statusMessage: `Bad Request: ${error.message}`, ...error })
     else
-        throw createError({ status: 500, statusMessage: `Internal Server Error: ${error.message}`, ...error })
+        throw createError({ status: 500, statusMessage: `Internal Server Error: ${error instanceof Error ? error.message : String(error)}` })
 }

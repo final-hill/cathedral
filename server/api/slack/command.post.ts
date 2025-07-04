@@ -1,10 +1,9 @@
 import { SlackService } from "~/server/data/services";
-import { PermissionInteractor } from "~/application";
-import { SlackRepository, PermissionRepository } from '~/server/data/repositories';
-import { SlackInteractor } from "~/application/SlackInteractor";
+import { createSlackEventInteractor } from "~/application/slack";
 import { SYSTEM_SLACK_USER_ID } from "~/shared/constants.js";
 import { NaturalLanguageToRequirementService } from "~/server/data/services/NaturalLanguageToRequirementService";
 import { slackSlashCommandSchema } from "~/server/data/slack-zod-schemas";
+import handleDomainException from "~/server/utils/handleDomainException";
 
 const config = useRuntimeConfig();
 
@@ -28,15 +27,12 @@ export default defineEventHandler(async (event) => {
 
     const body = await validateEventBody(event, slackSlashCommandSchema);
 
-    const slackInteractor = new SlackInteractor({
-        repository: new SlackRepository({ em: event.context.em }),
-        permissionInteractor: new PermissionInteractor({
-            userId: SYSTEM_SLACK_USER_ID,
-            repository: new PermissionRepository({ em: event.context.em })
-        }),
-        nlrService,
-        slackService
+    const eventInteractor = createSlackEventInteractor({
+        em: event.context.em,
+        userId: SYSTEM_SLACK_USER_ID,
+        slackService,
+        nlrService
     });
 
-    return slackInteractor.handleSlashCommand(body);
+    return eventInteractor.handleSlashCommand(body).catch(handleDomainException)
 });

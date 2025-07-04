@@ -16,7 +16,7 @@
     // Use 'postCreateCommand' to run commands after the container is created.
     // "postCreateCommand": "",
     // https://www.kenmuse.com/blog/avoiding-dubious-ownership-in-dev-containers/
-    "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+    "postStartCommand": "git config --global --get-all safe.directory | grep -q \"^${containerWorkspaceFolder}$\" || git config --global --add safe.directory ${containerWorkspaceFolder}",
     // Configure tool-specific properties.
     "customizations": {
         "vscode": {

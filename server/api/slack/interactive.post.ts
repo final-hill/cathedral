@@ -1,11 +1,10 @@
 import { NaturalLanguageToRequirementService, SlackService } from "~/server/data/services";
-import { PermissionInteractor } from "~/application";
-import { SlackRepository, PermissionRepository } from '~/server/data/repositories';
-import { SlackInteractor } from "~/application/SlackInteractor";
+import { createSlackEventInteractor } from "~/application/slack";
 import { SYSTEM_SLACK_USER_ID } from "~/shared/constants.js";
 import validateEventBody from '~/server/utils/validateEventBody';
 import { z } from "zod";
 import { slackInteractivePayloadSchema } from '~/server/data/slack-zod-schemas';
+import handleDomainException from "~/server/utils/handleDomainException";
 
 const config = useRuntimeConfig();
 
@@ -34,45 +33,26 @@ export default defineEventHandler(async (event) => {
     const { payload: payloadStr } = await validateEventBody(event, slackInteractiveOuterSchema);
     const payload = slackInteractivePayloadSchema.parse(JSON.parse(payloadStr));
 
-    const slackInteractor = new SlackInteractor({
-        repository: new SlackRepository({ em: event.context.em }),
-        permissionInteractor: new PermissionInteractor({
-            userId: SYSTEM_SLACK_USER_ID,
-            repository: new PermissionRepository({ em: event.context.em })
-        }),
-        // TODO: this smells. The service is unused in this handler, but is required for the constructor.
-        nlrService,
-        slackService
+    const eventInteractor = createSlackEventInteractor({
+        em: event.context.em,
+        userId: SYSTEM_SLACK_USER_ID,
+        slackService,
+        nlrService
     });
 
     if (payload.type === 'block_actions') {
         const actionId = payload.actions?.[0]?.action_id;
 
-        console.log('Received Slack interactive action:', actionId, payload);
-
-        try {
-            if (actionId === 'cathedral_link_org_select') {
-                const result = await slackInteractor.handleOrganizationSelectCallback(payload);
-                console.log('Organization callback result:', JSON.stringify(result, null, 2));
-                
-                // Ensure proper content type for Slack
-                setHeader(event, 'content-type', 'application/json');
-                return result;
-            } else if (actionId === 'cathedral_link_solution_select') {
-                const result = await slackInteractor.handleSolutionSelectCallback(payload);
-                console.log('Solution callback result:', JSON.stringify(result, null, 2));
-                
-                // Ensure proper content type for Slack
-                setHeader(event, 'content-type', 'application/json');
-                return result;
-            }
-        } catch (error) {
-            console.error('Error handling Slack interactive action:', error);
+        if (actionId === 'cathedral_link_org_select') {
+            const result = await eventInteractor.handleOrganizationSelectCallback(payload)
+                .catch(handleDomainException);
             setHeader(event, 'content-type', 'application/json');
-            return {
-                response_type: 'ephemeral',
-                text: 'An error occurred while processing your request. Please try again.'
-            };
+            return result;
+        } else if (actionId === 'cathedral_link_solution_select') {
+            const result = await eventInteractor.handleSolutionSelectCallback(payload)
+                .catch(handleDomainException);
+            setHeader(event, 'content-type', 'application/json');
+            return result;
         }
     }
 
