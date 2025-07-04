@@ -1,25 +1,23 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 
 definePageMeta({ name: 'SlackLink', middleware: 'auth' });
 
-const route = useRoute(),
-    status = ref<'pending' | 'success' | 'error'>('pending'),
-    errorMessage = ref('');
+const route = useRoute();
+const status = ref<'pending' | 'success' | 'error'>('pending');
+const errorMessage = ref('');
 
-onMounted(async () => {
-    const slackUserId = route.query.slackUserId as string,
-        teamId = route.query.teamId as string,
-        token = route.query.token as string;
+const slackUserId = route.query.slackUserId as string;
+const teamId = route.query.teamId as string;
+const token = route.query.token as string;
 
-    if (!slackUserId || !teamId || !token) {
-        status.value = 'error';
-        errorMessage.value = 'Missing Slack user information.';
-        return;
-    }
-
-    // Call API to link Slack user to Cathedral user
+// Validate required parameters
+if (!slackUserId || !teamId || !token) {
+    status.value = 'error';
+    errorMessage.value = 'Missing Slack user information.';
+} else {
+    // Execute the linking immediately
     try {
         await $fetch('/api/slack/link-user', {
             method: 'POST',
@@ -30,7 +28,7 @@ onMounted(async () => {
         status.value = 'error';
         errorMessage.value = e.data?.message || e.message || 'Failed to link Slack user.';
     }
-});
+}
 </script>
 
 <template>
@@ -45,7 +43,13 @@ onMounted(async () => {
             <p>Your Slack account has been successfully linked to your Cathedral account!</p>
         </div>
         <div v-else>
-            <p class="text-red-600">{{ errorMessage }}</p>
+            <UAlert 
+                color="error" 
+                variant="soft" 
+                title="Link Failed" 
+                :description="errorMessage"
+                icon="i-lucide-alert-circle"
+            />
         </div>
     </UCard>
 </template>

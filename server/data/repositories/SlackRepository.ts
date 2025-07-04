@@ -120,9 +120,8 @@ export class SlackRepository extends Repository<unknown> {
             teamId: props.teamId
         });
 
-        if (!existing) {
+        if (!existing)
             throw new NotFoundException('Channel link not found');
-        }
 
         await em.removeAndFlush(existing);
     }

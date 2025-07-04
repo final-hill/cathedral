@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
         return value.organizationId !== undefined || value.organizationSlug !== undefined;
     }, "At least one of organizationId or organizationSlug should be provided"),
         { solutionSlug, organizationId: orgId, organizationSlug: orgSlug } = await validateEventBody(event, bodySchema),
-        session = (await requireUserSession(event))!,
+        session = await requireUserSession(event),
         permissionInteractor = new PermissionInteractor({
             userId: session.user.id,
             repository: new PermissionRepository({ em: event.context.em })

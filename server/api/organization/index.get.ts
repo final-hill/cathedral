@@ -10,7 +10,7 @@ const querySchema = Organization.innerType().partial()
  */
 export default defineEventHandler(async (event) => {
     const query = await validateEventParams(event, querySchema),
-        session = (await requireUserSession(event))!,
+        session = await requireUserSession(event),
         orgColInt = new OrganizationCollectionInteractor({
             repository: new OrganizationCollectionRepository({ em: event.context.em }),
             permissionInteractor: new PermissionInteractor({

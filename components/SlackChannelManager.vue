@@ -86,22 +86,14 @@ const refreshChannelNames = async (channelId: string, teamId: string) => {
     refreshingChannels.value.add(channelKey);
 
     try {
-        const response = await fetch(`/api/solution/${props.solutionSlug}/slack-channels/refresh`, {
+        await $fetch(`/api/solution/${props.solutionSlug}/slack-channels/refresh`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+            body: {
                 organizationSlug: props.organizationSlug,
                 channelId,
                 teamId
-            })
+            }
         });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `Failed to refresh: ${response.statusText}`);
-        }
 
         toast.add({
             icon: 'i-lucide-check',
@@ -174,7 +166,7 @@ const slackChannelColumns: TableColumn<z.infer<typeof SlackChannelMeta>>[] = [
         cell: ({ row }: { row: Row<z.infer<typeof SlackChannelMeta>> }) => {
             const lastRefresh = row.original.lastNameRefresh;
             if (!lastRefresh) {
-                return <span class="text-gray-400 text-sm">Never</span>
+                return <span class="text-gray-400 dark:text-gray-500 text-sm">Never</span>
             }
             const refreshDate = lastRefresh instanceof Date ? lastRefresh : new Date(lastRefresh);
             return <time datetime={refreshDate.toISOString()} class="text-sm">{refreshDate.toLocaleDateString()}</time>
@@ -244,10 +236,10 @@ const slackChannelColumns: TableColumn<z.infer<typeof SlackChannelMeta>>[] = [
 
         <div v-else class="text-center py-8">
             <div class="flex flex-col items-center space-y-4">
-                <UIcon name="i-lucide-slack" class="text-4xl text-gray-400" />
-                <p class="text-gray-500">No Slack channels are currently linked to this solution.</p>
-                <p class="text-sm text-gray-400">
-                    Use the <code class="bg-gray-100 px-2 py-1 rounded">/cathedral-link-solution</code> command in
+                <UIcon name="i-lucide-slack" class="text-4xl text-gray-400 dark:text-gray-500" />
+                <p class="text-gray-500 dark:text-gray-400">No Slack channels are currently linked to this solution.</p>
+                <p class="text-sm text-gray-400 dark:text-gray-500">
+                    Use the <code class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">/cathedral-link-solution</code> command in
                     Slack to link
                     channels.
                 </p>

@@ -127,6 +127,15 @@ export class PermissionInteractor {
         return auor;
     }
 
+    /**
+     * Get the current user's name
+     * @throws If the user does not exist
+     * @returns The current user's name
+     */
+    async getCurrentUserName(): Promise<string> {
+        const appUser = await this._repository.getUserById(this._userId);
+        return appUser.name;
+    }
 
     /**
      * Check if the user is a system admin

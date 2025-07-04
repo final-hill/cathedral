@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { useRuntimeConfig } from '#imports';
 import jwt from 'jsonwebtoken';
-import { SlackInteractor, PermissionInteractor } from '~/application/';
+import { Slack, PermissionInteractor } from '~/application/';
 import { SlackRepository, PermissionRepository } from '~/server/data/repositories';
-import { NaturalLanguageToRequirementService, SlackService } from "~/server/data/services";
+import { SlackService } from "~/server/data/services";
 import { SYSTEM_SLACK_USER_ID } from "~/shared/constants.js";
 import handleDomainException from '~/server/utils/handleDomainException';
 
@@ -20,47 +20,39 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { slackUserId, teamId, token } = await validateEventBody(event, bodySchema),
-        session = (await requireUserSession(event))!,
+        session = await requireUserSession(event),
         config = useRuntimeConfig(),
-        userPermissionInteractor = new PermissionInteractor({
-            userId: session.user.id,
-            repository: new PermissionRepository({ em: event.context.em }),
-        }),
-        slackService = new SlackService(config.slackBotToken, config.slackSigningSecret),
-        nlrService = new NaturalLanguageToRequirementService({
-            apiKey: config.azureOpenaiApiKey,
-            apiVersion: config.azureOpenaiApiVersion,
-            endpoint: config.azureOpenaiEndpoint,
-            deployment: config.azureOpenaiDeploymentId
-        }),
-        slackInteractor = new SlackInteractor({
-            repository: new SlackRepository({ em: event.context.em }),
-            permissionInteractor: new PermissionInteractor({
-                userId: SYSTEM_SLACK_USER_ID,
-                repository: new PermissionRepository({ em: event.context.em })
-            }),
-            nlrService,
-            slackService
-        });
+        em = event.context.em
 
-    let payload: any;
-    try {
-        payload = verify(token, config.slackLinkSecret);
-        if (payload.slackUserId !== slackUserId) throw new Error('Token mismatch');
-    } catch (e: any) {
-        return handleDomainException(createError({ statusCode: 401, message: 'Invalid or expired token.' }));
-    }
+    const userPermissionInteractor = new PermissionInteractor({
+        userId: session.user.id,
+        repository: new PermissionRepository({ em }),
+    });
 
-    try {
-        await slackInteractor.linkSlackUserAsUser({
-            slackUserId,
-            teamId,
-            cathedralUserId: session.user.id,
-            createdById: session.user.id,
-            creationDate: new Date(),
-        }, userPermissionInteractor);
-        return { message: 'Slack user linked successfully.' };
-    } catch (e: any) {
-        return handleDomainException(e);
-    }
+    const slackUserInteractor = new Slack.SlackUserInteractor({
+        repository: new SlackRepository({ em }),
+        permissionInteractor: new PermissionInteractor({
+            userId: SYSTEM_SLACK_USER_ID,
+            repository: new PermissionRepository({ em })
+        }),
+        slackService: new SlackService(config.slackBotToken, config.slackSigningSecret)
+    });
+
+    const payload = verify(token, config.slackLinkSecret);
+
+    if (typeof payload === 'string' || !payload || typeof payload !== 'object')
+        handleDomainException('Invalid token payload');
+
+    if (payload.slackUserId !== slackUserId)
+        handleDomainException('Token mismatch');
+
+    await slackUserInteractor.linkSlackUserAsUser({
+        slackUserId,
+        teamId,
+        cathedralUserId: session.user.id,
+        createdById: session.user.id,
+        creationDate: new Date(),
+    }, userPermissionInteractor).catch(handleDomainException);
+
+    return { message: 'Slack user linked successfully.' };
 });

@@ -10,7 +10,7 @@ const bodySchema = Organization.innerType().pick({ name: true, description: true
  */
 export default defineEventHandler(async (event) => {
     const { name, description } = await validateEventBody(event, bodySchema),
-        session = (await requireUserSession(event))!,
+        session = await requireUserSession(event),
         organizationCollectionInteractor = new OrganizationCollectionInteractor({
             repository: new OrganizationCollectionRepository({ em: event.context.em }),
             permissionInteractor: new PermissionInteractor({

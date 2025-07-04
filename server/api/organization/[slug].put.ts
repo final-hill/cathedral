@@ -12,7 +12,7 @@ const paramSchema = Organization.innerType().pick({ slug: true }),
 export default defineEventHandler(async (event) => {
     const { slug } = await validateEventParams(event, paramSchema),
         body = await validateEventBody(event, bodySchema),
-        session = (await requireUserSession(event))!,
+        session = await requireUserSession(event),
         organizationInteractor = new OrganizationCollectionInteractor({
             repository: new OrganizationCollectionRepository({ em: event.context.em }),
             permissionInteractor: new PermissionInteractor({

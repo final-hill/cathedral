@@ -19,7 +19,7 @@ const bodySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { description, name, organizationId, organizationSlug } = await validateEventBody(event, bodySchema),
-        session = (await requireUserSession(event))!,
+        session = await requireUserSession(event),
         permissionInteractor = new PermissionInteractor({
             userId: session.user.id,
             repository: new PermissionRepository({ em: event.context.em })

@@ -75,6 +75,10 @@ const handleSolutionEdit = (solution: z.infer<typeof Solution>) => {
         </UModal>
     </section>
 
+    <section class="mt-4 text-center">
+        <SlackWorkspaceManager :organization-slug="organizationSlug" />
+    </section>
+
     <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <UCard variant="outline">
             <template #header>

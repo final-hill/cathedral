@@ -19,7 +19,7 @@ const querySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { description, name, organizationId, organizationSlug, slug } = await validateEventQuery(event, querySchema),
-        session = (await requireUserSession(event))!,
+        session = await requireUserSession(event),
         permissionInteractor = new PermissionInteractor({
             userId: session.user.id,
             repository: new PermissionRepository({ em: event.context.em })

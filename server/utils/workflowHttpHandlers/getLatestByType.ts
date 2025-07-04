@@ -19,7 +19,7 @@ export default function getLatestByType(workflowState: WorkflowState) {
     return defineEventHandler(async (event) => {
         const { reqType } = await validateEventParams(event, paramSchema),
             { solutionSlug, organizationId, organizationSlug } = await validateEventQuery(event, validatedQuerySchema),
-            session = (await requireUserSession(event))!,
+            session = await requireUserSession(event),
             permissionInteractor = new PermissionInteractor({
                 userId: session.user.id,
                 repository: new PermissionRepository({ em: event.context.em })
