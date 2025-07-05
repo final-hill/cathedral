@@ -546,7 +546,7 @@ export class SlackService {
                 enterprise: z.object({
                     name: z.string(),
                     id: z.string()
-                }).optional(),
+                }).nullable().optional(),
                 authed_user: z.object({
                     id: z.string(),
                     scope: z.string().optional(),
