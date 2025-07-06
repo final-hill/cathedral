@@ -1,6 +1,6 @@
-import { z } from "zod";
-import { ReqType } from "./ReqType.js";
-import { Requirement } from "./Requirement.js";
+import { z } from 'zod'
+import { ReqType } from './ReqType.js'
+import { Requirement } from './Requirement.js'
 
 export const Actor = Requirement.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.ACTOR)

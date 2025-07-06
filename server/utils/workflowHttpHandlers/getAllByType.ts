@@ -1,10 +1,10 @@
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from "~/application";
-import { AppUserRepository, OrganizationRepository, PermissionRepository, RequirementRepository } from '~/server/data/repositories';
-import handleDomainException from '../handleDomainException';
-import { Organization, ReqType, Solution } from '~/shared/domain';
-import { z } from 'zod';
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~/application'
+import { AppUserRepository, OrganizationRepository, PermissionRepository, RequirementRepository } from '~/server/data/repositories'
+import handleDomainException from '../handleDomainException'
+import { Organization, ReqType, Solution } from '~/shared/domain'
+import { z } from 'zod'
 
-const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape;
+const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
 export default function getAllByType() {
     const paramSchema = z.object({ reqType: z.nativeEnum(ReqType) }),
@@ -14,8 +14,8 @@ export default function getAllByType() {
             organizationSlug,
             parsedReqParentId: z.string().optional()
         }).refine((value) => {
-            return value.organizationId !== undefined || value.organizationSlug !== undefined;
-        }, "At least one of organizationId or organizationSlug should be provided");
+            return value.organizationId !== undefined || value.organizationSlug !== undefined
+        }, 'At least one of organizationId or organizationSlug should be provided')
 
     return defineEventHandler(async (event) => {
         const { reqType } = await validateEventParams(event, paramSchema),
@@ -40,14 +40,14 @@ export default function getAllByType() {
                 permissionInteractor,
                 organizationId: org.id,
                 solutionId: solution.id
-            });
+            })
 
         return requirementInteractor.getAllRequirementsByType({
             reqType,
             staticQuery: {
-                // @ts-ignore:
+                // @ts-expect-error - parsedRequirements field mapping is complex
                 parsedRequirements: parsedReqParentId
             }
         }).catch(handleDomainException)
-    });
+    })
 }

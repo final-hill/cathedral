@@ -1,47 +1,23 @@
-import devtoolsJson from 'vite-plugin-devtools-json';
+import devtoolsJson from 'vite-plugin-devtools-json'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-    compatibilityDate: '2025-04-14',
-    devtools: {
-        enabled: process.env.NODE_ENV === 'development'
-    },
-    devServer: {
-        https: {
-            key: './cert/localhost.key',
-            cert: './cert/localhost.crt'
-        },
-        cors: {
-            origin: ['https://cathedral.localhost'],
-        },
-        host: 'cathedral.localhost',
-        url: 'https://cathedral.localhost'
-    },
-    experimental: {
-        decorators: true,
-        viewTransition: true,
-        typedPages: true
-    },
-    sourcemap: process.env.NODE_ENV === 'development',
-    css: [
-        '~/assets/css/main.css'
-    ],
+    // https://vite-pwa-org.netlify.app/frameworks/nuxt
+    // https://icones.js.org/collection/lucide
+    // https://nuxt.com/modules/auth-utils
+    modules: ['@nuxt/ui', '@vite-pwa/nuxt', 'nuxt-security', 'nuxt-auth-utils', '@nuxt/test-utils/module', '@nuxt/eslint'],
+    // SSR is disabled because this application is designed as a Single Page Application (SPA),
+    // and server-side rendering is not required for its functionality.
+    ssr: false,
     components: {
         global: true,
         dirs: ['~/components']
     },
-    // SSR is disabled because this application is designed as a Single Page Application (SPA),
-    // and server-side rendering is not required for its functionality.
-    ssr: false,
-    // https://vite-pwa-org.netlify.app/frameworks/nuxt
-    // https://icones.js.org/collection/lucide
-    // https://nuxt.com/modules/auth-utils
-    modules: [
-        '@nuxt/ui',
-        '@vite-pwa/nuxt',
-        'nuxt-security',
-        'nuxt-auth-utils',
-        '@nuxt/test-utils/module'
+    devtools: {
+        enabled: process.env.NODE_ENV === 'development'
+    },
+    css: [
+        '~/assets/css/main.css'
     ],
     runtimeConfig: {
         // The private keys which are only available within server-side
@@ -70,19 +46,6 @@ export default defineNuxtConfig({
             slackClientId: ''
         }
     },
-    auth: {
-        webAuthn: true
-    },
-    // https://nuxt.com/modules/security
-    security: {
-        headers: {
-            crossOriginEmbedderPolicy: process.env.NODE_ENV === 'development' ? 'unsafe-none' : 'require-corp',
-            contentSecurityPolicy: {
-                'img-src': ["'self'", 'data:', 'blob:', 'https://avatars.githubusercontent.com', 'https://platform.slack-edge.com'],
-            }
-        },
-        rateLimiter: false
-    },
     routeRules: {
         '/api/slack': {
             security: {
@@ -95,16 +58,34 @@ export default defineNuxtConfig({
             }
         }
     },
+    sourcemap: process.env.NODE_ENV === 'development',
+    devServer: {
+        https: {
+            key: './cert/localhost.key',
+            cert: './cert/localhost.crt'
+        },
+        cors: {
+            origin: ['https://cathedral.localhost']
+        },
+        host: 'cathedral.localhost',
+        url: 'https://cathedral.localhost'
+    },
+    experimental: {
+        decorators: true,
+        viewTransition: true,
+        typedPages: true
+    },
+    compatibilityDate: '2025-04-14',
     nitro: {
         esbuild: {
             options: {
-                target: "esnext",
+                target: 'esnext',
                 // https://github.com/vitejs/vite/issues/13736
                 // https://github.com/nuxt/nuxt/issues/29279#issuecomment-2395293514
                 tsconfigRaw: {
                     compilerOptions: {
                         experimentalDecorators: true,
-                        // @ts-ignore
+                        // @ts-expect-error - emitDecoratorMetadata is not typed in TypeScript config
                         emitDecoratorMetadata: true
                     }
                 }
@@ -119,11 +100,6 @@ export default defineNuxtConfig({
             // database: true
         }
     },
-    primevue: {},
-    pwa: {},
-    typescript: {
-        typeCheck: true
-    },
     vite: {
         esbuild: {
             // https://github.com/vitejs/vite/issues/13736
@@ -131,7 +107,7 @@ export default defineNuxtConfig({
             tsconfigRaw: {
                 compilerOptions: {
                     experimentalDecorators: true,
-                    // @ts-ignore
+                    // @ts-expect-error - emitDecoratorMetadata is not typed in TypeScript config
                     emitDecoratorMetadata: true
                 }
             }
@@ -146,5 +122,23 @@ export default defineNuxtConfig({
                 host: '0.0.0.0'
             }
         }
+    },
+    typescript: {
+        typeCheck: true
+    },
+    auth: {
+        webAuthn: true
+    },
+    primevue: {},
+    pwa: {},
+    // https://nuxt.com/modules/security
+    security: {
+        headers: {
+            crossOriginEmbedderPolicy: process.env.NODE_ENV === 'development' ? 'unsafe-none' : 'require-corp',
+            contentSecurityPolicy: {
+                'img-src': ['\'self\'', 'data:', 'blob:', 'https://avatars.githubusercontent.com', 'https://platform.slack-edge.com']
+            }
+        },
+        rateLimiter: false
     }
 })

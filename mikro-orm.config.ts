@@ -1,14 +1,15 @@
 // This file is referenced by the application as well as the migration CLI
 // The CLI use case requires the direct and indirect imports to have a .js extension.
 // Additionally, the imports can not use '~'
-import dotenv from "dotenv";
-import { MikroORM, type Options, PopulateHint, PostgreSqlDriver } from '@mikro-orm/postgresql';
-import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
-import { Migrator } from '@mikro-orm/migrations';
-import * as entities from "./server/data/models/requirements/index.js";
-import * as appEntities from "./server/data/models/application/index.js";
+import dotenv from 'dotenv'
+import { MikroORM, PopulateHint, PostgreSqlDriver } from '@mikro-orm/postgresql'
+import type { Options } from '@mikro-orm/postgresql'
+import { TsMorphMetadataProvider } from '@mikro-orm/reflection'
+import { Migrator } from '@mikro-orm/migrations'
+import * as entities from './server/data/models/requirements/index.js'
+import * as appEntities from './server/data/models/application/index.js'
 
-dotenv.config();
+dotenv.config()
 const config: Options = {
     extensions: [Migrator],
     driver: PostgreSqlDriver,
@@ -33,12 +34,12 @@ const config: Options = {
     metadataProvider: TsMorphMetadataProvider,
     debug: process.env.NODE_ENV !== 'production',
     migrations: { transactional: true }
-};
+}
 
-let connection: ReturnType<typeof MikroORM.init> | undefined;
+let connection: ReturnType<typeof MikroORM.init> | undefined
 
 export const getConnection = async () => {
-    return connection ? connection : (connection = MikroORM.init(config));
-};
+    return connection ? connection : (connection = MikroORM.init(config))
+}
 
-export default config;
+export default config

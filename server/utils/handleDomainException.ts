@@ -1,4 +1,4 @@
-import { DuplicateEntityException, MismatchException, NotFoundException, PermissionDeniedException } from "#shared/domain/exceptions";
+import { DuplicateEntityException, MismatchException, NotFoundException, PermissionDeniedException } from '#shared/domain/exceptions'
 
 /**
  * Create an HTTP error from a domain exception
@@ -6,7 +6,7 @@ import { DuplicateEntityException, MismatchException, NotFoundException, Permiss
  * @throws {Error} The HTTP error
  */
 export default function handleDomainException(error: unknown): never {
-    console.error('Handling domain exception:', error);
+    console.error('Handling domain exception:', error)
 
     if (error instanceof DuplicateEntityException)
         throw createError({ status: 409, statusMessage: `Conflict: ${error.message}`, ...error })

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 const { $eventBus } = useNuxtApp(),
-    toast = useToast();
+    toast = useToast()
 
 const showError = (e: unknown) => {
     let error = ''
@@ -12,27 +12,35 @@ const showError = (e: unknown) => {
     else
         error = 'An error occurred. Check the browser console for more details.'
 
-    console.error(error);
+    console.error(error)
     toast.add({
         title: 'Error',
         description: error,
         color: 'error',
         icon: 'i-lucide-octagon-alert'
-    });
+    })
 }
 
-$eventBus.$on('page-error', showError);
-
+$eventBus.$on('page-error', showError)
 </script>
+
 <template>
-    <TopNavigation />
-    <UContainer id="content" class="flex flex-col p-8 overflow-auto leading-6 space-y-8">
-        <slot @page-error="showError" />
-    </UContainer>
-    <footer>
-        &copy; {{ new Date().getFullYear() }} Final Hill. All rights reserved. |
-        Warning: This is Pre-release software. Use at your own risk. Data may be lost.
-    </footer>
+    <div>
+        <header>
+            <TopNavigation />
+        </header>
+        <UContainer
+            id="content"
+            as="main"
+            class="flex flex-col p-8 overflow-auto leading-6 space-y-8"
+        >
+            <slot @page-error="showError" />
+        </UContainer>
+        <footer>
+            &copy; {{ new Date().getFullYear() }} Final Hill. All rights reserved. |
+            Warning: This is Pre-release software. Use at your own risk. Data may be lost.
+        </footer>
+    </div>
 </template>
 
 <style>
@@ -40,7 +48,7 @@ $eventBus.$on('page-error', showError);
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: 0.6in 1fr 0.6in;
-    grid-template-areas: "top-nav" "content" "footer";
+    grid-template-areas: "header" "content" "footer";
     height: 100vh;
     overflow: hidden;
 
@@ -52,8 +60,8 @@ $eventBus.$on('page-error', showError);
         text-decoration: underline;
     }
 
-    &>.top-nav {
-        grid-area: top-nav;
+    &>header {
+        grid-area: header;
     }
 
     &>#content {

@@ -1,8 +1,8 @@
-import { z } from "zod";
-import { AuditMetadata } from "../AuditMetadata.js";
-import { ReqType } from "./ReqType.js";
-import { reqIdPattern } from "./reqIdPattern.js";
-import { WorkflowState } from "./WorkflowState.js";
+import { z } from 'zod'
+import { AuditMetadata } from '../AuditMetadata.js'
+import { ReqType } from './ReqType.js'
+import { reqIdPattern } from './reqIdPattern.js'
+import { WorkflowState } from './WorkflowState.js'
 
 export type ReqIdPrefix = `${'P' | 'E' | 'G' | 'S' | '0'}.${number}.`
 export type ReqId = `${ReqIdPrefix}${number}`
@@ -26,7 +26,7 @@ export const Requirement = AuditMetadata.extend({
         id: z.string().uuid()
             .describe('The id of the parsed requirement'),
         name: z.string()
-            .describe('The name of the parsed requirement'),
+            .describe('The name of the parsed requirement')
     }).optional()
         .describe('The ParsedRequirements container that this requirement is derived from'),
     solution: z.object({
@@ -36,4 +36,4 @@ export const Requirement = AuditMetadata.extend({
         name: z.string()
             .describe('The name of the solution')
     }).optional().describe('The solution that the requirement belongs to')
-}).describe('A Requirement is a statement that specifies a property.');
+}).describe('A Requirement is a statement that specifies a property.')

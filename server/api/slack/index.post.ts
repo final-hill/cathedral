@@ -1,8 +1,8 @@
-import { NaturalLanguageToRequirementService, SlackService } from "~/server/data/services";
-import { createSlackEventInteractor } from "~/application/slack";
-import { SYSTEM_SLACK_USER_ID } from "~/shared/constants.js";
-import { slackBodySchema } from "~/server/data/slack-zod-schemas";
-import handleDomainException from "~/server/utils/handleDomainException";
+import { NaturalLanguageToRequirementService, SlackService } from '~/server/data/services'
+import { createSlackEventInteractor } from '~/application/slack'
+import { SYSTEM_SLACK_USER_ID } from '~/shared/constants.js'
+import { slackBodySchema } from '~/server/data/slack-zod-schemas'
+import handleDomainException from '~/server/utils/handleDomainException'
 
 const config = useRuntimeConfig()
 
@@ -18,21 +18,21 @@ export default defineEventHandler(async (event) => {
     try {
         const rawBody = (await readRawBody(event))!,
             data = await validateEventBody(event, slackBodySchema),
-            headers = event.headers;
+            headers = event.headers
 
         const eventInteractor = createSlackEventInteractor({
             em: event.context.em,
             userId: SYSTEM_SLACK_USER_ID,
             slackService,
             nlrService
-        });
+        })
 
         slackService.assertValidSlackRequest(headers, rawBody)
 
         return eventInteractor.handleEvent(data).catch(handleDomainException)
-    } catch (error) {
+    } catch {
         // Handle domain exceptions properly, but note that Slack expects 200 responses
         // to prevent retries, so we catch and log but still return success
-        return { challenge: 'error_handled' };
+        return { challenge: 'error_handled' }
     }
-});
+})

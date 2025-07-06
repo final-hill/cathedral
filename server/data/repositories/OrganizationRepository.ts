@@ -1,17 +1,17 @@
 import { v7 as uuid7 } from 'uuid'
-import { z } from "zod";
-import { type FilterQuery } from "@mikro-orm/core";
-import { slugify } from "#shared/utils";
-import { WorkflowState } from "#shared/domain";
-import * as req from "#shared/domain/requirements";
-import * as reqModels from "../models/requirements";
-import { ReqType } from "#shared/domain/requirements/ReqType";
-import { NotFoundException } from "#shared/domain/exceptions";
-import { Repository } from "./Repository";
-import { DataModelToDomainModel, ReqQueryToModelQuery } from "../mappers";
-import { type CreationInfo } from "./CreationInfo";
-import { type UpdationInfo } from "./UpdationInfo";
-import { type DeletionInfo } from "./DeletionInfo";
+import type { z } from 'zod'
+import type { FilterQuery } from '@mikro-orm/core'
+import { slugify } from '#shared/utils'
+import { WorkflowState } from '#shared/domain'
+import * as req from '#shared/domain/requirements'
+import * as reqModels from '../models/requirements'
+import { ReqType } from '#shared/domain/requirements/ReqType'
+import { NotFoundException } from '#shared/domain/exceptions'
+import { Repository } from './Repository'
+import { DataModelToDomainModel, ReqQueryToModelQuery } from '../mappers'
+import type { CreationInfo } from './CreationInfo'
+import type { UpdationInfo } from './UpdationInfo'
+import type { DeletionInfo } from './DeletionInfo'
 
 // TODO: parameterize the repository type
 export class OrganizationRepository extends Repository<z.infer<typeof req.Organization>> {
@@ -29,7 +29,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
      * @param [props.organizationSlug] - The slug of the organization to utilize
      */
     constructor(options: ConstructorParameters<typeof Repository>[0] & ({
-        organizationId?: z.infer<typeof req.Organization>['id'],
+        organizationId?: z.infer<typeof req.Organization>['id']
         organizationSlug?: z.infer<typeof req.Organization>['slug']
     })) {
         super({ em: options.em })
@@ -92,9 +92,9 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             solLatestVersion = maybeSolLatestVersion?.isDeleted ? undefined : maybeSolLatestVersion
 
         if (!solLatestVersion)
-            throw new NotFoundException('Solution does not exist');
+            throw new NotFoundException('Solution does not exist')
 
-        const solution = solLatestVersion.requirement;
+        const solution = solLatestVersion.requirement
 
         em.create(reqModels.SolutionVersionsModel, {
             isDeleted: true,
@@ -106,21 +106,21 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             requirement: solution,
             organization: solLatestVersion.organization,
             workflowState: WorkflowState.Removed
-        });
+        })
 
-        /*** delete all requirements associated with the solution ***/
-        const requirements = await this._getRequirementsInSolution(solution.id, props.deletedDate);
+        /** delete all requirements associated with the solution **/
+        const requirements = await this._getRequirementsInSolution(solution.id, props.deletedDate)
 
         for (const req of requirements) {
-            em.create<reqModels.RequirementVersionsModel>(req.constructor as any, {
+            em.create<reqModels.RequirementVersionsModel>(req.constructor as new () => reqModels.RequirementVersionsModel, {
                 ...req,
                 isDeleted: true,
                 effectiveFrom: props.deletedDate,
                 modifiedBy: props.deletedById
-            });
+            })
         }
 
-        await em.flush();
+        await em.flush()
     }
 
     /*
@@ -219,17 +219,17 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
                     ...modelQuery
                 }
             } as FilterQuery<reqModels.SolutionVersionsModel>
-        }, { populate: ['createdBy'] }));
+        }, { populate: ['createdBy'] }))
 
         const mapper = new DataModelToDomainModel(),
-            solutions = await Promise.all(solutionModels.map(async sol => {
-                const latestVersion = await sol.getLatestVersion(new Date(), modelQuery);
+            solutions = await Promise.all(solutionModels.map(async (sol) => {
+                const latestVersion = await sol.getLatestVersion(new Date(), modelQuery)
                 return req.Solution.parse(
                     await mapper.map({ ...sol, ...latestVersion })
-                );
-            }));
+                )
+            }))
 
-        return solutions;
+        return solutions
     }
 
     /**
@@ -254,14 +254,14 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             throw new NotFoundException('Organization id or slug must be provided')
 
         const tempResult = await em.findOne(reqModels.OrganizationVersionsModel, {
-            requirement: {
-                ...organizationId ? { id: organizationId } : {},
-            },
-            ...(organizationSlug ? { slug: organizationSlug } : {})
-        }, {
-            populate: ['requirement', 'requirement.createdBy', 'modifiedBy'],
-            orderBy: { effectiveFrom: 'desc' }
-        }),
+                requirement: {
+                    ...organizationId ? { id: organizationId } : {}
+                },
+                ...(organizationSlug ? { slug: organizationSlug } : {})
+            }, {
+                populate: ['requirement', 'requirement.createdBy', 'modifiedBy'],
+                orderBy: { effectiveFrom: 'desc' }
+            }),
             result = tempResult?.requirement,
             latestVersion = await result?.getLatestVersion(new Date()) as reqModels.OrganizationVersionsModel
 
@@ -285,24 +285,24 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
      * @returns An array of the latest versions of requirements associated with the solution
      */
     private async _getRequirementsInSolution(solutionId: string, effectiveDate: Date, filter: FilterQuery<Exclude<reqModels.RequirementVersionsModel, 'solution' | 'effectiveFrom'>> = {}): Promise<reqModels.RequirementVersionsModel[]> {
-        const em = this._em;
+        const em = this._em
 
         const reqs = await em.find<reqModels.RequirementModel>(reqModels.RequirementModel, {
-            req_type: { $nin: [ReqType.ORGANIZATION, ReqType.SOLUTION] },
-            versions: {
-                $some: {
-                    isDeleted: false,
-                    solution: solutionId,
-                    effectiveFrom: { $lte: effectiveDate },
-                    ...filter
+                req_type: { $nin: [ReqType.ORGANIZATION, ReqType.SOLUTION] },
+                versions: {
+                    $some: {
+                        isDeleted: false,
+                        solution: solutionId,
+                        effectiveFrom: { $lte: effectiveDate },
+                        ...filter
+                    }
                 }
-            }
-        }),
+            }),
             reqVersions = (await Promise.all(reqs.map(req =>
                 req.getLatestVersion(effectiveDate, filter)
-            ))).filter(req => req != null);
+            ))).filter(req => req != null)
 
-        return reqVersions;
+        return reqVersions
     }
 
     /*

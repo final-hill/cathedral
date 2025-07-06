@@ -1,16 +1,17 @@
-import { Collection, Entity, Enum, type FilterQuery, ManyToMany, ManyToOne, OneToMany, OptionalProps, type OrderDefinition, PrimaryKey, Property, type Ref, type Rel, types } from '@mikro-orm/core';
-import { ConstraintCategory, MoscowPriority, ReqType, StakeholderCategory, StakeholderSegmentation, WorkflowState } from '../../../../shared/domain/requirements/enums.js';
-import { AppUserModel, SlackChannelMetaModel } from '../application/index.js';
-import { type ReqId } from '../../../../shared/domain/index.js';
+import { Collection, Entity, Enum, ManyToMany, ManyToOne, OneToMany, OptionalProps, PrimaryKey, Property, types } from '@mikro-orm/core'
+import type { FilterQuery, OrderDefinition, Ref, Rel } from '@mikro-orm/core'
+import { ConstraintCategory, MoscowPriority, ReqType, StakeholderCategory, StakeholderSegmentation, WorkflowState } from '../../../../shared/domain/requirements/enums.js'
+import { AppUserModel, SlackChannelMetaModel } from '../application/index.js'
+import type { ReqId } from '../../../../shared/domain/index.js'
 
 export abstract class StaticAuditModel<V extends VolatileAuditModel> {
     @ManyToOne({ entity: () => AppUserModel })
-    readonly createdBy!: Rel<AppUserModel>;
+    readonly createdBy!: Rel<AppUserModel>
 
     @Property({ type: types.datetime })
-    readonly creationDate!: Date;
+    readonly creationDate!: Date
 
-    abstract readonly versions: Collection<V, object>;
+    abstract readonly versions: Collection<V, object>
 
     async getLatestVersion(effectiveDate: Date, filter: FilterQuery<V> = {}): Promise<V | undefined> {
         const latestVersion = (await this.versions.matching({
@@ -21,7 +22,7 @@ export abstract class StaticAuditModel<V extends VolatileAuditModel> {
             } as FilterQuery<V>,
             orderBy: { effectiveFrom: 'desc' } as OrderDefinition<V>,
             limit: 1,
-            // @ts-ignore
+            // @ts-expect-error - MikroORM populate types are not fully compatible
             populate: ['*']
         }))[0]
 
@@ -37,7 +38,7 @@ export abstract class VolatileAuditModel {
     readonly isDeleted!: boolean
 
     @ManyToOne({ entity: () => AppUserModel })
-    readonly modifiedBy!: Rel<AppUserModel>;
+    readonly modifiedBy!: Rel<AppUserModel>
 }
 
 @Entity({ abstract: true, tableName: 'requirement', discriminatorColumn: 'req_type', discriminatorValue: ReqType.REQUIREMENT })
@@ -45,36 +46,36 @@ export abstract class RequirementModel extends StaticAuditModel<RequirementVersi
     [OptionalProps]?: 'req_type'
 
     @Enum({ items: () => ReqType })
-    readonly req_type!: ReqType;
+    readonly req_type!: ReqType
 
     @PrimaryKey({ type: types.uuid })
-    readonly id!: string;
+    readonly id!: string
 
-    @OneToMany(() => RequirementVersionsModel, (e) => e.requirement, { orderBy: { effectiveFrom: 'desc' } })
-    readonly versions = new Collection<RequirementVersionsModel>(this);
+    @OneToMany(() => RequirementVersionsModel, e => e.requirement, { orderBy: { effectiveFrom: 'desc' } })
+    readonly versions = new Collection<RequirementVersionsModel>(this)
 
     @ManyToOne({ entity: 'ParsedRequirementsModel', nullable: true, inversedBy: 'requirements' })
     readonly parsedRequirements?: Rel<ParsedRequirementsModel>
 
     async getLatestActiveVersion(): Promise<RequirementVersionsModel | undefined> {
         const versions = await this.versions.matching({
-            where: {
-                effectiveFrom: { $lte: new Date() },
-                workflowState: { $in: [WorkflowState.Active, WorkflowState.Removed] },
-                isDeleted: false
-            },
-            orderBy: { effectiveFrom: 'desc' },
-            limit: 2, // Retrieve the most recent Active and Removed versions
-            populate: ['*']
-        }),
+                where: {
+                    effectiveFrom: { $lte: new Date() },
+                    workflowState: { $in: [WorkflowState.Active, WorkflowState.Removed] },
+                    isDeleted: false
+                },
+                orderBy: { effectiveFrom: 'desc' },
+                limit: 2, // Retrieve the most recent Active and Removed versions
+                populate: ['*']
+            }),
             latestActive = versions.find(v => v.workflowState === WorkflowState.Active),
-            latestRemoved = versions.find(v => v.workflowState === WorkflowState.Removed);
+            latestRemoved = versions.find(v => v.workflowState === WorkflowState.Removed)
 
         // Compare effectiveFrom dates to determine validity
         if (latestRemoved && (!latestActive || latestRemoved.effectiveFrom > latestActive.effectiveFrom))
-            return undefined; // A newer Removed version exists, so no Active version is valid
+            return undefined // A newer Removed version exists, so no Active version is valid
 
-        return latestActive; // Return the latest Active version if no newer Removed version exists
+        return latestActive // Return the latest Active version if no newer Removed version exists
     }
 }
 
@@ -83,16 +84,16 @@ export abstract class RequirementVersionsModel extends VolatileAuditModel {
     [OptionalProps]?: 'req_type'
 
     @Enum({ items: () => ReqType })
-    readonly req_type!: ReqType;
+    readonly req_type!: ReqType
 
     @Enum({ items: () => WorkflowState, default: WorkflowState.Proposed })
-    readonly workflowState!: WorkflowState;
+    readonly workflowState!: WorkflowState
 
     @ManyToOne({ primary: true, entity: () => RequirementModel })
-    readonly requirement!: RequirementModel;
+    readonly requirement!: RequirementModel
 
     @ManyToOne({ entity: () => RequirementModel, nullable: true })
-    readonly solution?: RequirementModel;
+    readonly solution?: RequirementModel
 
     @Property({ type: types.string, length: 100 })
     readonly name!: string
@@ -122,7 +123,7 @@ export class BehaviorModel extends RequirementModel { }
 @Entity({ discriminatorValue: ReqType.BEHAVIOR })
 export class BehaviorVersionsModel extends RequirementVersionsModel {
     @Enum({ items: () => MoscowPriority })
-    readonly priority!: MoscowPriority;
+    readonly priority!: MoscowPriority
 }
 
 @Entity({ discriminatorValue: ReqType.COMPONENT })
@@ -134,7 +135,7 @@ export class ComponentVersionsModel extends ActorVersionsModel {
      * The parent component that this component belongs to
      */
     @ManyToOne({ entity: () => ComponentVersionsModel, nullable: true })
-    readonly parentComponent?: Ref<ComponentModel>;
+    readonly parentComponent?: Ref<ComponentModel>
 }
 
 @Entity({ discriminatorValue: ReqType.CONSTRAINT })
@@ -143,7 +144,7 @@ export class ConstraintModel extends RequirementModel { }
 @Entity({ discriminatorValue: ReqType.CONSTRAINT })
 export class ConstraintVersionsModel extends RequirementVersionsModel {
     @Enum({ items: () => ConstraintCategory })
-    readonly category!: ConstraintCategory;
+    readonly category!: ConstraintCategory
 }
 
 @Entity({ discriminatorValue: ReqType.EFFECT })
@@ -244,8 +245,8 @@ export class ObstacleVersionsModel extends GoalVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.ORGANIZATION })
 export class OrganizationModel extends MetaRequirementModel {
-    @ManyToMany({ entity: () => AppUserModel, mappedBy: (o) => o.organizations })
-    readonly users = new Collection<AppUserModel>(this);
+    @ManyToMany({ entity: () => AppUserModel, mappedBy: o => o.organizations })
+    readonly users = new Collection<AppUserModel>(this)
 }
 
 @Entity({ discriminatorValue: ReqType.ORGANIZATION })
@@ -263,7 +264,7 @@ export class OutcomeVersionsModel extends GoalVersionsModel { }
 @Entity({ discriminatorValue: ReqType.PARSED_REQUIREMENTS })
 export class ParsedRequirementsModel extends MetaRequirementModel {
     @OneToMany({ entity: 'RequirementModel', mappedBy: 'parsedRequirements' })
-    readonly requirements = new Collection<RequirementModel>(this);
+    readonly requirements = new Collection<RequirementModel>(this)
 }
 
 @Entity({ discriminatorValue: ReqType.PARSED_REQUIREMENTS })
@@ -311,7 +312,7 @@ export class SituationVersionsModel extends GoalVersionsModel { }
 @Entity({ discriminatorValue: ReqType.SOLUTION })
 export class SolutionModel extends MetaRequirementModel {
     @OneToMany({ entity: () => SlackChannelMetaModel, mappedBy: 'solution' })
-    readonly slackChannels = new Collection<SlackChannelMetaModel>(this);
+    readonly slackChannels = new Collection<SlackChannelMetaModel>(this)
 }
 
 @Entity({ discriminatorValue: ReqType.SOLUTION })
@@ -323,7 +324,7 @@ export class SolutionVersionsModel extends MetaRequirementVersionsModel {
      * The organization that the solution belongs to
      */
     @ManyToOne({ entity: () => OrganizationModel })
-    readonly organization!: Ref<OrganizationModel>;
+    readonly organization!: Ref<OrganizationModel>
 }
 
 @Entity({ discriminatorValue: ReqType.STAKEHOLDER })
@@ -350,10 +351,10 @@ export class ScenarioModel extends ExampleModel { }
 @Entity({ discriminatorValue: ReqType.SCENARIO })
 export class ScenarioVersionsModel extends ExampleVersionsModel {
     @ManyToOne({ entity: () => StakeholderModel })
-    readonly primaryActor!: StakeholderModel;
+    readonly primaryActor!: StakeholderModel
 
     @ManyToOne({ entity: () => OutcomeModel })
-    readonly outcome!: OutcomeModel;
+    readonly outcome!: OutcomeModel
 }
 
 @Entity({ discriminatorValue: ReqType.EPIC })

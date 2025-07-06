@@ -1,4 +1,4 @@
 export enum StakeholderSegmentation {
-    'Client' = 'Client',
-    'Vendor' = 'Vendor'
+    Client = 'Client',
+    Vendor = 'Vendor'
 }

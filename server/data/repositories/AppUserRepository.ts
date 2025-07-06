@@ -1,11 +1,11 @@
-import { AppUser, DuplicateEntityException, NotFoundException, ReqType, AppCredentials } from "#shared/domain";
-import { Repository } from "./Repository";
-import { AppUserModel, AppCredentialsModel } from "../models";
+import { AppUser, DuplicateEntityException, NotFoundException, ReqType, AppCredentials } from '#shared/domain'
+import { Repository } from './Repository'
+import { AppUserModel, AppCredentialsModel } from '../models'
 import { v7 as uuid7 } from 'uuid'
-import { type CreationInfo } from "./CreationInfo";
-import { type UpdationInfo } from "./UpdationInfo";
-import { z } from "zod";
-import { DataModelToDomainModel } from "../mappers";
+import type { CreationInfo } from './CreationInfo'
+import type { UpdationInfo } from './UpdationInfo'
+import type { z } from 'zod'
+import { DataModelToDomainModel } from '../mappers'
 
 export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
     /**
@@ -46,31 +46,33 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
      * @throws {NotFoundException} If the user does not exist
      */
     async getUserByEmail(email: z.infer<typeof AppUser>['email']): Promise<z.infer<typeof AppUser>> {
-        const em = this._em;
+        const em = this._em
 
         const appUser = await em.findOne(AppUserModel, { email })
 
         if (!appUser)
-            throw new NotFoundException(`User with email ${email} does not exist`);
+            throw new NotFoundException(`User with email ${email} does not exist`)
 
         const orgStatics = await appUser.organizations.loadItems(),
             maybeOrgs = await Promise.all(orgStatics.map(async (org) => {
-                const orgLatestVersion = await org.getLatestVersion(new Date());
-                return orgLatestVersion ? {
-                    reqType: ReqType.ORGANIZATION,
-                    id: org.id,
-                    name: orgLatestVersion.name
-                } : undefined;
+                const orgLatestVersion = await org.getLatestVersion(new Date())
+                return orgLatestVersion
+                    ? {
+                            reqType: ReqType.ORGANIZATION,
+                            id: org.id,
+                            name: orgLatestVersion.name
+                        }
+                    : undefined
             })),
-            organizations = maybeOrgs.filter((org) => org != undefined);
+            organizations = maybeOrgs.filter(org => org != undefined)
 
         const mapper = new DataModelToDomainModel()
 
         return AppUser.parse(await mapper.map({
             ...appUser,
-            // @ts-ignore: this exists in the subclass
+            // @ts-expect-error - organizations exists in the subclass but not in base type
             organizations
-        }));
+        }))
     }
 
     /**
@@ -84,26 +86,28 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
             appUser = await em.findOne(AppUserModel, { id })
 
         if (!appUser)
-            throw new NotFoundException(`User with id ${id} does not exist`);
+            throw new NotFoundException(`User with id ${id} does not exist`)
 
         const orgStatics = await appUser.organizations.loadItems(),
             maybeOrgs = await Promise.all(orgStatics.map(async (org) => {
-                const orgLatestVersion = await org.getLatestVersion(new Date());
-                return orgLatestVersion ? {
-                    reqType: ReqType.ORGANIZATION,
-                    id: org.id,
-                    name: orgLatestVersion.name
-                } : undefined;
+                const orgLatestVersion = await org.getLatestVersion(new Date())
+                return orgLatestVersion
+                    ? {
+                            reqType: ReqType.ORGANIZATION,
+                            id: org.id,
+                            name: orgLatestVersion.name
+                        }
+                    : undefined
             })),
-            organizations = maybeOrgs.filter((org) => org != undefined);
+            organizations = maybeOrgs.filter(org => org != undefined)
 
-        const mapper = new DataModelToDomainModel();
+        const mapper = new DataModelToDomainModel()
 
         return AppUser.parse(await mapper.map({
             ...appUser,
-            // @ts-ignore: this exists in the subclass
+            // @ts-expect-error - organizations exists in the subclass but not in base type
             organizations
-        }));
+        }))
     }
 
     /**
@@ -152,9 +156,9 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
                 counter: props.counter,
                 backedUp: props.backedUp,
                 transports: props.transports
-            });
+            })
 
-        await em.persistAndFlush(credential);
+        await em.persistAndFlush(credential)
 
         return credential.id
     }
@@ -166,9 +170,9 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
      */
     async getCredentialsByUserId(userId: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof AppCredentials>[]> {
         const em = this._em,
-            credentials = await em.find(AppCredentialsModel, { appUser: userId });
+            credentials = await em.find(AppCredentialsModel, { appUser: userId })
 
-        return credentials.map((credential) => AppCredentials.parse({
+        return credentials.map(credential => AppCredentials.parse({
             id: credential.id,
             appUser: {
                 id: credential.appUser.id,
@@ -179,7 +183,7 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
             counter: credential.counter,
             backedUp: credential.backedUp,
             transports: credential.transports
-        } as z.infer<typeof AppCredentials>));
+        } as z.infer<typeof AppCredentials>))
     }
 
     /**
@@ -188,9 +192,9 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
      * @returns Whether the credential exists
      */
     async hasCredential(credentialId: z.infer<typeof AppCredentials>['id']): Promise<boolean> {
-        const em = this._em;
-        const credential = await em.findOne(AppCredentialsModel, { id: credentialId });
-        return credential != undefined;
+        const em = this._em
+        const credential = await em.findOne(AppCredentialsModel, { id: credentialId })
+        return credential != undefined
     }
 
     /**
@@ -203,10 +207,10 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
         const em = this._em,
             credential = await em.findOne(AppCredentialsModel, {
                 id: credentialId
-            }, { populate: ['appUser'] });
+            }, { populate: ['appUser'] })
 
         if (!credential)
-            throw new NotFoundException(`Credential with id ${credentialId} does not exist`);
+            throw new NotFoundException(`Credential with id ${credentialId} does not exist`)
 
         return AppCredentials.parse({
             id: credential.id,
@@ -219,7 +223,7 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
             counter: credential.counter,
             backedUp: credential.backedUp,
             transports: credential.transports
-        } as z.infer<typeof AppCredentials>);
+        } as z.infer<typeof AppCredentials>)
     }
 
     /**
@@ -229,15 +233,15 @@ export class AppUserRepository extends Repository<z.infer<typeof AppUser>> {
      */
     async incrementCredentialCounter(credentialId: z.infer<typeof AppCredentials>['id']): Promise<void> {
         const em = this._em,
-            credential = await em.findOne(AppCredentialsModel, { id: credentialId });
+            credential = await em.findOne(AppCredentialsModel, { id: credentialId })
 
         if (!credential)
-            throw new NotFoundException(`Credential with id ${credentialId} does not exist`);
+            throw new NotFoundException(`Credential with id ${credentialId} does not exist`)
 
         em.assign(credential, {
             counter: credential.counter + 1
-        });
+        })
 
-        await em.flush();
+        await em.flush()
     }
 }

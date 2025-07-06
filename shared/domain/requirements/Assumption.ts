@@ -1,7 +1,7 @@
-import { dedent } from "../../../shared/utils/dedent.js";
-import { Requirement } from "./Requirement.js";
-import { z } from "zod";
-import { ReqType } from "./ReqType.js";
+import { dedent } from '../../../shared/utils/dedent.js'
+import { Requirement } from './Requirement.js'
+import { z } from 'zod'
+import { ReqType } from './ReqType.js'
 
 export const Assumption = Requirement.extend({
     reqId: z.string().regex(/^E\.4\.\d+$/, 'Format must be E.4.#').optional()

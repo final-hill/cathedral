@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { AppRole } from "./AppRole.js";
-import { ReqType } from "../requirements/ReqType.js";
+import { z } from 'zod'
+import { AppRole } from './AppRole.js'
+import { ReqType } from '../requirements/ReqType.js'
 
 export const AppUserOrganizationRole = z.object({
     appUser: z.object({
@@ -33,4 +33,4 @@ export const AppUserOrganizationRole = z.object({
         name: z.string()
             .describe('The name of the user who last modified the entity')
     })
-}).describe('An AppUserOrganizationRole is a mapping between an AppUser, an Organization, and a Role');
+}).describe('An AppUserOrganizationRole is a mapping between an AppUser, an Organization, and a Role')

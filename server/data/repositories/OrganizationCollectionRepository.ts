@@ -1,20 +1,20 @@
-import { z } from "zod";
-import { Organization, DuplicateEntityException, NotFoundException, WorkflowState, AppUser } from "#shared/domain";
-import { slugify } from "#shared/utils";
-import { Repository } from "./Repository";
-import { OrganizationRepository } from "./OrganizationRepository";
-import { AppUserOrganizationRoleModel, OrganizationModel, OrganizationVersionsModel } from "../models";
-import { DataModelToDomainModel, ReqQueryToModelQuery } from "../mappers";
+import type { z } from 'zod'
+import type { AppUser } from '#shared/domain'
+import { Organization, DuplicateEntityException, NotFoundException, WorkflowState } from '#shared/domain'
+import { slugify } from '#shared/utils'
+import { Repository } from './Repository'
+import { OrganizationRepository } from './OrganizationRepository'
+import { AppUserOrganizationRoleModel, OrganizationModel, OrganizationVersionsModel } from '../models'
+import { DataModelToDomainModel, ReqQueryToModelQuery } from '../mappers'
 import { v7 as uuid7 } from 'uuid'
-import { type CreationInfo } from "./CreationInfo";
-import { type DeletionInfo } from "./DeletionInfo";
-import { type UpdationInfo } from "./UpdationInfo";
+import type { CreationInfo } from './CreationInfo'
+import type { DeletionInfo } from './DeletionInfo'
+import type { UpdationInfo } from './UpdationInfo'
 
 export class OrganizationCollectionRepository extends Repository<z.infer<typeof Organization>> {
-
     async addInitialAppuserOrganizationRole(props: {
-        appUserId: z.infer<typeof Organization>['id'],
-        organizationId: z.infer<typeof Organization>['id'],
+        appUserId: z.infer<typeof Organization>['id']
+        organizationId: z.infer<typeof Organization>['id']
         role: NonNullable<z.infer<typeof AppUser>['role']>
     }): Promise<void> {
         const em = this._em,
@@ -64,7 +64,7 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
             requirement: em.create(OrganizationModel, {
                 id: newId,
                 createdBy: props.createdById,
-                creationDate: props.creationDate,
+                creationDate: props.creationDate
             }),
             isDeleted: false,
             effectiveFrom: props.creationDate,
@@ -102,7 +102,7 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
                 deletedById: props.deletedById,
                 slug: sol.slug,
                 deletedDate: props.deletedDate
-            });
+            })
         }
 
         em.create(OrganizationVersionsModel, {
@@ -136,11 +136,11 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
         }, { populate: ['*'] })
 
         const mapper = new DataModelToDomainModel(),
-            organizations = await Promise.all(orgModels.map(async org => {
-                const latestVersion = await org.getLatestVersion(effectiveDate, volatileQuery);
+            organizations = await Promise.all(orgModels.map(async (org) => {
+                const latestVersion = await org.getLatestVersion(effectiveDate, volatileQuery)
                 return Organization.parse(
                     await mapper.map({ ...org, ...latestVersion })
-                );
+                )
             }))
 
         return organizations

@@ -2,7 +2,7 @@ import type { H3Event, EventHandlerRequest } from 'h3'
 import type { ZodType } from 'zod'
 
 export default async function validateEventParams<Z extends ZodType>(event: H3Event<EventHandlerRequest>, schema: Z): Promise<Z['_output']> {
-    const params = await getValidatedRouterParams(event, (q) => schema.safeParse(q))
+    const params = await getValidatedRouterParams(event, q => schema.safeParse(q))
 
     if (!params.success)
         throw createError({

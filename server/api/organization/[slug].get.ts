@@ -1,7 +1,7 @@
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from "~/application"
-import { AppUserRepository, OrganizationRepository, PermissionRepository } from "~/server/data/repositories"
-import handleDomainException from "~/server/utils/handleDomainException"
-import { Organization } from "~/shared/domain"
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~/application'
+import { AppUserRepository, OrganizationRepository, PermissionRepository } from '~/server/data/repositories'
+import handleDomainException from '~/server/utils/handleDomainException'
+import { Organization } from '~/shared/domain'
 
 const paramSchema = Organization.innerType().pick({ slug: true })
 

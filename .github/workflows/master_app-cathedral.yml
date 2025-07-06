@@ -69,6 +69,9 @@ jobs:
         echo "Build completed - checking output..."
         ls -la .output/server/
 
+    - name: Lint code
+      run: npm run lint
+
     - name: Run database migrations
       env:
         NODE_ENV: production

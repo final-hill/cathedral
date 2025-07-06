@@ -8,7 +8,7 @@ charset = utf-8
 end_of_line = lf
 indent_style = space
 trim_trailing_whitespace = true
-insert_final_newline = false
+insert_final_newline = true
 
 [*.{mts,ts,json,config,js,mjs}]
 indent_size = 4

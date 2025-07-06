@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { ReqType } from '../requirements/ReqType.js';
-import { AppRole } from './AppRole.js';
+import { z } from 'zod'
+import { ReqType } from '../requirements/ReqType.js'
+import { AppRole } from './AppRole.js'
 
 export const AppUser = z.object({
     id: z.string().uuid().readonly().describe('The unique identifier of the app user'),
@@ -21,5 +21,5 @@ export const AppUser = z.object({
     credentials: z.array(z.object({
         id: z.string()
             .describe('The id of the credentials')
-    })).optional().describe('The credentials of the app user'),
-}).describe('The users of the application');
+    })).optional().describe('The credentials of the app user')
+}).describe('The users of the application')

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Assumption, ReqType } from '#shared/domain';
+import { Assumption, ReqType } from '#shared/domain'
 
 useHead({ title: 'Assumptions' })
 definePageMeta({ name: 'Assumptions', middleware: 'auth' })
@@ -8,8 +8,14 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
 </script>
 
 <template>
-    <h1>E.4 Assumptions</h1>
-    <p>{{ Assumption.description }}</p>
+    <div>
+        <h1>E.4 Assumptions</h1>
+        <p>{{ Assumption.description }}</p>
 
-    <XWorkflow :organization-slug="organizationSlug" :req-type="ReqType.ASSUMPTION" :solution-slug="solutionSlug" />
+        <XWorkflow
+            :organization-slug="organizationSlug"
+            :req-type="ReqType.ASSUMPTION"
+            :solution-slug="solutionSlug"
+        />
+    </div>
 </template>

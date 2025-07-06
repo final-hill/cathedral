@@ -1,6 +1,4 @@
-import { AppUser } from "#shared/domain";
-import type { z } from "zod";
-import type { Repository } from "~/server/data/repositories/Repository"
+import type { Repository } from '~/server/data/repositories/Repository'
 
 /**
  * An Interactor is a class that contains the business logic for a collection of related use cases
@@ -19,7 +17,7 @@ export abstract class Interactor<E> {
      * @param props.userId - The id of the user to utilize
      */
     constructor(props: {
-        repository: Repository<E>,
+        repository: Repository<E>
     }) {
         this._repository = props.repository
     }

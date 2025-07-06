@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { slugify } from '#shared/utils';
-import { z } from 'zod';
-import { Solution } from '#shared/domain';
+import { slugify } from '#shared/utils'
+import type { z } from 'zod'
+import { Solution } from '#shared/domain'
 
 useHead({ title: 'New Solution' })
 definePageMeta({ name: 'New Solution', middleware: 'auth' })
@@ -23,13 +23,13 @@ const formSchema = Solution.innerType().pick({
     description: true
 })
 
-type FormSchema = z.infer<typeof formSchema>;
+type FormSchema = z.infer<typeof formSchema>
 
 const formState = reactive<FormSchema>({
     name: '',
     slug: '',
     description: ''
-});
+})
 
 const createSolution = async (data: FormSchema) => {
     try {
@@ -42,21 +42,26 @@ const createSolution = async (data: FormSchema) => {
             }
         })
 
-        router.push({ name: 'Solution', params: { organizationslug: organizationSlug, solutionslug: newSolutionSlug } });
+        router.push({ name: 'Solution', params: { organizationslug: organizationSlug, solutionslug: newSolutionSlug } })
     } catch (error) {
         $eventBus.$emit('page-error', error)
     }
 }
 
 const cancel = () => {
-    router.push({ name: 'Organization', params: { organizationslug: organizationSlug } });
+    router.push({ name: 'Organization', params: { organizationslug: organizationSlug } })
 }
 
 watch(() => formState.name, (newName) => {
-    formState.slug = slugify(newName);
-});
+    formState.slug = slugify(newName)
+})
 </script>
 
 <template>
-    <XForm :schema="formSchema" :state="formState" :onSubmit="createSolution" :onCancel="cancel" />
+    <XForm
+        :schema="formSchema"
+        :state="formState"
+        :on-submit="createSolution"
+        :on-cancel="cancel"
+    />
 </template>

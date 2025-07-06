@@ -1,7 +1,7 @@
-import { z } from "zod";
-import { Scenario } from "./Scenario.js";
-import { dedent } from "../../../shared/utils/dedent.js";
-import { ReqType } from "./ReqType.js";
+import { z } from 'zod'
+import { Scenario } from './Scenario.js'
+import { dedent } from '../../../shared/utils/dedent.js'
+import { ReqType } from './ReqType.js'
 
 export const Epic = Scenario.extend({
     reqId: z.string().regex(/^G\.5\.\d+$/, 'Format must be G.5.#').optional()
@@ -18,4 +18,4 @@ export const Epic = Scenario.extend({
 }).describe(dedent(`
     An Epic is a collection of Use Cases and User Stories all directed towards a common goal;
     Ex: "decrease the percentage of of fraudulent sellers by 20%"'
-`));
+`))

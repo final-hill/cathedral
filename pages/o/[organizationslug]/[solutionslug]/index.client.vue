@@ -24,7 +24,7 @@ const handleSolutionDelete = async () => {
     await $fetch(`/api/solution/${slug}`, {
         method: 'delete',
         body: { organizationSlug }
-    }).catch((e) => $eventBus.$emit('page-error', e))
+    }).catch(e => $eventBus.$emit('page-error', e))
     deleteConfirmModalOpenState.value = false
     router.push({ name: 'Organization', params: { organizationslug: organizationSlug } })
 }
@@ -35,31 +35,63 @@ const handleSolutionEdit = () => {
 </script>
 
 <template>
-    <PegsLanding :cards="links" :solutionslug="slug" :organizationslug="organizationSlug">
-        <template #header>
-            <h1>{{ solution!.name }}</h1>
-            <p>{{ solution!.description }}</p>
+    <div>
+        <PegsLanding
+            :cards="links"
+            :solutionslug="slug"
+            :organizationslug="organizationSlug"
+        >
+            <template #header>
+                <h1>{{ solution!.name }}</h1>
+                <p>{{ solution!.description }}</p>
 
-            <section class="flex space-x-4 justify-center">
-                <UButton icon="i-lucide-pen" @click="handleSolutionEdit()" label="Edit Solution" />
-                <UModal :dismissable="false" v-model:open="deleteConfirmModalOpenState" title="Delete Solution">
-                    <UButton icon="i-lucide-trash-2" color="error" label="Delete Solution" />
-                    <template #content>
-                        Are you sure you want to delete {{ solution!.name }}? This will also delete all associated
-                        requirements.
-                    </template>
-                    <template #footer>
-                        <UButton label="Cancel" color="neutral" @click="deleteConfirmModalOpenState = false" />
-                        <UButton label="Delete" color="error" @click="handleSolutionDelete()" />
-                    </template>
-                </UModal>
-            </section>
+                <section class="flex space-x-4 justify-center">
+                    <UButton
+                        icon="i-lucide-pen"
+                        label="Edit Solution"
+                        @click="handleSolutionEdit()"
+                    />
+                    <UModal
+                        v-model:open="deleteConfirmModalOpenState"
+                        :dismissable="false"
+                        title="Delete Solution"
+                    >
+                        <UButton
+                            icon="i-lucide-trash-2"
+                            color="error"
+                            label="Delete Solution"
+                        />
+                        <template #content>
+                            Are you sure you want to delete {{ solution!.name }}? This will also delete all associated
+                            requirements.
+                        </template>
+                        <template #footer>
+                            <UButton
+                                label="Cancel"
+                                color="neutral"
+                                @click="deleteConfirmModalOpenState = false"
+                            />
+                            <UButton
+                                label="Delete"
+                                color="error"
+                                @click="handleSolutionDelete()"
+                            />
+                        </template>
+                    </UModal>
+                </section>
 
-            <section class="mt-4">
-                <SlackChannelManager :organization-slug="organizationSlug" :solution-slug="slug" />
-            </section>
-        </template>
-    </PegsLanding>
+                <section class="mt-4">
+                    <SlackChannelManager
+                        :organization-slug="organizationSlug"
+                        :solution-slug="slug"
+                    />
+                </section>
+            </template>
+        </PegsLanding>
 
-    <FreeFormRequirements :solutionSlug="slug" :organizationSlug="organizationSlug" />
+        <FreeFormRequirements
+            :solution-slug="slug"
+            :organization-slug="organizationSlug"
+        />
+    </div>
 </template>

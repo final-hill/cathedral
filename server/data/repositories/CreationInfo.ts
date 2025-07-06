@@ -1,7 +1,7 @@
-import { AppUser } from "#shared/domain/application";
-import { z } from "zod";
+import type { AppUser } from '#shared/domain/application'
+import type { z } from 'zod'
 
 export type CreationInfo = {
-    createdById: z.infer<typeof AppUser>['id'];
-    creationDate: Date;
-};
+    createdById: z.infer<typeof AppUser>['id']
+    creationDate: Date
+}

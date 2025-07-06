@@ -1,15 +1,16 @@
-import { AzureOpenAI } from "openai";
-import zodSchema, { llmRequirementSchema } from '../llm-zod-schemas/index.js'
-import { zodResponseFormat } from "openai/helpers/zod";
-import { dedent } from "../../../shared/utils/dedent.js";
-import { z } from "zod";
-import { ReqType } from "~/shared/domain/index.js";
-import * as reqs from '~/shared/domain/requirements/index.js';
-import { snakeCaseToPascalCase } from "~/shared/utils/snakeCaseToPascalCase.js";
+import { AzureOpenAI } from 'openai'
+import type { llmRequirementSchema } from '../llm-zod-schemas/index.js'
+import zodSchema from '../llm-zod-schemas/index.js'
+import { zodResponseFormat } from 'openai/helpers/zod'
+import { dedent } from '../../../shared/utils/dedent.js'
+import type { z } from 'zod'
+import { ReqType } from '~/shared/domain/index.js'
+import * as reqs from '~/shared/domain/requirements/index.js'
+import { snakeCaseToPascalCase } from '~/shared/utils/snakeCaseToPascalCase.js'
 
 export class NaturalLanguageToRequirementService {
-    private _aiClient: AzureOpenAI;
-    private _modelId: string;
+    private _aiClient: AzureOpenAI
+    private _modelId: string
 
     constructor(props: { apiKey: string, apiVersion: string, endpoint: string, deployment: string }) {
         this._aiClient = new AzureOpenAI(props)
@@ -30,7 +31,7 @@ export class NaturalLanguageToRequirementService {
 
                 """
                 ${Object.values(ReqType)
-                        .filter((reqType) => ![
+                        .filter(reqType => ![
                             ReqType.COMPONENT,
                             ReqType.CONTEXT_AND_OBJECTIVE,
                             ReqType.FUNCTIONALITY,
@@ -38,7 +39,7 @@ export class NaturalLanguageToRequirementService {
                             ReqType.ORGANIZATION,
                             ReqType.PARSED_REQUIREMENTS,
                             ReqType.REQUIREMENT,
-                            ReqType.SOLUTION,
+                            ReqType.SOLUTION
                         ].includes(reqType))
                         .map((reqType) => {
                             const ReqTypePascal = snakeCaseToPascalCase(reqType) as keyof typeof reqs
@@ -46,7 +47,7 @@ export class NaturalLanguageToRequirementService {
                         })
                         .map(({ reqType, description }) => `- ${reqType}: ${description}`)
                         .join('\n')
-                    }
+                }
                 """
 
                 Any statement or substatement that can not be expressed or understood as a requirement should be considered a 'silence' requirement.

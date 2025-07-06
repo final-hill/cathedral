@@ -1,10 +1,10 @@
-import { PostgreSqlDriver, SqlEntityManager } from "@mikro-orm/postgresql";
-import { AppUserInteractor, PermissionInteractor } from "~/application";
-import { getConnection } from "~/mikro-orm.config"
-import { AppUserRepository, PermissionRepository } from "~/server/data/repositories";
-import cache from '~/server/utils/cache';
-import { SYSTEM_USER_ID } from "~/shared/constants.js";
-import { MismatchException } from '~/shared/domain';
+import type { PostgreSqlDriver, SqlEntityManager } from '@mikro-orm/postgresql'
+import { AppUserInteractor, PermissionInteractor } from '~/application'
+import { getConnection } from '~/mikro-orm.config'
+import { AppUserRepository, PermissionRepository } from '~/server/data/repositories'
+import cache from '~/server/utils/cache'
+import { SYSTEM_USER_ID } from '~/shared/constants.js'
+import { MismatchException } from '~/shared/domain'
 
 export default defineWebAuthnAuthenticateEventHandler({
     /**
@@ -42,9 +42,9 @@ export default defineWebAuthnAuthenticateEventHandler({
                     repository: new PermissionRepository({ em })
                 }),
                 repository: new AppUserRepository({ em })
-            });
+            })
 
-        return appUserInteractor.getCredential(credentialID).catch(handleDomainException);
+        return appUserInteractor.getCredential(credentialID).catch(handleDomainException)
     },
     async onSuccess(event, { credential }) {
         await setUserSession(event, {

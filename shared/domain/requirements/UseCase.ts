@@ -1,6 +1,6 @@
-import { z } from "zod";
-import { Scenario } from "./Scenario.js";
-import { ReqType } from "./ReqType.js";
+import { z } from 'zod'
+import { Scenario } from './Scenario.js'
+import { ReqType } from './ReqType.js'
 
 export const UseCase = Scenario.extend({
     reqId: z.string().regex(/^S\.4\.\d+$/, 'Format must be S.4.#').optional()
@@ -36,7 +36,7 @@ export const UseCase = Scenario.extend({
      * 3. The <Actor name> does something else.
      * ...
      */
-    //mainSuccessScenario: [FunctionalRequirement | Constraint | Role | Responsibility][]
+    // mainSuccessScenario: [FunctionalRequirement | Constraint | Role | Responsibility][]
     mainSuccessScenario: z.string().max(100)
         .describe('The main success scenario of the use case'),
     successGuarantee: z.object({
@@ -51,4 +51,4 @@ export const UseCase = Scenario.extend({
     // TODO: <https://github.com/final-hill/cathedral/issues/154>
     // stakeHoldersAndInterests: z.array(z.string().max(100)).describe('The stakeholders and interests of the use case')
     reqType: z.nativeEnum(ReqType).default(ReqType.USE_CASE)
-}).describe('A Use Case describes a complete interaction between an actor and the system to achieve a goal.');
+}).describe('A Use Case describes a complete interaction between an actor and the system to achieve a goal.')

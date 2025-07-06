@@ -1,17 +1,18 @@
-import type { z } from "zod";
-import * as req from "#shared/domain/requirements";
-import { ReqType } from "#shared/domain/requirements/enums";
-import { AppRole, AppUser } from "#shared/domain/application";
-import { MismatchException, PermissionDeniedException } from "#shared/domain/exceptions";
-import { type OrganizationRepository } from "~/server/data/repositories";
-import { Interactor, type AppUserInteractor, PermissionInteractor } from "./";
+import type { z } from 'zod'
+import type * as req from '#shared/domain/requirements'
+import { ReqType } from '#shared/domain/requirements/enums'
+import { AppRole, AppUser } from '#shared/domain/application'
+import { MismatchException, PermissionDeniedException } from '#shared/domain/exceptions'
+import type { OrganizationRepository } from '~/server/data/repositories'
+import type { PermissionInteractor, AppUserInteractor } from './'
+import { Interactor } from './Interactor'
 
 /**
  * The OrganizationInteractor class contains the business logic for interacting with an organization.
  */
 export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organization>> {
-    private readonly _permissionInteractor: PermissionInteractor;
-    private readonly _appUserInteractor: AppUserInteractor;
+    private readonly _permissionInteractor: PermissionInteractor
+    private readonly _appUserInteractor: AppUserInteractor
 
     /**
      * Create a new OrganizationInteractor
@@ -21,13 +22,13 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      */
     constructor(props: {
         // TODO: This should be Repository<Organization>
-        repository: OrganizationRepository,
-        permissionInteractor: PermissionInteractor,
+        repository: OrganizationRepository
+        permissionInteractor: PermissionInteractor
         appUserInteractor: AppUserInteractor
     }) {
-        super(props);
-        this._permissionInteractor = props.permissionInteractor;
-        this._appUserInteractor = props.appUserInteractor;
+        super(props)
+        this._permissionInteractor = props.permissionInteractor
+        this._appUserInteractor = props.appUserInteractor
     }
 
     // FIXME: this shouldn't be necessary
@@ -45,18 +46,18 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      */
     async addSolution({ name, description }: Pick<z.infer<typeof req.Solution>, 'name' | 'description'>): Promise<z.infer<typeof req.Solution>['id']> {
         const organization = await this.repository.getOrganization(),
-            currentUserId = this._permissionInteractor.userId;
+            currentUserId = this._permissionInteractor.userId
 
-        await this._permissionInteractor.assertOrganizationAdmin(organization.id);
+        await this._permissionInteractor.assertOrganizationAdmin(organization.id)
 
         const repo = this.repository,
-            effectiveDate = new Date();
+            effectiveDate = new Date()
 
-        await this._assertSolutionSlugIsUnique(name);
+        await this._assertSolutionSlugIsUnique(name)
 
-        const newSolutionId = await repo.addSolution({ name, description, creationDate: effectiveDate, createdById: currentUserId });
+        const newSolutionId = await repo.addSolution({ name, description, creationDate: effectiveDate, createdById: currentUserId })
 
-        return newSolutionId;
+        return newSolutionId
     }
 
     /**
@@ -70,27 +71,27 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
     async deleteAppUser(id: z.infer<typeof AppUser>['id']): Promise<void> {
         const organization = await this.repository.getOrganization(),
             pi = this._permissionInteractor,
-            currentUserId = pi.userId;
+            currentUserId = pi.userId
 
         if (!(await pi.isOrganizationAdmin(organization.id)) && id !== currentUserId)
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action');
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         const targetUserAuor = await pi.getAppUserOrganizationRole({
-            appUserId: id,
-            organizationId: organization.id
-        }),
+                appUserId: id,
+                organizationId: organization.id
+            }),
             orgAdminCount = await pi.findAppUserOrganizationRoles({
                 organizationId: organization.id,
                 role: AppRole.ORGANIZATION_ADMIN
-            }).then((roles) => roles.length)
+            }).then(roles => roles.length)
 
         if (targetUserAuor.role === AppRole.ORGANIZATION_ADMIN && orgAdminCount === 1)
-            throw new PermissionDeniedException('Forbidden: You cannot delete the last organization admin.');
+            throw new PermissionDeniedException('Forbidden: You cannot delete the last organization admin.')
 
         return pi.deleteAppUserOrganizationRole({
             appUserId: id,
             organizationId: organization.id
-        });
+        })
     }
 
     /**
@@ -103,17 +104,16 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      */
     async deleteSolutionBySlug(slug: z.infer<typeof req.Solution>['slug']): Promise<void> {
         const organization = await this.repository.getOrganization(),
-            currentUserId = this._permissionInteractor.userId;
+            currentUserId = this._permissionInteractor.userId
 
-        await this._permissionInteractor.assertOrganizationAdmin(organization.id);
+        await this._permissionInteractor.assertOrganizationAdmin(organization.id)
 
         return this.repository.deleteSolutionBySlug({
             deletedById: currentUserId,
             deletedDate: new Date(),
             slug
-        });
+        })
     }
-
 
     /**
      * Find solutions that match the query parameters for an organization
@@ -126,8 +126,8 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
     async findSolutions(query: Partial<z.infer<typeof req.Solution>> = {}): Promise<z.infer<typeof req.Solution>[]> {
         const organization = await this.repository.getOrganization()
 
-        await this._permissionInteractor.assertOrganizationReader(organization.id);
-        return this.repository.findSolutions(query);
+        await this._permissionInteractor.assertOrganizationReader(organization.id)
+        return this.repository.findSolutions(query)
     }
 
     /**
@@ -138,8 +138,8 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      */
     async getOrganization(): Promise<z.infer<typeof req.Organization>> {
         const org = await this.repository.getOrganization()
-        await this._permissionInteractor.assertOrganizationReader(org.id);
-        return org;
+        await this._permissionInteractor.assertOrganizationReader(org.id)
+        return org
     }
 
     /**
@@ -154,13 +154,13 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
     async getAppUserById(id: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof AppUser>> {
         const org = await this.repository.getOrganization(),
             pi = this._permissionInteractor,
-            aui = this._appUserInteractor;
+            aui = this._appUserInteractor
 
-        await pi.assertOrganizationReader(org.id);
+        await pi.assertOrganizationReader(org.id)
         const auor = await pi.getAppUserOrganizationRole({
             appUserId: id,
             organizationId: org.id
-        });
+        })
 
         return AppUser.parse({
             ...await aui.getUserById(auor.appUser.id),
@@ -170,7 +170,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
                 id: org.id,
                 name: org.name
             }]
-        });
+        })
     }
 
     /**
@@ -182,15 +182,15 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
     async getAppUsers(): Promise<z.infer<typeof AppUser>[]> {
         const org = await this.repository.getOrganization(),
             pi = this._permissionInteractor,
-            aui = this._appUserInteractor;
+            aui = this._appUserInteractor
 
-        await pi.assertOrganizationReader(org.id);
+        await pi.assertOrganizationReader(org.id)
 
         const auors = await pi.findAppUserOrganizationRoles({
             organizationId: org.id
-        });
+        })
 
-        const appUsers = await Promise.all(auors.map(async (auor) => AppUser.parse({
+        const appUsers = await Promise.all(auors.map(async auor => AppUser.parse({
             ...await aui.getUserById(auor.appUser.id),
             role: auor.role,
             organizations: [{
@@ -214,8 +214,8 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      */
     async getSolutionById(solutionId: z.infer<typeof req.Solution>['id']): Promise<z.infer<typeof req.Solution>> {
         const org = await this.repository.getOrganization()
-        await this._permissionInteractor.assertOrganizationReader(org.id);
-        return this.repository.getSolutionById(solutionId);
+        await this._permissionInteractor.assertOrganizationReader(org.id)
+        return this.repository.getSolutionById(solutionId)
     }
 
     /**
@@ -229,8 +229,8 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      */
     async getSolutionBySlug(slug: z.infer<typeof req.Solution>['slug']): Promise<z.infer<typeof req.Solution>> {
         const org = await this.repository.getOrganization()
-        await this._permissionInteractor.assertOrganizationReader(org.id);
-        return this.repository.getSolutionBySlug(slug);
+        await this._permissionInteractor.assertOrganizationReader(org.id)
+        return this.repository.getSolutionBySlug(slug)
     }
 
     /**
@@ -239,10 +239,10 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {MismatchException} If the solution slug is not unique within the organization
      */
     private async _assertSolutionSlugIsUnique(slug: z.infer<typeof req.Solution>['slug']): Promise<void> {
-        const solutions = (await this.findSolutions({ slug }));
+        const solutions = (await this.findSolutions({ slug }))
 
         if (solutions.length > 0)
-            throw new MismatchException(`Solution with slug ${slug} already exists in the organization`);
+            throw new MismatchException(`Solution with slug ${slug} already exists in the organization`)
     }
 
     /**
@@ -256,17 +256,17 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      */
     async updateSolutionBySlug(slug: z.infer<typeof req.Solution>['slug'], props: Pick<Partial<z.infer<typeof req.Solution>>, 'name' | 'description'>): Promise<void> {
         const org = await this.repository.getOrganization(),
-            currentUserId = this._permissionInteractor.userId;
+            currentUserId = this._permissionInteractor.userId
 
-        await this._permissionInteractor.assertOrganizationContributor(org.id);
+        await this._permissionInteractor.assertOrganizationContributor(org.id)
 
         if (props.name)
-            await this._assertSolutionSlugIsUnique(props.name);
+            await this._assertSolutionSlugIsUnique(props.name)
 
         await this.repository.updateSolutionBySlug(slug, {
             modifiedById: currentUserId,
             modifiedDate: new Date(),
             ...props
-        });
+        })
     }
 }

@@ -1,7 +1,7 @@
-import { dedent } from "../../../shared/utils/dedent.js";
-import { Component } from "./Component.js";
-import { z } from 'zod';
-import { ReqType } from "./ReqType.js";
+import { dedent } from '../../../shared/utils/dedent.js'
+import { Component } from './Component.js'
+import { z } from 'zod'
+import { ReqType } from './ReqType.js'
 
 export const SystemComponent = Component.extend({
     reqId: z.string().regex(/^S\.1\.\d+$/, 'Format must be S.1.#').optional()
@@ -14,8 +14,8 @@ export const SystemComponent = Component.extend({
             .describe('The parent component of the component'),
         name: z.string()
             .describe('The name of the parent component')
-    }).describe('The parent component of the component').optional(),
+    }).describe('The parent component of the component').optional()
 }).describe(dedent(`
     A System Component is a self-contained part of a system.
     These are often hierarchical and can be used to describe the structure of a System.
-`));
+`))

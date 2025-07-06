@@ -1,7 +1,7 @@
-import { dedent } from "../../../shared/utils/dedent.js";
-import { z } from "zod";
-import { ReqType } from "./ReqType.js";
-import { Requirement } from "./Requirement.js";
+import { dedent } from '../../../shared/utils/dedent.js'
+import { z } from 'zod'
+import { ReqType } from './ReqType.js'
+import { Requirement } from './Requirement.js'
 
 export const Goal = Requirement.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.GOAL)

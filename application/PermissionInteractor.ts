@@ -1,23 +1,24 @@
-import { AppRole, AppUserOrganizationRole, NotFoundException, Organization, PermissionDeniedException, type AppUser } from "#shared/domain";
-import type { PermissionRepository } from "~/server/data/repositories/PermissionRepository";
-import type { z } from "zod";
-import { SYSTEM_SLACK_USER_ID } from "~/shared/constants.js";
+import type { AppUserOrganizationRole, Organization, AppUser } from '#shared/domain'
+import { AppRole, NotFoundException, PermissionDeniedException } from '#shared/domain'
+import type { PermissionRepository } from '~/server/data/repositories/PermissionRepository'
+import type { z } from 'zod'
+import { SYSTEM_SLACK_USER_ID } from '~/shared/constants.js'
 
 /**
  * Interactor for checking permissions
  * for the current user in the context of an organization.
  */
 export class PermissionInteractor {
-    private readonly _userId: z.infer<typeof AppUser>['id'];
-    private readonly _repository: PermissionRepository;
+    private readonly _userId: z.infer<typeof AppUser>['id']
+    private readonly _repository: PermissionRepository
 
     constructor(props: { userId: z.infer<typeof AppUser>['id'], repository: PermissionRepository }) {
-        this._userId = props.userId;
-        this._repository = props.repository;
+        this._userId = props.userId
+        this._repository = props.repository
     }
 
     get userId(): z.infer<typeof AppUser>['id'] {
-        return this._userId;
+        return this._userId
     }
 
     /**
@@ -26,7 +27,7 @@ export class PermissionInteractor {
      */
     async assertSlackBot(): Promise<void> {
         if (!this.isSlackBot() && !await this.isSystemAdmin())
-            throw new PermissionDeniedException('Forbidden: You do not have permissions to perform this action.');
+            throw new PermissionDeniedException('Forbidden: You do not have permissions to perform this action.')
     }
 
     /**
@@ -36,7 +37,7 @@ export class PermissionInteractor {
      */
     async assertOrganizationAdmin(organizationId: z.infer<typeof Organization>['id']): Promise<void> {
         if (!await this.isOrganizationAdmin(organizationId))
-            throw new PermissionDeniedException('Forbidden: You do not have admin permissions.');
+            throw new PermissionDeniedException('Forbidden: You do not have admin permissions.')
     }
 
     /**
@@ -46,7 +47,7 @@ export class PermissionInteractor {
      */
     async assertOrganizationContributor(organizationId: z.infer<typeof Organization>['id']): Promise<void> {
         if (!await this.isOrganizationContributor(organizationId))
-            throw new PermissionDeniedException('Forbidden: You do not have contributor permissions.');
+            throw new PermissionDeniedException('Forbidden: You do not have contributor permissions.')
     }
 
     /**
@@ -56,7 +57,7 @@ export class PermissionInteractor {
      */
     async assertOrganizationReader(organizationId: z.infer<typeof Organization>['id']): Promise<void> {
         if (!await this.isOrganizationReader(organizationId))
-            throw new PermissionDeniedException('Forbidden: You do not have reader permissions.');
+            throw new PermissionDeniedException('Forbidden: You do not have reader permissions.')
     }
 
     /**
@@ -69,12 +70,12 @@ export class PermissionInteractor {
      * @throws {DuplicateEntityException} If the target app user is already associated with the organization
      */
     async addAppUserOrganizationRole(props: { appUserId: string, organizationId: string, role: AppRole }): Promise<void> {
-        await this.assertOrganizationAdmin(props.organizationId);
+        await this.assertOrganizationAdmin(props.organizationId)
         await this._repository.addAppUserOrganizationRole({
             createdById: this._userId,
             creationDate: new Date(),
             ...props
-        });
+        })
     }
 
     /**
@@ -83,7 +84,7 @@ export class PermissionInteractor {
      * @param props.organizationId The id of the organization to remove the app user from
      */
     async deleteAppUserOrganizationRole(props: { appUserId: string, organizationId: string }): Promise<void> {
-        await this.assertOrganizationAdmin(props.organizationId);
+        await this.assertOrganizationAdmin(props.organizationId)
         await this._repository.deleteAppUserOrganizationRole({
             appUserId: props.appUserId,
             organizationId: props.organizationId,
@@ -101,12 +102,12 @@ export class PermissionInteractor {
      * @returns The list of AppUserOrganizationRoles
      */
     async findAppUserOrganizationRoles(props: { appUserId?: z.infer<typeof AppUser>['id'], organizationId: z.infer<typeof Organization>['id'], role?: AppRole }): Promise<z.infer<typeof AppUserOrganizationRole>[]> {
-        await this.assertOrganizationReader(props.organizationId);
+        await this.assertOrganizationReader(props.organizationId)
         return this._repository.findAppUserOrganizationRoles({
             appUserId: props.appUserId,
             organizationId: props.organizationId,
             role: props.role
-        });
+        })
     }
 
     /**
@@ -118,13 +119,13 @@ export class PermissionInteractor {
      * @throws {NotFoundException} If the app user organization role does not exist
      */
     async getAppUserOrganizationRole(props: { appUserId: z.infer<typeof AppUser>['id'], organizationId: z.infer<typeof Organization>['id'] }): Promise<z.infer<typeof AppUserOrganizationRole>> {
-        await this.assertOrganizationReader(props.organizationId);
-        const auor = await this._repository.getAppUserOrganizationRole(props.appUserId, props.organizationId);
+        await this.assertOrganizationReader(props.organizationId)
+        const auor = await this._repository.getAppUserOrganizationRole(props.appUserId, props.organizationId)
 
         if (!auor)
-            throw new NotFoundException('App user organization role does not exist');
+            throw new NotFoundException('App user organization role does not exist')
 
-        return auor;
+        return auor
     }
 
     /**
@@ -133,8 +134,8 @@ export class PermissionInteractor {
      * @returns The current user's name
      */
     async getCurrentUserName(): Promise<string> {
-        const appUser = await this._repository.getUserById(this._userId);
-        return appUser.name;
+        const appUser = await this._repository.getUserById(this._userId)
+        return appUser.name
     }
 
     /**
@@ -142,9 +143,9 @@ export class PermissionInteractor {
      * @returns True if the user is a system admin
      */
     async isSystemAdmin(): Promise<boolean> {
-        const appUser = await this._repository.getUserById(this._userId);
+        const appUser = await this._repository.getUserById(this._userId)
 
-        return appUser.isSystemAdmin;
+        return appUser.isSystemAdmin
     }
 
     async isSlackBot(): Promise<boolean> {
@@ -157,12 +158,12 @@ export class PermissionInteractor {
      * @returns True if the user is an organization admin
      */
     async isOrganizationAdmin(organizationId: z.infer<typeof Organization>['id']): Promise<boolean> {
-        if (await this.isSystemAdmin()) return true;
+        if (await this.isSystemAdmin()) return true
 
         const auor = await this._repository.getAppUserOrganizationRole(this._userId, organizationId)
-            .catch(error => error instanceof NotFoundException ? null : Promise.reject(error));
+            .catch(error => error instanceof NotFoundException ? null : Promise.reject(error))
 
-        return auor?.role === AppRole.ORGANIZATION_ADMIN;
+        return auor?.role === AppRole.ORGANIZATION_ADMIN
     }
 
     /**
@@ -171,12 +172,12 @@ export class PermissionInteractor {
      * @returns True if the user is an organization contributor
      */
     async isOrganizationContributor(organizationId: z.infer<typeof Organization>['id']): Promise<boolean> {
-        if (await this.isSystemAdmin()) return true;
+        if (await this.isSystemAdmin()) return true
 
         const role = await this._repository.getAppUserOrganizationRole(this._userId, organizationId)
-            .catch(error => error instanceof NotFoundException ? null : Promise.reject(error));
+            .catch(error => error instanceof NotFoundException ? null : Promise.reject(error))
 
-        return role?.role ? [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR].includes(role.role) : false;
+        return role?.role ? [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR].includes(role.role) : false
     }
 
     /**
@@ -185,12 +186,12 @@ export class PermissionInteractor {
      * @returns True if the user is an organization reader
      */
     async isOrganizationReader(organizationId: z.infer<typeof Organization>['id']): Promise<boolean> {
-        if (await this.isSystemAdmin()) return true;
+        if (await this.isSystemAdmin()) return true
 
         const role = await this._repository.getAppUserOrganizationRole(this._userId, organizationId)
-            .catch(error => error instanceof NotFoundException ? null : Promise.reject(error));
+            .catch(error => error instanceof NotFoundException ? null : Promise.reject(error))
 
-        return role?.role ? [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR, AppRole.ORGANIZATION_READER].includes(role.role) : false;
+        return role?.role ? [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR, AppRole.ORGANIZATION_READER].includes(role.role) : false
     }
 
     /**
@@ -206,19 +207,19 @@ export class PermissionInteractor {
      * @throws {PermissionDeniedException} If the target user is trying to update themselves
      */
     async updateAppUserRole(props: { appUserId: z.infer<typeof AppUser>['id'], organizationId: z.infer<typeof Organization>['id'], role: AppRole }): Promise<void> {
-        await this.assertOrganizationAdmin(props.organizationId);
+        await this.assertOrganizationAdmin(props.organizationId)
 
         const currentUserId = this._userId,
             targetUserAuor = await this.getAppUserOrganizationRole({
                 appUserId: props.appUserId,
                 organizationId: props.organizationId
-            });
+            })
 
         if (props.appUserId === currentUserId)
-            throw new PermissionDeniedException('Forbidden: You cannot update your own role.');
+            throw new PermissionDeniedException('Forbidden: You cannot update your own role.')
 
         if (targetUserAuor.role === AppRole.ORGANIZATION_ADMIN && props.role !== AppRole.ORGANIZATION_ADMIN)
-            throw new PermissionDeniedException('Forbidden: You cannot remove the last organization admin.');
+            throw new PermissionDeniedException('Forbidden: You cannot remove the last organization admin.')
 
         await this._repository.updateAppUserRole({
             appUserId: props.appUserId,

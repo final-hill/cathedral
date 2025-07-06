@@ -1,6 +1,6 @@
-import { z } from "zod";
-import { ReqType } from "./ReqType.js";
-import { MetaRequirement } from "./MetaRequirement.js";
+import { z } from 'zod'
+import { ReqType } from './ReqType.js'
+import { MetaRequirement } from './MetaRequirement.js'
 
 export const ParsedRequirements = MetaRequirement.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.PARSED_REQUIREMENTS),
@@ -10,5 +10,5 @@ export const ParsedRequirements = MetaRequirement.extend({
             .describe('The id of the requirement'),
         name: z.string()
             .describe('The name of the requirement')
-    })).default([]),
-}).describe('A collection of requirements that have been parsed from a string (statement)');
+    })).default([])
+}).describe('A collection of requirements that have been parsed from a string (statement)')

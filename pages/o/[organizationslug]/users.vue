@@ -38,7 +38,7 @@ const { $eventBus } = useNuxtApp(),
     { organizationslug: organizationSlug } = useRoute('Organization Users').params,
     { data: users, status, refresh, error: getUserError } = await useFetch('/api/appusers', {
         query: { organizationSlug },
-        transform: (data) => data.map((user) => ({
+        transform: data => data.map(user => ({
             ...user,
             creationDate: new Date(user.creationDate),
             lastLoginDate: user.lastLoginDate ? new Date(user.lastLoginDate) : undefined,
@@ -53,7 +53,7 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
     const column: TableColumn<SchemaType> = {
         accessorKey: key,
         header: ({ column }) => {
-            const isSorted = column.getIsSorted();
+            const isSorted = column.getIsSorted()
 
             return (
                 <UButton
@@ -70,34 +70,40 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
                     class="-mx-2.5"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
                 />
-            );
+            )
         },
         cell: ({ row }) => {
-            const cellValue = row.original[key as keyof SchemaType] as any;
+            const cellValue = row.original[key as keyof SchemaType] as unknown
 
             switch (true) {
                 case typeof cellValue === 'string':
                 case typeof cellValue === 'number':
-                    return cellValue;
+                    return cellValue
                 case cellValue instanceof Date:
-                    return <time datetime={cellValue.toISOString()}> {cellValue.toLocaleString()} </time>;
+                    return (
+                        <time datetime={cellValue.toISOString()}>
+                            {' '}
+                            {cellValue.toLocaleString()}
+                            {' '}
+                        </time>
+                    )
                 case typeof cellValue === 'boolean':
-                    return <UCheckbox modelValue={cellValue} disabled />;
+                    return <UCheckbox modelValue={cellValue} disabled />
                 case typeof cellValue === 'object' && cellValue !== null && 'id' in cellValue && 'name' in cellValue:
-                    return cellValue.name;
+                    return cellValue.name
                 default:
-                    return cellValue;
+                    return cellValue
             }
         }
-    };
-    return column;
+    }
+    return column
 })
 
 const actionColumn: TableColumn<SchemaType> = {
     header: 'Actions',
     cell: ({ row }) => {
         const item = row.original,
-            actionItems = getActionItems(item);
+            actionItems = getActionItems(item)
 
         return (
             <div class="text-left">
@@ -111,42 +117,42 @@ const actionColumn: TableColumn<SchemaType> = {
                     />
                 </UDropdownMenu>
             </div>
-        );
+        )
     }
-};
+}
 
 const getActionItems = (item: SchemaType): DropdownMenuItem[] => {
     const items: DropdownMenuItem[] = [{
         label: 'Edit',
         icon: 'i-lucide-edit',
         onClick: () => {
-            editModalItem.value = item;
-            editModalOpenState.value = true;
+            editModalItem.value = item
+            editModalOpenState.value = true
         }
     }, {
         label: 'Delete',
         icon: 'i-lucide-trash-2',
         onClick: async () => {
             const result = await confirmDeleteModal.open({
-                title: `Are you sure you want to delete '${item.name}'?`,
-            }).result;
+                title: `Are you sure you want to delete '${item.name}'?`
+            }).result
 
             if (result) {
                 try {
                     await $fetch(`/api/appusers/${item.id}`, {
                         method: 'DELETE',
                         body: { organizationSlug }
-                    });
-                    toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'User removed successfully' });
-                    refresh();
+                    })
+                    toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'User removed successfully' })
+                    refresh()
                 } catch (error) {
-                    toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error removing user: ${error}` });
+                    toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error removing user: ${error}` })
                 }
             }
         }
-    }];
+    }]
 
-    return items;
+    return items
 }
 
 const userColumns: TableColumn<SchemaType>[] = [...viewDataColumns, actionColumn]
@@ -165,10 +171,10 @@ const addUser = async (data: z.infer<typeof createSchema>) => {
                 organizationSlug,
                 role: data.role
             }
-        });
-        refresh();
+        })
+        refresh()
     } catch (error) {
-        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error creating user: ${error}` });
+        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error creating user: ${error}` })
     }
 }
 
@@ -180,65 +186,93 @@ const updateUser = async (data: z.infer<typeof editSchema> & { id: string }) => 
                 organizationSlug,
                 role: data.role
             }
-        });
-        refresh();
+        })
+        refresh()
 
-        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'User updated successfully' });
+        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'User updated successfully' })
 
-        closeEdit();
+        closeEdit()
     } catch (error) {
-        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error updating user: ${error}` });
+        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error updating user: ${error}` })
     }
 }
 
 const closeEdit = () => {
     editModalOpenState.value = false
-    editModalItem.value = Object.create(null);
+    editModalItem.value = Object.create(null)
 }
 
 const addModalOpenState = ref(false),
-    addModalItem = ref<z.infer<typeof createSchema> | null>(null);
+    addModalItem = ref<z.infer<typeof createSchema> | null>(null)
 
 const openAddModal = () => {
-    addModalItem.value = Object.create(null);
-    addModalOpenState.value = true;
-};
+    addModalItem.value = Object.create(null)
+    addModalOpenState.value = true
+}
 
 const closeAddModal = () => {
-    addModalItem.value = Object.create(null);
-    addModalOpenState.value = false;
-};
+    addModalItem.value = Object.create(null)
+    addModalOpenState.value = false
+}
 
 const onAddModalSubmit = async () => {
     if (addModalItem.value) {
-        await addUser(addModalItem.value);
-        closeAddModal();
+        await addUser(addModalItem.value)
+        closeAddModal()
     }
-};
+}
 </script>
 
 <template>
-    <h1>Application Users</h1>
+    <div>
+        <h1>Application Users</h1>
 
-    <p> {{ AppUser.description }} </p>
+        <p> {{ AppUser.description }} </p>
 
-    <section>
-        <UButton label="Add User" color="success" @click="openAddModal" size="xl" />
-    </section>
+        <section>
+            <UButton
+                label="Add User"
+                color="success"
+                size="xl"
+                @click="openAddModal"
+            />
+        </section>
 
-    <UTable sticky :data="users || []" :columns="userColumns" v-model:column-pinning="columnPinning"
-        :loading="status === 'pending'" :empty-state="{ icon: 'i-lucide-database', label: 'No items.' }" />
+        <UTable
+            v-model:column-pinning="columnPinning"
+            sticky
+            :data="users || []"
+            :columns="userColumns"
+            :loading="status === 'pending'"
+            :empty-state="{ icon: 'i-lucide-database', label: 'No items.' }"
+        />
 
-    <UModal v-model:open="addModalOpenState" title="Add User">
-        <template #body>
-            <XForm :state="addModalItem as any" :schema="createSchema" :onSubmit="onAddModalSubmit"
-                :onCancel="closeAddModal" />
-        </template>
-    </UModal>
+        <UModal
+            v-model:open="addModalOpenState"
+            title="Add User"
+        >
+            <template #body>
+                <XForm
+                    :state="addModalItem as any"
+                    :schema="createSchema"
+                    :on-submit="onAddModalSubmit"
+                    :on-cancel="closeAddModal"
+                />
+            </template>
+        </UModal>
 
-    <UModal v-model:open="editModalOpenState" title="Edit User">
-        <template #body>
-            <XForm :state="editModalItem as any" :schema="editSchema" :onSubmit="updateUser" :onCancel="closeEdit" />
-        </template>
-    </UModal>
+        <UModal
+            v-model:open="editModalOpenState"
+            title="Edit User"
+        >
+            <template #body>
+                <XForm
+                    :state="editModalItem as any"
+                    :schema="editSchema"
+                    :on-submit="updateUser"
+                    :on-cancel="closeEdit"
+                />
+            </template>
+        </UModal>
+    </div>
 </template>

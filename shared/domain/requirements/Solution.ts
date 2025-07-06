@@ -1,12 +1,12 @@
-import { slugify } from '../../../shared/utils/slugify.js';
-import { z } from 'zod';
-import { ReqType } from "./ReqType.js";
-import { MetaRequirement } from './MetaRequirement.js';
+import { slugify } from '../../../shared/utils/slugify.js'
+import { z } from 'zod'
+import { ReqType } from './ReqType.js'
+import { MetaRequirement } from './MetaRequirement.js'
 
 export const Solution = MetaRequirement.extend({
     name: z.string().max(100).nonempty()
         .refine(
-            value => !["new-solution", "edit-entry", "users"].includes(slugify(value)),
+            value => !['new-solution', 'edit-entry', 'users'].includes(slugify(value)),
             'The name cannot slugify as "new-solution", "edit-entry", or "users" as these are reserved'
         ).describe('The name'),
     slug: z.string().nonempty()
@@ -25,4 +25,4 @@ export const Solution = MetaRequirement.extend({
 }).refine(
     value => value.slug === slugify(value.name),
     'The slug must be the slugified version of the name'
-).describe('A Solution is the aggregation of a Project, Environment, Goals, and a System');
+).describe('A Solution is the aggregation of a Project, Environment, Goals, and a System')

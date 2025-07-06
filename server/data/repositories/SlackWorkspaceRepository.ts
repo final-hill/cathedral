@@ -1,13 +1,12 @@
-import { Repository } from "./Repository";
-import { SlackWorkspaceMetaModel } from "../models/application/SlackWorkspaceMetaModel";
-import type { SlackWorkspaceMetaPublicType } from "#shared/domain/application";
-import { NotFoundException } from "~/shared/domain";
+import { Repository } from './Repository'
+import { SlackWorkspaceMetaModel } from '../models/application/SlackWorkspaceMetaModel'
+import type { SlackWorkspaceMetaPublicType } from '#shared/domain/application'
+import { NotFoundException } from '~/shared/domain'
 
 /**
  * Repository for managing Slack workspace data operations
  */
 export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel> {
-
     /**
      * Get all Slack workspace integrations for an organization
      * @param organizationId - The organization ID
@@ -15,13 +14,13 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
      * @returns Array of Slack workspace metadata (excluding sensitive data)
      */
     async getWorkspacesByOrganization(organizationId: string, organizationName: string): Promise<SlackWorkspaceMetaPublicType[]> {
-        const em = this._em;
+        const em = this._em
 
         const workspaceIntegrations = await em.find(SlackWorkspaceMetaModel, {
             organization: organizationId
         }, {
             populate: ['installedBy']
-        });
+        })
 
         // Map to domain objects (excluding sensitive data like access tokens)
         return workspaceIntegrations.map(integration => ({
@@ -36,7 +35,7 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
             installedByName: integration.installedBy.name,
             installationDate: integration.installationDate,
             lastRefreshDate: integration.lastRefreshDate
-        }));
+        }))
     }
 
     /**
@@ -45,13 +44,13 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
      * @returns Slack workspace metadata or null if not found (including access token for internal use)
      */
     async getWorkspaceByTeamId(teamId: string): Promise<SlackWorkspaceMetaModel | null> {
-        const em = this._em;
+        const em = this._em
 
         return await em.findOne(SlackWorkspaceMetaModel, {
             teamId
         }, {
             populate: ['installedBy', 'organization']
-        });
+        })
     }
 
     /**
@@ -60,22 +59,22 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
      * @returns The created or updated workspace integration
      */
     async installWorkspace(props: {
-        organizationId: string;
-        teamId: string;
-        teamName: string;
-        accessToken: string;
-        botUserId: string;
-        installedById: string;
-        installationDate: Date;
-        scope: string;
-        appId: string;
+        organizationId: string
+        teamId: string
+        teamName: string
+        accessToken: string
+        botUserId: string
+        installedById: string
+        installationDate: Date
+        scope: string
+        appId: string
     }): Promise<SlackWorkspaceMetaModel> {
-        const em = this._em;
+        const em = this._em
 
         let workspace = await em.findOne(SlackWorkspaceMetaModel, {
             teamId: props.teamId,
             organization: props.organizationId
-        });
+        })
 
         if (workspace) {
             em.assign(workspace, {
@@ -96,11 +95,11 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
                 lastRefreshDate: props.installationDate,
                 scope: props.scope,
                 appId: props.appId
-            });
+            })
         }
 
-        await em.persistAndFlush(workspace);
-        return workspace;
+        await em.persistAndFlush(workspace)
+        return workspace
     }
 
     /**
@@ -110,17 +109,17 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
      * @throws {NotFoundException} if workspace not found
      */
     async removeWorkspace(organizationId: string, teamId: string): Promise<void> {
-        const em = this._em;
+        const em = this._em
 
         const workspace = await em.findOne(SlackWorkspaceMetaModel, {
             teamId,
             organization: organizationId
-        });
+        })
 
         if (!workspace)
-            throw new NotFoundException(`Slack workspace integration not found for team ID: ${teamId} in organization ID: ${organizationId}`);
+            throw new NotFoundException(`Slack workspace integration not found for team ID: ${teamId} in organization ID: ${organizationId}`)
 
-        await em.removeAndFlush(workspace);
+        await em.removeAndFlush(workspace)
     }
 
     /**
@@ -129,22 +128,22 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
      * @returns Workspace configuration or null if not found
      */
     async getWorkspaceConfiguration(teamId: string): Promise<{
-        teamId: string;
-        teamName: string;
-        accessToken: string;
-        botUserId: string;
-        organizationId: string;
+        teamId: string
+        teamName: string
+        accessToken: string
+        botUserId: string
+        organizationId: string
     } | null> {
-        const em = this._em;
+        const em = this._em
 
         const workspace = await em.findOne(SlackWorkspaceMetaModel, {
             teamId
         }, {
             populate: ['organization']
-        });
+        })
 
         if (!workspace) {
-            return null;
+            return null
         }
 
         return {
@@ -153,7 +152,7 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
             accessToken: workspace.accessToken,
             botUserId: workspace.botUserId,
             organizationId: workspace.organization.id
-        };
+        }
     }
 
     /**
@@ -163,27 +162,27 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
      * @returns True if updated, false if workspace not found
      */
     async updateWorkspaceMetadata(teamId: string, updates: {
-        teamName?: string;
-        botUserId?: string;
-        lastMetadataRefresh?: Date;
+        teamName?: string
+        botUserId?: string
+        lastMetadataRefresh?: Date
     }): Promise<boolean> {
-        const em = this._em;
+        const em = this._em
 
         const workspace = await em.findOne(SlackWorkspaceMetaModel, {
             teamId
-        });
+        })
 
         if (!workspace)
-            return false;
+            return false
 
         if (updates.teamName !== undefined)
-            workspace.teamName = updates.teamName;
+            workspace.teamName = updates.teamName
         if (updates.botUserId !== undefined)
-            workspace.botUserId = updates.botUserId;
+            workspace.botUserId = updates.botUserId
         if (updates.lastMetadataRefresh !== undefined)
-            workspace.lastRefreshDate = updates.lastMetadataRefresh;
+            workspace.lastRefreshDate = updates.lastMetadataRefresh
 
-        await em.persistAndFlush(workspace);
-        return true;
+        await em.persistAndFlush(workspace)
+        return true
     }
 }

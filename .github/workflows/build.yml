@@ -33,6 +33,8 @@ jobs:
         run: npm run typecheck
       - name: Build Application
         run: npm run build
+      - name: Lint Code
+        run: npm run lint
       - name: Generate PWA Assets
         run: npm run generate-pwa-assets
       - name: Run Unit Tests

@@ -1,12 +1,12 @@
-import { type WebAuthnUser } from '#auth-utils';
-import { z } from 'zod';
-import cache from '~/server/utils/cache';
-import { AppUser, DuplicateEntityException, MismatchException } from '~/shared/domain';
-import { getConnection } from "~/mikro-orm.config"
-import { AppUserInteractor, PermissionInteractor } from '~/application';
-import { AppUserRepository, PermissionRepository } from '~/server/data/repositories';
-import { PostgreSqlDriver, SqlEntityManager } from '@mikro-orm/postgresql';
-import { SYSTEM_USER_ID } from '~/shared/constants.js';
+import type { WebAuthnUser } from '#auth-utils'
+import { z } from 'zod'
+import cache from '~/server/utils/cache'
+import { AppUser, DuplicateEntityException, MismatchException } from '~/shared/domain'
+import { getConnection } from '~/mikro-orm.config'
+import { AppUserInteractor, PermissionInteractor } from '~/application'
+import { AppUserRepository, PermissionRepository } from '~/server/data/repositories'
+import type { PostgreSqlDriver, SqlEntityManager } from '@mikro-orm/postgresql'
+import { SYSTEM_USER_ID } from '~/shared/constants.js'
 
 export default defineWebAuthnRegisterEventHandler({
     /**
@@ -40,7 +40,7 @@ export default defineWebAuthnRegisterEventHandler({
     },
     validateUser: (user: WebAuthnUser) => z.object({
         userName: AppUser.pick({ email: true }).shape.email,
-        displayName: AppUser.pick({ name: true }).shape.name,
+        displayName: AppUser.pick({ name: true }).shape.name
     }).parseAsync(user),
     /**
      * The credential creation has been successful.
@@ -95,10 +95,10 @@ export default defineWebAuthnRegisterEventHandler({
                 user: {
                     id: appUser.id,
                     email: appUser.email,
-                    name: appUser.name,
+                    name: appUser.name
                 }
             })
-        } catch (error: any) {
+        } catch (error: unknown) {
             handleDomainException(error)
         }
     }

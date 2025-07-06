@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { Organization } from '#shared/domain';
-import { slugify } from '#shared/utils';
-import { z } from 'zod';
+import { Organization } from '#shared/domain'
+import { slugify } from '#shared/utils'
+import type { z } from 'zod'
 
 definePageMeta({ name: 'Edit Organization', middleware: 'auth' })
 useHead({ title: 'Edit Organization' })
@@ -13,7 +13,7 @@ const router = useRouter(),
 
 if (!organization.value) {
     $eventBus.$emit('page-error', getOrgError.value)
-    throw new Error('Organization not found');
+    throw new Error('Organization not found')
 }
 
 const oldSlug = organization.value.slug
@@ -22,15 +22,15 @@ const formSchema = Organization.innerType().pick({
     name: true,
     slug: true,
     description: true
-});
+})
 
-type FormSchema = z.infer<typeof formSchema>;
+type FormSchema = z.infer<typeof formSchema>
 
 const formState = reactive<FormSchema>({
     name: organization.value.name,
     slug: organization.value.slug,
     description: organization.value.description
-});
+})
 
 const updateOrganization = async (data: FormSchema) => {
     try {
@@ -39,23 +39,30 @@ const updateOrganization = async (data: FormSchema) => {
             body: data
         })
 
-        router.push({ name: 'Organization', params: { organizationslug: data.slug } });
+        router.push({ name: 'Organization', params: { organizationslug: data.slug } })
     } catch (error) {
-        $eventBus.$emit('page-error', error);
+        $eventBus.$emit('page-error', error)
     }
 }
 
 const cancel = () => {
-    router.push({ name: 'Organization', params: { organizationslug: oldSlug } });
+    router.push({ name: 'Organization', params: { organizationslug: oldSlug } })
 }
 
 watch(() => formState.name, (newName) => {
-    formState.slug = slugify(newName);
-});
+    formState.slug = slugify(newName)
+})
 </script>
 
 <template>
-    <h1>Edit Organization</h1>
+    <div>
+        <h1>Edit Organization</h1>
 
-    <XForm :schema="formSchema" :state="formState" :onSubmit="updateOrganization" :onCancel="cancel" />
+        <XForm
+            :schema="formSchema"
+            :state="formState"
+            :on-submit="updateOrganization"
+            :on-cancel="cancel"
+        />
+    </div>
 </template>

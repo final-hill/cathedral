@@ -1,7 +1,7 @@
-import { z } from "zod";
-import { Requirement } from "./Requirement.js";
-import { dedent } from "../../../shared/utils/dedent.js";
-import { ReqType } from "./ReqType.js";
+import { z } from 'zod'
+import { Requirement } from './Requirement.js'
+import { dedent } from '../../../shared/utils/dedent.js'
+import { ReqType } from './ReqType.js'
 
 export const Invariant = Requirement.extend({
     reqId: z.string().regex(/^E\.6\.\d+$/, 'Format must be E.6.#').optional()
@@ -13,4 +13,4 @@ export const Invariant = Requirement.extend({
     It constrains the possible states of a System.
     It exists as both an assumption and an effect.
     (precondition and postcondition)
-`));
+`))

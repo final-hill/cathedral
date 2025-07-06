@@ -4,6 +4,6 @@
  * snakeCaseToSlug('snake_case_string'); // 'snake-case-string'
  */
 const snakeCaseToSlug = (str: string) =>
-    str.replace(/_/g, '-');
+    str.replace(/_/g, '-')
 
 export { snakeCaseToSlug }

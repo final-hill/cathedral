@@ -1,4 +1,4 @@
-import { Migration } from '@mikro-orm/migrations';
+import { Migration } from '@mikro-orm/migrations'
 
 export class Migration20241029171100 extends Migration {
     override async up(): Promise<void> {
@@ -8,7 +8,7 @@ export class Migration20241029171100 extends Migration {
             UPDATE requirement
             SET req_type = 'obstacle', name = 'G.2'
             WHERE req_type = 'justification' AND name = 'Situation';
-        `);
+        `)
 
         // There are currently records in the requirement table with req_type = 'justification' and name in name in ('Vision', 'Mission', 'Objective')
         // Update the req_type of the 'Vision' record to 'goal' and the name to 'G.1'
@@ -33,13 +33,13 @@ export class Migration20241029171100 extends Migration {
             UPDATE requirement
             SET req_type = 'goal', name = 'G.1', description = E'# Vision\n\n' || (SELECT description FROM description1) || E'\n\n# Mission\n\n' || (SELECT description FROM description2) || E'\n\n# Objective\n\n' || (SELECT description FROM description3)
             WHERE req_type = 'justification' AND name = 'Vision';
-        `);
+        `)
 
         // delete the Mission and Objective records from the requirement table
         this.addSql(`
             DELETE FROM requirement
             WHERE req_type = 'justification' AND name IN ('Mission', 'Objective');
-        `);
+        `)
     }
 
     override async down(): Promise<void> { }

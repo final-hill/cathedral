@@ -1,9 +1,9 @@
-import { z } from "zod"
-import { AppUser, AppUserOrganizationRole, Organization } from "#shared/domain"
-import { OrganizationCollectionInteractor, PermissionInteractor } from "~/application"
-import { AppUserRepository, OrganizationCollectionRepository, PermissionRepository } from "~/server/data/repositories";
-import { AppUserInteractor } from "~/application/AppUserInteractor";
-import handleDomainException from "~/server/utils/handleDomainException";
+import { z } from 'zod'
+import { AppUser, AppUserOrganizationRole, Organization } from '#shared/domain'
+import { OrganizationCollectionInteractor, PermissionInteractor } from '~/application'
+import { AppUserRepository, OrganizationCollectionRepository, PermissionRepository } from '~/server/data/repositories'
+import { AppUserInteractor } from '~/application/AppUserInteractor'
+import handleDomainException from '~/server/utils/handleDomainException'
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
@@ -13,8 +13,8 @@ const bodySchema = z.object({
     organizationId,
     organizationSlug
 }).refine((value) => {
-    return value.organizationId !== undefined || value.organizationSlug !== undefined;
-}, "At least one of organizationId or organizationSlug should be provided");
+    return value.organizationId !== undefined || value.organizationSlug !== undefined
+}, 'At least one of organizationId or organizationSlug should be provided')
 
 /**
  * Invite an appuser to an organization with a role
@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
             organizationId: orgId,
             role
         })
-    } catch (error: any) {
+    } catch (error: unknown) {
         return handleDomainException(error)
     }
 })

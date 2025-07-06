@@ -1,34 +1,34 @@
-import { WebClient } from "@slack/web-api";
-import crypto from 'crypto';
-import { z } from 'zod';
+import { WebClient } from '@slack/web-api'
+import crypto from 'crypto'
+import { z } from 'zod'
 import type {
     SlackResponseMessage,
     OrganizationData,
     SolutionData,
     SlackBlock
-} from "~/server/data/slack-zod-schemas";
+} from '~/server/data/slack-zod-schemas'
 
 export class SlackService {
-    private client: WebClient;
-    private slackSigningSecret: string;
+    private client: WebClient
+    private slackSigningSecret: string
 
     constructor(token: string, slackSigningSecret: string) {
-        this.client = new WebClient(token);
-        this.slackSigningSecret = slackSigningSecret;
+        this.client = new WebClient(token)
+        this.slackSigningSecret = slackSigningSecret
     }
 
     async postMessage({ channel, text, thread_ts, blocks }: {
-        channel: string;
-        text: string;
-        thread_ts?: string;
-        blocks?: SlackBlock[];
+        channel: string
+        text: string
+        thread_ts?: string
+        blocks?: SlackBlock[]
     }) {
         return this.client.chat.postMessage({
             channel,
             text,
             thread_ts,
             blocks
-        });
+        })
     }
 
     /**
@@ -49,26 +49,26 @@ export class SlackService {
                     'user-agent': 'Cathedral-Slack-Bot/1.0'
                 },
                 body: JSON.stringify(payload)
-            });
+            })
 
             if (!response.ok) {
-                const errorText = await response.text().catch(() => 'Unknown error');
+                const errorText = await response.text().catch(() => 'Unknown error')
                 throw createError({
                     statusCode: response.status,
                     statusMessage: `Failed to post to Slack response URL`,
                     message: `HTTP ${response.status}: ${errorText}`
-                });
+                })
             }
         } catch (error) {
             // Re-throw createError instances (they have statusCode property)
             if (error && typeof error === 'object' && 'statusCode' in error)
-                throw error;
+                throw error
 
             throw createError({
                 statusCode: 500,
                 statusMessage: 'Internal Server Error',
                 message: `Failed to post to Slack response URL: ${error instanceof Error ? error.message : 'Unknown error'}`
-            });
+            })
         }
     }
 
@@ -78,28 +78,28 @@ export class SlackService {
      * @param actionId - The action ID for the dropdown
      * @returns Slack message payload with dropdown
      */
-    createOrganizationDropdown(organizations: OrganizationData[], actionId: string = "cathedral_link_org_select"): SlackResponseMessage {
+    createOrganizationDropdown(organizations: OrganizationData[], actionId: string = 'cathedral_link_org_select'): SlackResponseMessage {
         const options = organizations.map(org => ({
-            text: { type: "plain_text" as const, text: org.name, emoji: true },
+            text: { type: 'plain_text' as const, text: org.name, emoji: true },
             value: org.id
-        }));
+        }))
 
         return {
-            response_type: "ephemeral" as const,
-            text: "",
+            response_type: 'ephemeral' as const,
+            text: '',
             blocks: [
                 {
-                    type: "section" as const,
-                    text: { type: "mrkdwn" as const, text: "*Select a Cathedral organization to link this channel:*" },
+                    type: 'section' as const,
+                    text: { type: 'mrkdwn' as const, text: '*Select a Cathedral organization to link this channel:*' },
                     accessory: {
-                        type: "static_select" as const,
-                        placeholder: { type: "plain_text" as const, text: "Select an organization", emoji: true },
+                        type: 'static_select' as const,
+                        placeholder: { type: 'plain_text' as const, text: 'Select an organization', emoji: true },
                         options,
                         action_id: actionId
                     }
                 }
             ]
-        };
+        }
     }
 
     /**
@@ -113,29 +113,29 @@ export class SlackService {
     createSolutionDropdown(
         solutions: SolutionData[],
         organizationId: string,
-        actionId: string = "cathedral_link_solution_select",
+        actionId: string = 'cathedral_link_solution_select',
         replaceOriginal: boolean = true
     ): SlackResponseMessage {
         const options = solutions.slice(0, 100).map(sol => ({
-            text: { type: "plain_text" as const, text: sol.name, emoji: true },
+            text: { type: 'plain_text' as const, text: sol.name, emoji: true },
             value: `${organizationId}:${sol.id}`
-        }));
+        }))
 
         const payload: SlackResponseMessage = {
-            response_type: "ephemeral" as const,
-            text: "Select a Cathedral solution to link this channel:",
+            response_type: 'ephemeral' as const,
+            text: 'Select a Cathedral solution to link this channel:',
             blocks: [
                 {
-                    type: "section" as const,
+                    type: 'section' as const,
                     text: {
-                        type: "mrkdwn" as const,
-                        text: "*Select a Cathedral solution to link this channel:*"
+                        type: 'mrkdwn' as const,
+                        text: '*Select a Cathedral solution to link this channel:*'
                     },
                     accessory: {
-                        type: "static_select" as const,
+                        type: 'static_select' as const,
                         placeholder: {
-                            type: "plain_text" as const,
-                            text: "Select a solution",
+                            type: 'plain_text' as const,
+                            text: 'Select a solution',
                             emoji: true
                         },
                         options,
@@ -143,13 +143,13 @@ export class SlackService {
                     }
                 }
             ]
-        };
-
-        if (replaceOriginal) {
-            payload.replace_original = true;
         }
 
-        return payload;
+        if (replaceOriginal) {
+            payload.replace_original = true
+        }
+
+        return payload
     }
 
     /**
@@ -160,15 +160,15 @@ export class SlackService {
      */
     createChannelLinkSuccessMessage(solutionName: string, replaceOriginal: boolean = true): SlackResponseMessage {
         const payload: SlackResponseMessage = {
-            response_type: "in_channel" as const,
+            response_type: 'in_channel' as const,
             text: `This Slack channel is now linked to Cathedral solution: *${solutionName}*.`
-        };
-
-        if (replaceOriginal) {
-            payload.replace_original = true;
         }
 
-        return payload;
+        if (replaceOriginal) {
+            payload.replace_original = true
+        }
+
+        return payload
     }
 
     /**
@@ -178,9 +178,9 @@ export class SlackService {
      */
     createErrorMessage(message: string): SlackResponseMessage {
         return {
-            response_type: "ephemeral" as const,
+            response_type: 'ephemeral' as const,
             text: message
-        };
+        }
     }
 
     /**
@@ -189,16 +189,16 @@ export class SlackService {
      */
     createHelpMessage(): SlackResponseMessage {
         return {
-            response_type: "ephemeral" as const,
+            response_type: 'ephemeral' as const,
             text: [
-                "*Cathedral Slack Commands:*",
-                "`/cathedral` or `/cathedral-help`: Show this help message",
-                "`/cathedral-link-user`: Link your Slack user to a Cathedral user",
-                "`/cathedral-unlink-user`: Unlink your Slack user from a Cathedral user",
-                "`/cathedral-link-solution`: Link this channel to a Cathedral solution",
-                "`/cathedral-unlink-solution`: Unlink this channel from a Cathedral solution"
-            ].join("\n")
-        };
+                '*Cathedral Slack Commands:*',
+                '`/cathedral` or `/cathedral-help`: Show this help message',
+                '`/cathedral-link-user`: Link your Slack user to a Cathedral user',
+                '`/cathedral-unlink-user`: Unlink your Slack user from a Cathedral user',
+                '`/cathedral-link-solution`: Link this channel to a Cathedral solution',
+                '`/cathedral-unlink-solution`: Unlink this channel from a Cathedral solution'
+            ].join('\n')
+        }
     }
 
     /**
@@ -209,9 +209,9 @@ export class SlackService {
      */
     createUserLinkMessage(userId: string, authUrl: string): SlackResponseMessage {
         return {
-            response_type: "ephemeral" as const,
+            response_type: 'ephemeral' as const,
             text: `Hi <@${userId}>, I need to connect your Slack account to the Cathedral requirements app. Click here to link your account: ${authUrl}.`
-        };
+        }
     }
 
     /**
@@ -220,9 +220,9 @@ export class SlackService {
      */
     createUserUnlinkSuccessMessage(): SlackResponseMessage {
         return {
-            response_type: "ephemeral" as const,
-            text: "Your Slack user has been unlinked from your Cathedral account."
-        };
+            response_type: 'ephemeral' as const,
+            text: 'Your Slack user has been unlinked from your Cathedral account.'
+        }
     }
 
     /**
@@ -231,9 +231,9 @@ export class SlackService {
      */
     createChannelUnlinkSuccessMessage(): SlackResponseMessage {
         return {
-            response_type: "in_channel" as const,
-            text: "This Slack channel is no longer linked to any Cathedral solution."
-        };
+            response_type: 'in_channel' as const,
+            text: 'This Slack channel is no longer linked to any Cathedral solution.'
+        }
     }
 
     /**
@@ -243,9 +243,9 @@ export class SlackService {
      */
     createUnknownCommandMessage(command: string): SlackResponseMessage {
         return {
-            response_type: "ephemeral" as const,
+            response_type: 'ephemeral' as const,
             text: `Unknown slash command: ${command}`
-        };
+        }
     }
 
     /**
@@ -254,9 +254,9 @@ export class SlackService {
      */
     createUserLinkRequiredMessage(): SlackResponseMessage {
         return {
-            response_type: "ephemeral" as const,
-            text: "You must first link your Slack user to a Cathedral user using `/cathedral-link-user`."
-        };
+            response_type: 'ephemeral' as const,
+            text: 'You must first link your Slack user to a Cathedral user using `/cathedral-link-user`.'
+        }
     }
 
     /**
@@ -265,9 +265,9 @@ export class SlackService {
      */
     createChannelNotLinkedMessage(): SlackResponseMessage {
         return {
-            response_type: "ephemeral" as const,
-            text: "This channel is not currently linked to any Cathedral solution."
-        };
+            response_type: 'ephemeral' as const,
+            text: 'This channel is not currently linked to any Cathedral solution.'
+        }
     }
 
     /**
@@ -276,9 +276,9 @@ export class SlackService {
      */
     createProcessingErrorMessage(): SlackResponseMessage {
         return {
-            response_type: "ephemeral" as const,
-            text: "An error occurred while processing your selection. Please try again."
-        };
+            response_type: 'ephemeral' as const,
+            text: 'An error occurred while processing your selection. Please try again.'
+        }
     }
 
     /**
@@ -287,9 +287,9 @@ export class SlackService {
      */
     createInvalidSelectionMessage(): SlackResponseMessage {
         return {
-            response_type: "ephemeral" as const,
-            text: "Invalid selection. Please try again."
-        };
+            response_type: 'ephemeral' as const,
+            text: 'Invalid selection. Please try again.'
+        }
     }
 
     /**
@@ -298,9 +298,9 @@ export class SlackService {
      */
     createNoSolutionsMessage(): SlackResponseMessage {
         return {
-            response_type: "ephemeral" as const,
-            text: "No solutions available in this organization."
-        };
+            response_type: 'ephemeral' as const,
+            text: 'No solutions available in this organization.'
+        }
     }
 
     /**
@@ -312,14 +312,14 @@ export class SlackService {
     async postInteractiveResponse(responseUrl: string | undefined, payload: SlackResponseMessage): Promise<SlackResponseMessage> {
         if (responseUrl) {
             try {
-                await this.postToResponseUrl(responseUrl, payload);
-                return { response_type: "ephemeral" as const, text: "" }; // Return empty response
+                await this.postToResponseUrl(responseUrl, payload)
+                return { response_type: 'ephemeral' as const, text: '' } // Return empty response
             } catch (error) {
-                console.error('Failed to post to response_url:', error);
+                console.error('Failed to post to response_url:', error)
                 // Fall through to regular response
             }
         }
-        return payload;
+        return payload
     }
 
     /**
@@ -328,9 +328,9 @@ export class SlackService {
     async sendTeamInfoError(channel: string, thread_ts?: string): Promise<void> {
         await this.postMessage({
             channel,
-            text: "❌ Unable to determine team information for this request.",
+            text: '❌ Unable to determine team information for this request.',
             thread_ts
-        });
+        })
     }
 
     /**
@@ -339,9 +339,9 @@ export class SlackService {
     async sendChannelNotLinkedError(channel: string, thread_ts?: string): Promise<void> {
         await this.postMessage({
             channel,
-            text: "❌ This channel is not linked to any Cathedral solution. Please use `/cathedral-link-solution` first.",
+            text: '❌ This channel is not linked to any Cathedral solution. Please use `/cathedral-link-solution` first.',
             thread_ts
-        });
+        })
     }
 
     /**
@@ -350,9 +350,9 @@ export class SlackService {
     async sendUserNotLinkedError(channel: string, thread_ts?: string): Promise<void> {
         await this.postMessage({
             channel,
-            text: "❌ Your Slack user is not linked to a Cathedral user. Please use `/cathedral-link-user` first.",
+            text: '❌ Your Slack user is not linked to a Cathedral user. Please use `/cathedral-link-user` first.',
             thread_ts
-        });
+        })
     }
 
     /**
@@ -361,9 +361,9 @@ export class SlackService {
     async sendParsingError(channel: string, thread_ts?: string): Promise<void> {
         await this.postMessage({
             channel,
-            text: "❌ Unable to parse your message as requirements. Please try rephrasing your request or contact support if the issue persists.",
+            text: '❌ Unable to parse your message as requirements. Please try rephrasing your request or contact support if the issue persists.',
             thread_ts
-        });
+        })
     }
 
     /**
@@ -372,9 +372,9 @@ export class SlackService {
     async sendSimpleSuccessMessage(channel: string, thread_ts?: string): Promise<void> {
         await this.postMessage({
             channel,
-            text: "✅ Requirements parsed and saved successfully!",
+            text: '✅ Requirements parsed and saved successfully!',
             thread_ts
-        });
+        })
     }
 
     /**
@@ -415,7 +415,7 @@ export class SlackService {
                     ]
                 }
             ]
-        });
+        })
     }
 
     /**
@@ -424,9 +424,9 @@ export class SlackService {
     async sendUnexpectedError(channel: string, thread_ts?: string): Promise<void> {
         await this.postMessage({
             channel,
-            text: "❌ An unexpected error occurred while processing your request. Please try again or contact support.",
+            text: '❌ An unexpected error occurred while processing your request. Please try again or contact support.',
             thread_ts
-        }).catch(console.error); // Prevent error loops
+        }).catch(console.error) // Prevent error loops
     }
 
     // https://api.slack.com/authentication/verifying-requests-from-slack#validating-a-request
@@ -437,14 +437,14 @@ export class SlackService {
         // Prevent replay attacks by checking the timestamp
         // to verify that it does not differ from local time by more than five minutes.
         const curTimestamp = Math.floor(Date.now() / 1000),
-            reqTimestamp = parseInt(timestamp, 10);
+            reqTimestamp = parseInt(timestamp, 10)
 
         if (Math.abs(curTimestamp - reqTimestamp) > 300) {
             throw createError({
                 statusCode: 403,
                 statusMessage: 'Forbidden',
                 message: 'Invalid Slack request timestamp'
-            });
+            })
         }
 
         const slackSignature = headers.get('X-Slack-Signature')!,
@@ -460,7 +460,7 @@ export class SlackService {
                 statusCode: 403,
                 statusMessage: 'Forbidden',
                 message: 'Invalid Slack request signature'
-            });
+            })
     }
 
     /**
@@ -472,15 +472,15 @@ export class SlackService {
         try {
             const result = await this.client.conversations.info({
                 channel: channelId
-            });
-            return result.channel;
+            })
+            return result.channel
         } catch (error) {
-            console.error('Failed to get channel info:', error);
+            console.error('Failed to get channel info:', error)
             throw createError({
                 statusCode: 500,
                 statusMessage: 'Failed to get channel information',
                 message: `Could not retrieve channel information for ${channelId}: ${error instanceof Error ? error.message : 'Unknown error'}`
-            });
+            })
         }
     }
 
@@ -494,15 +494,15 @@ export class SlackService {
         try {
             const result = await this.client.team.info({
                 ...(teamId && { team: teamId })
-            });
-            return result.team;
+            })
+            return result.team
         } catch (error) {
-            console.error('Failed to get team info:', error);
+            console.error('Failed to get team info:', error)
             throw createError({
                 statusCode: 500,
                 statusMessage: 'Failed to get team information',
                 message: `Could not retrieve team information${teamId ? ` for ${teamId}` : ''}: ${error instanceof Error ? error.message : 'Unknown error'}`
-            });
+            })
         }
     }
 
@@ -512,10 +512,10 @@ export class SlackService {
      * @returns OAuth token response from Slack
      */
     static async exchangeOAuthCode(props: {
-        clientId: string;
-        clientSecret: string;
-        code: string;
-        redirectUri: string;
+        clientId: string
+        clientSecret: string
+        code: string
+        redirectUri: string
     }) {
         try {
             const response = await $fetch('https://slack.com/api/oauth.v2.access', {
@@ -529,7 +529,7 @@ export class SlackService {
                     code: props.code,
                     redirect_uri: props.redirectUri
                 }).toString()
-            });
+            })
 
             // Validate and parse the response
             const responseSchema = z.object({
@@ -554,26 +554,26 @@ export class SlackService {
                     token_type: z.string().optional()
                 }).optional(),
                 error: z.string().optional()
-            });
+            })
 
-            const tokenData = responseSchema.parse(response);
+            const tokenData = responseSchema.parse(response)
 
             if (!tokenData.ok || !tokenData.access_token) {
-                console.error('Slack OAuth token exchange failed:', tokenData.error);
+                console.error('Slack OAuth token exchange failed:', tokenData.error)
                 throw createError({
                     statusCode: 400,
                     statusMessage: `Slack OAuth failed: ${tokenData.error || 'Unknown error'}`
-                });
+                })
             }
 
-            return tokenData;
+            return tokenData
         } catch (error) {
-            console.error('Failed to exchange OAuth code:', error);
+            console.error('Failed to exchange OAuth code:', error)
             throw createError({
                 statusCode: 500,
                 statusMessage: 'Failed to exchange OAuth code',
                 message: `OAuth token exchange failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-            });
+            })
         }
     }
 
@@ -583,12 +583,12 @@ export class SlackService {
      * @returns The complete OAuth authorization URL for redirecting users
      */
     static generateOAuthAuthorizationUrl(props: {
-        clientId: string;
-        redirectUri: string;
-        state: string;
-        scopes?: string[];
+        clientId: string
+        redirectUri: string
+        state: string
+        scopes?: string[]
     }): string {
-        const { clientId, redirectUri, state, scopes } = props;
+        const { clientId, redirectUri, state, scopes } = props
 
         // Default scopes for Cathedral Slack integration
         const defaultScopes = [
@@ -602,15 +602,15 @@ export class SlackService {
             'im:write',
             'mpim:write',
             'team:read'
-        ];
+        ]
 
-        const slackAuthUrl = new URL('https://slack.com/oauth/v2/authorize');
-        slackAuthUrl.searchParams.set('client_id', clientId);
-        slackAuthUrl.searchParams.set('scope', (scopes || defaultScopes).join(','));
-        slackAuthUrl.searchParams.set('redirect_uri', redirectUri);
-        slackAuthUrl.searchParams.set('state', state);
+        const slackAuthUrl = new URL('https://slack.com/oauth/v2/authorize')
+        slackAuthUrl.searchParams.set('client_id', clientId)
+        slackAuthUrl.searchParams.set('scope', (scopes || defaultScopes).join(','))
+        slackAuthUrl.searchParams.set('redirect_uri', redirectUri)
+        slackAuthUrl.searchParams.set('state', state)
 
-        return slackAuthUrl.toString();
+        return slackAuthUrl.toString()
     }
 
     /**
@@ -619,18 +619,18 @@ export class SlackService {
      * @returns Base64 encoded state parameter
      */
     static generateOAuthState(props: {
-        organizationSlug: string;
-        additionalData?: Record<string, any>;
+        organizationSlug: string
+        additionalData?: Record<string, unknown>
     }): string {
-        const { organizationSlug, additionalData = {} } = props;
+        const { organizationSlug, additionalData = {} } = props
 
         const stateData = {
             organizationSlug,
             timestamp: Date.now(),
             nonce: Math.random().toString(36).substring(2, 15),
             ...additionalData
-        };
+        }
 
-        return btoa(JSON.stringify(stateData));
+        return btoa(JSON.stringify(stateData))
     }
 }

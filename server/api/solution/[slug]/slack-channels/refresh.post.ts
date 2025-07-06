@@ -1,5 +1,5 @@
-import { z } from "zod"
-import { Slack, PermissionInteractor, OrganizationInteractor } from "~/application"
+import { z } from 'zod'
+import { Slack, PermissionInteractor, OrganizationInteractor } from '~/application'
 import { SlackRepository, PermissionRepository, OrganizationRepository } from '~/server/data/repositories'
 import { SlackService } from '~/server/data/services'
 import handleDomainException from '~/server/utils/handleDomainException'
@@ -15,8 +15,8 @@ const bodySchema = z.object({
     channelId: z.string().describe('The Slack channel ID'),
     teamId: z.string().describe('The Slack team ID')
 }).refine((value) => {
-    return value.organizationId !== undefined || value.organizationSlug !== undefined;
-}, "At least one of organizationId or organizationSlug should be provided");
+    return value.organizationId !== undefined || value.organizationSlug !== undefined
+}, 'At least one of organizationId or organizationSlug should be provided')
 
 /**
  * Refresh Slack channel and team names from Slack API
@@ -32,21 +32,21 @@ export default defineEventHandler(async (event) => {
     const permissionInteractor = new PermissionInteractor({
         userId: session.user.id,
         repository: new PermissionRepository({ em })
-    });
+    })
 
     const organizationInteractor = new OrganizationInteractor({
         repository: new OrganizationRepository({ em, organizationId, organizationSlug }),
         permissionInteractor,
-        appUserInteractor: null as any // Not needed for this operation
-    });
-    const organization = await organizationInteractor.getOrganization();
+        appUserInteractor: null as never // Not needed for this operation
+    })
+    const organization = await organizationInteractor.getOrganization()
 
     const slackChannelInteractor = new Slack.SlackChannelInteractor({
         repository: new SlackRepository({ em }),
         permissionInteractor,
         slackService: new SlackService(config.slackBotToken, config.slackSigningSecret)
-    });
+    })
 
     return await slackChannelInteractor.refreshChannelNames(organization.id, channelId, teamId)
         .catch(handleDomainException)
-});
+})

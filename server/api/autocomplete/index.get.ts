@@ -1,9 +1,9 @@
-import { z } from "zod";
-import handleDomainException from "~/server/utils/handleDomainException"
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from "~/application";
-import { AppUserRepository, OrganizationRepository, PermissionRepository, RequirementRepository } from "~/server/data/repositories";
-import { ReqType } from "#shared/domain/requirements/ReqType";
-import { Organization, Solution } from "#shared/domain";
+import { z } from 'zod'
+import handleDomainException from '~/server/utils/handleDomainException'
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~/application'
+import { AppUserRepository, OrganizationRepository, PermissionRepository, RequirementRepository } from '~/server/data/repositories'
+import { ReqType } from '#shared/domain/requirements/ReqType'
+import { Organization, Solution } from '#shared/domain'
 
 const querySchema = z.object({
     solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,

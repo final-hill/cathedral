@@ -1,16 +1,17 @@
-import { SlackService, NaturalLanguageToRequirementService } from "~/server/data/services";
-import { SlackRepository, PermissionRepository, SlackWorkspaceRepository } from "~/server/data/repositories";
-import { PermissionInteractor } from "~/application";
-import { SlackWorkspaceInteractor, SlackChannelInteractor, SlackUserInteractor, SlackEventInteractor } from ".";
+import type { SlackService, NaturalLanguageToRequirementService } from '~/server/data/services'
+import { SlackRepository, PermissionRepository, SlackWorkspaceRepository } from '~/server/data/repositories'
+import { PermissionInteractor } from '~/application'
+import { SlackWorkspaceInteractor, SlackChannelInteractor, SlackUserInteractor, SlackEventInteractor } from '.'
+import type { SqlEntityManager, PostgreSqlDriver } from '@mikro-orm/postgresql'
 
 /**
  * Factory for creating a fully configured SlackEventInteractor with all dependencies
  * This simplifies the setup in API endpoints and ensures consistent configuration
  */
 export function createSlackEventInteractor(props: {
-    em: any,
-    userId: string,
-    slackService: SlackService,
+    em: SqlEntityManager<PostgreSqlDriver>
+    userId: string
+    slackService: SlackService
     nlrService: NaturalLanguageToRequirementService
 }): SlackEventInteractor {
     const { em, userId, slackService, nlrService } = props,
@@ -18,7 +19,7 @@ export function createSlackEventInteractor(props: {
         permissionInteractor = new PermissionInteractor({
             userId,
             repository: new PermissionRepository({ em })
-        });
+        })
 
     return new SlackEventInteractor({
         repository,
@@ -39,18 +40,18 @@ export function createSlackEventInteractor(props: {
             permissionInteractor,
             slackService
         })
-    });
+    })
 }
 
 /**
  * Factory for creating a SlackWorkspaceInteractor with all dependencies
  */
 export function createSlackWorkspaceInteractor(props: {
-    em: any,
+    em: SqlEntityManager<PostgreSqlDriver>
     userId: string
 }): SlackWorkspaceInteractor {
     const { em, userId } = props,
-        repository = new SlackWorkspaceRepository({ em });
+        repository = new SlackWorkspaceRepository({ em })
 
     return new SlackWorkspaceInteractor({
         repository,
@@ -58,5 +59,5 @@ export function createSlackWorkspaceInteractor(props: {
             userId,
             repository: new PermissionRepository({ em })
         })
-    });
+    })
 }
