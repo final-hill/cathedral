@@ -16,7 +16,11 @@ const links = [
 </script>
 
 <template>
-    <PegsLanding :cards="links" :solutionslug="solutionslug" :organizationslug="organizationslug">
+    <PegsLanding
+        :cards="links"
+        :solutionslug="solutionslug"
+        :organizationslug="organizationslug"
+    >
         <template #header>
             <h1>
                 Goals

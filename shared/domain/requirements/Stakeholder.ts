@@ -1,22 +1,22 @@
-import { z } from "zod";
-import { Component } from "./Component.js";
-import { StakeholderCategory } from "./StakeholderCategory.js";
-import { StakeholderSegmentation } from "./StakeholderSegmentation.js";
-import { dedent } from "../../../shared/utils/dedent.js";
-import { ReqType } from "./ReqType.js";
+import { z } from 'zod'
+import { Component } from './Component.js'
+import { StakeholderCategory } from './StakeholderCategory.js'
+import { StakeholderSegmentation } from './StakeholderSegmentation.js'
+import { dedent } from '../../../shared/utils/dedent.js'
+import { ReqType } from './ReqType.js'
 
 const computeInterestAndInfluence = (category: StakeholderCategory) => {
     switch (category) {
         case StakeholderCategory['Fellow Traveler']:
-            return { interest: 25, influence: 25 };
+            return { interest: 25, influence: 25 }
         case StakeholderCategory['Observer']:
-            return { interest: 75, influence: 25 };
+            return { interest: 75, influence: 25 }
         case StakeholderCategory['Shadow Influencer']:
-            return { interest: 25, influence: 75 };
+            return { interest: 25, influence: 75 }
         case StakeholderCategory['Key Stakeholder']:
-            return { interest: 75, influence: 75 };
+            return { interest: 75, influence: 75 }
         default:
-            return { interest: 0, influence: 0 };
+            return { interest: 0, influence: 0 }
     }
 }
 
@@ -37,7 +37,7 @@ export const Stakeholder = Component.extend({
     A Stakeholder is a human actor who may affect or be affected by a Project or its associated System.
     These are not individuals, but rather groups or roles.
     Example: instead of "Jane Doe", use "Project Manager".
-`)).transform((data) => ({
+`)).transform(data => ({
     ...data,
     ...computeInterestAndInfluence(data.category)
 }))

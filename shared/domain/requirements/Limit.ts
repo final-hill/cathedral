@@ -1,7 +1,7 @@
-import { z } from "zod";
-import { Requirement } from "./Requirement.js";
-import { dedent } from "../../../shared/utils/dedent.js";
-import { ReqType } from "./ReqType.js";
+import { z } from 'zod'
+import { Requirement } from './Requirement.js'
+import { dedent } from '../../../shared/utils/dedent.js'
+import { ReqType } from './ReqType.js'
 
 export const Limit = Requirement.extend({
     reqId: z.string().regex(/^G\.6\.\d+$/, 'Format must be G.6.#').optional()
@@ -11,4 +11,4 @@ export const Limit = Requirement.extend({
 }).describe(dedent(`
     A Limitation is a constraint on functionality. It describes what is out-of-scope and excluded.
     Example: "Providing an interface to the user to change the color of the background is out-of-scope."
-`));
+`))

@@ -13,18 +13,29 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
     <p> {{ Epic.description }} </p>
     <p>
         Before you can begin, you must define one or more
-        <NuxtLink class="underline"
-            :to="{ name: 'Stakeholders', params: { solutionslug: solutionSlug, organizationslug: organizationSlug } }">
+        <NuxtLink
+            class="underline"
+            :to="{ name: 'Stakeholders', params: { solutionslug: solutionSlug, organizationslug: organizationSlug } }"
+        >
             Stakeholders</NuxtLink>,
-        <NuxtLink class="underline"
+        <NuxtLink
+            class="underline"
             :to="{ name: 'Goals Functionality', params: { solutionslug: solutionSlug, organizationslug: organizationSlug } }"
-            v-text="'Functional Behaviors'" />,
-        and <NuxtLink class="underline"
-            :to="{ name: 'Outcomes', params: { solutionslug: solutionSlug, organizationslug: organizationSlug } }">
+        >
+            Functional Behaviors
+        </NuxtLink>,
+        and <NuxtLink
+            class="underline"
+            :to="{ name: 'Outcomes', params: { solutionslug: solutionSlug, organizationslug: organizationSlug } }"
+        >
             Outcomes
         </NuxtLink>
         for the solution.
     </p>
 
-    <XWorkflow :organization-slug="organizationSlug" :req-type="ReqType.EPIC" :solution-slug="solutionSlug" />
+    <XWorkflow
+        :organization-slug="organizationSlug"
+        :req-type="ReqType.EPIC"
+        :solution-slug="solutionSlug"
+    />
 </template>

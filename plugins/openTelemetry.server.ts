@@ -1,9 +1,10 @@
 // ref: https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-enable?tabs=nodejs
-import { useAzureMonitor, type AzureMonitorOpenTelemetryOptions } from "@azure/monitor-opentelemetry";
+import { useAzureMonitor } from '@azure/monitor-opentelemetry'
+import type { AzureMonitorOpenTelemetryOptions } from '@azure/monitor-opentelemetry'
 
-export default defineNuxtPlugin(async nuxtApp => {
+export default defineNuxtPlugin(async (_nuxtApp) => {
     if (!process.env.APPLICATIONINSIGHTS_CONNECTION_STRING)
-        return;
+        return
 
     // https://www.npmjs.com/package/@azure/monitor-opentelemetry
     const options: AzureMonitorOpenTelemetryOptions = {
@@ -15,8 +16,8 @@ export default defineNuxtPlugin(async nuxtApp => {
             http: { enabled: true }
         },
         enableLiveMetrics: true,
-        enableStandardMetrics: true,
+        enableStandardMetrics: true
     }
 
-    useAzureMonitor(options);
+    useAzureMonitor(options)
 })

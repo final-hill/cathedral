@@ -1,7 +1,7 @@
-import { OrganizationCollectionInteractor, PermissionInteractor } from "~/application/index"
-import { OrganizationCollectionRepository, PermissionRepository } from "~/server/data/repositories"
-import handleDomainException from "~/server/utils/handleDomainException"
-import { Organization } from "#shared/domain"
+import { OrganizationCollectionInteractor, PermissionInteractor } from '~/application/index'
+import { OrganizationCollectionRepository, PermissionRepository } from '~/server/data/repositories'
+import handleDomainException from '~/server/utils/handleDomainException'
+import { Organization } from '#shared/domain'
 
 const bodySchema = Organization.innerType().pick({ name: true, description: true })
 
@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
             })
         })
 
-    console.log("Creating organization. with session: ", session)
+    console.log('Creating organization. with session: ', session)
 
     try {
         const newOrgId = await organizationCollectionInteractor.createOrganization({ name, description }),
@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
             })
 
         return newOrg.slug
-    } catch (error: any) {
+    } catch (error: unknown) {
         return handleDomainException(error)
     }
 })

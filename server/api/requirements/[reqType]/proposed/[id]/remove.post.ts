@@ -1,4 +1,4 @@
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from "~/application"
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~/application'
 import { AppUserRepository, OrganizationRepository, PermissionRepository, RequirementRepository } from '~/server/data/repositories'
 import { Organization, ReqType, Solution } from '~/shared/domain'
 import { z } from 'zod'
@@ -11,18 +11,18 @@ const paramSchema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-    const { id, reqType } = await validateEventParams(event, paramSchema);
+    const { id, reqType } = await validateEventParams(event, paramSchema)
 
     if (reqType === ReqType.PARSED_REQUIREMENTS)
-        throw new Error("ReqType.PARSED_REQUIREMENTS is not allowed.");
+        throw new Error('ReqType.PARSED_REQUIREMENTS is not allowed.')
 
     const bodySchema = z.object({
-        solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
-        organizationId,
-        organizationSlug
-    }).refine((value) => {
-        return value.organizationId !== undefined || value.organizationSlug !== undefined;
-    }, "At least one of organizationId or organizationSlug should be provided"),
+            solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
+            organizationId,
+            organizationSlug
+        }).refine((value) => {
+            return value.organizationId !== undefined || value.organizationSlug !== undefined
+        }, 'At least one of organizationId or organizationSlug should be provided'),
         { solutionSlug, organizationId: orgId, organizationSlug: orgSlug } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
         permissionInteractor = new PermissionInteractor({

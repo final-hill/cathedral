@@ -1,7 +1,7 @@
-import { dedent } from "../../../shared/utils/dedent.js";
-import { z } from "zod";
-import { MetaRequirement } from "./MetaRequirement.js";
-import { ReqType } from "./ReqType.js";
+import { dedent } from '../../../shared/utils/dedent.js'
+import { z } from 'zod'
+import { MetaRequirement } from './MetaRequirement.js'
+import { ReqType } from './ReqType.js'
 
 export const Justification = MetaRequirement.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.JUSTIFICATION)

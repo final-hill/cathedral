@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 export const AuditMetadata = z.object({
     createdBy: z.object({
@@ -19,4 +19,4 @@ export const AuditMetadata = z.object({
         name: z.string()
             .describe('The name of the user who last modified the entity')
     })
-}).describe('Represents the metadata of an entity that is used to track the creation and modification of the entity');
+}).describe('Represents the metadata of an entity that is used to track the creation and modification of the entity')

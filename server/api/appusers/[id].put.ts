@@ -1,8 +1,8 @@
-import { z } from "zod"
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from "~/application"
-import { AppUserRepository, OrganizationRepository, PermissionRepository } from "~/server/data/repositories"
-import handleDomainException from "~/server/utils/handleDomainException"
-import { AppUser, AppUserOrganizationRole, Organization } from "#shared/domain"
+import { z } from 'zod'
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~/application'
+import { AppUserRepository, OrganizationRepository, PermissionRepository } from '~/server/data/repositories'
+import handleDomainException from '~/server/utils/handleDomainException'
+import { AppUser, AppUserOrganizationRole, Organization } from '#shared/domain'
 
 const paramSchema = AppUser.pick({ id: true }),
     { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
@@ -12,8 +12,8 @@ const bodySchema = z.object({
     organizationSlug,
     ...AppUserOrganizationRole.pick({ role: true }).required().shape
 }).refine((value) => {
-    return value.organizationId !== undefined || value.organizationSlug !== undefined;
-}, "At least one of organizationId or organizationSlug should be provided");
+    return value.organizationId !== undefined || value.organizationSlug !== undefined
+}, 'At least one of organizationId or organizationSlug should be provided')
 
 /**
  * Update an appuser by id in a given organization to have a new role

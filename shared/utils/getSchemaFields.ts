@@ -1,27 +1,29 @@
-import { z } from "zod"
-import { camelCaseToTitleCase } from "./camelCaseToTitleCase"
+import { z } from 'zod'
+import { camelCaseToTitleCase } from './camelCaseToTitleCase'
 
 const enumToLabelValue = (enumObject: Record<string, string>) =>
-    Object.entries(enumObject).map(([key, value]) => ({ value, label: value }))
+    Object.entries(enumObject).map(([_key, value]) => ({ value, label: value }))
 
 /**
  * Get the fields of a Zod schema as an array of objects with metadata
  * @param schema The Zod schema to get the fields of
  * @returns An array of objects with metadata about the fields of the schema
  */
-const getSchemaFields = (schema: z.ZodObject<any>) => Object.entries<z.ZodRawShape>(schema.shape)
+const getSchemaFields = (schema: z.ZodObject<z.ZodRawShape>) => Object.entries(schema.shape)
     .map(([key, fieldType]) => {
-        const isOptional = fieldType instanceof z.ZodOptional ||
-            (fieldType instanceof z.ZodString &&
-                fieldType._def.checks.reduce(
+        const isOptional = fieldType instanceof z.ZodOptional
+            || (fieldType instanceof z.ZodString
+                && fieldType._def.checks.reduce(
                     (acc, check) => check.kind === 'min' ? acc || check.value === 0 : acc,
                     !fieldType._def.checks.some(check => check.kind === 'min')
                 )
             ),
             isEffect = fieldType instanceof z.ZodEffects,
             isReadOnly = fieldType instanceof z.ZodReadonly,
-            innerType = isOptional ? (fieldType instanceof z.ZodOptional ? fieldType._def.innerType : fieldType)
-                : isEffect ? fieldType._def.schema
+            innerType = isOptional
+                ? (fieldType instanceof z.ZodOptional ? fieldType._def.innerType : fieldType)
+                : isEffect
+                    ? fieldType._def.schema
                     : fieldType,
             isEnum = innerType instanceof z.ZodNativeEnum || innerType instanceof z.ZodEnum,
             isObject = innerType instanceof z.ZodObject,
@@ -34,7 +36,7 @@ const getSchemaFields = (schema: z.ZodObject<any>) => Object.entries<z.ZodRawSha
         return {
             key,
             label: camelCaseToTitleCase(key),
-            description: (fieldType as any).description as string,
+            description: (fieldType as { description?: string }).description as string,
             fieldType,
             isOptional,
             isObject,
@@ -46,7 +48,7 @@ const getSchemaFields = (schema: z.ZodObject<any>) => Object.entries<z.ZodRawSha
             maxLength,
             isEnum,
             isEmail,
-            enumOptions: isEnum ? enumToLabelValue((innerType as z.ZodEnum<any>).enum) : []
+            enumOptions: isEnum ? enumToLabelValue((innerType as z.ZodEnum<[string, ...string[]]>).enum) : []
         } as const
     })
 

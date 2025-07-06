@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { z } from 'zod';
-import { AppUser } from '~/shared/domain';
+import type { z } from 'zod'
+import { AppUser } from '~/shared/domain'
 
 const toast = useToast(),
     { fetch } = useUserSession(),
@@ -9,30 +9,30 @@ const toast = useToast(),
 const signUpFormSchema = AppUser.pick({
     name: true,
     email: true
-});
+})
 
 const signInFormSchema = AppUser.pick({
     email: true
-});
+})
 
-type SignUpFormSchema = z.infer<typeof signUpFormSchema>;
-type SignInFormSchema = z.infer<typeof signInFormSchema>;
+type SignUpFormSchema = z.infer<typeof signUpFormSchema>
+type SignInFormSchema = z.infer<typeof signInFormSchema>
 
 const signUpformState = reactive<SignUpFormSchema>({
     name: '',
     email: ''
-});
+})
 
 const signInformState = reactive<SignInFormSchema>({
     email: ''
-});
+})
 
 async function signUp() {
     await register({ userName: signUpformState.email, displayName: signUpformState.name })
         .then(fetch)
         .then(async () => {
-            const redirect = useRoute().query.redirect as string ?? { name: 'Home' };
-            await navigateTo(redirect);
+            const redirect = useRoute().query.redirect as string ?? { name: 'Home' }
+            await navigateTo(redirect)
         })
         .catch((error) => {
             toast.add({
@@ -48,8 +48,8 @@ async function signIn() {
     await authenticate(signInformState.email)
         .then(fetch)
         .then(async () => {
-            const redirect = useRoute().query.redirect as string ?? { name: 'Home' };
-            await navigateTo(redirect);
+            const redirect = useRoute().query.redirect as string ?? { name: 'Home' }
+            await navigateTo(redirect)
         })
         .catch((error) => {
             toast.add({
@@ -64,7 +64,7 @@ async function signIn() {
 const tabs = [
     { label: 'Sign In', slot: 'sign-in' },
     { label: 'Sign Up', slot: 'sign-up' }
-];
+]
 </script>
 
 <template>
@@ -74,31 +74,82 @@ const tabs = [
                 Cathedral
             </h2>
         </template>
-        <UTabs :items="tabs" class="h-80">
+        <UTabs
+            :items="tabs"
+            class="h-80"
+        >
             <template #sign-in>
-                <UForm class="flex flex-col gap-6 h-60 mt-4" @submit.prevent="signIn" :state="signInformState"
-                    :schema="signInFormSchema">
+                <UForm
+                    class="flex flex-col gap-6 h-60 mt-4"
+                    :state="signInformState"
+                    :schema="signInFormSchema"
+                    @submit.prevent="signIn"
+                >
                     <h3>Welcome Back</h3>
-                    <UFormField label="Email" name="email" field="email" required>
-                        <UInput v-model="signInformState.email" name="email" type="email" class="w-full"
-                            autocomplete="username webauthn" />
+                    <UFormField
+                        label="Email"
+                        name="email"
+                        field="email"
+                        required
+                    >
+                        <UInput
+                            v-model="signInformState.email"
+                            name="email"
+                            type="email"
+                            class="w-full"
+                            autocomplete="username webauthn"
+                        />
                     </UFormField>
-                    <UButton type="submit" color="success" label="Sign in" size="xl"
-                        :disabled="signInformState.email === ''" />
+                    <UButton
+                        type="submit"
+                        color="success"
+                        label="Sign in"
+                        size="xl"
+                        :disabled="signInformState.email === ''"
+                    />
                 </UForm>
             </template>
             <template #sign-up>
-                <UForm class="flex flex-col gap-6 h-60 mt-4" @submit.prevent="signUp" :state="signUpformState"
-                    :schema="signUpFormSchema">
+                <UForm
+                    class="flex flex-col gap-6 h-60 mt-4"
+                    :state="signUpformState"
+                    :schema="signUpFormSchema"
+                    @submit.prevent="signUp"
+                >
                     <h3>Register</h3>
-                    <UFormField label="Email" name="email" field="email" required>
-                        <UInput v-model="signUpformState.email" name="email" type="email" class="w-full" />
+                    <UFormField
+                        label="Email"
+                        name="email"
+                        field="email"
+                        required
+                    >
+                        <UInput
+                            v-model="signUpformState.email"
+                            name="email"
+                            type="email"
+                            class="w-full"
+                        />
                     </UFormField>
-                    <UFormField label="Full Name" name="name" field="name" required>
-                        <UInput v-model="signUpformState.name" name="name" type="text" class="w-full" />
+                    <UFormField
+                        label="Full Name"
+                        name="name"
+                        field="name"
+                        required
+                    >
+                        <UInput
+                            v-model="signUpformState.name"
+                            name="name"
+                            type="text"
+                            class="w-full"
+                        />
                     </UFormField>
-                    <UButton type="submit" color="success" label="Sign up" size="xl"
-                        :disabled="signUpformState.email === '' || signUpformState.name === ''" />
+                    <UButton
+                        type="submit"
+                        color="success"
+                        label="Sign up"
+                        size="xl"
+                        :disabled="signUpformState.email === '' || signUpformState.name === ''"
+                    />
                 </UForm>
             </template>
         </UTabs>

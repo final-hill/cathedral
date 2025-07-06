@@ -1,20 +1,20 @@
-import type { z } from "zod";
+import type { z } from 'zod'
 import { validate as validateUuid } from 'uuid'
-import { Interactor } from "./Interactor";
-import * as req from "#shared/domain/requirements";
-import { ReqType, WorkflowState } from "#shared/domain/requirements/enums";
-import { InvalidWorkflowStateException, MismatchException } from "#shared/domain/exceptions";
-import type { PermissionInteractor } from "./PermissionInteractor";
-import type { AuditMetadata } from "~/shared/domain";
-import type { RequirementRepository } from "~/server/data/repositories/RequirementRepository";
-import type { NaturalLanguageToRequirementService } from "~/server/data/services/NaturalLanguageToRequirementService";
+import { Interactor } from './Interactor'
+import type * as req from '#shared/domain/requirements'
+import { ReqType, WorkflowState } from '#shared/domain/requirements/enums'
+import { InvalidWorkflowStateException, MismatchException } from '#shared/domain/exceptions'
+import type { PermissionInteractor } from './PermissionInteractor'
+import type { AuditMetadata } from '~/shared/domain'
+import type { RequirementRepository } from '~/server/data/repositories/RequirementRepository'
+import type { NaturalLanguageToRequirementService } from '~/server/data/services/NaturalLanguageToRequirementService'
 
 type ReqTypeName = keyof typeof req
 
 export class RequirementInteractor extends Interactor<z.infer<typeof req.Requirement>> {
-    private readonly _permissionInteractor: PermissionInteractor;
-    private readonly _solutionId: string;
-    private readonly _organizationId: string;
+    private readonly _permissionInteractor: PermissionInteractor
+    private readonly _solutionId: string
+    private readonly _organizationId: string
 
     /**
      * Create a new RequirementInteractor
@@ -24,15 +24,15 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
      */
     constructor(props: {
         // FIXME: Repository<z.infer<typeof req.Requirement>>
-        repository: RequirementRepository,
-        permissionInteractor: PermissionInteractor,
-        solutionId: string,
-        organizationId: string,
+        repository: RequirementRepository
+        permissionInteractor: PermissionInteractor
+        solutionId: string
+        organizationId: string
     }) {
-        super(props);
-        this._organizationId = props.organizationId;
-        this._solutionId = props.solutionId;
-        this._permissionInteractor = props.permissionInteractor;
+        super(props)
+        this._organizationId = props.organizationId
+        this._solutionId = props.solutionId
+        this._permissionInteractor = props.permissionInteractor
 
         // TODO: Implement, or update to only rely on the solutionId as a dependency
         // this._assertSolutionBelongsToOrganization();
@@ -54,20 +54,21 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         reqProps: Partial<Omit<z.infer<typeof req.Requirement>, 'reqId' | keyof z.infer<typeof AuditMetadata>>>
     ) {
         for (const [key, value] of Object.entries(reqProps) as [keyof typeof reqProps, string | { id: string }][]) {
-            const id = typeof value === 'string' && validateUuid(value) ? value :
-                typeof value === 'object' && 'id' in value ? value.id : undefined;
+            const id = typeof value === 'string' && validateUuid(value)
+                ? value
+                : typeof value === 'object' && 'id' in value ? value.id : undefined
 
-            if (!id) continue;
+            if (!id) continue
 
             try {
-                const result = await this.repository.getById(id);
+                const result = await this.repository.getById(id)
 
                 if (key === 'solution') {
                     if (result.id !== this._solutionId)
-                        throw new MismatchException(`Requirement with id ${reqProps['id']} does not belong to the solution`);
+                        throw new MismatchException(`Requirement with id ${reqProps['id']} does not belong to the solution`)
                 }
-            } catch (error) {
-                throw new MismatchException(`Requirement with id ${value} does not belong to the solution`);
+            } catch {
+                throw new MismatchException(`Requirement with id ${value} does not belong to the solution`)
             }
         }
     }
@@ -86,7 +87,7 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         const result = await this.repository.getById(id)
 
         if (result.reqType !== reqType)
-            throw new MismatchException(`Requirement with id ${id} is not of type ${reqType}`);
+            throw new MismatchException(`Requirement with id ${id} is not of type ${reqType}`)
 
         return result as R
     }
@@ -115,8 +116,8 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
      * @returns The requirements in the given state
      */
     async getLatestRequirementsByType<R extends ReqTypeName>(props: {
-        workflowState: WorkflowState,
-        reqType: ReqType,
+        workflowState: WorkflowState
+        reqType: ReqType
     }): Promise<z.infer<typeof req[R]>[]> {
         await this._permissionInteractor.assertOrganizationReader(this._organizationId)
 
@@ -135,12 +136,12 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
     async getAllRequirementsByType<R extends ReqTypeName>(props: { reqType: ReqType, staticQuery?: Partial<z.infer<typeof req[R]>> }): Promise<z.infer<typeof req[R]>[]> {
-        await this._permissionInteractor.assertOrganizationReader(this._organizationId);
+        await this._permissionInteractor.assertOrganizationReader(this._organizationId)
 
         return this.repository.getAll({
             solutionId: this._solutionId,
             ...props
-        });
+        })
     }
 
     /**
@@ -152,17 +153,17 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
      * @returns The statistics of the parsed requirements with the id of the newly parsed requirements collection
      */
     async parseRequirements(props: {
-        service: NaturalLanguageToRequirementService,
-        name: string,
+        service: NaturalLanguageToRequirementService
+        name: string
         statement: string
     }): Promise<z.infer<typeof req.ParsedRequirements>['id']> {
         await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
 
         const currentUserId = this._permissionInteractor.userId,
-            results = await props.service.parse(props.statement);
+            results = await props.service.parse(props.statement)
 
         if (!results || results.length === 0)
-            throw new MismatchException('No requirements found in the statement');
+            throw new MismatchException('No requirements found in the statement')
 
         const newId = await this.repository.addParsedRequirements({
             createdById: currentUserId,
@@ -187,9 +188,9 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         props: Omit<z.infer<typeof req[R]>, 'reqId' | 'reqIdPrefix' | 'id' | 'workflowState' | 'solution' | keyof z.infer<typeof AuditMetadata>>
     ): Promise<z.infer<typeof req.Requirement>['id']> {
         await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
-        await this._assertReferencedRequirementsBelongToSolution(props);
+        await this._assertReferencedRequirementsBelongToSolution(props)
 
-        const currentUserId = this._permissionInteractor.userId;
+        const currentUserId = this._permissionInteractor.userId
 
         return this.repository.add({
             reqProps: {
@@ -214,13 +215,13 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         reqProps: Partial<Omit<z.infer<typeof req[R]>, 'reqIdPrefix' | 'workflowState' | 'solution' | keyof z.infer<typeof AuditMetadata>>> & { id: z.infer<typeof req.Requirement>['id'] }
     ) {
         await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
-        await this._assertReferencedRequirementsBelongToSolution(reqProps);
+        await this._assertReferencedRequirementsBelongToSolution(reqProps)
 
         const currentRequirement = await this.repository.getById(reqProps.id),
-            currentUserId = this._permissionInteractor.userId;
+            currentUserId = this._permissionInteractor.userId
 
         if (currentRequirement.workflowState !== WorkflowState.Proposed)
-            throw new InvalidWorkflowStateException(`Requirement with id ${reqProps.id} is not in the Proposed state`);
+            throw new InvalidWorkflowStateException(`Requirement with id ${reqProps.id} is not in the Proposed state`)
 
         return this.repository.update({
             reqProps: {
@@ -250,7 +251,7 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         const currentRequirement = await this.repository.getById(id)
 
         if (currentRequirement.workflowState !== WorkflowState.Proposed)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Proposed state`);
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Proposed state`)
 
         return this.repository.update({
             reqProps: {
@@ -279,13 +280,13 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         const currentRequirement = await this.repository.getById(id)
 
         if (currentRequirement.workflowState !== WorkflowState.Proposed)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Proposed state`);
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Proposed state`)
 
         return this.repository.update({
             reqProps: {
                 id,
                 reqType: currentRequirement.reqType,
-                workflowState: WorkflowState.Review,
+                workflowState: WorkflowState.Review
             },
             modifiedById: this._permissionInteractor.userId,
             modifiedDate: new Date()
@@ -308,13 +309,13 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         const currentRequirement = await this.repository.getById(this._solutionId)
 
         if (currentRequirement.workflowState !== WorkflowState.Review)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Review state`);
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Review state`)
 
         return this.repository.update({
             reqProps: {
                 id,
                 reqType: currentRequirement.reqType,
-                workflowState: WorkflowState.Rejected,
+                workflowState: WorkflowState.Rejected
             },
             modifiedById: this._permissionInteractor.userId,
             modifiedDate: new Date()
@@ -337,13 +338,13 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         const currentRequirement = await this.repository.getById(id)
 
         if (currentRequirement.workflowState !== WorkflowState.Review)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Review state`);
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Review state`)
 
         return this.repository.update({
             reqProps: {
                 id,
                 reqType: currentRequirement.reqType,
-                workflowState: WorkflowState.Active,
+                workflowState: WorkflowState.Active
             },
             modifiedById: this._permissionInteractor.userId,
             modifiedDate: new Date()
@@ -366,13 +367,13 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         const currentRequirement = await this.repository.getById(id)
 
         if (currentRequirement.workflowState !== WorkflowState.Rejected)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Rejected state`);
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Rejected state`)
 
         return this.repository.update({
             reqProps: {
                 id,
                 reqType: currentRequirement.reqType,
-                workflowState: WorkflowState.Proposed,
+                workflowState: WorkflowState.Proposed
             },
             modifiedById: this._permissionInteractor.userId,
             modifiedDate: new Date()
@@ -395,13 +396,13 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         const currentRequirement = await this.repository.getById(id)
 
         if (currentRequirement.workflowState !== WorkflowState.Rejected)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Rejected state`);
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Rejected state`)
 
         return this.repository.update({
             reqProps: {
                 id,
                 reqType: currentRequirement.reqType,
-                workflowState: WorkflowState.Removed,
+                workflowState: WorkflowState.Removed
             },
             modifiedById: this._permissionInteractor.userId,
             modifiedDate: new Date()
@@ -424,13 +425,13 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         const currentRequirement = await this.repository.getById(id)
 
         if (currentRequirement.workflowState !== WorkflowState.Removed)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Removed state`);
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Removed state`)
 
         return this.repository.update({
             reqProps: {
                 id,
                 reqType: currentRequirement.reqType,
-                workflowState: WorkflowState.Proposed,
+                workflowState: WorkflowState.Proposed
             },
             modifiedById: this._permissionInteractor.userId,
             modifiedDate: new Date()
@@ -452,13 +453,13 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         const currentRequirement = await this.repository.getById(id)
 
         if (currentRequirement.workflowState !== WorkflowState.Active)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Active state`);
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Active state`)
 
         return this.repository.update({
             reqProps: {
                 id,
                 reqType: currentRequirement.reqType,
-                workflowState: WorkflowState.Proposed,
+                workflowState: WorkflowState.Proposed
             },
             modifiedById: this._permissionInteractor.userId,
             modifiedDate: new Date()
@@ -481,13 +482,13 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         const currentRequirement = await this.repository.getById(id)
 
         if (currentRequirement.workflowState !== WorkflowState.Active)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Active state`);
+            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Active state`)
 
         return this.repository.update({
             reqProps: {
                 id,
                 reqType: currentRequirement.reqType,
-                workflowState: WorkflowState.Removed,
+                workflowState: WorkflowState.Removed
             },
             modifiedById: this._permissionInteractor.userId,
             modifiedDate: new Date()

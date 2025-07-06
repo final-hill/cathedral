@@ -1,12 +1,13 @@
-import { z } from 'zod'
-import { AppRole, Organization, DuplicateEntityException, NotFoundException, PermissionDeniedException } from "#shared/domain";
-import { slugify } from "#shared/utils";
-import { Interactor } from "./Interactor";
-import { PermissionInteractor } from "./PermissionInteractor";
-import { type OrganizationCollectionRepository } from "~/server/data/repositories";
+import type { z } from 'zod'
+import type { Organization } from '#shared/domain'
+import { AppRole, DuplicateEntityException, NotFoundException, PermissionDeniedException } from '#shared/domain'
+import { slugify } from '#shared/utils'
+import { Interactor } from './Interactor'
+import type { PermissionInteractor } from './PermissionInteractor'
+import type { OrganizationCollectionRepository } from '~/server/data/repositories'
 
 export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof Organization>> {
-    private readonly _permissionInteractor: PermissionInteractor;
+    private readonly _permissionInteractor: PermissionInteractor
 
     /**
      * Create a new OrganizationCollectionInteractor
@@ -16,11 +17,11 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      */
     constructor(props: {
         // TODO: This should be Repository<Organization>
-        repository: OrganizationCollectionRepository,
+        repository: OrganizationCollectionRepository
         permissionInteractor: PermissionInteractor
     }) {
-        super(props);
-        this._permissionInteractor = props.permissionInteractor;
+        super(props)
+        this._permissionInteractor = props.permissionInteractor
     }
 
     // FIXME: this shouldn't be necessary
@@ -59,12 +60,12 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      */
     async deleteOrganizationById(id: z.infer<typeof Organization>['id']): Promise<void> {
         const currentUserId = this._permissionInteractor.userId
-        await this._permissionInteractor.assertOrganizationAdmin(id);
+        await this._permissionInteractor.assertOrganizationAdmin(id)
         return this.repository.deleteOrganization({
             deletedById: currentUserId,
             deletedDate: new Date(),
             id
-        });
+        })
     }
 
     /**
@@ -74,13 +75,13 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      * @throws {NotFoundException} If the organization does not exist
      */
     async deleteOrganizationBySlug(slug: z.infer<typeof Organization>['slug']): Promise<void> {
-        const org = (await this.repository.findOrganizations({ slug }))[0];
+        const org = (await this.repository.findOrganizations({ slug }))[0]
 
         if (!org)
-            throw new NotFoundException('Organization not found');
+            throw new NotFoundException('Organization not found')
 
-        await this._permissionInteractor.assertOrganizationAdmin(org.id);
-        return this.deleteOrganizationById(org.id);
+        await this._permissionInteractor.assertOrganizationAdmin(org.id)
+        return this.deleteOrganizationById(org.id)
     }
 
     /**
@@ -90,7 +91,7 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      * @returns The organizations that match the query parameters
      */
     async findOrganizations(query: Partial<z.infer<typeof Organization>> = {}): Promise<z.infer<typeof Organization>[]> {
-        const orgs = await this.repository.findOrganizations(query);
+        const orgs = await this.repository.findOrganizations(query)
 
         // Check permissions for each organization and filter out those the user can't read
         const permissionChecks = await Promise.all(
@@ -98,11 +99,11 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
                 org,
                 canRead: await this._permissionInteractor.isOrganizationReader(org.id)
             }))
-        );
+        )
 
         return permissionChecks
             .filter(({ canRead }) => canRead)
-            .map(({ org }) => org);
+            .map(({ org }) => org)
     }
 
     /**
@@ -117,23 +118,23 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
     async updateOrganizationBySlug(slug: z.infer<typeof Organization>['slug'], props: Pick<Partial<z.infer<typeof Organization>>, 'name' | 'description'>): Promise<void> {
         const currentUserId = this._permissionInteractor.userId,
             existingOrg = (await this.repository.findOrganizations({ slug }))[0],
-            newSlug = props.name ? slugify(props.name) : existingOrg.slug;
+            newSlug = props.name ? slugify(props.name) : existingOrg.slug
 
         if (!existingOrg)
-            throw new NotFoundException(`Organization not found with slug: ${slug}`);
+            throw new NotFoundException(`Organization not found with slug: ${slug}`)
 
         if (!await this._permissionInteractor.isOrganizationContributor(existingOrg.id))
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action');
+            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
-        const existingSlugOrg = (await this.repository.findOrganizations({ slug: newSlug }))[0];
+        const existingSlugOrg = (await this.repository.findOrganizations({ slug: newSlug }))[0]
 
         if (existingSlugOrg && existingSlugOrg.id !== existingOrg.id)
-            throw new DuplicateEntityException('Organization already exists with that name');
+            throw new DuplicateEntityException('Organization already exists with that name')
 
         await this.repository.updateOrganizationById(existingOrg.id, {
             modifiedById: currentUserId,
             modifiedDate: new Date(),
             ...props
-        });
+        })
     }
 }

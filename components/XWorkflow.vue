@@ -1,16 +1,16 @@
 <script lang="tsx" setup>
-import type { BadgeProps, DropdownMenuItem, TableColumn, ChipProps } from '@nuxt/ui';
-import { UButton, UDropdownMenu, UBadge, UTable, XConfirmModal, UCheckbox } from '#components';
-import { z } from 'zod';
-import { ReqType, WorkflowState, MoscowPriority } from '#shared/domain';
-import * as req from "#shared/domain/requirements";
-import { reqIdPattern } from '#shared/domain/requirements/reqIdPattern';
-import { snakeCaseToPascalCase, getSchemaFields } from '#shared/utils';
+import type { BadgeProps, DropdownMenuItem, TableColumn, ChipProps } from '@nuxt/ui'
+import { UButton, UDropdownMenu, UBadge, UTable, XConfirmModal, UCheckbox } from '#components'
+import { z } from 'zod'
+import { ReqType, WorkflowState, MoscowPriority } from '#shared/domain'
+import * as req from '#shared/domain/requirements'
+import { reqIdPattern } from '#shared/domain/requirements/reqIdPattern'
+import { snakeCaseToPascalCase, getSchemaFields } from '#shared/utils'
 
 const props = defineProps<{
-    reqType: ReqType,
-    organizationSlug: string,
-    solutionSlug: string,
+    reqType: ReqType
+    organizationSlug: string
+    solutionSlug: string
     disableNewRequirement?: boolean
     // TODO: this is hacky
     parsedReqParentId?: string
@@ -21,20 +21,19 @@ const router = useRouter(),
     RequirementSchema = req[reqTypePascal],
     innerSchema = RequirementSchema instanceof z.ZodEffects
         ? RequirementSchema._def.schema
-        : RequirementSchema;
+        : RequirementSchema
 
-type SchemaType = z.infer<typeof innerSchema>;
+type SchemaType = z.infer<typeof innerSchema>
 
 const emit = defineEmits<{
-    (event: 'workflow-active-items', items: SchemaType[]): void;
-    (event: 'workflow-non-active-items', items: SchemaType[]): void;
-}>();
+    (event: 'workflow-active-items' | 'workflow-non-active-items', items: SchemaType[]): void
+}>()
 
 const { $eventBus } = useNuxtApp(),
     overlay = useOverlay(),
     confirmRemoveModal = overlay.create(XConfirmModal, {}),
-    workflowTable: any = useTemplateRef('workflowTable'),
-    toast = useToast();
+    workflowTable = useTemplateRef<HTMLElement>('workflowTable'),
+    toast = useToast()
 
 const { data, refresh, status, error } = await useFetch<SchemaType[]>(`/api/requirements/${props.reqType}`, {
     query: {
@@ -42,7 +41,7 @@ const { data, refresh, status, error } = await useFetch<SchemaType[]>(`/api/requ
         organizationSlug: props.organizationSlug,
         ...(props.parsedReqParentId ? { parsedReqParentId: props.parsedReqParentId } : {})
     },
-    transform: (data) => data.map((item) => req[reqTypePascal].parse({
+    transform: data => data.map(item => req[reqTypePascal].parse({
         ...item,
         creationDate: new Date(item.creationDate),
         lastModified: new Date(item.lastModified)
@@ -55,67 +54,67 @@ if (error.value)
 // Emit events for WorkflowState.Active and non-Active items
 if (data.value) {
     const activeItems = data.value.filter(item => item.workflowState === WorkflowState.Active),
-        nonActiveItems = data.value.filter(item => item.workflowState !== WorkflowState.Active);
+        nonActiveItems = data.value.filter(item => item.workflowState !== WorkflowState.Active)
 
-    emit('workflow-active-items', activeItems);
-    emit('workflow-non-active-items', nonActiveItems);
+    emit('workflow-active-items', activeItems)
+    emit('workflow-non-active-items', nonActiveItems)
 }
 
-const createSchema = props.reqType === ReqType.PARSED_REQUIREMENTS ?
-    req.ParsedRequirements.pick({
-        description: true
-    })
+const createSchema = props.reqType === ReqType.PARSED_REQUIREMENTS
+    ? req.ParsedRequirements.pick({
+            description: true
+        })
     : (innerSchema as typeof req.Requirement).omit({
-        reqId: true,
-        // @ts-ignore: this property exists on some subtypes of Requirement
-        reqIdPrefix: true,
-        createdBy: true,
-        creationDate: true,
-        lastModified: true,
-        id: true,
-        reqType: true,
-        isDeleted: true,
-        modifiedBy: true,
-        solution: true
-    })
+            reqId: true,
+            // @ts-expect-error: this property exists on some subtypes of Requirement
+            reqIdPrefix: true,
+            createdBy: true,
+            creationDate: true,
+            lastModified: true,
+            id: true,
+            reqType: true,
+            isDeleted: true,
+            modifiedBy: true,
+            solution: true
+        })
 
-const viewSchema = props.reqType === ReqType.PARSED_REQUIREMENTS ?
-    req.ParsedRequirements.pick({
-        workflowState: true,
-        description: true,
-        requirements: true
-    })
+const viewSchema = props.reqType === ReqType.PARSED_REQUIREMENTS
+    ? req.ParsedRequirements.pick({
+            workflowState: true,
+            description: true,
+            requirements: true
+        })
     : (innerSchema as typeof req.Requirement).omit({
-        reqType: true,
-        // @ts-ignore: this property exists on some subtypes of Requirement
-        reqIdPrefix: true,
-        createdBy: true,
-        creationDate: true,
-        lastModified: true,
-        id: true,
-        isDeleted: true,
-        modifiedBy: true,
-        solution: true
-    })
+            reqType: true,
+            // @ts-expect-error: this property exists on some subtypes of Requirement
+            reqIdPrefix: true,
+            createdBy: true,
+            creationDate: true,
+            lastModified: true,
+            id: true,
+            isDeleted: true,
+            modifiedBy: true,
+            solution: true
+        })
 
-const editSchema = props.reqType === ReqType.PARSED_REQUIREMENTS ?
-    req.ParsedRequirements.pick({
-        description: true
-    })
+const editSchema = props.reqType === ReqType.PARSED_REQUIREMENTS
+    ? req.ParsedRequirements.pick({
+            description: true
+        })
     : (innerSchema as typeof req.Requirement).omit({
-        workflowState: true,
-        reqId: true,
-        // @ts-ignore: this property exists on some subtypes of Requirement
-        reqIdPrefix: true,
-        createdBy: true,
-        creationDate: true,
-        lastModified: true,
-        id: true,
-        reqType: true,
-        isDeleted: true,
-        modifiedBy: true,
-        solution: true
-    })
+            workflowState: true,
+            reqId: true,
+            // @ts-expect-error: this property exists on some subtypes of Requirement
+            reqIdPrefix: true,
+            createdBy: true,
+            creationDate: true,
+            lastModified: true,
+            id: true,
+            reqType: true,
+            isDeleted: true,
+            modifiedBy: true,
+            solution: true
+        })
 
 const workflowColorMap: Record<WorkflowState, BadgeProps['color']> = {
     [WorkflowState.Proposed]: 'info',
@@ -123,20 +122,20 @@ const workflowColorMap: Record<WorkflowState, BadgeProps['color']> = {
     [WorkflowState.Removed]: 'neutral',
     [WorkflowState.Review]: 'warning',
     [WorkflowState.Active]: 'success'
-};
+}
 
 const priorityColorMap: Record<MoscowPriority, BadgeProps['color']> = {
     [MoscowPriority.MUST]: 'error',
     [MoscowPriority.SHOULD]: 'warning',
     [MoscowPriority.COULD]: 'info',
     [MoscowPriority.WONT]: 'neutral'
-};
+}
 
 const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
     const column: TableColumn<SchemaType> = {
         accessorKey: key,
         header: ({ column }) => {
-            const isSorted = column.getIsSorted();
+            const isSorted = column.getIsSorted()
 
             return (
                 <UButton
@@ -153,40 +152,48 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
                     class="-mx-2.5"
                     onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
                 />
-            );
+            )
         },
         cell: ({ row }) => {
-            const cellValue = row.original[key as keyof SchemaType] as any;
+            const cellValue = row.original[key as keyof SchemaType] as unknown
 
             switch (true) {
                 case WorkflowState[cellValue as WorkflowState] !== undefined:
-                    return <UBadge color={workflowColorMap[cellValue as WorkflowState]} label={cellValue} />;
+                    return <UBadge color={workflowColorMap[cellValue as WorkflowState]} label={cellValue as string} />
                 case MoscowPriority[cellValue as MoscowPriority] !== undefined:
-                    return <UBadge color={priorityColorMap[cellValue as MoscowPriority]} label={cellValue} />;
+                    return <UBadge color={priorityColorMap[cellValue as MoscowPriority]} label={cellValue as string} />
                 case typeof cellValue === 'string':
                 case typeof cellValue === 'number':
-                    return <p class="max-w-2xl truncate">{cellValue}</p>;
+                    return <p class="max-w-2xl truncate">{cellValue}</p>
                 case cellValue instanceof Date:
-                    return <time datetime={cellValue.toISOString()}>{cellValue.toLocaleString()}</time>;
+                    return <time datetime={cellValue.toISOString()}>{cellValue.toLocaleString()}</time>
                 case typeof cellValue === 'boolean':
-                    return <UCheckbox modelValue={cellValue} disabled />;
+                    return <UCheckbox modelValue={cellValue} disabled />
                 case typeof cellValue === 'object' && cellValue !== null && 'id' in cellValue && 'name' in cellValue:
-                    return cellValue.name;
+                    return cellValue.name
                 case props.reqType === ReqType.PARSED_REQUIREMENTS && key === 'requirements':
-                    return <span class="text-sm">{cellValue.length} requirements</span>;
+                    return (
+                        <span class="text-sm">
+                            {(cellValue as unknown[]).length}
+                            {' '}
+                            requirements
+                        </span>
+                    )
                 default:
-                    return cellValue;
+                    return cellValue
             }
         },
-        ...key === 'reqId' ? {
-            sortingFn: (a: any, b: any, columnId) => {
-                const aSuffix = a.original[columnId]?.match(reqIdPattern)?.[2],
-                    bSuffix = b.original[columnId]?.match(reqIdPattern)?.[2];
-                return aSuffix && bSuffix ? +aSuffix - +bSuffix : 0;
-            }
-        } : {}
-    };
-    return column;
+        ...key === 'reqId'
+            ? {
+                    sortingFn: (a: { original: Record<string, unknown> }, b: { original: Record<string, unknown> }, columnId: string) => {
+                        const aSuffix = (a.original[columnId] as string)?.match(reqIdPattern)?.[2],
+                            bSuffix = (b.original[columnId] as string)?.match(reqIdPattern)?.[2]
+                        return aSuffix && bSuffix ? +aSuffix - +bSuffix : 0
+                    }
+                }
+            : {}
+    }
+    return column
 })
 
 const actionColumn: TableColumn<SchemaType> = {
@@ -195,7 +202,7 @@ const actionColumn: TableColumn<SchemaType> = {
         const item = row.original,
             actionItems = props.reqType === ReqType.PARSED_REQUIREMENTS
                 ? getParsedReqsActionItems(item)
-                : getDefaultActionItems(item);
+                : getDefaultActionItems(item)
 
         return (
             <div class="text-left">
@@ -209,9 +216,9 @@ const actionColumn: TableColumn<SchemaType> = {
                     />
                 </UDropdownMenu>
             </div>
-        );
+        )
     }
-};
+}
 
 const editProposedModalOpenState = ref(false),
     editProposedModalItem = ref<SchemaType>()
@@ -221,7 +228,7 @@ const openEditProposedModal = (item: SchemaType) => {
     editProposedModalOpenState.value = true
 }
 
-const onEditProposedModalSubmit = async (_: any) => {
+const onEditProposedModalSubmit = async (_: unknown) => {
     await $fetch(`/api/requirements/${props.reqType}/proposed/${editProposedModalItem.value?.id}/edit`, {
         method: 'POST',
         body: {
@@ -230,14 +237,14 @@ const onEditProposedModalSubmit = async (_: any) => {
             organizationSlug: props.organizationSlug
         }
     }).then(() => {
-        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement updated successfully' });
-        refresh();
+        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement updated successfully' })
+        refresh()
     }).catch((error) => {
-        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error updating requirement: ${error}` });
+        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error updating requirement: ${error}` })
     }).finally(() => {
-        editProposedModalItem.value = Object.create(null);
-        editProposedModalOpenState.value = false;
-    });
+        editProposedModalItem.value = Object.create(null)
+        editProposedModalOpenState.value = false
+    })
 }
 
 const onEditProposedModalReset = () => {
@@ -253,7 +260,7 @@ const openEditRejectedModal = (item: SchemaType) => {
     editRejectedModalOpenState.value = true
 }
 
-const onEditRejectedModalSubmit = async (_: any) => {
+const onEditRejectedModalSubmit = async (_: unknown) => {
     await $fetch(`/api/requirements/${props.reqType}/rejected/${editRejectedModalItem.value?.id}/revise`, {
         method: 'POST',
         body: {
@@ -261,14 +268,14 @@ const onEditRejectedModalSubmit = async (_: any) => {
             organizationSlug: props.organizationSlug
         }
     }).then(() => {
-        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement revised successfully' });
-        refresh();
+        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement revised successfully' })
+        refresh()
     }).catch((error) => {
-        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error revising requirement: ${error}` });
+        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error revising requirement: ${error}` })
     }).finally(() => {
-        editRejectedModalItem.value = Object.create(null);
-        editRejectedModalOpenState.value = false;
-    });
+        editRejectedModalItem.value = Object.create(null)
+        editRejectedModalOpenState.value = false
+    })
 }
 
 const onEditRejectedModalReset = () => {
@@ -284,7 +291,7 @@ const openEditActiveModal = (item: SchemaType) => {
     editActiveModalOpenState.value = true
 }
 
-const onEditActiveModalSubmit = async (_: any) => {
+const onEditActiveModalSubmit = async (_: unknown) => {
     await $fetch(`/api/requirements/${props.reqType}/active/${editActiveModalItem.value?.id}/edit`, {
         method: 'POST',
         body: {
@@ -292,14 +299,14 @@ const onEditActiveModalSubmit = async (_: any) => {
             organizationSlug: props.organizationSlug
         }
     }).then(() => {
-        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement revised successfully' });
-        refresh();
+        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement revised successfully' })
+        refresh()
     }).catch((error) => {
-        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error revising requirement: ${error}` });
+        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error revising requirement: ${error}` })
     }).finally(() => {
-        editActiveModalItem.value = Object.create(null);
-        editActiveModalOpenState.value = false;
-    });
+        editActiveModalItem.value = Object.create(null)
+        editActiveModalOpenState.value = false
+    })
 }
 
 const onEditActiveModalReset = () => {
@@ -323,14 +330,14 @@ const onReviewApprove = async () => {
             organizationSlug: props.organizationSlug
         }
     }).then(() => {
-        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement approved successfully' });
-        refresh();
+        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement approved successfully' })
+        refresh()
     }).catch((error) => {
-        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error approving requirement: ${error}` });
+        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error approving requirement: ${error}` })
     }).finally(() => {
-        reviewModalItem.value = Object.create(null);
-        reviewModalOpenState.value = false;
-    });
+        reviewModalItem.value = Object.create(null)
+        reviewModalOpenState.value = false
+    })
 }
 
 const onReviewReject = async () => {
@@ -341,14 +348,14 @@ const onReviewReject = async () => {
             organizationSlug: props.organizationSlug
         }
     }).then(() => {
-        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement rejected successfully' });
-        refresh();
+        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement rejected successfully' })
+        refresh()
     }).catch((error) => {
-        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error rejecting requirement: ${error}` });
+        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error rejecting requirement: ${error}` })
     }).finally(() => {
-        reviewModalItem.value = Object.create(null);
-        reviewModalOpenState.value = false;
-    });
+        reviewModalItem.value = Object.create(null)
+        reviewModalOpenState.value = false
+    })
 }
 
 const getParsedReqsActionItems = (item: SchemaType): DropdownMenuItem[] => {
@@ -364,7 +371,7 @@ const getParsedReqsActionItems = (item: SchemaType): DropdownMenuItem[] => {
                     solutionslug: props.solutionSlug,
                     id: item.id
                 }
-            });
+            })
         }
     }]
     switch (item.workflowState) {
@@ -397,11 +404,11 @@ const getDefaultActionItems = (item: SchemaType): DropdownMenuItem[] => {
                             organizationSlug: props.organizationSlug
                         }
                     }).then(() => {
-                        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement submitted for review' });
-                        refresh();
+                        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement submitted for review' })
+                        refresh()
                     }).catch((error) => {
-                        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error submitting requirement: ${error}` });
-                    });
+                        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error submitting requirement: ${error}` })
+                    })
                 }
             }, {
                 label: 'Remove',
@@ -409,8 +416,8 @@ const getDefaultActionItems = (item: SchemaType): DropdownMenuItem[] => {
                 color: 'error',
                 onSelect: async () => {
                     const result = await confirmRemoveModal.open({
-                        title: `Are you sure you want to remove requirement '${item.name}'?`,
-                    }).result;
+                        title: `Are you sure you want to remove requirement '${item.name}'?`
+                    }).result
                     if (result) {
                         $fetch(`/api/requirements/${props.reqType}/proposed/${item.id}/remove`, {
                             method: 'POST',
@@ -419,21 +426,21 @@ const getDefaultActionItems = (item: SchemaType): DropdownMenuItem[] => {
                                 organizationSlug: props.organizationSlug
                             }
                         }).then(() => {
-                            toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement removed successfully' });
-                            refresh();
+                            toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement removed successfully' })
+                            refresh()
                         }).catch((error) => {
-                            toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error removing requirement: ${error}` });
-                        });
+                            toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error removing requirement: ${error}` })
+                        })
                     }
                 }
-            }];
+            }]
         case WorkflowState.Review:
             return [{
                 label: 'Review',
                 icon: 'i-lucide-eye',
                 color: 'info',
                 onSelect: () => openReviewModal(item)
-            }];
+            }]
         case WorkflowState.Rejected:
             return [{
                 label: 'Revise',
@@ -446,8 +453,8 @@ const getDefaultActionItems = (item: SchemaType): DropdownMenuItem[] => {
                 color: 'error',
                 onSelect: async () => {
                     const result = await confirmRemoveModal.open({
-                        title: `Are you sure you want to remove requirement '${item.name}'?`,
-                    }).result;
+                        title: `Are you sure you want to remove requirement '${item.name}'?`
+                    }).result
                     if (result) {
                         $fetch(`/api/requirements/${props.reqType}/rejected/${item.id}/remove`, {
                             method: 'POST',
@@ -456,14 +463,14 @@ const getDefaultActionItems = (item: SchemaType): DropdownMenuItem[] => {
                                 organizationSlug: props.organizationSlug
                             }
                         }).then(() => {
-                            toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement removed successfully' });
-                            refresh();
+                            toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement removed successfully' })
+                            refresh()
                         }).catch((error) => {
-                            toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error removing requirement: ${error}` });
-                        });
+                            toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error removing requirement: ${error}` })
+                        })
                     }
                 }
-            }];
+            }]
         case WorkflowState.Removed:
             return [{
                 label: 'Restore',
@@ -477,13 +484,13 @@ const getDefaultActionItems = (item: SchemaType): DropdownMenuItem[] => {
                             organizationSlug: props.organizationSlug
                         }
                     }).then(() => {
-                        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement restored successfully' });
-                        refresh();
+                        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement restored successfully' })
+                        refresh()
                     }).catch((error) => {
-                        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error restoring requirement: ${error}` });
-                    });
+                        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error restoring requirement: ${error}` })
+                    })
                 }
-            }];
+            }]
         case WorkflowState.Active:
             return [{
                 label: 'Revise',
@@ -496,8 +503,8 @@ const getDefaultActionItems = (item: SchemaType): DropdownMenuItem[] => {
                 color: 'error',
                 onSelect: async () => {
                     const result = await confirmRemoveModal.open({
-                        title: `Are you sure you want to remove requirement '${item.name}'?`,
-                    }).result;
+                        title: `Are you sure you want to remove requirement '${item.name}'?`
+                    }).result
                     if (result) {
                         $fetch(`/api/requirements/${props.reqType}/active/${item.id}/remove`, {
                             method: 'POST',
@@ -506,14 +513,14 @@ const getDefaultActionItems = (item: SchemaType): DropdownMenuItem[] => {
                                 organizationSlug: props.organizationSlug
                             }
                         }).then(() => {
-                            toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement removed successfully' });
-                            refresh();
+                            toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement removed successfully' })
+                            refresh()
                         }).catch((error) => {
-                            toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error removing requirement: ${error}` });
-                        });
+                            toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error removing requirement: ${error}` })
+                        })
                     }
                 }
-            }];
+            }]
     }
 }
 
@@ -527,7 +534,7 @@ const columnPinning = ref({
 const workflowColumnFilters = ref([{
     id: 'workflowState',
     value: ''
-}]);
+}])
 
 const workflowStateOptions = ref([
     { label: 'All', value: undefined },
@@ -540,11 +547,11 @@ const workflowStateOptions = ref([
                 label: state
             }
         }))
-]);
+])
 
 function getChip(value: WorkflowState) {
-    const item = workflowStateOptions.value.find(item => item?.value === value);
-    return item && 'chip' in item ? item.chip : null;
+    const item = workflowStateOptions.value.find(item => item?.value === value)
+    return item && 'chip' in item ? item.chip : null
 }
 
 const createModalOpenState = ref(false),
@@ -555,7 +562,7 @@ const openCreateModal = () => {
     createModalOpenState.value = true
 }
 
-const onCreateModalSubmit = async (_: any) => {
+const onCreateModalSubmit = async (_: unknown) => {
     await $fetch(`/api/requirements/${props.reqType}/propose`, {
         method: 'PUT',
         body: {
@@ -564,14 +571,14 @@ const onCreateModalSubmit = async (_: any) => {
             organizationSlug: props.organizationSlug
         }
     }).then(() => {
-        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement created successfully' });
-        refresh();
+        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement created successfully' })
+        refresh()
     }).catch((error) => {
-        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error creating requirement: ${error}` });
+        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error creating requirement: ${error}` })
     }).finally(() => {
-        createModalItem.value = Object.create(null);
-        createModalOpenState.value = false;
-    });
+        createModalItem.value = Object.create(null)
+        createModalOpenState.value = false
+    })
 }
 
 const onCreateModalReset = () => {
@@ -582,50 +589,102 @@ const onCreateModalReset = () => {
 
 <template>
     <section class="flex space-x-4 items-center px-4 py-3.5 border-b border-accented">
-        <UButton v-if="!props.disableNewRequirement" label="New Requirement" color="success" @click="openCreateModal"
-            size="xl" />
-        <USelect :items="workflowStateOptions"
-            @update:model-value="workflowTable?.tableApi?.getColumn('workflowState')?.setFilterValue($event)"
-            placeholder="Filter by Workflow State...">
+        <UButton
+            v-if="!props.disableNewRequirement"
+            label="New Requirement"
+            color="success"
+            size="xl"
+            @click="openCreateModal"
+        />
+        <USelect
+            :items="workflowStateOptions"
+            placeholder="Filter by Workflow State..."
+            @update:model-value="(workflowTable as any)?.tableApi?.getColumn('workflowState')?.setFilterValue($event)"
+        >
             <template #leading="{ modelValue, ui }">
-                <UChip v-if="modelValue" v-bind="getChip(modelValue as WorkflowState)" inset standalone
-                    :size="(ui.itemLeadingChipSize() as ChipProps['size'])" :class="ui.itemLeadingChip()" />
+                <UChip
+                    v-if="modelValue"
+                    v-bind="getChip(modelValue as WorkflowState)"
+                    inset
+                    standalone
+                    :size="(ui.itemLeadingChipSize() as ChipProps['size'])"
+                    :class="ui.itemLeadingChip()"
+                />
             </template>
         </USelect>
     </section>
-    <UTable ref="workflowTable" sticky v-model:column-filters="workflowColumnFilters" :data="data ?? []"
-        :columns="workflowColumns" v-model:column-pinning="columnPinning" :loading="status === 'pending'"
-        :empty-state="{ icon: 'i-lucide-database', label: 'No items.' }" class="min-h-fit" />
+    <UTable
+        ref="workflowTable"
+        v-model:column-filters="workflowColumnFilters"
+        v-model:column-pinning="columnPinning"
+        sticky
+        :data="data ?? []"
+        :columns="workflowColumns"
+        :loading="status === 'pending'"
+        :empty-state="{ icon: 'i-lucide-database', label: 'No items.' }"
+        class="min-h-fit"
+    />
 
-    <UModal v-model:open="createModalOpenState" title="New Requirement">
+    <UModal
+        v-model:open="createModalOpenState"
+        title="New Requirement"
+    >
         <template #body>
-            <XForm :state="createModalItem!" :schema="createSchema" :onSubmit="onCreateModalSubmit"
-                :onCancel="onCreateModalReset" />
+            <XForm
+                :state="createModalItem!"
+                :schema="createSchema"
+                :on-submit="onCreateModalSubmit"
+                :on-cancel="onCreateModalReset"
+            />
         </template>
     </UModal>
 
-    <UModal v-model:open="editProposedModalOpenState" title="Edit Proposal">
+    <UModal
+        v-model:open="editProposedModalOpenState"
+        title="Edit Proposal"
+    >
         <template #body>
-            <XForm :state="editProposedModalItem!" :schema="editSchema" :onSubmit="onEditProposedModalSubmit"
-                :onCancel="onEditProposedModalReset" />
+            <XForm
+                :state="editProposedModalItem!"
+                :schema="editSchema"
+                :on-submit="onEditProposedModalSubmit"
+                :on-cancel="onEditProposedModalReset"
+            />
         </template>
     </UModal>
 
-    <UModal v-model:open="editRejectedModalOpenState" title="Revise Rejected Requirement">
+    <UModal
+        v-model:open="editRejectedModalOpenState"
+        title="Revise Rejected Requirement"
+    >
         <template #body>
-            <XForm :state="editRejectedModalItem!" :schema="editSchema" :onSubmit="onEditRejectedModalSubmit"
-                :onCancel="onEditRejectedModalReset" />
+            <XForm
+                :state="editRejectedModalItem!"
+                :schema="editSchema"
+                :on-submit="onEditRejectedModalSubmit"
+                :on-cancel="onEditRejectedModalReset"
+            />
         </template>
     </UModal>
 
-    <UModal v-model:open="editActiveModalOpenState" title="Revise Active Requirement">
+    <UModal
+        v-model:open="editActiveModalOpenState"
+        title="Revise Active Requirement"
+    >
         <template #body>
-            <XForm :state="editActiveModalItem!" :schema="editSchema" :onSubmit="onEditActiveModalSubmit"
-                :onCancel="onEditActiveModalReset" />
+            <XForm
+                :state="editActiveModalItem!"
+                :schema="editSchema"
+                :on-submit="onEditActiveModalSubmit"
+                :on-cancel="onEditActiveModalReset"
+            />
         </template>
     </UModal>
 
-    <UModal v-model:open="reviewModalOpenState" title="Review Requirement">
+    <UModal
+        v-model:open="reviewModalOpenState"
+        title="Review Requirement"
+    >
         <template #body>
             <p>
                 Below are the details of the requirement to be reviewed.
@@ -634,14 +693,27 @@ const onCreateModalReset = () => {
                 requirement is approved.
             </p>
 
-            <hr class="my-6" />
+            <hr class="my-6">
 
-            <XForm :state="reviewModalItem!" :schema="viewSchema" :disabled="true" :onSubmit="onReviewApprove"
-                :onCancel="onReviewReject" />
+            <XForm
+                :state="reviewModalItem!"
+                :schema="viewSchema"
+                :disabled="true"
+                :on-submit="onReviewApprove"
+                :on-cancel="onReviewReject"
+            />
         </template>
         <template #footer>
-            <UButton label="Approve" color="success" @click="onReviewApprove" />
-            <UButton label="Reject" color="error" @click="onReviewReject" />
+            <UButton
+                label="Approve"
+                color="success"
+                @click="onReviewApprove"
+            />
+            <UButton
+                label="Reject"
+                color="error"
+                @click="onReviewReject"
+            />
         </template>
     </UModal>
 </template>

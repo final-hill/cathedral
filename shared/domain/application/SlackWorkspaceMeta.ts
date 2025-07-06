@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod'
 
 export const SlackWorkspaceMeta = z.object({
     teamId: z.string().describe('The unique identifier for the Slack team/workspace'),
@@ -12,12 +12,12 @@ export const SlackWorkspaceMeta = z.object({
     installedById: z.string().uuid().describe('The Cathedral user ID who installed the app'),
     installedByName: z.string().describe('The name of the Cathedral user who installed the app'),
     installationDate: z.date().describe('The date and time when the app was installed in the workspace'),
-    lastRefreshDate: z.date().optional().describe('The date and time when the workspace info was last refreshed'),
-}).describe('Metadata for a Slack workspace integration with a Cathedral organization');
+    lastRefreshDate: z.date().optional().describe('The date and time when the workspace info was last refreshed')
+}).describe('Metadata for a Slack workspace integration with a Cathedral organization')
 
-export type SlackWorkspaceMetaType = z.infer<typeof SlackWorkspaceMeta>;
+export type SlackWorkspaceMetaType = z.infer<typeof SlackWorkspaceMeta>
 
 /**
  * Type for repository operations - excludes the access token for security
  */
-export type SlackWorkspaceMetaPublicType = Omit<SlackWorkspaceMetaType, 'accessToken'>;
+export type SlackWorkspaceMetaPublicType = Omit<SlackWorkspaceMetaType, 'accessToken'>

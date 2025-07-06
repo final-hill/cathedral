@@ -1,11 +1,11 @@
 // Create a proposed requirement
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from "~/application"
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~/application'
 import { AppUserRepository, OrganizationRepository, PermissionRepository, RequirementRepository } from '~/server/data/repositories'
 import { Organization, ReqType, Solution } from '~/shared/domain'
-import { snakeCaseToPascalCase } from '~/shared/utils';
-import * as req from "#shared/domain/requirements";
+import { snakeCaseToPascalCase } from '~/shared/utils'
+import * as req from '#shared/domain/requirements'
 import { z } from 'zod'
-import { NaturalLanguageToRequirementService } from "~/server/data/services/NaturalLanguageToRequirementService";
+import { NaturalLanguageToRequirementService } from '~/server/data/services/NaturalLanguageToRequirementService'
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
@@ -33,8 +33,8 @@ export default defineEventHandler(async (event) => {
             organizationId,
             organizationSlug
         }).refine((value) => {
-            return value.organizationId !== undefined || value.organizationSlug !== undefined;
-        }, "At least one of organizationId or organizationSlug should be provided"),
+            return value.organizationId !== undefined || value.organizationSlug !== undefined
+        }, 'At least one of organizationId or organizationSlug should be provided'),
         { solutionSlug, organizationId: orgId, organizationSlug: orgSlug, ...reqProps } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
         permissionInteractor = new PermissionInteractor({

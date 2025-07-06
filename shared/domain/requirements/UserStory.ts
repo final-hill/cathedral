@@ -1,7 +1,7 @@
-import { z } from "zod";
-import { Scenario } from "./Scenario.js";
-import { dedent } from "../../../shared/utils/dedent.js";
-import { ReqType } from "./ReqType.js";
+import { z } from 'zod'
+import { Scenario } from './Scenario.js'
+import { dedent } from '../../../shared/utils/dedent.js'
+import { ReqType } from './ReqType.js'
 
 export const UserStory = Scenario.extend({
     reqId: z.string().regex(/^S\.4\.\d+$/, 'Format must be S.4.#').optional()
@@ -22,4 +22,4 @@ export const UserStory = Scenario.extend({
     [role] - primary_actor_id (Actor)
     [behavior] - behaviorId (Functional Behavior)
     [goal] - outcomeId
-`));
+`))

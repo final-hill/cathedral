@@ -1,3 +1,3 @@
-import getAllByType from "~/server/utils/workflowHttpHandlers/getAllByType";
+import getAllByType from '~/server/utils/workflowHttpHandlers/getAllByType'
 
-export default getAllByType();
+export default getAllByType()

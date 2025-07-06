@@ -1,17 +1,16 @@
-import { Repository } from "./Repository";
-import { SlackChannelMetaModel } from "../models/application/SlackChannelMetaModel";
-import { SlackUserMetaModel, AppUserModel } from "../models/application";
-import { SolutionVersionsModel } from "../models/requirements";
-import { OrganizationRepository } from "./OrganizationRepository";
-import type { SlackChannelMetaRepositoryType } from "#shared/domain/application/SlackChannelMeta";
-import type { SlackUserMetaType } from "#shared/domain/application";
-import { DuplicateEntityException, NotFoundException } from "#shared/domain";
+import { Repository } from './Repository'
+import { SlackChannelMetaModel } from '../models/application/SlackChannelMetaModel'
+import { SlackUserMetaModel, AppUserModel } from '../models/application'
+import type { SolutionVersionsModel } from '../models/requirements'
+import { OrganizationRepository } from './OrganizationRepository'
+import type { SlackChannelMetaRepositoryType } from '#shared/domain/application/SlackChannelMeta'
+import type { SlackUserMetaType } from '#shared/domain/application'
+import { DuplicateEntityException, NotFoundException } from '#shared/domain'
 
 /**
  * Repository for managing Slack-related data operations
  */
 export class SlackRepository extends Repository<unknown> {
-
     /**
      * Get complete Slack channel configuration including organization and solution details
      * @param props.channelId - The Slack channel ID
@@ -19,36 +18,36 @@ export class SlackRepository extends Repository<unknown> {
      * @returns Channel configuration with organization and solution data or null
      */
     async getChannelConfiguration(props: { channelId: string, teamId: string }): Promise<{
-        organizationId: string,
-        organizationSlug: string,
-        solutionId: string,
-        solutionSlug: string,
+        organizationId: string
+        organizationSlug: string
+        solutionId: string
+        solutionSlug: string
         solutionName: string
     } | null> {
-        const em = this._em;
+        const em = this._em
         const channelMeta = await em.findOne(SlackChannelMetaModel, {
             channelId: props.channelId,
             teamId: props.teamId
         }, {
             populate: ['solution']
-        });
+        })
 
         if (!channelMeta || !channelMeta.solution) {
-            return null;
+            return null
         }
 
-        const solutionModel = channelMeta.solution;
-        const latestVersion = await solutionModel.getLatestVersion(new Date()) as SolutionVersionsModel | null;
+        const solutionModel = channelMeta.solution
+        const latestVersion = await solutionModel.getLatestVersion(new Date()) as SolutionVersionsModel | null
 
         if (!latestVersion?.organization) {
-            return null;
+            return null
         }
 
         // Get the organization details
-        const organizationId = latestVersion.organization.id;
-        const orgRepo = new OrganizationRepository({ em, organizationId });
-        const solution = await orgRepo.getSolutionById(solutionModel.id);
-        const org = await orgRepo.getOrganization();
+        const organizationId = latestVersion.organization.id
+        const orgRepo = new OrganizationRepository({ em, organizationId })
+        const solution = await orgRepo.getSolutionById(solutionModel.id)
+        const org = await orgRepo.getOrganization()
 
         return {
             organizationId: org.id,
@@ -56,7 +55,7 @@ export class SlackRepository extends Repository<unknown> {
             solutionId: solution.id,
             solutionSlug: solution.slug,
             solutionName: solution.name
-        };
+        }
     }
 
     /**
@@ -66,15 +65,15 @@ export class SlackRepository extends Repository<unknown> {
      * @returns The channel metadata or null if not found
      */
     async getChannelMeta(props: { channelId: string, teamId: string }): Promise<{ solutionId: string } | null> {
-        const em = this._em;
+        const em = this._em
         const meta = await em.findOne(SlackChannelMetaModel, {
             channelId: props.channelId,
             teamId: props.teamId
-        }, { populate: ['solution'] });
+        }, { populate: ['solution'] })
 
-        if (!meta?.solution) return null;
+        if (!meta?.solution) return null
 
-        return { solutionId: meta.solution.id };
+        return { solutionId: meta.solution.id }
     }
 
     /**
@@ -83,14 +82,14 @@ export class SlackRepository extends Repository<unknown> {
      * @throws {DuplicateEntityException} If the channel is already linked
      */
     async linkChannel(props: SlackChannelMetaRepositoryType): Promise<void> {
-        const em = this._em;
+        const em = this._em
         const existing = await em.findOne(SlackChannelMetaModel, {
             channelId: props.channelId,
             teamId: props.teamId
-        });
+        })
 
         if (existing) {
-            throw new DuplicateEntityException('Channel is already linked to a solution');
+            throw new DuplicateEntityException('Channel is already linked to a solution')
         }
 
         const slackChannelMeta = em.create(SlackChannelMetaModel, {
@@ -102,9 +101,9 @@ export class SlackRepository extends Repository<unknown> {
             createdBy: props.createdById,
             creationDate: props.creationDate,
             lastNameRefresh: props.lastNameRefresh
-        });
+        })
 
-        await em.persistAndFlush(slackChannelMeta);
+        await em.persistAndFlush(slackChannelMeta)
     }
 
     /**
@@ -114,16 +113,16 @@ export class SlackRepository extends Repository<unknown> {
      * @throws {NotFoundException} If the channel link does not exist
      */
     async unlinkChannel(props: { channelId: string, teamId: string }): Promise<void> {
-        const em = this._em;
+        const em = this._em
         const existing = await em.findOne(SlackChannelMetaModel, {
             channelId: props.channelId,
             teamId: props.teamId
-        });
+        })
 
         if (!existing)
-            throw new NotFoundException('Channel link not found');
+            throw new NotFoundException('Channel link not found')
 
-        await em.removeAndFlush(existing);
+        await em.removeAndFlush(existing)
     }
 
     /**
@@ -133,19 +132,19 @@ export class SlackRepository extends Repository<unknown> {
      * @throws {NotFoundException} If the Cathedral user does not exist
      */
     async linkSlackUser(props: SlackUserMetaType): Promise<void> {
-        const em = this._em;
+        const em = this._em
         // Check if the link already exists
         const existing = await em.findOne(SlackUserMetaModel, {
             slackUserId: props.slackUserId,
             teamId: props.teamId
-        });
+        })
         if (existing)
-            throw new DuplicateEntityException(`Slack user ${props.slackUserId} in team ${props.teamId} is already linked to a Cathedral user.`);
+            throw new DuplicateEntityException(`Slack user ${props.slackUserId} in team ${props.teamId} is already linked to a Cathedral user.`)
 
         // Find the AppUserModel
-        const appUser = await em.findOne(AppUserModel, { id: props.cathedralUserId });
+        const appUser = await em.findOne(AppUserModel, { id: props.cathedralUserId })
         if (!appUser)
-            throw new NotFoundException(`Cathedral user with id ${props.cathedralUserId} does not exist`);
+            throw new NotFoundException(`Cathedral user with id ${props.cathedralUserId} does not exist`)
 
         // Create the SlackUserMetaModel
         const slackUserMeta = em.create(SlackUserMetaModel, {
@@ -154,8 +153,8 @@ export class SlackRepository extends Repository<unknown> {
             appUser: appUser,
             createdBy: props.createdById,
             creationDate: props.creationDate
-        });
-        await em.persistAndFlush(slackUserMeta);
+        })
+        await em.persistAndFlush(slackUserMeta)
     }
 
     /**
@@ -165,15 +164,15 @@ export class SlackRepository extends Repository<unknown> {
      * @throws {NotFoundException} If the link does not exist
      */
     async unlinkSlackUser(props: { slackUserId: string, teamId: string }): Promise<void> {
-        const em = this._em;
+        const em = this._em
         const existing = await em.findOne(SlackUserMetaModel, {
             slackUserId: props.slackUserId,
             teamId: props.teamId
-        });
+        })
         if (!existing) {
-            throw new NotFoundException(`No Slack user link found for user ${props.slackUserId} in team ${props.teamId}`);
+            throw new NotFoundException(`No Slack user link found for user ${props.slackUserId} in team ${props.teamId}`)
         }
-        await em.removeAndFlush(existing);
+        await em.removeAndFlush(existing)
     }
 
     /**
@@ -183,12 +182,12 @@ export class SlackRepository extends Repository<unknown> {
      * @returns True if the user is linked, false otherwise
      */
     async isSlackUserLinked(props: { slackUserId: string, teamId: string }): Promise<boolean> {
-        const em = this._em;
+        const em = this._em
         const existing = await em.findOne(SlackUserMetaModel, {
             slackUserId: props.slackUserId,
             teamId: props.teamId
-        });
-        return !!existing;
+        })
+        return !!existing
     }
 
     /**
@@ -198,11 +197,11 @@ export class SlackRepository extends Repository<unknown> {
      * @returns Cathedral user ID or null if not found
      */
     async getCathedralUserIdForSlackUser({ slackUserId, teamId }: { slackUserId: string, teamId: string }): Promise<string | null> {
-        const em = this._em;
-        const meta = await em.findOne(SlackUserMetaModel, { slackUserId, teamId }, { populate: ['appUser'] });
+        const em = this._em
+        const meta = await em.findOne(SlackUserMetaModel, { slackUserId, teamId }, { populate: ['appUser'] })
         if (!meta || !meta.appUser)
-            return null;
-        return meta.appUser.id;
+            return null
+        return meta.appUser.id
     }
 
     /**
@@ -211,12 +210,12 @@ export class SlackRepository extends Repository<unknown> {
      * @returns Array of SlackChannelMetaRepositoryType objects
      */
     async getChannelsForSolution(solutionId: string): Promise<SlackChannelMetaRepositoryType[]> {
-        const em = this._em;
+        const em = this._em
         const channelLinks = await em.find(SlackChannelMetaModel, {
             solution: solutionId
         }, {
             populate: ['createdBy']
-        });
+        })
 
         return channelLinks.map((link: SlackChannelMetaModel) => ({
             channelId: link.channelId,
@@ -227,8 +226,8 @@ export class SlackRepository extends Repository<unknown> {
             createdById: link.createdBy.id,
             createdByName: link.createdBy.name,
             creationDate: link.creationDate,
-            lastNameRefresh: link.lastNameRefresh,
-        }));
+            lastNameRefresh: link.lastNameRefresh
+        }))
     }
 
     /**
@@ -240,24 +239,24 @@ export class SlackRepository extends Repository<unknown> {
      * @returns Updated SlackChannelMeta or null if not found
      */
     async refreshChannelNames(props: {
-        channelId: string,
-        teamId: string,
-        channelName?: string,
+        channelId: string
+        teamId: string
+        channelName?: string
         teamName?: string
     }): Promise<SlackChannelMetaRepositoryType | null> {
-        const em = this._em;
+        const em = this._em
         const existing = await em.findOne(SlackChannelMetaModel, {
             channelId: props.channelId,
             teamId: props.teamId
-        }, { populate: ['createdBy', 'solution'] });
+        }, { populate: ['createdBy', 'solution'] })
 
-        if (!existing) return null;
+        if (!existing) return null
 
-        existing.channelName = props.channelName ?? existing.channelName;
-        existing.teamName = props.teamName ?? existing.teamName;
-        existing.lastNameRefresh = new Date();
+        existing.channelName = props.channelName ?? existing.channelName
+        existing.teamName = props.teamName ?? existing.teamName
+        existing.lastNameRefresh = new Date()
 
-        await em.persistAndFlush(existing);
+        await em.persistAndFlush(existing)
 
         return {
             channelId: existing.channelId,
@@ -268,7 +267,7 @@ export class SlackRepository extends Repository<unknown> {
             createdById: existing.createdBy.id,
             createdByName: existing.createdBy.name,
             creationDate: existing.creationDate,
-            lastNameRefresh: existing.lastNameRefresh,
-        };
+            lastNameRefresh: existing.lastNameRefresh
+        }
     }
 }

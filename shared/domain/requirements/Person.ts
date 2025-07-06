@@ -1,7 +1,7 @@
-import { z } from "zod";
-import { Actor } from "./Actor.js";
-import { dedent } from "../../../shared/utils/dedent.js";
-import { ReqType } from "./ReqType.js";
+import { z } from 'zod'
+import { Actor } from './Actor.js'
+import { dedent } from '../../../shared/utils/dedent.js'
+import { ReqType } from './ReqType.js'
 
 export const Person = Actor.extend({
     email: z.string().email().max(254).optional()
@@ -12,4 +12,4 @@ export const Person = Actor.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.PERSON)
 }).describe(dedent(`
     A member of the Project staff with associated contact information, roles, and responsibilities.
-`));
+`))

@@ -11,5 +11,9 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
     <h1>E.6 Invariants </h1>
     <p> {{ Invariant.description }} </p>
 
-    <XWorkflow :organization-slug="organizationSlug" :req-type="ReqType.INVARIANT" :solution-slug="solutionSlug" />
+    <XWorkflow
+        :organization-slug="organizationSlug"
+        :req-type="ReqType.INVARIANT"
+        :solution-slug="solutionSlug"
+    />
 </template>

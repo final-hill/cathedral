@@ -1,9 +1,9 @@
-import { Interactor } from "../Interactor";
-import type { PermissionInteractor } from "../PermissionInteractor";
-import type { SlackWorkspaceRepository } from "~/server/data/repositories";
-import { SlackService } from "~/server/data/services";
-import { NotFoundException } from "#shared/domain/exceptions";
-import type { SlackWorkspaceMetaType } from "#shared/domain/application";
+import { Interactor } from '../Interactor'
+import type { PermissionInteractor } from '../PermissionInteractor'
+import type { SlackWorkspaceRepository } from '~/server/data/repositories'
+import { SlackService } from '~/server/data/services'
+import { NotFoundException } from '#shared/domain/exceptions'
+import type { SlackWorkspaceMetaType } from '#shared/domain/application'
 
 /**
  * Slack Workspace Interactor
@@ -15,19 +15,19 @@ import type { SlackWorkspaceMetaType } from "#shared/domain/application";
  * - Organization-workspace relationships
  */
 export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType> {
-    protected readonly _permissionInteractor: PermissionInteractor;
+    protected readonly _permissionInteractor: PermissionInteractor
 
     constructor(props: {
-        repository: SlackWorkspaceRepository,
+        repository: SlackWorkspaceRepository
         permissionInteractor: PermissionInteractor
     }) {
-        super({ repository: props.repository });
-        this._permissionInteractor = props.permissionInteractor;
+        super({ repository: props.repository })
+        this._permissionInteractor = props.permissionInteractor
     }
 
     // Type-safe repository access
     get repository(): SlackWorkspaceRepository {
-        return this._repository as SlackWorkspaceRepository;
+        return this._repository as SlackWorkspaceRepository
     }
 
     /**
@@ -40,9 +40,9 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
      * @returns Array of workspace integrations
      */
     async getOrganizationWorkspaces(organizationId: string, organizationName: string) {
-        await this._permissionInteractor.assertOrganizationReader(organizationId);
+        await this._permissionInteractor.assertOrganizationReader(organizationId)
 
-        return await this.repository.getWorkspacesByOrganization(organizationId, organizationName);
+        return await this.repository.getWorkspacesByOrganization(organizationId, organizationName)
     }
 
     /**
@@ -52,21 +52,21 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
      * @throws { PermissionException } if user lacks contributor access
      */
     async installWorkspaceForOrganization(props: {
-        organizationId: string;
-        teamId: string;
-        teamName: string;
-        accessToken: string;
-        botUserId: string;
-        installedById: string;
-        scope: string;
-        appId: string;
+        organizationId: string
+        teamId: string
+        teamName: string
+        accessToken: string
+        botUserId: string
+        installedById: string
+        scope: string
+        appId: string
     }) {
-        await this._permissionInteractor.assertOrganizationContributor(props.organizationId);
+        await this._permissionInteractor.assertOrganizationContributor(props.organizationId)
 
         return await this.repository.installWorkspace({
             ...props,
             installationDate: new Date()
-        });
+        })
     }
 
     /**
@@ -77,10 +77,10 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
      * @throws { PermissionException } if user lacks contributor access
      */
     async removeWorkspaceFromOrganization(organizationId: string, teamId: string) {
-        await this._permissionInteractor.assertOrganizationContributor(organizationId);
+        await this._permissionInteractor.assertOrganizationContributor(organizationId)
 
         return await this.repository.removeWorkspace(organizationId, teamId)
-            .catch(handleDomainException);
+            .catch(handleDomainException)
     }
 
     /**
@@ -91,14 +91,14 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
      * @throws { PermissionException } if user lacks organization read access
      */
     async getWorkspaceConfiguration(teamId: string) {
-        const workspaceInfo = await this.repository.getWorkspaceByTeamId(teamId);
+        const workspaceInfo = await this.repository.getWorkspaceByTeamId(teamId)
 
         if (!workspaceInfo)
-            throw new NotFoundException('Slack workspace integration not found');
+            throw new NotFoundException('Slack workspace integration not found')
 
-        await this._permissionInteractor.assertOrganizationReader(workspaceInfo.organization.id);
+        await this._permissionInteractor.assertOrganizationReader(workspaceInfo.organization.id)
 
-        return await this.repository.getWorkspaceConfiguration(teamId);
+        return await this.repository.getWorkspaceConfiguration(teamId)
     }
 
     /**
@@ -110,21 +110,21 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
      * @throws { PermissionException } if user lacks organization contributor access
      */
     async updateWorkspaceMetadata(teamId: string, updates: {
-        teamName?: string;
-        botUserId?: string;
-        lastMetadataRefresh?: Date;
+        teamName?: string
+        botUserId?: string
+        lastMetadataRefresh?: Date
     }) {
-        const workspaceInfo = await this.repository.getWorkspaceByTeamId(teamId);
+        const workspaceInfo = await this.repository.getWorkspaceByTeamId(teamId)
 
         if (!workspaceInfo)
-            throw new NotFoundException('Slack workspace integration not found');
+            throw new NotFoundException('Slack workspace integration not found')
 
-        await this._permissionInteractor.assertOrganizationContributor(workspaceInfo.organization.id);
+        await this._permissionInteractor.assertOrganizationContributor(workspaceInfo.organization.id)
 
         return await this.repository.updateWorkspaceMetadata(teamId, {
             ...updates,
             lastMetadataRefresh: updates.lastMetadataRefresh || new Date()
-        });
+        })
     }
 
     /**
@@ -140,30 +140,30 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
      * @returns Updated workspace configuration
      */
     async refreshWorkspaceFromSlackAPI(teamId: string) {
-        const workspaceConfig = await this.repository.getWorkspaceByTeamId(teamId);
+        const workspaceConfig = await this.repository.getWorkspaceByTeamId(teamId)
 
         if (!workspaceConfig)
-            throw new NotFoundException('Slack workspace integration not found');
+            throw new NotFoundException('Slack workspace integration not found')
 
-        await this._permissionInteractor.assertOrganizationContributor(workspaceConfig.organization.id);
+        await this._permissionInteractor.assertOrganizationContributor(workspaceConfig.organization.id)
 
         const config = useRuntimeConfig(),
-            slackService = new SlackService(workspaceConfig.accessToken, config.slackSigningSecret);
+            slackService = new SlackService(workspaceConfig.accessToken, config.slackSigningSecret)
 
-        const teamInfo = await slackService.getTeamInfo(teamId);
+        const teamInfo = await slackService.getTeamInfo(teamId)
 
         if (teamInfo && teamInfo.name) {
             await this.repository.updateWorkspaceMetadata(teamId, {
                 teamName: teamInfo.name,
                 lastMetadataRefresh: new Date()
-            });
+            })
         }
 
-        const updatedConfig = await this.repository.getWorkspaceConfiguration(teamId);
+        const updatedConfig = await this.repository.getWorkspaceConfiguration(teamId)
 
         if (!updatedConfig)
-            throw new NotFoundException('Slack workspace integration not found after update');
+            throw new NotFoundException('Slack workspace integration not found after update')
 
-        return updatedConfig;
+        return updatedConfig
     }
 }

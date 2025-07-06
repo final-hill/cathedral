@@ -1,7 +1,7 @@
-import { slugify } from "../../../shared/utils/slugify.js";
-import { z } from "zod";
-import { MetaRequirement } from "./MetaRequirement.js";
-import { ReqType } from "./ReqType.js";
+import { slugify } from '../../../shared/utils/slugify.js'
+import { z } from 'zod'
+import { MetaRequirement } from './MetaRequirement.js'
+import { ReqType } from './ReqType.js'
 
 export const Organization = MetaRequirement.extend({
     slug: z.string().nonempty().refine(
@@ -12,4 +12,4 @@ export const Organization = MetaRequirement.extend({
 }).refine(
     value => value.slug === slugify(value.name),
     'The slug must be the slugified version of the name'
-).describe('An Organization is a collection of users and solutions');
+).describe('An Organization is a collection of users and solutions')

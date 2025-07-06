@@ -4,5 +4,5 @@
 export enum AppRole {
     ORGANIZATION_ADMIN = 'Organization Admin',
     ORGANIZATION_CONTRIBUTOR = 'Organization Contributor',
-    ORGANIZATION_READER = 'Organization Reader',
+    ORGANIZATION_READER = 'Organization Reader'
 }

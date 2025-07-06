@@ -1,16 +1,16 @@
-import { type AppUserRepository } from "~/server/data/repositories";
-import { Interactor } from "./Interactor";
-import { AppUser, MismatchException, PermissionDeniedException } from "#shared/domain";
-import type { z } from "zod";
-import type { PermissionInteractor } from "./PermissionInteractor";
-import type { AppCredentials } from "~/shared/domain/application/AppCredentials";
-import type { CreationInfo } from "~/server/data/repositories";
+import type { AppUserRepository, CreationInfo } from '~/server/data/repositories'
+import { Interactor } from './Interactor'
+import type { AppUser } from '#shared/domain'
+import { MismatchException, PermissionDeniedException } from '#shared/domain'
+import type { z } from 'zod'
+import type { PermissionInteractor } from './PermissionInteractor'
+import type { AppCredentials } from '~/shared/domain/application/AppCredentials'
 
 /**
  * Interactor for the AppUser
  */
 export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
-    private readonly _permissionInteractor: PermissionInteractor;
+    private readonly _permissionInteractor: PermissionInteractor
 
     /**
      * Create a new AppUserInteractor
@@ -20,11 +20,11 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
      */
     constructor(props: {
         // TODO: This should be Repository<AppUser>
-        repository: AppUserRepository,
+        repository: AppUserRepository
         permissionInteractor: PermissionInteractor
     }) {
-        super(props);
-        this._permissionInteractor = props.permissionInteractor;
+        super(props)
+        this._permissionInteractor = props.permissionInteractor
     }
 
     // TODO: This should not be necessary
@@ -40,16 +40,16 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
      * @throws {PermissionDeniedException} If the current user is not a system admin
      */
     async createAppUser(props: Omit<z.infer<typeof AppUser>, 'id' | 'role'>): Promise<z.infer<typeof AppUser>['id']> {
-        const currentUserId = this._permissionInteractor.userId;
+        const currentUserId = this._permissionInteractor.userId
 
         if (!this._permissionInteractor.isSystemAdmin())
-            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to create users`);
+            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to create users`)
 
         return this.repository.createAppUser({
             ...props,
             createdById: currentUserId,
             creationDate: new Date()
-        });
+        })
     }
 
     /**
@@ -60,11 +60,11 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
      * @throws {PermissionDeniedException} If the current user is not a system admin or the user being queried is not the current user
      */
     async getUserById(id: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof AppUser>> {
-        const currentUserId = this._permissionInteractor.userId;
+        const currentUserId = this._permissionInteractor.userId
         if (id !== currentUserId && !this._permissionInteractor.isSystemAdmin())
-            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to get user with id ${id}`);
+            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to get user with id ${id}`)
 
-        return this.repository.getUserById(id);
+        return this.repository.getUserById(id)
     }
 
     /**
@@ -78,7 +78,7 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
         const currentUserId = this._permissionInteractor.userId,
             currentUser = await this.getUserById(currentUserId)
         if (email !== currentUser.email && !currentUser.isSystemAdmin)
-            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to get user with email ${email}`);
+            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to get user with email ${email}`)
 
         return this.repository.getUserByEmail(email)
     }
@@ -96,7 +96,7 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
         const currentUserId = this._permissionInteractor.userId,
             currentUser = await this.getUserById(currentUserId)
         if (email !== currentUser.email && !currentUser.isSystemAdmin)
-            throw new PermissionDeniedException(`User ${currentUser.email} does not have permission to check if user with email ${email} exists`);
+            throw new PermissionDeniedException(`User ${currentUser.email} does not have permission to check if user with email ${email} exists`)
 
         return this.repository.hasUser(email)
     }
@@ -111,7 +111,7 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
         const currentUserId = this._permissionInteractor.userId,
             currentUser = await this.getUserById(currentUserId)
         if (props.id !== currentUser.id && !currentUser.isSystemAdmin)
-            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to update user with id ${props.id}`);
+            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to update user with id ${props.id}`)
 
         return this.repository.updateAppUser({
             ...props,
@@ -127,16 +127,16 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
      */
     async addCredential(props: Omit<z.infer<typeof AppCredentials>, keyof CreationInfo>): Promise<void> {
         const currentUserId = this._permissionInteractor.userId,
-            currentUser = await this.getUserById(currentUserId);
+            currentUser = await this.getUserById(currentUserId)
 
         if (props.appUser.id !== currentUser.id && !currentUser.isSystemAdmin)
-            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to add credentials for user with id ${props.appUser.id}`);
+            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to add credentials for user with id ${props.appUser.id}`)
 
         await this.repository.addCredential({
             ...props,
             createdById: currentUserId,
             creationDate: new Date()
-        });
+        })
     }
 
     /**
@@ -147,15 +147,15 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
      */
     async getAllCredentials(email: z.infer<typeof AppUser>['email']): Promise<z.infer<typeof AppCredentials>[]> {
         const currentUserId = this._permissionInteractor.userId,
-            currentUser = await this.getUserById(currentUserId);
+            currentUser = await this.getUserById(currentUserId)
 
         if (email !== currentUser.email && !currentUser.isSystemAdmin)
-            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to get credentials for user with email ${email}`);
+            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to get credentials for user with email ${email}`)
 
         const appUser = await this.repository.getUserByEmail(email),
-            credentials = await this.repository.getCredentialsByUserId(appUser.id);
+            credentials = await this.repository.getCredentialsByUserId(appUser.id)
 
-        return credentials;
+        return credentials
     }
 
     /**
@@ -166,15 +166,15 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
      */
     async hasCredential(credentialId: z.infer<typeof AppCredentials>['id']): Promise<boolean> {
         const currentUserId = this._permissionInteractor.userId,
-            currentUser = await this.getUserById(currentUserId);
+            currentUser = await this.getUserById(currentUserId)
 
         if (!currentUser.isSystemAdmin) {
-            const credential = await this.repository.getCredentialById(credentialId);
+            const credential = await this.repository.getCredentialById(credentialId)
             if (credential.appUser.id !== currentUser.id)
-                throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to check credential with id ${credentialId}`);
+                throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to check credential with id ${credentialId}`)
         }
 
-        return this.repository.hasCredential(credentialId);
+        return this.repository.hasCredential(credentialId)
     }
 
     /**
@@ -187,21 +187,21 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
      */
     async getCredential(credentialId: z.infer<typeof AppCredentials>['id']): Promise<z.infer<typeof AppCredentials>> {
         const currentUserId = this._permissionInteractor.userId,
-            currentUser = await this.getUserById(currentUserId);
+            currentUser = await this.getUserById(currentUserId)
 
         if (!currentUser.isSystemAdmin) {
-            const credential = await this.repository.getCredentialById(credentialId);
+            const credential = await this.repository.getCredentialById(credentialId)
             if (credential.appUser.id !== currentUser.id)
-                throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to get credential with id ${credentialId}`);
+                throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to get credential with id ${credentialId}`)
         }
 
-        const credential = await this.repository.getCredentialById(credentialId);
+        const credential = await this.repository.getCredentialById(credentialId)
 
         if (credential.counter < 0)
-            throw new MismatchException('Credential counter is invalid');
+            throw new MismatchException('Credential counter is invalid')
 
-        await this.repository.incrementCredentialCounter(credentialId);
+        await this.repository.incrementCredentialCounter(credentialId)
 
-        return credential;
+        return credential
     }
 }

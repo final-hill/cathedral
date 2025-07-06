@@ -1,5 +1,5 @@
 // Get the current Active requirements by type
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from "~/application"
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~/application'
 import { AppUserRepository, OrganizationRepository, PermissionRepository, RequirementRepository } from '~/server/data/repositories'
 import { Organization, ReqType, Solution } from '~/shared/domain'
 import { z } from 'zod'
@@ -13,8 +13,8 @@ const querySchema = z.object({
     organizationId,
     organizationSlug
 }).refine((value) => {
-    return value.organizationId !== undefined || value.organizationSlug !== undefined;
-}, "At least one of organizationId or organizationSlug should be provided");
+    return value.organizationId !== undefined || value.organizationSlug !== undefined
+}, 'At least one of organizationId or organizationSlug should be provided')
 
 export default defineEventHandler(async (event) => {
     const { reqType } = await validateEventParams(event, paramSchema),

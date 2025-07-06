@@ -1,14 +1,13 @@
-import { Migration } from '@mikro-orm/migrations';
+import { Migration } from '@mikro-orm/migrations'
 
 export class Migration20241101165305 extends Migration {
-
     override async up(): Promise<void> {
-        this.addSql(`alter table "requirement" drop constraint if exists "requirement_req_type_check";`);
+        this.addSql(`alter table "requirement" drop constraint if exists "requirement_req_type_check";`)
 
-        this.addSql(`alter table "requirement" drop column "goal_in_context";`);
+        this.addSql(`alter table "requirement" drop column "goal_in_context";`)
 
-        this.addSql(`alter table "requirement" add column "req_id" text null;`);
-        this.addSql(`alter table "requirement" add constraint "requirement_req_type_check" check("req_type" in ('actor', 'assumption', 'behavior', 'component', 'constraint', 'effect', 'environment_component', 'epic', 'example', 'functional_behavior', 'functionality', 'glossary_term', 'goal', 'hint', 'invariant', 'justification', 'limit', 'meta_requirement', 'noise', 'non_functional_behavior', 'obstacle', 'organization', 'outcome', 'parsed_requirement', 'person', 'product', 'requirement', 'responsibility', 'role', 'scenario', 'silence', 'solution', 'stakeholder', 'system_component', 'task', 'test_case', 'use_case', 'user_story'));`);
+        this.addSql(`alter table "requirement" add column "req_id" text null;`)
+        this.addSql(`alter table "requirement" add constraint "requirement_req_type_check" check("req_type" in ('actor', 'assumption', 'behavior', 'component', 'constraint', 'effect', 'environment_component', 'epic', 'example', 'functional_behavior', 'functionality', 'glossary_term', 'goal', 'hint', 'invariant', 'justification', 'limit', 'meta_requirement', 'noise', 'non_functional_behavior', 'obstacle', 'organization', 'outcome', 'parsed_requirement', 'person', 'product', 'requirement', 'responsibility', 'role', 'scenario', 'silence', 'solution', 'stakeholder', 'system_component', 'task', 'test_case', 'use_case', 'user_story'));`)
 
         // change the justification requirements to outcome requirements
         this.addSql(`
@@ -100,7 +99,7 @@ export class Migration20241101165305 extends Migration {
         `)
 
         // delete the generate_req_id function
-        this.addSql(`DROP FUNCTION generate_req_id(UUID, TEXT);`);
+        this.addSql(`DROP FUNCTION generate_req_id(UUID, TEXT);`)
 
         // Set the current Goal situation Obstacle to the new req_id G.2.0
         this.addSql(`
@@ -121,7 +120,7 @@ export class Migration20241101165305 extends Migration {
     }
 
     override async down(): Promise<void> {
-        this.addSql(`alter table "requirement" drop constraint if exists "requirement_req_type_check";`);
+        this.addSql(`alter table "requirement" drop constraint if exists "requirement_req_type_check";`)
 
         // Change the 'G.1.0' outcome to req_type = 'goal'
         this.addSql(`
@@ -131,10 +130,10 @@ export class Migration20241101165305 extends Migration {
             AND req_id = 'G.1.0';
         `)
 
-        this.addSql(`alter table "requirement" drop column "req_id";`);
+        this.addSql(`alter table "requirement" drop column "req_id";`)
 
-        this.addSql(`alter table "requirement" add column "goal_in_context" varchar(255) null;`);
-        this.addSql(`alter table "requirement" add constraint "requirement_req_type_check" check("req_type" in ('actor', 'assumption', 'behavior', 'component', 'constraint', 'effect', 'environment_component', 'example', 'functional_behavior', 'functionality', 'glossary_term', 'goal', 'hint', 'invariant', 'justification', 'limit', 'meta_requirement', 'noise', 'non_functional_behavior', 'obstacle', 'organization', 'outcome', 'parsed_requirement', 'person', 'product', 'requirement', 'responsibility', 'role', 'scenario', 'silence', 'solution', 'stakeholder', 'system_component', 'task', 'test_case', 'use_case', 'user_story'));`);
+        this.addSql(`alter table "requirement" add column "goal_in_context" varchar(255) null;`)
+        this.addSql(`alter table "requirement" add constraint "requirement_req_type_check" check("req_type" in ('actor', 'assumption', 'behavior', 'component', 'constraint', 'effect', 'environment_component', 'example', 'functional_behavior', 'functionality', 'glossary_term', 'goal', 'hint', 'invariant', 'justification', 'limit', 'meta_requirement', 'noise', 'non_functional_behavior', 'obstacle', 'organization', 'outcome', 'parsed_requirement', 'person', 'product', 'requirement', 'responsibility', 'role', 'scenario', 'silence', 'solution', 'stakeholder', 'system_component', 'task', 'test_case', 'use_case', 'user_story'));`)
 
         // change the outcome requirements to justification requirements
         this.addSql(`
@@ -144,5 +143,4 @@ export class Migration20241101165305 extends Migration {
                 AND name = 'G.1';
             `)
     }
-
 }

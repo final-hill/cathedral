@@ -1,5 +1,5 @@
-import { z } from "zod"
-import { Slack, PermissionInteractor, OrganizationInteractor } from "~/application"
+import { z } from 'zod'
+import { Slack, PermissionInteractor, OrganizationInteractor } from '~/application'
 import { SlackRepository, PermissionRepository, OrganizationRepository } from '~/server/data/repositories'
 import { SlackService } from '~/server/data/services'
 import handleDomainException from '~/server/utils/handleDomainException'
@@ -13,8 +13,8 @@ const querySchema = z.object({
     organizationId,
     organizationSlug
 }).refine((value) => {
-    return value.organizationId !== undefined || value.organizationSlug !== undefined;
-}, "At least one of organizationId or organizationSlug should be provided");
+    return value.organizationId !== undefined || value.organizationSlug !== undefined
+}, 'At least one of organizationId or organizationSlug should be provided')
 
 /**
  * Get Slack channel links for a solution
@@ -29,22 +29,22 @@ export default defineEventHandler(async (event) => {
     const permissionInteractor = new PermissionInteractor({
         userId: session.user.id,
         repository: new PermissionRepository({ em })
-    });
+    })
 
     // Get organization and solution for context
     const organizationInteractor = new OrganizationInteractor({
         repository: new OrganizationRepository({ em, organizationId, organizationSlug }),
         permissionInteractor,
-        appUserInteractor: null as any // Not needed for this operation
-    });
-    const organization = await organizationInteractor.getOrganization();
-    const solution = await organizationInteractor.getSolutionBySlug(slug);
+        appUserInteractor: null as never // Not needed for this operation
+    })
+    const organization = await organizationInteractor.getOrganization()
+    const solution = await organizationInteractor.getSolutionBySlug(slug)
     const slackChannelInteractor = new Slack.SlackChannelInteractor({
         repository: new SlackRepository({ em }),
         permissionInteractor,
         slackService: new SlackService(config.slackBotToken, config.slackSigningSecret)
-    });
+    })
 
     return await slackChannelInteractor.getChannelsForSolution(organization.id, solution.id)
-        .catch(handleDomainException);
-});
+        .catch(handleDomainException)
+})

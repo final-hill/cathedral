@@ -1,9 +1,9 @@
 // Description: This file handles the editing of a proposed requirement in the system. It validates the request parameters and body, checks permissions, and updates the requirement in the database.
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from "~/application"
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~/application'
 import { AppUserRepository, OrganizationRepository, PermissionRepository, RequirementRepository } from '~/server/data/repositories'
 import { Organization, ReqType, Solution } from '~/shared/domain'
-import { snakeCaseToPascalCase } from '~/shared/utils';
-import * as req from "#shared/domain/requirements";
+import { snakeCaseToPascalCase } from '~/shared/utils'
+import * as req from '#shared/domain/requirements'
 import { z } from 'zod'
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
@@ -14,10 +14,10 @@ const paramSchema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-    const { reqType, id } = await validateEventParams(event, paramSchema);
+    const { reqType, id } = await validateEventParams(event, paramSchema)
 
     if (reqType === ReqType.PARSED_REQUIREMENTS)
-        throw new Error("ReqType.PARSED_REQUIREMENTS is not allowed.");
+        throw new Error('ReqType.PARSED_REQUIREMENTS is not allowed.')
 
     const ReqPascal = snakeCaseToPascalCase(reqType) as keyof typeof req,
         ReqCons = req[ReqPascal] as typeof req.Requirement,
@@ -36,8 +36,8 @@ export default defineEventHandler(async (event) => {
             organizationId,
             organizationSlug
         }).refine((value) => {
-            return value.organizationId !== undefined || value.organizationSlug !== undefined;
-        }, "At least one of organizationId or organizationSlug should be provided"),
+            return value.organizationId !== undefined || value.organizationSlug !== undefined
+        }, 'At least one of organizationId or organizationSlug should be provided'),
         { solutionSlug, organizationId: orgId, organizationSlug: orgSlug, ...reqProps } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
         permissionInteractor = new PermissionInteractor({

@@ -1,9 +1,9 @@
-import { z } from 'zod';
-import { SlackService } from '~/server/data/services';
+import { z } from 'zod'
+import { SlackService } from '~/server/data/services'
 
 const querySchema = z.object({
     organizationSlug: z.string().min(1, 'Organization slug is required')
-});
+})
 
 /**
  * Slack OAuth authorization redirect endpoint
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
             clientId,
             redirectUri: `${slackOAuthOrigin}/api/slack/oauth/callback`,
             state
-        });
+        })
 
-    await sendRedirect(event, slackAuthUrl);
-});
+    await sendRedirect(event, slackAuthUrl)
+})

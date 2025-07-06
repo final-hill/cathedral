@@ -1,7 +1,7 @@
-import { z } from "zod";
-import { Requirement } from "./Requirement.js";
-import { dedent } from "../../../shared/utils/dedent.js";
-import { ReqType } from "./ReqType.js";
+import { z } from 'zod'
+import { Requirement } from './Requirement.js'
+import { dedent } from '../../../shared/utils/dedent.js'
+import { ReqType } from './ReqType.js'
 
 export const Effect = Requirement.extend({
     reqId: z.string().regex(/^E\.5\.\d+$/, 'Format must be E.5.#').optional()
@@ -11,4 +11,4 @@ export const Effect = Requirement.extend({
 }).describe(dedent(`
     An Effect is a property of the environment affected by the system.
     Example: "The running system will cause the temperature of the room to increase."
-`));
+`))

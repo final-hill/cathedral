@@ -1,8 +1,8 @@
-import { Requirement } from './Requirement.js';
-import { ConstraintCategory } from './ConstraintCategory.js';
-import { z } from 'zod';
-import { dedent } from '../../../shared/utils/dedent.js';
-import { ReqType } from './ReqType.js';
+import { Requirement } from './Requirement.js'
+import { ConstraintCategory } from './ConstraintCategory.js'
+import { z } from 'zod'
+import { dedent } from '../../../shared/utils/dedent.js'
+import { ReqType } from './ReqType.js'
 
 export const Constraint = Requirement.extend({
     category: z.nativeEnum(ConstraintCategory)
@@ -14,4 +14,4 @@ export const Constraint = Requirement.extend({
 }).describe(dedent(`
     Constraints are the limitations and obligations that
     the environment imposes on the project and system.
-`));
+`))

@@ -1,7 +1,7 @@
-import { z } from "zod";
-import { Functionality } from "./Functionality.js";
-import { dedent } from "../../../shared/utils/dedent.js";
-import { ReqType } from "./ReqType.js";
+import { z } from 'zod'
+import { Functionality } from './Functionality.js'
+import { dedent } from '../../../shared/utils/dedent.js'
+import { ReqType } from './ReqType.js'
 
 export const FunctionalBehavior = Functionality.extend({
     reqId: z.string().regex(/^S\.2\.\d+$/, 'Format must be S.2.#').optional()
@@ -12,4 +12,4 @@ export const FunctionalBehavior = Functionality.extend({
     A Functional Behavior specifies WHAT behavior the system should exhibit, i.e.,
     the results or effects of the system's operation.
     Generally expressed in the form "system must do <requirement>"
-`));
+`))

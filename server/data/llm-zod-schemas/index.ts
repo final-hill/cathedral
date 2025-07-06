@@ -1,11 +1,11 @@
-import { z } from "zod"
-import { ConstraintCategory, MoscowPriority, ReqType, StakeholderCategory, StakeholderSegmentation, UseCase } from "~/shared/domain"
+import { z } from 'zod'
+import { ConstraintCategory, MoscowPriority, ReqType, StakeholderCategory, StakeholderSegmentation, UseCase } from '~/shared/domain'
 
 export const llmRequirementSchema = z.object({
     reqType: z.nativeEnum(ReqType),
     name: z.string().describe('The name of the requirement'),
     description: z.string().describe('The statement describing the requirement'),
-    moscowPriority: z.nativeEnum(MoscowPriority).describe('The priority of the requirement, using the MoSCoW method',).or(z.null()),
+    moscowPriority: z.nativeEnum(MoscowPriority).describe('The priority of the requirement, using the MoSCoW method').or(z.null()),
     email: z.string().describe('The email of the person').or(z.null()),
     primaryActorName: z.string().describe(
         'The name of the primary actor associated with the Scenario: (Epic, User Story, or Use Case)'

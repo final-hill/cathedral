@@ -1,7 +1,7 @@
-import type { EntityManager } from '@mikro-orm/core';
-import { Seeder } from '@mikro-orm/seeder';
-import { AppUserModel } from '../server/data/models/application/index.js';
-import { SYSTEM_SLACK_USER_ID, SYSTEM_USER_ID } from '../shared/constants.js';
+import type { EntityManager } from '@mikro-orm/core'
+import { Seeder } from '@mikro-orm/seeder'
+import { AppUserModel } from '../server/data/models/application/index.js'
+import { SYSTEM_SLACK_USER_ID, SYSTEM_USER_ID } from '../shared/constants.js'
 
 export class AppUserSeeder extends Seeder {
     private async _createUser(

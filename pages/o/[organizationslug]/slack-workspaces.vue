@@ -4,19 +4,24 @@ definePageMeta({ name: 'Slack Workspaces', middleware: 'auth' })
 
 const route = useRoute(),
     params = route.params as { organizationslug: string },
-    organizationSlug = params.organizationslug;
+    organizationSlug = params.organizationslug
 </script>
 
 <template>
     <div class="space-y-6">
         <div>
-            <h1 class="text-2xl font-bold">Slack Workspace Integration</h1>
+            <h1 class="text-2xl font-bold">
+                Slack Workspace Integration
+            </h1>
             <p class="text-gray-600 dark:text-gray-400">
                 Manage Slack workspace connections for this organization. Connected workspaces allow users to interact
                 with Cathedral through slash commands and app mentions.
             </p>
         </div>
 
-        <SlackWorkspaceManager :organization-slug="organizationSlug" :show-management="true" />
+        <SlackWorkspaceManager
+            :organization-slug="organizationSlug"
+            :show-management="true"
+        />
     </div>
 </template>

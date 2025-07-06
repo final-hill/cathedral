@@ -1,4 +1,4 @@
-import type { Connection, EntityManager, IDatabaseDriver, MikroORM, PostgreSqlDriver, SqlEntityManager } from "@mikro-orm/postgresql"
+import type { Connection, EntityManager, IDatabaseDriver, MikroORM, PostgreSqlDriver, SqlEntityManager } from '@mikro-orm/postgresql'
 
 // see: /server/middleware/mikroorm.ts
 type EM = SqlEntityManager<PostgreSqlDriver> & EntityManager<IDatabaseDriver<Connection>>

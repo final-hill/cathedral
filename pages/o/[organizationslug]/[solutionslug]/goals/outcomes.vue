@@ -11,5 +11,9 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
     <h1>G.3 Outcomes</h1>
     <p> {{ Outcome.description }} </p>
 
-    <XWorkflow :organization-slug="organizationSlug" :req-type="ReqType.OUTCOME" :solution-slug="solutionSlug" />
+    <XWorkflow
+        :organization-slug="organizationSlug"
+        :req-type="ReqType.OUTCOME"
+        :solution-slug="solutionSlug"
+    />
 </template>

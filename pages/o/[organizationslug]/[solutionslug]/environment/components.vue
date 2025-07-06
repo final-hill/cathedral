@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { EnvironmentComponent, ReqType } from '#shared/domain';
+import { EnvironmentComponent, ReqType } from '#shared/domain'
 
 useHead({ title: 'Components' })
 definePageMeta({ name: 'Environment Components', middleware: 'auth' })
@@ -11,6 +11,9 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
     <h1>E.2 Environment Components</h1>
     <p>{{ EnvironmentComponent.description }}</p>
 
-    <XWorkflow :organization-slug="organizationSlug" :req-type="ReqType.ENVIRONMENT_COMPONENT"
-        :solution-slug="solutionSlug" />
+    <XWorkflow
+        :organization-slug="organizationSlug"
+        :req-type="ReqType.ENVIRONMENT_COMPONENT"
+        :solution-slug="solutionSlug"
+    />
 </template>

@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { z } from 'zod'
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~/application'
 import { AppUserRepository, OrganizationRepository, PermissionRepository } from '~/server/data/repositories'
 import handleDomainException from '~/server/utils/handleDomainException'
@@ -14,8 +14,8 @@ const bodySchema = z.object({
     organizationId,
     organizationSlug
 }).refine((value) => {
-    return value.organizationId !== undefined || value.organizationSlug !== undefined;
-}, "At least one of organizationId or organizationSlug should be provided");
+    return value.organizationId !== undefined || value.organizationSlug !== undefined
+}, 'At least one of organizationId or organizationSlug should be provided')
 
 /**
  * Delete a solution by slug.

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Functionality, ReqType } from '#shared/domain';
+import { Functionality, ReqType } from '#shared/domain'
 
 useHead({ title: 'Functionality' })
 definePageMeta({ name: 'Functionality', middleware: 'auth' })
@@ -18,12 +18,18 @@ const tabs = [
 
     <UTabs :items="tabs">
         <template #functional-behaviors>
-            <XWorkflow :organization-slug="organizationSlug" :req-type="ReqType.FUNCTIONAL_BEHAVIOR"
-                :solution-slug="solutionSlug" />
+            <XWorkflow
+                :organization-slug="organizationSlug"
+                :req-type="ReqType.FUNCTIONAL_BEHAVIOR"
+                :solution-slug="solutionSlug"
+            />
         </template>
         <template #non-functional-behaviors>
-            <XWorkflow :organization-slug="organizationSlug" :req-type="ReqType.NON_FUNCTIONAL_BEHAVIOR"
-                :solution-slug="solutionSlug" />
+            <XWorkflow
+                :organization-slug="organizationSlug"
+                :req-type="ReqType.NON_FUNCTIONAL_BEHAVIOR"
+                :solution-slug="solutionSlug"
+            />
         </template>
     </UTabs>
 </template>

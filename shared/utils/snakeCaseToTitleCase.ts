@@ -5,6 +5,6 @@
  */
 const snakeCaseToTitleCase = (str: string) =>
     str.replace(/_/g, ' ')
-        .replace(/\b\w/g, char => char.toUpperCase());
+        .replace(/\b\w/g, char => char.toUpperCase())
 
 export { snakeCaseToTitleCase }

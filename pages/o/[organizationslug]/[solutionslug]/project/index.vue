@@ -8,8 +8,13 @@ const { solutionslug, organizationslug } = useRoute('Project').params,
         { name: 'Requirements Process and Report' as const, icon: 'i-lucide-file-text', label: 'Requirements Process and Report', reqId: 'P.7' }
     ]
 </script>
+
 <template>
-    <PegsLanding :cards="links" :solutionslug="solutionslug" :organizationslug="organizationslug">
+    <PegsLanding
+        :cards="links"
+        :solutionslug="solutionslug"
+        :organizationslug="organizationslug"
+    >
         <template #header>
             <h1>
                 Project

@@ -11,5 +11,9 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
     <h1>G.6 Limitations </h1>
     <p> {{ Limit.description }} </p>
 
-    <XWorkflow :organization-slug="organizationSlug" :req-type="ReqType.LIMIT" :solution-slug="solutionSlug" />
+    <XWorkflow
+        :organization-slug="organizationSlug"
+        :req-type="ReqType.LIMIT"
+        :solution-slug="solutionSlug"
+    />
 </template>

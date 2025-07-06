@@ -1,7 +1,7 @@
-import { z } from "zod";
-import { Goal } from "./Goal.js";
-import { dedent } from "../../../shared/utils/dedent.js";
-import { ReqType } from "./ReqType.js";
+import { z } from 'zod'
+import { Goal } from './Goal.js'
+import { dedent } from '../../../shared/utils/dedent.js'
+import { ReqType } from './ReqType.js'
 
 export const Outcome = Goal.extend({
     reqId: z.string().regex(/^G\.3\.\d+$/, 'Format must be G.3.#').optional()
@@ -12,4 +12,4 @@ export const Outcome = Goal.extend({
     An Outcome is the expected benefit, capability, or process
     of the system that will be achieved by the associated project.
     It's the high-level goal that the project is trying to achieve.
-`));
+`))
