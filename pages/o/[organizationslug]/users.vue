@@ -224,55 +224,53 @@ const onAddModalSubmit = async () => {
 </script>
 
 <template>
-    <div>
-        <h1>Application Users</h1>
+    <h1>Application Users</h1>
 
-        <p> {{ AppUser.description }} </p>
+    <p> {{ AppUser.description }} </p>
 
-        <section>
-            <UButton
-                label="Add User"
-                color="success"
-                size="xl"
-                @click="openAddModal"
-            />
-        </section>
-
-        <UTable
-            v-model:column-pinning="columnPinning"
-            sticky
-            :data="users || []"
-            :columns="userColumns"
-            :loading="status === 'pending'"
-            :empty-state="{ icon: 'i-lucide-database', label: 'No items.' }"
+    <section>
+        <UButton
+            label="Add User"
+            color="success"
+            size="xl"
+            @click="openAddModal"
         />
+    </section>
 
-        <UModal
-            v-model:open="addModalOpenState"
-            title="Add User"
-        >
-            <template #body>
-                <XForm
-                    :state="addModalItem as any"
-                    :schema="createSchema"
-                    :on-submit="onAddModalSubmit"
-                    :on-cancel="closeAddModal"
-                />
-            </template>
-        </UModal>
+    <UTable
+        v-model:column-pinning="columnPinning"
+        sticky
+        :data="users || []"
+        :columns="userColumns"
+        :loading="status === 'pending'"
+        :empty-state="{ icon: 'i-lucide-database', label: 'No items.' }"
+    />
 
-        <UModal
-            v-model:open="editModalOpenState"
-            title="Edit User"
-        >
-            <template #body>
-                <XForm
-                    :state="editModalItem as any"
-                    :schema="editSchema"
-                    :on-submit="updateUser"
-                    :on-cancel="closeEdit"
-                />
-            </template>
-        </UModal>
-    </div>
+    <UModal
+        v-model:open="addModalOpenState"
+        title="Add User"
+    >
+        <template #body>
+            <XForm
+                :state="addModalItem as any"
+                :schema="createSchema"
+                :on-submit="onAddModalSubmit"
+                :on-cancel="closeAddModal"
+            />
+        </template>
+    </UModal>
+
+    <UModal
+        v-model:open="editModalOpenState"
+        title="Edit User"
+    >
+        <template #body>
+            <XForm
+                :state="editModalItem as any"
+                :schema="editSchema"
+                :on-submit="updateUser"
+                :on-cancel="closeEdit"
+            />
+        </template>
+    </UModal>
 </template>

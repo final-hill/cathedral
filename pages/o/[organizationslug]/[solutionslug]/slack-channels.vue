@@ -9,17 +9,16 @@ const organizationSlug = params.organizationslug
 </script>
 
 <template>
-    <div>
-        <h1>Slack Channel Links</h1>
-        <p>
-            Manage Slack channels linked to this solution. Users can mention @cathedral in these channels to create
-            requirements automatically.
-        </p>
+    <h1>Slack Channel Links</h1>
 
-        <SlackChannelManager
-            :organization-slug="organizationSlug"
-            :solution-slug="solutionSlug"
-            :show-management="true"
-        />
-    </div>
+    <p>
+        Manage Slack channels linked to this solution. Users can mention @cathedral in these channels to create
+        requirements automatically.
+    </p>
+
+    <SlackChannelManager
+        :organization-slug="organizationSlug"
+        :solution-slug="solutionSlug"
+        :show-management="true"
+    />
 </template>

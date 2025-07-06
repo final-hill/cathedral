@@ -25,22 +25,20 @@ $eventBus.$on('page-error', showError)
 </script>
 
 <template>
-    <div>
-        <header>
-            <TopNavigation />
-        </header>
-        <UContainer
-            id="content"
-            as="main"
-            class="flex flex-col p-8 overflow-auto leading-6 space-y-8"
-        >
-            <slot @page-error="showError" />
-        </UContainer>
-        <footer>
-            &copy; {{ new Date().getFullYear() }} Final Hill. All rights reserved. |
-            Warning: This is Pre-release software. Use at your own risk. Data may be lost.
-        </footer>
-    </div>
+    <header>
+        <TopNavigation />
+    </header>
+    <UContainer
+        id="content"
+        as="main"
+        class="flex flex-col p-8 overflow-auto leading-6 space-y-8"
+    >
+        <slot @page-error="showError" />
+    </UContainer>
+    <footer>
+        &copy; {{ new Date().getFullYear() }} Final Hill. All rights reserved. |
+        Warning: This is Pre-release software. Use at your own risk. Data may be lost.
+    </footer>
 </template>
 
 <style>
@@ -60,11 +58,11 @@ $eventBus.$on('page-error', showError)
         text-decoration: underline;
     }
 
-    &>header {
+    & > header {
         grid-area: header;
     }
 
-    &>#content {
+    & > #content {
         grid-area: content;
 
         & h1 {
@@ -80,7 +78,7 @@ $eventBus.$on('page-error', showError)
         }
     }
 
-    &>footer {
+    & > footer {
         grid-area: footer;
         padding: 1em;
         color: var(--ui-error);

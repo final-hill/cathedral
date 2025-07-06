@@ -31,22 +31,20 @@ const reqTypes = new Set(
 </script>
 
 <template>
-    <div>
-        <h1>{{ parsedReq.name }} details</h1>
+    <h1>{{ parsedReq.name }} details</h1>
 
-        <template
-            v-for="reqType of reqTypes"
-            :key="reqType"
-        >
-            <h2>{{ snakeCaseToTitleCase(reqType) }}</h2>
+    <template
+        v-for="reqType of reqTypes"
+        :key="reqType"
+    >
+        <h2>{{ snakeCaseToTitleCase(reqType) }}</h2>
 
-            <XWorkflow
-                :organization-slug="organizationSlug"
-                :req-type="reqType"
-                :solution-slug="solutionSlug"
-                :parsed-req-parent-id="id"
-                :disable-new-requirement="true"
-            />
-        </template>
-    </div>
+        <XWorkflow
+            :organization-slug="organizationSlug"
+            :req-type="reqType"
+            :solution-slug="solutionSlug"
+            :parsed-req-parent-id="id"
+            :disable-new-requirement="true"
+        />
+    </template>
 </template>

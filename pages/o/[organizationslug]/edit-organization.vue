@@ -55,14 +55,12 @@ watch(() => formState.name, (newName) => {
 </script>
 
 <template>
-    <div>
-        <h1>Edit Organization</h1>
+    <h1>Edit Organization</h1>
 
-        <XForm
-            :schema="formSchema"
-            :state="formState"
-            :on-submit="updateOrganization"
-            :on-cancel="cancel"
-        />
-    </div>
+    <XForm
+        :schema="formSchema"
+        :state="formState"
+        :on-submit="updateOrganization"
+        :on-cancel="cancel"
+    />
 </template>

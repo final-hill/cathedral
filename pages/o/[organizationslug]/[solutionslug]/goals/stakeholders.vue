@@ -51,26 +51,24 @@ renderChart()
 </script>
 
 <template>
-    <div>
-        <h1>G.7 Stakeholders</h1>
-        <p> {{ Stakeholder.description }} </p>
+    <h1>G.7 Stakeholders</h1>
+    <p> {{ Stakeholder.description }} </p>
 
-        <UTabs
-            :items="tabs"
-            @update:open="renderChart"
-        >
-            <template #stakeholders>
-                <XWorkflow
-                    :organization-slug="organizationSlug"
-                    :req-type="ReqType.STAKEHOLDER"
-                    :solution-slug="solutionSlug"
-                    @workflow-active-items="handleActiveItems"
-                />
-            </template>
-            <template #stakeholder-map>
-                <MermaidDiagram :value="clientMap" />
-                <MermaidDiagram :value="vendorMap" />
-            </template>
-        </UTabs>
-    </div>
+    <UTabs
+        :items="tabs"
+        @update:open="renderChart"
+    >
+        <template #stakeholders>
+            <XWorkflow
+                :organization-slug="organizationSlug"
+                :req-type="ReqType.STAKEHOLDER"
+                :solution-slug="solutionSlug"
+                @workflow-active-items="handleActiveItems"
+            />
+        </template>
+        <template #stakeholder-map>
+            <MermaidDiagram :value="clientMap" />
+            <MermaidDiagram :value="vendorMap" />
+        </template>
+    </UTabs>
 </template>

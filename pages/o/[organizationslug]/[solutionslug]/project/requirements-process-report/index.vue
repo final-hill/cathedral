@@ -9,17 +9,15 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = route
 </script>
 
 <template>
-    <div>
-        <h1>P.7 Requirements Process and Report</h1>
+    <h1>P.7 Requirements Process and Report</h1>
 
-        <p>Manage and review the requirements process and reports.</p>
+    <p>Manage and review the requirements process and reports.</p>
 
-        <h2>Free-Form Requirements</h2>
+    <h2>Free-Form Requirements</h2>
 
-        <XWorkflow
-            :organization-slug="organizationSlug"
-            :req-type="ReqType.PARSED_REQUIREMENTS"
-            :solution-slug="solutionSlug"
-        />
-    </div>
+    <XWorkflow
+        :organization-slug="organizationSlug"
+        :req-type="ReqType.PARSED_REQUIREMENTS"
+        :solution-slug="solutionSlug"
+    />
 </template>

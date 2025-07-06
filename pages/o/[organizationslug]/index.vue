@@ -54,125 +54,123 @@ const handleSolutionEdit = (solution: z.infer<typeof Solution>) => {
 </script>
 
 <template>
-    <div>
-        <h1> {{ organization!.name }} </h1>
-        <p> {{ organization!.description }} </p>
+    <h1> {{ organization!.name }} </h1>
+    <p> {{ organization!.description }} </p>
 
-        <section class="flex space-x-4 justify-center">
+    <section class="flex space-x-4 justify-center">
+        <UButton
+            icon="i-lucide-pen"
+            color="primary"
+            label="Edit Organization"
+            @click="handleOrganizationEdit(organization!)"
+        />
+        <UButton
+            icon="i-lucide-users"
+            color="neutral"
+            label="Manage Users"
+            @click="handleOrganizationUsers(organization!)"
+        />
+        <UModal
+            v-model:open="organizationDeleteModalOpenState"
+            :dismissable="false"
+            title="Delete Organization"
+        >
             <UButton
-                icon="i-lucide-pen"
-                color="primary"
-                label="Edit Organization"
-                @click="handleOrganizationEdit(organization!)"
+                icon="i-lucide-trash-2"
+                color="error"
+                label="Delete Organization"
             />
-            <UButton
-                icon="i-lucide-users"
-                color="neutral"
-                label="Manage Users"
-                @click="handleOrganizationUsers(organization!)"
-            />
-            <UModal
-                v-model:open="organizationDeleteModalOpenState"
-                :dismissable="false"
-                title="Delete Organization"
-            >
+            <template #content>
+                Are you sure you want to delete {{ organization!.name }}? This will also delete all associated
+                solutions.
+            </template>
+            <template #footer>
                 <UButton
-                    icon="i-lucide-trash-2"
-                    color="error"
-                    label="Delete Organization"
+                    label="Cancel"
+                    color="neutral"
+                    @click="organizationDeleteModalOpenState = false"
                 />
-                <template #content>
-                    Are you sure you want to delete {{ organization!.name }}? This will also delete all associated
-                    solutions.
-                </template>
-                <template #footer>
+                <UButton
+                    label="Delete"
+                    color="error"
+                    @click="handleOrganizationDelete(organization!)"
+                />
+            </template>
+        </UModal>
+    </section>
+
+    <section class="mt-4 text-center">
+        <SlackWorkspaceManager :organization-slug="organizationSlug" />
+    </section>
+
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <UCard variant="outline">
+            <template #header>
+                <NuxtLink
+                    class="font-bold text-xl"
+                    :to="{ name: 'New Solution', params: { organizationslug: organizationSlug } }"
+                >
+                    <p>New Solution</p>
+                    <small> Create a new Solution </small>
+                </NuxtLink>
+            </template>
+            <template #footer>
+                <p>&nbsp;</p>
+            </template>
+        </UCard>
+
+        <UCard
+            v-for="solution in solutions"
+            :key="solution.slug"
+            variant="subtle"
+        >
+            <template #header>
+                <NuxtLink
+                    class="font-bold text-xl"
+                    :to="{ name: 'Solution', params: { organizationslug: organizationSlug, solutionslug: solution.slug } }"
+                >
+                    <p> {{ solution.name }} </p>
+                    <small> {{ solution.description }} </small>
+                </NuxtLink>
+            </template>
+            <template #footer>
+                <div class="flex gap-2">
                     <UButton
-                        label="Cancel"
-                        color="neutral"
-                        @click="organizationDeleteModalOpenState = false"
+                        icon="i-lucide-pen"
+                        color="primary"
+                        title="Edit Solution"
+                        @click="handleSolutionEdit(solution)"
                     />
-                    <UButton
-                        label="Delete"
-                        color="error"
-                        @click="handleOrganizationDelete(organization!)"
-                    />
-                </template>
-            </UModal>
-        </section>
-
-        <section class="mt-4 text-center">
-            <SlackWorkspaceManager :organization-slug="organizationSlug" />
-        </section>
-
-        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <UCard variant="outline">
-                <template #header>
-                    <NuxtLink
-                        class="font-bold text-xl"
-                        :to="{ name: 'New Solution', params: { organizationslug: organizationSlug } }"
+                    <UModal
+                        v-model:open="solutionDeleteModalOpenState"
+                        :dismissable="false"
+                        title="Delete Solution"
                     >
-                        <p>New Solution</p>
-                        <small> Create a new Solution </small>
-                    </NuxtLink>
-                </template>
-                <template #footer>
-                    <p>&nbsp;</p>
-                </template>
-            </UCard>
-
-            <UCard
-                v-for="solution in solutions"
-                :key="solution.slug"
-                variant="subtle"
-            >
-                <template #header>
-                    <NuxtLink
-                        class="font-bold text-xl"
-                        :to="{ name: 'Solution', params: { organizationslug: organizationSlug, solutionslug: solution.slug } }"
-                    >
-                        <p> {{ solution.name }} </p>
-                        <small> {{ solution.description }} </small>
-                    </NuxtLink>
-                </template>
-                <template #footer>
-                    <div class="flex gap-2">
                         <UButton
-                            icon="i-lucide-pen"
-                            color="primary"
-                            title="Edit Solution"
-                            @click="handleSolutionEdit(solution)"
-                        />
-                        <UModal
-                            v-model:open="solutionDeleteModalOpenState"
-                            :dismissable="false"
+                            icon="i-lucide-trash-2"
+                            color="error"
                             title="Delete Solution"
-                        >
+                        />
+                        <template #content>
+                            Are you sure you want to delete {{ solution.name }}? This will also delete all
+                            associated
+                            requirements.
+                        </template>
+                        <template #footer>
                             <UButton
-                                icon="i-lucide-trash-2"
-                                color="error"
-                                title="Delete Solution"
+                                label="Cancel"
+                                color="neutral"
+                                @click="solutionDeleteModalOpenState = false"
                             />
-                            <template #content>
-                                Are you sure you want to delete {{ solution.name }}? This will also delete all
-                                associated
-                                requirements.
-                            </template>
-                            <template #footer>
-                                <UButton
-                                    label="Cancel"
-                                    color="neutral"
-                                    @click="solutionDeleteModalOpenState = false"
-                                />
-                                <UButton
-                                    label="Delete"
-                                    color="error"
-                                    @click="handleSolutionDelete(solution)"
-                                />
-                            </template>
-                        </UModal>
-                    </div>
-                </template>
-            </UCard>
-        </section>
-    </div>
+                            <UButton
+                                label="Delete"
+                                color="error"
+                                @click="handleSolutionDelete(solution)"
+                            />
+                        </template>
+                    </UModal>
+                </div>
+            </template>
+        </UCard>
+    </section>
 </template>

@@ -13,25 +13,23 @@ const tabs = [
 </script>
 
 <template>
-    <div>
-        <h1>S.2 Functionality</h1>
-        <p>{{ Functionality.description }}</p>
+    <h1>S.2 Functionality</h1>
+    <p>{{ Functionality.description }}</p>
 
-        <UTabs :items="tabs">
-            <template #functional-behaviors>
-                <XWorkflow
-                    :organization-slug="organizationSlug"
-                    :req-type="ReqType.FUNCTIONAL_BEHAVIOR"
-                    :solution-slug="solutionSlug"
-                />
-            </template>
-            <template #non-functional-behaviors>
-                <XWorkflow
-                    :organization-slug="organizationSlug"
-                    :req-type="ReqType.NON_FUNCTIONAL_BEHAVIOR"
-                    :solution-slug="solutionSlug"
-                />
-            </template>
-        </UTabs>
-    </div>
+    <UTabs :items="tabs">
+        <template #functional-behaviors>
+            <XWorkflow
+                :organization-slug="organizationSlug"
+                :req-type="ReqType.FUNCTIONAL_BEHAVIOR"
+                :solution-slug="solutionSlug"
+            />
+        </template>
+        <template #non-functional-behaviors>
+            <XWorkflow
+                :organization-slug="organizationSlug"
+                :req-type="ReqType.NON_FUNCTIONAL_BEHAVIOR"
+                :solution-slug="solutionSlug"
+            />
+        </template>
+    </UTabs>
 </template>

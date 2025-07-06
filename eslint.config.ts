@@ -8,4 +8,8 @@ export default createConfigForNuxt({
             commaDangle: 'never' // Disable trailing commas - commas are separators, not terminators
         }
     }
+}).append({
+    rules: {
+        'vue/no-multiple-template-root': 'off'
+    }
 })

@@ -13,36 +13,34 @@ const tabItems = ref([
 </script>
 
 <template>
-    <div>
-        <h1>S.4 Scenarios</h1>
+    <h1>S.4 Scenarios</h1>
 
-        <p>{{ Scenario.description }}</p>
+    <p>{{ Scenario.description }}</p>
 
-        <UTabs :items="tabItems">
-            <template #user-stories>
-                <p class="whitespace-pre-wrap mb-8">
-                    {{ UserStory.description }}
-                </p>
+    <UTabs :items="tabItems">
+        <template #user-stories>
+            <p class="whitespace-pre-wrap mb-8">
+                {{ UserStory.description }}
+            </p>
 
-                <XWorkflow
-                    :organization-slug="organizationSlug"
-                    :req-type="ReqType.USER_STORY"
-                    :solution-slug="solutionSlug"
-                />
-            </template>
-            <template #use-cases>
-                <p class="m-8">
-                    {{ UseCase.description }}
-                </p>
+            <XWorkflow
+                :organization-slug="organizationSlug"
+                :req-type="ReqType.USER_STORY"
+                :solution-slug="solutionSlug"
+            />
+        </template>
+        <template #use-cases>
+            <p class="m-8">
+                {{ UseCase.description }}
+            </p>
 
-                <UAlert
-                    color="warning"
-                    title="This section is currently disabled until Use Case Trigger events can be defined"
-                />
+            <UAlert
+                color="warning"
+                title="This section is currently disabled until Use Case Trigger events can be defined"
+            />
 
-                <!-- <XWorkflow :organization-slug="organizationSlug" :req-type="ReqType.USE_CASE"
-                    :solution-slug="solutionSlug" /> -->
-            </template>
-        </UTabs>
-    </div>
+            <!-- <XWorkflow :organization-slug="organizationSlug" :req-type="ReqType.USE_CASE"
+                :solution-slug="solutionSlug" /> -->
+        </template>
+    </UTabs>
 </template>

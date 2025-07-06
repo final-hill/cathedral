@@ -8,14 +8,12 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
 </script>
 
 <template>
-    <div>
-        <h1>E.4 Assumptions</h1>
-        <p>{{ Assumption.description }}</p>
+    <h1>E.4 Assumptions</h1>
+    <p>{{ Assumption.description }}</p>
 
-        <XWorkflow
-            :organization-slug="organizationSlug"
-            :req-type="ReqType.ASSUMPTION"
-            :solution-slug="solutionSlug"
-        />
-    </div>
+    <XWorkflow
+        :organization-slug="organizationSlug"
+        :req-type="ReqType.ASSUMPTION"
+        :solution-slug="solutionSlug"
+    />
 </template>
