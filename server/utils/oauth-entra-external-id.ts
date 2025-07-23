@@ -152,11 +152,15 @@ export function defineOAuthEntraExternalIDEventHandler({
                 body: tokenBody.toString()
             })
         } catch (error) {
-            console.error('Token exchange error:', error instanceof Error ? error.message : 'Unknown error')
+            if (process.env.NODE_ENV === 'production') {
+                console.error('Token exchange error occurred');
+            } else {
+                console.error('Token exchange error:', error instanceof Error ? error.message : 'Unknown error');
+            }
             const tokenExchangeError = createError({
                 statusCode: 500,
                 message: 'Token exchange failed',
-                data: { error: 'token_exchange_failed', details: error }
+                data: { error: 'token_exchange_failed', details: process.env.NODE_ENV === 'production' ? undefined : error }
             })
             if (!onError) throw tokenExchangeError
             return onError(event, tokenExchangeError)
