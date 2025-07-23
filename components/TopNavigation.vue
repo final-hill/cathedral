@@ -2,11 +2,7 @@
 import { deSlugify } from '#shared/utils'
 import type { DropdownMenuItem } from '@nuxt/ui'
 
-const { loggedIn, user, session: _session, fetch: _fetch, clear, openInPopup } = useUserSession(),
-    { register: _register, authenticate: _authenticate } = useWebAuthn({
-        registerEndpoint: '/api/webauthn/register',
-        authenticateEndpoint: '/api/webauthn/authenticate'
-    }),
+const { loggedIn, user, session: _session, fetch: _fetch, clear } = useUserSession(),
     router = useRouter()
 
 const getCrumbs = () => {
@@ -30,6 +26,11 @@ router.afterEach(() => {
     crumbs.value = getCrumbs()
 })
 
+const handleSignOut = async () => {
+    await clear()
+    await navigateTo('/auth/login', { external: true })
+}
+
 const avatarFallback = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1em\' height=\'1em\' viewBox=\'0 0 24 24\'%3E%3Cg fill=\'none\' stroke=\'currentColor\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\'%3E%3Cpath d=\'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\'/%3E%3Ccircle cx=\'12\' cy=\'7\' r=\'4\'/%3E%3C/g%3E%3C/svg%3E'
 
 const menuItems = ref<DropdownMenuItem[][]>([
@@ -41,28 +42,48 @@ const menuItems = ref<DropdownMenuItem[][]>([
         type: 'label',
         label: user.value?.email ?? 'anonymous@example.com'
     }], [{
-        label: loggedIn ? 'Sign Out' : 'Sign In',
-        icon: loggedIn ? 'i-lucide-user-round-x' : 'i-lucide-user-check',
-        onSelect: async () => loggedIn ? await clear() : openInPopup('/auth/webauthn')
+        label: 'Sign Out',
+        icon: 'i-lucide-user-round-x',
+        onSelect: async () => await handleSignOut()
     }]
 ])
 
-watch(user, () => {
-    menuItems.value = [
-        [{
-            type: 'label',
-            label: user.value?.name ?? 'Anonymous',
-            avatar: { src: avatarFallback }
-        }], [{
-            type: 'label',
-            label: user.value?.email ?? 'anonymous@example.com'
-        }], [{
-            label: loggedIn ? 'Sign Out' : 'Sign In',
-            icon: loggedIn ? 'i-lucide-user-round-x' : 'i-lucide-user-check',
-            onSelect: async () => loggedIn ? await clear() : openInPopup('/auth/webauthn')
-        }]
-    ]
-})
+const updateMenuItems = () => {
+    if (loggedIn.value) {
+        menuItems.value = [
+            [{
+                type: 'label',
+                label: user.value?.name ?? 'Anonymous',
+                avatar: { src: avatarFallback }
+            }], [{
+                type: 'label',
+                label: user.value?.email ?? 'anonymous@example.com'
+            }], [{
+                label: 'Sign Out',
+                icon: 'i-lucide-user-round-x',
+                onSelect: async () => await handleSignOut()
+            }]
+        ]
+    } else {
+        menuItems.value = [
+            [{
+                type: 'label',
+                label: 'Anonymous',
+                avatar: { src: avatarFallback }
+            }], [{
+                type: 'label',
+                label: 'anonymous@example.com'
+            }], [{
+                label: 'Sign In',
+                icon: 'i-lucide-user-check',
+                onSelect: async () => await navigateTo('/auth/login', { external: true })
+            }]
+        ]
+    }
+}
+
+watch(user, updateMenuItems, { immediate: true })
+watch(loggedIn, updateMenuItems)
 </script>
 
 <template>

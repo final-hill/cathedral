@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { PermissionInteractor, OrganizationInteractor, Slack } from '~/application'
-import { PermissionRepository, OrganizationRepository, SlackWorkspaceRepository } from '~/server/data/repositories'
+import { OrganizationRepository, SlackWorkspaceRepository } from '~/server/data/repositories'
+import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 import handleDomainException from '~/server/utils/handleDomainException'
 
 const querySchema = z.object({
@@ -15,8 +16,8 @@ export default defineEventHandler(async (event) => {
         session = await requireUserSession(event),
         em = event.context.em,
         permissionInteractor = new PermissionInteractor({
-            userId: session.user.id,
-            repository: new PermissionRepository({ em })
+            session,
+            groupService: createEntraGroupService()
         }),
         organizationInteractor = new OrganizationInteractor({
             repository: new OrganizationRepository({ em, organizationSlug }),

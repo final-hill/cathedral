@@ -1,9 +1,10 @@
 import { z } from 'zod'
 import { AppUser, AppUserOrganizationRole, Organization } from '#shared/domain'
 import { OrganizationCollectionInteractor, PermissionInteractor } from '~/application'
-import { AppUserRepository, OrganizationCollectionRepository, PermissionRepository } from '~/server/data/repositories'
+import { OrganizationCollectionRepository } from '~/server/data/repositories'
 import { AppUserInteractor } from '~/application/AppUserInteractor'
 import handleDomainException from '~/server/utils/handleDomainException'
+import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
@@ -23,16 +24,17 @@ export default defineEventHandler(async (event) => {
     const { email, organizationId, organizationSlug, role } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
         permissionInteractor = new PermissionInteractor({
-            userId: session.user.id,
-            repository: new PermissionRepository({ em: event.context.em })
+            session,
+            groupService: createEntraGroupService()
         }),
         appUserInteractor = new AppUserInteractor({
             permissionInteractor,
-            repository: new AppUserRepository({ em: event.context.em })
+            groupService: createEntraGroupService()
         }),
         organizationInteractor = new OrganizationCollectionInteractor({
             permissionInteractor,
-            repository: new OrganizationCollectionRepository({ em: event.context.em })
+            repository: new OrganizationCollectionRepository({ em: event.context.em }),
+            entraGroupService: createEntraGroupService()
         })
 
     try {

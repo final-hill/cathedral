@@ -5,7 +5,7 @@ export default defineNuxtConfig({
     // https://vite-pwa-org.netlify.app/frameworks/nuxt
     // https://icones.js.org/collection/lucide
     // https://nuxt.com/modules/auth-utils
-    modules: ['@nuxt/ui', '@vite-pwa/nuxt', 'nuxt-security', 'nuxt-auth-utils', '@nuxt/test-utils/module', '@nuxt/eslint'],
+    modules: ['@nuxt/ui', '@vite-pwa/nuxt', 'nuxt-security', '@nuxt/test-utils/module', '@nuxt/eslint', 'nuxt-auth-utils'],
     // SSR is disabled because this application is designed as a Single Page Application (SPA),
     // and server-side rendering is not required for its functionality.
     ssr: false,
@@ -38,6 +38,24 @@ export default defineNuxtConfig({
         azureOpenaiApiVersion: '',
         azureOpenaiEndpoint: '',
         azureOpenaiDeploymentId: '',
+
+        // System user configuration (Entra External ID Object IDs)
+        systemUserId: '',
+        systemUserName: '',
+        systemUserEmail: '',
+        systemSlackUserId: '',
+        systemSlackUserName: '',
+        systemSlackUserEmail: '',
+
+        // OAuth configuration for Entra External ID
+        oauth: {
+            microsoft: {
+                clientId: '',
+                clientSecret: '',
+                tenant: '',
+                redirectURL: ''
+            }
+        },
 
         // The public keys which are available both client-side and server-side
         // These values are overwritten by the associated NUXT_PUBLIC_ environment variables in the .env file
@@ -125,9 +143,6 @@ export default defineNuxtConfig({
     },
     typescript: {
         typeCheck: true
-    },
-    auth: {
-        webAuthn: true
     },
     primevue: {},
     pwa: {},

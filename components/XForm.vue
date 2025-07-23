@@ -24,7 +24,8 @@ const emit = defineEmits<{
 const form = useTemplateRef('form'),
     localState = reactive({ ...props.state }) as z.output<F>,
     backupState = reactive(Object.create(props.state)),
-    toast = useToast()
+    toast = useToast(),
+    isSubmitting = ref(false)
 
 // Watch for changes in localState and emit updates
 watch(localState, (newState) => {
@@ -37,12 +38,20 @@ watch(() => props.state, (newState) => {
 }, { deep: true, immediate: true })
 
 const onSubmit = async ({ data }: FormSubmitEvent<z.output<F>>) => {
-    await props.onSubmit(data)
-    toast.add({
-        icon: 'i-lucide-check',
-        title: 'Success',
-        description: 'Data saved successfully'
-    })
+    isSubmitting.value = true
+    try {
+        await props.onSubmit(data)
+        toast.add({
+            icon: 'i-lucide-check',
+            title: 'Success',
+            description: 'Data saved successfully'
+        })
+    } catch {
+        // Error handling is done by the parent component
+        // The toast error will be shown by the error handler
+    } finally {
+        isSubmitting.value = false
+    }
 }
 
 const onCancel = () => {
@@ -193,6 +202,12 @@ const autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field
             </UFormField>
         </template>
 
+        <UProgress
+            v-if="isSubmitting"
+            animation="carousel"
+            class="w-full"
+        />
+
         <div
             v-if="!props.disabled"
             class="flex gap-2"
@@ -201,11 +216,14 @@ const autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field
                 label="Submit"
                 type="submit"
                 color="primary"
+                :loading="isSubmitting"
+                :disabled="isSubmitting"
             />
             <UButton
                 label="Cancel"
                 type="reset"
                 color="neutral"
+                :disabled="isSubmitting"
                 @click="onCancel"
             />
         </div>

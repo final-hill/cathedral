@@ -1,8 +1,25 @@
-import { defineVitestConfig } from '@nuxt/test-utils/config'
-import type { UserConfig } from 'vitest/node'
+import { defineConfig } from 'vitest/config'
+import { resolve } from 'path'
 
-export default defineVitestConfig({
+export default defineConfig({
     test: {
-        environment: 'nuxt'
+        environment: 'node',
+        globals: true,
+        include: [
+            '**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
+        ],
+        exclude: [
+            '**/node_modules/**',
+            '**/dist/**',
+            '**/.{idea,git,cache,output,temp}/**',
+            '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*'
+        ]
+    },
+    resolve: {
+        alias: {
+            '~': resolve(__dirname, '.'),
+            '@': resolve(__dirname, '.'),
+            '#shared': resolve(__dirname, 'shared')
+        }
     }
-}) as UserConfig
+})

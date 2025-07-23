@@ -55,15 +55,30 @@ export class SlackChannelInteractor extends Interactor<SlackChannelMetaType> {
     }
 
     /**
-     * Enriches SlackChannelMeta objects with the isStale property based on business rules
+     * Enriches SlackChannelMeta objects with the isStale property and user names from Entra
      * @param channels - Array of channel metadata from repository
-     * @returns Array of enriched channel metadata with isStale property
+     * @returns Array of enriched channel metadata with isStale property and user names
      */
-    private enrichChannelsWithStaleness(channels: SlackChannelMetaRepositoryType[]): z.infer<typeof SlackChannelMeta>[] {
-        return channels.map(channel => ({
-            ...channel,
-            isStale: this.isNameDataStale(channel.lastNameRefresh)
-        }))
+    private async enrichChannels(channels: SlackChannelMetaRepositoryType[]): Promise<z.infer<typeof SlackChannelMeta>[]> {
+        return await Promise.all(
+            channels.map(async (channel) => {
+                let createdByName: string | undefined
+
+                try {
+                    const user = await this._permissionInteractor.groupService.getUser(channel.createdById)
+                    createdByName = user.name
+                } catch (error) {
+                    console.warn(`Failed to get user name for ${channel.createdById}:`, error)
+                    createdByName = undefined
+                }
+
+                return {
+                    ...channel,
+                    createdByName,
+                    isStale: this.isNameDataStale(channel.lastNameRefresh)
+                }
+            })
+        )
     }
 
     /**
@@ -144,7 +159,7 @@ export class SlackChannelInteractor extends Interactor<SlackChannelMetaType> {
         await this._permissionInteractor.assertOrganizationReader(organizationId)
 
         const channels = await this.repository.getChannelsForSolution(solutionId)
-        return this.enrichChannelsWithStaleness(channels)
+        return await this.enrichChannels(channels)
     }
 
     /**
@@ -172,7 +187,10 @@ export class SlackChannelInteractor extends Interactor<SlackChannelMetaType> {
             teamName: teamInfo?.name
         })
 
-        return result ? this.enrichChannelsWithStaleness([result])[0] : null
+        if (!result) return null
+
+        const enriched = await this.enrichChannels([result])
+        return enriched[0]
     }
 
     /**

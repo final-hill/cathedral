@@ -1,25 +1,56 @@
-import { Collection, Entity, Enum, ManyToMany, ManyToOne, OneToMany, OptionalProps, PrimaryKey, Property, types } from '@mikro-orm/core'
+import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, PrimaryKey, Property, types } from '@mikro-orm/core'
 import type { FilterQuery, OrderDefinition, Ref, Rel } from '@mikro-orm/core'
 import { ConstraintCategory, MoscowPriority, ReqType, StakeholderCategory, StakeholderSegmentation, WorkflowState } from '../../../../shared/domain/requirements/enums.js'
-import { AppUserModel, SlackChannelMetaModel } from '../application/index.js'
+import { SlackChannelMetaModel } from '../application/index.js'
 import type { ReqId } from '../../../../shared/domain/index.js'
 
 export abstract class StaticAuditModel<V extends VolatileAuditModel> {
-    @ManyToOne({ entity: () => AppUserModel })
-    readonly createdBy!: Rel<AppUserModel>
+    @Property({ type: types.string, length: 766 })
+    readonly createdById!: string
 
     @Property({ type: types.datetime })
     readonly creationDate!: Date
 
     abstract readonly versions: Collection<V, object>
 
+    /**
+     * Gets the latest non-deleted version of this entity at the given effective date.
+     * This is the standard method for retrieving the current active state of an entity.
+     *
+     * @param effectiveDate - The date at which to evaluate the latest version
+     * @param filter - Additional filter criteria to apply when finding versions
+     * @returns The latest non-deleted version, or undefined if none exists
+     */
     async getLatestVersion(effectiveDate: Date, filter: FilterQuery<V> = {}): Promise<V | undefined> {
+        const where = {
+            effectiveFrom: { $lte: effectiveDate },
+            isDeleted: false,
+            ...filter
+        } as FilterQuery<V>
+
         const latestVersion = (await this.versions.matching({
-            where: {
-                effectiveFrom: { $lte: effectiveDate },
-                isDeleted: false,
-                ...filter
-            } as FilterQuery<V>,
+            where,
+            orderBy: { effectiveFrom: 'desc' } as OrderDefinition<V>,
+            limit: 1,
+            // @ts-expect-error - MikroORM populate types are not fully compatible
+            populate: ['*']
+        }))[0]
+
+        return latestVersion
+    }
+
+    /**
+     * Gets the latest version of this entity at the given effective date, including deleted versions.
+     * This is useful for checking the current state of an entity, including whether it has been deleted.
+     */
+    async getLatestVersionIncludingDeleted(effectiveDate: Date, filter: FilterQuery<V> = {}): Promise<V | undefined> {
+        const where = {
+            effectiveFrom: { $lte: effectiveDate },
+            ...filter
+        } as FilterQuery<V>
+
+        const latestVersion = (await this.versions.matching({
+            where,
             orderBy: { effectiveFrom: 'desc' } as OrderDefinition<V>,
             limit: 1,
             // @ts-expect-error - MikroORM populate types are not fully compatible
@@ -37,8 +68,8 @@ export abstract class VolatileAuditModel {
     @Property({ type: types.boolean })
     readonly isDeleted!: boolean
 
-    @ManyToOne({ entity: () => AppUserModel })
-    readonly modifiedBy!: Rel<AppUserModel>
+    @Property({ type: types.string, length: 766 })
+    readonly modifiedById!: string
 }
 
 @Entity({ abstract: true, tableName: 'requirement', discriminatorColumn: 'req_type', discriminatorValue: ReqType.REQUIREMENT })
@@ -245,8 +276,6 @@ export class ObstacleVersionsModel extends GoalVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.ORGANIZATION })
 export class OrganizationModel extends MetaRequirementModel {
-    @ManyToMany({ entity: () => AppUserModel, mappedBy: o => o.organizations })
-    readonly users = new Collection<AppUserModel>(this)
 }
 
 @Entity({ discriminatorValue: ReqType.ORGANIZATION })

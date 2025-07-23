@@ -1,7 +1,6 @@
 import { Entity, ManyToOne, PrimaryKey, Property, types } from '@mikro-orm/core'
 import type { Rel } from '@mikro-orm/core'
 import { SolutionModel } from '../requirements/index.js'
-import { AppUserModel } from '../index.js'
 
 @Entity({ tableName: 'slack_channel_meta' })
 export class SlackChannelMetaModel {
@@ -20,8 +19,8 @@ export class SlackChannelMetaModel {
     @ManyToOne({ entity: () => SolutionModel })
     solution!: Rel<SolutionModel>
 
-    @ManyToOne({ entity: () => AppUserModel })
-    readonly createdBy!: Rel<AppUserModel>
+    @Property({ type: types.string, length: 766 })
+    readonly createdById!: string
 
     @Property({ type: types.datetime })
     creationDate!: Date

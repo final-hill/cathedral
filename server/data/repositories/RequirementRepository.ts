@@ -38,12 +38,12 @@ export class RequirementRepository extends Repository<RequirementType> {
         em.create(ReqVersionsModel, {
             requirement: em.create(ReqStaticModel, {
                 id: newId,
-                createdBy: props.createdById,
+                createdById: props.createdById,
                 creationDate: props.creationDate
             }),
             isDeleted: false,
             effectiveFrom: props.creationDate,
-            modifiedBy: props.createdById,
+            modifiedById: props.createdById,
             ...mappedProps
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any)
@@ -65,12 +65,12 @@ export class RequirementRepository extends Repository<RequirementType> {
         em.create(reqModels.ParsedRequirementsVersionsModel, {
             requirement: em.create(reqModels.ParsedRequirementsModel, {
                 id: parsedReqsId,
-                createdBy: props.createdById,
+                createdById: props.createdById,
                 creationDate: props.creationDate
             }),
             isDeleted: false,
             effectiveFrom: props.creationDate,
-            modifiedBy: props.createdById,
+            modifiedById: props.createdById,
             workflowState: WorkflowState.Proposed,
             solution: props.solutionId,
             name: props.name,
@@ -88,13 +88,13 @@ export class RequirementRepository extends Repository<RequirementType> {
                 em.create(reqModels.StakeholderVersionsModel, {
                     requirement: em.create(reqModels.StakeholderModel, {
                         id: newPrimaryActorId,
-                        createdBy: props.createdById,
+                        createdById: props.createdById,
                         creationDate: props.creationDate,
                         parsedRequirements: parsedReqsId
                     }),
                     isDeleted: false,
                     effectiveFrom: props.creationDate,
-                    modifiedBy: props.createdById,
+                    modifiedById: props.createdById,
                     workflowState: WorkflowState.Proposed,
                     solution: props.solutionId,
                     name: req.primaryActorName!,
@@ -111,13 +111,13 @@ export class RequirementRepository extends Repository<RequirementType> {
                 em.create(reqModels.OutcomeVersionsModel, {
                     requirement: em.create(reqModels.OutcomeModel, {
                         id: newOutcomeId,
-                        createdBy: props.createdById,
+                        createdById: props.createdById,
                         creationDate: props.creationDate,
                         parsedRequirements: parsedReqsId
                     }),
                     isDeleted: false,
                     effectiveFrom: props.creationDate,
-                    modifiedBy: props.createdById,
+                    modifiedById: props.createdById,
                     workflowState: WorkflowState.Proposed,
                     solution: props.solutionId,
                     name: req.outcomeName!,
@@ -130,13 +130,13 @@ export class RequirementRepository extends Repository<RequirementType> {
                 em.create(reqModels.AssumptionVersionsModel, {
                     requirement: em.create(reqModels.AssumptionModel, {
                         id: newPreconditionId,
-                        createdBy: props.createdById,
+                        createdById: props.createdById,
                         creationDate: props.creationDate,
                         parsedRequirements: parsedReqsId
                     }),
                     isDeleted: false,
                     effectiveFrom: props.creationDate,
-                    modifiedBy: props.createdById,
+                    modifiedById: props.createdById,
                     workflowState: WorkflowState.Proposed,
                     solution: props.solutionId,
                     name: req.useCasePreconditionName!,
@@ -149,13 +149,13 @@ export class RequirementRepository extends Repository<RequirementType> {
                 em.create(reqModels.EffectVersionsModel, {
                     requirement: em.create(reqModels.EffectModel, {
                         id: newSuccessGuaranteeId,
-                        createdBy: props.createdById,
+                        createdById: props.createdById,
                         creationDate: props.creationDate,
                         parsedRequirements: parsedReqsId
                     }),
                     isDeleted: false,
                     effectiveFrom: props.creationDate,
-                    modifiedBy: props.createdById,
+                    modifiedById: props.createdById,
                     workflowState: WorkflowState.Proposed,
                     solution: props.solutionId,
                     name: req.useCaseSuccessGuaranteeName!,
@@ -168,13 +168,13 @@ export class RequirementRepository extends Repository<RequirementType> {
                 em.create(reqModels.FunctionalBehaviorVersionsModel, {
                     requirement: em.create(reqModels.FunctionalBehaviorModel, {
                         id: newFunctionalBehaviorId,
-                        createdBy: props.createdById,
+                        createdById: props.createdById,
                         creationDate: props.creationDate,
                         parsedRequirements: parsedReqsId
                     }),
                     isDeleted: false,
                     effectiveFrom: props.creationDate,
-                    modifiedBy: props.createdById,
+                    modifiedById: props.createdById,
                     description: req.userStoryFunctionalBehaviorName!,
                     workflowState: WorkflowState.Proposed,
                     solution: props.solutionId,
@@ -186,13 +186,13 @@ export class RequirementRepository extends Repository<RequirementType> {
             em.create(ReqVersionsModel, {
                 requirement: em.create(ReqStaticModel, {
                     id: newId,
-                    createdBy: props.createdById,
+                    createdById: props.createdById,
                     creationDate: props.creationDate,
                     parsedRequirements: parsedReqsId
                 }),
                 isDeleted: false,
                 effectiveFrom: props.creationDate,
-                modifiedBy: props.createdById,
+                modifiedById: props.createdById,
                 workflowState: WorkflowState.Proposed,
                 solution: props.solutionId,
                 description: req.description,
@@ -431,7 +431,7 @@ export class RequirementRepository extends Repository<RequirementType> {
             requirement: existingReqStatic,
             isDeleted: false,
             effectiveFrom: props.modifiedDate,
-            modifiedBy: props.modifiedById
+            modifiedById: props.modifiedById
         })
 
         await em.flush()

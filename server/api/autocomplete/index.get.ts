@@ -1,9 +1,10 @@
 import { z } from 'zod'
 import handleDomainException from '~/server/utils/handleDomainException'
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~/application'
-import { AppUserRepository, OrganizationRepository, PermissionRepository, RequirementRepository } from '~/server/data/repositories'
+import { OrganizationRepository, RequirementRepository } from '~/server/data/repositories'
 import { ReqType } from '#shared/domain/requirements/ReqType'
 import { Organization, Solution } from '#shared/domain'
+import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 
 const querySchema = z.object({
     solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
@@ -15,14 +16,14 @@ export default defineEventHandler(async (event) => {
     const { solutionSlug, organizationSlug, reqType } = await validateEventQuery(event, querySchema),
         session = await requireUserSession(event),
         permissionInteractor = new PermissionInteractor({
-            userId: session.user.id,
-            repository: new PermissionRepository({ em: event.context.em })
+            session,
+            groupService: createEntraGroupService()
         }),
         organizationInteractor = new OrganizationInteractor({
             repository: new OrganizationRepository({ em: event.context.em, organizationSlug }),
             appUserInteractor: new AppUserInteractor({
                 permissionInteractor,
-                repository: new AppUserRepository({ em: event.context.em })
+                groupService: createEntraGroupService()
             }),
             permissionInteractor
         }),

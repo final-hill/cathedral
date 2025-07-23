@@ -1,4 +1,3 @@
-export * from './AppCredentials.js'
 export * from './AppRole.js'
 export * from './AppUser.js'
 export * from './AppUserOrganizationRole.js'

@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     // Create workspace interactor using Clean Architecture factory
     const workspaceInteractor = createSlackWorkspaceInteractor({
         em,
-        userId: session.user.id
+        session
     })
 
     // Use the workspace interactor to refresh metadata from Slack API

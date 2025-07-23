@@ -17,245 +17,13 @@
         },
         "created_by_id": {
           "name": "created_by_id",
-          "type": "uuid",
+          "type": "varchar(766)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "mappedType": "uuid"
-        },
-        "creation_date": {
-          "name": "creation_date",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(254)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 254,
+          "length": 766,
           "mappedType": "string"
-        },
-        "email": {
-          "name": "email",
-          "type": "varchar(254)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 254,
-          "mappedType": "string"
-        },
-        "last_login_date": {
-          "name": "last_login_date",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "is_system_admin": {
-          "name": "is_system_admin",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "boolean"
-        }
-      },
-      "name": "app_user",
-      "schema": "public",
-      "indexes": [
-        {
-          "columnNames": [
-            "email"
-          ],
-          "composite": false,
-          "keyName": "app_user_email_unique",
-          "constraint": true,
-          "primary": false,
-          "unique": true
-        },
-        {
-          "keyName": "app_user_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "app_user_created_by_id_foreign": {
-          "constraintName": "app_user_created_by_id_foreign",
-          "columnNames": [
-            "created_by_id"
-          ],
-          "localTableName": "public.app_user",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "app_user_modified_by_id_foreign": {
-          "constraintName": "app_user_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.app_user",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(1023)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 1023,
-          "mappedType": "string"
-        },
-        "app_user_id": {
-          "name": "app_user_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "public_key": {
-          "name": "public_key",
-          "type": "varchar(512)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 512,
-          "mappedType": "string"
-        },
-        "counter": {
-          "name": "counter",
-          "type": "int",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "integer"
-        },
-        "backed_up": {
-          "name": "backed_up",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "boolean"
-        },
-        "transports": {
-          "name": "transports",
-          "type": "jsonb",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "json"
-        }
-      },
-      "name": "app_credentials",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "app_credentials_pkey",
-          "columnNames": [
-            "id",
-            "app_user_id"
-          ],
-          "composite": true,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "app_credentials_app_user_id_foreign": {
-          "constraintName": "app_credentials_app_user_id_foreign",
-          "columnNames": [
-            "app_user_id"
-          ],
-          "localTableName": "public.app_credentials",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "created_by_id": {
-          "name": "created_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
         },
         "creation_date": {
           "name": "creation_date",
@@ -354,18 +122,6 @@
       ],
       "checks": [],
       "foreignKeys": {
-        "requirement_created_by_id_foreign": {
-          "constraintName": "requirement_created_by_id_foreign",
-          "columnNames": [
-            "created_by_id"
-          ],
-          "localTableName": "public.requirement",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
         "requirement_parsed_requirements_id_foreign": {
           "constraintName": "requirement_parsed_requirements_id_foreign",
           "columnNames": [
@@ -377,147 +133,6 @@
           ],
           "referencedTableName": "public.requirement",
           "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "app_user_id": {
-          "name": "app_user_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "organization_id": {
-          "name": "organization_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "role": {
-          "name": "role",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "enumItems": [
-            "Organization Admin",
-            "Organization Contributor",
-            "Organization Reader"
-          ],
-          "mappedType": "enum"
-        },
-        "created_by_id": {
-          "name": "created_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "creation_date": {
-          "name": "creation_date",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "modified_by_id": {
-          "name": "modified_by_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "last_modified": {
-          "name": "last_modified",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 6,
-          "mappedType": "datetime"
-        }
-      },
-      "name": "app_user_organization_role",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "app_user_organization_role_pkey",
-          "columnNames": [
-            "app_user_id",
-            "organization_id"
-          ],
-          "composite": true,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "app_user_organization_role_app_user_id_foreign": {
-          "constraintName": "app_user_organization_role_app_user_id_foreign",
-          "columnNames": [
-            "app_user_id"
-          ],
-          "localTableName": "public.app_user_organization_role",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "app_user_organization_role_organization_id_foreign": {
-          "constraintName": "app_user_organization_role_organization_id_foreign",
-          "columnNames": [
-            "organization_id"
-          ],
-          "localTableName": "public.app_user_organization_role",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.requirement",
-          "updateRule": "cascade"
-        },
-        "app_user_organization_role_created_by_id_foreign": {
-          "constraintName": "app_user_organization_role_created_by_id_foreign",
-          "columnNames": [
-            "created_by_id"
-          ],
-          "localTableName": "public.app_user_organization_role",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "app_user_organization_role_modified_by_id_foreign": {
-          "constraintName": "app_user_organization_role_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.app_user_organization_role",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
           "updateRule": "cascade"
         }
       },
@@ -555,12 +170,13 @@
         },
         "modified_by_id": {
           "name": "modified_by_id",
-          "type": "uuid",
+          "type": "varchar(766)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "mappedType": "uuid"
+          "length": 766,
+          "mappedType": "string"
         },
         "req_type": {
           "name": "req_type",
@@ -916,18 +532,6 @@
           "referencedTableName": "public.requirement",
           "updateRule": "cascade"
         },
-        "requirement_versions_modified_by_id_foreign": {
-          "constraintName": "requirement_versions_modified_by_id_foreign",
-          "columnNames": [
-            "modified_by_id"
-          ],
-          "localTableName": "public.requirement_versions",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
         "requirement_versions_solution_id_foreign": {
           "constraintName": "requirement_versions_solution_id_foreign",
           "columnNames": [
@@ -1090,12 +694,13 @@
         },
         "created_by_id": {
           "name": "created_by_id",
-          "type": "uuid",
+          "type": "varchar(766)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "mappedType": "uuid"
+          "length": 766,
+          "mappedType": "string"
         },
         "creation_date": {
           "name": "creation_date",
@@ -1146,18 +751,6 @@
           ],
           "referencedTableName": "public.requirement",
           "updateRule": "cascade"
-        },
-        "slack_channel_meta_created_by_id_foreign": {
-          "constraintName": "slack_channel_meta_created_by_id_foreign",
-          "columnNames": [
-            "created_by_id"
-          ],
-          "localTableName": "public.slack_channel_meta",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
         }
       },
       "nativeEnums": {}
@@ -1186,21 +779,23 @@
         },
         "app_user_id": {
           "name": "app_user_id",
-          "type": "uuid",
+          "type": "varchar(766)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "mappedType": "uuid"
+          "length": 766,
+          "mappedType": "string"
         },
         "created_by_id": {
           "name": "created_by_id",
-          "type": "uuid",
+          "type": "varchar(766)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "mappedType": "uuid"
+          "length": 766,
+          "mappedType": "string"
         },
         "creation_date": {
           "name": "creation_date",
@@ -1229,32 +824,7 @@
         }
       ],
       "checks": [],
-      "foreignKeys": {
-        "slack_user_meta_app_user_id_foreign": {
-          "constraintName": "slack_user_meta_app_user_id_foreign",
-          "columnNames": [
-            "app_user_id"
-          ],
-          "localTableName": "public.slack_user_meta",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        },
-        "slack_user_meta_created_by_id_foreign": {
-          "constraintName": "slack_user_meta_created_by_id_foreign",
-          "columnNames": [
-            "created_by_id"
-          ],
-          "localTableName": "public.slack_user_meta",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
-          "updateRule": "cascade"
-        }
-      },
+      "foreignKeys": {},
       "nativeEnums": {}
     },
     {
@@ -1328,12 +898,13 @@
         },
         "installed_by_id": {
           "name": "installed_by_id",
-          "type": "uuid",
+          "type": "varchar(766)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "mappedType": "uuid"
+          "length": 766,
+          "mappedType": "string"
         },
         "installation_date": {
           "name": "installation_date",
@@ -1382,18 +953,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "updateRule": "cascade"
-        },
-        "slack_workspace_meta_installed_by_id_foreign": {
-          "constraintName": "slack_workspace_meta_installed_by_id_foreign",
-          "columnNames": [
-            "installed_by_id"
-          ],
-          "localTableName": "public.slack_workspace_meta",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.app_user",
           "updateRule": "cascade"
         }
       },

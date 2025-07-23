@@ -19,7 +19,7 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
         const workspaceIntegrations = await em.find(SlackWorkspaceMetaModel, {
             organization: organizationId
         }, {
-            populate: ['installedBy']
+            populate: ['installedById']
         })
 
         // Map to domain objects (excluding sensitive data like access tokens)
@@ -31,8 +31,7 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
             botUserId: integration.botUserId,
             scope: integration.scope,
             appId: integration.appId,
-            installedById: integration.installedBy.id,
-            installedByName: integration.installedBy.name,
+            installedById: integration.installedById,
             installationDate: integration.installationDate,
             lastRefreshDate: integration.lastRefreshDate
         }))
@@ -49,7 +48,7 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
         return await em.findOne(SlackWorkspaceMetaModel, {
             teamId
         }, {
-            populate: ['installedBy', 'organization']
+            populate: ['installedById', 'organization']
         })
     }
 
@@ -90,7 +89,7 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
                 organization: props.organizationId,
                 accessToken: props.accessToken,
                 botUserId: props.botUserId,
-                installedBy: props.installedById,
+                installedById: props.installedById,
                 installationDate: props.installationDate,
                 lastRefreshDate: props.installationDate,
                 scope: props.scope,

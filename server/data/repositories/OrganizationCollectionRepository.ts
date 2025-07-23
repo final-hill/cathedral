@@ -1,10 +1,9 @@
 import type { z } from 'zod'
-import type { AppUser } from '#shared/domain'
 import { Organization, DuplicateEntityException, NotFoundException, WorkflowState } from '#shared/domain'
 import { slugify } from '#shared/utils'
 import { Repository } from './Repository'
 import { OrganizationRepository } from './OrganizationRepository'
-import { AppUserOrganizationRoleModel, OrganizationModel, OrganizationVersionsModel } from '../models'
+import { OrganizationModel, OrganizationVersionsModel } from '../models'
 import { DataModelToDomainModel, ReqQueryToModelQuery } from '../mappers'
 import { v7 as uuid7 } from 'uuid'
 import type { CreationInfo } from './CreationInfo'
@@ -12,35 +11,6 @@ import type { DeletionInfo } from './DeletionInfo'
 import type { UpdationInfo } from './UpdationInfo'
 
 export class OrganizationCollectionRepository extends Repository<z.infer<typeof Organization>> {
-    async addInitialAppuserOrganizationRole(props: {
-        appUserId: z.infer<typeof Organization>['id']
-        organizationId: z.infer<typeof Organization>['id']
-        role: NonNullable<z.infer<typeof AppUser>['role']>
-    }): Promise<void> {
-        const em = this._em,
-            creationDate = new Date(),
-            existingAuorModel = await em.findOne(AppUserOrganizationRoleModel, {
-                appUser: props.appUserId,
-                organization: props.organizationId
-            }),
-            existingRole = existingAuorModel?.role
-
-        if (existingAuorModel || existingRole)
-            throw new DuplicateEntityException('App user organization role already exists')
-
-        em.create(AppUserOrganizationRoleModel, {
-            appUser: props.appUserId,
-            organization: props.organizationId,
-            createdBy: props.appUserId,
-            creationDate: creationDate,
-            role: props.role,
-            lastModified: creationDate,
-            modifiedBy: props.appUserId
-        })
-
-        await em.flush()
-    }
-
     /**
      * Creates a new organization
      * @param props.name - The name of the organization
@@ -63,7 +33,7 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
         em.create(OrganizationVersionsModel, {
             requirement: em.create(OrganizationModel, {
                 id: newId,
-                createdBy: props.createdById,
+                createdById: props.createdById,
                 creationDate: props.creationDate
             }),
             isDeleted: false,
@@ -71,7 +41,7 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
             slug: slugify(props.name),
             name: props.name,
             description: props.description,
-            modifiedBy: props.createdById,
+            modifiedById: props.createdById,
             workflowState: WorkflowState.Active
         })
 
@@ -88,11 +58,11 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
     async deleteOrganization(props: Pick<z.infer<typeof Organization>, 'id'> & DeletionInfo): Promise<void> {
         const em = this._em,
             orgRepo = new OrganizationRepository({ em, organizationId: props.id }),
-            existingOrg = await orgRepo.getOrganization(),
-            { slug, name, description } = existingOrg
+            organization = await orgRepo.getOrganization()
 
-        if (!existingOrg)
-            throw new NotFoundException('Organization does not exist')
+        if (organization.isDeleted) {
+            throw new NotFoundException('Organization has already been deleted')
+        }
 
         const solutions = await orgRepo.findSolutions({})
 
@@ -105,14 +75,19 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
             })
         }
 
+        const organizationModel = await em.findOne(OrganizationModel, { id: props.id })
+        if (!organizationModel) {
+            throw new NotFoundException('Organization does not exist')
+        }
+
         em.create(OrganizationVersionsModel, {
             isDeleted: true,
             effectiveFrom: props.deletedDate,
-            slug,
-            name,
-            description,
-            modifiedBy: props.deletedById,
-            requirement: existingOrg.id,
+            slug: organization.slug,
+            name: organization.name,
+            description: organization.description,
+            modifiedById: props.deletedById,
+            requirement: organizationModel,
             workflowState: WorkflowState.Removed
         })
 
@@ -131,19 +106,26 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
 
         const orgModels = await this._em.find(OrganizationModel, {
             id,
-            createdBy,
+            createdById: createdBy?.id,
             creationDate
         }, { populate: ['*'] })
 
         const mapper = new DataModelToDomainModel(),
             organizations = await Promise.all(orgModels.map(async (org) => {
-                const latestVersion = await org.getLatestVersion(effectiveDate, volatileQuery)
-                return Organization.parse(
-                    await mapper.map({ ...org, ...latestVersion })
-                )
+                // Get the truly latest version (including deleted versions) to check deletion status
+                const latestVersion = await org.getLatestVersionIncludingDeleted(effectiveDate, volatileQuery)
+
+                // Skip organizations that don't have a latest version or are deleted
+                if (!latestVersion || latestVersion.isDeleted) {
+                    return null
+                }
+
+                const combinedData = { ...org, ...latestVersion }
+                const mappedData = await mapper.map(combinedData)
+                return Organization.parse(mappedData)
             }))
 
-        return organizations
+        return organizations.filter(org => org !== null) as z.infer<typeof Organization>[]
     }
 
     /**
@@ -155,10 +137,18 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
     async updateOrganizationById(id: z.infer<typeof Organization>['id'], props: Pick<Partial<z.infer<typeof Organization>>, 'name' | 'description'> & UpdationInfo): Promise<void> {
         const em = this._em,
             organization = await em.findOne(OrganizationModel, { id }),
+            // Check if organization is deleted by getting the truly latest version
+            latestVersionAny = await organization?.getLatestVersionIncludingDeleted(props.modifiedDate),
+            // Get the latest non-deleted version for update base
             orgLatestVersion = await organization?.getLatestVersion(props.modifiedDate) as OrganizationVersionsModel | undefined
 
         if (!organization || !orgLatestVersion)
             throw new NotFoundException('Organization does not exist')
+
+        // Prevent updating deleted organizations
+        if (latestVersionAny?.isDeleted) {
+            throw new NotFoundException('Organization has been deleted')
+        }
 
         em.create(OrganizationVersionsModel, {
             isDeleted: false,
@@ -166,7 +156,7 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
             slug: props.name ? slugify(props.name) : orgLatestVersion.slug,
             name: props.name ?? orgLatestVersion.name,
             description: props.description ?? orgLatestVersion.description,
-            modifiedBy: props.modifiedById,
+            modifiedById: props.modifiedById,
             requirement: organization,
             workflowState: orgLatestVersion.workflowState
         })

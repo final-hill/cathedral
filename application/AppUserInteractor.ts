@@ -1,70 +1,111 @@
-import type { AppUserRepository, CreationInfo } from '~/server/data/repositories'
+import type { EntraGroupService } from '~/server/data/services/EntraGroupService'
 import { Interactor } from './Interactor'
-import type { AppUser } from '#shared/domain'
-import { MismatchException, PermissionDeniedException } from '#shared/domain'
+import type { AppRole } from '#shared/domain'
+import { AppUser, PermissionDeniedException, NotFoundException } from '#shared/domain'
 import type { z } from 'zod'
 import type { PermissionInteractor } from './PermissionInteractor'
-import type { AppCredentials } from '~/shared/domain/application/AppCredentials'
 
 /**
  * Interactor for the AppUser
  */
 export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
     private readonly _permissionInteractor: PermissionInteractor
+    private readonly _groupService: EntraGroupService
 
     /**
      * Create a new AppUserInteractor
      *
-     * @param props.repository - The repository to use
      * @param props.permissionInteractor - The PermissionInteractor instance
+     * @param props.groupService - The EntraGroupService instance
      */
     constructor(props: {
-        // TODO: This should be Repository<AppUser>
-        repository: AppUserRepository
         permissionInteractor: PermissionInteractor
+        groupService: EntraGroupService
     }) {
-        super(props)
+        super({ repository: null as never })
         this._permissionInteractor = props.permissionInteractor
-    }
-
-    // TODO: This should not be necessary
-    // This should be inferred as Repository<AppUser>
-    get repository(): AppUserRepository {
-        return this._repository as AppUserRepository
+        this._groupService = props.groupService
     }
 
     /**
-     * Create a new app user
-     * @param props - The properties of the app user
-     * @returns The id of the created app user
-     * @throws {PermissionDeniedException} If the current user is not a system admin
+     * Invite a user to the organization via Entra External ID
+     * This method adds an existing Entra user to the appropriate groups
+     *
+     * @param email - The email address of the user to invite
+     * @param organizationId - The ID of the organization to invite the user to
+     * @param role - The role to assign to the user in the organization
+     * @returns The ID of the Entra user
+     * @throws {PermissionDeniedException} If the current user is not an admin of the organization
+     * @throws {NotFoundException} If the user doesn't exist in Entra
      */
-    async createAppUser(props: Omit<z.infer<typeof AppUser>, 'id' | 'role'>): Promise<z.infer<typeof AppUser>['id']> {
-        const currentUserId = this._permissionInteractor.userId
+    async inviteUserToOrganization(
+        email: string,
+        organizationId: string,
+        role: AppRole
+    ): Promise<string> {
+        await this._permissionInteractor.assertOrganizationAdmin(organizationId)
 
-        if (!this._permissionInteractor.isSystemAdmin())
-            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to create users`)
+        try {
+            // Check if user exists in Entra by email
+            const entraUser = await this._groupService.getUser(email)
 
-        return this.repository.createAppUser({
-            ...props,
-            createdById: currentUserId,
-            creationDate: new Date()
-        })
+            if (!entraUser) {
+                throw new NotFoundException(`User with email ${email} not found in Entra External ID tenant. User must be invited through the Entra admin portal first.`)
+            }
+
+            // Add user to organization role via PermissionInteractor
+            await this._permissionInteractor.addAppUserOrganizationRole({
+                appUserId: entraUser.id,
+                organizationId,
+                role
+            })
+
+            // Add user to appropriate Entra groups based on their role
+            await this._groupService.addUserToOrganizationGroup({
+                userId: entraUser.id,
+                organizationId,
+                role
+            })
+
+            return entraUser.id
+        } catch (error) {
+            // If it's a Microsoft Graph API error, provide more context
+            if (error instanceof Error && error.message.includes('Graph API')) {
+                throw new PermissionDeniedException(`Failed to invite user via Entra External ID: ${error.message}`)
+            }
+            throw error
+        }
     }
 
     /**
-     * Get the app user by id
-     * @param id - The id of the app user
-     * @returns The app user
+     * Get the app user by id from Entra External ID
+     * @param id - The Entra user id
+     * @returns The app user data from Entra
      * @throws {NotFoundException} If the user does not exist
      * @throws {PermissionDeniedException} If the current user is not a system admin or the user being queried is not the current user
      */
-    async getUserById(id: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof AppUser>> {
+    async getUserById(id: string): Promise<z.infer<typeof AppUser>> {
         const currentUserId = this._permissionInteractor.userId
         if (id !== currentUserId && !this._permissionInteractor.isSystemAdmin())
             throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to get user with id ${id}`)
 
-        return this.repository.getUserById(id)
+        try {
+            const entraUser = await this._groupService.getUser(id)
+            if (!entraUser) {
+                throw new NotFoundException(`User with id ${id} does not exist in Entra External ID`)
+            }
+
+            return AppUser.parse({
+                id: entraUser.id,
+                name: entraUser.name,
+                email: entraUser.email,
+                // Role is contextual and set by the caller if needed
+                role: undefined
+            })
+        } catch (error) {
+            if (error instanceof NotFoundException) throw error
+            throw new NotFoundException(`Failed to get user ${id} from Entra External ID`)
+        }
     }
 
     /**
@@ -74,13 +115,29 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
      * @throws {NotFoundException} If the user does not exist
      * @throws {PermissionDeniedException} If the current user is not a system admin or the user being queried is not the current user
      */
-    async getUserByEmail(email: z.infer<typeof AppUser>['email']): Promise<z.infer<typeof AppUser>> {
-        const currentUserId = this._permissionInteractor.userId,
-            currentUser = await this.getUserById(currentUserId)
-        if (email !== currentUser.email && !currentUser.isSystemAdmin)
+    async getUserByEmail(email: string): Promise<z.infer<typeof AppUser>> {
+        const currentUserId = this._permissionInteractor.userId
+        const currentUser = await this.getUserById(currentUserId)
+
+        if (email !== currentUser.email && !this._permissionInteractor.isSystemAdmin())
             throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to get user with email ${email}`)
 
-        return this.repository.getUserByEmail(email)
+        try {
+            const entraUser = await this._groupService.getUser(email)
+            if (!entraUser) {
+                throw new NotFoundException(`User with email ${email} does not exist in Entra External ID`)
+            }
+
+            return AppUser.parse({
+                id: entraUser.id,
+                name: entraUser.name,
+                email: entraUser.email,
+                role: undefined
+            })
+        } catch (error) {
+            if (error instanceof NotFoundException) throw error
+            throw new NotFoundException(`Failed to get user ${email} from Entra External ID`)
+        }
     }
 
     /**
@@ -89,119 +146,18 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
      * @returns Whether the user exists
      * @throws {PermissionDeniedException} If the current user is not a system admin or the user being queried is not the current user
      */
-    async hasUser(email: z.infer<typeof AppUser>['email']): Promise<boolean> {
-        console.log('Checking if user exists', email)
-        console.log('Current user id', this._permissionInteractor.userId)
+    async hasUser(email: string): Promise<boolean> {
+        const currentUserId = this._permissionInteractor.userId
+        const currentUser = await this.getUserById(currentUserId)
 
-        const currentUserId = this._permissionInteractor.userId,
-            currentUser = await this.getUserById(currentUserId)
-        if (email !== currentUser.email && !currentUser.isSystemAdmin)
+        if (email !== currentUser.email && !this._permissionInteractor.isSystemAdmin())
             throw new PermissionDeniedException(`User ${currentUser.email} does not have permission to check if user with email ${email} exists`)
 
-        return this.repository.hasUser(email)
-    }
-
-    /**
-     * Update an app user
-     * @param props - The properties to update
-     * @throws {PermissionDeniedException} If the current user is not a system admin or the user being updated is not the current user
-     * @throws {NotFoundException} If the user does not exist
-     */
-    async updateUser(props: Pick<z.infer<typeof AppUser>, 'id' | 'name' | 'email' | 'lastLoginDate'>): Promise<void> {
-        const currentUserId = this._permissionInteractor.userId,
-            currentUser = await this.getUserById(currentUserId)
-        if (props.id !== currentUser.id && !currentUser.isSystemAdmin)
-            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to update user with id ${props.id}`)
-
-        return this.repository.updateAppUser({
-            ...props,
-            modifiedById: currentUserId,
-            modifiedDate: new Date()
-        })
-    }
-
-    /**
-     * Add a credential for an app user
-     * @param props - The properties of the credential
-     * @throws {PermissionDeniedException} If the current user is not a system admin or the user being updated is not the current user
-     */
-    async addCredential(props: Omit<z.infer<typeof AppCredentials>, keyof CreationInfo>): Promise<void> {
-        const currentUserId = this._permissionInteractor.userId,
-            currentUser = await this.getUserById(currentUserId)
-
-        if (props.appUser.id !== currentUser.id && !currentUser.isSystemAdmin)
-            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to add credentials for user with id ${props.appUser.id}`)
-
-        await this.repository.addCredential({
-            ...props,
-            createdById: currentUserId,
-            creationDate: new Date()
-        })
-    }
-
-    /**
-     * Get the credentials for an app user by email
-     * @param email - The email of the app user
-     * @returns The credentials of the app user
-     * @throws {PermissionDeniedException} If the current user is not a system admin or the user being queried is not the current user
-     */
-    async getAllCredentials(email: z.infer<typeof AppUser>['email']): Promise<z.infer<typeof AppCredentials>[]> {
-        const currentUserId = this._permissionInteractor.userId,
-            currentUser = await this.getUserById(currentUserId)
-
-        if (email !== currentUser.email && !currentUser.isSystemAdmin)
-            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to get credentials for user with email ${email}`)
-
-        const appUser = await this.repository.getUserByEmail(email),
-            credentials = await this.repository.getCredentialsByUserId(appUser.id)
-
-        return credentials
-    }
-
-    /**
-     * Check if a credential exists by its ID
-     * @param credentialId - The ID of the credential
-     * @returns Whether the credential exists
-     * @throws {PermissionDeniedException} If the current user is not a system admin or the owner of the credential
-     */
-    async hasCredential(credentialId: z.infer<typeof AppCredentials>['id']): Promise<boolean> {
-        const currentUserId = this._permissionInteractor.userId,
-            currentUser = await this.getUserById(currentUserId)
-
-        if (!currentUser.isSystemAdmin) {
-            const credential = await this.repository.getCredentialById(credentialId)
-            if (credential.appUser.id !== currentUser.id)
-                throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to check credential with id ${credentialId}`)
+        try {
+            const entraUser = await this._groupService.getUser(email)
+            return entraUser !== null
+        } catch {
+            return false
         }
-
-        return this.repository.hasCredential(credentialId)
-    }
-
-    /**
-     * Get a WebAuth credential by its ID
-     * @param credentialId - The ID of the credential
-     * @returns The credential
-     * @throws {NotFoundException} If the credential does not exist
-     * @throws {PermissionDeniedException} If the current user is not a system admin or the owner of the credential
-     * @throws {MismatchException} If the credential counter is invalid
-     */
-    async getCredential(credentialId: z.infer<typeof AppCredentials>['id']): Promise<z.infer<typeof AppCredentials>> {
-        const currentUserId = this._permissionInteractor.userId,
-            currentUser = await this.getUserById(currentUserId)
-
-        if (!currentUser.isSystemAdmin) {
-            const credential = await this.repository.getCredentialById(credentialId)
-            if (credential.appUser.id !== currentUser.id)
-                throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to get credential with id ${credentialId}`)
-        }
-
-        const credential = await this.repository.getCredentialById(credentialId)
-
-        if (credential.counter < 0)
-            throw new MismatchException('Credential counter is invalid')
-
-        await this.repository.incrementCredentialCounter(credentialId)
-
-        return credential
     }
 }
