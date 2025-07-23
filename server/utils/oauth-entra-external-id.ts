@@ -152,7 +152,7 @@ export function defineOAuthEntraExternalIDEventHandler({
                 body: tokenBody.toString()
             })
         } catch (error) {
-            console.error('Token exchange error:', error)
+            console.error('Token exchange error:', error instanceof Error ? error.message : 'Unknown error')
             const tokenExchangeError = createError({
                 statusCode: 500,
                 message: 'Token exchange failed',
