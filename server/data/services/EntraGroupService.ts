@@ -186,7 +186,9 @@ export class EntraGroupService {
             const base64Payload = idToken.split('.')[1]
             const payload = JSON.parse(atob(base64Payload))
 
-            console.log('Full ID Token payload:', JSON.stringify(payload, null, 2))
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('Full ID Token payload:', JSON.stringify(payload, null, 2))
+            }
             console.log('ID Token payload roles:', payload.roles)
 
             // Groups are in the 'roles' claim as an array of group IDs (GUIDs)
