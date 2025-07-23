@@ -153,7 +153,13 @@ export function defineOAuthEntraExternalIDEventHandler({
             })
         } catch (error) {
             console.error('Token exchange error:', error)
-            tokens = { access_token: '', token_type: '', expires_in: 0, scope: '', error: 'token_exchange_failed' }
+            const tokenExchangeError = createError({
+                statusCode: 500,
+                message: 'Token exchange failed',
+                data: { error: 'token_exchange_failed', details: error }
+            })
+            if (!onError) throw tokenExchangeError
+            return onError(event, tokenExchangeError)
         }
 
         if (tokens.error) {
