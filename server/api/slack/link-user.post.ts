@@ -5,7 +5,6 @@ import { Slack, PermissionInteractor } from '~/application/'
 import { SlackRepository } from '~/server/data/repositories'
 import { SlackService } from '~/server/data/services'
 import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
-import { SYSTEM_SLACK_USER_ID, SYSTEM_SLACK_USER_NAME, SYSTEM_SLACK_USER_EMAIL } from '~/shared/constants.js'
 import handleDomainException from '~/server/utils/handleDomainException'
 
 const { verify } = jwt
@@ -34,11 +33,11 @@ export default defineEventHandler(async (event) => {
         repository: new SlackRepository({ em }),
         permissionInteractor: new PermissionInteractor({
             session: {
-                id: SYSTEM_SLACK_USER_ID,
+                id: config.systemSlackUserId as string,
                 user: {
-                    id: SYSTEM_SLACK_USER_ID,
-                    name: SYSTEM_SLACK_USER_NAME,
-                    email: SYSTEM_SLACK_USER_EMAIL,
+                    id: config.systemSlackUserId as string,
+                    name: config.systemSlackUserName as string,
+                    email: config.systemSlackUserEmail as string,
                     groups: []
                 },
                 loggedInAt: Date.now()

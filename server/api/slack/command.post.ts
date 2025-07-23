@@ -1,6 +1,5 @@
 import { SlackService } from '~/server/data/services'
 import { createSlackEventInteractor } from '~/application/slack'
-import { SYSTEM_SLACK_USER_ID, SYSTEM_SLACK_USER_NAME, SYSTEM_SLACK_USER_EMAIL } from '~/shared/constants.js'
 import { NaturalLanguageToRequirementService } from '~/server/data/services/NaturalLanguageToRequirementService'
 import { slackSlashCommandSchema } from '~/server/data/slack-zod-schemas'
 import handleDomainException from '~/server/utils/handleDomainException'
@@ -30,11 +29,11 @@ export default defineEventHandler(async (event) => {
     const eventInteractor = createSlackEventInteractor({
         em: event.context.em,
         session: {
-            id: SYSTEM_SLACK_USER_ID,
+            id: config.systemSlackUserId as string,
             user: {
-                id: SYSTEM_SLACK_USER_ID,
-                name: SYSTEM_SLACK_USER_NAME,
-                email: SYSTEM_SLACK_USER_EMAIL,
+                id: config.systemSlackUserId as string,
+                name: config.systemSlackUserName as string,
+                email: config.systemSlackUserEmail as string,
                 groups: []
             },
             loggedInAt: Date.now()

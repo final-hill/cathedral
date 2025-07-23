@@ -3,7 +3,6 @@ import { AppRole, NotFoundException, PermissionDeniedException } from '#shared/d
 import type { EntraGroupService } from '~/server/data/services/EntraGroupService'
 import type { UserSession } from '#auth-utils'
 import type { z } from 'zod'
-import { SYSTEM_SLACK_USER_ID } from '~/shared/constants.js'
 
 /**
  * Interactor for checking permissions
@@ -201,7 +200,7 @@ export class PermissionInteractor {
     }
 
     isSlackBot(): boolean {
-        return this._session.user!.id === SYSTEM_SLACK_USER_ID
+        return this._session.user!.id === useRuntimeConfig().systemSlackUserId
     }
 
     /**

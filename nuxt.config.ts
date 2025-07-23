@@ -39,6 +39,14 @@ export default defineNuxtConfig({
         azureOpenaiEndpoint: '',
         azureOpenaiDeploymentId: '',
 
+        // System user configuration (Entra External ID Object IDs)
+        systemUserId: '',
+        systemUserName: '',
+        systemUserEmail: '',
+        systemSlackUserId: '',
+        systemSlackUserName: '',
+        systemSlackUserEmail: '',
+
         // OAuth configuration for Entra External ID
         oauth: {
             microsoft: {
