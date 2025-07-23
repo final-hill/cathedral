@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~/application'
-import { AppUserRepository, OrganizationRepository, PermissionRepository } from '~/server/data/repositories'
+import { OrganizationRepository } from '~/server/data/repositories'
+import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 import handleDomainException from '~/server/utils/handleDomainException'
 import { Organization, Solution } from '~/shared/domain'
 
@@ -21,16 +22,14 @@ export default defineEventHandler(async (event) => {
     const { description, name, organizationId, organizationSlug, slug } = await validateEventQuery(event, querySchema),
         session = await requireUserSession(event),
         permissionInteractor = new PermissionInteractor({
-            userId: session.user.id,
-            repository: new PermissionRepository({ em: event.context.em })
+            session,
+            groupService: createEntraGroupService()
         }),
         organizationInteractor = new OrganizationInteractor({
             permissionInteractor,
             appUserInteractor: new AppUserInteractor({
                 permissionInteractor,
-                repository: new AppUserRepository({
-                    em: event.context.em
-                })
+                groupService: createEntraGroupService()
             }),
             repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug })
         })

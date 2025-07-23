@@ -49,9 +49,19 @@ const cancel = () => {
     router.push({ name: 'Organization', params: { organizationslug: oldSlug } })
 }
 
-watch(() => formState.name, (newName) => {
-    formState.slug = slugify(newName)
-})
+// Handle state updates from XForm component
+const handleStateUpdate = (newState: Partial<FormSchema>) => {
+    // Check if the name changed before updating formState
+    const nameChanged = newState.name !== undefined && newState.name !== formState.name
+    const newName = newState.name
+
+    Object.assign(formState, newState)
+
+    // If the name changed, update the slug
+    if (nameChanged && newName) {
+        formState.slug = slugify(newName)
+    }
+}
 </script>
 
 <template>
@@ -62,5 +72,6 @@ watch(() => formState.name, (newName) => {
         :state="formState"
         :on-submit="updateOrganization"
         :on-cancel="cancel"
+        @update:state="handleStateUpdate"
     />
 </template>

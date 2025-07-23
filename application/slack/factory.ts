@@ -1,8 +1,10 @@
 import type { SlackService, NaturalLanguageToRequirementService } from '~/server/data/services'
-import { SlackRepository, PermissionRepository, SlackWorkspaceRepository } from '~/server/data/repositories'
+import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
+import { SlackRepository, SlackWorkspaceRepository } from '~/server/data/repositories'
 import { PermissionInteractor } from '~/application'
 import { SlackWorkspaceInteractor, SlackChannelInteractor, SlackUserInteractor, SlackEventInteractor } from '.'
 import type { SqlEntityManager, PostgreSqlDriver } from '@mikro-orm/postgresql'
+import type { UserSession } from '#auth-utils'
 
 /**
  * Factory for creating a fully configured SlackEventInteractor with all dependencies
@@ -10,15 +12,15 @@ import type { SqlEntityManager, PostgreSqlDriver } from '@mikro-orm/postgresql'
  */
 export function createSlackEventInteractor(props: {
     em: SqlEntityManager<PostgreSqlDriver>
-    userId: string
+    session: UserSession
     slackService: SlackService
     nlrService: NaturalLanguageToRequirementService
 }): SlackEventInteractor {
-    const { em, userId, slackService, nlrService } = props,
+    const { em, session, slackService, nlrService } = props,
         repository = new SlackRepository({ em }),
         permissionInteractor = new PermissionInteractor({
-            userId,
-            repository: new PermissionRepository({ em })
+            session,
+            groupService: createEntraGroupService()
         })
 
     return new SlackEventInteractor({
@@ -48,16 +50,16 @@ export function createSlackEventInteractor(props: {
  */
 export function createSlackWorkspaceInteractor(props: {
     em: SqlEntityManager<PostgreSqlDriver>
-    userId: string
+    session: UserSession
 }): SlackWorkspaceInteractor {
-    const { em, userId } = props,
+    const { em, session } = props,
         repository = new SlackWorkspaceRepository({ em })
 
     return new SlackWorkspaceInteractor({
         repository,
         permissionInteractor: new PermissionInteractor({
-            userId,
-            repository: new PermissionRepository({ em })
+            session,
+            groupService: createEntraGroupService()
         })
     })
 }

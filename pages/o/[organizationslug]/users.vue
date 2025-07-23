@@ -11,16 +11,12 @@ definePageMeta({ name: 'Organization Users', middleware: 'auth' })
 const viewSchema = AppUser.pick({
     name: true,
     email: true,
-    role: true,
-    isSystemAdmin: true,
-    creationDate: true,
-    lastLoginDate: true
+    role: true
 })
 const editSchema = AppUser.pick({
     id: true,
     email: true,
-    role: true,
-    isSystemAdmin: true
+    role: true
 })
 const createSchema = AppUser.pick({
     email: true,
@@ -37,13 +33,7 @@ const { $eventBus } = useNuxtApp(),
     toast = useToast(),
     { organizationslug: organizationSlug } = useRoute('Organization Users').params,
     { data: users, status, refresh, error: getUserError } = await useFetch('/api/appusers', {
-        query: { organizationSlug },
-        transform: data => data.map(user => ({
-            ...user,
-            creationDate: new Date(user.creationDate),
-            lastLoginDate: user.lastLoginDate ? new Date(user.lastLoginDate) : undefined,
-            lastModified: new Date(user.lastModified)
-        }))
+        query: { organizationSlug }
     })
 
 if (getUserError.value)

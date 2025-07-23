@@ -3,7 +3,8 @@ import type { PermissionInteractor } from '../PermissionInteractor'
 import type { SlackWorkspaceRepository } from '~/server/data/repositories'
 import { SlackService } from '~/server/data/services'
 import { NotFoundException } from '#shared/domain/exceptions'
-import type { SlackWorkspaceMetaType } from '#shared/domain/application'
+import type { SlackWorkspaceMetaType, SlackWorkspaceMetaPublicType } from '#shared/domain/application'
+import handleDomainException from '~/server/utils/handleDomainException'
 
 /**
  * Slack Workspace Interactor
@@ -39,10 +40,31 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
      * @throws PermissionException if user is not an organization reader
      * @returns Array of workspace integrations
      */
-    async getOrganizationWorkspaces(organizationId: string, organizationName: string) {
-        await this._permissionInteractor.assertOrganizationReader(organizationId)
+    async getOrganizationWorkspaces(organizationId: string, organizationName: string): Promise<SlackWorkspaceMetaPublicType[]> {
+        this._permissionInteractor.assertOrganizationReader(organizationId)
 
-        return await this.repository.getWorkspacesByOrganization(organizationId, organizationName)
+        const workspaces = await this.repository.getWorkspacesByOrganization(organizationId, organizationName)
+
+        // Enrich with user names from Entra
+        const enrichedWorkspaces = await Promise.all(
+            workspaces.map(async (workspace) => {
+                try {
+                    const user = await this._permissionInteractor.groupService.getUser(workspace.installedById)
+                    return {
+                        ...workspace,
+                        installedByName: user.name
+                    }
+                } catch (error) {
+                    console.warn(`Failed to get user name for ${workspace.installedById}:`, error)
+                    return {
+                        ...workspace,
+                        installedByName: '{Unknown User}'
+                    }
+                }
+            })
+        )
+
+        return enrichedWorkspaces
     }
 
     /**

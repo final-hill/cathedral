@@ -1,5 +1,6 @@
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~/application'
-import { AppUserRepository, OrganizationRepository, PermissionRepository } from '~/server/data/repositories'
+import { OrganizationRepository } from '~/server/data/repositories'
+import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 import handleDomainException from '~/server/utils/handleDomainException'
 import { Organization } from '~/shared/domain'
 
@@ -12,17 +13,15 @@ export default defineEventHandler(async (event) => {
     const { slug } = await validateEventParams(event, paramSchema),
         session = await requireUserSession(event),
         permissionInteractor = new PermissionInteractor({
-            userId: session.user.id,
-            repository: new PermissionRepository({ em: event.context.em })
+            session,
+            groupService: createEntraGroupService()
         }),
         organizationInteractor = new OrganizationInteractor({
             repository: new OrganizationRepository({ em: event.context.em, organizationSlug: slug }),
             permissionInteractor,
             appUserInteractor: new AppUserInteractor({
                 permissionInteractor,
-                repository: new AppUserRepository({
-                    em: event.context.em
-                })
+                groupService: createEntraGroupService()
             })
         })
 

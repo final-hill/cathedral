@@ -1,7 +1,6 @@
 import { Entity, ManyToOne, PrimaryKey, Property, types } from '@mikro-orm/core'
 import type { Rel } from '@mikro-orm/core'
 import { OrganizationModel } from '../requirements/index.js'
-import { AppUserModel } from '../index.js'
 
 @Entity({ tableName: 'slack_workspace_meta' })
 export class SlackWorkspaceMetaModel {
@@ -26,8 +25,8 @@ export class SlackWorkspaceMetaModel {
     @Property({ type: types.string })
     appId!: string
 
-    @ManyToOne({ entity: () => AppUserModel })
-    readonly installedBy!: Rel<AppUserModel>
+    @Property({ type: types.string, length: 766 })
+    readonly installedById!: string
 
     @Property({ type: types.datetime })
     installationDate!: Date

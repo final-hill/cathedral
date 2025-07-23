@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import { Slack, PermissionInteractor, OrganizationInteractor } from '~/application'
-import { SlackRepository, PermissionRepository, OrganizationRepository } from '~/server/data/repositories'
+import { SlackRepository, OrganizationRepository } from '~/server/data/repositories'
 import { SlackService } from '~/server/data/services'
+import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 import handleDomainException from '~/server/utils/handleDomainException'
 import { Organization, Solution } from '#shared/domain'
 
@@ -27,8 +28,8 @@ export default defineEventHandler(async (event) => {
         em = event.context.em
 
     const permissionInteractor = new PermissionInteractor({
-        userId: session.user.id,
-        repository: new PermissionRepository({ em })
+        session,
+        groupService: createEntraGroupService()
     })
 
     // Get organization and solution for context

@@ -10,7 +10,7 @@ export const SlackWorkspaceMeta = z.object({
     scope: z.string().describe('The OAuth scopes granted to the application'),
     appId: z.string().describe('The Slack app ID'),
     installedById: z.string().uuid().describe('The Cathedral user ID who installed the app'),
-    installedByName: z.string().describe('The name of the Cathedral user who installed the app'),
+    installedByName: z.string().optional().describe('The name of the Cathedral user who installed the app'),
     installationDate: z.date().describe('The date and time when the app was installed in the workspace'),
     lastRefreshDate: z.date().optional().describe('The date and time when the workspace info was last refreshed')
 }).describe('Metadata for a Slack workspace integration with a Cathedral organization')

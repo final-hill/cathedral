@@ -1,8 +1,9 @@
 import type { NaturalLanguageToRequirementService, SlackService } from '~/server/data/services'
+import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 import { Interactor } from '../Interactor'
 import { PermissionInteractor, RequirementInteractor, OrganizationCollectionInteractor } from '../'
 import type { SlackRepository } from '~/server/data/repositories'
-import { PermissionRepository, RequirementRepository, OrganizationCollectionRepository, OrganizationRepository } from '~/server/data/repositories'
+import { RequirementRepository, OrganizationCollectionRepository, OrganizationRepository } from '~/server/data/repositories'
 import type { z } from 'zod'
 import type { slackAppMentionSchema, slackMessageSchema, SlackInteractivePayload, SlackResponseMessage } from '~/server/data/slack-zod-schemas'
 import { slackBodySchema, slackSlashCommandSchema } from '~/server/data/slack-zod-schemas'
@@ -53,6 +54,50 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
     // TODO: This should not be necessary
     get repository(): SlackRepository {
         return this._repository as SlackRepository
+    }
+
+    /**
+     * Create a temporary permission interactor for Slack operations
+     * Fetches actual user information from Entra External ID
+     */
+    private async createTempPermissionInteractor(cathedralUserId: string): Promise<PermissionInteractor> {
+        const groupService = createEntraGroupService()
+
+        try {
+            // Fetch real user information from Entra External ID
+            const userInfo = await groupService.getUser(cathedralUserId)
+
+            return new PermissionInteractor({
+                session: {
+                    id: cathedralUserId, // Session ID (nuxt-auth-utils requirement)
+                    user: {
+                        id: cathedralUserId,
+                        name: userInfo.name,
+                        email: userInfo.email,
+                        groups: [] // Groups require access token, will be empty for Slack operations
+                    },
+                    loggedInAt: Date.now()
+                },
+                groupService
+            })
+        } catch (error) {
+            console.warn(`Failed to fetch user info for ${cathedralUserId}, using fallback:`, error)
+
+            // Fallback to placeholder values if Entra lookup fails
+            return new PermissionInteractor({
+                session: {
+                    id: cathedralUserId, // Session ID (nuxt-auth-utils requirement)
+                    user: {
+                        id: cathedralUserId,
+                        name: 'Unknown User', // Fallback when Entra lookup fails
+                        email: 'unknown@example.com', // Fallback when Entra lookup fails
+                        groups: [] // Groups require access token, will be empty for Slack operations
+                    },
+                    loggedInAt: Date.now()
+                },
+                groupService
+            })
+        }
     }
 
     /**
@@ -185,12 +230,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
             }
 
         // Create permission interactor with the Cathedral user being linked to
-        const userPermissionInteractor = new PermissionInteractor({
-            userId: cathedralUserId,
-            repository: new PermissionRepository({
-                em: this.repository['_em']
-            })
-        })
+        const userPermissionInteractor = await this.createTempPermissionInteractor(cathedralUserId)
 
         // Link the Slack user to the selected Cathedral user
         await this._userInteractor.linkSlackUserAsUser({
@@ -239,10 +279,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         if (!solution)
             throw new MismatchException('Invalid solution selected. Please try again.')
 
-        const permissionInteractor = new PermissionInteractor({
-            userId: cathedralUserId,
-            repository: new PermissionRepository({ em })
-        })
+        const permissionInteractor = await this.createTempPermissionInteractor(cathedralUserId)
 
         await permissionInteractor.assertOrganizationContributor(solution.organization.id)
 
@@ -310,12 +347,9 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         const cathedralUserId = await this._userInteractor.validateUserAuthentication(data.user, data.channel, teamId)
         if (!cathedralUserId) return
 
-        const permissionInteractor = new PermissionInteractor({
-            userId: cathedralUserId,
-            repository: new PermissionRepository({ em })
-        })
+        const permissionInteractor = await this.createTempPermissionInteractor(cathedralUserId)
 
-        await permissionInteractor.assertOrganizationContributor(channelConfig.organizationId)
+        permissionInteractor.assertOrganizationContributor(channelConfig.organizationId)
 
         return await this.parseRequirementsWithInteractor({
             channelConfig,
@@ -340,10 +374,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
     }): Promise<string | undefined> {
         const { channelConfig, cathedralUserId, statement, channelId, em, thread_ts } = params
 
-        const permissionInteractor = new PermissionInteractor({
-            userId: cathedralUserId,
-            repository: new PermissionRepository({ em })
-        })
+        const permissionInteractor = await this.createTempPermissionInteractor(cathedralUserId)
 
         const requirementInteractor = new RequirementInteractor({
             repository: new RequirementRepository({ em }),
@@ -384,10 +415,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         thread_ts?: string
     ): Promise<void> {
         try {
-            const permissionInteractor = new PermissionInteractor({
-                userId: cathedralUserId,
-                repository: new PermissionRepository({ em })
-            })
+            const permissionInteractor = await this.createTempPermissionInteractor(cathedralUserId)
 
             const requirementInteractor = new RequirementInteractor({
                 repository: new RequirementRepository({ em }),
@@ -485,13 +513,13 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         // 1. If no orgId, show org dropdown
         if (!orgId) {
             // Use OrganizationCollectionInteractor to get all orgs user can access
-            const orgCollectionInteractor = new OrganizationCollectionInteractor({
-                repository: new OrganizationCollectionRepository({ em }),
-                permissionInteractor: new PermissionInteractor({
-                    userId: cathedralUserId,
-                    repository: new PermissionRepository({ em })
+            const entraGroupService = createEntraGroupService(),
+                permissionInteractor = await this.createTempPermissionInteractor(cathedralUserId),
+                orgCollectionInteractor = new OrganizationCollectionInteractor({
+                    repository: new OrganizationCollectionRepository({ em }),
+                    permissionInteractor,
+                    entraGroupService
                 })
-            })
             const orgs = (await orgCollectionInteractor.findOrganizations()).filter(Boolean)
             if (!orgs || orgs.length === 0)
                 return this._slackService.createErrorMessage('No Cathedral organizations available to link.')
@@ -548,8 +576,6 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         if (!cathedralUserId)
             return this._slackService.createUserLinkRequiredMessage()
 
-        const em = this.repository['_em']
-
         // Find the channel meta first
         const channelMeta = await this.repository.getChannelMeta({ channelId, teamId })
         if (!channelMeta || !channelMeta.solutionId) {
@@ -563,11 +589,8 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         }
 
         // Check permissions for the organization
-        const permissionInteractor = new PermissionInteractor({
-            userId: cathedralUserId,
-            repository: new PermissionRepository({ em })
-        })
-        await permissionInteractor.assertOrganizationContributor(channelConfig.organizationId)
+        const permissionInteractor = await this.createTempPermissionInteractor(cathedralUserId)
+        permissionInteractor.assertOrganizationContributor(channelConfig.organizationId)
 
         await this.repository.unlinkChannel({ channelId, teamId })
         return this._slackService.createChannelUnlinkSuccessMessage()

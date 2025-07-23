@@ -60,11 +60,11 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             slug: slugify(name),
             name,
             description,
-            modifiedBy: createdById,
+            modifiedById: createdById,
             workflowState: WorkflowState.Active,
             requirement: em.create(reqModels.SolutionModel, {
                 id: newId,
-                createdBy: createdById,
+                createdById: createdById,
                 creationDate: effectiveDate
             })
         })
@@ -102,7 +102,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             slug: solLatestVersion.slug,
             name: solLatestVersion.name,
             description: solLatestVersion.description,
-            modifiedBy: props.deletedById,
+            modifiedById: props.deletedById,
             requirement: solution,
             organization: solLatestVersion.organization,
             workflowState: WorkflowState.Removed
@@ -116,7 +116,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
                 ...req,
                 isDeleted: true,
                 effectiveFrom: props.deletedDate,
-                modifiedBy: props.deletedById
+                modifiedById: props.deletedById
             })
         }
 
@@ -210,7 +210,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
 
         const solutionModels = (await em.find(reqModels.SolutionModel, {
             id,
-            createdBy,
+            createdById: createdBy?.id,
             creationDate,
             versions: {
                 $some: {
@@ -219,7 +219,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
                     ...modelQuery
                 }
             } as FilterQuery<reqModels.SolutionVersionsModel>
-        }, { populate: ['createdBy'] }))
+        }))
 
         const mapper = new DataModelToDomainModel(),
             solutions = await Promise.all(solutionModels.map(async (sol) => {
@@ -259,7 +259,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
                 },
                 ...(organizationSlug ? { slug: organizationSlug } : {})
             }, {
-                populate: ['requirement', 'requirement.createdBy', 'modifiedBy'],
+                populate: ['requirement'],
                 orderBy: { effectiveFrom: 'desc' }
             }),
             result = tempResult?.requirement,
@@ -462,7 +462,7 @@ export class OrganizationRepository extends Repository<z.infer<typeof req.Organi
             slug: props.name ? slugify(props.name) : solution.slug,
             name: props.name ?? solution.name,
             description: props.description ?? solution.description,
-            modifiedBy: props.modifiedById,
+            modifiedById: props.modifiedById,
             requirement: solution.id,
             workflowState: existingSolutionVersion.workflowState
         })

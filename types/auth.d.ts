@@ -1,21 +1,22 @@
+// Type declarations for nuxt-auth-utils
 declare module '#auth-utils' {
     interface User {
         id: string
-        name: string
         email: string
+        name: string
+        avatar?: string | null
+        groups: string[] // Entra group memberships
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     interface UserSession {
-        // User session data will be added as needed
-
+        user: User
+        loggedInAt: number
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     interface SecureSessionData {
-        // Secure session data will be added as needed
-
+        // Define secure session data structure
+        [key: string]: unknown
     }
 }
 
-export { }
+export {}

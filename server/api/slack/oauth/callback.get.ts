@@ -64,7 +64,7 @@ export default defineEventHandler(async (event) => {
 
     const workspaceInteractor = createSlackWorkspaceInteractor({
         em,
-        userId: session.user.id
+        session
     })
 
     await workspaceInteractor.installWorkspaceForOrganization({

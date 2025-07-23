@@ -1,16 +1,11 @@
-export default defineNuxtRouteMiddleware((to) => {
+export default defineNuxtRouteMiddleware(async (to) => {
     const { loggedIn } = useUserSession()
 
     if (!loggedIn.value) {
-        // Don't redirect if we're already on the auth page to prevent loops
-        if (to.name === 'Auth')
-            return
-
-        // Preserve the current route as redirect parameter
-        const redirectPath = to.fullPath
-        return navigateTo({
-            name: 'Auth',
-            query: { redirect: redirectPath }
-        })
+        // Store the intended destination in sessionStorage (client-side only)
+        if (import.meta.client && to.fullPath !== '/') {
+            sessionStorage.setItem('auth-redirect', to.fullPath)
+        }
+        return navigateTo('/auth/entra-external-id', { external: true })
     }
 })

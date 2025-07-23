@@ -1,7 +1,8 @@
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~/application'
-import { AppUserRepository, OrganizationRepository, PermissionRepository, RequirementRepository } from '~/server/data/repositories'
+import { OrganizationRepository, RequirementRepository } from '~/server/data/repositories'
 import { Organization, ReqType, Solution } from '~/shared/domain'
 import { z } from 'zod'
+import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
@@ -27,8 +28,8 @@ export default defineEventHandler(async (event) => {
     const { solutionSlug, organizationId: orgId, organizationSlug: orgSlug } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
         permissionInteractor = new PermissionInteractor({
-            userId: session.user.id,
-            repository: new PermissionRepository({ em: event.context.em })
+            session,
+            groupService: createEntraGroupService()
         }),
         organizationInteractor = new OrganizationInteractor({
             repository: new OrganizationRepository({
@@ -39,7 +40,7 @@ export default defineEventHandler(async (event) => {
             permissionInteractor,
             appUserInteractor: new AppUserInteractor({
                 permissionInteractor,
-                repository: new AppUserRepository({ em: event.context.em })
+                groupService: createEntraGroupService()
             })
         }),
         org = await organizationInteractor.getOrganization(),

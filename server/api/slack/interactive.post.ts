@@ -1,6 +1,6 @@
 import { NaturalLanguageToRequirementService, SlackService } from '~/server/data/services'
 import { createSlackEventInteractor } from '~/application/slack'
-import { SYSTEM_SLACK_USER_ID } from '~/shared/constants.js'
+import { SYSTEM_SLACK_USER_ID, SYSTEM_SLACK_USER_NAME, SYSTEM_SLACK_USER_EMAIL } from '~/shared/constants.js'
 import validateEventBody from '~/server/utils/validateEventBody'
 import { z } from 'zod'
 import { slackInteractivePayloadSchema } from '~/server/data/slack-zod-schemas'
@@ -35,7 +35,16 @@ export default defineEventHandler(async (event) => {
 
     const eventInteractor = createSlackEventInteractor({
         em: event.context.em,
-        userId: SYSTEM_SLACK_USER_ID,
+        session: {
+            id: SYSTEM_SLACK_USER_ID,
+            user: {
+                id: SYSTEM_SLACK_USER_ID,
+                name: SYSTEM_SLACK_USER_NAME,
+                email: SYSTEM_SLACK_USER_EMAIL,
+                groups: []
+            },
+            loggedInAt: Date.now()
+        },
         slackService,
         nlrService
     })

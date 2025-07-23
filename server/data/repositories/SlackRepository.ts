@@ -1,6 +1,6 @@
 import { Repository } from './Repository'
 import { SlackChannelMetaModel } from '../models/application/SlackChannelMetaModel'
-import { SlackUserMetaModel, AppUserModel } from '../models/application'
+import { SlackUserMetaModel } from '../models/application'
 import type { SolutionVersionsModel } from '../models/requirements'
 import { OrganizationRepository } from './OrganizationRepository'
 import type { SlackChannelMetaRepositoryType } from '#shared/domain/application/SlackChannelMeta'
@@ -98,7 +98,7 @@ export class SlackRepository extends Repository<unknown> {
             teamId: props.teamId,
             teamName: props.teamName,
             solution: props.solutionId,
-            createdBy: props.createdById,
+            createdById: props.createdById,
             creationDate: props.creationDate,
             lastNameRefresh: props.lastNameRefresh
         })
@@ -141,17 +141,12 @@ export class SlackRepository extends Repository<unknown> {
         if (existing)
             throw new DuplicateEntityException(`Slack user ${props.slackUserId} in team ${props.teamId} is already linked to a Cathedral user.`)
 
-        // Find the AppUserModel
-        const appUser = await em.findOne(AppUserModel, { id: props.cathedralUserId })
-        if (!appUser)
-            throw new NotFoundException(`Cathedral user with id ${props.cathedralUserId} does not exist`)
-
         // Create the SlackUserMetaModel
         const slackUserMeta = em.create(SlackUserMetaModel, {
             slackUserId: props.slackUserId,
             teamId: props.teamId,
-            appUser: appUser,
-            createdBy: props.createdById,
+            appUserId: props.cathedralUserId,
+            createdById: props.createdById,
             creationDate: props.creationDate
         })
         await em.persistAndFlush(slackUserMeta)
@@ -198,10 +193,10 @@ export class SlackRepository extends Repository<unknown> {
      */
     async getCathedralUserIdForSlackUser({ slackUserId, teamId }: { slackUserId: string, teamId: string }): Promise<string | null> {
         const em = this._em
-        const meta = await em.findOne(SlackUserMetaModel, { slackUserId, teamId }, { populate: ['appUser'] })
-        if (!meta || !meta.appUser)
+        const meta = await em.findOne(SlackUserMetaModel, { slackUserId, teamId })
+        if (!meta || !meta.appUserId)
             return null
-        return meta.appUser.id
+        return meta.appUserId
     }
 
     /**
@@ -214,7 +209,7 @@ export class SlackRepository extends Repository<unknown> {
         const channelLinks = await em.find(SlackChannelMetaModel, {
             solution: solutionId
         }, {
-            populate: ['createdBy']
+            populate: ['createdById']
         })
 
         return channelLinks.map((link: SlackChannelMetaModel) => ({
@@ -223,8 +218,7 @@ export class SlackRepository extends Repository<unknown> {
             teamId: link.teamId,
             teamName: link.teamName,
             solutionId: solutionId,
-            createdById: link.createdBy.id,
-            createdByName: link.createdBy.name,
+            createdById: link.createdById,
             creationDate: link.creationDate,
             lastNameRefresh: link.lastNameRefresh
         }))
@@ -248,7 +242,7 @@ export class SlackRepository extends Repository<unknown> {
         const existing = await em.findOne(SlackChannelMetaModel, {
             channelId: props.channelId,
             teamId: props.teamId
-        }, { populate: ['createdBy', 'solution'] })
+        }, { populate: ['createdById', 'solution'] })
 
         if (!existing) return null
 
@@ -264,8 +258,7 @@ export class SlackRepository extends Repository<unknown> {
             teamId: existing.teamId,
             teamName: existing.teamName,
             solutionId: existing.solution.id,
-            createdById: existing.createdBy.id,
-            createdByName: existing.createdBy.name,
+            createdById: existing.createdById,
             creationDate: existing.creationDate,
             lastNameRefresh: existing.lastNameRefresh
         }

@@ -1,11 +1,5 @@
 <script lang="ts" setup>
-const { loggedIn } = useUserSession()
 const { public: publicConfig } = useRuntimeConfig()
-
-watch(loggedIn, () => {
-    if (!loggedIn.value)
-        navigateTo({ name: 'Auth' })
-})
 
 useHead({
     titleTemplate: titleChunk =>
