@@ -43,7 +43,7 @@ export default defineOAuthEntraExternalIDEventHandler({
 
             return sendRedirect(event, '/')
         } catch (error) {
-            console.error('ERROR: Failed to extract groups from token:', error)
+            console.error('ERROR: Failed to extract groups from token. See sanitized error details below.')
             console.error('Error details:', {
                 message: error instanceof Error ? error.message : String(error),
                 stack: error instanceof Error ? error.stack : undefined
