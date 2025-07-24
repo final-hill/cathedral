@@ -37,12 +37,12 @@ export class EntraGroupService {
      */
     private escapeODataString(value: string): string {
         if (!value) return ''
-        
+
         // Replace single quotes with double single quotes (OData standard escaping)
         // and escape other potentially dangerous characters
         return value
-            .replace(/'/g, "''")  // Escape single quotes
-            .replace(/\\/g, "\\\\") // Escape backslashes
+            .replace(/'/g, '\'\'') // Escape single quotes
+            .replace(/\\/g, '\\\\') // Escape backslashes
     }
 
     /**
