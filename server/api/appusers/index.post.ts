@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { AppUser, AppUserOrganizationRole, Organization } from '#shared/domain'
+import { AppUser, AppUserOrganizationRole, Organization, NotFoundException } from '#shared/domain'
 import { OrganizationCollectionInteractor, PermissionInteractor } from '~/application'
 import { OrganizationCollectionRepository } from '~/server/data/repositories'
 import { AppUserInteractor } from '~/application/AppUserInteractor'
@@ -23,6 +23,7 @@ const bodySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { email, organizationId, organizationSlug, role } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
+        config = useRuntimeConfig(),
         permissionInteractor = new PermissionInteractor({
             session,
             groupService: createEntraGroupService()
@@ -38,14 +39,27 @@ export default defineEventHandler(async (event) => {
         })
 
     try {
-        const orgId = organizationId ?? (await organizationInteractor.findOrganizations({ slug: organizationSlug }))[0]?.id,
-            appUser = (await appUserInteractor.getUserByEmail(email))!
+        const orgId = organizationId ?? (await organizationInteractor.findOrganizations({ slug: organizationSlug }))[0]?.id
 
-        return await permissionInteractor.addAppUserOrganizationRole({
-            appUserId: appUser.id,
-            organizationId: orgId,
-            role
-        })
+        if (!orgId) {
+            throw new NotFoundException(`Organization not found`)
+        }
+
+        const redirectUrl = config.oauth?.microsoft?.redirectURL
+        if (!redirectUrl) {
+            throw new Error('OAuth redirect URL not configured')
+        }
+
+        const result = await appUserInteractor.addOrInviteUserToOrganization(email, orgId, role, redirectUrl)
+
+        return {
+            success: true,
+            userId: result.userId,
+            invited: result.invited,
+            message: result.invited
+                ? `Invitation sent to ${email}. They will receive an email to join the organization.`
+                : `User ${email} has been added to the organization.`
+        }
     } catch (error: unknown) {
         return handleDomainException(error)
     }

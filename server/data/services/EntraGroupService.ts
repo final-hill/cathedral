@@ -32,6 +32,20 @@ export class EntraGroupService {
     }
 
     /**
+     * Escape a string for safe use in OData filter expressions
+     * This prevents OData injection attacks by properly escaping special characters
+     */
+    private escapeODataString(value: string): string {
+        if (!value) return ''
+
+        // Replace single quotes with double single quotes (OData standard escaping)
+        // and escape other potentially dangerous characters
+        return value
+            .replace(/'/g, '\'\'') // Escape single quotes
+            .replace(/\\/g, '\\\\') // Escape backslashes
+    }
+
+    /**
      * Get access token for Microsoft Graph API
      */
     private async getAccessToken(): Promise<string> {
@@ -218,7 +232,7 @@ export class EntraGroupService {
                 const batch = groupIds.slice(i, i + batchSize)
 
                 // Build filter query for this batch
-                const filterConditions = batch.map(id => `id eq '${id}'`).join(' or ')
+                const filterConditions = batch.map(id => `id eq '${this.escapeODataString(id)}'`).join(' or ')
                 const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=${filterConditions}&$select=id,displayName`)
 
                 if (groups.value) {
@@ -305,7 +319,8 @@ export class EntraGroupService {
             for (const groupName of Object.values(groupNames)) {
                 try {
                     // Find the group
-                    const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${groupName}'`)
+                    const escapedGroupName = this.escapeODataString(groupName)
+                    const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
 
                     if (groups.value && groups.value.length > 0) {
                         const group = groups.value[0]
@@ -337,7 +352,8 @@ export class EntraGroupService {
     private async findOrCreateGroup(groupName: string): Promise<Group> {
         try {
             // Try to find existing group by display name
-            const existingGroups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${groupName}'`)
+            const escapedGroupName = this.escapeODataString(groupName)
+            const existingGroups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
 
             if (existingGroups.value && existingGroups.value.length > 0) {
                 console.log(`Found existing group: ${groupName}`)
@@ -428,7 +444,8 @@ export class EntraGroupService {
             for (const groupName of Object.values(groupNames)) {
                 try {
                     // Find the group
-                    const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${groupName}'`)
+                    const escapedGroupName = this.escapeODataString(groupName)
+                    const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
 
                     if (groups.value && groups.value.length > 0) {
                         const group = groups.value[0]
@@ -505,6 +522,78 @@ export class EntraGroupService {
     }
 
     /**
+     * Search for a user by email address
+     * @param email - The email address to search for
+     * @returns User information if found, null if not found
+     */
+    async getUserByEmail(email: string): Promise<{
+        id: string
+        name: string
+        email: string
+    } | null> {
+        try {
+            // Properly escape the email parameter for OData filter to prevent injection attacks
+            const escapedEmail = this.escapeODataString(email)
+            // Use the Microsoft Graph filter to search for users by mail or userPrincipalName
+            const users = await this.graphRequest<{ value: User[] }>(`/users?$filter=mail eq '${escapedEmail}' or userPrincipalName eq '${escapedEmail}'&$select=id,displayName,userPrincipalName,mail`)
+
+            if (!users.value || users.value.length === 0) {
+                return null
+            }
+
+            const user = users.value[0]
+            return {
+                id: user.id!,
+                name: user.displayName || user.userPrincipalName || 'Unknown User',
+                email: user.mail || user.userPrincipalName || ''
+            }
+        } catch (error) {
+            console.error(`Failed to search for user ${email}:`, error)
+            return null
+        }
+    }
+
+    /**
+     * Create an external user invitation via Microsoft Graph
+     * @param email - The email address to invite
+     * @param redirectUrl - The URL to redirect users to after accepting the invitation
+     * @param displayName - Optional display name for the invited user
+     * @returns The invited user information
+     */
+    async createExternalUserInvitation(email: string, redirectUrl: string, displayName?: string): Promise<{
+        id: string
+        name: string
+        email: string
+    }> {
+        try {
+            const invitation = await this.graphRequest<{
+                id: string
+                inviteRedeemUrl: string
+                invitedUser: User
+                status: string
+            }>('/invitations', {
+                method: 'POST',
+                body: JSON.stringify({
+                    invitedUserEmailAddress: email,
+                    inviteRedirectUrl: redirectUrl,
+                    invitedUserDisplayName: displayName || email.split('@')[0],
+                    sendInvitationMessage: true
+                })
+            })
+
+            const user = invitation.invitedUser
+            return {
+                id: user.id!,
+                name: user.displayName || displayName || email.split('@')[0],
+                email: user.mail || user.userPrincipalName || email
+            }
+        } catch (error) {
+            console.error(`Failed to create invitation for ${email}:`, error)
+            throw new MismatchException(`Failed to create invitation: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        }
+    }
+
+    /**
      * Get all users in an organization with their roles
      * @param organizationId - The organization ID
      * @returns List of users with their roles
@@ -524,7 +613,8 @@ export class EntraGroupService {
 
                 try {
                     // Find the group
-                    const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${groupName}'`)
+                    const escapedGroupName = this.escapeODataString(groupName)
+                    const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
 
                     if (groups.value && groups.value.length > 0) {
                         const group = groups.value[0]
