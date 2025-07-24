@@ -33,8 +33,7 @@ const createOrganization = async (data: FormSchema) => {
     if (newSlug) {
         await refreshSession()
         router.push({ name: 'Organization', params: { organizationslug: newSlug } })
-    }
-    else
+    } else
         $eventBus.$emit('page-error', 'Failed to create organization. No organization ID returned.')
 }
 
