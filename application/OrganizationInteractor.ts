@@ -163,7 +163,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
         })
 
         return AppUser.parse({
-            ...await aui.getUserById(auor.appUser.id),
+            ...await aui.getUserById(auor.appUser.id, org.id),
             role: auor.role,
             organizations: [{
                 reqType: ReqType.ORGANIZATION,
@@ -184,14 +184,14 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
             pi = this._permissionInteractor,
             aui = this._appUserInteractor
 
-        await pi.assertOrganizationReader(org.id)
+        pi.assertOrganizationReader(org.id)
 
         const auors = await pi.findAppUserOrganizationRoles({
             organizationId: org.id
         })
 
         const appUsers = await Promise.all(auors.map(async auor => AppUser.parse({
-            ...await aui.getUserById(auor.appUser.id),
+            ...await aui.getUserById(auor.appUser.id, org.id),
             role: auor.role,
             organizations: [{
                 reqType: ReqType.ORGANIZATION,

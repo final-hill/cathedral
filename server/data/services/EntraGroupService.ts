@@ -505,6 +505,76 @@ export class EntraGroupService {
     }
 
     /**
+     * Search for a user by email address
+     * @param email - The email address to search for
+     * @returns User information if found, null if not found
+     */
+    async getUserByEmail(email: string): Promise<{
+        id: string
+        name: string
+        email: string
+    } | null> {
+        try {
+            // Use the Microsoft Graph filter to search for users by mail or userPrincipalName
+            const users = await this.graphRequest<{ value: User[] }>(`/users?$filter=mail eq '${email}' or userPrincipalName eq '${email}'&$select=id,displayName,userPrincipalName,mail`)
+
+            if (!users.value || users.value.length === 0) {
+                return null
+            }
+
+            const user = users.value[0]
+            return {
+                id: user.id!,
+                name: user.displayName || user.userPrincipalName || 'Unknown User',
+                email: user.mail || user.userPrincipalName || ''
+            }
+        } catch (error) {
+            console.error(`Failed to search for user ${email}:`, error)
+            return null
+        }
+    }
+
+    /**
+     * Create an external user invitation via Microsoft Graph
+     * @param email - The email address to invite
+     * @param redirectUrl - The URL to redirect users to after accepting the invitation
+     * @param displayName - Optional display name for the invited user
+     * @returns The invited user information
+     */
+    async createExternalUserInvitation(email: string, redirectUrl: string, displayName?: string): Promise<{
+        id: string
+        name: string
+        email: string
+    }> {
+        try {
+            const invitation = await this.graphRequest<{
+                id: string
+                inviteRedeemUrl: string
+                invitedUser: User
+                status: string
+            }>('/invitations', {
+                method: 'POST',
+                body: JSON.stringify({
+                    invitedUserEmailAddress: email,
+                    inviteRedirectUrl: redirectUrl,
+                    invitedUserDisplayName: displayName || email.split('@')[0],
+                    sendInvitationMessage: true
+                })
+            })
+
+            const user = invitation.invitedUser
+            return {
+                id: user.id!,
+                name: user.displayName || displayName || email.split('@')[0],
+                email: user.mail || user.userPrincipalName || email
+            }
+        } catch (error) {
+            console.error(`Failed to create invitation for ${email}:`, error)
+            throw new MismatchException(`Failed to create invitation: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        }
+    }
+
+    /**
      * Get all users in an organization with their roles
      * @param organizationId - The organization ID
      * @returns List of users with their roles

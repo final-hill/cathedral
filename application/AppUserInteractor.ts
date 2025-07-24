@@ -43,26 +43,17 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
         organizationId: string,
         role: AppRole
     ): Promise<string> {
-        await this._permissionInteractor.assertOrganizationAdmin(organizationId)
+        this._permissionInteractor.assertOrganizationAdmin(organizationId)
 
         try {
-            // Check if user exists in Entra by email
-            const entraUser = await this._groupService.getUser(email)
+            const entraUser = await this._groupService.getUserByEmail(email)
 
             if (!entraUser) {
                 throw new NotFoundException(`User with email ${email} not found in Entra External ID tenant. User must be invited through the Entra admin portal first.`)
             }
 
-            // Add user to organization role via PermissionInteractor
             await this._permissionInteractor.addAppUserOrganizationRole({
                 appUserId: entraUser.id,
-                organizationId,
-                role
-            })
-
-            // Add user to appropriate Entra groups based on their role
-            await this._groupService.addUserToOrganizationGroup({
-                userId: entraUser.id,
                 organizationId,
                 role
             })
@@ -78,16 +69,60 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
     }
 
     /**
+     * Add or invite a user to the organization
+     * If the user exists in Entra, they will be added to the organization.
+     * If the user doesn't exist, they will be invited via Entra External ID.
+     *
+     * @param email - The email address of the user to add/invite
+     * @param organizationId - The ID of the organization
+     * @param role - The role to assign to the user in the organization
+     * @param redirectUrl - The URL to redirect users to after accepting the invitation
+     * @returns Object containing user ID and whether an invitation was sent
+     * @throws {PermissionDeniedException} If the current user is not an admin of the organization
+     */
+    async addOrInviteUserToOrganization(
+        email: string,
+        organizationId: string,
+        role: AppRole,
+        redirectUrl: string
+    ): Promise<{ userId: string, invited: boolean }> {
+        this._permissionInteractor.assertOrganizationAdmin(organizationId)
+
+        try {
+            let entraUser = await this._groupService.getUserByEmail(email)
+            let invited = false
+
+            if (!entraUser) {
+                entraUser = await this._groupService.createExternalUserInvitation(email, redirectUrl)
+                invited = true
+            }
+
+            await this._permissionInteractor.addAppUserOrganizationRole({
+                appUserId: entraUser.id,
+                organizationId,
+                role
+            })
+
+            return { userId: entraUser.id, invited }
+        } catch (error) {
+            // If it's a Microsoft Graph API error, provide more context
+            if (error instanceof Error && error.message.includes('Graph API')) {
+                throw new PermissionDeniedException(`Failed to add/invite user via Entra External ID: ${error.message}`)
+            }
+            throw error
+        }
+    }
+
+    /**
      * Get the app user by id from Entra External ID
      * @param id - The Entra user id
+     * @param organizationId - Organization ID to check if user has access within that organization
      * @returns The app user data from Entra
      * @throws {NotFoundException} If the user does not exist
-     * @throws {PermissionDeniedException} If the current user is not a system admin or the user being queried is not the current user
+     * @throws {PermissionDeniedException} If the current user doesn't have permission to access this user's information
      */
-    async getUserById(id: string): Promise<z.infer<typeof AppUser>> {
-        const currentUserId = this._permissionInteractor.userId
-        if (id !== currentUserId && !this._permissionInteractor.isSystemAdmin())
-            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to get user with id ${id}`)
+    async getUserById(id: string, organizationId: string): Promise<z.infer<typeof AppUser>> {
+        this._permissionInteractor.assertOrganizationReader(organizationId)
 
         try {
             const entraUser = await this._groupService.getUser(id)
@@ -111,19 +146,16 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
     /**
      * Get the app user by email
      * @param email - The email of the app user
+     * @param organizationId - Organization ID to check if user has access within that organization
      * @returns The app user
      * @throws {NotFoundException} If the user does not exist
-     * @throws {PermissionDeniedException} If the current user is not a system admin or the user being queried is not the current user
+     * @throws {PermissionDeniedException} If the current user doesn't have permission to access this user's information
      */
-    async getUserByEmail(email: string): Promise<z.infer<typeof AppUser>> {
-        const currentUserId = this._permissionInteractor.userId
-        const currentUser = await this.getUserById(currentUserId)
-
-        if (email !== currentUser.email && !this._permissionInteractor.isSystemAdmin())
-            throw new PermissionDeniedException(`User with id ${currentUserId} does not have permission to get user with email ${email}`)
+    async getUserByEmail(email: string, organizationId: string): Promise<z.infer<typeof AppUser>> {
+        this._permissionInteractor.assertOrganizationReader(organizationId)
 
         try {
-            const entraUser = await this._groupService.getUser(email)
+            const entraUser = await this._groupService.getUserByEmail(email)
             if (!entraUser) {
                 throw new NotFoundException(`User with email ${email} does not exist in Entra External ID`)
             }
@@ -143,18 +175,15 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
     /**
      * Check if the requested user exists
      * @param email - The email of the user
+     * @param organizationId - Organization ID to check if user has access within that organization
      * @returns Whether the user exists
-     * @throws {PermissionDeniedException} If the current user is not a system admin or the user being queried is not the current user
+     * @throws {PermissionDeniedException} If the current user doesn't have permission to check this user's existence
      */
-    async hasUser(email: string): Promise<boolean> {
-        const currentUserId = this._permissionInteractor.userId
-        const currentUser = await this.getUserById(currentUserId)
-
-        if (email !== currentUser.email && !this._permissionInteractor.isSystemAdmin())
-            throw new PermissionDeniedException(`User ${currentUser.email} does not have permission to check if user with email ${email} exists`)
+    async hasUser(email: string, organizationId: string): Promise<boolean> {
+        this._permissionInteractor.assertOrganizationReader(organizationId)
 
         try {
-            const entraUser = await this._groupService.getUser(email)
+            const entraUser = await this._groupService.getUserByEmail(email)
             return entraUser !== null
         } catch {
             return false

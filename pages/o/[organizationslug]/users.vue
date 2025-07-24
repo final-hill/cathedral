@@ -154,7 +154,7 @@ const columnPinning = ref({
 
 const addUser = async (data: z.infer<typeof createSchema>) => {
     try {
-        await $fetch(`/api/appusers/`, {
+        const response = await $fetch(`/api/appusers/`, {
             method: 'POST',
             body: {
                 email: data.email,
@@ -162,13 +162,29 @@ const addUser = async (data: z.infer<typeof createSchema>) => {
                 role: data.role
             }
         })
+
         refresh()
+
+        // Show different success messages based on whether user was invited or added
+        if (response.invited) {
+            toast.add({
+                icon: 'i-lucide-mail',
+                title: 'Invitation Sent',
+                description: `Invitation sent to ${data.email}. They will receive an email to join the organization.`
+            })
+        } else {
+            toast.add({
+                icon: 'i-lucide-check',
+                title: 'User Added',
+                description: `${data.email} has been added to the organization.`
+            })
+        }
     } catch (error) {
-        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error creating user: ${error}` })
+        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error adding/inviting user: ${error}` })
     }
 }
 
-const updateUser = async (data: z.infer<typeof editSchema> & { id: string }) => {
+const updateUser = async (data: z.infer<typeof editSchema>) => {
     try {
         await $fetch(`/api/appusers/${data.id}`, {
             method: 'PUT',
@@ -205,22 +221,24 @@ const closeAddModal = () => {
     addModalOpenState.value = false
 }
 
-const onAddModalSubmit = async () => {
-    if (addModalItem.value) {
-        await addUser(addModalItem.value)
-        closeAddModal()
-    }
+const onAddModalSubmit = async (data: z.infer<typeof createSchema>) => {
+    await addUser(data)
+    closeAddModal()
 }
 </script>
 
 <template>
     <h1>Application Users</h1>
 
-    <p> {{ AppUser.description }} </p>
+    <p>{{ AppUser.description }}</p>
+    <p>
+        <strong>Add/Invite Users:</strong> If the user already exists in the system, they will be added immediately to the organization.
+        If they don't exist, an invitation will be sent to their email address.
+    </p>
 
     <section>
         <UButton
-            label="Add User"
+            label="Add/Invite User"
             color="success"
             size="xl"
             @click="openAddModal"
@@ -238,7 +256,7 @@ const onAddModalSubmit = async () => {
 
     <UModal
         v-model:open="addModalOpenState"
-        title="Add User"
+        title="Add/Invite User"
     >
         <template #body>
             <XForm
