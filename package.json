@@ -1,6 +1,6 @@
 {
     "name": "@final-hill/cathedral",
-    "version": "0.28.0",
+    "version": "0.29.0",
     "description": "Requirements management system",
     "keywords": [],
     "private": true,
@@ -33,7 +33,6 @@
         "orm-list-executed-migrations": "mikro-orm-esm migration:list",
         "orm-run-pending-migrations": "mikro-orm-esm migration:up",
         "orm-rollback-migration": "mikro-orm-esm migration:down",
-        "orm-seed-users": "mikro-orm-esm seeder:run -c AppUserSeeder",
         "test": "vitest run",
         "test:watch": "vitest"
     },

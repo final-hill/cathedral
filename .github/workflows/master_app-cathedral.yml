@@ -87,8 +87,6 @@ jobs:
         npm run orm-list-pending-migrations
         echo "Running pending migrations..."
         npm run orm-run-pending-migrations
-        echo "Seeding users..."
-        npm run orm-seed-users || echo "User seeding failed or users already exist - continuing..."
         echo "Database migrations completed successfully"
 
     - name: Build and push container image to registry
