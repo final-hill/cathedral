@@ -7,7 +7,8 @@ definePageMeta({ name: 'New Organization', middleware: 'auth' })
 useHead({ title: 'New Organization' })
 
 const router = useRouter(),
-    { $eventBus } = useNuxtApp()
+    { $eventBus } = useNuxtApp(),
+    { fetch: refreshSession } = useUserSession()
 
 const formSchema = Organization.innerType().pick({
     name: true,
@@ -29,8 +30,10 @@ const createOrganization = async (data: FormSchema) => {
         body: data
     }).catch(e => $eventBus.$emit('page-error', e)))
 
-    if (newSlug)
-        router.push({ name: 'Organization', params: { organizationslug: data.slug } })
+    if (newSlug) {
+        await refreshSession()
+        router.push({ name: 'Organization', params: { organizationslug: newSlug } })
+    }
     else
         $eventBus.$emit('page-error', 'Failed to create organization. No organization ID returned.')
 }

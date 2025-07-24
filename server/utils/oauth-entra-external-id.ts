@@ -126,8 +126,7 @@ export function defineOAuthEntraExternalIDEventHandler({
                     client_id: resolvedConfig.clientId,
                     redirect_uri: redirectURL,
                     response_type: 'code',
-                    scope: scope.join(' '),
-                    prompt: 'login'
+                    scope: scope.join(' ')
                 })
             )
         }
