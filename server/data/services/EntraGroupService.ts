@@ -32,6 +32,20 @@ export class EntraGroupService {
     }
 
     /**
+     * Escape a string for safe use in OData filter expressions
+     * This prevents OData injection attacks by properly escaping special characters
+     */
+    private escapeODataString(value: string): string {
+        if (!value) return ''
+        
+        // Replace single quotes with double single quotes (OData standard escaping)
+        // and escape other potentially dangerous characters
+        return value
+            .replace(/'/g, "''")  // Escape single quotes
+            .replace(/\\/g, "\\\\") // Escape backslashes
+    }
+
+    /**
      * Get access token for Microsoft Graph API
      */
     private async getAccessToken(): Promise<string> {
@@ -218,7 +232,7 @@ export class EntraGroupService {
                 const batch = groupIds.slice(i, i + batchSize)
 
                 // Build filter query for this batch
-                const filterConditions = batch.map(id => `id eq '${id}'`).join(' or ')
+                const filterConditions = batch.map(id => `id eq '${this.escapeODataString(id)}'`).join(' or ')
                 const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=${filterConditions}&$select=id,displayName`)
 
                 if (groups.value) {
@@ -305,7 +319,8 @@ export class EntraGroupService {
             for (const groupName of Object.values(groupNames)) {
                 try {
                     // Find the group
-                    const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${groupName}'`)
+                    const escapedGroupName = this.escapeODataString(groupName)
+                    const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
 
                     if (groups.value && groups.value.length > 0) {
                         const group = groups.value[0]
@@ -337,7 +352,8 @@ export class EntraGroupService {
     private async findOrCreateGroup(groupName: string): Promise<Group> {
         try {
             // Try to find existing group by display name
-            const existingGroups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${groupName}'`)
+            const escapedGroupName = this.escapeODataString(groupName)
+            const existingGroups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
 
             if (existingGroups.value && existingGroups.value.length > 0) {
                 console.log(`Found existing group: ${groupName}`)
@@ -428,7 +444,8 @@ export class EntraGroupService {
             for (const groupName of Object.values(groupNames)) {
                 try {
                     // Find the group
-                    const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${groupName}'`)
+                    const escapedGroupName = this.escapeODataString(groupName)
+                    const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
 
                     if (groups.value && groups.value.length > 0) {
                         const group = groups.value[0]
@@ -515,8 +532,10 @@ export class EntraGroupService {
         email: string
     } | null> {
         try {
+            // Properly escape the email parameter for OData filter to prevent injection attacks
+            const escapedEmail = this.escapeODataString(email)
             // Use the Microsoft Graph filter to search for users by mail or userPrincipalName
-            const users = await this.graphRequest<{ value: User[] }>(`/users?$filter=mail eq '${email}' or userPrincipalName eq '${email}'&$select=id,displayName,userPrincipalName,mail`)
+            const users = await this.graphRequest<{ value: User[] }>(`/users?$filter=mail eq '${escapedEmail}' or userPrincipalName eq '${escapedEmail}'&$select=id,displayName,userPrincipalName,mail`)
 
             if (!users.value || users.value.length === 0) {
                 return null
@@ -594,7 +613,8 @@ export class EntraGroupService {
 
                 try {
                     // Find the group
-                    const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${groupName}'`)
+                    const escapedGroupName = this.escapeODataString(groupName)
+                    const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
 
                     if (groups.value && groups.value.length > 0) {
                         const group = groups.value[0]
