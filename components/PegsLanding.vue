@@ -52,18 +52,18 @@ const props = defineProps<{
             >
                 <UCard
                     variant="subtle"
-                    class="border-dashed border-gray-300 opacity-70"
+                    class="border-dashed border-muted opacity-70"
                 >
                     <template #header>
                         <UIcon
                             :name="card.icon"
-                            class="size-7 text-gray-400"
+                            class="size-7 text-muted"
                         />
                     </template>
 
                     <div>
                         {{ card.reqId }}. {{ card.label }}
-                        <div class="text-red-500 text-sm mt-2 font-medium">
+                        <div class="text-error text-sm mt-2 font-medium">
                             Coming Soon
                         </div>
                     </div>
