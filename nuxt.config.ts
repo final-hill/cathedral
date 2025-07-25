@@ -32,7 +32,7 @@ export default defineNuxtConfig({
         slackClientSecret: '',
         slackBotToken: '',
         slackLinkSecret: '',
-        slackOauthOrigin: '', // For OAuth callbacks (supports ngrok tunneling)
+        slackOauthOrigin: '',
 
         azureOpenaiApiKey: '',
         azureOpenaiApiVersion: '',
