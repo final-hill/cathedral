@@ -4,9 +4,10 @@ import { SlackService } from '~/server/data/services'
 import { createSlackWorkspaceInteractor } from '~/application/slack/factory'
 
 const querySchema = z.object({
-    code: z.string().min(1, 'Authorization code is required'),
+    code: z.string().optional(),
     state: z.string().min(1, 'State parameter is required'),
-    error: z.string().optional()
+    error: z.string().optional(),
+    error_description: z.string().optional()
 })
 
 /**
@@ -16,14 +17,35 @@ const querySchema = z.object({
 export default defineEventHandler(async (event) => {
     const config = useRuntimeConfig(),
         session = await requireUserSession(event),
-        { code, state, error } = await validateEventQuery(event, querySchema),
+        { code, state, error, error_description } = await validateEventQuery(event, querySchema),
         em = event.context.em
 
     if (error) {
         console.error('Slack OAuth error:', error)
+
+        if (error === 'access_denied') {
+            const stateData: { organizationSlug: string, timestamp: number, nonce: string }
+                = JSON.parse(atob(state))
+
+            // Redirect back to organization page with error message
+            const redirectUrl = new URL(`/o/${stateData.organizationSlug}`, config.origin)
+            redirectUrl.searchParams.set('slack_install', 'error')
+            redirectUrl.searchParams.set('error_message', error_description || 'Access was denied by the user')
+            await sendRedirect(event, redirectUrl.toString())
+
+            return
+        }
+
         throw createError({
             statusCode: 400,
             statusMessage: `Slack OAuth error: ${error}`
+        })
+    }
+
+    if (!code) {
+        throw createError({
+            statusCode: 400,
+            statusMessage: 'Authorization code is required'
         })
     }
 
