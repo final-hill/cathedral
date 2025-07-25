@@ -30,7 +30,7 @@ await navigateTo('/auth/entra-external-id', { external: true })
             <h2 class="text-xl font-semibold mb-4">
                 Redirecting to login...
             </h2>
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
         </div>
     </div>
 </template>

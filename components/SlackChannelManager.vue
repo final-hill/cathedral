@@ -169,7 +169,7 @@ const slackChannelColumns: TableColumn<z.infer<typeof SlackChannelMeta>>[] = [
         cell: ({ row }: { row: Row<z.infer<typeof SlackChannelMeta>> }) => {
             const lastRefresh = row.original.lastNameRefresh
             if (!lastRefresh) {
-                return <span class="text-gray-400 dark:text-gray-500 text-sm">Never</span>
+                return <span class="text-muted text-sm">Never</span>
             }
             const refreshDate = lastRefresh instanceof Date ? lastRefresh : new Date(lastRefresh)
             return <time datetime={refreshDate.toISOString()} class="text-sm">{refreshDate.toLocaleDateString()}</time>
@@ -255,13 +255,13 @@ const slackChannelColumns: TableColumn<z.infer<typeof SlackChannelMeta>>[] = [
             <div class="flex flex-col items-center space-y-4">
                 <UIcon
                     name="i-lucide-slack"
-                    class="text-4xl text-gray-400 dark:text-gray-500"
+                    class="text-4xl text-muted"
                 />
-                <p class="text-gray-500 dark:text-gray-400">
+                <p class="text-muted">
                     No Slack channels are currently linked to this solution.
                 </p>
-                <p class="text-sm text-gray-400 dark:text-gray-500">
-                    Use the <code class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">/cathedral-link-solution</code>
+                <p class="text-sm text-muted">
+                    Use the <code class="bg-elevated px-2 py-1 rounded">"/cathedral-link-solution"</code>
                     command in
                     Slack to link
                     channels.

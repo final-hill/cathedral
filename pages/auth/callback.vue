@@ -25,10 +25,10 @@ onMounted(() => {
             <h2 class="text-xl font-semibold mb-4">
                 Authentication successful!
             </h2>
-            <p class="text-gray-600 mb-4">
+            <p class="text-muted mb-4">
                 Redirecting you to your destination...
             </p>
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
         </div>
     </div>
 </template>

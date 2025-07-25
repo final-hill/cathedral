@@ -13,7 +13,7 @@ const route = useRoute(),
             <h1 class="text-2xl font-bold">
                 Slack Workspace Integration
             </h1>
-            <p class="text-gray-600 dark:text-gray-400">
+            <p class="text-muted">
                 Manage Slack workspace connections for this organization. Connected workspaces allow users to interact
                 with Cathedral through slash commands and app mentions.
             </p>

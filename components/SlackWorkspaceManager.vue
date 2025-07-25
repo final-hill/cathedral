@@ -161,7 +161,7 @@ const slackWorkspaceColumns: TableColumn<z.infer<typeof SlackWorkspaceMeta>>[] =
         cell: ({ row }: { row: Row<z.infer<typeof SlackWorkspaceMeta>> }) => {
             const lastRefresh = row.original.lastRefreshDate
             if (!lastRefresh) {
-                return <span class="text-gray-400 text-sm">Never</span>
+                return <span class="text-muted text-sm">Never</span>
             }
             const refreshDate = lastRefresh
             return <time datetime={refreshDate.toISOString()} class="text-sm">{refreshDate.toLocaleDateString()}</time>
@@ -246,7 +246,7 @@ const slackWorkspaceColumns: TableColumn<z.infer<typeof SlackWorkspaceMeta>>[] =
                 <h2 class="text-xl font-semibold">
                     Connected Slack Workspaces
                 </h2>
-                <p class="text-gray-600 dark:text-gray-400 text-sm">
+                <p class="text-muted text-sm">
                     Manage Slack workspaces connected to this
                     organization
                 </p>
@@ -269,13 +269,13 @@ const slackWorkspaceColumns: TableColumn<z.infer<typeof SlackWorkspaceMeta>>[] =
             <div class="flex flex-col items-center space-y-4">
                 <UIcon
                     name="i-lucide-slack"
-                    class="text-4xl text-gray-400 dark:text-gray-500"
+                    class="text-4xl text-muted"
                 />
-                <p class="text-gray-500 dark:text-gray-400">
+                <p class="text-muted">
                     No Slack workspaces are currently connected to this
                     organization.
                 </p>
-                <p class="text-sm text-gray-400 dark:text-gray-500">
+                <p class="text-sm text-muted">
                     Add Cathedral to your Slack workspace to enable slash commands and channel linking.
                 </p>
                 <SlackAddButton :organization-slug="organizationSlug" />
