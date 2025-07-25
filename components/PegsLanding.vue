@@ -18,7 +18,10 @@ const props = defineProps<{
     <slot name="header" />
 
     <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-center">
-        <template v-for="card in props.cards" :key="card.name">
+        <template
+            v-for="card in props.cards"
+            :key="card.name"
+        >
             <!-- Enabled card -->
             <NuxtLink
                 v-if="!card.disabled"
@@ -43,8 +46,14 @@ const props = defineProps<{
             </NuxtLink>
 
             <!-- Disabled card -->
-            <div v-else class="cursor-not-allowed">
-                <UCard variant="subtle" class="border-dashed border-gray-300 opacity-70">
+            <div
+                v-else
+                class="cursor-not-allowed"
+            >
+                <UCard
+                    variant="subtle"
+                    class="border-dashed border-gray-300 opacity-70"
+                >
                     <template #header>
                         <UIcon
                             :name="card.icon"
