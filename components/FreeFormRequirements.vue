@@ -145,7 +145,7 @@ function resetRequirements() {
                 <UTextarea
                     v-model="requirementsFormState.description"
                     class="w-full"
-                    autoresize
+                    :rows="4"
                 />
 
                 <template #help>
