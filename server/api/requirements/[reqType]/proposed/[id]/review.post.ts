@@ -17,6 +17,9 @@ export default defineEventHandler(async (event) => {
     if (reqType === ReqType.PARSED_REQUIREMENTS)
         throw createError({ statusCode: 400, statusMessage: 'ReqType.PARSED_REQUIREMENTS is not allowed.' })
 
+    if (reqType === ReqType.SILENCE)
+        throw createError({ statusCode: 400, statusMessage: 'Silence requirements cannot be submitted for review.' })
+
     const bodySchema = z.object({
             solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
             organizationId,

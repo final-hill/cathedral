@@ -90,6 +90,136 @@ Note that this will only work if the server is running locally (`npm run dev`).
 
 Once the local server is stopped, the ngrok tunnel will be closed and the Slackbot will no longer work.
 
+## Requirements Workflow
+
+The Cathedral application implements a comprehensive workflow system for managing requirements throughout their lifecycle. This workflow ensures quality control, proper review processes, and maintains traceability of all requirement changes.
+
+### Workflow States
+
+Requirements in Cathedral follow a five-state workflow:
+
+#### 1. **Proposed**
+- **Purpose**: Initial state for newly created requirements
+- **Description**: Requirements that have been submitted but not yet reviewed or approved
+- **Actions Available**:
+  - **Edit**: Modify the requirement content while maintaining the Proposed state
+  - **Submit for Review**: Move the requirement to the Review state
+  - **Remove**: Move the requirement to the Removed state
+
+#### 2. **Review** (also called "In Review")
+- **Purpose**: Requirements undergoing evaluation for approval
+- **Description**: Requirements that are being assessed for correctness, completeness, and alignment with project goals
+- **Actions Available**:
+  - **Review**: Open the review dialog to approve or reject the requirement
+  - **Approve**: Move the requirement to the Active state and generate a unique `ReqId`
+  - **Reject**: Move the requirement to the Rejected state
+
+#### 3. **Active**
+- **Purpose**: Approved and officially part of the project
+- **Description**: Requirements that have been reviewed, approved, and are currently being implemented or maintained
+- **Actions Available**:
+  - **Revise**: Create a new version in the Proposed state (original remains Active until the revision is approved)
+  - **Remove**: Move the requirement to the Removed state
+
+#### 4. **Rejected**
+- **Purpose**: Requirements that were reviewed but not approved
+- **Description**: Requirements that failed review and need revision before resubmission
+- **Actions Available**:
+  - **Revise**: Modify and move back to the Proposed state for another review cycle
+  - **Remove**: Move the requirement to the Removed state
+
+#### 5. **Removed**
+- **Purpose**: Requirements that have been deleted from active consideration
+- **Description**: Requirements that are no longer part of the project but are preserved for audit trails
+- **Actions Available**:
+  - **Restore**: Return the requirement to the Proposed state
+
+### Special Case: Silence Requirements
+
+**Silence** requirements have unique workflow behavior due to their nature as unparseable content:
+
+- **Automatic State**: Silence requirements are automatically placed in the **Rejected** state when created
+- **Limited Transitions**: Can only transition from Rejected → Removed
+- **No Restoration**: Once in the Removed state, Silence requirements cannot be moved to any other state
+- **Purpose**: These represent content that could not be parsed into proper requirements and serve as placeholders for malformed input
+
+### Workflow Transitions
+
+The following state transitions are supported:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Proposed : Create Requirement
+
+    Proposed --> Review : Submit for Review
+    Proposed --> Removed : Remove
+
+    Review --> Active : Approve
+    Review --> Rejected : Reject
+
+    Active --> Proposed : Revise (new version)
+    Active --> Removed : Remove
+
+    Rejected --> Proposed : Revise
+    Rejected --> Removed : Remove
+
+    Removed --> Proposed : Restore
+
+    note right of Active : Generates unique ReqId
+    note right of Proposed : New version created<br>when revising Active
+```
+
+#### Silence Requirements Workflow
+
+Silence requirements follow a simplified workflow due to their nature as unparseable content:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Rejected : Create Silence
+
+    Rejected --> Removed : Remove Only
+
+    Removed --> [*] : End State
+```
+
+### Permission Requirements
+
+All workflow operations require specific permission levels:
+
+- **Organization Reader**: Can view requirements in all states
+- **Organization Contributor**: Can perform all workflow operations (create, edit, review, approve, reject, remove, restore)
+- **Organization Admin**: Has all contributor permissions plus user management capabilities
+
+### Implementation Details
+
+#### API Endpoints
+
+The workflow is implemented through RESTful API endpoints following the pattern:
+- `PUT /api/requirements/[reqType]/propose` - Create new requirement
+- `POST /api/requirements/[reqType]/proposed/[id]/edit` - Edit proposed requirement
+- `POST /api/requirements/[reqType]/proposed/[id]/review` - Submit for review
+- `POST /api/requirements/[reqType]/proposed/[id]/remove` - Remove proposed requirement
+- `POST /api/requirements/[reqType]/review/[id]/approve` - Approve requirement
+- `POST /api/requirements/[reqType]/review/[id]/reject` - Reject requirement
+- `POST /api/requirements/[reqType]/rejected/[id]/revise` - Revise rejected requirement
+- `POST /api/requirements/[reqType]/rejected/[id]/remove` - Remove rejected requirement
+- `POST /api/requirements/[reqType]/active/[id]/edit` - Revise active requirement
+- `POST /api/requirements/[reqType]/active/[id]/remove` - Remove active requirement
+- `POST /api/requirements/[reqType]/removed/[id]/restore` - Restore removed requirement
+
+**Note**: For Silence requirements (`reqType` = "silence"):
+- Silence requirements are automatically created in the Rejected state
+- Only the remove operation (`POST /api/requirements/silence/rejected/[id]/remove`) is available
+- Restore operations are not supported for removed Silence requirements
+
+#### UI Components
+
+The workflow is primarily managed through the `XWorkflow.vue` component, which provides:
+- Tabular display of requirements with state-based filtering
+- Context menus with appropriate actions for each state
+- Modal dialogs for editing, reviewing, and confirming operations
+- Real-time state updates and notifications
+
 ## Troubleshooting
 
 Most issues can be resolved by restarting the dev container. This can be done by closinng and reopening VSCode. Don't do this too quickly. When VSCode is closed, the Docker containers take some time to stop.

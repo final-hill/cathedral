@@ -187,16 +187,21 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
     async proposeRequirement<R extends ReqTypeName>(
         props: Omit<z.infer<typeof req[R]>, 'reqId' | 'reqIdPrefix' | 'id' | 'workflowState' | 'solution' | keyof z.infer<typeof AuditMetadata>>
     ): Promise<z.infer<typeof req.Requirement>['id']> {
-        await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
         await this._assertReferencedRequirementsBelongToSolution(props)
 
         const currentUserId = this._permissionInteractor.userId
+
+        // Special handling for Silence requirements - they go directly to Rejected state
+        const workflowState = props.reqType === ReqType.SILENCE
+            ? WorkflowState.Rejected
+            : WorkflowState.Proposed
 
         return this.repository.add({
             reqProps: {
                 ...props,
                 solution: { id: this._solutionId, name: '', reqType: ReqType.SOLUTION },
-                workflowState: WorkflowState.Proposed
+                workflowState
             },
             createdById: currentUserId,
             creationDate: new Date()
@@ -304,9 +309,9 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
     async rejectRequirement(
         id: z.infer<typeof req.Requirement>['id']
     ): Promise<void> {
-        await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
 
-        const currentRequirement = await this.repository.getById(this._solutionId)
+        const currentRequirement = await this.repository.getById(id)
 
         if (currentRequirement.workflowState !== WorkflowState.Review)
             throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Review state`)
@@ -369,6 +374,10 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         if (currentRequirement.workflowState !== WorkflowState.Rejected)
             throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Rejected state`)
 
+        // Silence requirements cannot be revised - they can only be removed
+        if (currentRequirement.reqType === ReqType.SILENCE)
+            throw new InvalidWorkflowStateException(`Silence requirements cannot be revised. They can only be removed.`)
+
         return this.repository.update({
             reqProps: {
                 id,
@@ -420,12 +429,16 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
     async restoreRemovedRequirement(
         id: z.infer<typeof req.Requirement>['id']
     ): Promise<void> {
-        await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
 
         const currentRequirement = await this.repository.getById(id)
 
         if (currentRequirement.workflowState !== WorkflowState.Removed)
             throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Removed state`)
+
+        // Silence requirements cannot be restored - they remain in the Removed state permanently
+        if (currentRequirement.reqType === ReqType.SILENCE)
+            throw new InvalidWorkflowStateException(`Silence requirements cannot be restored once removed.`)
 
         return this.repository.update({
             reqProps: {
