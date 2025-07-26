@@ -73,7 +73,7 @@ export default defineEventHandler(async (event) => {
 
         return requirementInteractor.parseRequirements({
             service: naturalLanguageToRequirementService,
-            name: 'Free-form requirements',
+            name: reqProps.name || 'Free-form requirements',
             statement: reqProps.description
         })
     } else {

@@ -71,7 +71,7 @@ export class RequirementRepository extends Repository<RequirementType> {
             isDeleted: false,
             effectiveFrom: props.creationDate,
             modifiedById: props.createdById,
-            workflowState: WorkflowState.Proposed,
+            workflowState: WorkflowState.Parsed,
             solution: props.solutionId,
             name: props.name,
             description: props.statement

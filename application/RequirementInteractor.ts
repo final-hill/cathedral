@@ -192,10 +192,18 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
 
         const currentUserId = this._permissionInteractor.userId
 
-        // Special handling for Silence requirements - they go directly to Rejected state
-        const workflowState = props.reqType === ReqType.SILENCE
-            ? WorkflowState.Rejected
-            : WorkflowState.Proposed
+        // Special handling for different requirement types
+        let workflowState: WorkflowState
+        if (props.reqType === ReqType.SILENCE) {
+            // Silence requirements go directly to Rejected state
+            workflowState = WorkflowState.Rejected
+        } else if (props.reqType === ReqType.PARSED_REQUIREMENTS) {
+            // ParsedRequirements always go to Parsed state
+            workflowState = WorkflowState.Parsed
+        } else {
+            // All other requirements start in Proposed state
+            workflowState = WorkflowState.Proposed
+        }
 
         return this.repository.add({
             reqProps: {

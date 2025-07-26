@@ -22,5 +22,11 @@ export enum WorkflowState {
     /**
      * This state indicates that a requirement is currently being implemented or is an active part of the project.
      */
-    Active = 'Active'
+    Active = 'Active',
+    /**
+     * This state indicates that a ParsedRequirements container is not actionable in itself,
+     * but exists to group auto-generated requirements for further review.
+     * ParsedRequirements are always in this state.
+     */
+    Parsed = 'Parsed'
 }

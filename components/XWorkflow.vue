@@ -86,7 +86,7 @@ const createSchema = props.reqType === ReqType.PARSED_REQUIREMENTS
 
 const viewSchema = props.reqType === ReqType.PARSED_REQUIREMENTS
     ? req.ParsedRequirements.pick({
-            workflowState: true,
+            name: true,
             description: true,
             requirements: true
         })
@@ -127,7 +127,8 @@ const workflowColorMap: Record<WorkflowState, BadgeProps['color']> = {
     [WorkflowState.Rejected]: 'error',
     [WorkflowState.Removed]: 'neutral',
     [WorkflowState.Review]: 'warning',
-    [WorkflowState.Active]: 'success'
+    [WorkflowState.Active]: 'success',
+    [WorkflowState.Parsed]: 'neutral'
 }
 
 const priorityColorMap: Record<MoscowPriority, BadgeProps['color']> = {
@@ -227,7 +228,7 @@ const actionColumn: TableColumn<SchemaType> = {
 }
 
 const editProposedModalOpenState = ref(false),
-    editProposedModalItem = ref<SchemaType>()
+    editProposedModalItem = ref<SchemaType>({} as SchemaType)
 
 const openEditProposedModal = (item: SchemaType) => {
     editProposedModalItem.value = { ...item }
@@ -259,7 +260,7 @@ const onEditProposedModalReset = () => {
 }
 
 const editRejectedModalOpenState = ref(false),
-    editRejectedModalItem = ref<SchemaType>()
+    editRejectedModalItem = ref<SchemaType>({} as SchemaType)
 
 const openEditRejectedModal = (item: SchemaType) => {
     editRejectedModalItem.value = { ...item }
@@ -290,7 +291,7 @@ const onEditRejectedModalReset = () => {
 }
 
 const editActiveModalOpenState = ref(false),
-    editActiveModalItem = ref<SchemaType>(),
+    editActiveModalItem = ref<SchemaType>({} as SchemaType),
     revisionBlockedModalOpenState = ref(false),
     revisionBlockedModalMessage = ref('')
 
@@ -317,10 +318,10 @@ const onEditActiveModalSubmit = async (_: unknown) => {
         // Check if this is a conflict error about newer versions
         if (errorMessage.includes('newer versions') || errorMessage.includes('Proposed or Review')) {
             revisionBlockedModalMessage.value = dedent(`
-                Cannot revise "${editActiveModalItem.value?.name}" because there are already newer versions in Proposed or Review states. 
+                Cannot revise "${editActiveModalItem.value?.name}" because there are already newer versions in Proposed or Review states.
                 Only one revision process can be active at a time to prevent conflicting changes.
 
-                To find the newer versions, use the workflow state filter above to show only "Proposed" or "Review" requirements 
+                To find the newer versions, use the workflow state filter above to show only "Proposed" or "Review" requirements
                 and look for other versions of "${editActiveModalItem.value?.name}".
             `)
             revisionBlockedModalOpenState.value = true
@@ -339,7 +340,7 @@ const onEditActiveModalReset = () => {
 }
 
 const reviewModalOpenState = ref(false),
-    reviewModalItem = ref<SchemaType>()
+    reviewModalItem = ref<SchemaType>({} as SchemaType)
 
 const openReviewModal = (item: SchemaType) => {
     reviewModalItem.value = { ...item }
@@ -404,11 +405,19 @@ const getParsedReqsActionItems = (item: SchemaType): DropdownMenuItem[] => {
         case WorkflowState.Rejected:
         case WorkflowState.Removed:
         case WorkflowState.Active:
+        case WorkflowState.Parsed:
+            return items
+        default:
             return items
     }
 }
 
 const getDefaultActionItems = (item: SchemaType): DropdownMenuItem[] => {
+    // Special handling for ParsedRequirements
+    if (item.reqType === ReqType.PARSED_REQUIREMENTS) {
+        return getParsedReqsActionItems(item)
+    }
+
     // Special handling for Silence requirements
     if (item.reqType === ReqType.SILENCE) {
         return getSilenceActionItems(item)
@@ -522,6 +531,11 @@ const getDefaultActionItems = (item: SchemaType): DropdownMenuItem[] => {
             }]
         case WorkflowState.Active:
             return getActiveRequirementActions(item)
+        case WorkflowState.Parsed:
+            // ParsedRequirements have no workflow actions - they are non-actionable containers
+            return []
+        default:
+            return []
     }
 }
 
@@ -609,14 +623,19 @@ const columnPinning = ref({
     right: ['Actions']
 })
 
-const workflowColumnFilters = ref([{
-    id: 'workflowState',
-    value: ''
-}])
+const workflowColumnFilters = ref(
+    props.reqType === ReqType.PARSED_REQUIREMENTS
+        ? []
+        : [{
+                id: 'workflowState',
+                value: ''
+            }]
+)
 
 const workflowStateOptions = ref([
     { label: 'All', value: undefined },
     ...Object.values(WorkflowState)
+        .filter(state => props.reqType !== ReqType.PARSED_REQUIREMENTS || state !== WorkflowState.Parsed)
         .map(state => ({
             label: state,
             value: state,
@@ -633,7 +652,7 @@ function getChip(value: WorkflowState) {
 }
 
 const createModalOpenState = ref(false),
-    createModalItem = ref<SchemaType>()
+    createModalItem = ref<SchemaType>({} as SchemaType)
 
 const openCreateModal = () => {
     createModalItem.value = Object.create(null)
@@ -643,11 +662,18 @@ const openCreateModal = () => {
 const onCreateModalSubmit = async (_: unknown) => {
     await $fetch(`/api/requirements/${props.reqType}/propose`, {
         method: 'PUT',
-        body: {
-            ...createModalItem.value,
-            solutionSlug: props.solutionSlug,
-            organizationSlug: props.organizationSlug
-        }
+        body: props.reqType === ReqType.PARSED_REQUIREMENTS
+            ? {
+                    name: 'Free-form requirements',
+                    description: createModalItem.value?.description,
+                    solutionSlug: props.solutionSlug,
+                    organizationSlug: props.organizationSlug
+                }
+            : {
+                    ...createModalItem.value,
+                    solutionSlug: props.solutionSlug,
+                    organizationSlug: props.organizationSlug
+                }
     }).then(() => {
         toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement created successfully' })
         refresh()
@@ -688,6 +714,7 @@ const showProposedAndReviewItems = () => {
             @click="openCreateModal"
         />
         <USelect
+            v-if="props.reqType !== ReqType.PARSED_REQUIREMENTS"
             :items="workflowStateOptions"
             placeholder="Filter by Workflow State..."
             @update:model-value="workflowTable?.tableApi?.getColumn('workflowState')?.setFilterValue($event)"
@@ -722,7 +749,7 @@ const showProposedAndReviewItems = () => {
     >
         <template #body>
             <XForm
-                :state="createModalItem!"
+                v-model:state="createModalItem"
                 :schema="createSchema"
                 :on-submit="onCreateModalSubmit"
                 :on-cancel="onCreateModalReset"
@@ -736,7 +763,7 @@ const showProposedAndReviewItems = () => {
     >
         <template #body>
             <XForm
-                :state="editProposedModalItem!"
+                :state="editProposedModalItem"
                 :schema="editSchema"
                 :on-submit="onEditProposedModalSubmit"
                 :on-cancel="onEditProposedModalReset"
@@ -750,7 +777,7 @@ const showProposedAndReviewItems = () => {
     >
         <template #body>
             <XForm
-                :state="editRejectedModalItem!"
+                :state="editRejectedModalItem"
                 :schema="editSchema"
                 :on-submit="onEditRejectedModalSubmit"
                 :on-cancel="onEditRejectedModalReset"
@@ -764,7 +791,7 @@ const showProposedAndReviewItems = () => {
     >
         <template #body>
             <XForm
-                :state="editActiveModalItem!"
+                :state="editActiveModalItem"
                 :schema="editSchema"
                 :on-submit="onEditActiveModalSubmit"
                 :on-cancel="onEditActiveModalReset"
@@ -787,7 +814,7 @@ const showProposedAndReviewItems = () => {
             <hr class="my-6">
 
             <XForm
-                :state="reviewModalItem!"
+                :state="reviewModalItem"
                 :schema="viewSchema"
                 :disabled="true"
                 :on-submit="onReviewApprove"
