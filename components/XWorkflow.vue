@@ -1,11 +1,17 @@
 <script lang="tsx" setup>
 import type { BadgeProps, DropdownMenuItem, TableColumn, ChipProps } from '@nuxt/ui'
+import type { Table } from '@tanstack/table-core'
 import { UButton, UDropdownMenu, UBadge, UTable, XConfirmModal, UCheckbox } from '#components'
 import { z } from 'zod'
 import { ReqType, WorkflowState, MoscowPriority } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
 import { reqIdPattern } from '#shared/domain/requirements/reqIdPattern'
-import { snakeCaseToPascalCase, getSchemaFields } from '#shared/utils'
+import { snakeCaseToPascalCase, getSchemaFields, dedent } from '#shared/utils'
+
+// Type for the table element with the TanStack Table API
+interface TableElement extends HTMLElement {
+    tableApi?: Table<SchemaType>
+}
 
 const props = defineProps<{
     reqType: ReqType
@@ -32,7 +38,7 @@ const emit = defineEmits<{
 const { $eventBus } = useNuxtApp(),
     overlay = useOverlay(),
     confirmRemoveModal = overlay.create(XConfirmModal, {}),
-    workflowTable = useTemplateRef<HTMLElement>('workflowTable'),
+    workflowTable = useTemplateRef<TableElement>('workflowTable'),
     toast = useToast()
 
 const { data, refresh, status, error } = await useFetch<SchemaType[]>(`/api/requirements/${props.reqType}`, {
@@ -310,8 +316,13 @@ const onEditActiveModalSubmit = async (_: unknown) => {
 
         // Check if this is a conflict error about newer versions
         if (errorMessage.includes('newer versions') || errorMessage.includes('Proposed or Review')) {
-            // Show the revision blocked modal with helpful guidance
-            revisionBlockedModalMessage.value = `Cannot revise "${editActiveModalItem.value?.name}" because there are already newer versions in Proposed or Review states. Only one revision process can be active at a time to prevent conflicting changes.\n\nTo find the newer versions, use the workflow state filter above to show only "Proposed" or "Review" requirements and look for other versions of "${editActiveModalItem.value?.name}".`
+            revisionBlockedModalMessage.value = dedent(`
+                Cannot revise "${editActiveModalItem.value?.name}" because there are already newer versions in Proposed or Review states. 
+                Only one revision process can be active at a time to prevent conflicting changes.
+
+                To find the newer versions, use the workflow state filter above to show only "Proposed" or "Review" requirements 
+                and look for other versions of "${editActiveModalItem.value?.name}".
+            `)
             revisionBlockedModalOpenState.value = true
         } else {
             toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error revising requirement: ${errorMessage}` })
@@ -656,8 +667,7 @@ const onCreateModalReset = () => {
 const showProposedAndReviewItems = () => {
     revisionBlockedModalOpenState.value = false
     // Clear current filter to show all states
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(workflowTable.value as any)?.tableApi?.getColumn('workflowState')?.setFilterValue('')
+    workflowTable.value?.tableApi?.getColumn('workflowState')?.setFilterValue('')
     // Focus on the filter dropdown to help user find the newer versions
     setTimeout(() => {
         const filterSelect = document.querySelector('[placeholder="Filter by Workflow State..."]')
@@ -680,7 +690,7 @@ const showProposedAndReviewItems = () => {
         <USelect
             :items="workflowStateOptions"
             placeholder="Filter by Workflow State..."
-            @update:model-value="(workflowTable as any)?.tableApi?.getColumn('workflowState')?.setFilterValue($event)"
+            @update:model-value="workflowTable?.tableApi?.getColumn('workflowState')?.setFilterValue($event)"
         >
             <template #leading="{ modelValue, ui }">
                 <UChip
