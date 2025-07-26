@@ -115,11 +115,14 @@ Requirements in Cathedral follow a five-state workflow:
   - **Reject**: Move the requirement to the Rejected state
 
 #### 3. **Active**
-- **Purpose**: Approved and officially part of the project
-- **Description**: Requirements that have been reviewed, approved, and are currently being implemented or maintained
+- **Purpose**: Requirements that are officially part of the project
+- **Description**: Requirements that have been approved and are currently in effect. Each Active requirement has a unique ReqId for tracking and reference
 - **Actions Available**:
   - **Revise**: Create a new version in the Proposed state (original remains Active until the revision is approved)
+    - **Restriction**: Cannot revise if there are newer versions already in Proposed or Review states to prevent conflicting parallel changes
   - **Remove**: Move the requirement to the Removed state
+
+**Versioning Behavior**: When an Active requirement is revised, a new version is created in the Proposed state while the original Active version remains unchanged. This allows for parallel development where multiple proposed changes can exist simultaneously, each following independent review processes. However, to prevent conflicts, only one revision can be in progress at a time.
 
 #### 4. **Rejected**
 - **Purpose**: Requirements that were reviewed but not approved
@@ -190,6 +193,34 @@ All workflow operations require specific permission levels:
 - **Organization Contributor**: Can perform all workflow operations (create, edit, review, approve, reject, remove, restore)
 - **Organization Admin**: Has all contributor permissions plus user management capabilities
 
+### Requirement Versioning and Parallel Development
+
+The Cathedral system supports a sophisticated versioning model that allows for parallel development of requirements:
+
+#### Version Creation
+- Each requirement can have multiple versions over time
+- Versions are identified by their `effectiveFrom` timestamp
+- Only one version can be **Active** at any given time
+- Multiple versions can exist simultaneously in **Proposed** or **Review** states
+
+#### Parallel Development Support
+The system supports multiple concurrent changes to the same requirement:
+
+1. **Active Requirement**: The current official version with a unique `ReqId`
+2. **Parallel Proposals**: Multiple independent revisions can be proposed simultaneously
+3. **Independent Review**: Each proposed version follows its own review cycle
+4. **Conflict Prevention**: Only one revision process can be initiated at a time from the same Active version
+
+#### Example Workflow
+Consider requirement R.1.1 that is currently **Active**:
+
+1. User A creates a revision → New version R.1.1-Rev1 in **Proposed** state
+2. User B attempts to create another revision → **Blocked** (conflicts with existing revision)
+3. R.1.1-Rev1 moves through **Review** → **Active** (becomes R.1.2)
+4. Now User B can create a revision from R.1.2
+
+This prevents conflicting changes and ensures clear change management.
+
 ### Implementation Details
 
 #### API Endpoints
@@ -203,7 +234,7 @@ The workflow is implemented through RESTful API endpoints following the pattern:
 - `POST /api/requirements/[reqType]/review/[id]/reject` - Reject requirement
 - `POST /api/requirements/[reqType]/rejected/[id]/revise` - Revise rejected requirement
 - `POST /api/requirements/[reqType]/rejected/[id]/remove` - Remove rejected requirement
-- `POST /api/requirements/[reqType]/active/[id]/edit` - Revise active requirement
+- `POST /api/requirements/[reqType]/active/[id]/edit` - Revise active requirement (fails if newer versions exist in Proposed or Review states to prevent parallel conflicts)
 - `POST /api/requirements/[reqType]/active/[id]/remove` - Remove active requirement
 - `POST /api/requirements/[reqType]/removed/[id]/restore` - Restore removed requirement
 

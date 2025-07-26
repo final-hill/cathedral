@@ -1,11 +1,17 @@
 <script lang="tsx" setup>
 import type { BadgeProps, DropdownMenuItem, TableColumn, ChipProps } from '@nuxt/ui'
+import type { Table } from '@tanstack/table-core'
 import { UButton, UDropdownMenu, UBadge, UTable, XConfirmModal, UCheckbox } from '#components'
 import { z } from 'zod'
 import { ReqType, WorkflowState, MoscowPriority } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
 import { reqIdPattern } from '#shared/domain/requirements/reqIdPattern'
-import { snakeCaseToPascalCase, getSchemaFields } from '#shared/utils'
+import { snakeCaseToPascalCase, getSchemaFields, dedent } from '#shared/utils'
+
+// Type for the table element with the TanStack Table API
+interface TableElement extends HTMLElement {
+    tableApi?: Table<SchemaType>
+}
 
 const props = defineProps<{
     reqType: ReqType
@@ -32,7 +38,7 @@ const emit = defineEmits<{
 const { $eventBus } = useNuxtApp(),
     overlay = useOverlay(),
     confirmRemoveModal = overlay.create(XConfirmModal, {}),
-    workflowTable = useTemplateRef<HTMLElement>('workflowTable'),
+    workflowTable = useTemplateRef<TableElement>('workflowTable'),
     toast = useToast()
 
 const { data, refresh, status, error } = await useFetch<SchemaType[]>(`/api/requirements/${props.reqType}`, {
@@ -284,7 +290,9 @@ const onEditRejectedModalReset = () => {
 }
 
 const editActiveModalOpenState = ref(false),
-    editActiveModalItem = ref<SchemaType>()
+    editActiveModalItem = ref<SchemaType>(),
+    revisionBlockedModalOpenState = ref(false),
+    revisionBlockedModalMessage = ref('')
 
 const openEditActiveModal = (item: SchemaType) => {
     editActiveModalItem.value = { ...item }
@@ -301,9 +309,25 @@ const onEditActiveModalSubmit = async (_: unknown) => {
     }).then(() => {
         toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement revised successfully' })
         refresh()
+        editActiveModalItem.value = Object.create(null)
+        editActiveModalOpenState.value = false
     }).catch((error) => {
-        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error revising requirement: ${error}` })
-    }).finally(() => {
+        const errorMessage = error.data?.message || error.message || 'Unknown error'
+
+        // Check if this is a conflict error about newer versions
+        if (errorMessage.includes('newer versions') || errorMessage.includes('Proposed or Review')) {
+            revisionBlockedModalMessage.value = dedent(`
+                Cannot revise "${editActiveModalItem.value?.name}" because there are already newer versions in Proposed or Review states. 
+                Only one revision process can be active at a time to prevent conflicting changes.
+
+                To find the newer versions, use the workflow state filter above to show only "Proposed" or "Review" requirements 
+                and look for other versions of "${editActiveModalItem.value?.name}".
+            `)
+            revisionBlockedModalOpenState.value = true
+        } else {
+            toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error revising requirement: ${errorMessage}` })
+        }
+
         editActiveModalItem.value = Object.create(null)
         editActiveModalOpenState.value = false
     })
@@ -497,36 +521,48 @@ const getDefaultActionItems = (item: SchemaType): DropdownMenuItem[] => {
                 }
             }]
         case WorkflowState.Active:
-            return [{
-                label: 'Revise',
-                icon: 'i-lucide-pen',
-                color: 'info',
-                onSelect: () => openEditActiveModal(item)
-            }, {
-                label: 'Remove',
-                icon: 'i-lucide-trash-2',
-                color: 'error',
-                onSelect: async () => {
-                    const result = await confirmRemoveModal.open({
-                        title: `Are you sure you want to remove requirement '${item.name}'?`
-                    }).result
-                    if (result) {
-                        $fetch(`/api/requirements/${props.reqType}/active/${item.id}/remove`, {
-                            method: 'POST',
-                            body: {
-                                solutionSlug: props.solutionSlug,
-                                organizationSlug: props.organizationSlug
-                            }
-                        }).then(() => {
-                            toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement removed successfully' })
-                            refresh()
-                        }).catch((error) => {
-                            toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error removing requirement: ${error}` })
-                        })
-                    }
-                }
-            }]
+            return getActiveRequirementActions(item)
     }
+}
+
+const getActiveRequirementActions = (item: SchemaType): DropdownMenuItem[] => {
+    const actions: DropdownMenuItem[] = []
+
+    // Always show Revise action
+    actions.push({
+        label: 'Revise',
+        icon: 'i-lucide-pen',
+        color: 'info',
+        onSelect: () => openEditActiveModal(item)
+    })
+
+    // Always show Remove action
+    actions.push({
+        label: 'Remove',
+        icon: 'i-lucide-trash-2',
+        color: 'error',
+        onSelect: async () => {
+            const result = await confirmRemoveModal.open({
+                title: `Are you sure you want to remove requirement '${item.name}'?`
+            }).result
+            if (result) {
+                $fetch(`/api/requirements/${props.reqType}/active/${item.id}/remove`, {
+                    method: 'POST',
+                    body: {
+                        solutionSlug: props.solutionSlug,
+                        organizationSlug: props.organizationSlug
+                    }
+                }).then(() => {
+                    toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement removed successfully' })
+                    refresh()
+                }).catch((error) => {
+                    toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error removing requirement: ${error}` })
+                })
+            }
+        }
+    })
+
+    return actions
 }
 
 const getSilenceActionItems = (item: SchemaType): DropdownMenuItem[] => {
@@ -627,6 +663,19 @@ const onCreateModalReset = () => {
     createModalItem.value = Object.create(null)
     createModalOpenState.value = false
 }
+
+const showProposedAndReviewItems = () => {
+    revisionBlockedModalOpenState.value = false
+    // Clear current filter to show all states
+    workflowTable.value?.tableApi?.getColumn('workflowState')?.setFilterValue('')
+    // Focus on the filter dropdown to help user find the newer versions
+    setTimeout(() => {
+        const filterSelect = document.querySelector('[placeholder="Filter by Workflow State..."]')
+        if (filterSelect) {
+            (filterSelect as HTMLElement).focus()
+        }
+    }, 100)
+}
 </script>
 
 <template>
@@ -641,7 +690,7 @@ const onCreateModalReset = () => {
         <USelect
             :items="workflowStateOptions"
             placeholder="Filter by Workflow State..."
-            @update:model-value="(workflowTable as any)?.tableApi?.getColumn('workflowState')?.setFilterValue($event)"
+            @update:model-value="workflowTable?.tableApi?.getColumn('workflowState')?.setFilterValue($event)"
         >
             <template #leading="{ modelValue, ui }">
                 <UChip
@@ -755,6 +804,43 @@ const onCreateModalReset = () => {
                 label="Reject"
                 color="error"
                 @click="onReviewReject"
+            />
+        </template>
+    </UModal>
+
+    <UModal
+        v-model:open="revisionBlockedModalOpenState"
+        title="Revision Blocked"
+    >
+        <template #body>
+            <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0">
+                    <UIcon
+                        name="i-lucide-alert-triangle"
+                        class="h-6 w-6 text-warning"
+                    />
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-sm font-medium text-highlighted mb-2">
+                        Cannot Revise Requirement
+                    </h3>
+                    <p class="text-sm text-muted whitespace-pre-line">
+                        {{ revisionBlockedModalMessage }}
+                    </p>
+                </div>
+            </div>
+        </template>
+        <template #footer>
+            <UButton
+                label="Show Proposed & Review Items"
+                color="neutral"
+                variant="outline"
+                @click="showProposedAndReviewItems"
+            />
+            <UButton
+                label="OK"
+                color="primary"
+                @click="revisionBlockedModalOpenState = false"
             />
         </template>
     </UModal>

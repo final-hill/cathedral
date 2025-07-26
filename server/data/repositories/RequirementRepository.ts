@@ -436,4 +436,40 @@ export class RequirementRepository extends Repository<RequirementType> {
 
         await em.flush()
     }
+
+    /**
+     * Check if there are newer versions of a requirement in Proposed or Review states.
+     * This prevents parallel conflicting changes by ensuring only one revision process
+     * can be active at a time for any given Active requirement.
+     *
+     * @param requirementId - The id of the requirement to check
+     * @returns true if there are newer versions in Proposed or Review states
+     */
+    async hasNewerProposedOrReviewVersions(requirementId: RequirementType['id']): Promise<boolean> {
+        const em = this._em,
+            requirement = await em.findOne(reqModels.RequirementModel, { id: requirementId })
+
+        if (!requirement) {
+            return false
+        }
+
+        // Get the latest active version
+        const latestActiveVersion = await requirement.getLatestActiveVersion()
+
+        if (!latestActiveVersion) {
+            return false
+        }
+
+        // Check if there are any versions in Proposed or Review states that are newer than the active version
+        // This indicates parallel development is already in progress
+        const newerVersions = await requirement.versions.matching({
+            where: {
+                effectiveFrom: { $gt: latestActiveVersion.effectiveFrom },
+                workflowState: { $in: [WorkflowState.Proposed, WorkflowState.Review] },
+                isDeleted: false
+            }
+        })
+
+        return newerVersions.length > 0
+    }
 }

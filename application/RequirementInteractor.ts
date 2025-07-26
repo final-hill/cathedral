@@ -452,21 +452,29 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
     }
 
     /**
-     * Creates a new version of a requirement currently in the Active state.
-     * The new version will be in the Proposed state.
-     * @throws {InvalidWorkflowStateException} If the requirement is not currently in the Active state.
+     * Revises a requirement currently in the Active state by creating a new version in Proposed state.
+     * The original Active requirement remains unchanged until the new version is approved.
+     *
+     * @param id - The id of the requirement to revise
+     * @throws {InvalidWorkflowStateException} If the requirement is not currently in the Active state
+     * @throws {InvalidWorkflowStateException} If there are already newer versions in Proposed or Review states (prevents parallel conflicts)
      * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
      * @throws {NotFoundException} If the requirement does not exist
      */
     async editActiveRequirement(
         id: z.infer<typeof req.Requirement>['id']
     ): Promise<void> {
-        await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
 
         const currentRequirement = await this.repository.getById(id)
 
         if (currentRequirement.workflowState !== WorkflowState.Active)
             throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Active state`)
+
+        // Check if there are newer versions in Proposed or Review states
+        const hasNewerVersions = await this.repository.hasNewerProposedOrReviewVersions(id)
+        if (hasNewerVersions)
+            throw new InvalidWorkflowStateException(`Cannot revise active requirement ${id} because there are already newer versions in Proposed or Review states. Only one revision process can be active at a time to prevent conflicting changes.`)
 
         return this.repository.update({
             reqProps: {
