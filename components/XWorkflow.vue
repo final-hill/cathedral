@@ -228,7 +228,7 @@ const actionColumn: TableColumn<SchemaType> = {
 }
 
 const editProposedModalOpenState = ref(false),
-    editProposedModalItem = ref<SchemaType>()
+    editProposedModalItem = ref<SchemaType>({} as SchemaType)
 
 const openEditProposedModal = (item: SchemaType) => {
     editProposedModalItem.value = { ...item }
@@ -260,7 +260,7 @@ const onEditProposedModalReset = () => {
 }
 
 const editRejectedModalOpenState = ref(false),
-    editRejectedModalItem = ref<SchemaType>()
+    editRejectedModalItem = ref<SchemaType>({} as SchemaType)
 
 const openEditRejectedModal = (item: SchemaType) => {
     editRejectedModalItem.value = { ...item }
@@ -291,7 +291,7 @@ const onEditRejectedModalReset = () => {
 }
 
 const editActiveModalOpenState = ref(false),
-    editActiveModalItem = ref<SchemaType>(),
+    editActiveModalItem = ref<SchemaType>({} as SchemaType),
     revisionBlockedModalOpenState = ref(false),
     revisionBlockedModalMessage = ref('')
 
@@ -340,7 +340,7 @@ const onEditActiveModalReset = () => {
 }
 
 const reviewModalOpenState = ref(false),
-    reviewModalItem = ref<SchemaType>()
+    reviewModalItem = ref<SchemaType>({} as SchemaType)
 
 const openReviewModal = (item: SchemaType) => {
     reviewModalItem.value = { ...item }
@@ -652,7 +652,7 @@ function getChip(value: WorkflowState) {
 }
 
 const createModalOpenState = ref(false),
-    createModalItem = ref<SchemaType>()
+    createModalItem = ref<SchemaType>({} as SchemaType)
 
 const openCreateModal = () => {
     createModalItem.value = Object.create(null)
@@ -749,7 +749,7 @@ const showProposedAndReviewItems = () => {
     >
         <template #body>
             <XForm
-                v-model:state="createModalItem!"
+                v-model:state="createModalItem"
                 :schema="createSchema"
                 :on-submit="onCreateModalSubmit"
                 :on-cancel="onCreateModalReset"
@@ -763,7 +763,7 @@ const showProposedAndReviewItems = () => {
     >
         <template #body>
             <XForm
-                :state="editProposedModalItem!"
+                :state="editProposedModalItem"
                 :schema="editSchema"
                 :on-submit="onEditProposedModalSubmit"
                 :on-cancel="onEditProposedModalReset"
@@ -777,7 +777,7 @@ const showProposedAndReviewItems = () => {
     >
         <template #body>
             <XForm
-                :state="editRejectedModalItem!"
+                :state="editRejectedModalItem"
                 :schema="editSchema"
                 :on-submit="onEditRejectedModalSubmit"
                 :on-cancel="onEditRejectedModalReset"
@@ -791,7 +791,7 @@ const showProposedAndReviewItems = () => {
     >
         <template #body>
             <XForm
-                :state="editActiveModalItem!"
+                :state="editActiveModalItem"
                 :schema="editSchema"
                 :on-submit="onEditActiveModalSubmit"
                 :on-cancel="onEditActiveModalReset"
@@ -814,7 +814,7 @@ const showProposedAndReviewItems = () => {
             <hr class="my-6">
 
             <XForm
-                :state="reviewModalItem!"
+                :state="reviewModalItem"
                 :schema="viewSchema"
                 :disabled="true"
                 :on-submit="onReviewApprove"
