@@ -385,6 +385,11 @@ const getParsedReqsActionItems = (item: SchemaType): DropdownMenuItem[] => {
 }
 
 const getDefaultActionItems = (item: SchemaType): DropdownMenuItem[] => {
+    // Special handling for Silence requirements
+    if (item.reqType === ReqType.SILENCE) {
+        return getSilenceActionItems(item)
+    }
+
     switch (item.workflowState) {
         case WorkflowState.Proposed:
             return [{
@@ -521,6 +526,43 @@ const getDefaultActionItems = (item: SchemaType): DropdownMenuItem[] => {
                     }
                 }
             }]
+    }
+}
+
+const getSilenceActionItems = (item: SchemaType): DropdownMenuItem[] => {
+    switch (item.workflowState) {
+        case WorkflowState.Rejected:
+            // Silence requirements can only be removed when in Rejected state
+            return [{
+                label: 'Remove',
+                icon: 'i-lucide-trash-2',
+                color: 'error',
+                onSelect: async () => {
+                    const result = await confirmRemoveModal.open({
+                        title: `Are you sure you want to remove this silence requirement? This action cannot be undone. Silence requirements cannot be restored once removed.`
+                    }).result
+                    if (result) {
+                        $fetch(`/api/requirements/${props.reqType}/rejected/${item.id}/remove`, {
+                            method: 'POST',
+                            body: {
+                                solutionSlug: props.solutionSlug,
+                                organizationSlug: props.organizationSlug
+                            }
+                        }).then(() => {
+                            toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Silence requirement removed successfully' })
+                            refresh()
+                        }).catch((error) => {
+                            toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error removing silence requirement: ${error}` })
+                        })
+                    }
+                }
+            }]
+        case WorkflowState.Removed:
+            // Silence requirements have no actions when removed - they are permanently removed
+            return []
+        default:
+            // Silence requirements should never be in other states, but return empty array as fallback
+            return []
     }
 }
 

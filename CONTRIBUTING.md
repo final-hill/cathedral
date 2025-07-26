@@ -134,6 +134,15 @@ Requirements in Cathedral follow a five-state workflow:
 - **Actions Available**:
   - **Restore**: Return the requirement to the Proposed state
 
+### Special Case: Silence Requirements
+
+**Silence** requirements have unique workflow behavior due to their nature as unparseable content:
+
+- **Automatic State**: Silence requirements are automatically placed in the **Rejected** state when created
+- **Limited Transitions**: Can only transition from Rejected → Removed
+- **No Restoration**: Once in the Removed state, Silence requirements cannot be moved to any other state
+- **Purpose**: These represent content that could not be parsed into proper requirements and serve as placeholders for malformed input
+
 ### Workflow Transitions
 
 The following state transitions are supported:
@@ -160,21 +169,17 @@ stateDiagram-v2
     note right of Proposed : New version created<br>when revising Active
 ```
 
-Text representation:
-```
-Proposed → Review (Submit for Review)
-Proposed → Removed (Remove)
+#### Silence Requirements Workflow
 
-Review → Active (Approve)
-Review → Rejected (Reject)
+Silence requirements follow a simplified workflow due to their nature as unparseable content:
 
-Active → Proposed (Revise - creates new version)
-Active → Removed (Remove)
+```mermaid
+stateDiagram-v2
+    [*] --> Rejected : Create Silence
 
-Rejected → Proposed (Revise)
-Rejected → Removed (Remove)
+    Rejected --> Removed : Remove Only
 
-Removed → Proposed (Restore)
+    Removed --> [*] : End State
 ```
 
 ### Permission Requirements
@@ -201,6 +206,11 @@ The workflow is implemented through RESTful API endpoints following the pattern:
 - `POST /api/requirements/[reqType]/active/[id]/edit` - Revise active requirement
 - `POST /api/requirements/[reqType]/active/[id]/remove` - Remove active requirement
 - `POST /api/requirements/[reqType]/removed/[id]/restore` - Restore removed requirement
+
+**Note**: For Silence requirements (`reqType` = "silence"):
+- Silence requirements are automatically created in the Rejected state
+- Only the remove operation (`POST /api/requirements/silence/rejected/[id]/remove`) is available
+- Restore operations are not supported for removed Silence requirements
 
 #### UI Components
 
