@@ -627,9 +627,9 @@ const workflowColumnFilters = ref(
     props.reqType === ReqType.PARSED_REQUIREMENTS
         ? []
         : [{
-            id: 'workflowState',
-            value: ''
-        }]
+                id: 'workflowState',
+                value: ''
+            }]
 )
 
 const workflowStateOptions = ref([
@@ -664,16 +664,16 @@ const onCreateModalSubmit = async (_: unknown) => {
         method: 'PUT',
         body: props.reqType === ReqType.PARSED_REQUIREMENTS
             ? {
-                name: 'Free-form requirements',
-                description: createModalItem.value?.description,
-                solutionSlug: props.solutionSlug,
-                organizationSlug: props.organizationSlug
-            }
+                    name: 'Free-form requirements',
+                    description: createModalItem.value?.description,
+                    solutionSlug: props.solutionSlug,
+                    organizationSlug: props.organizationSlug
+                }
             : {
-                ...createModalItem.value,
-                solutionSlug: props.solutionSlug,
-                organizationSlug: props.organizationSlug
-            }
+                    ...createModalItem.value,
+                    solutionSlug: props.solutionSlug,
+                    organizationSlug: props.organizationSlug
+                }
     }).then(() => {
         toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'Requirement created successfully' })
         refresh()
