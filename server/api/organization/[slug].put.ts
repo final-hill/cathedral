@@ -4,8 +4,8 @@ import handleDomainException from '~/server/utils/handleDomainException'
 import { Organization } from '#shared/domain'
 import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 
-const paramSchema = Organization.innerType().pick({ slug: true }),
-    bodySchema = Organization.innerType().pick({ name: true, description: true }).partial()
+const paramSchema = Organization.pick({ slug: true }),
+    bodySchema = Organization.pick({ name: true, description: true }).partial()
 
 /**
  * Updates an organization by id.

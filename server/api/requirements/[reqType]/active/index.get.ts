@@ -5,12 +5,12 @@ import { Organization, ReqType, Solution } from '~/shared/domain'
 import { z } from 'zod'
 import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 
-const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
+const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape
 
-const paramSchema = z.object({ reqType: z.nativeEnum(ReqType) })
+const paramSchema = z.object({ reqType: z.enum(ReqType) })
 
 const querySchema = z.object({
-    solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
+    solutionSlug: Solution.pick({ slug: true }).shape.slug,
     organizationId,
     organizationSlug
 }).refine((value) => {

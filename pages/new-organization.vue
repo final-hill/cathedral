@@ -10,7 +10,7 @@ const router = useRouter(),
     { $eventBus } = useNuxtApp(),
     { fetch: refreshSession } = useUserSession()
 
-const formSchema = Organization.innerType().pick({
+const formSchema = Organization.pick({
     name: true,
     slug: true,
     description: true

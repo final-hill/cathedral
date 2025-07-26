@@ -8,7 +8,7 @@ export const ContextAndObjective = Goal.extend({
         .describe('The name'),
     reqId: z.literal('G.1.0').default('G.1.0').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.CONTEXT_AND_OBJECTIVE)
+    reqType: z.enum(ReqType).default(ReqType.CONTEXT_AND_OBJECTIVE)
 }).describe(dedent(`
     High-level view of the project: organizational context and reason for building the system
 `))

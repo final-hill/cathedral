@@ -18,7 +18,7 @@ if (!organization.value) {
 
 const oldSlug = organization.value.slug
 
-const formSchema = Organization.innerType().pick({
+const formSchema = Organization.pick({
     name: true,
     slug: true,
     description: true

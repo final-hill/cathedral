@@ -5,10 +5,10 @@ import handleDomainException from '~/server/utils/handleDomainException'
 import { Organization, ReqType, Solution } from '#shared/domain'
 import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 
-const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
+const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape
 
 const bodySchema = z.object({
-    ...Solution.innerType().pick({ name: true, description: true }).shape,
+    ...Solution.pick({ name: true, description: true }).shape,
     organizationId,
     organizationSlug
 }).refine((value) => {

@@ -7,9 +7,9 @@ export const SystemComponent = Component.extend({
     reqId: z.string().regex(/^S\.1\.\d+$/, 'Format must be S.1.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('S.1.').default('S.1.'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.SYSTEM_COMPONENT),
+    reqType: z.enum(ReqType).default(ReqType.SYSTEM_COMPONENT),
     parentComponent: z.object({
-        reqType: z.nativeEnum(ReqType).default(ReqType.SYSTEM_COMPONENT),
+        reqType: z.enum(ReqType).default(ReqType.SYSTEM_COMPONENT),
         id: z.string().uuid()
             .describe('The parent component of the component'),
         name: z.string()

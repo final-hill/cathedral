@@ -21,7 +21,7 @@ if (!solution.value) {
 
 const oldSlug = solution.value.slug
 
-const formSchema = Solution.innerType().pick({
+const formSchema = Solution.pick({
     name: true,
     slug: true,
     description: true

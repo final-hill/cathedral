@@ -24,12 +24,9 @@ const props = defineProps<{
 
 const router = useRouter(),
     reqTypePascal = snakeCaseToPascalCase(props.reqType) as keyof typeof req,
-    RequirementSchema = req[reqTypePascal],
-    innerSchema = RequirementSchema instanceof z.ZodEffects
-        ? RequirementSchema._def.schema
-        : RequirementSchema
+    RequirementSchema = req[reqTypePascal]
 
-type SchemaType = z.infer<typeof innerSchema>
+type SchemaType = z.infer<typeof RequirementSchema>
 
 const emit = defineEmits<{
     (event: 'workflow-active-items' | 'workflow-non-active-items', items: SchemaType[]): void
@@ -70,9 +67,8 @@ const createSchema = props.reqType === ReqType.PARSED_REQUIREMENTS
     ? req.ParsedRequirements.pick({
             description: true
         })
-    : (innerSchema as typeof req.Requirement).omit({
+    : (RequirementSchema as typeof req.Requirement).omit({
             reqId: true,
-            // @ts-expect-error: this property exists on some subtypes of Requirement
             reqIdPrefix: true,
             createdBy: true,
             creationDate: true,
@@ -90,9 +86,8 @@ const viewSchema = props.reqType === ReqType.PARSED_REQUIREMENTS
             description: true,
             requirements: true
         })
-    : (innerSchema as typeof req.Requirement).omit({
+    : (RequirementSchema as typeof req.Requirement).omit({
             reqType: true,
-            // @ts-expect-error: this property exists on some subtypes of Requirement
             reqIdPrefix: true,
             createdBy: true,
             creationDate: true,
@@ -107,10 +102,9 @@ const editSchema = props.reqType === ReqType.PARSED_REQUIREMENTS
     ? req.ParsedRequirements.pick({
             description: true
         })
-    : (innerSchema as typeof req.Requirement).omit({
+    : (RequirementSchema as typeof req.Requirement).omit({
             workflowState: true,
             reqId: true,
-            // @ts-expect-error: this property exists on some subtypes of Requirement
             reqIdPrefix: true,
             createdBy: true,
             creationDate: true,
@@ -405,6 +399,8 @@ const getParsedReqsActionItems = (item: SchemaType): DropdownMenuItem[] => {
         case WorkflowState.Removed:
         case WorkflowState.Active:
             return items
+        default:
+            return items
     }
 }
 
@@ -522,6 +518,8 @@ const getDefaultActionItems = (item: SchemaType): DropdownMenuItem[] => {
             }]
         case WorkflowState.Active:
             return getActiveRequirementActions(item)
+        default:
+            return []
     }
 }
 

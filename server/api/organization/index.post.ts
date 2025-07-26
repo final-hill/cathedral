@@ -4,7 +4,7 @@ import handleDomainException from '~/server/utils/handleDomainException'
 import { Organization } from '#shared/domain'
 import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 
-const bodySchema = Organization.innerType().pick({ name: true, description: true })
+const bodySchema = Organization.pick({ name: true, description: true })
 
 /**
  * Creates a new organization and returns its slug

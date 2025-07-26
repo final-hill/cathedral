@@ -6,7 +6,7 @@ import { AppUserInteractor } from '~/application/AppUserInteractor'
 import handleDomainException from '~/server/utils/handleDomainException'
 import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 
-const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
+const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape
 
 const bodySchema = z.object({
     ...AppUser.pick({ email: true }).required().shape,

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { camelCaseToTitleCase } from './camelCaseToTitleCase'
 
-const enumToLabelValue = (enumObject: Record<string, string>) =>
+const enumToLabelValue = (enumObject: Readonly<Record<string, any>>) =>
     Object.entries(enumObject).map(([_key, value]) => ({ value, label: value }))
 
 /**
@@ -11,27 +11,78 @@ const enumToLabelValue = (enumObject: Record<string, string>) =>
  */
 const getSchemaFields = (schema: z.ZodObject<z.ZodRawShape>) => Object.entries(schema.shape)
     .map(([key, fieldType]) => {
+        // Handle wrapped types (Optional, Readonly, etc.)
+        let innerType = fieldType
         const isOptional = fieldType instanceof z.ZodOptional
-            || (fieldType instanceof z.ZodString
-                && fieldType._def.checks.reduce(
-                    (acc, check) => check.kind === 'min' ? acc || check.value === 0 : acc,
-                    !fieldType._def.checks.some(check => check.kind === 'min')
-                )
-            ),
-            isEffect = fieldType instanceof z.ZodEffects,
-            isReadOnly = fieldType instanceof z.ZodReadonly,
-            innerType = isOptional
-                ? (fieldType instanceof z.ZodOptional ? fieldType._def.innerType : fieldType)
-                : isEffect
-                    ? fieldType._def.schema
-                    : fieldType,
-            isEnum = innerType instanceof z.ZodNativeEnum || innerType instanceof z.ZodEnum,
-            isObject = innerType instanceof z.ZodObject,
-            reqType = isObject ? innerType._def.shape().reqType._def.defaultValue() : undefined,
-            maxLength = innerType instanceof z.ZodString ? innerType._def.checks.find(check => check.kind === 'max')?.value : undefined,
-            min = innerType instanceof z.ZodNumber ? innerType._def.checks.find(check => check.kind === 'min')?.value : undefined,
-            max = innerType instanceof z.ZodNumber ? innerType._def.checks.find(check => check.kind === 'max')?.value : undefined,
-            isEmail = innerType instanceof z.ZodString && innerType._def.checks.some(check => check.kind === 'email')
+        const isReadOnly = fieldType instanceof z.ZodReadonly
+
+        // Unwrap optional and readonly wrappers to get to the actual type
+        if (isOptional) {
+            innerType = (fieldType as z.ZodOptional<any>).unwrap()
+        }
+        if (isReadOnly) {
+            innerType = (fieldType as z.ZodReadonly<any>).unwrap()
+        }
+
+        // Type detection using instanceof checks
+        const isEnum = innerType instanceof z.ZodEnum
+        const isObject = innerType instanceof z.ZodObject
+
+        // For enum options, we can safely access the .enum property
+        let enumOptions: Array<{ value: any, label: string }> = []
+        if (isEnum) {
+            enumOptions = enumToLabelValue((innerType as z.ZodEnum<any>).enum)
+        }
+
+        let min: number | undefined = undefined
+        let max: number | undefined = undefined
+        let maxLength: number | undefined = undefined
+        let isEmail = false
+        let reqType: string | undefined = undefined
+
+        // Extract reqType default value for requirement type fields
+        if (fieldType instanceof z.ZodDefault && key === 'reqType') {
+            const defaultValue = (fieldType)._zod?.def?.defaultValue
+            if (typeof defaultValue === 'function') {
+                reqType = defaultValue()
+            } else {
+                reqType = defaultValue as string
+            }
+        }
+
+        const checks = (innerType as any)._zod?.def?.checks || []
+
+        for (const check of checks) {
+            const checkDef = check._zod?.def || check
+
+            switch (checkDef.check) {
+                case 'min_length':
+                    min = !min || checkDef.value < min ? checkDef.value : min
+                    break
+                case 'max_length':
+                    maxLength = !maxLength || checkDef.value > maxLength ? checkDef.value : maxLength
+                    break
+                case 'length_equals':
+                    min = checkDef.value
+                    maxLength = checkDef.value
+                    break
+                case 'greater_than':
+                    min = !min || checkDef.value + 1 < min ? checkDef.value + 1 : min
+                    break
+                case 'greater_than_or_equal':
+                    min = !min || checkDef.value < min ? checkDef.value : min
+                    break
+                case 'less_than':
+                    max = !max || checkDef.value - 1 > max ? checkDef.value - 1 : max
+                    break
+                case 'less_than_or_equal':
+                    max = !max || checkDef.value > max ? checkDef.value : max
+                    break
+                case 'string_format':
+                    isEmail = checkDef.format === 'email'
+                    break
+            }
+        }
 
         return {
             key,
@@ -48,7 +99,7 @@ const getSchemaFields = (schema: z.ZodObject<z.ZodRawShape>) => Object.entries(s
             maxLength,
             isEnum,
             isEmail,
-            enumOptions: isEnum ? enumToLabelValue((innerType as z.ZodEnum<[string, ...string[]]>).enum) : []
+            enumOptions
         } as const
     })
 

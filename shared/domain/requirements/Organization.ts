@@ -8,7 +8,7 @@ export const Organization = MetaRequirement.extend({
         value => value === slugify(value),
         'The slug must be a slugified string'
     ).readonly().describe('A slugified version of the name'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.ORGANIZATION)
+    reqType: z.enum(ReqType).default(ReqType.ORGANIZATION)
 }).refine(
     value => value.slug === slugify(value.name),
     'The slug must be the slugified version of the name'

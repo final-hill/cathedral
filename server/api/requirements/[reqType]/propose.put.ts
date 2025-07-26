@@ -8,9 +8,9 @@ import { z } from 'zod'
 import { NaturalLanguageToRequirementService } from '~/server/data/services/NaturalLanguageToRequirementService'
 import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 
-const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
+const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape
 
-const paramSchema = z.object({ reqType: z.nativeEnum(ReqType) })
+const paramSchema = z.object({ reqType: z.enum(ReqType) })
 
 const appConfig = useRuntimeConfig()
 
@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
             reqType: true,
             solution: true
         }).extend({
-            solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
+            solutionSlug: Solution.pick({ slug: true }).shape.slug,
             organizationId,
             organizationSlug
         }).refine((value) => {

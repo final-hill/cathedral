@@ -7,9 +7,9 @@ import { Organization, Solution } from '#shared/domain'
 import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 
 const querySchema = z.object({
-    solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
-    organizationSlug: Organization.innerType().pick({ slug: true }).shape.slug,
-    reqType: z.nativeEnum(ReqType)
+    solutionSlug: Solution.pick({ slug: true }).shape.slug,
+    organizationSlug: Organization.pick({ slug: true }).shape.slug,
+    reqType: z.enum(ReqType)
 })
 
 export default defineEventHandler(async (event) => {

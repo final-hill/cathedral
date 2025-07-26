@@ -8,7 +8,7 @@ export default async function validateEventParams<Z extends ZodType>(event: H3Ev
         throw createError({
             statusCode: 400,
             statusMessage: 'Bad Request: Invalid route parameters',
-            message: JSON.stringify(params.error.errors)
+            message: JSON.stringify(params.error.issues)
         })
 
     return params.data

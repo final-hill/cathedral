@@ -7,9 +7,9 @@ import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 
 // TODO: this feels backwards. Shouldn't the param be the organizationSlug and the body be the solutionSlug?
 
-const paramSchema = Solution.innerType().pick({ slug: true })
+const paramSchema = Solution.pick({ slug: true })
 
-const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
+const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape
 
 const bodySchema = z.object({
     organizationId,

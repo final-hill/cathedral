@@ -4,7 +4,7 @@ import { ReqType } from './ReqType.js'
 import { Requirement } from './Requirement.js'
 
 export const Goal = Requirement.extend({
-    reqType: z.nativeEnum(ReqType).default(ReqType.GOAL)
+    reqType: z.enum(ReqType).default(ReqType.GOAL)
 }).describe(dedent(`
     A result desired by an organization
     an objective of the project or system, in terms

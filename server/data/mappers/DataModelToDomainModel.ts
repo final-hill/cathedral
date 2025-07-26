@@ -10,7 +10,7 @@ import { resolveReqTypeFromModel } from '~/shared/utils'
 const objectSchema = z.object({
     id: z.string().uuid(),
     name: z.string(),
-    reqType: z.nativeEnum(ReqType)
+    reqType: z.enum(ReqType)
 })
 
 async function replaceReferenceMembers<M extends Partial<Omit<RequirementModel, 'getLatestVersion'> & RequirementVersionsModel>>(model: M): Promise<M> {

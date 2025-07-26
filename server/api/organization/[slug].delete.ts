@@ -4,7 +4,7 @@ import handleDomainException from '~/server/utils/handleDomainException'
 import { Organization } from '#shared/domain'
 import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 
-const paramSchema = Organization.innerType().pick({ slug: true })
+const paramSchema = Organization.pick({ slug: true })
 
 /**
  * Delete an organization by id.

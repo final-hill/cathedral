@@ -10,11 +10,11 @@ export const AppUserOrganizationRole = z.object({
             .describe('The name of the AppUser associated with the OrganizationRole')
     }).describe('The user associated with the OrganizationRole'),
     organization: z.object({
-        reqType: z.nativeEnum(ReqType).default(ReqType.ORGANIZATION),
+        reqType: z.enum(ReqType).default(ReqType.ORGANIZATION),
         id: z.string().uuid()
             .describe('The id of the Organization associated with the OrganizationRole'),
         name: z.string()
             .describe('The name of the Organization associated with the OrganizationRole')
     }).describe('The Organization associated with the OrganizationRole'),
-    role: z.nativeEnum(AppRole).describe('The Role associated with the OrganizationRole')
+    role: z.enum(AppRole).describe('The Role associated with the OrganizationRole')
 }).describe('An AppUserOrganizationRole is a mapping between an AppUser, an Organization, and a Role managed by Microsoft Entra External ID')

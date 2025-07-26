@@ -2,10 +2,10 @@ import { z } from 'zod'
 import { ConstraintCategory, MoscowPriority, ReqType, StakeholderCategory, StakeholderSegmentation, UseCase } from '~/shared/domain'
 
 export const llmRequirementSchema = z.object({
-    reqType: z.nativeEnum(ReqType),
+    reqType: z.enum(ReqType),
     name: z.string().describe('The name of the requirement'),
     description: z.string().describe('The statement describing the requirement'),
-    moscowPriority: z.nativeEnum(MoscowPriority).describe('The priority of the requirement, using the MoSCoW method').or(z.null()),
+    moscowPriority: z.enum(MoscowPriority).describe('The priority of the requirement, using the MoSCoW method').or(z.null()),
     email: z.string().describe('The email of the person').or(z.null()),
     primaryActorName: z.string().describe(
         'The name of the primary actor associated with the Scenario: (Epic, User Story, or Use Case)'
@@ -13,9 +13,9 @@ export const llmRequirementSchema = z.object({
     outcomeName: z.string().describe(
         'The name of the outcome (goal) associated with the Scenario: (Epic, User Story, or Use Case)'
     ).or(z.null()),
-    stakeholderSegmentation: z.nativeEnum(StakeholderSegmentation).describe('The segmentation of the stakeholder').or(z.null()),
-    stakeholderCategory: z.nativeEnum(StakeholderCategory).describe('The category of the stakeholder').or(z.null()),
-    constraintCategory: z.nativeEnum(ConstraintCategory).describe('The category of the constraint').or(z.null()),
+    stakeholderSegmentation: z.enum(StakeholderSegmentation).describe('The segmentation of the stakeholder').or(z.null()),
+    stakeholderCategory: z.enum(StakeholderCategory).describe('The category of the stakeholder').or(z.null()),
+    constraintCategory: z.enum(ConstraintCategory).describe('The category of the constraint').or(z.null()),
     useCaseScope: z.string().describe(UseCase.shape.scope.description!).or(z.null()),
     useCaseLevel: z.string().describe(UseCase.shape.level.description!).or(z.null()),
     useCasePreconditionName: z.string().describe(

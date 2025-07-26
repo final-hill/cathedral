@@ -4,7 +4,7 @@ import handleDomainException from '~/server/utils/handleDomainException'
 import { Organization } from '#shared/domain'
 import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 
-const querySchema = Organization.innerType().partial()
+const querySchema = Organization.partial()
 
 /**
  * Returns all organizations that match the query parameters

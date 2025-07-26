@@ -18,11 +18,11 @@ export const Requirement = AuditMetadata.extend({
         .describe('A human-readable explanation of the Requirement'),
     // see: https://github.com/final-hill/cathedral/issues/368
     // property: z.string().max(100).describe('A property is a Predicate formalizing its associated statement'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.REQUIREMENT),
-    workflowState: z.nativeEnum(WorkflowState)
+    reqType: z.enum(ReqType).default(ReqType.REQUIREMENT),
+    workflowState: z.enum(WorkflowState)
         .describe('The current state of the Requirement'),
     parsedRequirements: z.object({
-        reqType: z.nativeEnum(ReqType).default(ReqType.PARSED_REQUIREMENTS),
+        reqType: z.enum(ReqType).default(ReqType.PARSED_REQUIREMENTS),
         id: z.string().uuid()
             .describe('The id of the parsed requirement'),
         name: z.string()
@@ -30,7 +30,7 @@ export const Requirement = AuditMetadata.extend({
     }).optional()
         .describe('The ParsedRequirements container that this requirement is derived from'),
     solution: z.object({
-        reqType: z.nativeEnum(ReqType).default(ReqType.SOLUTION),
+        reqType: z.enum(ReqType).default(ReqType.SOLUTION),
         id: z.string().uuid()
             .describe('The id of the solution'),
         name: z.string()

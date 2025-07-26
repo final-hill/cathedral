@@ -6,7 +6,7 @@ import { AppUser, AppUserOrganizationRole, Organization } from '#shared/domain'
 import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 
 const paramSchema = AppUser.pick({ id: true }),
-    { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
+    { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape
 
 const bodySchema = z.object({
     organizationId,

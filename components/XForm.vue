@@ -3,7 +3,7 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 import { z } from 'zod'
 import { getSchemaFields } from '~/shared/utils'
 
-export type FormSchema = z.ZodObject<{ [key: string]: z.ZodTypeAny }>
+export type FormSchema = z.ZodObject<{ [key: string]: z.ZodType }>
 
 const props = defineProps<{
     id?: string

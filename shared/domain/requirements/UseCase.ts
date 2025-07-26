@@ -13,7 +13,7 @@ export const UseCase = Scenario.extend({
     level: z.string().max(100)
         .describe('The level of the use case'),
     precondition: z.object({
-        reqType: z.nativeEnum(ReqType).default(ReqType.ASSUMPTION),
+        reqType: z.enum(ReqType).default(ReqType.ASSUMPTION),
         id: z.string().uuid()
             .describe('The id of the precondition'),
         name: z.string()
@@ -22,7 +22,7 @@ export const UseCase = Scenario.extend({
     trigger: z.object({
         // TODO: The trigger is some form of event that starts the use case.
         // But how do we represent this in the system?
-        reqType: z.nativeEnum(ReqType),
+        reqType: z.enum(ReqType),
         id: z.string().uuid()
             .describe('The id of the trigger'),
         name: z.string()
@@ -40,7 +40,7 @@ export const UseCase = Scenario.extend({
     mainSuccessScenario: z.string().max(100)
         .describe('The main success scenario of the use case'),
     successGuarantee: z.object({
-        reqType: z.nativeEnum(ReqType).default(ReqType.EFFECT),
+        reqType: z.enum(ReqType).default(ReqType.EFFECT),
         id: z.string().uuid()
             .describe('The id of the success guarantee'),
         name: z.string()
@@ -50,5 +50,5 @@ export const UseCase = Scenario.extend({
         .describe('The extensions of the use case'),
     // TODO: <https://github.com/final-hill/cathedral/issues/154>
     // stakeHoldersAndInterests: z.array(z.string().max(100)).describe('The stakeholders and interests of the use case')
-    reqType: z.nativeEnum(ReqType).default(ReqType.USE_CASE)
+    reqType: z.enum(ReqType).default(ReqType.USE_CASE)
 }).describe('A Use Case describes a complete interaction between an actor and the system to achieve a goal.')
