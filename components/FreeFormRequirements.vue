@@ -47,7 +47,7 @@ async function submitRequirements({ data: { description } }: FormSubmitEvent<Req
             body: {
                 solutionSlug: props.solutionSlug,
                 organizationSlug: props.organizationSlug,
-                name: 'Free-Form Requirements',
+                name: 'Free-form requirements',
                 description
             }
         }) as string

@@ -146,6 +146,20 @@ Requirements in Cathedral follow a five-state workflow:
 - **No Restoration**: Once in the Removed state, Silence requirements cannot be moved to any other state
 - **Purpose**: These represent content that could not be parsed into proper requirements and serve as placeholders for malformed input
 
+### Special Case: ParsedRequirements
+
+**ParsedRequirements** have unique workflow behavior as they are container requirements for auto-generated content:
+
+- **Automatic State**: ParsedRequirements are automatically placed in the **Parsed** state when created
+- **No State Transitions**: ParsedRequirements cannot be moved to any other workflow state
+- **Container Role**: They serve as containers for multiple individual requirements that were parsed from natural language
+- **Non-Actionable**: ParsedRequirements themselves are not actionable requirements but exist to group related parsed requirements
+- **UI Behavior**: The workflow state is not displayed in the UI for ParsedRequirements, and workflow filtering is not available
+- **Source Tracking**: The `name` field is used to distinguish the source of parsed requirements:
+  - **"Free-form requirements"** - Created via the web UI form
+  - **"Slack Requirements"** - Created via Slack bot interactions
+  - This naming convention enables auditing, user experience tracking, and system analytics
+
 ### Workflow Transitions
 
 The following state transitions are supported:
@@ -153,6 +167,8 @@ The following state transitions are supported:
 ```mermaid
 stateDiagram-v2
     [*] --> Proposed : Create Requirement
+    [*] --> Rejected : Create Silence
+    [*] --> Parsed : Create ParsedRequirements
 
     Proposed --> Review : Submit for Review
     Proposed --> Removed : Remove
@@ -163,26 +179,14 @@ stateDiagram-v2
     Active --> Proposed : Revise (new version)
     Active --> Removed : Remove
 
-    Rejected --> Proposed : Revise
+    Rejected --> Proposed : Revise<br>(normal requirements)
     Rejected --> Removed : Remove
 
-    Removed --> Proposed : Restore
+    Removed --> Proposed : Restore<br>(normal requirements only)
 
     note right of Active : Generates unique ReqId
     note right of Proposed : New version created<br>when revising Active
-```
-
-#### Silence Requirements Workflow
-
-Silence requirements follow a simplified workflow due to their nature as unparseable content:
-
-```mermaid
-stateDiagram-v2
-    [*] --> Rejected : Create Silence
-
-    Rejected --> Removed : Remove Only
-
-    Removed --> [*] : End State
+    note right of Rejected : Silence requirements<br>Remove only<br>no restore
 ```
 
 ### Permission Requirements
@@ -242,6 +246,11 @@ The workflow is implemented through RESTful API endpoints following the pattern:
 - Silence requirements are automatically created in the Rejected state
 - Only the remove operation (`POST /api/requirements/silence/rejected/[id]/remove`) is available
 - Restore operations are not supported for removed Silence requirements
+
+**Note**: For ParsedRequirements (`reqType` = "parsed_requirements"):
+- ParsedRequirements are automatically created in the Parsed state
+- No workflow operations are available as they are non-actionable containers
+- They serve only as grouping mechanisms for individual parsed requirements
 
 #### UI Components
 

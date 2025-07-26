@@ -242,7 +242,8 @@
             "Rejected",
             "Removed",
             "Review",
-            "Active"
+            "Active",
+            "Parsed"
           ],
           "mappedType": "enum"
         },
