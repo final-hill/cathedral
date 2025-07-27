@@ -36,7 +36,10 @@ export default defineEventHandler(async (event) => {
             solutionId: solution.id
         })
 
-    return await requirementInteractor.getCurrentActiveRequirementsByType(reqType)
-        .then(requirements => requirements.map(req => ({ label: req.name, value: { id: req.id, name: req.name } })))
+    return await requirementInteractor.getAllVisibleRequirementsByType(reqType)
+        .then(requirements => requirements.map(req => ({
+            label: `${req.name} (${req.workflowState})`,
+            value: { id: req.id, name: req.name }
+        })))
         .catch(handleDomainException)
 })

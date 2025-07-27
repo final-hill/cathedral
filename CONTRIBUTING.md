@@ -114,6 +114,10 @@ Requirements in Cathedral follow a five-state workflow:
   - **Approve**: Move the requirement to the Active state and generate a unique `ReqId`
   - **Reject**: Move the requirement to the Rejected state
 
+**Approval Validation**: Before a requirement can be approved and moved to Active state, all referenced requirements (such as Primary Actor, Outcome, etc.) must already be in the Active state. This ensures topological ordering and prevents broken references. If any referenced requirement is not Active, the approval will fail with a clear error message indicating which requirement needs to be approved first.
+
+**Dropdown Behavior**: While editing requirements in Review state, dropdown menus will show requirements from all visible workflow states (Active, Proposed, Review) to allow flexibility during editing. However, the approval validation ensures data integrity at the time of activation.
+
 #### 3. **Active**
 - **Purpose**: Requirements that are officially part of the project
 - **Description**: Requirements that have been approved and are currently in effect. Each Active requirement has a unique ReqId for tracking and reference
@@ -187,6 +191,7 @@ stateDiagram-v2
     note right of Active : Generates unique ReqId
     note right of Proposed : New version created<br>when revising Active
     note right of Rejected : Silence requirements<br>Remove only<br>no restore
+    note left of Review : Approval requires all<br>referenced requirements<br>to be Active
 ```
 
 ### Permission Requirements
@@ -259,6 +264,22 @@ The workflow is primarily managed through the `XWorkflow.vue` component, which p
 - Context menus with appropriate actions for each state
 - Modal dialogs for editing, reviewing, and confirming operations
 - Real-time state updates and notifications
+
+#### Autocomplete and Reference Validation
+
+**Autocomplete Behavior**: 
+- The `/api/autocomplete` endpoint provides dropdown options for requirement references (Primary Actor, Outcome, etc.)
+- During editing, autocomplete shows requirements from all visible workflow states: Active, Proposed, and Review
+- Each option displays the workflow state (e.g., "HR Manager (Active)", "Screening Process (Proposed)") to help users make informed choices
+- Requirements in Rejected, Removed and Parsed states are excluded from autocomplete options
+
+**Reference Validation**:
+- While requirements can reference others in any visible workflow state during editing
+- All referenced requirements must be Active before the referencing requirement can be approved
+- Approval attempts with non-Active references will fail with descriptive error messages
+- Example error: "Cannot approve requirement because referenced requirement 'HR Manager' (primaryActor) is in Proposed state instead of Active. All referenced requirements must be Active before this requirement can be approved."
+
+This design enables flexible editing while enforcing data integrity through topological ordering validation.
 
 ## Troubleshooting
 

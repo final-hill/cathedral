@@ -8,6 +8,7 @@ import type { PermissionInteractor } from './PermissionInteractor'
 import type { AuditMetadata } from '~/shared/domain'
 import type { RequirementRepository } from '~/server/data/repositories/RequirementRepository'
 import type { NaturalLanguageToRequirementService } from '~/server/data/services/NaturalLanguageToRequirementService'
+import { dedent } from '~/shared/utils'
 
 type ReqTypeName = keyof typeof req
 
@@ -50,7 +51,7 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
      * @param reqProps The properties of the requirements to check
      * @throws {MismatchException} If a referenced requirement does not belong to the solution
      */
-    private async _assertReferencedRequirementsBelongToSolution(
+    private async assertReferencedRequirementsBelongToSolution(
         reqProps: Partial<Omit<z.infer<typeof req.Requirement>, 'reqId' | keyof z.infer<typeof AuditMetadata>>>
     ) {
         for (const [key, value] of Object.entries(reqProps) as [keyof typeof reqProps, string | { id: string }][]) {
@@ -69,6 +70,47 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
                 }
             } catch {
                 throw new MismatchException(`Requirement with id ${value} does not belong to the solution`)
+            }
+        }
+    }
+
+    /**
+     * Asserts that all referenced requirements are in the Active workflow state.
+     * This is used during approval to ensure that a requirement can only reference Active requirements.
+     * @param reqProps The properties of the requirements to check
+     * @throws {InvalidWorkflowStateException} If a referenced requirement is not in the Active state
+     */
+    private async assertReferencedRequirementsAreActive(
+        reqProps: Partial<Omit<z.infer<typeof req.Requirement>, 'reqId' | keyof z.infer<typeof AuditMetadata>>>
+    ) {
+        for (const [key, value] of Object.entries(reqProps) as [keyof typeof reqProps, string | { id: string }][]) {
+            // Skip non-reference fields
+            if (key === 'solution') continue
+
+            const id = typeof value === 'string' && validateUuid(value)
+                ? value
+                : typeof value === 'object' && 'id' in value ? value.id : undefined
+
+            if (!id) continue
+
+            try {
+                const result = await this.repository.getById(id)
+
+                if (result.workflowState !== WorkflowState.Active) {
+                    throw new InvalidWorkflowStateException(
+                        dedent(`
+                            Cannot approve requirement because referenced requirement
+                            '${result.name}' (${key}) is in ${result.workflowState} state
+                            instead of Active. All referenced requirements must be Active
+                            before this requirement can be approved.
+                        `)
+                    )
+                }
+            } catch (error) {
+                if (error instanceof InvalidWorkflowStateException) {
+                    throw error
+                }
+                throw new MismatchException(`Referenced requirement with id ${id} not found`)
             }
         }
     }
@@ -136,12 +178,46 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
     async getAllRequirementsByType<R extends ReqTypeName>(props: { reqType: ReqType, staticQuery?: Partial<z.infer<typeof req[R]>> }): Promise<z.infer<typeof req[R]>[]> {
-        await this._permissionInteractor.assertOrganizationReader(this._organizationId)
+        this._permissionInteractor.assertOrganizationReader(this._organizationId)
 
         return this.repository.getAll({
             solutionId: this._solutionId,
             ...props
         })
+    }
+
+    /**
+     * Get all visible requirements of a given type for autocomplete purposes.
+     * This includes requirements in Active, Proposed, and Review states (but not Rejected, Removed, or Parsed).
+     * @param reqType - The type of the requirements to get
+     * @returns The requirements of the given type across visible workflow states
+     * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
+     */
+    async getAllVisibleRequirementsByType<R extends ReqTypeName>(reqType: ReqType): Promise<z.infer<typeof req[R]>[]> {
+        this._permissionInteractor.assertOrganizationReader(this._organizationId)
+
+        // Get requirements from all visible states
+        const visibleStates = [WorkflowState.Active, WorkflowState.Proposed, WorkflowState.Review]
+        const allRequirements = await Promise.all(
+            visibleStates.map(workflowState =>
+                this.repository.getAllLatest({
+                    solutionId: this._solutionId,
+                    reqType,
+                    workflowState
+                })
+            )
+        )
+
+        // Flatten and return unique requirements (deduplicate by id)
+        const flatRequirements = allRequirements.flat()
+        const uniqueRequirements = flatRequirements.reduce((acc, req) => {
+            if (!acc.find(existing => existing.id === req.id)) {
+                acc.push(req)
+            }
+            return acc
+        }, [] as z.infer<typeof req[R]>[])
+
+        return uniqueRequirements
     }
 
     /**
@@ -188,7 +264,7 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         props: Omit<z.infer<typeof req[R]>, 'reqId' | 'reqIdPrefix' | 'id' | 'workflowState' | 'solution' | keyof z.infer<typeof AuditMetadata>>
     ): Promise<z.infer<typeof req.Requirement>['id']> {
         this._permissionInteractor.assertOrganizationContributor(this._organizationId)
-        await this._assertReferencedRequirementsBelongToSolution(props)
+        await this.assertReferencedRequirementsBelongToSolution(props)
 
         const currentUserId = this._permissionInteractor.userId
 
@@ -228,7 +304,7 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
         reqProps: Partial<Omit<z.infer<typeof req[R]>, 'reqIdPrefix' | 'workflowState' | 'solution' | keyof z.infer<typeof AuditMetadata>>> & { id: z.infer<typeof req.Requirement>['id'] }
     ) {
         await this._permissionInteractor.assertOrganizationContributor(this._organizationId)
-        await this._assertReferencedRequirementsBelongToSolution(reqProps)
+        await this.assertReferencedRequirementsBelongToSolution(reqProps)
 
         const currentRequirement = await this.repository.getById(reqProps.id),
             currentUserId = this._permissionInteractor.userId
@@ -339,7 +415,7 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
      * Approves a requirement currently in the Review state.
      * This will change the state to Active.
      * @param id - The id of the requirement to approve
-     * @throws {InvalidWorkflowStateException} If the requirement is not currently in the Review state.
+     * @throws {InvalidWorkflowStateException} If the requirement is not currently in the Review state or if referenced requirements are not Active.
      * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
      * @throws {NotFoundException} If the requirement does not exist
      */
@@ -352,6 +428,9 @@ export class RequirementInteractor extends Interactor<z.infer<typeof req.Require
 
         if (currentRequirement.workflowState !== WorkflowState.Review)
             throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Review state`)
+
+        // Validate that all referenced requirements are Active before approving
+        await this.assertReferencedRequirementsAreActive(currentRequirement)
 
         return this.repository.update({
             reqProps: {

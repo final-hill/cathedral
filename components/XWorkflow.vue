@@ -100,7 +100,8 @@ const viewSchema = props.reqType === ReqType.PARSED_REQUIREMENTS
             id: true,
             isDeleted: true,
             modifiedBy: true,
-            solution: true
+            solution: true,
+            parsedRequirements: true
         })
 
 const editSchema = props.reqType === ReqType.PARSED_REQUIREMENTS
@@ -119,7 +120,8 @@ const editSchema = props.reqType === ReqType.PARSED_REQUIREMENTS
             reqType: true,
             isDeleted: true,
             modifiedBy: true,
-            solution: true
+            solution: true,
+            parsedRequirements: true
         })
 
 const workflowColorMap: Record<WorkflowState, BadgeProps['color']> = {
