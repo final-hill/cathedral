@@ -179,8 +179,16 @@ const autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field
                     :items="field.enumOptions"
                     class="w-full"
                 />
+                <UInput
+                    v-else-if="field.isObject && props.disabled"
+                    :value="(localState as any)[field.key]?.name || ''"
+                    type="text"
+                    disabled
+                    tabindex="-1"
+                    class="w-full"
+                />
                 <UInputMenu
-                    v-else-if="field.isObject"
+                    v-else-if="field.isObject && !props.disabled"
                     v-model="(localState as any)[field.key]"
                     :items="(autocompleteFetchObjects[field.key].data.value || []) as any"
                     value-key="value"
