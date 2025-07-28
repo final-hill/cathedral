@@ -18,7 +18,7 @@ const handleError = () => {
                 sessionStorage.setItem('auth-redirect', currentPath)
             }
         }
-        navigateTo('/auth/entra-external-id', { external: true })
+        navigateTo('/auth', { external: true })
         return
     }
     clearError({ redirect: '/' })

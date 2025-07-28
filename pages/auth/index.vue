@@ -21,7 +21,7 @@ if (import.meta.client && redirectPath && redirectPath.startsWith('/')) {
 }
 
 // Redirect to OAuth
-await navigateTo('/auth/entra-external-id', { external: true })
+await navigateTo('/auth', { external: true })
 </script>
 
 <template>

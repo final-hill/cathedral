@@ -90,6 +90,14 @@ Note that this will only work if the server is running locally (`npm run dev`).
 
 Once the local server is stopped, the ngrok tunnel will be closed and the Slackbot will no longer work.
 
+Also update the `.env` file with the ngrok URL:
+
+```env
+NUXT_SLACK_OAUTH_ORIGIN=https://73cfd69848d9.ngrok-free.app
+```
+
+After updating the `.env` file, rebuild the devcontainer to apply the changes.
+
 ## Requirements Workflow
 
 The Cathedral application implements a comprehensive workflow system for managing requirements throughout their lifecycle. This workflow ensures quality control, proper review processes, and maintains traceability of all requirement changes.
@@ -267,7 +275,7 @@ The workflow is primarily managed through the `XWorkflow.vue` component, which p
 
 #### Autocomplete and Reference Validation
 
-**Autocomplete Behavior**: 
+**Autocomplete Behavior**:
 - The `/api/autocomplete` endpoint provides dropdown options for requirement references (Primary Actor, Outcome, etc.)
 - During editing, autocomplete shows requirements from all visible workflow states: Active, Proposed, and Review
 - Each option displays the workflow state (e.g., "HR Manager (Active)", "Screening Process (Proposed)") to help users make informed choices

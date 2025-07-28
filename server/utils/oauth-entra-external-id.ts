@@ -22,7 +22,7 @@ export interface OAuthEntraExternalIDConfig {
     tenant: string
     /**
      * Redirect URL (REQUIRED)
-     * @example 'https://cathedral.localhost/auth/entra-external-id'
+     * @example 'https://cathedral.localhost/auth'
      * @default process.env.NUXT_OAUTH_ENTRA_EXTERNAL_ID_REDIRECT_URL
      */
     redirectURL: string

@@ -6,6 +6,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
         if (import.meta.client && to.fullPath !== '/') {
             sessionStorage.setItem('auth-redirect', to.fullPath)
         }
-        return navigateTo('/auth/entra-external-id', { external: true })
+        return navigateTo('/auth', { external: true })
     }
 })
