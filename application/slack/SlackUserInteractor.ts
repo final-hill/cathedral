@@ -111,6 +111,21 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
     }
 
     /**
+     * Get all Slack user associations for a Cathedral user
+     *
+     * @param cathedralUserId - The Cathedral user ID
+     * @returns Array of Slack user associations
+     */
+    async getSlackUsersForCathedralUser(cathedralUserId: string): Promise<Array<{
+        slackUserId: string
+        teamId: string
+        teamName: string
+        creationDate: Date
+    }>> {
+        return this.repository.getSlackUsersForCathedralUser(cathedralUserId)
+    }
+
+    /**
      * Validate user authentication and return Cathedral user ID
      *
      * Business Rules:
@@ -148,7 +163,7 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
      * Business Rules:
      * - Generates secure JWT token for user linking
      * - Token expires in 10 minutes for security
-     * - Redirects through auth flow for proper user validation
+     * - Redirects through account selection flow for proper user validation
      *
      * @param slackUserId - The Slack user ID
      * @param teamId - The Slack team ID

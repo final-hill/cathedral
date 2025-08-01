@@ -1,6 +1,7 @@
 import { Repository } from './Repository'
 import { SlackChannelMetaModel } from '../models/application/SlackChannelMetaModel'
 import { SlackUserMetaModel } from '../models/application'
+import { SlackWorkspaceMetaModel } from '../models/application/SlackWorkspaceMetaModel'
 import type { SolutionVersionsModel } from '../models/requirements'
 import { OrganizationRepository } from './OrganizationRepository'
 import type { SlackChannelMetaRepositoryType } from '#shared/domain/application/SlackChannelMeta'
@@ -197,6 +198,40 @@ export class SlackRepository extends Repository<unknown> {
         if (!meta || !meta.appUserId)
             return null
         return meta.appUserId
+    }
+
+    /**
+     * Get all Slack user associations for a Cathedral user
+     * @param cathedralUserId - The Cathedral user ID
+     * @returns Array of Slack user associations
+     */
+    async getSlackUsersForCathedralUser(cathedralUserId: string): Promise<Array<{
+        slackUserId: string
+        teamId: string
+        teamName: string
+        creationDate: Date
+    }>> {
+        const em = this._em
+        const slackUsers = await em.find(SlackUserMetaModel, {
+            appUserId: cathedralUserId
+        })
+
+        // Get team names for each team ID
+        const result = []
+        for (const user of slackUsers) {
+            const workspace = await em.findOne(SlackWorkspaceMetaModel, {
+                teamId: user.teamId
+            })
+
+            result.push({
+                slackUserId: user.slackUserId,
+                teamId: user.teamId,
+                teamName: workspace?.teamName || 'Unknown Workspace',
+                creationDate: user.creationDate
+            })
+        }
+
+        return result
     }
 
     /**
