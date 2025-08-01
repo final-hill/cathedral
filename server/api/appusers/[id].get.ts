@@ -1,6 +1,7 @@
 import { z } from 'zod'
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~/application'
-import { OrganizationRepository } from '~/server/data/repositories'
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, AppUserSlackInteractor, Slack } from '~/application'
+import { OrganizationRepository, SlackRepository } from '~/server/data/repositories'
+import { SlackService } from '~/server/data/services'
 import handleDomainException from '~/server/utils/handleDomainException'
 import { AppUser, Organization } from '#shared/domain'
 import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
@@ -10,7 +11,8 @@ const paramSchema = AppUser.pick({ id: true }),
 
 const querySchema = z.object({
     organizationId,
-    organizationSlug
+    organizationSlug,
+    includeSlack: z.string().optional().transform(val => val === 'true').default('false').describe('Whether to include Slack associations')
 }).refine((value) => {
     return value.organizationId !== undefined || value.organizationSlug !== undefined
 }, 'At least one of organizationId or organizationSlug should be provided')
@@ -20,8 +22,9 @@ const querySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams(event, paramSchema),
-        { organizationId, organizationSlug } = await validateEventQuery(event, querySchema),
+        { organizationId, organizationSlug, includeSlack } = await validateEventQuery(event, querySchema),
         session = await requireUserSession(event),
+        config = useRuntimeConfig(),
         permissionInteractor = new PermissionInteractor({
             session,
             groupService: createEntraGroupService()
@@ -42,5 +45,33 @@ export default defineEventHandler(async (event) => {
         auor = await permissionInteractor.getAppUserOrganizationRole({ appUserId: id, organizationId: orgId })
             .catch(handleDomainException)
 
-    return organizationInteractor.getAppUserById(auor!.appUser.id).catch(handleDomainException)
+    if (includeSlack) {
+        const slackUserInteractor = new Slack.SlackUserInteractor({
+            repository: new SlackRepository({ em: event.context.em }),
+            permissionInteractor: new PermissionInteractor({
+                session: {
+                    id: config.systemSlackUserId,
+                    user: {
+                        id: config.systemSlackUserId,
+                        name: config.systemSlackUserName,
+                        email: config.systemSlackUserEmail,
+                        groups: []
+                    },
+                    loggedInAt: Date.now()
+                },
+                groupService: createEntraGroupService()
+            }),
+            slackService: new SlackService(config.slackBotToken, config.slackSigningSecret)
+        })
+
+        const appUserSlackInteractor = new AppUserSlackInteractor({
+            organizationInteractor,
+            slackUserInteractor
+        })
+
+        return await appUserSlackInteractor.getAppUserByIdWithSlack(auor!.appUser.id)
+            .catch(handleDomainException)
+    }
+
+    return await organizationInteractor.getAppUserById(auor!.appUser.id).catch(handleDomainException)
 })

@@ -1,6 +1,7 @@
 import { Repository } from './Repository'
 import { SlackChannelMetaModel } from '../models/application/SlackChannelMetaModel'
 import { SlackUserMetaModel } from '../models/application'
+import { SlackWorkspaceMetaModel } from '../models/application/SlackWorkspaceMetaModel'
 import type { SolutionVersionsModel } from '../models/requirements'
 import { OrganizationRepository } from './OrganizationRepository'
 import type { SlackChannelMetaRepositoryType } from '#shared/domain/application/SlackChannelMeta'
@@ -197,6 +198,42 @@ export class SlackRepository extends Repository<unknown> {
         if (!meta || !meta.appUserId)
             return null
         return meta.appUserId
+    }
+
+    /**
+     * Get all Slack user associations for a Cathedral user
+     * @param cathedralUserId - The Cathedral user ID
+     * @returns Array of Slack user associations
+     */
+    async getSlackUsersForCathedralUser(cathedralUserId: string): Promise<Array<{
+        slackUserId: string
+        teamId: string
+        teamName: string
+        creationDate: Date
+    }>> {
+        const em = this._em
+        const slackUsers = await em.find(SlackUserMetaModel, {
+            appUserId: cathedralUserId
+        })
+
+        // Get team names for each team ID
+        // Fetch all workspaces for the team IDs in a single query
+        const teamIds = slackUsers.map(user => user.teamId)
+        const workspaces = await em.find(SlackWorkspaceMetaModel, {
+            teamId: { $in: teamIds }
+        })
+
+        // Create a lookup map for teamId to teamName
+        const workspaceMap = new Map(workspaces.map(workspace => [workspace.teamId, workspace.teamName]))
+
+        // Build the result array using the lookup map
+        const result = slackUsers.map(user => ({
+            slackUserId: user.slackUserId,
+            teamId: user.teamId,
+            teamName: workspaceMap.get(user.teamId) || 'Unknown Workspace',
+            creationDate: user.creationDate
+        }))
+        return result
     }
 
     /**
