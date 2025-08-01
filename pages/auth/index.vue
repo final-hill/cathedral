@@ -5,16 +5,6 @@ definePageMeta({ middleware: 'guest' })
 const route = useRoute()
 const redirectPath = route.query.redirect as string
 
-// If user is already logged in, redirect them to their intended destination
-const { loggedIn } = useUserSession()
-if (loggedIn.value) {
-    if (redirectPath && redirectPath.startsWith('/')) {
-        await navigateTo(redirectPath)
-    } else {
-        await navigateTo('/')
-    }
-}
-
 // Store redirect in sessionStorage before starting OAuth (client-side only)
 if (import.meta.client && redirectPath && redirectPath.startsWith('/')) {
     sessionStorage.setItem('auth-redirect', redirectPath)
