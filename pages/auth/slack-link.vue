@@ -56,7 +56,7 @@ const cancelLinking = () => {
 
 const handleSignOut = async () => {
     await clear()
-    await navigateTo('/auth/entra-external-id', { external: true })
+    await navigateTo('/api/auth/logout', { external: true })
 }
 </script>
 
