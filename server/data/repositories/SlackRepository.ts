@@ -217,20 +217,22 @@ export class SlackRepository extends Repository<unknown> {
         })
 
         // Get team names for each team ID
-        const result = []
-        for (const user of slackUsers) {
-            const workspace = await em.findOne(SlackWorkspaceMetaModel, {
-                teamId: user.teamId
-            })
+        // Fetch all workspaces for the team IDs in a single query
+        const teamIds = slackUsers.map(user => user.teamId)
+        const workspaces = await em.find(SlackWorkspaceMetaModel, {
+            teamId: { $in: teamIds }
+        })
 
-            result.push({
-                slackUserId: user.slackUserId,
-                teamId: user.teamId,
-                teamName: workspace?.teamName || 'Unknown Workspace',
-                creationDate: user.creationDate
-            })
-        }
+        // Create a lookup map for teamId to teamName
+        const workspaceMap = new Map(workspaces.map(workspace => [workspace.teamId, workspace.teamName]))
 
+        // Build the result array using the lookup map
+        const result = slackUsers.map(user => ({
+            slackUserId: user.slackUserId,
+            teamId: user.teamId,
+            teamName: workspaceMap.get(user.teamId) || 'Unknown Workspace',
+            creationDate: user.creationDate
+        }))
         return result
     }
 
