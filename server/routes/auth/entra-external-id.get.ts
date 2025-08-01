@@ -41,7 +41,7 @@ export default defineOAuthEntraExternalIDEventHandler({
                 loggedInAt: Date.now()
             })
 
-            return sendRedirect(event, '/')
+            return sendRedirect(event, '/auth/callback')
         } catch (error) {
             console.error('ERROR: Failed to extract groups from token. See sanitized error details below.')
             console.error('Error details:', {
@@ -62,7 +62,7 @@ export default defineOAuthEntraExternalIDEventHandler({
                 loggedInAt: Date.now()
             })
 
-            return sendRedirect(event, '/')
+            return sendRedirect(event, '/auth/callback')
         }
     },
     async onError(event, error) {
