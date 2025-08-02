@@ -1,6 +1,6 @@
 <script setup lang="tsx">
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui'
-import { UButton, UCheckbox, UDropdownMenu, UIcon, XConfirmModal } from '#components'
+import { UButton, UCard, UCheckbox, UDropdownMenu, UIcon, XConfirmModal } from '#components'
 import { AppUser } from '#shared/domain/application'
 import type { z } from 'zod'
 import { getSchemaFields } from '~/shared/utils'
@@ -90,44 +90,47 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
     return column
 })
 
-// Add Slack associations column
+// Add expandable Slack associations column
 const slackColumn: TableColumn<SchemaType> = {
     header: 'Slack',
-    accessorKey: 'slackAssociations',
     cell: ({ row }) => {
         const associations = row.original.slackAssociations || []
 
         if (associations.length === 0) {
             return (
                 <span class="text-muted text-sm italic">
-                    No Slack accounts linked
+                    No accounts linked
                 </span>
             )
         }
 
         return (
-            <ul class="space-y-1">
-                {associations.map(assoc => (
-                    <li key={`${assoc.teamId}-${assoc.slackUserId}`} class="text-sm">
-                        <header class="font-medium">
-                            <UIcon name="i-lucide-message-circle" class="mr-1 text-success" />
-                            {assoc.teamName}
-                        </header>
-                        <p class="text-muted text-xs">
-                            User ID:
-                            {' '}
-                            <data value={assoc.slackUserId}>{assoc.slackUserId}</data>
-                        </p>
-                        <p class="text-muted text-xs">
-                            Linked:
-                            {' '}
-                            <time datetime={assoc.creationDate.toISOString()}>
-                                {new Date(assoc.creationDate).toLocaleDateString()}
-                            </time>
-                        </p>
-                    </li>
-                ))}
-            </ul>
+            <div class="flex items-center gap-2">
+                <UButton
+                    color="neutral"
+                    variant="ghost"
+                    icon="i-lucide-chevron-down"
+                    size="xs"
+                    square
+                    aria-label="Expand Slack accounts"
+                    ui={{
+                        leadingIcon: [
+                            'transition-transform',
+                            row.getIsExpanded() ? 'duration-200 rotate-180' : ''
+                        ]
+                    }}
+                    onClick={() => row.toggleExpanded()}
+                />
+                <div class="flex items-center gap-1">
+                    <UIcon name="i-lucide-message-circle" class="text-success" />
+                    <span class="text-sm font-medium">
+                        {associations.length}
+                        {' '}
+                        account
+                        {associations.length === 1 ? '' : 's'}
+                    </span>
+                </div>
+            </div>
         )
     }
 }
@@ -164,20 +167,6 @@ const getActionItems = (item: SchemaType): DropdownMenuItem[] => {
         }
     }]
 
-    // Add Slack management options if user has associations
-    if (item.slackAssociations && item.slackAssociations.length > 0) {
-        items.push({
-            label: 'Manage Slack Accounts',
-            icon: 'i-lucide-message-circle',
-            onClick: () => {
-                manageSlackModal.value = {
-                    isOpen: true,
-                    user: item
-                }
-            }
-        })
-    }
-
     items.push({
         label: 'Delete',
         icon: 'i-lucide-trash-2',
@@ -211,24 +200,9 @@ const columnPinning = ref({
     right: ['Actions']
 })
 
-const manageSlackModal = ref<{
-    isOpen: boolean
-    user: SchemaType | null
-}>({
-    isOpen: false,
-    user: null
-})
-
-const closeSlackModal = () => {
-    manageSlackModal.value = {
-        isOpen: false,
-        user: null
-    }
-}
+const expanded = ref<Record<string, boolean>>({})
 
 const unlinkSlackUser = async (slackUserId: string, teamId: string, teamName: string) => {
-    if (!manageSlackModal.value.user) return
-
     const result = await confirmUnlinkSlackModal.open({
         title: `Are you sure you want to unlink the Slack account from "${teamName}"? The user will need to re-link their account to perform interactions from Slack.`
     }).result
@@ -353,12 +327,79 @@ const onAddModalSubmit = async (data: z.infer<typeof createSchema>) => {
 
     <UTable
         v-model:column-pinning="columnPinning"
+        v-model:expanded="expanded"
         sticky
         :data="users || []"
         :columns="userColumns as any"
         :loading="status === 'pending'"
         :empty-state="{ icon: 'i-lucide-database', label: 'No items.' }"
-    />
+        :ui="{ tr: 'data-[expanded=true]:bg-elevated/50' }"
+    >
+        <template #expanded="{ row }">
+            <div
+                v-if="row.original.slackAssociations && row.original.slackAssociations.length > 0"
+                class="px-4 py-3 bg-subtle/50"
+            >
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2">
+                    <UIcon
+                        name="i-lucide-message-circle"
+                        class="text-success"
+                    />
+                    Slack Account Details
+                </h4>
+                <div class="grid gap-3">
+                    <UCard
+                        v-for="assoc in row.original.slackAssociations"
+                        :key="`${assoc.teamId}-${assoc.slackUserId}`"
+                        variant="subtle"
+                    >
+                        <template #header>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <UIcon
+                                        name="i-lucide-building"
+                                        class="text-primary"
+                                    />
+                                    <span class="font-medium">{{ assoc.teamName }}</span>
+                                </div>
+                                <UButton
+                                    color="error"
+                                    variant="ghost"
+                                    size="xs"
+                                    icon="i-lucide-unlink"
+                                    @click="unlinkSlackUser(assoc.slackUserId, assoc.teamId, assoc.teamName)"
+                                >
+                                    Unlink
+                                </UButton>
+                            </div>
+                        </template>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted">
+                            <div>
+                                <span class="font-medium">User ID:</span>
+                                {{ assoc.slackUserId }}
+                            </div>
+                            <div>
+                                <span class="font-medium">Team ID:</span>
+                                {{ assoc.teamId }}
+                            </div>
+                            <div class="md:col-span-2">
+                                <span class="font-medium">Linked:</span>
+                                {{ new Date(assoc.creationDate).toLocaleString() }}
+                            </div>
+                        </div>
+                    </UCard>
+                </div>
+                <div class="mt-4 pt-3 border-t border-accented">
+                    <p class="text-xs text-muted">
+                        <strong>Tip:</strong> Users can manage their Slack connections using
+                        <code class="bg-elevated px-1 py-0.5 rounded text-xs">/cathedral-link-user</code> and
+                        <code class="bg-elevated px-1 py-0.5 rounded text-xs">/cathedral-unlink-user</code> commands in Slack.
+                    </p>
+                </div>
+            </div>
+        </template>
+    </UTable>
 
     <UModal
         v-model:open="addModalOpenState"
@@ -385,94 +426,6 @@ const onAddModalSubmit = async (data: z.infer<typeof createSchema>) => {
                 :on-submit="updateUser"
                 :on-cancel="closeEdit"
             />
-        </template>
-    </UModal>
-
-    <UModal
-        v-model:open="manageSlackModal.isOpen"
-        title="Manage Slack Accounts"
-    >
-        <template #body>
-            <div
-                v-if="manageSlackModal.user"
-                class="space-y-4"
-            >
-                <div>
-                    <h3 class="text-lg font-medium mb-2">
-                        Slack Accounts for {{ manageSlackModal.user.name }}
-                    </h3>
-                    <p class="text-sm text-muted mb-4">
-                        {{ manageSlackModal.user.email }}
-                    </p>
-                </div>
-
-                <div v-if="!manageSlackModal.user.slackAssociations || manageSlackModal.user.slackAssociations.length === 0">
-                    <p class="text-muted italic">
-                        This user has no Slack accounts linked.
-                    </p>
-                </div>
-
-                <div
-                    v-else
-                    class="space-y-3"
-                >
-                    <div
-                        v-for="assoc in manageSlackModal.user.slackAssociations"
-                        :key="`${assoc.teamId}-${assoc.slackUserId}`"
-                        class="border rounded-lg p-4 space-y-2"
-                    >
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="font-medium flex items-center">
-                                    <UIcon
-                                        name="i-lucide-message-circle"
-                                        class="mr-2 text-success"
-                                    />
-                                    {{ assoc.teamName }}
-                                </div>
-                                <div class="text-sm text-muted">
-                                    Slack User ID: {{ assoc.slackUserId }}
-                                </div>
-                                <div class="text-sm text-muted">
-                                    Team ID: {{ assoc.teamId }}
-                                </div>
-                                <div class="text-sm text-muted">
-                                    Linked: {{ new Date(assoc.creationDate).toLocaleString() }}
-                                </div>
-                            </div>
-                            <UButton
-                                color="error"
-                                variant="ghost"
-                                size="sm"
-                                icon="i-lucide-unlink"
-                                @click="unlinkSlackUser(assoc.slackUserId, assoc.teamId, assoc.teamName)"
-                            >
-                                Unlink
-                            </UButton>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="border-t pt-4 mt-4">
-                    <h4 class="font-medium mb-2">
-                        How to Link/Unlink Slack Accounts
-                    </h4>
-                    <div class="text-sm text-muted space-y-1">
-                        <p>• Users can link their Slack account using: <code>/cathedral-link-user</code></p>
-                        <p>• Users can unlink their Slack account using: <code>/cathedral-unlink-user</code></p>
-                        <p>• These commands must be run in a Slack workspace with the Cathedral app installed</p>
-                    </div>
-                </div>
-
-                <div class="flex justify-end pt-4">
-                    <UButton
-                        variant="outline"
-                        @click="closeSlackModal"
-                    >
-                        Close
-                    </UButton>
-                </div>
-            </div>
         </template>
     </UModal>
 </template>
