@@ -4,6 +4,7 @@ import validateEventBody from '~/server/utils/validateEventBody'
 import { z } from 'zod'
 import { slackInteractivePayloadSchema } from '~/server/data/slack-zod-schemas'
 import handleDomainException from '~/server/utils/handleDomainException'
+import { resolveSlackUserSession } from '~/server/utils/resolveSlackUser'
 
 const config = useRuntimeConfig()
 
@@ -32,18 +33,18 @@ export default defineEventHandler(async (event) => {
     const { payload: payloadStr } = await validateEventBody(event, slackInteractiveOuterSchema)
     const payload = slackInteractivePayloadSchema.parse(JSON.parse(payloadStr))
 
+    const userSession = await resolveSlackUserSession(event, payload.user?.id || '', payload.team?.id || '')
+
+    if (!userSession) {
+        return {
+            response_type: 'ephemeral',
+            text: '❌ You must link your Slack account to Cathedral first. Use `/cathedral-link-user` to get started.'
+        }
+    }
+
     const eventInteractor = createSlackEventInteractor({
         em: event.context.em,
-        session: {
-            id: config.systemSlackUserId as string,
-            user: {
-                id: config.systemSlackUserId as string,
-                name: config.systemSlackUserName as string,
-                email: config.systemSlackUserEmail as string,
-                groups: []
-            },
-            loggedInAt: Date.now()
-        },
+        session: userSession,
         slackService,
         nlrService
     })

@@ -13,6 +13,7 @@ export default defineEventHandler(async (event) => {
     const { slug } = await validateEventParams(event, paramSchema),
         session = await requireUserSession(event),
         permissionInteractor = new PermissionInteractor({
+            event,
             session,
             groupService: createEntraGroupService()
         }),

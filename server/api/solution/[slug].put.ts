@@ -25,6 +25,7 @@ export default defineEventHandler(async (event) => {
         { organizationId, organizationSlug, ...body } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
         permissionInteractor = new PermissionInteractor({
+            event,
             session,
             groupService: createEntraGroupService()
         }),

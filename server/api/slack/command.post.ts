@@ -3,6 +3,7 @@ import { createSlackEventInteractor } from '~/application/slack'
 import { NaturalLanguageToRequirementService } from '~/server/data/services/NaturalLanguageToRequirementService'
 import { slackSlashCommandSchema } from '~/server/data/slack-zod-schemas'
 import handleDomainException from '~/server/utils/handleDomainException'
+import { resolveSlackUserSession } from '~/server/utils/resolveSlackUser'
 
 const config = useRuntimeConfig()
 
@@ -26,18 +27,35 @@ export default defineEventHandler(async (event) => {
 
     const body = await validateEventBody(event, slackSlashCommandSchema)
 
+    const userSession = await resolveSlackUserSession(event, body.user_id, body.team_id)
+
+    // For most slash commands, we need a valid user session
+    // However, some commands like help and link-user can work without authentication
+    const requiresAuth = !['cathedral', 'cathedral-help', 'cathedral-link-user'].includes(body.command)
+
+    if (requiresAuth && !userSession) {
+        return {
+            response_type: 'ephemeral',
+            text: '❌ You must link your Slack account to Cathedral first. Use `/cathedral-link-user` to get started.'
+        }
+    }
+
+    // Use resolved session or create a minimal session for non-authenticated commands
+    const sessionToUse = userSession || {
+        id: `slack-${body.user_id}`, // Temporary ID for unlinked users
+        user: {
+            id: `slack-${body.user_id}`,
+            name: 'Unlinked Slack User',
+            email: `${body.user_id}@slack.local`,
+            isSystemAdmin: false,
+            organizationRoles: []
+        },
+        loggedInAt: Date.now()
+    }
+
     const eventInteractor = createSlackEventInteractor({
         em: event.context.em,
-        session: {
-            id: config.systemSlackUserId as string,
-            user: {
-                id: config.systemSlackUserId as string,
-                name: config.systemSlackUserName as string,
-                email: config.systemSlackUserEmail as string,
-                groups: []
-            },
-            loggedInAt: Date.now()
-        },
+        session: sessionToUse,
         slackService,
         nlrService
     })

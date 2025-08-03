@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { useRuntimeConfig } from '#imports'
 import jwt from 'jsonwebtoken'
-import { Slack, PermissionInteractor } from '~/application/'
+import { PermissionInteractor, SlackUserInteractor } from '~/application/'
 import { SlackRepository } from '~/server/data/repositories'
 import { SlackService } from '~/server/data/services'
 import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
@@ -25,25 +25,14 @@ export default defineEventHandler(async (event) => {
         em = event.context.em
 
     const userPermissionInteractor = new PermissionInteractor({
+        event,
         session,
         groupService: createEntraGroupService()
     })
 
-    const slackUserInteractor = new Slack.SlackUserInteractor({
+    const slackUserInteractor = new SlackUserInteractor({
         repository: new SlackRepository({ em }),
-        permissionInteractor: new PermissionInteractor({
-            session: {
-                id: config.systemSlackUserId as string,
-                user: {
-                    id: config.systemSlackUserId as string,
-                    name: config.systemSlackUserName as string,
-                    email: config.systemSlackUserEmail as string,
-                    groups: []
-                },
-                loggedInAt: Date.now()
-            },
-            groupService: createEntraGroupService()
-        }),
+        permissionInteractor: userPermissionInteractor,
         slackService: new SlackService(config.slackBotToken, config.slackSigningSecret)
     })
 

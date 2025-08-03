@@ -23,6 +23,7 @@ export default defineEventHandler(async (event) => {
         em = event.context.em
 
     const permissionInteractor = new PermissionInteractor({
+        event,
         session,
         groupService: createEntraGroupService()
     })

@@ -1,29 +1,33 @@
 <script setup lang="tsx">
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui'
 import { UButton, UCard, UCheckbox, UDropdownMenu, UIcon, XConfirmModal } from '#components'
-import { AppUser } from '#shared/domain/application'
-import type { z } from 'zod'
+import { AppUser, AppRole } from '#shared/domain/application'
+import { z } from 'zod'
 import { getSchemaFields } from '~/shared/utils'
 
 useHead({ title: 'Users' })
 definePageMeta({ name: 'Organization Users', middleware: 'auth' })
 
-const viewSchema = AppUser.pick({
+const AppUserWithRole = AppUser.extend({
+    role: z.nativeEnum(AppRole).describe('The role of the user in this organization')
+})
+
+const viewSchema = AppUserWithRole.pick({
     name: true,
     email: true,
     role: true
 })
-const editSchema = AppUser.pick({
+const editSchema = AppUserWithRole.pick({
     id: true,
     email: true,
     role: true
 })
-const createSchema = AppUser.pick({
+const createSchema = AppUserWithRole.pick({
     email: true,
     role: true
 })
 
-type SchemaType = z.infer<typeof AppUser>
+type SchemaType = z.infer<typeof AppUserWithRole>
 
 const { $eventBus } = useNuxtApp(),
     overlay = useOverlay(),

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, AppUserSlackInteractor, Slack } from '~/application'
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, AppUserSlackInteractor, SlackUserInteractor } from '~/application'
 import { OrganizationRepository, SlackRepository } from '~/server/data/repositories'
 import { SlackService } from '~/server/data/services'
 import handleDomainException from '~/server/utils/handleDomainException'
@@ -26,6 +26,7 @@ export default defineEventHandler(async (event) => {
         session = await requireUserSession(event),
         config = useRuntimeConfig(),
         permissionInteractor = new PermissionInteractor({
+            event,
             session,
             groupService: createEntraGroupService()
         }),
@@ -46,21 +47,9 @@ export default defineEventHandler(async (event) => {
             .catch(handleDomainException)
 
     if (includeSlack) {
-        const slackUserInteractor = new Slack.SlackUserInteractor({
+        const slackUserInteractor = new SlackUserInteractor({
             repository: new SlackRepository({ em: event.context.em }),
-            permissionInteractor: new PermissionInteractor({
-                session: {
-                    id: config.systemSlackUserId,
-                    user: {
-                        id: config.systemSlackUserId,
-                        name: config.systemSlackUserName,
-                        email: config.systemSlackUserEmail,
-                        groups: []
-                    },
-                    loggedInAt: Date.now()
-                },
-                groupService: createEntraGroupService()
-            }),
+            permissionInteractor,
             slackService: new SlackService(config.slackBotToken, config.slackSigningSecret)
         })
 

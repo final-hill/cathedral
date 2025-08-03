@@ -1,11 +1,14 @@
 // Type declarations for nuxt-auth-utils
+import type { AppRole } from '#shared/domain'
+
 declare module '#auth-utils' {
     interface User {
         id: string
         email: string
         name: string
         avatar?: string | null
-        groups: string[] // Entra group memberships
+        isSystemAdmin: boolean
+        organizationRoles: Array<{ orgId: string, role: AppRole }>
     }
 
     interface UserSession {

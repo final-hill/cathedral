@@ -24,6 +24,7 @@ export default defineEventHandler(async (event) => {
     const session = await requireUserSession(event)
 
     const permissionInteractor = new PermissionInteractor({
+        event,
         session,
         groupService: createEntraGroupService()
     })

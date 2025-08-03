@@ -133,9 +133,7 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
             return AppUser.parse({
                 id: entraUser.id,
                 name: entraUser.name,
-                email: entraUser.email,
-                // Role is contextual and set by the caller if needed
-                role: undefined
+                email: entraUser.email
             })
         } catch (error) {
             if (error instanceof NotFoundException) throw error
@@ -163,8 +161,7 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
             return AppUser.parse({
                 id: entraUser.id,
                 name: entraUser.name,
-                email: entraUser.email,
-                role: undefined
+                email: entraUser.email
             })
         } catch (error) {
             if (error instanceof NotFoundException) throw error

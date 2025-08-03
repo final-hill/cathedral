@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { PermissionInteractor, OrganizationInteractor, Slack } from '~/application'
+import { PermissionInteractor, OrganizationInteractor, SlackWorkspaceInteractor } from '~/application'
 import { OrganizationRepository, SlackWorkspaceRepository } from '~/server/data/repositories'
 import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
 import handleDomainException from '~/server/utils/handleDomainException'
@@ -16,6 +16,7 @@ export default defineEventHandler(async (event) => {
         session = await requireUserSession(event),
         em = event.context.em,
         permissionInteractor = new PermissionInteractor({
+            event,
             session,
             groupService: createEntraGroupService()
         }),
@@ -25,7 +26,7 @@ export default defineEventHandler(async (event) => {
             appUserInteractor: null as never // We don't need this for this operation
         }),
         organization = await organizationInteractor.getOrganization(),
-        slackWorkspaceInteractor = new Slack.SlackWorkspaceInteractor({
+        slackWorkspaceInteractor = new SlackWorkspaceInteractor({
             repository: new SlackWorkspaceRepository({ em }),
             permissionInteractor
         })

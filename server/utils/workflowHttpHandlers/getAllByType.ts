@@ -23,6 +23,7 @@ export default function getAllByType() {
             { solutionSlug, organizationId, organizationSlug, parsedReqParentId } = await validateEventQuery(event, validatedQuerySchema),
             session = await requireUserSession(event),
             permissionInteractor = new PermissionInteractor({
+                event,
                 session,
                 groupService: createEntraGroupService()
             }),

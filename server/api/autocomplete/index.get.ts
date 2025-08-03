@@ -16,6 +16,7 @@ export default defineEventHandler(async (event) => {
     const { solutionSlug, organizationSlug, reqType } = await validateEventQuery(event, querySchema),
         session = await requireUserSession(event),
         permissionInteractor = new PermissionInteractor({
+            event,
             session,
             groupService: createEntraGroupService()
         }),

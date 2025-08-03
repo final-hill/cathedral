@@ -23,6 +23,7 @@ export default function getLatestByType(workflowState: WorkflowState) {
             { solutionSlug, organizationId, organizationSlug } = await validateEventQuery(event, validatedQuerySchema),
             session = await requireUserSession(event),
             permissionInteractor = new PermissionInteractor({
+                event,
                 session,
                 groupService: createEntraGroupService()
             }),

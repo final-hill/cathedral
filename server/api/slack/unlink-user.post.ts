@@ -17,6 +17,7 @@ export default defineEventHandler(async (event) => {
     const { slackUserId, teamId } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
         permissionInteractor = new PermissionInteractor({
+            event,
             session,
             groupService: createEntraGroupService()
         }),
