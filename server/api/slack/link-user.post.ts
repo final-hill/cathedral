@@ -44,13 +44,13 @@ export default defineEventHandler(async (event) => {
     if (payload.slackUserId !== slackUserId)
         handleDomainException('Token mismatch')
 
-    await slackUserInteractor.linkSlackUserAsUser({
+    await slackUserInteractor.linkUser({
         slackUserId,
         teamId,
         cathedralUserId: session.user.id,
         createdById: session.user.id,
         creationDate: new Date()
-    }, userPermissionInteractor).catch(handleDomainException)
+    }).catch(handleDomainException)
 
     return { message: 'Slack user linked successfully.' }
 })

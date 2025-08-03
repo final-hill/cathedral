@@ -197,13 +197,13 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         this.assertUserIdentity(cathedralUserId)
 
         // Link the Slack user to the Cathedral user
-        await this._userInteractor.linkSlackUserAsUser({
+        await this._userInteractor.linkUser({
             slackUserId: payload.user.id,
             teamId: payload.team?.id || '',
             cathedralUserId: cathedralUserId,
             creationDate: new Date(),
             createdById: cathedralUserId // The Cathedral user is the creator of their own link
-        }, this._permissionInteractor)
+        })
 
         return {
             response_type: 'ephemeral',

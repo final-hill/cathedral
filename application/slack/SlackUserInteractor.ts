@@ -35,21 +35,27 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
     }
 
     /**
-     * Link a Slack user to a Cathedral user (admin/bot operation)
+     * Link a Slack user to a Cathedral user
      *
      * @param props - User linking parameters
      * @throws {NotFoundException} If the Cathedral user does not exist
      * @throws {DuplicateEntityException} If the link already exists
-     * @throws {PermissionDeniedException} If the current user is not a system admin or the Slack bot
+     * @throws {PermissionDeniedException} If the current user is not the user being linked or a system admin
      */
     async linkUser(props: SlackUserMetaType): Promise<void> {
-        await this._permissionInteractor.assertSlackBot()
+        const currentUserId = this._permissionInteractor.userId
+
+        if (props.cathedralUserId !== currentUserId && !this._permissionInteractor.isSystemAdmin()) {
+            throw new PermissionDeniedException(
+                `User with id ${currentUserId} does not have permission to link Slack user to Cathedral user ${props.cathedralUserId}`
+            )
+        }
 
         await this.repository.linkSlackUser({
             slackUserId: props.slackUserId,
             cathedralUserId: props.cathedralUserId,
             teamId: props.teamId,
-            createdById: this._permissionInteractor.userId,
+            createdById: currentUserId,
             creationDate: new Date()
         })
     }
@@ -59,10 +65,14 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
      *
      * @param props - User unlinking parameters
      * @throws {NotFoundException} If the link does not exist
-     * @throws {PermissionDeniedException} If the current user is not a system admin or the Slack bot
+     * @throws {PermissionDeniedException} If the current user is not a system admin
      */
     async unlinkUser(props: { slackUserId: string, teamId: string }): Promise<void> {
-        await this._permissionInteractor.assertSlackBot()
+        // Only system admins can perform admin-level user unlinking operations
+        if (!this._permissionInteractor.isSystemAdmin()) {
+            throw new PermissionDeniedException('Only system administrators can unlink users through admin operations')
+        }
+
         await this.repository.unlinkSlackUser(props)
     }
 
@@ -70,34 +80,15 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
      * Check if a Slack user is linked to a Cathedral user for a given team
      *
      * @param props - User checking parameters
-     * @throws {PermissionDeniedException} If the current user is not a system admin or the Slack bot
      * @returns True if the user is linked, false otherwise
+     * @throws {PermissionDeniedException} If the current user is not a system admin
      */
     async isSlackUserLinked(props: { slackUserId: string, teamId: string }): Promise<boolean> {
-        await this._permissionInteractor.assertSlackBot()
-
-        return this.repository.isSlackUserLinked(props)
-    }
-
-    /**
-     * Link a Slack user to a Cathedral user (user-level permissions)
-     *
-     * @param props - User linking parameters
-     * @param userPermissionInteractor - PermissionInteractor for the requesting user
-     * @throws {NotFoundException} If the Cathedral user does not exist
-     * @throws {DuplicateEntityException} If the link already exists
-     * @throws {PermissionDeniedException} If the current user is not the user being linked or a system admin
-     */
-    async linkSlackUserAsUser(props: SlackUserMetaType, userPermissionInteractor: PermissionInteractor): Promise<void> {
-        const currentUserId = userPermissionInteractor.userId
-
-        if (props.cathedralUserId !== currentUserId && !userPermissionInteractor.isSystemAdmin()) {
-            throw new PermissionDeniedException(
-                `User with id ${currentUserId} does not have permission to link Slack user to Cathedral user ${props.cathedralUserId}`
-            )
+        if (!this._permissionInteractor.isSystemAdmin()) {
+            throw new PermissionDeniedException('Only system administrators can check user linking status')
         }
 
-        await this.repository.linkSlackUser(props)
+        return this.repository.isSlackUserLinked(props)
     }
 
     /**

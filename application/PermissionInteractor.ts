@@ -38,15 +38,6 @@ export class PermissionInteractor {
     }
 
     /**
-     * Check if the user is the Slack bot
-     * @throws {PermissionDeniedException} If the user is not the Slack bot and not a system admin
-     */
-    assertSlackBot(): void {
-        if (!this.isSlackBot() && !this.isSystemAdmin())
-            throw new PermissionDeniedException('Forbidden: You do not have permissions to perform this action.')
-    }
-
-    /**
      * Check if the user is an organization admin
      * @param organizationId Optional organization ID for organization-specific checks
      * @throws {PermissionDeniedException} If the user is not an organization admin
@@ -200,10 +191,6 @@ export class PermissionInteractor {
      */
     isSystemAdmin(): boolean {
         return this._session.user!.isSystemAdmin
-    }
-
-    isSlackBot(): boolean {
-        return this._session.user!.id === useRuntimeConfig().systemSlackUserId
     }
 
     /**
