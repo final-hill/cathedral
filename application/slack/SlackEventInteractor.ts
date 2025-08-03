@@ -203,7 +203,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
             cathedralUserId: cathedralUserId,
             creationDate: new Date(),
             createdById: cathedralUserId // The Cathedral user is the creator of their own link
-        }, this._permissionInteractor)
+        })
 
         return {
             response_type: 'ephemeral',

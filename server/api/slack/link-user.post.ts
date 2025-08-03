@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
         cathedralUserId: session.user.id,
         createdById: session.user.id,
         creationDate: new Date()
-    }, userPermissionInteractor).catch(handleDomainException)
+    }).catch(handleDomainException)
 
     return { message: 'Slack user linked successfully.' }
 })

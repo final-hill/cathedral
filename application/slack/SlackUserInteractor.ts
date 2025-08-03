@@ -38,16 +38,14 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
      * Link a Slack user to a Cathedral user
      *
      * @param props - User linking parameters
-     * @param userPermissionInteractor - Optional PermissionInteractor for the requesting user (defaults to internal one)
      * @throws {NotFoundException} If the Cathedral user does not exist
      * @throws {DuplicateEntityException} If the link already exists
      * @throws {PermissionDeniedException} If the current user is not the user being linked or a system admin
      */
-    async linkUser(props: SlackUserMetaType, userPermissionInteractor?: PermissionInteractor): Promise<void> {
-        const permissionChecker = userPermissionInteractor || this._permissionInteractor
-        const currentUserId = permissionChecker.userId
+    async linkUser(props: SlackUserMetaType): Promise<void> {
+        const currentUserId = this._permissionInteractor.userId
 
-        if (props.cathedralUserId !== currentUserId && !permissionChecker.isSystemAdmin()) {
+        if (props.cathedralUserId !== currentUserId && !this._permissionInteractor.isSystemAdmin()) {
             throw new PermissionDeniedException(
                 `User with id ${currentUserId} does not have permission to link Slack user to Cathedral user ${props.cathedralUserId}`
             )
