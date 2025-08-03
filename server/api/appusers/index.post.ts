@@ -25,6 +25,7 @@ export default defineEventHandler(async (event) => {
         session = await requireUserSession(event),
         config = useRuntimeConfig(),
         permissionInteractor = new PermissionInteractor({
+            event,
             session,
             groupService: createEntraGroupService()
         }),

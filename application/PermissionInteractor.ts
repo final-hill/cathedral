@@ -3,6 +3,7 @@ import { AppRole, NotFoundException, PermissionDeniedException } from '#shared/d
 import type { EntraGroupService } from '~/server/data/services/EntraGroupService'
 import type { UserSession } from '#auth-utils'
 import type { z } from 'zod'
+import type { H3Event } from 'h3'
 
 /**
  * Interactor for checking permissions
@@ -10,14 +11,16 @@ import type { z } from 'zod'
  */
 export class PermissionInteractor {
     private readonly _session: UserSession
-
+    private readonly _event?: H3Event
     private readonly _groupService: EntraGroupService
 
     constructor(props: {
         session: UserSession
+        event?: H3Event
         groupService: EntraGroupService
     }) {
         this._session = props.session
+        this._event = props.event
         this._groupService = props.groupService
 
         // Ensure we have a valid user session
@@ -196,7 +199,7 @@ export class PermissionInteractor {
      * @returns True if the user is a system admin
      */
     isSystemAdmin(): boolean {
-        return this._groupService.isSystemAdmin(this._session.user!.groups)
+        return this._session.user!.isSystemAdmin
     }
 
     isSlackBot(): boolean {
@@ -209,10 +212,12 @@ export class PermissionInteractor {
      * @returns True if the user is an organization admin
      */
     isOrganizationAdmin(organizationId: z.infer<typeof Organization>['id']): boolean {
-        if (this.isSystemAdmin()) return true
+        if (this._session.user!.isSystemAdmin) {
+            return true
+        }
 
-        const role = this._groupService.getOrganizationRole(this._session.user!.groups, organizationId)
-        return role === AppRole.ORGANIZATION_ADMIN
+        const orgRole = this._session.user!.organizationRoles.find(role => role.orgId === organizationId)
+        return orgRole?.role === AppRole.ORGANIZATION_ADMIN
     }
 
     /**
@@ -221,10 +226,12 @@ export class PermissionInteractor {
      * @returns True if the user is an organization contributor
      */
     isOrganizationContributor(organizationId: z.infer<typeof Organization>['id']): boolean {
-        if (this.isSystemAdmin()) return true
+        if (this._session.user!.isSystemAdmin) {
+            return true
+        }
 
-        const role = this._groupService.getOrganizationRole(this._session.user!.groups, organizationId)
-        return role ? [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR].includes(role) : false
+        const orgRole = this._session.user!.organizationRoles.find(role => role.orgId === organizationId)
+        return orgRole?.role ? [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR].includes(orgRole.role) : false
     }
 
     /**
@@ -233,10 +240,12 @@ export class PermissionInteractor {
      * @returns True if the user is an organization reader
      */
     isOrganizationReader(organizationId: z.infer<typeof Organization>['id']): boolean {
-        if (this.isSystemAdmin()) return true
+        if (this._session.user!.isSystemAdmin) {
+            return true
+        }
 
-        const role = this._groupService.getOrganizationRole(this._session.user!.groups, organizationId)
-        return role ? [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR, AppRole.ORGANIZATION_READER].includes(role) : false
+        const orgRole = this._session.user!.organizationRoles.find(role => role.orgId === organizationId)
+        return orgRole?.role ? [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR, AppRole.ORGANIZATION_READER].includes(orgRole.role) : false
     }
 
     /**
@@ -258,34 +267,37 @@ export class PermissionInteractor {
     }
 
     /**
-     * Refresh session groups by adding the new organization group to the current session
+     * Refresh session permissions by adding the new organization role to the current session
      * This ensures permission checks work immediately after organization creation
      * @param organizationId The organization ID that was just created
      * @param role The role assigned to the current user
      */
     private async refreshSessionGroups(organizationId: string, role: AppRole): Promise<void> {
-        // Generate the group name that was just added to Entra
-        const groupNames = this._groupService.generateOrganizationGroupNames(organizationId)
-        let newGroupName: string
+        const existingOrgRole = this._session.user!.organizationRoles.find(
+            orgRole => orgRole.orgId === organizationId
+        )
 
-        switch (role) {
-            case AppRole.ORGANIZATION_ADMIN:
-                newGroupName = groupNames.admin
-                break
-            case AppRole.ORGANIZATION_CONTRIBUTOR:
-                newGroupName = groupNames.contributor
-                break
-            case AppRole.ORGANIZATION_READER:
-                newGroupName = groupNames.reader
-                break
-            default:
-                return // Invalid role, nothing to add
-        }
-
-        // Add the new group to the session if it's not already there
-        if (!this._session.user!.groups.includes(newGroupName)) {
-            this._session.user!.groups.push(newGroupName)
-            console.log(`Updated session groups: added ${newGroupName} for organization ${organizationId}`)
+        if (!existingOrgRole) {
+            // Update the session with the new organization role if we have an event context
+            if (this._event) {
+                await setUserSession(this._event, {
+                    user: {
+                        ...this._session.user!,
+                        organizationRoles: [
+                            ...this._session.user!.organizationRoles,
+                            { orgId: organizationId, role }
+                        ]
+                    }
+                })
+                console.log(`Updated session permissions: added ${role} role for organization ${organizationId}`)
+            } else {
+                // For non-HTTP contexts (like Slack operations), just update the in-memory session
+                this._session.user!.organizationRoles = [
+                    ...this._session.user!.organizationRoles,
+                    { orgId: organizationId, role }
+                ]
+                console.log(`Updated in-memory session permissions: added ${role} role for organization ${organizationId}`)
+            }
         }
     }
 }

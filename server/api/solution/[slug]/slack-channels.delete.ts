@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { Slack, PermissionInteractor, OrganizationInteractor } from '~/application'
+import { SlackChannelInteractor, PermissionInteractor, OrganizationInteractor } from '~/application'
 import { SlackRepository, OrganizationRepository } from '~/server/data/repositories'
 import { SlackService } from '~/server/data/services'
 import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
@@ -31,6 +31,7 @@ export default defineEventHandler(async (event) => {
         em = event.context.em
 
     const permissionInteractor = new PermissionInteractor({
+        event,
         session,
         groupService: createEntraGroupService()
     })
@@ -43,7 +44,7 @@ export default defineEventHandler(async (event) => {
     })
     const organization = await organizationInteractor.getOrganization()
 
-    const slackChannelInteractor = new Slack.SlackChannelInteractor({
+    const slackChannelInteractor = new SlackChannelInteractor({
         repository: new SlackRepository({ em }),
         permissionInteractor,
         slackService: new SlackService(config.slackBotToken, config.slackSigningSecret)

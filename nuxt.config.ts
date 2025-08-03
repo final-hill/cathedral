@@ -43,9 +43,6 @@ export default defineNuxtConfig({
         systemUserId: '',
         systemUserName: '',
         systemUserEmail: '',
-        systemSlackUserId: '',
-        systemSlackUserName: '',
-        systemSlackUserEmail: '',
 
         // OAuth configuration for Entra External ID
         oauth: {

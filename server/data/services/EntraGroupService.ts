@@ -1,7 +1,28 @@
 import { AppRole, MismatchException } from '#shared/domain'
-import { validate as isValidUUID } from 'uuid'
 import * as msal from '@azure/msal-node'
 import type { Group, User } from 'microsoft-graph'
+
+const UUID_ROLE_PATTERN = /^Cathedral-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-(.+)$/i
+
+/**
+ * Represents a Cathedral group name as it appears in Entra ID
+ * This is a branded string type to prevent mixing with regular strings
+ */
+type CathedralGroupName = string & { readonly __brand: 'CathedralGroupName' }
+
+/**
+ * Array of Cathedral group names
+ */
+type CathedralGroups = readonly CathedralGroupName[]
+
+/**
+ * Organization-specific group names for a given organization
+ */
+interface OrganizationGroupNames {
+    readonly admin: CathedralGroupName
+    readonly contributor: CathedralGroupName
+    readonly reader: CathedralGroupName
+}
 
 export interface ParsedPermissions {
     isSystemAdmin: boolean
@@ -13,7 +34,7 @@ export interface ParsedPermissions {
 
 export class EntraGroupService {
     private readonly groupPrefix = 'Cathedral-'
-    private readonly systemAdminGroup = 'Cathedral-SystemAdmin'
+    private readonly systemAdminGroup: CathedralGroupName = 'Cathedral-SystemAdmin' as CathedralGroupName
     private authClient: msal.ConfidentialClientApplication
 
     constructor(config: {
@@ -29,6 +50,63 @@ export class EntraGroupService {
             }
         }
         this.authClient = new msal.ConfidentialClientApplication(clientConfig)
+    }
+
+    /**
+     * Maps group suffix to AppRole
+     */
+    private readonly groupSuffixToRole: Record<string, AppRole> = {
+        Admin: AppRole.ORGANIZATION_ADMIN,
+        Contributor: AppRole.ORGANIZATION_CONTRIBUTOR,
+        Reader: AppRole.ORGANIZATION_READER
+    } as const
+
+    /**
+     * Type guard to check if a string is a valid Cathedral group name
+     */
+    private isCathedralGroupName(value: string): value is CathedralGroupName {
+        if (!value.startsWith(this.groupPrefix)) {
+            return false
+        }
+
+        // Check if it's the system admin group
+        if (value === this.systemAdminGroup) {
+            return true
+        }
+
+        return UUID_ROLE_PATTERN.test(value)
+    }
+
+    /**
+     * Safely creates Cathedral group names from a string array
+     */
+    private createCathedralGroups(values: string[]): CathedralGroups {
+        return values.filter(this.isCathedralGroupName.bind(this)) as CathedralGroups
+    }
+
+    /**
+     * Parses an organization group name to extract organization ID and role
+     */
+    private parseOrganizationGroupName(groupName: CathedralGroupName): { orgId: string, role: AppRole } | null {
+        if (groupName === this.systemAdminGroup) {
+            return null // System admin is not organization-specific
+        }
+
+        // Match Cathedral-{UUID}-{role} pattern
+        const match = groupName.match(UUID_ROLE_PATTERN)
+
+        if (!match) {
+            return null
+        }
+
+        const [, orgId, roleStr] = match
+        const role = this.groupSuffixToRole[roleStr]
+
+        if (!role) {
+            return null
+        }
+
+        return { orgId, role }
     }
 
     /**
@@ -105,26 +183,57 @@ export class EntraGroupService {
      * Get user's group memberships from token claims
      * Groups are configured to be emitted as role claims in the ID token
      */
-    async getUserGroups(accessToken: string, userId: string, idToken?: string): Promise<string[]> {
-        if (!idToken) {
-            console.warn('No ID token provided - this may indicate a configuration issue')
-            throw new MismatchException('ID token required for group extraction with role claims configured')
-        }
-
+    async getUserGroups(idToken: string): Promise<CathedralGroups> {
         const groupIdsFromToken = this.extractGroupIdsFromRoleClaims(idToken)
         console.log('Group IDs extracted from role claims:', groupIdsFromToken)
 
         const groupNames = await this.resolveGroupIdsToNames(groupIdsFromToken)
         console.log('Groups resolved to names:', groupNames)
 
-        return groupNames
+        return this.createCathedralGroups(groupNames)
+    }
+
+    /**
+     * Get user's group memberships directly via Microsoft Graph API
+     * This method uses the service principal to look up group memberships for a specific user
+     */
+    async getUserGroupsDirect(userId: string): Promise<CathedralGroups> {
+        try {
+            // Get user's group memberships using Microsoft Graph API
+            const memberOfResponse = await this.graphRequest<{ value: Array<{ id: string, displayName?: string }> }>(
+                `/users/${userId}/memberOf?$select=id,displayName&$filter=securityEnabled eq true`
+            )
+
+            if (!memberOfResponse.value) {
+                console.log(`No groups found for user ${userId}`)
+                return [] as CathedralGroups
+            }
+
+            // Extract group names, filtering for Cathedral groups
+            const groupNames = memberOfResponse.value
+                .map(group => group.displayName)
+                .filter((name): name is string => name !== undefined)
+
+            console.log('Direct group lookup - All groups:', groupNames)
+            console.log('Group prefix:', this.groupPrefix)
+
+            // Filter to only Cathedral groups and create branded types
+            const cathedralGroups = this.createCathedralGroups(groupNames)
+            console.log('Direct group lookup - Cathedral groups:', cathedralGroups)
+
+            return cathedralGroups
+        } catch (error) {
+            console.error(`Failed to get user groups directly for user ${userId}:`, error)
+
+            return [] as CathedralGroups
+        }
     }
 
     /**
      * Parse group memberships to determine permissions
      */
-    parseGroups(groups: string[]): ParsedPermissions {
-        const isSystemAdmin = groups.includes(this.systemAdminGroup)
+    parseGroups(groups: CathedralGroups): ParsedPermissions {
+        const isSystemAdmin = groups.some(group => group === this.systemAdminGroup)
         const organizationRoles: Array<{ orgId: string, role: AppRole }> = []
 
         for (const group of groups) {
@@ -132,61 +241,15 @@ export class EntraGroupService {
                 continue // Already handled
             }
 
-            const orgRole = this.parseOrganizationGroup(group)
-            if (orgRole) {
-                organizationRoles.push(orgRole)
+            const parsed = this.parseOrganizationGroupName(group)
+            if (parsed) {
+                organizationRoles.push(parsed)
             }
         }
 
         return {
             isSystemAdmin,
             organizationRoles
-        }
-    }
-
-    /**
-     * Parse organization-specific group name
-     * Format: Cathedral-{orgId}-{role}
-     */
-    private parseOrganizationGroup(groupName: string): { orgId: string, role: AppRole } | null {
-        // Match Cathedral-{UUID}-{role} pattern
-        // UUID pattern: 8-4-4-4-12 hex characters separated by hyphens
-        const pattern = /^Cathedral-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-(.+)$/i
-        const match = groupName.match(pattern)
-
-        if (!match) {
-            return null
-        }
-
-        const [, orgId, roleStr] = match
-
-        // Validate orgId is a proper UUID (redundant but good for clarity)
-        if (!isValidUUID(orgId)) {
-            return null
-        }
-
-        // Map role string to AppRole enum
-        const role = this.mapRoleString(roleStr)
-        if (!role) {
-            return null
-        }
-
-        return { orgId, role }
-    }
-
-    /**
-     * Map role string to AppRole enum
-     */
-    private mapRoleString(roleStr: string): AppRole | null {
-        switch (roleStr.toLowerCase()) {
-            case 'admin':
-                return AppRole.ORGANIZATION_ADMIN
-            case 'contributor':
-                return AppRole.ORGANIZATION_CONTRIBUTOR
-            case 'reader':
-                return AppRole.ORGANIZATION_READER
-            default:
-                return null
         }
     }
 
@@ -263,29 +326,25 @@ export class EntraGroupService {
     /**
      * Generate group names for an organization
      */
-    generateOrganizationGroupNames(orgId: string): {
-        admin: string
-        contributor: string
-        reader: string
-    } {
+    generateOrganizationGroupNames(orgId: string): OrganizationGroupNames {
         return {
-            admin: `${this.groupPrefix}${orgId}-Admin`,
-            contributor: `${this.groupPrefix}${orgId}-Contributor`,
-            reader: `${this.groupPrefix}${orgId}-Reader`
+            admin: `${this.groupPrefix}${orgId}-Admin` as CathedralGroupName,
+            contributor: `${this.groupPrefix}${orgId}-Contributor` as CathedralGroupName,
+            reader: `${this.groupPrefix}${orgId}-Reader` as CathedralGroupName
         }
     }
 
     /**
      * Check if user has system admin permissions
      */
-    isSystemAdmin(groups: string[]): boolean {
+    isSystemAdmin(groups: CathedralGroups): boolean {
         return groups.includes(this.systemAdminGroup)
     }
 
     /**
      * Get user's role for a specific organization
      */
-    getOrganizationRole(groups: string[], orgId: string): AppRole | null {
+    getOrganizationRole(groups: CathedralGroups, orgId: string): AppRole | null {
         const parsedPermissions = this.parseGroups(groups)
 
         // System admins have admin access to all organizations
@@ -300,7 +359,7 @@ export class EntraGroupService {
     /**
      * Get all organizations the user has access to
      */
-    getUserOrganizations(groups: string[]): Array<{ orgId: string, role: AppRole }> {
+    getUserOrganizations(groups: CathedralGroups): Array<{ orgId: string, role: AppRole }> {
         const parsedPermissions = this.parseGroups(groups)
         return parsedPermissions.organizationRoles
     }

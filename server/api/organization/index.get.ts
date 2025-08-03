@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
         entraGroupService = createEntraGroupService(),
         permissionInteractor = new PermissionInteractor({
             session,
+            event,
             groupService: entraGroupService
         }),
         organizationCollectionInteractor = new OrganizationCollectionInteractor({

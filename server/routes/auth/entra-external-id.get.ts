@@ -20,9 +20,11 @@ export default defineOAuthEntraExternalIDEventHandler({
         const groupService = createEntraGroupService()
 
         try {
+            if (!tokens.id_token) {
+                throw new Error('ID token is required for group claims')
+            }
+
             const userGroups = await groupService.getUserGroups(
-                tokens.access_token,
-                user.id,
                 tokens.id_token // ID token is required for group claims
             )
             const parsedPermissions = groupService.parseGroups(userGroups)
@@ -36,7 +38,8 @@ export default defineOAuthEntraExternalIDEventHandler({
                     name: user.displayName || `${user.givenName || ''} ${user.surname || ''}`.trim() || user.userPrincipalName,
                     email: user.mail || user.userPrincipalName,
                     avatar: null,
-                    groups: userGroups
+                    isSystemAdmin: parsedPermissions.isSystemAdmin,
+                    organizationRoles: parsedPermissions.organizationRoles
                 },
                 loggedInAt: Date.now()
             })
@@ -50,14 +53,15 @@ export default defineOAuthEntraExternalIDEventHandler({
             })
 
             // Don't fail the login, but log the issue for investigation
-            // User will have no groups (no permissions) until issue is resolved
+            // User will have no permissions until issue is resolved
             await setUserSession(event, {
                 user: {
                     id: user.id,
                     name: user.displayName || `${user.givenName || ''} ${user.surname || ''}`.trim() || user.userPrincipalName,
                     email: user.mail || user.userPrincipalName,
                     avatar: null,
-                    groups: [] // Empty groups array - user will have no permissions
+                    isSystemAdmin: false,
+                    organizationRoles: []
                 },
                 loggedInAt: Date.now()
             })
