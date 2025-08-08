@@ -14,3 +14,5 @@ export const Invariant = Requirement.extend({
     It exists as both an assumption and an effect.
     (precondition and postcondition)
 `))
+
+export type InvariantType = z.infer<typeof Invariant>

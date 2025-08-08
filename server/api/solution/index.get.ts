@@ -1,19 +1,18 @@
 import { z } from 'zod'
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~/application'
 import { OrganizationRepository } from '~/server/data/repositories'
-import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
+import { createEntraService } from '~/server/utils/createEntraService'
 import handleDomainException from '~/server/utils/handleDomainException'
 import { Organization, Solution } from '~/shared/domain'
 
-const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
-
-const querySchema = z.object({
-    ...Solution.innerType().pick({ name: true, description: true, slug: true }).partial().shape,
-    organizationId,
-    organizationSlug
-}).refine((value) => {
-    return value.organizationId !== undefined || value.organizationSlug !== undefined
-}, 'At least one of organizationId or organizationSlug should be provided')
+const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
+    querySchema = z.object({
+        ...Solution.innerType().pick({ name: true, description: true, slug: true }).partial().shape,
+        organizationId,
+        organizationSlug
+    }).refine((value) => {
+        return value.organizationId !== undefined || value.organizationSlug !== undefined
+    }, 'At least one of organizationId or organizationSlug should be provided')
 
 /**
  * Returns all solutions that match the query parameters
@@ -21,17 +20,11 @@ const querySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { description, name, organizationId, organizationSlug, slug } = await validateEventQuery(event, querySchema),
         session = await requireUserSession(event),
-        permissionInteractor = new PermissionInteractor({
-            event,
-            session,
-            groupService: createEntraGroupService()
-        }),
+        entraService = createEntraService(),
+        permissionInteractor = new PermissionInteractor({ event, session, entraService }),
         organizationInteractor = new OrganizationInteractor({
             permissionInteractor,
-            appUserInteractor: new AppUserInteractor({
-                permissionInteractor,
-                groupService: createEntraGroupService()
-            }),
+            appUserInteractor: new AppUserInteractor({ permissionInteractor, entraService }),
             repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug })
         })
 

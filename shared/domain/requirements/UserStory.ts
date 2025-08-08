@@ -4,9 +4,9 @@ import { dedent } from '../../../shared/utils/dedent.js'
 import { ReqType } from './ReqType.js'
 
 export const UserStory = Scenario.extend({
-    reqId: z.string().regex(/^S\.4\.\d+$/, 'Format must be S.4.#').optional()
+    reqId: z.string().regex(/^S\.4\.1\.\d+$/, 'Format must be S.4.1.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
-    reqIdPrefix: z.literal('S.4.').default('S.4.'),
+    reqIdPrefix: z.literal('S.4.1.').default('S.4.1.'),
     functionalBehavior: z.object({
         reqType: z.nativeEnum(ReqType).default(ReqType.FUNCTIONAL_BEHAVIOR),
         id: z.string().uuid()
@@ -23,3 +23,5 @@ export const UserStory = Scenario.extend({
     [behavior] - behaviorId (Functional Behavior)
     [goal] - outcomeId
 `))
+
+export type UserStoryType = z.infer<typeof UserStory>

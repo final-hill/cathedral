@@ -13,3 +13,5 @@ export const Person = Actor.extend({
 }).describe(dedent(`
     A member of the Project staff with associated contact information, roles, and responsibilities.
 `))
+
+export type PersonType = z.infer<typeof Person>

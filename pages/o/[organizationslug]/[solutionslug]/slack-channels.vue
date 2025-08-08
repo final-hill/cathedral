@@ -2,10 +2,10 @@
 useHead({ title: 'Slack Channels' })
 definePageMeta({ name: 'Slack Channels', middleware: 'auth' })
 
-const route = useRoute()
-const params = route.params as { organizationslug: string, solutionslug: string }
-const solutionSlug = params.solutionslug
-const organizationSlug = params.organizationslug
+const route = useRoute(),
+    params = route.params as { organizationslug: string, solutionslug: string },
+    solutionSlug = params.solutionslug,
+    organizationSlug = params.organizationslug
 </script>
 
 <template>

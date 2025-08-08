@@ -19,3 +19,5 @@ export const Epic = Scenario.extend({
     An Epic is a collection of Use Cases and User Stories all directed towards a common goal;
     Ex: "decrease the percentage of of fraudulent sellers by 20%"'
 `))
+
+export type EpicType = z.infer<typeof Epic>

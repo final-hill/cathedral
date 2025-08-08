@@ -9,6 +9,8 @@ export const Limit = Requirement.extend({
     reqIdPrefix: z.literal('G.6.').default('G.6.'),
     reqType: z.nativeEnum(ReqType).default(ReqType.LIMIT)
 }).describe(dedent(`
-    A Limitation is a constraint on functionality. It describes what is out-of-scope and excluded.
+    A Limit is a constraint on functionality. It describes what is out-of-scope and excluded.
     Example: "Providing an interface to the user to change the color of the background is out-of-scope."
 `))
+
+export type LimitType = z.infer<typeof Limit>

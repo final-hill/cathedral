@@ -23,9 +23,9 @@ export class NaturalLanguageToRequirementService {
         // https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/structured-outputs?tabs=python-secure
         const completion = await this._aiClient.chat.completions.create({
             // temperature: 0,
-            model: this._modelId,
-            messages: [{
-                role: 'system', content: dedent(`
+                model: this._modelId,
+                messages: [{
+                    role: 'system', content: dedent(`
                 Your role is to distill requirements from user input.
                 The Requirements fall into the following categories:
 
@@ -58,14 +58,12 @@ export class NaturalLanguageToRequirementService {
                 and some fields are specific to each requirement type and should be left as null if not applicable
                 to the requirement type.
             `)
-            }, {
-                role: 'user', content: statement
-            }],
-            response_format: zodResponseFormat(zodSchema, 'requirements')
-
-        })
-
-        const result = completion.choices[0].message
+                }, {
+                    role: 'user', content: statement
+                }],
+                response_format: zodResponseFormat(zodSchema, 'requirements')
+            }),
+            result = completion.choices[0].message
 
         if (result.refusal)
             throw new Error(result.refusal)

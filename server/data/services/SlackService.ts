@@ -117,33 +117,32 @@ export class SlackService {
         replaceOriginal: boolean = true
     ): SlackResponseMessage {
         const options = solutions.slice(0, 100).map(sol => ({
-            text: { type: 'plain_text' as const, text: sol.name, emoji: true },
-            value: `${organizationId}:${sol.id}`
-        }))
-
-        const payload: SlackResponseMessage = {
-            response_type: 'ephemeral' as const,
-            text: 'Select a Cathedral solution to link this channel:',
-            blocks: [
-                {
-                    type: 'section' as const,
-                    text: {
-                        type: 'mrkdwn' as const,
-                        text: '*Select a Cathedral solution to link this channel:*'
-                    },
-                    accessory: {
-                        type: 'static_select' as const,
-                        placeholder: {
-                            type: 'plain_text' as const,
-                            text: 'Select a solution',
-                            emoji: true
+                text: { type: 'plain_text' as const, text: sol.name, emoji: true },
+                value: `${organizationId}:${sol.id}`
+            })),
+            payload: SlackResponseMessage = {
+                response_type: 'ephemeral' as const,
+                text: 'Select a Cathedral solution to link this channel:',
+                blocks: [
+                    {
+                        type: 'section' as const,
+                        text: {
+                            type: 'mrkdwn' as const,
+                            text: '*Select a Cathedral solution to link this channel:*'
                         },
-                        options,
-                        action_id: actionId
+                        accessory: {
+                            type: 'static_select' as const,
+                            placeholder: {
+                                type: 'plain_text' as const,
+                                text: 'Select a solution',
+                                emoji: true
+                            },
+                            options,
+                            action_id: actionId
+                        }
                     }
-                }
-            ]
-        }
+                ]
+            }
 
         if (replaceOriginal) {
             payload.replace_original = true
@@ -432,11 +431,10 @@ export class SlackService {
     // https://api.slack.com/authentication/verifying-requests-from-slack#validating-a-request
     assertValidSlackRequest(headers: Headers, rawBody: string) {
         const signingSecret = this.slackSigningSecret,
-            timestamp = headers.get('X-Slack-Request-Timestamp')!
-
-        // Prevent replay attacks by checking the timestamp
-        // to verify that it does not differ from local time by more than five minutes.
-        const curTimestamp = Math.floor(Date.now() / 1000),
+            timestamp = headers.get('X-Slack-Request-Timestamp')!,
+            // Prevent replay attacks by checking the timestamp
+            // to verify that it does not differ from local time by more than five minutes.
+            curTimestamp = Math.floor(Date.now() / 1000),
             reqTimestamp = parseInt(timestamp, 10)
 
         if (Math.abs(curTimestamp - reqTimestamp) > 300) {
@@ -519,44 +517,42 @@ export class SlackService {
     }) {
         try {
             const response = await $fetch('https://slack.com/api/oauth.v2.access', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams({
-                    client_id: props.clientId,
-                    client_secret: props.clientSecret,
-                    code: props.code,
-                    redirect_uri: props.redirectUri
-                }).toString()
-            })
-
-            // Validate and parse the response
-            const responseSchema = z.object({
-                ok: z.boolean(),
-                access_token: z.string().optional(),
-                token_type: z.string().optional(),
-                scope: z.string().optional(),
-                bot_user_id: z.string().optional(),
-                app_id: z.string().optional(),
-                team: z.object({
-                    name: z.string(),
-                    id: z.string()
-                }).optional(),
-                enterprise: z.object({
-                    name: z.string(),
-                    id: z.string()
-                }).nullable().optional(),
-                authed_user: z.object({
-                    id: z.string(),
-                    scope: z.string().optional(),
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({
+                        client_id: props.clientId,
+                        client_secret: props.clientSecret,
+                        code: props.code,
+                        redirect_uri: props.redirectUri
+                    }).toString()
+                }),
+                // Validate and parse the response
+                responseSchema = z.object({
+                    ok: z.boolean(),
                     access_token: z.string().optional(),
-                    token_type: z.string().optional()
-                }).optional(),
-                error: z.string().optional()
-            })
-
-            const tokenData = responseSchema.parse(response)
+                    token_type: z.string().optional(),
+                    scope: z.string().optional(),
+                    bot_user_id: z.string().optional(),
+                    app_id: z.string().optional(),
+                    team: z.object({
+                        name: z.string(),
+                        id: z.string()
+                    }).optional(),
+                    enterprise: z.object({
+                        name: z.string(),
+                        id: z.string()
+                    }).nullable().optional(),
+                    authed_user: z.object({
+                        id: z.string(),
+                        scope: z.string().optional(),
+                        access_token: z.string().optional(),
+                        token_type: z.string().optional()
+                    }).optional(),
+                    error: z.string().optional()
+                }),
+                tokenData = responseSchema.parse(response)
 
             if (!tokenData.ok || !tokenData.access_token) {
                 console.error('Slack OAuth token exchange failed:', tokenData.error)
@@ -588,23 +584,21 @@ export class SlackService {
         state: string
         scopes?: string[]
     }): string {
-        const { clientId, redirectUri, state, scopes } = props
-
-        // Default scopes for Cathedral Slack integration
-        const defaultScopes = [
-            'app_mentions:read',
-            'channels:read',
-            'chat:write',
-            'commands',
-            'groups:read',
-            'im:history',
-            'im:read',
-            'im:write',
-            'mpim:write',
-            'team:read'
-        ]
-
-        const slackAuthUrl = new URL('https://slack.com/oauth/v2/authorize')
+        const { clientId, redirectUri, state, scopes } = props,
+            // Default scopes for Cathedral Slack integration
+            defaultScopes = [
+                'app_mentions:read',
+                'channels:read',
+                'chat:write',
+                'commands',
+                'groups:read',
+                'im:history',
+                'im:read',
+                'im:write',
+                'mpim:write',
+                'team:read'
+            ],
+            slackAuthUrl = new URL('https://slack.com/oauth/v2/authorize')
         slackAuthUrl.searchParams.set('client_id', clientId)
         slackAuthUrl.searchParams.set('scope', (scopes || defaultScopes).join(','))
         slackAuthUrl.searchParams.set('redirect_uri', redirectUri)
@@ -622,14 +616,13 @@ export class SlackService {
         organizationSlug: string
         additionalData?: Record<string, unknown>
     }): string {
-        const { organizationSlug, additionalData = {} } = props
-
-        const stateData = {
-            organizationSlug,
-            timestamp: Date.now(),
-            nonce: Math.random().toString(36).substring(2, 15),
-            ...additionalData
-        }
+        const { organizationSlug, additionalData = {} } = props,
+            stateData = {
+                organizationSlug,
+                timestamp: Date.now(),
+                nonce: Math.random().toString(36).substring(2, 15),
+                ...additionalData
+            }
 
         return btoa(JSON.stringify(stateData))
     }

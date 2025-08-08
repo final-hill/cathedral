@@ -15,3 +15,5 @@ export const Constraint = Requirement.extend({
     Constraints are the limitations and obligations that
     the environment imposes on the project and system.
 `))
+
+export type ConstraintType = z.infer<typeof Constraint>

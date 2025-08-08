@@ -1,6 +1,5 @@
 <script lang="tsx" setup>
-import type { SlackWorkspaceMeta } from '#shared/domain/application'
-import type { z } from 'zod'
+import type { SlackWorkspaceMetaType } from '#shared/domain/application'
 import type { TableColumn } from '@nuxt/ui'
 import type { Row } from '@tanstack/vue-table'
 import { UButton, UTable, UIcon, UBadge, XConfirmModal } from '#components'
@@ -11,10 +10,9 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    showManagement: false
-})
-
-const overlay = useOverlay(),
+        showManagement: false
+    }),
+    overlay = useOverlay(),
     confirmDisconnectModal = overlay.create(XConfirmModal, {}),
     toast = useToast(),
     router = useRouter(),
@@ -26,7 +24,7 @@ if (route.query.slack_install === 'success') {
         title: 'Success',
         description: 'Successfully added Cathedral to your Slack workspace!'
     })
-    // Remove query parameters from URL
+
     router.replace({ query: {} })
 } else if (route.query.slack_install === 'error') {
     const errorMessage = route.query.error_message || 'Failed to add Cathedral to Slack workspace'
@@ -35,173 +33,167 @@ if (route.query.slack_install === 'success') {
         title: 'Error',
         description: errorMessage as string
     })
-    // Remove query parameters from URL
+
     router.replace({ query: {} })
 }
 
-const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useFetch<z.infer<typeof SlackWorkspaceMeta>[]>(
-    `/api/slack/workspaces`,
-    {
-        query: { organizationSlug: props.organizationSlug },
-        transform: (data: z.infer<typeof SlackWorkspaceMeta>[]): z.infer<typeof SlackWorkspaceMeta>[] => {
-            return data?.map(workspace => ({
-                ...workspace,
-                installationDate: new Date(workspace.installationDate),
-                lastRefreshDate: workspace.lastRefreshDate ? new Date(workspace.lastRefreshDate) : undefined
-            })) || []
-        }
-    }
-)
-
-const disconnectingWorkspaces = ref<Set<string>>(new Set())
-const refreshingWorkspaces = ref<Set<string>>(new Set())
-
-const addAnotherUrl = `/api/slack/oauth/authorize?organizationSlug=${props.organizationSlug}`
-
-const disconnectSlackWorkspace = async (teamId: string) => {
-    // Find the workspace data to get the name for a better confirmation message
-    const workspaceData = slackWorkspaces.value?.find(ws => ws.teamId === teamId)
-    const workspaceDisplayName = workspaceData?.teamName || teamId
-
-    const result = await confirmDisconnectModal.open({
-        title: `Are you sure you want to disconnect workspace "${workspaceDisplayName}"? This will remove the app installation and all associated channel links.`
-    }).result
-
-    if (!result)
-        return
-
-    disconnectingWorkspaces.value.add(teamId)
-
-    try {
-        await $fetch(`/api/slack/workspaces/${teamId}`, {
-            method: 'DELETE',
-            body: {
-                organizationSlug: props.organizationSlug
+const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useFetch<SlackWorkspaceMetaType[]>(
+        `/api/slack/workspaces`,
+        {
+            query: { organizationSlug: props.organizationSlug },
+            transform: (data: SlackWorkspaceMetaType[]): SlackWorkspaceMetaType[] => {
+                return data?.map(workspace => ({
+                    ...workspace,
+                    installationDate: new Date(workspace.installationDate),
+                    lastRefreshDate: workspace.lastRefreshDate ? new Date(workspace.lastRefreshDate) : undefined
+                })) || []
             }
-        })
-
-        toast.add({
-            icon: 'i-lucide-check',
-            title: 'Success',
-            description: 'Slack workspace disconnected successfully'
-        })
-
-        await refreshSlackWorkspaces()
-    } catch (error: unknown) {
-        toast.add({
-            icon: 'i-lucide-alert-circle',
-            title: 'Error',
-            description: `Failed to disconnect Slack workspace: ${(error as { data?: { message?: string }, message?: string })?.data?.message || (error as { message?: string })?.message}`
-        })
-    } finally {
-        disconnectingWorkspaces.value.delete(teamId)
-    }
-}
-
-const refreshWorkspaceTokens = async (teamId: string) => {
-    refreshingWorkspaces.value.add(teamId)
-
-    try {
-        await $fetch(`/api/slack/workspaces/${teamId}/refresh`, {
-            method: 'POST',
-            body: {
-                organizationSlug: props.organizationSlug
-            }
-        })
-
-        toast.add({
-            icon: 'i-lucide-check',
-            title: 'Success',
-            description: 'Workspace tokens refreshed successfully'
-        })
-
-        await refreshSlackWorkspaces()
-    } catch (error: unknown) {
-        toast.add({
-            icon: 'i-lucide-alert-circle',
-            title: 'Error',
-            description: `Failed to refresh workspace tokens: ${(error as { data?: { message?: string }, message?: string })?.data?.message || (error as { message?: string })?.message}`
-        })
-    } finally {
-        refreshingWorkspaces.value.delete(teamId)
-    }
-}
-
-const slackWorkspaceColumns: TableColumn<z.infer<typeof SlackWorkspaceMeta>>[] = [
-    {
-        accessorKey: 'teamName',
-        header: 'Workspace',
-        cell: ({ row }: { row: Row<z.infer<typeof SlackWorkspaceMeta>> }) => {
-            const teamName = row.original.teamName
-            const teamId = row.original.teamId
-
-            return (
-                <div class="flex flex-col">
-                    <span class="font-medium">{teamName}</span>
-                    <UBadge variant="outline" color="neutral" size="xs">{teamId}</UBadge>
-                </div>
-            )
         }
-    },
-    {
-        accessorKey: 'installedByName',
-        header: 'Installed By'
-    },
-    {
-        accessorKey: 'installationDate',
-        header: 'Installation Date',
-        cell: ({ row }: { row: Row<z.infer<typeof SlackWorkspaceMeta>> }) => {
-            const installDate = row.original.installationDate
-            return <time datetime={installDate.toISOString()} class="text-sm">{installDate.toLocaleDateString()}</time>
-        }
-    },
-    {
-        accessorKey: 'lastRefreshDate',
-        header: 'Last Refreshed',
-        cell: ({ row }: { row: Row<z.infer<typeof SlackWorkspaceMeta>> }) => {
-            const lastRefresh = row.original.lastRefreshDate
-            if (!lastRefresh) {
-                return <span class="text-muted text-sm">Never</span>
-            }
-            const refreshDate = lastRefresh
-            return <time datetime={refreshDate.toISOString()} class="text-sm">{refreshDate.toLocaleDateString()}</time>
-        }
-    },
-    ...(props.showManagement
-        ? [{
-                id: 'actions',
-                header: 'Actions',
-                cell: ({ row }: { row: Row<z.infer<typeof SlackWorkspaceMeta>> }) => {
-                    const teamId = row.original.teamId
+    ),
+    disconnectingWorkspaces = ref<Set<string>>(new Set()),
+    refreshingWorkspaces = ref<Set<string>>(new Set()),
+    addAnotherUrl = `/api/slack/oauth/authorize?organizationSlug=${props.organizationSlug}`,
+    disconnectSlackWorkspace = async (teamId: string) => {
+        // Find the workspace data to get the name for a better confirmation message
+        const workspaceData = slackWorkspaces.value?.find(ws => ws.teamId === teamId),
+            workspaceDisplayName = workspaceData?.teamName || teamId,
+            result = await confirmDisconnectModal.open({
+                title: `Are you sure you want to disconnect workspace "${workspaceDisplayName}"? This will remove the app installation and all associated channel links.`
+            }).result
 
-                    return (
-                        <div class="flex gap-2">
-                            <UButton
-                                icon="i-lucide-refresh-cw"
-                                color="primary"
-                                variant="ghost"
-                                size="sm"
-                                loading={refreshingWorkspaces.value.has(teamId)}
-                                disabled={refreshingWorkspaces.value.has(teamId) || disconnectingWorkspaces.value.has(teamId)}
-                                onClick={() => refreshWorkspaceTokens(teamId)}
-                                aria-label="Refresh workspace tokens"
-                            />
-                            <UButton
-                                icon="i-lucide-unlink"
-                                color="error"
-                                variant="ghost"
-                                size="sm"
-                                loading={disconnectingWorkspaces.value.has(teamId)}
-                                disabled={disconnectingWorkspaces.value.has(teamId) || refreshingWorkspaces.value.has(teamId)}
-                                onClick={() => disconnectSlackWorkspace(teamId)}
-                                aria-label="Disconnect workspace"
-                            />
-                        </div>
-                    )
+        if (!result)
+            return
+
+        disconnectingWorkspaces.value.add(teamId)
+
+        try {
+            await $fetch(`/api/slack/workspaces/${teamId}`, {
+                method: 'DELETE',
+                body: {
+                    organizationSlug: props.organizationSlug
                 }
-            }]
-        : [])
-]
+            })
+
+            toast.add({
+                icon: 'i-lucide-check',
+                title: 'Success',
+                description: 'Slack workspace disconnected successfully'
+            })
+
+            await refreshSlackWorkspaces()
+        } catch (error: unknown) {
+            toast.add({
+                icon: 'i-lucide-alert-circle',
+                title: 'Error',
+                description: `Failed to disconnect Slack workspace: ${(error as { data?: { message?: string }, message?: string })?.data?.message || (error as { message?: string })?.message}`
+            })
+        } finally {
+            disconnectingWorkspaces.value.delete(teamId)
+        }
+    },
+    refreshWorkspaceTokens = async (teamId: string) => {
+        refreshingWorkspaces.value.add(teamId)
+
+        try {
+            await $fetch(`/api/slack/workspaces/${teamId}/refresh`, {
+                method: 'POST',
+                body: {
+                    organizationSlug: props.organizationSlug
+                }
+            })
+
+            toast.add({
+                icon: 'i-lucide-check',
+                title: 'Success',
+                description: 'Workspace tokens refreshed successfully'
+            })
+
+            await refreshSlackWorkspaces()
+        } catch (error: unknown) {
+            toast.add({
+                icon: 'i-lucide-alert-circle',
+                title: 'Error',
+                description: `Failed to refresh workspace tokens: ${(error as { data?: { message?: string }, message?: string })?.data?.message || (error as { message?: string })?.message}`
+            })
+        } finally {
+            refreshingWorkspaces.value.delete(teamId)
+        }
+    },
+    slackWorkspaceColumns: TableColumn<SlackWorkspaceMetaType>[] = [
+        {
+            accessorKey: 'teamName',
+            header: 'Workspace',
+            cell: ({ row }: { row: Row<SlackWorkspaceMetaType> }) => {
+                const teamName = row.original.teamName,
+                    teamId = row.original.teamId
+
+                return (
+                    <div class="flex flex-col">
+                        <span class="font-medium">{teamName}</span>
+                        <UBadge variant="outline" color="neutral" size="xs">{teamId}</UBadge>
+                    </div>
+                )
+            }
+        },
+        {
+            accessorKey: 'installedByName',
+            header: 'Installed By'
+        },
+        {
+            accessorKey: 'installationDate',
+            header: 'Installation Date',
+            cell: ({ row }: { row: Row<SlackWorkspaceMetaType> }) => {
+                const installDate = row.original.installationDate
+                return <time datetime={installDate.toISOString()} class="text-sm">{installDate.toLocaleDateString()}</time>
+            }
+        },
+        {
+            accessorKey: 'lastRefreshDate',
+            header: 'Last Refreshed',
+            cell: ({ row }: { row: Row<SlackWorkspaceMetaType> }) => {
+                const lastRefresh = row.original.lastRefreshDate
+                if (!lastRefresh) {
+                    return <span class="text-muted text-sm">Never</span>
+                }
+                const refreshDate = lastRefresh
+                return <time datetime={refreshDate.toISOString()} class="text-sm">{refreshDate.toLocaleDateString()}</time>
+            }
+        },
+        ...(props.showManagement
+            ? [{
+                    id: 'actions',
+                    header: 'Actions',
+                    cell: ({ row }: { row: Row<SlackWorkspaceMetaType> }) => {
+                        const teamId = row.original.teamId
+
+                        return (
+                            <div class="flex gap-2">
+                                <UButton
+                                    icon="i-lucide-refresh-cw"
+                                    color="primary"
+                                    variant="ghost"
+                                    size="sm"
+                                    loading={refreshingWorkspaces.value.has(teamId)}
+                                    disabled={refreshingWorkspaces.value.has(teamId) || disconnectingWorkspaces.value.has(teamId)}
+                                    onClick={() => refreshWorkspaceTokens(teamId)}
+                                    aria-label="Refresh workspace tokens"
+                                />
+                                <UButton
+                                    icon="i-lucide-unlink"
+                                    color="error"
+                                    variant="ghost"
+                                    size="sm"
+                                    loading={disconnectingWorkspaces.value.has(teamId)}
+                                    disabled={disconnectingWorkspaces.value.has(teamId) || refreshingWorkspaces.value.has(teamId)}
+                                    onClick={() => disconnectSlackWorkspace(teamId)}
+                                    aria-label="Disconnect workspace"
+                                />
+                            </div>
+                        )
+                    }
+                }]
+            : [])
+    ]
 </script>
 
 <template>

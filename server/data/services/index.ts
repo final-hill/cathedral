@@ -1,3 +1,3 @@
-export * from './EntraGroupService'
+export * from './EntraService'
 export * from './NaturalLanguageToRequirementService'
 export * from './SlackService'

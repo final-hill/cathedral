@@ -10,3 +10,5 @@ export const TestCase = Example.extend({
     testing procedure, and expected results that define a single test
     to be executed to achieve a particular goal
 `))
+
+export type TestCaseType = z.infer<typeof TestCase>

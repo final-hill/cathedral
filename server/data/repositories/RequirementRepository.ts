@@ -1,10 +1,9 @@
 import type { z } from 'zod'
 import { v7 as uuid7 } from 'uuid'
 import { Repository } from './Repository'
-import type { Requirement } from '#shared/domain/requirements'
 import * as req from '#shared/domain/requirements'
 import * as reqModels from '../models/requirements'
-import type { AuditMetadata } from '~/shared/domain'
+import type { AuditMetadataType, RequirementType } from '~/shared/domain'
 import { ConstraintCategory, MoscowPriority, NotFoundException, ReqType, StakeholderCategory, StakeholderSegmentation, WorkflowState } from '~/shared/domain'
 import { snakeCaseToPascalCase, resolveReqTypeFromModel } from '~/shared/utils'
 import { DataModelToDomainModel, ReqQueryToModelQuery } from '../mappers'
@@ -12,8 +11,6 @@ import type { CreationInfo } from './CreationInfo'
 import type { UpdationInfo } from './UpdationInfo'
 import type { llmRequirementSchema } from '../llm-zod-schemas'
 import type { ObjectQuery } from '@mikro-orm/core'
-
-type RequirementType = z.infer<typeof Requirement>
 
 export class RequirementRepository extends Repository<RequirementType> {
     /**
@@ -24,16 +21,15 @@ export class RequirementRepository extends Repository<RequirementType> {
      * @returns The id of the requirement
      */
     async add(props: CreationInfo & {
-        reqProps: Omit<RequirementType, 'reqId' | 'reqIdPrefix' | 'id' | keyof z.infer<typeof AuditMetadata>>
-    }): Promise<RequirementType['id']> {
+        reqProps: Omit<req.RequirementType, 'reqId' | 'reqIdPrefix' | 'id' | keyof AuditMetadataType>
+    }): Promise<req.RequirementType['id']> {
         const em = this._em,
             { reqType, ...reqProps } = props.reqProps,
             ReqTypePascal = snakeCaseToPascalCase(reqType) as keyof typeof req,
             ReqStaticModel = reqModels[`${ReqTypePascal}Model` as keyof typeof reqModels] as typeof reqModels.RequirementModel,
             ReqVersionsModel = reqModels[`${ReqTypePascal}VersionsModel` as keyof typeof reqModels] as typeof reqModels.RequirementVersionsModel,
-            mappedProps = await new ReqQueryToModelQuery().map(reqProps) as Record<string, unknown>
-
-        const newId = uuid7()
+            mappedProps = await new ReqQueryToModelQuery().map(reqProps) as Record<string, unknown>,
+            newId = uuid7()
 
         em.create(ReqVersionsModel, {
             requirement: em.create(ReqStaticModel, {
@@ -81,9 +77,9 @@ export class RequirementRepository extends Repository<RequirementType> {
             const reqTypePascal = snakeCaseToPascalCase(req.reqType) as keyof typeof req,
                 ReqStaticModel = reqModels[`${reqTypePascal}Model` as keyof typeof reqModels] as typeof reqModels.RequirementModel,
                 ReqVersionsModel = reqModels[`${reqTypePascal}VersionsModel` as keyof typeof reqModels] as typeof reqModels.RequirementVersionsModel,
-                newId = uuid7()
+                newId = uuid7(),
+                newPrimaryActorId = req.primaryActorName ? uuid7() : undefined
 
-            const newPrimaryActorId = req.primaryActorName ? uuid7() : undefined
             if (newPrimaryActorId) {
                 em.create(reqModels.StakeholderVersionsModel, {
                     requirement: em.create(reqModels.StakeholderModel, {
@@ -231,42 +227,40 @@ export class RequirementRepository extends Repository<RequirementType> {
         const em = this._em,
             reqTypePascal = snakeCaseToPascalCase(props.reqType) as keyof typeof req,
             ReqStaticModel = reqModels[`${reqTypePascal}Model` as keyof typeof reqModels] as typeof reqModels.RequirementModel,
-            mapper = new DataModelToDomainModel()
+            mapper = new DataModelToDomainModel(),
+            reqStatics = (await em.find(ReqStaticModel, {
+                versions: {
+                    solution: { id: props.solutionId },
+                    workflowState: { $in: [WorkflowState.Active, WorkflowState.Removed] },
+                    effectiveFrom: { $lte: new Date() },
+                    isDeleted: false
+                }
+            }, {
+                populate: ['parsedRequirements']
+            })),
+            requirements = await Promise.all(reqStatics.map(async (reqStatic) => {
+                const versions = await reqStatic.versions.matching({
+                        where: {
+                            solution: { id: props.solutionId },
+                            workflowState: { $in: [WorkflowState.Active, WorkflowState.Removed] },
+                            effectiveFrom: { $lte: new Date() },
+                            isDeleted: false
+                        },
+                        orderBy: { effectiveFrom: 'desc' },
+                        limit: 2,
+                        populate: ['*']
+                    }),
+                    latestActive = versions.find(v => v.workflowState === WorkflowState.Active),
+                    latestRemoved = versions.find(v => v.workflowState === WorkflowState.Removed)
 
-        const reqStatics = (await em.find(ReqStaticModel, {
-            versions: {
-                solution: { id: props.solutionId },
-                workflowState: { $in: [WorkflowState.Active, WorkflowState.Removed] },
-                effectiveFrom: { $lte: new Date() },
-                isDeleted: false
-            }
-        }, {
-            populate: ['parsedRequirements']
-        }))
+                // Compare effectiveFrom dates to determine validity
+                if (latestRemoved && (!latestActive || latestRemoved.effectiveFrom > latestActive.effectiveFrom))
+                    return undefined // A newer Removed version exists, so no Active version is valid
 
-        const requirements = await Promise.all(reqStatics.map(async (reqStatic) => {
-            const versions = await reqStatic.versions.matching({
-                    where: {
-                        solution: { id: props.solutionId },
-                        workflowState: { $in: [WorkflowState.Active, WorkflowState.Removed] },
-                        effectiveFrom: { $lte: new Date() },
-                        isDeleted: false
-                    },
-                    orderBy: { effectiveFrom: 'desc' },
-                    limit: 2,
-                    populate: ['*']
-                }),
-                latestActive = versions.find(v => v.workflowState === WorkflowState.Active),
-                latestRemoved = versions.find(v => v.workflowState === WorkflowState.Removed)
-
-            // Compare effectiveFrom dates to determine validity
-            if (latestRemoved && (!latestActive || latestRemoved.effectiveFrom > latestActive.effectiveFrom))
-                return undefined // A newer Removed version exists, so no Active version is valid
-
-            return req[reqTypePascal].parse(
-                await mapper.map({ ...reqStatic, ...latestActive })
-            ) as R
-        })).then(reqs => reqs.filter(req => req !== undefined))
+                return req[reqTypePascal].parse(
+                    await mapper.map({ ...reqStatic, ...latestActive })
+                ) as R
+            })).then(reqs => reqs.filter(req => req !== undefined))
 
         return requirements
     }
@@ -287,40 +281,38 @@ export class RequirementRepository extends Repository<RequirementType> {
         const em = this._em,
             reqTypePascal = snakeCaseToPascalCase(props.reqType) as keyof typeof req,
             ReqStaticModel = reqModels[`${reqTypePascal}Model` as keyof typeof reqModels] as typeof reqModels.RequirementModel,
-            mapper = new DataModelToDomainModel()
+            mapper = new DataModelToDomainModel(),
+            reqStatics = (await em.find(ReqStaticModel, {
+                versions: {
+                    solution: { id: props.solutionId },
+                    workflowState: props.workflowState,
+                    effectiveFrom: { $lte: new Date() },
+                    isDeleted: false
+                }
+            }, {
+                populate: ['parsedRequirements']
+            })),
+            requirements = await Promise.all(reqStatics.map(async (reqStatic) => {
+                const versions = await reqStatic.versions.matching({
+                        where: {
+                            solution: { id: props.solutionId },
+                            workflowState: props.workflowState,
+                            effectiveFrom: { $lte: new Date() },
+                            isDeleted: false
+                        },
+                        orderBy: { effectiveFrom: 'desc' },
+                        limit: 1,
+                        populate: ['*']
+                    }),
+                    latestVersion = versions[0]
 
-        const reqStatics = (await em.find(ReqStaticModel, {
-            versions: {
-                solution: { id: props.solutionId },
-                workflowState: props.workflowState,
-                effectiveFrom: { $lte: new Date() },
-                isDeleted: false
-            }
-        }, {
-            populate: ['parsedRequirements']
-        }))
+                if (!latestVersion)
+                    return undefined
 
-        const requirements = await Promise.all(reqStatics.map(async (reqStatic) => {
-            const versions = await reqStatic.versions.matching({
-                    where: {
-                        solution: { id: props.solutionId },
-                        workflowState: props.workflowState,
-                        effectiveFrom: { $lte: new Date() },
-                        isDeleted: false
-                    },
-                    orderBy: { effectiveFrom: 'desc' },
-                    limit: 1,
-                    populate: ['*']
-                }),
-                latestVersion = versions[0]
-
-            if (!latestVersion)
-                return undefined
-
-            return req[reqTypePascal].parse(
-                await mapper.map({ ...reqStatic, ...latestVersion })
-            ) as R
-        })).then(reqs => reqs.filter(req => req !== undefined))
+                return req[reqTypePascal].parse(
+                    await mapper.map({ ...reqStatic, ...latestVersion })
+                ) as R
+            })).then(reqs => reqs.filter(req => req !== undefined))
 
         return requirements
     }
@@ -340,38 +332,36 @@ export class RequirementRepository extends Repository<RequirementType> {
         const em = this._em,
             reqTypePascal = snakeCaseToPascalCase(props.reqType) as keyof typeof req,
             ReqStaticModel = reqModels[`${reqTypePascal}Model` as keyof typeof reqModels] as typeof reqModels.RequirementModel,
-            mapper = new DataModelToDomainModel()
+            mapper = new DataModelToDomainModel(),
+            reqStatics = (await em.find(ReqStaticModel, {
+                ...(props.staticQuery ?? {}),
+                versions: {
+                    solution: { id: props.solutionId },
+                    effectiveFrom: { $lte: new Date() },
+                    isDeleted: false
+                }
+            }, {
+                populate: ['parsedRequirements']
+            })),
+            requirements = await Promise.all(reqStatics.map(async (reqStatic) => {
+                const versions = await reqStatic.versions.matching({
+                        where: {
+                            solution: { id: props.solutionId },
+                            effectiveFrom: { $lte: new Date() },
+                            isDeleted: false
+                        },
+                        orderBy: { effectiveFrom: 'desc' },
+                        populate: ['*']
+                    }),
+                    latestVersion = versions[0]
 
-        const reqStatics = (await em.find(ReqStaticModel, {
-            ...(props.staticQuery ?? {}),
-            versions: {
-                solution: { id: props.solutionId },
-                effectiveFrom: { $lte: new Date() },
-                isDeleted: false
-            }
-        }, {
-            populate: ['parsedRequirements']
-        }))
+                if (!latestVersion)
+                    return undefined
 
-        const requirements = await Promise.all(reqStatics.map(async (reqStatic) => {
-            const versions = await reqStatic.versions.matching({
-                    where: {
-                        solution: { id: props.solutionId },
-                        effectiveFrom: { $lte: new Date() },
-                        isDeleted: false
-                    },
-                    orderBy: { effectiveFrom: 'desc' },
-                    populate: ['*']
-                }),
-                latestVersion = versions[0]
-
-            if (!latestVersion)
-                return undefined
-
-            return req[reqTypePascal].parse(
-                await mapper.map({ ...reqStatic, ...latestVersion })
-            ) as R
-        })).then(reqs => reqs.filter(req => req !== undefined))
+                return req[reqTypePascal].parse(
+                    await mapper.map({ ...reqStatic, ...latestVersion })
+                ) as R
+            })).then(reqs => reqs.filter(req => req !== undefined))
 
         return requirements
     }
@@ -382,18 +372,19 @@ export class RequirementRepository extends Repository<RequirementType> {
      * @returns The requirement with the given id
      * @throws {NotFoundException} If the requirement does not exist
      */
-    async getById<R extends RequirementType>(id: z.infer<typeof Requirement>['id']): Promise<R> {
+    async getById<R extends RequirementType>(id: RequirementType['id']): Promise<R> {
         const em = this._em,
-            reqStatic = await em.findOne(reqModels.RequirementModel, { id }),
+            reqStatic = await em.findOne(reqModels.RequirementModel, { id }, {
+                populate: ['versions', 'parsedRequirements.versions']
+            }),
             reqLatestVersion = await reqStatic?.getLatestVersion(new Date())
 
         if (!reqStatic || !reqLatestVersion)
             throw new NotFoundException(`Requirement with id ${id} not found`)
 
         // Use utility function to resolve req_type from the model instance
-        const req_type = resolveReqTypeFromModel(reqStatic)
-
-        const reqTypePascal = snakeCaseToPascalCase(req_type) as keyof typeof req,
+        const req_type = resolveReqTypeFromModel(reqStatic),
+            reqTypePascal = snakeCaseToPascalCase(req_type) as keyof typeof req,
             mapper = new DataModelToDomainModel()
 
         return req[reqTypePascal].parse(
@@ -409,17 +400,16 @@ export class RequirementRepository extends Repository<RequirementType> {
      * @throws {NotFoundException} If the requirement does not exist
      */
     async update(props: UpdationInfo & {
-        reqProps: Omit<Partial<RequirementType>, 'reqIdPrefix' | keyof z.infer<typeof AuditMetadata>>
-            & { id: z.infer<typeof Requirement>['id'], reqType: ReqType }
+        reqProps: Omit<Partial<RequirementType>, 'reqIdPrefix' | keyof AuditMetadataType>
+            & { id: RequirementType['id'], reqType: ReqType }
     }): Promise<void> {
         const em = this._em,
             { reqType, ...reqProps } = props.reqProps,
             ReqTypePascal = snakeCaseToPascalCase(reqType) as keyof typeof req,
             ReqStaticModel = reqModels[`${ReqTypePascal}Model` as keyof typeof reqModels] as typeof reqModels.RequirementModel,
             ReqVersionsModel = reqModels[`${ReqTypePascal}VersionsModel` as keyof typeof reqModels] as typeof reqModels.RequirementVersionsModel,
-            mappedProps = await new ReqQueryToModelQuery().map(reqProps) as Record<string, unknown>
-
-        const existingReqStatic = await em.findOne(ReqStaticModel, { id: props.reqProps.id }),
+            mappedProps = await new ReqQueryToModelQuery().map(reqProps) as Record<string, unknown>,
+            existingReqStatic = await em.findOne(ReqStaticModel, { id: props.reqProps.id }),
             existingReqVersion = await existingReqStatic?.getLatestVersion(props.modifiedDate)
 
         if (!existingReqStatic || !existingReqVersion)

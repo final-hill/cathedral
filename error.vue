@@ -3,26 +3,25 @@
 import type { NuxtError } from '#app'
 
 const _props = defineProps({
-    error: {
-        type: Object as () => NuxtError,
-        default: () => ({}) as NuxtError
-    }
-})
-
-const handleError = () => {
-    if (_props.error?.statusCode === 401) {
-        // Store current path in sessionStorage for post-auth redirect (client-side only)
-        if (import.meta.client) {
-            const currentPath = useRoute().fullPath
-            if (currentPath !== '/error') {
-                sessionStorage.setItem('auth-redirect', currentPath)
-            }
+        error: {
+            type: Object as () => NuxtError,
+            default: () => ({}) as NuxtError
         }
-        navigateTo('/auth/entra-external-id', { external: true })
-        return
+    }),
+    handleError = () => {
+        if (_props.error?.statusCode === 401) {
+        // Store current path in sessionStorage for post-auth redirect (client-side only)
+            if (import.meta.client) {
+                const currentPath = useRoute().fullPath
+                if (currentPath !== '/error') {
+                    sessionStorage.setItem('auth-redirect', currentPath)
+                }
+            }
+            navigateTo('/auth/entra-external-id', { external: true })
+            return
+        }
+        clearError({ redirect: '/' })
     }
-    clearError({ redirect: '/' })
-}
 </script>
 
 <template>

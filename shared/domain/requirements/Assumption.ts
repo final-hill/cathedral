@@ -12,3 +12,5 @@ export const Assumption = Requirement.extend({
     An assumption is a property of the environment that is assumed to be true; a precondition.
     An example of an assumption would be: "Screen resolution will not change during the execution of the program".
 `))
+
+export type AssumptionType = z.infer<typeof Assumption>

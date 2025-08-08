@@ -259,11 +259,16 @@ The workflow is implemented through RESTful API endpoints following the pattern:
 
 #### UI Components
 
-The workflow is primarily managed through the `XWorkflow.vue` component, which provides:
-- Tabular display of requirements with state-based filtering
-- Context menus with appropriate actions for each state
-- Modal dialogs for editing, reviewing, and confirming operations
+The workflow is primarily managed through the `RequirementList.vue` component and dedicated page components, which provide:
+- Tabular display of requirements with state-based filtering through `RequirementList.vue`
+- Context menus with appropriate actions for each workflow state
+- Dedicated pages for specific workflow operations:
+  - `review.vue` - For reviewing requirements with approve/reject actions
+  - `edit.vue` - For editing proposed requirements and creating revisions
+  - `new.vue` - For creating new requirements
+  - `index.vue` - For viewing requirement details
 - Real-time state updates and notifications
+- Automatic navigation to appropriate detail pages after workflow transitions
 
 #### Autocomplete and Reference Validation
 

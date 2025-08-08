@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import type { Organization } from '#shared/domain'
-import type { z } from 'zod'
+import type { OrganizationType } from '#shared/domain'
 
 const router = useRouter(),
     { status: _status, data: organizations, refresh, error: getOrgError } = await useFetch('/api/organization', {
@@ -16,21 +15,19 @@ const router = useRouter(),
 if (getOrgError.value)
     $eventBus.$emit('page-error', getOrgError.value)
 
-const handleDelete = async (organization: z.infer<typeof Organization>) => {
-    await $fetch(`/api/organization/${organization.slug}`, {
-        method: 'delete'
-    }).catch(e => $eventBus.$emit('page-error', e))
-    deleteModalOpenState.value = false
-    refresh()
-}
-
-const handleEdit = (organization: { slug: string }) => {
-    router.push({ name: 'Edit Organization', params: { organizationslug: organization.slug } })
-}
-
-const handleUsers = (organization: { slug: string }) => {
-    router.push({ name: 'Organization Users', params: { organizationslug: organization.slug } })
-}
+const handleDelete = async (organization: OrganizationType) => {
+        await $fetch(`/api/organization/${organization.slug}`, {
+            method: 'delete'
+        }).catch(e => $eventBus.$emit('page-error', e))
+        deleteModalOpenState.value = false
+        refresh()
+    },
+    handleEdit = (organization: { slug: string }) => {
+        router.push({ name: 'Edit Organization', params: { organizationslug: organization.slug } })
+    },
+    handleUsers = (organization: { slug: string }) => {
+        router.push({ name: 'Organization Users', params: { organizationslug: organization.slug } })
+    }
 </script>
 
 <template>

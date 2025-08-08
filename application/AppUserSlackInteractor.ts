@@ -1,8 +1,7 @@
 import { Interactor } from './Interactor'
 import type { OrganizationInteractor } from './OrganizationInteractor'
 import type { SlackUserInteractor } from './slack/SlackUserInteractor'
-import type { z } from 'zod'
-import type { AppUser } from '#shared/domain/application'
+import type { AppUserType } from '#shared/domain/application'
 
 /**
  * Composite interactor that handles AppUser operations with Slack associations
@@ -11,7 +10,7 @@ import type { AppUser } from '#shared/domain/application'
  * a clean interface for operations that require both organization user data and
  * their associated Slack information.
  */
-export class AppUserSlackInteractor extends Interactor<z.infer<typeof AppUser> & { slackAssociations?: unknown[] }> {
+export class AppUserSlackInteractor extends Interactor<AppUserType> {
     private readonly _organizationInteractor: OrganizationInteractor
     private readonly _slackUserInteractor: SlackUserInteractor
 
@@ -32,7 +31,7 @@ export class AppUserSlackInteractor extends Interactor<z.infer<typeof AppUser> &
      * @throws {NotFoundException} If the user does not exist
      * @throws {PermissionDeniedException} If not authorized to view the user
      */
-    async getAppUserByIdWithSlack(userId: string): Promise<z.infer<typeof AppUser>> {
+    async getAppUserByIdWithSlack(userId: string): Promise<AppUserType> {
         const user = await this._organizationInteractor.getAppUserById(userId)
 
         try {
@@ -56,7 +55,7 @@ export class AppUserSlackInteractor extends Interactor<z.infer<typeof AppUser> &
      * @returns All users with their Slack associations
      * @throws {PermissionDeniedException} If not authorized to view users
      */
-    async getAppUsersWithSlack(): Promise<Array<z.infer<typeof AppUser>>> {
+    async getAppUsersWithSlack(): Promise<AppUserType[]> {
         const users = await this._organizationInteractor.getAppUsers()
 
         if (users.length === 0) {

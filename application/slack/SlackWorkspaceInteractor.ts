@@ -43,26 +43,24 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
     async getOrganizationWorkspaces(organizationId: string, organizationName: string): Promise<SlackWorkspaceMetaPublicType[]> {
         this._permissionInteractor.assertOrganizationReader(organizationId)
 
-        const workspaces = await this.repository.getWorkspacesByOrganization(organizationId, organizationName)
-
-        // Enrich with user names from Entra
-        const enrichedWorkspaces = await Promise.all(
-            workspaces.map(async (workspace) => {
-                try {
-                    const user = await this._permissionInteractor.groupService.getUser(workspace.installedById)
-                    return {
-                        ...workspace,
-                        installedByName: user.name
+        const workspaces = await this.repository.getWorkspacesByOrganization(organizationId, organizationName),
+            enrichedWorkspaces = await Promise.all(
+                workspaces.map(async (workspace) => {
+                    try {
+                        const user = await this._permissionInteractor.entraService.getUser(workspace.installedById)
+                        return {
+                            ...workspace,
+                            installedByName: user.name
+                        }
+                    } catch (error) {
+                        console.warn(`Failed to get user name for ${workspace.installedById}:`, error)
+                        return {
+                            ...workspace,
+                            installedByName: '{Unknown User}'
+                        }
                     }
-                } catch (error) {
-                    console.warn(`Failed to get user name for ${workspace.installedById}:`, error)
-                    return {
-                        ...workspace,
-                        installedByName: '{Unknown User}'
-                    }
-                }
-            })
-        )
+                })
+            )
 
         return enrichedWorkspaces
     }
@@ -83,7 +81,7 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
         scope: string
         appId: string
     }) {
-        await this._permissionInteractor.assertOrganizationContributor(props.organizationId)
+        this._permissionInteractor.assertOrganizationContributor(props.organizationId)
 
         return await this.repository.installWorkspace({
             ...props,
@@ -99,7 +97,7 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
      * @throws { PermissionException } if user lacks contributor access
      */
     async removeWorkspaceFromOrganization(organizationId: string, teamId: string) {
-        await this._permissionInteractor.assertOrganizationContributor(organizationId)
+        this._permissionInteractor.assertOrganizationContributor(organizationId)
 
         return await this.repository.removeWorkspace(organizationId, teamId)
             .catch(handleDomainException)
@@ -118,7 +116,7 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
         if (!workspaceInfo)
             throw new NotFoundException('Slack workspace integration not found')
 
-        await this._permissionInteractor.assertOrganizationReader(workspaceInfo.organization.id)
+        this._permissionInteractor.assertOrganizationReader(workspaceInfo.organization.id)
 
         return await this.repository.getWorkspaceConfiguration(teamId)
     }
@@ -141,7 +139,7 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
         if (!workspaceInfo)
             throw new NotFoundException('Slack workspace integration not found')
 
-        await this._permissionInteractor.assertOrganizationContributor(workspaceInfo.organization.id)
+        this._permissionInteractor.assertOrganizationContributor(workspaceInfo.organization.id)
 
         return await this.repository.updateWorkspaceMetadata(teamId, {
             ...updates,
@@ -167,12 +165,12 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
         if (!workspaceConfig)
             throw new NotFoundException('Slack workspace integration not found')
 
-        await this._permissionInteractor.assertOrganizationContributor(workspaceConfig.organization.id)
+        this._permissionInteractor.assertOrganizationContributor(workspaceConfig.organization.id)
 
         const config = useRuntimeConfig(),
-            slackService = new SlackService(workspaceConfig.accessToken, config.slackSigningSecret)
+            slackService = new SlackService(workspaceConfig.accessToken, config.slackSigningSecret),
 
-        const teamInfo = await slackService.getTeamInfo(teamId)
+            teamInfo = await slackService.getTeamInfo(teamId)
 
         if (teamInfo && teamInfo.name) {
             await this.repository.updateWorkspaceMetadata(teamId, {

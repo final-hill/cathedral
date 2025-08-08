@@ -2,7 +2,7 @@ import { OrganizationCollectionInteractor, PermissionInteractor } from '~/applic
 import { OrganizationCollectionRepository } from '~/server/data/repositories'
 import handleDomainException from '~/server/utils/handleDomainException'
 import { Organization } from '#shared/domain'
-import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
+import { createEntraService } from '~/server/utils/createEntraService'
 
 const bodySchema = Organization.innerType().pick({ name: true, description: true })
 
@@ -12,16 +12,12 @@ const bodySchema = Organization.innerType().pick({ name: true, description: true
 export default defineEventHandler(async (event) => {
     const { name, description } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
-        entraGroupService = createEntraGroupService(),
-        permissionInteractor = new PermissionInteractor({
-            event,
-            session,
-            groupService: entraGroupService
-        }),
+        entraService = createEntraService(),
+        permissionInteractor = new PermissionInteractor({ event, session, entraService }),
         organizationCollectionInteractor = new OrganizationCollectionInteractor({
             repository: new OrganizationCollectionRepository({ em: event.context.em }),
             permissionInteractor,
-            entraGroupService
+            entraService
         })
 
     console.log('Creating organization. with session: ', session)

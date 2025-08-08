@@ -6,19 +6,20 @@ import { snakeCaseToPascalCase } from '~/shared/utils'
 import * as req from '#shared/domain/requirements'
 import { z } from 'zod'
 import { NaturalLanguageToRequirementService } from '~/server/data/services/NaturalLanguageToRequirementService'
-import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
+import { createEntraService } from '~/server/utils/createEntraService'
 
-const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
-
-const paramSchema = z.object({ reqType: z.nativeEnum(ReqType) })
-
-const appConfig = useRuntimeConfig()
+const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
+    paramSchema = z.object({ reqType: z.nativeEnum(ReqType) }),
+    appConfig = useRuntimeConfig()
 
 export default defineEventHandler(async (event) => {
     const { reqType } = await validateEventParams(event, paramSchema),
         ReqPascal = snakeCaseToPascalCase(reqType) as keyof typeof req,
         ReqCons = req[ReqPascal] as typeof req.Requirement,
-        bodySchema = ReqCons.omit({
+        innerSchema = (ReqCons as unknown) instanceof z.ZodEffects
+            ? (ReqCons as unknown as z.ZodEffects<z.ZodTypeAny>)._def.schema
+            : ReqCons,
+        bodySchema = (innerSchema as typeof req.Requirement).omit({
             createdBy: true,
             creationDate: true,
             id: true,
@@ -38,11 +39,9 @@ export default defineEventHandler(async (event) => {
         }, 'At least one of organizationId or organizationSlug should be provided'),
         { solutionSlug, organizationId: orgId, organizationSlug: orgSlug, ...reqProps } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
-        permissionInteractor = new PermissionInteractor({
-            event,
-            session,
-            groupService: createEntraGroupService()
-        }),
+        entraService = createEntraService(),
+        permissionInteractor = new PermissionInteractor({ event, session, entraService }),
+        appUserInteractor = new AppUserInteractor({ permissionInteractor, entraService }),
         organizationInteractor = new OrganizationInteractor({
             repository: new OrganizationRepository({
                 em: event.context.em,
@@ -50,16 +49,14 @@ export default defineEventHandler(async (event) => {
                 organizationSlug: orgSlug
             }),
             permissionInteractor,
-            appUserInteractor: new AppUserInteractor({
-                permissionInteractor,
-                groupService: createEntraGroupService()
-            })
+            appUserInteractor
         }),
         org = await organizationInteractor.getOrganization(),
         solution = await organizationInteractor.getSolutionBySlug(solutionSlug),
         requirementInteractor = new RequirementInteractor({
             repository: new RequirementRepository({ em: event.context.em }),
             permissionInteractor,
+            appUserInteractor,
             organizationId: org.id,
             solutionId: solution.id
         })

@@ -29,9 +29,9 @@ export const Stakeholder = Component.extend({
     category: z.nativeEnum(StakeholderCategory)
         .describe('The category of the stakeholder'),
     interest: z.number().int().min(0).max(100)
-        .describe('The interest that the stakeholder has in the project; AKA "availability"'),
+        .describe('The interest that the stakeholder has in the project; AKA "availability". (0 = not interested, 100 = very interested)'),
     influence: z.number().int().min(0).max(100)
-        .describe('The influence of the stakeholder'),
+        .describe('The influence of the stakeholder on the project; AKA "power". (0 = no influence, 100 = very influential)'),
     reqType: z.nativeEnum(ReqType).default(ReqType.STAKEHOLDER)
 }).describe(dedent(`
     A Stakeholder is a human actor who may affect or be affected by a Project or its associated System.
@@ -41,3 +41,5 @@ export const Stakeholder = Component.extend({
     ...data,
     ...computeInterestAndInfluence(data.category)
 }))
+
+export type StakeholderType = z.infer<typeof Stakeholder>

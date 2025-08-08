@@ -1,15 +1,15 @@
 import type { NaturalLanguageToRequirementService, SlackService } from '~/server/data/services'
-import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
+import { createEntraService } from '~/server/utils/createEntraService'
 import { Interactor } from '../Interactor'
 import type { PermissionInteractor, SlackWorkspaceInteractor, SlackChannelInteractor, SlackUserInteractor } from '../'
-import { RequirementInteractor, OrganizationCollectionInteractor } from '../'
+import { RequirementInteractor, OrganizationCollectionInteractor, AppUserInteractor } from '../'
 import type { SlackRepository } from '~/server/data/repositories'
 import { RequirementRepository, OrganizationCollectionRepository, OrganizationRepository } from '~/server/data/repositories'
 import type { z } from 'zod'
 import type { slackAppMentionSchema, slackMessageSchema, SlackInteractivePayload, SlackResponseMessage } from '~/server/data/slack-zod-schemas'
 import { slackBodySchema, slackSlashCommandSchema } from '~/server/data/slack-zod-schemas'
 import { ReqType, MismatchException } from '#shared/domain'
-import type { ParsedRequirements } from '#shared/domain'
+import type { ParsedRequirementsType } from '#shared/domain'
 import cache from '~/server/utils/cache'
 import type { SqlEntityManager, PostgreSqlDriver } from '@mikro-orm/postgresql'
 
@@ -223,12 +223,9 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         if (!solutionId)
             throw new MismatchException('No solution selected')
 
-        const cathedralUserId = this._permissionInteractor.userId
-
-        const em = this.repository['_em']
-
-        // Get the solution details to determine its organization
-        const orgRepo = new OrganizationRepository({ em }),
+        const cathedralUserId = this._permissionInteractor.userId,
+            em = this.repository['_em'],
+            orgRepo = new OrganizationRepository({ em }),
             solution = await orgRepo.getSolutionById(solutionId).catch((err) => {
                 console.error('Failed to get solution by ID:', err)
                 return null
@@ -272,8 +269,8 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         cache.set(recentProcessedKey, true, { ttl: 5 * 60 })
 
         // Additional check: ensure this message wasn't sent more than 30 seconds ago
-        const messageTimestamp = parseFloat(data.ts)
-        const currentTime = Date.now() / 1000
+        const messageTimestamp = parseFloat(data.ts),
+            currentTime = Date.now() / 1000
         if (currentTime - messageTimestamp > 30)
             return false
 
@@ -332,6 +329,10 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         const requirementInteractor = new RequirementInteractor({
             repository: new RequirementRepository({ em }),
             permissionInteractor: this._permissionInteractor,
+            appUserInteractor: new AppUserInteractor({
+                permissionInteractor: this._permissionInteractor,
+                entraService: createEntraService()
+            }),
             organizationId: channelConfig.organizationId,
             solutionId: channelConfig.solutionId
         })
@@ -371,18 +372,20 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
             this.assertUserIdentity(cathedralUserId)
 
             const requirementInteractor = new RequirementInteractor({
-                repository: new RequirementRepository({ em }),
-                permissionInteractor: this._permissionInteractor,
-                organizationId: channelConfig.organizationId,
-                solutionId: channelConfig.solutionId
-            })
-
-            const parsedReqObj = await requirementInteractor.getRequirementTypeById({
-                id: parsedResultsId,
-                reqType: ReqType.PARSED_REQUIREMENTS
-            }) as z.infer<typeof ParsedRequirements>
-
-            const count = parsedReqObj?.requirements?.length || 0,
+                    repository: new RequirementRepository({ em }),
+                    permissionInteractor: this._permissionInteractor,
+                    appUserInteractor: new AppUserInteractor({
+                        permissionInteractor: this._permissionInteractor,
+                        entraService: createEntraService()
+                    }),
+                    organizationId: channelConfig.organizationId,
+                    solutionId: channelConfig.solutionId
+                }),
+                parsedReqObj = await requirementInteractor.getRequirementTypeById({
+                    id: parsedResultsId,
+                    reqType: ReqType.PARSED_REQUIREMENTS
+                }) as ParsedRequirementsType,
+                count = parsedReqObj?.requirements?.length || 0,
                 requirementsUrl = this.buildRequirementsUrl(
                     parsedResultsId,
                     channelConfig.organizationSlug,
@@ -406,8 +409,8 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
      * Build the requirements URL for the success message
      */
     private buildRequirementsUrl(parsedResultsId: string, orgSlug: string, solutionSlug: string): URL {
-        const config = useRuntimeConfig()
-        const urlString = `${config.origin}/o/${orgSlug}/${solutionSlug}/project/requirements-process-report/${parsedResultsId}`
+        const config = useRuntimeConfig(),
+            urlString = `${config.origin}/o/${orgSlug}/${solutionSlug}/project/requirements-process-report/${parsedResultsId}`
 
         return new URL(urlString)
     }
@@ -452,20 +455,19 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
             }
         }
 
-        const cathedralUserId = this._permissionInteractor.userId
-
-        const em = this.repository['_em']
+        const cathedralUserId = this._permissionInteractor.userId,
+            em = this.repository['_em']
 
         // 1. If no orgId, show org dropdown
         if (!orgId) {
             // Use OrganizationCollectionInteractor to get all orgs user can access
-            const entraGroupService = createEntraGroupService(),
+            const entraGroupService = createEntraService(),
                 orgCollectionInteractor = new OrganizationCollectionInteractor({
                     repository: new OrganizationCollectionRepository({ em }),
                     permissionInteractor: this._permissionInteractor,
-                    entraGroupService
-                })
-            const orgs = (await orgCollectionInteractor.findOrganizations()).filter(Boolean)
+                    entraService: entraGroupService
+                }),
+                orgs = (await orgCollectionInteractor.findOrganizations()).filter(Boolean)
             if (!orgs || orgs.length === 0)
                 return this._slackService.createErrorMessage('No Cathedral organizations available to link.')
 
@@ -482,11 +484,11 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         }
 
         // 3. Both orgId and solutionId present: perform the link
-        const orgRepo = new OrganizationRepository({ em })
-        const solution = await orgRepo.getSolutionById(solutionId).catch((err) => {
-            console.error('Failed to get solution by ID:', err)
-            return null
-        })
+        const orgRepo = new OrganizationRepository({ em }),
+            solution = await orgRepo.getSolutionById(solutionId).catch((err) => {
+                console.error('Failed to get solution by ID:', err)
+                return null
+            })
         if (!solution)
             return this._slackService.createErrorMessage('Invalid solution selected. Please try again.')
 
@@ -510,10 +512,8 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
      */
     private async handleUnlinkSolutionCommand(parsed: z.infer<typeof slackSlashCommandSchema>): Promise<SlackResponseMessage> {
         const teamId = parsed.team_id,
-            channelId = parsed.channel_id
-
-        // Find the channel meta first
-        const channelMeta = await this.repository.getChannelMeta({ channelId, teamId })
+            channelId = parsed.channel_id,
+            channelMeta = await this.repository.getChannelMeta({ channelId, teamId })
         if (!channelMeta || !channelMeta.solutionId) {
             return this._slackService.createChannelNotLinkedMessage()
         }

@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { PermissionInteractor } from '~/application'
 import { SlackRepository } from '~/server/data/repositories'
 import handleDomainException from '~/server/utils/handleDomainException'
-import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
+import { createEntraService } from '~/server/utils/createEntraService'
 import { PermissionDeniedException } from '#shared/domain'
 
 const bodySchema = z.object({
@@ -16,11 +16,8 @@ const bodySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { slackUserId, teamId } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
-        permissionInteractor = new PermissionInteractor({
-            event,
-            session,
-            groupService: createEntraGroupService()
-        }),
+        entraService = createEntraService(),
+        permissionInteractor = new PermissionInteractor({ event, session, entraService }),
         slackRepository = new SlackRepository({ em: event.context.em })
 
     // Only system admins can unlink users via the admin interface

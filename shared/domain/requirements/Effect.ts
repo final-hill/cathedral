@@ -12,3 +12,5 @@ export const Effect = Requirement.extend({
     An Effect is a property of the environment affected by the system.
     Example: "The running system will cause the temperature of the room to increase."
 `))
+
+export type EffectType = z.infer<typeof Effect>

@@ -1,6 +1,6 @@
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~/application'
 import { OrganizationRepository } from '~/server/data/repositories'
-import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
+import { createEntraService } from '~/server/utils/createEntraService'
 import handleDomainException from '~/server/utils/handleDomainException'
 import { Organization } from '~/shared/domain'
 
@@ -12,18 +12,12 @@ const paramSchema = Organization.innerType().pick({ slug: true })
 export default defineEventHandler(async (event) => {
     const { slug } = await validateEventParams(event, paramSchema),
         session = await requireUserSession(event),
-        permissionInteractor = new PermissionInteractor({
-            event,
-            session,
-            groupService: createEntraGroupService()
-        }),
+        entraService = createEntraService(),
+        permissionInteractor = new PermissionInteractor({ event, session, entraService }),
         organizationInteractor = new OrganizationInteractor({
             repository: new OrganizationRepository({ em: event.context.em, organizationSlug: slug }),
             permissionInteractor,
-            appUserInteractor: new AppUserInteractor({
-                permissionInteractor,
-                groupService: createEntraGroupService()
-            })
+            appUserInteractor: new AppUserInteractor({ permissionInteractor, entraService })
         })
 
     return await organizationInteractor.getOrganization().catch(handleDomainException)

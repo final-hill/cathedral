@@ -13,3 +13,5 @@ export const Outcome = Goal.extend({
     of the system that will be achieved by the associated project.
     It's the high-level goal that the project is trying to achieve.
 `))
+
+export type OutcomeType = z.infer<typeof Outcome>

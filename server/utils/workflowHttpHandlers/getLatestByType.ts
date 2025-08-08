@@ -4,7 +4,7 @@ import handleDomainException from '../handleDomainException'
 import type { WorkflowState } from '~/shared/domain'
 import { Organization, ReqType, Solution } from '~/shared/domain'
 import { z } from 'zod'
-import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
+import { createEntraService } from '~/server/utils/createEntraService'
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
@@ -22,24 +22,20 @@ export default function getLatestByType(workflowState: WorkflowState) {
         const { reqType } = await validateEventParams(event, paramSchema),
             { solutionSlug, organizationId, organizationSlug } = await validateEventQuery(event, validatedQuerySchema),
             session = await requireUserSession(event),
-            permissionInteractor = new PermissionInteractor({
-                event,
-                session,
-                groupService: createEntraGroupService()
-            }),
+            entraService = createEntraService(),
+            permissionInteractor = new PermissionInteractor({ event, session, entraService }),
+            appUserInteractor = new AppUserInteractor({ permissionInteractor, entraService }),
             organizationInteractor = new OrganizationInteractor({
                 repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug }),
                 permissionInteractor,
-                appUserInteractor: new AppUserInteractor({
-                    permissionInteractor,
-                    groupService: createEntraGroupService()
-                })
+                appUserInteractor
             }),
             org = await organizationInteractor.getOrganization(),
             solution = await organizationInteractor.getSolutionBySlug(solutionSlug),
             requirementInteractor = new RequirementInteractor({
                 repository: new RequirementRepository({ em: event.context.em }),
                 permissionInteractor,
+                appUserInteractor,
                 organizationId: org.id,
                 solutionId: solution.id
             })

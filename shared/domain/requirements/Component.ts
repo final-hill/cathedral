@@ -12,3 +12,5 @@ export const Component = Actor.extend({
     }).optional().describe('The parent component of the component'),
     reqType: z.nativeEnum(ReqType).default(ReqType.COMPONENT)
 }).describe('A part of the Project, Environment, Goals, or System')
+
+export type ComponentType = z.infer<typeof Component>

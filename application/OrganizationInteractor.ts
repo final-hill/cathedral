@@ -1,7 +1,7 @@
-import type { z } from 'zod'
 import type * as req from '#shared/domain/requirements'
 import { ReqType } from '#shared/domain/requirements/enums'
 import { AppRole, AppUser } from '#shared/domain/application'
+import type { AppUserType } from '#shared/domain/application'
 import { MismatchException, PermissionDeniedException } from '#shared/domain/exceptions'
 import type { OrganizationRepository } from '~/server/data/repositories'
 import type { PermissionInteractor, AppUserInteractor } from './'
@@ -10,7 +10,7 @@ import { Interactor } from './Interactor'
 /**
  * The OrganizationInteractor class contains the business logic for interacting with an organization.
  */
-export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organization>> {
+export class OrganizationInteractor extends Interactor<req.OrganizationType> {
     private readonly _permissionInteractor: PermissionInteractor
     private readonly _appUserInteractor: AppUserInteractor
 
@@ -44,11 +44,11 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {PermissionDeniedException} If the user is not an admin of the organization
      * @throws {NotFoundException} If the organization does not exist
      */
-    async addSolution({ name, description }: Pick<z.infer<typeof req.Solution>, 'name' | 'description'>): Promise<z.infer<typeof req.Solution>['id']> {
+    async addSolution({ name, description }: Pick<req.SolutionType, 'name' | 'description'>): Promise<req.SolutionType['id']> {
         const organization = await this.repository.getOrganization(),
             currentUserId = this._permissionInteractor.userId
 
-        await this._permissionInteractor.assertOrganizationAdmin(organization.id)
+        this._permissionInteractor.assertOrganizationAdmin(organization.id)
 
         const repo = this.repository,
             effectiveDate = new Date()
@@ -68,12 +68,12 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {PermissionDeniedException} If the user is deleting the last admin of the organization
      * @throws {NotFoundException} If the target app user does not exist
      */
-    async deleteAppUser(id: z.infer<typeof AppUser>['id']): Promise<void> {
+    async deleteAppUser(id: AppUserType['id']): Promise<void> {
         const organization = await this.repository.getOrganization(),
             pi = this._permissionInteractor,
             currentUserId = pi.userId
 
-        if (!(await pi.isOrganizationAdmin(organization.id)) && id !== currentUserId)
+        if (!(pi.isOrganizationAdmin(organization.id)) && id !== currentUserId)
             throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         const targetUserAuor = await pi.getAppUserOrganizationRole({
@@ -102,11 +102,11 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {NotFoundException} If the solution does not exist
      * @throws {MismatchException} If the solution does not belong to the organization
      */
-    async deleteSolutionBySlug(slug: z.infer<typeof req.Solution>['slug']): Promise<void> {
+    async deleteSolutionBySlug(slug: req.SolutionType['slug']): Promise<void> {
         const organization = await this.repository.getOrganization(),
             currentUserId = this._permissionInteractor.userId
 
-        await this._permissionInteractor.assertOrganizationAdmin(organization.id)
+        this._permissionInteractor.assertOrganizationAdmin(organization.id)
 
         return this.repository.deleteSolutionBySlug({
             deletedById: currentUserId,
@@ -123,10 +123,10 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      * @throws {NotFoundException} If the organization does not exist
      */
-    async findSolutions(query: Partial<z.infer<typeof req.Solution>> = {}): Promise<z.infer<typeof req.Solution>[]> {
+    async findSolutions(query: Partial<req.SolutionType> = {}): Promise<req.SolutionType[]> {
         const organization = await this.repository.getOrganization()
 
-        await this._permissionInteractor.assertOrganizationReader(organization.id)
+        this._permissionInteractor.assertOrganizationReader(organization.id)
         return this.repository.findSolutions(query)
     }
 
@@ -136,9 +136,9 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @returns The organization
      * @throws {NotFoundException} If the organization does not exist
      */
-    async getOrganization(): Promise<z.infer<typeof req.Organization>> {
+    async getOrganization(): Promise<req.OrganizationType> {
         const org = await this.repository.getOrganization()
-        await this._permissionInteractor.assertOrganizationReader(org.id)
+        this._permissionInteractor.assertOrganizationReader(org.id)
         return org
     }
 
@@ -151,12 +151,12 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      * @throws {PermissionDeniedException} If the user is trying to get an app user that is not in the same organization
      */
-    async getAppUserById(id: z.infer<typeof AppUser>['id']): Promise<z.infer<typeof AppUser>> {
+    async getAppUserById(id: AppUserType['id']): Promise<AppUserType> {
         const org = await this.repository.getOrganization(),
             pi = this._permissionInteractor,
             aui = this._appUserInteractor
 
-        await pi.assertOrganizationReader(org.id)
+        pi.assertOrganizationReader(org.id)
         const auor = await pi.getAppUserOrganizationRole({
             appUserId: id,
             organizationId: org.id
@@ -179,7 +179,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @returns The app users with their associated roles
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
-    async getAppUsers(): Promise<z.infer<typeof AppUser>[]> {
+    async getAppUsers(): Promise<AppUserType[]> {
         const org = await this.repository.getOrganization(),
             pi = this._permissionInteractor,
             aui = this._appUserInteractor
@@ -187,18 +187,17 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
         pi.assertOrganizationReader(org.id)
 
         const auors = await pi.findAppUserOrganizationRoles({
-            organizationId: org.id
-        })
-
-        const appUsers = await Promise.all(auors.map(async auor => AppUser.parse({
-            ...await aui.getUserById(auor.appUser.id, org.id),
-            role: auor.role,
-            organizations: [{
-                reqType: ReqType.ORGANIZATION,
-                id: org.id,
-                name: org.name
-            }]
-        })))
+                organizationId: org.id
+            }),
+            appUsers = await Promise.all(auors.map(async auor => AppUser.parse({
+                ...await aui.getUserById(auor.appUser.id, org.id),
+                role: auor.role,
+                organizations: [{
+                    reqType: ReqType.ORGANIZATION,
+                    id: org.id,
+                    name: org.name
+                }]
+            })))
 
         return appUsers
     }
@@ -212,9 +211,9 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {NotFoundException} If the solution does not exist
      * @throws {MismatchException} If the solution does not belong to the organization
      */
-    async getSolutionById(solutionId: z.infer<typeof req.Solution>['id']): Promise<z.infer<typeof req.Solution>> {
+    async getSolutionById(solutionId: req.SolutionType['id']): Promise<req.SolutionType> {
         const org = await this.repository.getOrganization()
-        await this._permissionInteractor.assertOrganizationReader(org.id)
+        this._permissionInteractor.assertOrganizationReader(org.id)
         return this.repository.getSolutionById(solutionId)
     }
 
@@ -227,9 +226,9 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {NotFoundException} If the solution does not exist
      * @throws {MismatchException} If the solution does not belong to the organization
      */
-    async getSolutionBySlug(slug: z.infer<typeof req.Solution>['slug']): Promise<z.infer<typeof req.Solution>> {
+    async getSolutionBySlug(slug: req.SolutionType['slug']): Promise<req.SolutionType> {
         const org = await this.repository.getOrganization()
-        await this._permissionInteractor.assertOrganizationReader(org.id)
+        this._permissionInteractor.assertOrganizationReader(org.id)
         return this.repository.getSolutionBySlug(slug)
     }
 
@@ -238,7 +237,7 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @param slug The slug of the solution to check
      * @throws {MismatchException} If the solution slug is not unique within the organization
      */
-    private async _assertSolutionSlugIsUnique(slug: z.infer<typeof req.Solution>['slug']): Promise<void> {
+    private async _assertSolutionSlugIsUnique(slug: req.SolutionType['slug']): Promise<void> {
         const solutions = (await this.findSolutions({ slug }))
 
         if (solutions.length > 0)
@@ -254,11 +253,11 @@ export class OrganizationInteractor extends Interactor<z.infer<typeof req.Organi
      * @throws {NotFoundException} If the solution does not exist
      * @throws {MismatchException} If the solution does not belong to the organization
      */
-    async updateSolutionBySlug(slug: z.infer<typeof req.Solution>['slug'], props: Pick<Partial<z.infer<typeof req.Solution>>, 'name' | 'description'>): Promise<void> {
+    async updateSolutionBySlug(slug: req.SolutionType['slug'], props: Pick<Partial<req.SolutionType>, 'name' | 'description'>): Promise<void> {
         const org = await this.repository.getOrganization(),
             currentUserId = this._permissionInteractor.userId
 
-        await this._permissionInteractor.assertOrganizationContributor(org.id)
+        this._permissionInteractor.assertOrganizationContributor(org.id)
 
         if (props.name)
             await this._assertSolutionSlugIsUnique(props.name)

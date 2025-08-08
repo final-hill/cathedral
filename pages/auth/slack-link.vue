@@ -5,59 +5,54 @@ import { UIcon } from '#components'
 
 definePageMeta({ name: 'SlackLink', middleware: 'auth' })
 
-const route = useRoute()
-const router = useRouter()
-const loading = ref(false)
-const error = ref('')
-
-const slackUserId = route.query.slackUserId as string
-const teamId = route.query.teamId as string
-const token = route.query.token as string
+const route = useRoute(),
+    router = useRouter(),
+    loading = ref(false),
+    error = ref(''),
+    slackUserId = route.query.slackUserId as string,
+    teamId = route.query.teamId as string,
+    token = route.query.token as string
 
 // Validate required parameters
 if (!slackUserId || !teamId || !token) {
     error.value = 'Missing Slack user information.'
 }
 
-const { user, clear } = useUserSession()
+const { user, clear } = useUserSession(),
+    currentUser = computed(() => ({
+        id: user.value?.id,
+        name: user.value?.name,
+        email: user.value?.email
+    })),
+    linkToCurrentUser = async () => {
+        if (!currentUser.value.id) return
 
-const currentUser = computed(() => ({
-    id: user.value?.id,
-    name: user.value?.name,
-    email: user.value?.email
-}))
+        loading.value = true
+        try {
+            await $fetch('/api/slack/link-user', {
+                method: 'POST',
+                body: { slackUserId, teamId, token }
+            })
 
-const linkToCurrentUser = async () => {
-    if (!currentUser.value.id) return
-
-    loading.value = true
-    try {
-        await $fetch('/api/slack/link-user', {
-            method: 'POST',
-            body: { slackUserId, teamId, token }
-        })
-
-        // Redirect to success page
-        router.push({
-            path: '/auth/slack-link-success',
-            query: { linked: 'true' }
-        })
-    } catch (e: unknown) {
-        error.value = (e as { data?: { message?: string }, message?: string })?.data?.message
-            || (e as { message?: string })?.message || 'Failed to link Slack user.'
-    } finally {
-        loading.value = false
+            // Redirect to success page
+            router.push({
+                path: '/auth/slack-link-success',
+                query: { linked: 'true' }
+            })
+        } catch (e: unknown) {
+            error.value = (e as { data?: { message?: string }, message?: string })?.data?.message
+                || (e as { message?: string })?.message || 'Failed to link Slack user.'
+        } finally {
+            loading.value = false
+        }
+    },
+    cancelLinking = () => {
+        router.push('/')
+    },
+    handleSignOut = async () => {
+        await clear()
+        await navigateTo('/api/auth/logout', { external: true })
     }
-}
-
-const cancelLinking = () => {
-    router.push('/')
-}
-
-const handleSignOut = async () => {
-    await clear()
-    await navigateTo('/api/auth/logout', { external: true })
-}
 </script>
 
 <template>

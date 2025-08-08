@@ -1,5 +1,5 @@
 import { defineOAuthEntraExternalIDEventHandler } from '~/server/utils/oauth-entra-external-id'
-import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
+import { createEntraService } from '~/server/utils/createEntraService'
 import { ENTRA_OAUTH_SCOPES } from '~/server/utils/oauth-constants'
 
 export default defineOAuthEntraExternalIDEventHandler({
@@ -17,20 +17,15 @@ export default defineOAuthEntraExternalIDEventHandler({
         console.log('OAuth success:', { user, tokenType: tokens.token_type })
 
         // Parse group memberships from ID token claims (required with optional claims)
-        const groupService = createEntraGroupService()
+        const entraService = createEntraService()
 
         try {
             if (!tokens.id_token) {
                 throw new Error('ID token is required for group claims')
             }
 
-            const userGroups = await groupService.getUserGroups(
-                tokens.id_token // ID token is required for group claims
-            )
-            const parsedPermissions = groupService.parseGroups(userGroups)
-
-            console.log('User groups extracted successfully:', userGroups)
-            console.log('Parsed permissions:', parsedPermissions)
+            const userGroups = await entraService.getUserGroups(tokens.id_token),
+                parsedPermissions = entraService.parseGroups(userGroups)
 
             await setUserSession(event, {
                 user: {

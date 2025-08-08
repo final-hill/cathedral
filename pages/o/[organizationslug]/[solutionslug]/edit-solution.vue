@@ -19,53 +19,45 @@ if (!solution.value) {
     throw new Error('Solution not found')
 }
 
-const oldSlug = solution.value.slug
-
-const formSchema = Solution.innerType().pick({
-    name: true,
-    slug: true,
-    description: true
-})
+const oldSlug = solution.value.slug,
+    formSchema = Solution.innerType().pick({
+        name: true,
+        slug: true,
+        description: true
+    })
 
 type FormSchema = z.infer<typeof formSchema>
 
 const formState = reactive<FormSchema>({
-    name: solution.value.name,
-    slug: solution.value.slug,
-    description: solution.value.description
-})
+        name: solution.value.name,
+        slug: solution.value.slug,
+        description: solution.value.description
+    }),
+    updateSolution = async (data: FormSchema) => {
+        await $fetch(`/api/solution/${oldSlug}`, {
+            method: 'PUT',
+            body: {
+                organizationSlug,
+                name: data.name,
+                description: data.description
+            }
+        }).catch(e => $eventBus.$emit('page-error', e))
 
-const updateSolution = async (data: FormSchema) => {
-    await $fetch(`/api/solution/${oldSlug}`, {
-        method: 'PUT',
-        body: {
-            organizationSlug,
-            name: data.name,
-            description: data.description
+        router.push({ name: 'Organization', params: { organizationslug: organizationSlug } })
+    },
+    cancel = () => {
+        router.push({ name: 'Solution', params: { organizationslug: organizationSlug, solutionslug: slug } })
+    },
+    handleStateUpdate = (newState: Partial<FormSchema>) => {
+        const nameChanged = newState.name !== undefined && newState.name !== formState.name,
+            newName = newState.name
+
+        Object.assign(formState, newState)
+
+        if (nameChanged && newName) {
+            formState.slug = slugify(newName)
         }
-    }).catch(e => $eventBus.$emit('page-error', e))
-
-    router.push({ name: 'Organization', params: { organizationslug: organizationSlug } })
-}
-
-const cancel = () => {
-    router.push({ name: 'Solution', params: { organizationslug: organizationSlug, solutionslug: slug } })
-}
-
-// Handle state updates from XForm component
-const handleStateUpdate = (newState: Partial<FormSchema>) => {
-    // Check if the name changed before updating formState
-    const nameChanged = newState.name !== undefined && newState.name !== formState.name
-    const newName = newState.name
-
-    // Update our form state with changes from XForm
-    Object.assign(formState, newState)
-
-    // If the name changed, update the slug
-    if (nameChanged && newName) {
-        formState.slug = slugify(newName)
     }
-}
 </script>
 
 <template>

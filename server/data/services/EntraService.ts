@@ -32,7 +32,7 @@ export interface ParsedPermissions {
     }>
 }
 
-export class EntraGroupService {
+export class EntraService {
     private readonly groupPrefix = 'Cathedral-'
     private readonly systemAdminGroup: CathedralGroupName = 'Cathedral-SystemAdmin' as CathedralGroupName
     private authClient: msal.ConfidentialClientApplication
@@ -99,8 +99,8 @@ export class EntraGroupService {
             return null
         }
 
-        const [, orgId, roleStr] = match
-        const role = this.groupSuffixToRole[roleStr]
+        const [, orgId, roleStr] = match,
+            role = this.groupSuffixToRole[roleStr]
 
         if (!role) {
             return null
@@ -138,7 +138,6 @@ export class EntraGroupService {
 
             return tokens.accessToken
         } catch (error) {
-            console.error('Failed to acquire access token:', error)
             throw new MismatchException(`Failed to authenticate: ${error instanceof Error ? error.message : 'Unknown error'}`)
         }
     }
@@ -147,21 +146,19 @@ export class EntraGroupService {
      * Make a request to Microsoft Graph API
      */
     private async graphRequest<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
-        const accessToken = await this.getAccessToken()
-
-        const response = await fetch(`https://graph.microsoft.com/v1.0${path}`, {
-            ...options,
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        })
+        const accessToken = await this.getAccessToken(),
+            response = await fetch(`https://graph.microsoft.com/v1.0${path}`, {
+                ...options,
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            })
 
         if (!response.ok) {
             const errorBody = await response.text()
-            console.error(`Graph API error (${response.status}):`, errorBody)
-            throw new MismatchException(`Graph API request failed: ${response.status} ${response.statusText}`)
+            throw new MismatchException(`Graph API request failed: ${response.status} ${response.statusText} - ${errorBody}`)
         }
 
         // Handle responses with no content (like 204 No Content)
@@ -184,11 +181,8 @@ export class EntraGroupService {
      * Groups are configured to be emitted as role claims in the ID token
      */
     async getUserGroups(idToken: string): Promise<CathedralGroups> {
-        const groupIdsFromToken = this.extractGroupIdsFromRoleClaims(idToken)
-        console.log('Group IDs extracted from role claims:', groupIdsFromToken)
-
-        const groupNames = await this.resolveGroupIdsToNames(groupIdsFromToken)
-        console.log('Groups resolved to names:', groupNames)
+        const groupIdsFromToken = this.extractGroupIdsFromRoleClaims(idToken),
+            groupNames = await this.resolveGroupIdsToNames(groupIdsFromToken)
 
         return this.createCathedralGroups(groupNames)
     }
@@ -205,26 +199,19 @@ export class EntraGroupService {
             )
 
             if (!memberOfResponse.value) {
-                console.log(`No groups found for user ${userId}`)
                 return [] as CathedralGroups
             }
 
             // Extract group names, filtering for Cathedral groups
             const groupNames = memberOfResponse.value
-                .map(group => group.displayName)
-                .filter((name): name is string => name !== undefined)
+                    .map(group => group.displayName)
+                    .filter((name): name is string => name !== undefined),
 
-            console.log('Direct group lookup - All groups:', groupNames)
-            console.log('Group prefix:', this.groupPrefix)
-
-            // Filter to only Cathedral groups and create branded types
-            const cathedralGroups = this.createCathedralGroups(groupNames)
-            console.log('Direct group lookup - Cathedral groups:', cathedralGroups)
+                // Filter to only Cathedral groups and create branded types
+                cathedralGroups = this.createCathedralGroups(groupNames)
 
             return cathedralGroups
-        } catch (error) {
-            console.error(`Failed to get user groups directly for user ${userId}:`, error)
-
+        } catch {
             return [] as CathedralGroups
         }
     }
@@ -233,8 +220,8 @@ export class EntraGroupService {
      * Parse group memberships to determine permissions
      */
     parseGroups(groups: CathedralGroups): ParsedPermissions {
-        const isSystemAdmin = groups.some(group => group === this.systemAdminGroup)
-        const organizationRoles: Array<{ orgId: string, role: AppRole }> = []
+        const isSystemAdmin = groups.some(group => group === this.systemAdminGroup),
+            organizationRoles: Array<{ orgId: string, role: AppRole }> = []
 
         for (const group of groups) {
             if (group === this.systemAdminGroup) {
@@ -260,20 +247,13 @@ export class EntraGroupService {
     private extractGroupIdsFromRoleClaims(idToken: string): string[] {
         try {
             // Decode JWT payload (note: this doesn't verify signature, but it's fine for reading claims)
-            const base64Payload = idToken.split('.')[1]
-            const payload = JSON.parse(atob(base64Payload))
-
-            if (process.env.NODE_ENV !== 'production') {
-                console.log('ID Token payload roles:', payload.roles)
-            }
-
-            // Groups are in the 'roles' claim as an array of group IDs (GUIDs)
-            const roles = payload.roles || []
-            console.log('Raw roles from token:', roles)
+            const base64Payload = idToken.split('.')[1],
+                payload = JSON.parse(atob(base64Payload)),
+                // Groups are in the 'roles' claim as an array of group IDs (GUIDs)
+                roles = payload.roles || []
 
             return roles
         } catch (error) {
-            console.error('Failed to extract group IDs from ID token role claims:', error)
             throw new MismatchException(`Failed to parse ID token for role claims: ${error instanceof Error ? error.message : 'Unknown error'}`)
         }
     }
@@ -287,16 +267,14 @@ export class EntraGroupService {
         }
 
         try {
-            const groupNames: string[] = []
-
-            // Process groups in batches to avoid URL length limits
-            const batchSize = 10
+            const groupNames: string[] = [],
+                // Process groups in batches to avoid URL length limits
+                batchSize = 10
             for (let i = 0; i < groupIds.length; i += batchSize) {
-                const batch = groupIds.slice(i, i + batchSize)
-
-                // Build filter query for this batch
-                const filterConditions = batch.map(id => `id eq '${this.escapeODataString(id)}'`).join(' or ')
-                const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=${filterConditions}&$select=id,displayName`)
+                const batch = groupIds.slice(i, i + batchSize),
+                    // Build filter query for this batch
+                    filterConditions = batch.map(id => `id eq '${this.escapeODataString(id)}'`).join(' or '),
+                    groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=${filterConditions}&$select=id,displayName`)
 
                 if (groups.value) {
                     for (const group of groups.value) {
@@ -307,18 +285,13 @@ export class EntraGroupService {
                 }
             }
 
-            console.log('Group prefix:', this.groupPrefix)
-            console.log('All resolved group names:', groupNames)
-
             // Filter to only Cathedral groups
             const filteredGroups = groupNames.filter(name =>
                 name.startsWith(this.groupPrefix)
             )
-            console.log('Filtered Cathedral groups:', filteredGroups)
 
             return filteredGroups
         } catch (error) {
-            console.error('Failed to resolve group IDs to names:', error)
             throw new MismatchException(`Failed to resolve group names: ${error instanceof Error ? error.message : 'Unknown error'}`)
         }
     }
@@ -378,8 +351,8 @@ export class EntraGroupService {
             for (const groupName of Object.values(groupNames)) {
                 try {
                     // Find the group
-                    const escapedGroupName = this.escapeODataString(groupName)
-                    const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
+                    const escapedGroupName = this.escapeODataString(groupName),
+                        groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
 
                     if (groups.value && groups.value.length > 0) {
                         const group = groups.value[0]
@@ -388,22 +361,15 @@ export class EntraGroupService {
                         await this.graphRequest(`/groups/${group.id}`, {
                             method: 'DELETE'
                         })
-                        console.log(`Deleted group: ${groupName}`)
-                    } else {
-                        console.log(`Group not found (may already be deleted): ${groupName}`)
                     }
-                } catch (error) {
-                    console.warn(`Failed to delete group ${groupName}:`, error)
+                } catch {
                     // Continue with other groups even if one fails
                 }
             }
         } catch (error) {
-            console.error(`Failed to delete organization ${props.organizationId} groups:`, error)
             throw new MismatchException(`Failed to delete organization groups: ${error instanceof Error ? error.message : 'Unknown error'}`)
         }
     }
-
-    // Microsoft Graph API operations for managing group memberships
 
     /**
      * Find a group by display name, or create it if it doesn't exist
@@ -411,16 +377,14 @@ export class EntraGroupService {
     private async findOrCreateGroup(groupName: string): Promise<Group> {
         try {
             // Try to find existing group by display name
-            const escapedGroupName = this.escapeODataString(groupName)
-            const existingGroups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
+            const escapedGroupName = this.escapeODataString(groupName),
+                existingGroups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
 
             if (existingGroups.value && existingGroups.value.length > 0) {
-                console.log(`Found existing group: ${groupName}`)
                 return existingGroups.value[0]
             }
 
             // Group doesn't exist, create it
-            console.log(`Creating new group: ${groupName}`)
             const newGroup = await this.graphRequest<Group>('/groups', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -434,7 +398,6 @@ export class EntraGroupService {
 
             return newGroup
         } catch (error) {
-            console.error(`Failed to find or create group ${groupName}:`, error)
             throw new MismatchException(`Failed to find or create group: ${error instanceof Error ? error.message : 'Unknown error'}`)
         }
     }
@@ -479,10 +442,7 @@ export class EntraGroupService {
                     '@odata.id': `https://graph.microsoft.com/v1.0/directoryObjects/${props.userId}`
                 })
             })
-
-            console.log(`Successfully added user ${props.userId} to group ${targetGroupName}`)
         } catch (error) {
-            console.error(`Failed to add user ${props.userId} to group ${targetGroupName}:`, error)
             throw new MismatchException(`Failed to add user to group: ${error instanceof Error ? error.message : 'Unknown error'}`)
         }
     }
@@ -503,30 +463,27 @@ export class EntraGroupService {
             for (const groupName of Object.values(groupNames)) {
                 try {
                     // Find the group
-                    const escapedGroupName = this.escapeODataString(groupName)
-                    const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
+                    const escapedGroupName = this.escapeODataString(groupName),
+                        groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
 
                     if (groups.value && groups.value.length > 0) {
-                        const group = groups.value[0]
+                        const group = groups.value[0],
 
-                        // Check if user is a member of this group
-                        const members = await this.graphRequest<{ value: User[] }>(`/groups/${group.id}/members?$filter=id eq '${props.userId}'`)
+                            // Check if user is a member of this group
+                            members = await this.graphRequest<{ value: User[] }>(`/groups/${group.id}/members?$filter=id eq '${props.userId}'`)
 
                         if (members.value && members.value.length > 0) {
                             // Remove user from this group
                             await this.graphRequest(`/groups/${group.id}/members/${props.userId}/$ref`, {
                                 method: 'DELETE'
                             })
-                            console.log(`Removed user ${props.userId} from group ${groupName}`)
                         }
                     }
-                } catch (error) {
-                    console.warn(`Failed to remove user from group ${groupName}:`, error)
+                } catch {
                     // Continue with other groups even if one fails
                 }
             }
         } catch (error) {
-            console.error(`Failed to remove user ${props.userId} from organization ${props.organizationId} groups:`, error)
             throw new MismatchException(`Failed to remove user from organization groups: ${error instanceof Error ? error.message : 'Unknown error'}`)
         }
     }
@@ -575,7 +532,6 @@ export class EntraGroupService {
                 email: user.mail || user.userPrincipalName || ''
             }
         } catch (error) {
-            console.error(`Failed to get user ${userId}:`, error)
             throw new MismatchException(`Failed to get user: ${error instanceof Error ? error.message : 'Unknown error'}`)
         }
     }
@@ -592,9 +548,9 @@ export class EntraGroupService {
     } | null> {
         try {
             // Properly escape the email parameter for OData filter to prevent injection attacks
-            const escapedEmail = this.escapeODataString(email)
-            // Use the Microsoft Graph filter to search for users by mail or userPrincipalName
-            const users = await this.graphRequest<{ value: User[] }>(`/users?$filter=mail eq '${escapedEmail}' or userPrincipalName eq '${escapedEmail}'&$select=id,displayName,userPrincipalName,mail`)
+            const escapedEmail = this.escapeODataString(email),
+                // Use the Microsoft Graph filter to search for users by mail or userPrincipalName
+                users = await this.graphRequest<{ value: User[] }>(`/users?$filter=mail eq '${escapedEmail}' or userPrincipalName eq '${escapedEmail}'&$select=id,displayName,userPrincipalName,mail`)
 
             if (!users.value || users.value.length === 0) {
                 return null
@@ -606,8 +562,7 @@ export class EntraGroupService {
                 name: user.displayName || user.userPrincipalName || 'Unknown User',
                 email: user.mail || user.userPrincipalName || ''
             }
-        } catch (error) {
-            console.error(`Failed to search for user ${email}:`, error)
+        } catch {
             return null
         }
     }
@@ -631,23 +586,22 @@ export class EntraGroupService {
                 invitedUser: User
                 status: string
             }>('/invitations', {
-                method: 'POST',
-                body: JSON.stringify({
-                    invitedUserEmailAddress: email,
-                    inviteRedirectUrl: redirectUrl,
-                    invitedUserDisplayName: displayName || email.split('@')[0],
-                    sendInvitationMessage: true
-                })
-            })
+                    method: 'POST',
+                    body: JSON.stringify({
+                        invitedUserEmailAddress: email,
+                        inviteRedirectUrl: redirectUrl,
+                        invitedUserDisplayName: displayName || email.split('@')[0],
+                        sendInvitationMessage: true
+                    })
+                }),
 
-            const user = invitation.invitedUser
+                user = invitation.invitedUser
             return {
                 id: user.id!,
                 name: user.displayName || displayName || email.split('@')[0],
                 email: user.mail || user.userPrincipalName || email
             }
         } catch (error) {
-            console.error(`Failed to create invitation for ${email}:`, error)
             throw new MismatchException(`Failed to create invitation: ${error instanceof Error ? error.message : 'Unknown error'}`)
         }
     }
@@ -661,8 +615,8 @@ export class EntraGroupService {
         user: { id: string, name: string, email: string }
         role: AppRole
     }>> {
-        const groupNames = this.generateOrganizationGroupNames(organizationId)
-        const userRoleMap = new Map<string, { user: { id: string, name: string, email: string }, role: AppRole }>()
+        const groupNames = this.generateOrganizationGroupNames(organizationId),
+            userRoleMap = new Map<string, { user: { id: string, name: string, email: string }, role: AppRole }>()
 
         try {
             // Get members from each role group
@@ -672,14 +626,14 @@ export class EntraGroupService {
 
                 try {
                     // Find the group
-                    const escapedGroupName = this.escapeODataString(groupName)
-                    const groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
+                    const escapedGroupName = this.escapeODataString(groupName),
+                        groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
 
                     if (groups.value && groups.value.length > 0) {
-                        const group = groups.value[0]
+                        const group = groups.value[0],
 
-                        // Get group members
-                        const members = await this.graphRequest<{ value: User[] }>(`/groups/${group.id}/members?$select=id,displayName,userPrincipalName,mail`)
+                            // Get group members
+                            members = await this.graphRequest<{ value: User[] }>(`/groups/${group.id}/members?$select=id,displayName,userPrincipalName,mail`)
 
                         if (members.value) {
                             for (const member of members.value) {
@@ -697,15 +651,13 @@ export class EntraGroupService {
                             }
                         }
                     }
-                } catch (error) {
-                    console.warn(`Failed to get members from group ${groupName}:`, error)
+                } catch {
                     // Continue with other groups even if one fails
                 }
             }
 
             return Array.from(userRoleMap.values())
         } catch (error) {
-            console.error(`Failed to get users for organization ${organizationId}:`, error)
             throw new MismatchException(`Failed to get organization users: ${error instanceof Error ? error.message : 'Unknown error'}`)
         }
     }

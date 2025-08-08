@@ -7,8 +7,8 @@ describe('dedent', () => {
             line1
             line2
             line3
-        `
-        const expected = `
+        `,
+            expected = `
 line1
 line2
 line3
@@ -21,8 +21,8 @@ line3
 \t\tline1
 \t\tline2
 \t\tline3
-\t\t`
-        const expected = `
+\t\t`,
+            expected = `
 line1
 line2
 line3
@@ -45,8 +45,8 @@ line3
             line1
           line2
             line3
-        `
-        const expected = `
+        `,
+            expected = `
   line1
 line2
   line3

@@ -19,3 +19,5 @@ export const Scenario = Example.extend({
     }).describe('The outcome (goal) that the scenario is aiming to achieve'),
     reqType: z.nativeEnum(ReqType).default(ReqType.SCENARIO)
 }).describe('A Scenario specifies system behavior by describing paths of interaction between actors and the system.')
+
+export type ScenarioType = z.infer<typeof Scenario>

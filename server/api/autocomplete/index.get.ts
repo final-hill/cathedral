@@ -4,7 +4,7 @@ import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, Requir
 import { OrganizationRepository, RequirementRepository } from '~/server/data/repositories'
 import { ReqType } from '#shared/domain/requirements/ReqType'
 import { Organization, Solution } from '#shared/domain'
-import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
+import { createEntraService } from '~/server/utils/createEntraService'
 
 const querySchema = z.object({
     solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
@@ -15,17 +15,12 @@ const querySchema = z.object({
 export default defineEventHandler(async (event) => {
     const { solutionSlug, organizationSlug, reqType } = await validateEventQuery(event, querySchema),
         session = await requireUserSession(event),
-        permissionInteractor = new PermissionInteractor({
-            event,
-            session,
-            groupService: createEntraGroupService()
-        }),
+        entraService = createEntraService(),
+        permissionInteractor = new PermissionInteractor({ event, session, entraService }),
+        appUserInteractor = new AppUserInteractor({ permissionInteractor, entraService }),
         organizationInteractor = new OrganizationInteractor({
             repository: new OrganizationRepository({ em: event.context.em, organizationSlug }),
-            appUserInteractor: new AppUserInteractor({
-                permissionInteractor,
-                groupService: createEntraGroupService()
-            }),
+            appUserInteractor,
             permissionInteractor
         }),
         org = await organizationInteractor.getOrganization(),
@@ -33,6 +28,7 @@ export default defineEventHandler(async (event) => {
         requirementInteractor = new RequirementInteractor({
             repository: new RequirementRepository({ em: event.context.em }),
             permissionInteractor,
+            appUserInteractor,
             organizationId: org.id,
             solutionId: solution.id
         })

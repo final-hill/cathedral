@@ -2,7 +2,7 @@ import { OrganizationCollectionInteractor, PermissionInteractor } from '~/applic
 import { OrganizationCollectionRepository } from '~/server/data/repositories'
 import handleDomainException from '~/server/utils/handleDomainException'
 import { Organization } from '#shared/domain'
-import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
+import { createEntraService } from '~/server/utils/createEntraService'
 
 const querySchema = Organization.innerType().partial()
 
@@ -12,16 +12,12 @@ const querySchema = Organization.innerType().partial()
 export default defineEventHandler(async (event) => {
     const query = await validateEventQuery(event, querySchema),
         session = await requireUserSession(event),
-        entraGroupService = createEntraGroupService(),
-        permissionInteractor = new PermissionInteractor({
-            session,
-            event,
-            groupService: entraGroupService
-        }),
+        entraService = createEntraService(),
+        permissionInteractor = new PermissionInteractor({ session, event, entraService }),
         organizationCollectionInteractor = new OrganizationCollectionInteractor({
             repository: new OrganizationCollectionRepository({ em: event.context.em }),
             permissionInteractor,
-            entraGroupService
+            entraService
         })
 
     return organizationCollectionInteractor.findOrganizations(query).catch(handleDomainException)

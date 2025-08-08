@@ -155,7 +155,6 @@ export const solutionDataSchema = z.object({
     name: z.string()
 })
 
-// Type exports
 export type SlackTextObject = z.infer<typeof slackTextObjectSchema>
 export type SlackOption = z.infer<typeof slackOptionSchema>
 export type SlackSelectElement = z.infer<typeof slackSelectElementSchema>

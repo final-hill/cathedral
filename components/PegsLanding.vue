@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 type Card = {
-    name: string
     icon: string
     label: string
     reqId: string
+    path?: string
     disabled?: boolean
 }
 
@@ -20,18 +20,12 @@ const props = defineProps<{
     <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-center">
         <template
             v-for="card in props.cards"
-            :key="card.name"
+            :key="card.label"
         >
             <!-- Enabled card -->
             <NuxtLink
                 v-if="!card.disabled"
-                :to="{
-                    name: card.name as any,
-                    params: {
-                        solutionslug: props.solutionslug,
-                        organizationslug: props.organizationslug
-                    }
-                }"
+                :to="card.path"
             >
                 <UCard variant="subtle">
                     <template #header>
@@ -41,7 +35,7 @@ const props = defineProps<{
                         />
                     </template>
 
-                    {{ card.reqId }}. {{ card.label }}
+                    {{ card.reqId }} {{ card.label }}
                 </UCard>
             </NuxtLink>
 
@@ -62,7 +56,7 @@ const props = defineProps<{
                     </template>
 
                     <div>
-                        {{ card.reqId }}. {{ card.label }}
+                        {{ card.reqId }} {{ card.label }}
                         <div class="text-error text-sm mt-2 font-medium">
                             Coming Soon
                         </div>

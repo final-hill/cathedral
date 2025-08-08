@@ -13,3 +13,5 @@ export const Organization = MetaRequirement.extend({
     value => value.slug === slugify(value.name),
     'The slug must be the slugified version of the name'
 ).describe('An Organization is a collection of users and solutions')
+
+export type OrganizationType = z.infer<typeof Organization>

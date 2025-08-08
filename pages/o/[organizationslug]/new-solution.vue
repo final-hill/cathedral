@@ -8,9 +8,8 @@ definePageMeta({ name: 'New Solution', middleware: 'auth' })
 
 const { $eventBus } = useNuxtApp(),
     { organizationslug: organizationSlug } = useRoute('New Solution').params,
-    router = useRouter()
-
-const { data: organization, error: getOrgError } = await useFetch(`/api/organization/${organizationSlug}`)
+    router = useRouter(),
+    { data: organization, error: getOrgError } = await useFetch(`/api/organization/${organizationSlug}`)
 
 if (!organization.value) {
     $eventBus.$emit('page-error', getOrgError.value)
@@ -26,46 +25,39 @@ const formSchema = Solution.innerType().pick({
 type FormSchema = z.infer<typeof formSchema>
 
 const formState = reactive<FormSchema>({
-    name: '',
-    slug: '',
-    description: ''
-})
+        name: '',
+        slug: '',
+        description: ''
+    }),
+    createSolution = async (data: FormSchema) => {
+        try {
+            const newSolutionSlug = await $fetch('/api/solution', {
+                method: 'post',
+                body: {
+                    name: data.name,
+                    description: data.description,
+                    organizationSlug
+                }
+            })
 
-const createSolution = async (data: FormSchema) => {
-    try {
-        const newSolutionSlug = await $fetch('/api/solution', {
-            method: 'post',
-            body: {
-                name: data.name,
-                description: data.description,
-                organizationSlug
-            }
-        })
+            router.push({ name: 'Solution', params: { organizationslug: organizationSlug, solutionslug: newSolutionSlug } })
+        } catch (error) {
+            $eventBus.$emit('page-error', error)
+        }
+    },
+    cancel = () => {
+        router.push({ name: 'Organization', params: { organizationslug: organizationSlug } })
+    },
+    handleStateUpdate = (newState: Partial<FormSchema>) => {
+        const nameChanged = newState.name !== undefined && newState.name !== formState.name,
+            newName = newState.name
 
-        router.push({ name: 'Solution', params: { organizationslug: organizationSlug, solutionslug: newSolutionSlug } })
-    } catch (error) {
-        $eventBus.$emit('page-error', error)
+        Object.assign(formState, newState)
+
+        if (nameChanged && newName) {
+            formState.slug = slugify(newName)
+        }
     }
-}
-
-const cancel = () => {
-    router.push({ name: 'Organization', params: { organizationslug: organizationSlug } })
-}
-
-// Handle state updates from XForm component
-const handleStateUpdate = (newState: Partial<FormSchema>) => {
-    // Check if the name changed before updating formState
-    const nameChanged = newState.name !== undefined && newState.name !== formState.name
-    const newName = newState.name
-
-    // Update our form state with changes from XForm
-    Object.assign(formState, newState)
-
-    // If the name changed, update the slug
-    if (nameChanged && newName) {
-        formState.slug = slugify(newName)
-    }
-}
 </script>
 
 <template>

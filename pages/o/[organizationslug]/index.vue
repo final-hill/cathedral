@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import type { Organization, Solution } from '#shared/domain'
-import type { z } from 'zod'
+import type { OrganizationType, SolutionType } from '#shared/domain'
 
 useHead({ title: 'Organization' })
 definePageMeta({ name: 'Organization', middleware: 'auth' })
@@ -8,8 +7,8 @@ definePageMeta({ name: 'Organization', middleware: 'auth' })
 const { $eventBus } = useNuxtApp(),
     { organizationslug: organizationSlug } = useRoute('Organization').params,
     router = useRouter(),
-    { data: organization, error: getOrgError, status: _orgStatus } = await useFetch<z.infer<typeof Organization>>(`/api/organization/${organizationSlug}`),
-    { refresh: refreshSolutions, status: _solStatus, data: solutions, error: getSolutionError } = await useFetch<z.infer<typeof Solution>[]>('/api/solution', {
+    { data: organization, error: getOrgError, status: _orgStatus } = await useFetch<OrganizationType>(`/api/organization/${organizationSlug}`),
+    { refresh: refreshSolutions, status: _solStatus, data: solutions, error: getSolutionError } = await useFetch<SolutionType[]>('/api/solution', {
         query: { organizationSlug }
     }),
     solutionDeleteModalOpenState = ref(false),
@@ -23,34 +22,30 @@ if (!organization.value) {
 if (getSolutionError.value)
     $eventBus.$emit('page-error', getSolutionError.value)
 
-const handleOrganizationDelete = async (organization: z.infer<typeof Organization>) => {
-    await $fetch(`/api/organization/${organization.slug}`, {
-        method: 'delete'
-    }).catch(e => $eventBus.$emit('page-error', e))
-    organizationDeleteModalOpenState.value = false
-    router.push({ name: 'Home' })
-}
-
-const handleOrganizationEdit = (organization: z.infer<typeof Organization>) => {
-    router.push({ name: 'Edit Organization', params: { organizationslug: organization.slug } })
-}
-
-const handleOrganizationUsers = (organization: z.infer<typeof Organization>) => {
-    router.push({ name: 'Organization Users', params: { organizationslug: organization.slug } })
-}
-
-const handleSolutionDelete = async (solution: z.infer<typeof Solution>) => {
-    await $fetch(`/api/solution/${solution.slug}`, {
-        method: 'delete',
-        body: { organizationSlug }
-    }).catch(e => $eventBus.$emit('page-error', e))
-    solutionDeleteModalOpenState.value = false
-    await refreshSolutions()
-}
-
-const handleSolutionEdit = (solution: z.infer<typeof Solution>) => {
-    router.push({ name: 'Edit Solution', params: { organizationslug: organizationSlug, solutionslug: solution.slug } })
-}
+const handleOrganizationDelete = async (organization: OrganizationType) => {
+        await $fetch(`/api/organization/${organization.slug}`, {
+            method: 'delete'
+        }).catch(e => $eventBus.$emit('page-error', e))
+        organizationDeleteModalOpenState.value = false
+        router.push({ name: 'Home' })
+    },
+    handleOrganizationEdit = (organization: OrganizationType) => {
+        router.push({ name: 'Edit Organization', params: { organizationslug: organization.slug } })
+    },
+    handleOrganizationUsers = (organization: OrganizationType) => {
+        router.push({ name: 'Organization Users', params: { organizationslug: organization.slug } })
+    },
+    handleSolutionDelete = async (solution: SolutionType) => {
+        await $fetch(`/api/solution/${solution.slug}`, {
+            method: 'delete',
+            body: { organizationSlug }
+        }).catch(e => $eventBus.$emit('page-error', e))
+        solutionDeleteModalOpenState.value = false
+        await refreshSolutions()
+    },
+    handleSolutionEdit = (solution: SolutionType) => {
+        router.push({ name: 'Edit Solution', params: { organizationslug: organizationSlug, solutionslug: solution.slug } })
+    }
 </script>
 
 <template>

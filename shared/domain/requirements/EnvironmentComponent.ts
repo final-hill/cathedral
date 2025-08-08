@@ -12,3 +12,5 @@ export const EnvironmentComponent = Component.extend({
     Environment components are the EXTERNAL elements that the system interacts with.
     These external components expose interfaces that the system uses to communicate with.
 `))
+
+export type EnvironmentComponentType = z.infer<typeof EnvironmentComponent>
