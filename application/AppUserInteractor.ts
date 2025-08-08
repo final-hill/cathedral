@@ -1,30 +1,29 @@
-import type { EntraGroupService } from '~/server/data/services/EntraGroupService'
+import type { EntraService } from '~/server/data/services/EntraService'
 import { Interactor } from './Interactor'
-import type { AppRole } from '#shared/domain'
+import type { AppRole, AppUserType } from '#shared/domain'
 import { AppUser, PermissionDeniedException, NotFoundException } from '#shared/domain'
-import type { z } from 'zod'
 import type { PermissionInteractor } from './PermissionInteractor'
 
 /**
  * Interactor for the AppUser
  */
-export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
+export class AppUserInteractor extends Interactor<AppUserType> {
     private readonly _permissionInteractor: PermissionInteractor
-    private readonly _groupService: EntraGroupService
+    private readonly _entraService: EntraService
 
     /**
      * Create a new AppUserInteractor
      *
      * @param props.permissionInteractor - The PermissionInteractor instance
-     * @param props.groupService - The EntraGroupService instance
+     * @param props.entraService - The EntraGroupService instance
      */
     constructor(props: {
         permissionInteractor: PermissionInteractor
-        groupService: EntraGroupService
+        entraService: EntraService
     }) {
         super({ repository: null as never })
         this._permissionInteractor = props.permissionInteractor
-        this._groupService = props.groupService
+        this._entraService = props.entraService
     }
 
     /**
@@ -46,7 +45,7 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
         this._permissionInteractor.assertOrganizationAdmin(organizationId)
 
         try {
-            const entraUser = await this._groupService.getUserByEmail(email)
+            const entraUser = await this._entraService.getUserByEmail(email)
 
             if (!entraUser) {
                 throw new NotFoundException(`User with email ${email} not found in Entra External ID tenant. User must be invited through the Entra admin portal first.`)
@@ -89,11 +88,11 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
         this._permissionInteractor.assertOrganizationAdmin(organizationId)
 
         try {
-            let entraUser = await this._groupService.getUserByEmail(email)
-            let invited = false
+            let entraUser = await this._entraService.getUserByEmail(email),
+                invited = false
 
             if (!entraUser) {
-                entraUser = await this._groupService.createExternalUserInvitation(email, redirectUrl)
+                entraUser = await this._entraService.createExternalUserInvitation(email, redirectUrl)
                 invited = true
             }
 
@@ -121,11 +120,11 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
      * @throws {NotFoundException} If the user does not exist
      * @throws {PermissionDeniedException} If the current user doesn't have permission to access this user's information
      */
-    async getUserById(id: string, organizationId: string): Promise<z.infer<typeof AppUser>> {
+    async getUserById(id: string, organizationId: string): Promise<AppUserType> {
         this._permissionInteractor.assertOrganizationReader(organizationId)
 
         try {
-            const entraUser = await this._groupService.getUser(id)
+            const entraUser = await this._entraService.getUser(id)
             if (!entraUser) {
                 throw new NotFoundException(`User with id ${id} does not exist in Entra External ID`)
             }
@@ -149,11 +148,11 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
      * @throws {NotFoundException} If the user does not exist
      * @throws {PermissionDeniedException} If the current user doesn't have permission to access this user's information
      */
-    async getUserByEmail(email: string, organizationId: string): Promise<z.infer<typeof AppUser>> {
+    async getUserByEmail(email: string, organizationId: string): Promise<AppUserType> {
         this._permissionInteractor.assertOrganizationReader(organizationId)
 
         try {
-            const entraUser = await this._groupService.getUserByEmail(email)
+            const entraUser = await this._entraService.getUserByEmail(email)
             if (!entraUser) {
                 throw new NotFoundException(`User with email ${email} does not exist in Entra External ID`)
             }
@@ -180,7 +179,7 @@ export class AppUserInteractor extends Interactor<z.infer<typeof AppUser>> {
         this._permissionInteractor.assertOrganizationReader(organizationId)
 
         try {
-            const entraUser = await this._groupService.getUserByEmail(email)
+            const entraUser = await this._entraService.getUserByEmail(email)
             return entraUser !== null
         } catch {
             return false

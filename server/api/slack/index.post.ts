@@ -4,9 +4,8 @@ import { slackBodySchema } from '~/server/data/slack-zod-schemas'
 import handleDomainException from '~/server/utils/handleDomainException'
 import { resolveSlackUserSession } from '~/server/utils/resolveSlackUser'
 
-const config = useRuntimeConfig()
-
-const slackService = new SlackService(config.slackBotToken, config.slackSigningSecret),
+const config = useRuntimeConfig(),
+    slackService = new SlackService(config.slackBotToken, config.slackSigningSecret),
     nlrService = new NaturalLanguageToRequirementService({
         apiKey: config.azureOpenaiApiKey,
         apiVersion: config.azureOpenaiApiVersion,
@@ -20,8 +19,8 @@ export default defineEventHandler(async (event) => {
             data = await validateEventBody(event, slackBodySchema),
             headers = event.headers
 
-        let slackUserId = ''
-        let teamId = ''
+        let slackUserId = '',
+            teamId = ''
 
         if (data.type === 'event_callback' && data.event) {
             if ('user' in data.event) {
@@ -36,23 +35,22 @@ export default defineEventHandler(async (event) => {
         if (data.type === 'url_verification') {
             // Create minimal session for url_verification
             const verificationSession = {
-                id: 'url-verification',
-                user: {
                     id: 'url-verification',
-                    name: 'URL Verification',
-                    email: 'verification@cathedral.local',
-                    isSystemAdmin: false,
-                    organizationRoles: []
+                    user: {
+                        id: 'url-verification',
+                        name: 'URL Verification',
+                        email: 'verification@cathedral.local',
+                        isSystemAdmin: false,
+                        organizationRoles: []
+                    },
+                    loggedInAt: Date.now()
                 },
-                loggedInAt: Date.now()
-            }
-
-            const eventInteractor = createSlackEventInteractor({
-                em: event.context.em,
-                session: verificationSession,
-                slackService,
-                nlrService
-            })
+                eventInteractor = createSlackEventInteractor({
+                    em: event.context.em,
+                    session: verificationSession,
+                    slackService,
+                    nlrService
+                })
 
             return eventInteractor.handleEvent(data).catch(handleDomainException)
         }

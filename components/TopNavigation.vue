@@ -3,84 +3,79 @@ import { deSlugify } from '#shared/utils'
 import type { DropdownMenuItem } from '@nuxt/ui'
 
 const { loggedIn, user, session: _session, fetch: _fetch, clear } = useUserSession(),
-    router = useRouter()
+    router = useRouter(),
+    getCrumbs = () => {
+        const route = router.currentRoute.value,
+            crumbs = route.path.split('/').filter(crumb => crumb !== '')
 
-const getCrumbs = () => {
-    const route = router.currentRoute.value,
-        crumbs = route.path.split('/').filter(crumb => crumb !== '')
-
-    return [
-        { label: 'Home', to: '/' },
-        ...crumbs.map((crumb, index) => {
-            return {
-                label: deSlugify(crumb),
-                to: '/' + crumbs.slice(0, index + 1).join('/')
-            }
-        })
-    ].filter(({ to }) => to !== '/o')
-}
-
-const crumbs = ref(getCrumbs())
+        return [
+            { label: 'Home', to: '/' },
+            ...crumbs.map((crumb, index) => {
+                return {
+                    label: deSlugify(crumb),
+                    to: '/' + crumbs.slice(0, index + 1).join('/')
+                }
+            })
+        ].filter(({ to }) => to !== '/o')
+    },
+    crumbs = ref(getCrumbs())
 
 router.afterEach(() => {
     crumbs.value = getCrumbs()
 })
 
 const handleSignOut = async () => {
-    await clear()
-    await navigateTo('/api/auth/logout', { external: true })
-}
-
-const avatarFallback = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1em\' height=\'1em\' viewBox=\'0 0 24 24\'%3E%3Cg fill=\'none\' stroke=\'currentColor\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\'%3E%3Cpath d=\'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\'/%3E%3Ccircle cx=\'12\' cy=\'7\' r=\'4\'/%3E%3C/g%3E%3C/svg%3E'
-
-const menuItems = ref<DropdownMenuItem[][]>([
-    [{
-        type: 'label',
-        label: user.value?.name ?? 'Anonymous',
-        avatar: { src: avatarFallback }
-    }], [{
-        type: 'label',
-        label: user.value?.email ?? 'anonymous@example.com'
-    }], [{
-        label: 'Sign Out',
-        icon: 'i-lucide-user-round-x',
-        onSelect: async () => await handleSignOut()
-    }]
-])
-
-const updateMenuItems = () => {
-    if (loggedIn.value) {
-        menuItems.value = [
-            [{
-                type: 'label',
-                label: user.value?.name ?? 'Anonymous',
-                avatar: { src: avatarFallback }
-            }], [{
-                type: 'label',
-                label: user.value?.email ?? 'anonymous@example.com'
-            }], [{
-                label: 'Sign Out',
-                icon: 'i-lucide-user-round-x',
-                onSelect: async () => await handleSignOut()
-            }]
-        ]
-    } else {
-        menuItems.value = [
-            [{
-                type: 'label',
-                label: 'Anonymous',
-                avatar: { src: avatarFallback }
-            }], [{
-                type: 'label',
-                label: 'anonymous@example.com'
-            }], [{
-                label: 'Sign In',
-                icon: 'i-lucide-user-check',
-                onSelect: async () => await navigateTo('/auth/entra-external-id', { external: true })
-            }]
-        ]
+        await clear()
+        await navigateTo('/api/auth/logout', { external: true })
+    },
+    avatarFallback = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1em\' height=\'1em\' viewBox=\'0 0 24 24\'%3E%3Cg fill=\'none\' stroke=\'currentColor\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\'%3E%3Cpath d=\'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\'/%3E%3Ccircle cx=\'12\' cy=\'7\' r=\'4\'/%3E%3C/g%3E%3C/svg%3E',
+    menuItems = ref<DropdownMenuItem[][]>([
+        [{
+            type: 'label',
+            label: user.value?.name ?? 'Anonymous',
+            avatar: { src: avatarFallback }
+        }], [{
+            type: 'label',
+            label: user.value?.email ?? 'anonymous@example.com'
+        }], [{
+            label: 'Sign Out',
+            icon: 'i-lucide-user-round-x',
+            onSelect: async () => await handleSignOut()
+        }]
+    ]),
+    updateMenuItems = () => {
+        if (loggedIn.value) {
+            menuItems.value = [
+                [{
+                    type: 'label',
+                    label: user.value?.name ?? 'Anonymous',
+                    avatar: { src: avatarFallback }
+                }], [{
+                    type: 'label',
+                    label: user.value?.email ?? 'anonymous@example.com'
+                }], [{
+                    label: 'Sign Out',
+                    icon: 'i-lucide-user-round-x',
+                    onSelect: async () => await handleSignOut()
+                }]
+            ]
+        } else {
+            menuItems.value = [
+                [{
+                    type: 'label',
+                    label: 'Anonymous',
+                    avatar: { src: avatarFallback }
+                }], [{
+                    type: 'label',
+                    label: 'anonymous@example.com'
+                }], [{
+                    label: 'Sign In',
+                    icon: 'i-lucide-user-check',
+                    onSelect: async () => await navigateTo('/auth/entra-external-id', { external: true })
+                }]
+            ]
+        }
     }
-}
 
 watch(user, updateMenuItems, { immediate: true })
 watch(loggedIn, updateMenuItems)

@@ -2,14 +2,13 @@ import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, Requir
 import { OrganizationRepository, RequirementRepository } from '~/server/data/repositories'
 import { Organization, ReqType, Solution } from '~/shared/domain'
 import { z } from 'zod'
-import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
+import { createEntraService } from '~/server/utils/createEntraService'
 
-const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
-
-const paramSchema = z.object({
-    reqType: z.nativeEnum(ReqType), // Unused in this handler
-    id: z.string().uuid()
-})
+const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
+    paramSchema = z.object({
+        reqType: z.nativeEnum(ReqType), // Unused in this handler
+        id: z.string().uuid()
+    })
 
 export default defineEventHandler(async (event) => {
     const { id, reqType } = await validateEventParams(event, paramSchema)
@@ -29,11 +28,9 @@ export default defineEventHandler(async (event) => {
         }, 'At least one of organizationId or organizationSlug should be provided'),
         { solutionSlug, organizationId: orgId, organizationSlug: orgSlug } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
-        permissionInteractor = new PermissionInteractor({
-            event,
-            session,
-            groupService: createEntraGroupService()
-        }),
+        entraService = createEntraService(),
+        permissionInteractor = new PermissionInteractor({ event, session, entraService }),
+        appUserInteractor = new AppUserInteractor({ permissionInteractor, entraService }),
         organizationInteractor = new OrganizationInteractor({
             repository: new OrganizationRepository({
                 em: event.context.em,
@@ -41,16 +38,14 @@ export default defineEventHandler(async (event) => {
                 organizationSlug: orgSlug
             }),
             permissionInteractor,
-            appUserInteractor: new AppUserInteractor({
-                permissionInteractor,
-                groupService: createEntraGroupService()
-            })
+            appUserInteractor
         }),
         org = await organizationInteractor.getOrganization(),
         solution = await organizationInteractor.getSolutionBySlug(solutionSlug),
         requirementInteractor = new RequirementInteractor({
             repository: new RequirementRepository({ em: event.context.em }),
             permissionInteractor,
+            appUserInteractor,
             organizationId: org.id,
             solutionId: solution.id
         })

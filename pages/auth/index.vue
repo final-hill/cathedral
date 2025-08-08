@@ -2,8 +2,8 @@
 // This page handles authentication requests with optional redirect parameters
 definePageMeta({ middleware: 'guest' })
 
-const route = useRoute()
-const redirectPath = route.query.redirect as string
+const route = useRoute(),
+    redirectPath = route.query.redirect as string
 
 // Store redirect in sessionStorage before starting OAuth (client-side only)
 if (import.meta.client && redirectPath && redirectPath.startsWith('/')) {

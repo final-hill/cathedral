@@ -25,8 +25,8 @@ export function resolveReqTypeFromModel(requirementModel: { req_type?: ReqType, 
     // Fallback: derive from constructor name using utilities
     const constructorName = requirementModel.constructor.name
     if (constructorName.endsWith('Model')) {
-        const classNameWithoutModel = constructorName.slice(0, -5) // Remove "Model"
-        const snakeCaseType = pascalCaseToSnakeCase(classNameWithoutModel)
+        const classNameWithoutModel = constructorName.slice(0, -5), // Remove "Model"
+            snakeCaseType = pascalCaseToSnakeCase(classNameWithoutModel)
         return snakeCaseType as ReqType
     }
 

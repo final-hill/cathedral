@@ -1,5 +1,5 @@
 import type { SlackService, NaturalLanguageToRequirementService } from '~/server/data/services'
-import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
+import { createEntraService } from '~/server/utils/createEntraService'
 import { SlackRepository, SlackWorkspaceRepository } from '~/server/data/repositories'
 import { PermissionInteractor } from '~/application'
 import { SlackWorkspaceInteractor, SlackChannelInteractor, SlackUserInteractor, SlackEventInteractor } from '.'
@@ -20,7 +20,7 @@ export function createSlackEventInteractor(props: {
         repository = new SlackRepository({ em }),
         permissionInteractor = new PermissionInteractor({
             session,
-            groupService: createEntraGroupService()
+            entraService: createEntraService()
         })
 
     return new SlackEventInteractor({
@@ -59,7 +59,7 @@ export function createSlackWorkspaceInteractor(props: {
         repository,
         permissionInteractor: new PermissionInteractor({
             session,
-            groupService: createEntraGroupService()
+            entraService: createEntraService()
         })
     })
 }

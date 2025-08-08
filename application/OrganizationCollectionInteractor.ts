@@ -1,15 +1,14 @@
-import type { z } from 'zod'
-import type { Organization } from '#shared/domain'
+import type { OrganizationType } from '#shared/domain'
 import { AppRole, DuplicateEntityException, NotFoundException } from '#shared/domain'
 import { slugify } from '#shared/utils'
 import { Interactor } from './Interactor'
 import type { PermissionInteractor } from './PermissionInteractor'
 import type { OrganizationCollectionRepository } from '~/server/data/repositories'
-import type { EntraGroupService } from '~/server/data/services'
+import type { EntraService } from '~/server/data/services'
 
-export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof Organization>> {
+export class OrganizationCollectionInteractor extends Interactor<OrganizationType> {
     private readonly _permissionInteractor: PermissionInteractor
-    private readonly _entraGroupService: EntraGroupService
+    private readonly _entraGroupService: EntraService
 
     /**
      * Create a new OrganizationCollectionInteractor
@@ -22,11 +21,11 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
         // TODO: This should be Repository<Organization>
         repository: OrganizationCollectionRepository
         permissionInteractor: PermissionInteractor
-        entraGroupService: EntraGroupService
+        entraService: EntraService
     }) {
         super(props)
         this._permissionInteractor = props.permissionInteractor
-        this._entraGroupService = props.entraGroupService
+        this._entraGroupService = props.entraService
     }
 
     // FIXME: this shouldn't be necessary
@@ -43,7 +42,7 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      * @throws {DuplicateEntityException} If the organization already exists
      * @throws {DuplicateEntityException} If the app user organization role already exists
      */
-    async createOrganization(props: Pick<z.infer<typeof Organization>, 'name' | 'description'>): Promise<z.infer<typeof Organization>['id']> {
+    async createOrganization(props: Pick<OrganizationType, 'name' | 'description'>): Promise<OrganizationType['id']> {
         const repo = this.repository,
             currentUserId = this._permissionInteractor.userId,
             newOrgId = await repo.createOrganization({ ...props, createdById: currentUserId, creationDate: new Date() })
@@ -64,9 +63,9 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      * @throws {PermissionDeniedException} If the user is not an admin of the organization or better
      * @throws {NotFoundException} If the organization does not exist
      */
-    async deleteOrganizationById(id: z.infer<typeof Organization>['id']): Promise<void> {
+    async deleteOrganizationById(id: OrganizationType['id']): Promise<void> {
         const currentUserId = this._permissionInteractor.userId
-        await this._permissionInteractor.assertOrganizationAdmin(id)
+        this._permissionInteractor.assertOrganizationAdmin(id)
 
         // Note: For soft deletion, we don't delete Entra groups immediately
         // This preserves user permissions and allows for potential organization restoration
@@ -85,13 +84,13 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      * @throws {PermissionDeniedException} If the user is not an admin of the organization or better
      * @throws {NotFoundException} If the organization does not exist
      */
-    async deleteOrganizationBySlug(slug: z.infer<typeof Organization>['slug']): Promise<void> {
+    async deleteOrganizationBySlug(slug: OrganizationType['slug']): Promise<void> {
         const org = (await this.repository.findOrganizations({ slug }))[0]
 
         if (!org)
             throw new NotFoundException('Organization not found')
 
-        await this._permissionInteractor.assertOrganizationAdmin(org.id)
+        this._permissionInteractor.assertOrganizationAdmin(org.id)
         return this.deleteOrganizationById(org.id)
     }
 
@@ -101,22 +100,19 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      * @param query The query parameters to filter organizations by
      * @returns The organizations that match the query parameters with enriched user names
      */
-    async findOrganizations(query: Partial<z.infer<typeof Organization>> = {}): Promise<z.infer<typeof Organization>[]> {
-        const orgs = await this.repository.findOrganizations(query)
+    async findOrganizations(query: Partial<OrganizationType> = {}): Promise<OrganizationType[]> {
+        const orgs = await this.repository.findOrganizations(query),
+            // Check permissions for each organization and filter out those the user can't read
+            permissionChecks = await Promise.all(
+                orgs.map(async org => ({
+                    org,
+                    canRead: this._permissionInteractor.isOrganizationReader(org.id)
+                }))
+            ),
+            authorizedOrgs = permissionChecks
+                .filter(({ canRead }) => canRead)
+                .map(({ org }) => org)
 
-        // Check permissions for each organization and filter out those the user can't read
-        const permissionChecks = await Promise.all(
-            orgs.map(async org => ({
-                org,
-                canRead: await this._permissionInteractor.isOrganizationReader(org.id)
-            }))
-        )
-
-        const authorizedOrgs = permissionChecks
-            .filter(({ canRead }) => canRead)
-            .map(({ org }) => org)
-
-        // Enrich organizations with user names from Entra service
         return await this.enrichOrganizationsWithUserNames(authorizedOrgs)
     }
 
@@ -125,11 +121,11 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      * @param organizations - Array of organizations from repository
      * @returns Array of organizations with enriched user names in createdBy and modifiedBy fields
      */
-    private async enrichOrganizationsWithUserNames(organizations: z.infer<typeof Organization>[]): Promise<z.infer<typeof Organization>[]> {
+    private async enrichOrganizationsWithUserNames(organizations: OrganizationType[]): Promise<OrganizationType[]> {
         return await Promise.all(
             organizations.map(async (org) => {
-                let createdByName = 'Unknown User'
-                let modifiedByName = 'Unknown User'
+                let createdByName = 'Unknown User',
+                    modifiedByName = 'Unknown User'
 
                 // Get creator name
                 try {
@@ -175,7 +171,7 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
      * @throws {NotFoundException} If the organization does not exist
      * @throws {DuplicateEntityException} If an organization already exists with the new name
      */
-    async updateOrganizationBySlug(slug: z.infer<typeof Organization>['slug'], props: Pick<Partial<z.infer<typeof Organization>>, 'name' | 'description'>): Promise<void> {
+    async updateOrganizationBySlug(slug: OrganizationType['slug'], props: Pick<Partial<OrganizationType>, 'name' | 'description'>): Promise<void> {
         const currentUserId = this._permissionInteractor.userId,
             existingOrg = (await this.repository.findOrganizations({ slug }))[0],
             newSlug = props.name ? slugify(props.name) : existingOrg.slug
@@ -183,7 +179,7 @@ export class OrganizationCollectionInteractor extends Interactor<z.infer<typeof 
         if (!existingOrg)
             throw new NotFoundException(`Organization not found with slug: ${slug}`)
 
-        await this._permissionInteractor.assertOrganizationContributor(existingOrg.id)
+        this._permissionInteractor.assertOrganizationContributor(existingOrg.id)
 
         const existingSlugOrg = (await this.repository.findOrganizations({ slug: newSlug }))[0]
 

@@ -23,18 +23,18 @@ export abstract class StaticAuditModel<V extends VolatileAuditModel> {
      */
     async getLatestVersion(effectiveDate: Date, filter: FilterQuery<V> = {}): Promise<V | undefined> {
         const where = {
-            effectiveFrom: { $lte: effectiveDate },
-            isDeleted: false,
-            ...filter
-        } as FilterQuery<V>
+                effectiveFrom: { $lte: effectiveDate },
+                isDeleted: false,
+                ...filter
+            } as FilterQuery<V>,
 
-        const latestVersion = (await this.versions.matching({
-            where,
-            orderBy: { effectiveFrom: 'desc' } as OrderDefinition<V>,
-            limit: 1,
-            // @ts-expect-error - MikroORM populate types are not fully compatible
-            populate: ['*']
-        }))[0]
+            latestVersion = (await this.versions.matching({
+                where,
+                orderBy: { effectiveFrom: 'desc' } as OrderDefinition<V>,
+                limit: 1,
+                // @ts-expect-error - MikroORM populate types are not fully compatible
+                populate: ['*']
+            }))[0]
 
         return latestVersion
     }
@@ -45,17 +45,17 @@ export abstract class StaticAuditModel<V extends VolatileAuditModel> {
      */
     async getLatestVersionIncludingDeleted(effectiveDate: Date, filter: FilterQuery<V> = {}): Promise<V | undefined> {
         const where = {
-            effectiveFrom: { $lte: effectiveDate },
-            ...filter
-        } as FilterQuery<V>
+                effectiveFrom: { $lte: effectiveDate },
+                ...filter
+            } as FilterQuery<V>,
 
-        const latestVersion = (await this.versions.matching({
-            where,
-            orderBy: { effectiveFrom: 'desc' } as OrderDefinition<V>,
-            limit: 1,
-            // @ts-expect-error - MikroORM populate types are not fully compatible
-            populate: ['*']
-        }))[0]
+            latestVersion = (await this.versions.matching({
+                where,
+                orderBy: { effectiveFrom: 'desc' } as OrderDefinition<V>,
+                limit: 1,
+                // @ts-expect-error - MikroORM populate types are not fully compatible
+                populate: ['*']
+            }))[0]
 
         return latestVersion
     }
@@ -331,12 +331,6 @@ export class SilenceModel extends RequirementModel { }
 
 @Entity({ discriminatorValue: ReqType.SILENCE })
 export class SilenceVersionsModel extends RequirementVersionsModel { }
-
-@Entity({ discriminatorValue: ReqType.SITUATION })
-export class SituationModel extends GoalModel { }
-
-@Entity({ discriminatorValue: ReqType.SITUATION })
-export class SituationVersionsModel extends GoalVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.SOLUTION })
 export class SolutionModel extends MetaRequirementModel {

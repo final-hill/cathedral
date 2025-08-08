@@ -8,53 +8,45 @@ useHead({ title: 'New Organization' })
 
 const router = useRouter(),
     { $eventBus } = useNuxtApp(),
-    { fetch: refreshSession } = useUserSession()
-
-const formSchema = Organization.innerType().pick({
-    name: true,
-    slug: true,
-    description: true
-})
+    { fetch: refreshSession } = useUserSession(),
+    formSchema = Organization.innerType().pick({
+        name: true,
+        slug: true,
+        description: true
+    })
 
 type FormSchema = z.infer<typeof formSchema>
 
 const formState = reactive<FormSchema>({
-    name: '',
-    slug: '',
-    description: ''
-})
+        name: '',
+        slug: '',
+        description: ''
+    }),
+    createOrganization = async (data: FormSchema) => {
+        const newSlug = (await $fetch('/api/organization', {
+            method: 'post',
+            body: data
+        }).catch(e => $eventBus.$emit('page-error', e)))
 
-const createOrganization = async (data: FormSchema) => {
-    const newSlug = (await $fetch('/api/organization', {
-        method: 'post',
-        body: data
-    }).catch(e => $eventBus.$emit('page-error', e)))
+        if (newSlug) {
+            await refreshSession()
+            router.push({ name: 'Organization', params: { organizationslug: newSlug } })
+        } else
+            $eventBus.$emit('page-error', 'Failed to create organization. No organization ID returned.')
+    },
+    cancel = () => {
+        router.push({ name: 'Home' })
+    },
+    handleStateUpdate = (newState: Partial<FormSchema>) => {
+        const nameChanged = newState.name !== undefined && newState.name !== formState.name,
+            newName = newState.name
 
-    if (newSlug) {
-        await refreshSession()
-        router.push({ name: 'Organization', params: { organizationslug: newSlug } })
-    } else
-        $eventBus.$emit('page-error', 'Failed to create organization. No organization ID returned.')
-}
+        Object.assign(formState, newState)
 
-const cancel = () => {
-    router.push({ name: 'Home' })
-}
-
-// Handle state updates from XForm component
-const handleStateUpdate = (newState: Partial<FormSchema>) => {
-    // Check if the name changed before updating formState
-    const nameChanged = newState.name !== undefined && newState.name !== formState.name
-    const newName = newState.name
-
-    // Update our form state with changes from XForm
-    Object.assign(formState, newState)
-
-    // If the name changed, update the slug
-    if (nameChanged && newName) {
-        formState.slug = slugify(newName)
+        if (nameChanged && newName) {
+            formState.slug = slugify(newName)
+        }
     }
-}
 </script>
 
 <template>

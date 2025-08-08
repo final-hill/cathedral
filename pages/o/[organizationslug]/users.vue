@@ -9,23 +9,22 @@ useHead({ title: 'Users' })
 definePageMeta({ name: 'Organization Users', middleware: 'auth' })
 
 const AppUserWithRole = AppUser.extend({
-    role: z.nativeEnum(AppRole).describe('The role of the user in this organization')
-})
-
-const viewSchema = AppUserWithRole.pick({
-    name: true,
-    email: true,
-    role: true
-})
-const editSchema = AppUserWithRole.pick({
-    id: true,
-    email: true,
-    role: true
-})
-const createSchema = AppUserWithRole.pick({
-    email: true,
-    role: true
-})
+        role: z.nativeEnum(AppRole).describe('The role of the user in this organization')
+    }),
+    viewSchema = AppUserWithRole.pick({
+        name: true,
+        email: true,
+        role: true
+    }),
+    editSchema = AppUserWithRole.pick({
+        id: true,
+        email: true,
+        role: true
+    }),
+    createSchema = AppUserWithRole.pick({
+        email: true,
+        role: true
+    })
 
 type SchemaType = z.infer<typeof AppUserWithRole>
 
@@ -45,270 +44,255 @@ if (getUserError.value)
     $eventBus.$emit('page-error', getUserError.value)
 
 const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
-    const column: TableColumn<SchemaType> = {
-        accessorKey: key,
-        header: ({ column }) => {
-            const isSorted = column.getIsSorted()
+        const column: TableColumn<SchemaType> = {
+            accessorKey: key,
+            header: ({ column }) => {
+                const isSorted = column.getIsSorted()
 
-            return (
-                <UButton
-                    label={label}
-                    color="neutral"
-                    variant="ghost"
-                    icon={
-                        isSorted
-                            ? isSorted === 'asc'
-                                ? 'i-lucide-arrow-up-narrow-wide'
-                                : 'i-lucide-arrow-down-wide-narrow'
-                            : 'i-lucide-arrow-up-down'
-                    }
-                    class="-mx-2.5"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-                />
-            )
-        },
-        cell: ({ row }) => {
-            const cellValue = row.original[key as keyof SchemaType] as unknown
-
-            switch (true) {
-                case typeof cellValue === 'string':
-                case typeof cellValue === 'number':
-                    return cellValue
-                case cellValue instanceof Date:
-                    return (
-                        <time datetime={cellValue.toISOString()}>
-                            {' '}
-                            {cellValue.toLocaleString()}
-                            {' '}
-                        </time>
-                    )
-                case typeof cellValue === 'boolean':
-                    return <UCheckbox modelValue={cellValue} disabled />
-                case typeof cellValue === 'object' && cellValue !== null && 'id' in cellValue && 'name' in cellValue:
-                    return cellValue.name
-                default:
-                    return cellValue
-            }
-        }
-    }
-    return column
-})
-
-// Add expandable Slack associations column
-const slackColumn: TableColumn<SchemaType> = {
-    header: 'Slack',
-    cell: ({ row }) => {
-        const associations = row.original.slackAssociations || []
-
-        if (associations.length === 0) {
-            return (
-                <span class="text-muted text-sm italic">
-                    No accounts linked
-                </span>
-            )
-        }
-
-        return (
-            <div class="flex items-center gap-2">
-                <UButton
-                    color="neutral"
-                    variant="ghost"
-                    icon="i-lucide-chevron-down"
-                    size="xs"
-                    square
-                    aria-label="Expand Slack accounts"
-                    ui={{
-                        leadingIcon: [
-                            'transition-transform',
-                            row.getIsExpanded() ? 'duration-200 rotate-180' : ''
-                        ]
-                    }}
-                    onClick={() => row.toggleExpanded()}
-                />
-                <div class="flex items-center gap-1">
-                    <UIcon name="i-lucide-message-circle" class="text-success" />
-                    <span class="text-sm font-medium">
-                        {associations.length}
-                        {' '}
-                        account
-                        {associations.length === 1 ? '' : 's'}
-                    </span>
-                </div>
-            </div>
-        )
-    }
-}
-
-const actionColumn: TableColumn<SchemaType> = {
-    header: 'Actions',
-    cell: ({ row }) => {
-        const item = row.original,
-            actionItems = getActionItems(item)
-
-        return (
-            <div class="text-left">
-                <UDropdownMenu items={actionItems}>
+                return (
                     <UButton
-                        class="ml-auto"
-                        icon="i-lucide-ellipsis-vertical"
+                        label={label}
                         color="neutral"
                         variant="ghost"
-                        aria-label="Actions dropdown"
+                        icon={
+                            isSorted
+                                ? isSorted === 'asc'
+                                    ? 'i-lucide-arrow-up-narrow-wide'
+                                    : 'i-lucide-arrow-down-wide-narrow'
+                                : 'i-lucide-arrow-up-down'
+                        }
+                        class="-mx-2.5"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
                     />
-                </UDropdownMenu>
-            </div>
-        )
-    }
-}
+                )
+            },
+            cell: ({ row }) => {
+                const cellValue = row.original[key as keyof SchemaType] as unknown
 
-const getActionItems = (item: SchemaType): DropdownMenuItem[] => {
-    const items: DropdownMenuItem[] = [{
-        label: 'Edit',
-        icon: 'i-lucide-edit',
-        onClick: () => {
-            editModalItem.value = item
-            editModalOpenState.value = true
-        }
-    }]
-
-    items.push({
-        label: 'Delete',
-        icon: 'i-lucide-trash-2',
-        onClick: async () => {
-            const result = await confirmDeleteModal.open({
-                title: `Are you sure you want to delete '${item.name}'?`
-            }).result
-
-            if (result) {
-                try {
-                    await $fetch(`/api/appusers/${item.id}`, {
-                        method: 'DELETE',
-                        body: { organizationSlug }
-                    })
-                    toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'User removed successfully' })
-                    refresh()
-                } catch (error) {
-                    toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error removing user: ${error}` })
+                switch (true) {
+                    case typeof cellValue === 'string':
+                    case typeof cellValue === 'number':
+                        return cellValue
+                    case cellValue instanceof Date:
+                        return (
+                            <time datetime={cellValue.toISOString()}>
+                                {' '}
+                                {cellValue.toLocaleString()}
+                                {' '}
+                            </time>
+                        )
+                    case typeof cellValue === 'boolean':
+                        return <UCheckbox modelValue={cellValue} disabled />
+                    case typeof cellValue === 'object' && cellValue !== null && 'id' in cellValue && 'name' in cellValue:
+                        return cellValue.name
+                    default:
+                        return cellValue
                 }
             }
         }
-    })
+        return column
+    }),
+    slackColumn: TableColumn<SchemaType> = {
+        header: 'Slack',
+        cell: ({ row }) => {
+            const associations = row.original.slackAssociations || []
 
-    return items
-}
+            if (associations.length === 0) {
+                return (
+                    <span class="text-muted text-sm italic">
+                        No accounts linked
+                    </span>
+                )
+            }
 
-const userColumns: TableColumn<SchemaType>[] = [...viewDataColumns, slackColumn, actionColumn]
+            return (
+                <div class="flex items-center gap-2">
+                    <UButton
+                        color="neutral"
+                        variant="ghost"
+                        icon="i-lucide-chevron-down"
+                        size="xs"
+                        square
+                        aria-label="Expand Slack accounts"
+                        ui={{
+                            leadingIcon: [
+                                'transition-transform',
+                                row.getIsExpanded() ? 'duration-200 rotate-180' : ''
+                            ]
+                        }}
+                        onClick={() => row.toggleExpanded()}
+                    />
+                    <div class="flex items-center gap-1">
+                        <UIcon name="i-lucide-message-circle" class="text-success" />
+                        <span class="text-sm font-medium">
+                            {associations.length}
+                            {' '}
+                            account
+                            {associations.length === 1 ? '' : 's'}
+                        </span>
+                    </div>
+                </div>
+            )
+        }
+    },
+    actionColumn: TableColumn<SchemaType> = {
+        header: 'Actions',
+        cell: ({ row }) => {
+            const item = row.original,
+                actionItems = getActionItems(item)
 
-const columnPinning = ref({
-    left: [],
-    right: ['Actions']
-})
+            return (
+                <div class="text-left">
+                    <UDropdownMenu items={actionItems}>
+                        <UButton
+                            class="ml-auto"
+                            icon="i-lucide-ellipsis-vertical"
+                            color="neutral"
+                            variant="ghost"
+                            aria-label="Actions dropdown"
+                        />
+                    </UDropdownMenu>
+                </div>
+            )
+        }
+    },
+    getActionItems = (item: SchemaType): DropdownMenuItem[] => {
+        const items: DropdownMenuItem[] = [{
+            label: 'Edit',
+            icon: 'i-lucide-edit',
+            onClick: () => {
+                editModalItem.value = item
+                editModalOpenState.value = true
+            }
+        }]
 
-const expanded = ref<Record<string, boolean>>({})
+        items.push({
+            label: 'Delete',
+            icon: 'i-lucide-trash-2',
+            onClick: async () => {
+                const result = await confirmDeleteModal.open({
+                    title: `Are you sure you want to delete '${item.name}'?`
+                }).result
 
-const unlinkSlackUser = async (slackUserId: string, teamId: string, teamName: string) => {
-    const result = await confirmUnlinkSlackModal.open({
-        title: `Are you sure you want to unlink the Slack account from "${teamName}"? The user will need to re-link their account to perform interactions from Slack.`
-    }).result
-
-    if (!result) return
-
-    try {
-        await $fetch('/api/slack/unlink-user', {
-            method: 'POST' as const,
-            body: {
-                slackUserId,
-                teamId
+                if (result) {
+                    try {
+                        await $fetch(`/api/appusers/${item.id}`, {
+                            method: 'DELETE',
+                            body: { organizationSlug }
+                        })
+                        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'User removed successfully' })
+                        refresh()
+                    } catch (error) {
+                        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error removing user: ${error}` })
+                    }
+                }
             }
         })
 
-        toast.add({
-            icon: 'i-lucide-check',
-            title: 'Success',
-            description: 'Slack account has been unlinked successfully.'
-        })
+        return items
+    },
+    userColumns: TableColumn<SchemaType>[] = [...viewDataColumns, slackColumn, actionColumn],
+    columnPinning = ref({
+        left: [],
+        right: ['Actions']
+    }),
+    expanded = ref<Record<string, boolean>>({}),
+    unlinkSlackUser = async (slackUserId: string, teamId: string, teamName: string) => {
+        const result = await confirmUnlinkSlackModal.open({
+            title: `Are you sure you want to unlink the Slack account from "${teamName}"? The user will need to re-link their account to perform interactions from Slack.`
+        }).result
 
-        refresh()
-    } catch (error) {
-        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error unlinking Slack user: ${error}` })
-    }
-}
+        if (!result) return
 
-const addUser = async (data: z.infer<typeof createSchema>) => {
-    try {
-        const response = await $fetch(`/api/appusers/`, {
-            method: 'POST',
-            body: {
-                email: data.email,
-                organizationSlug,
-                role: data.role
-            }
-        })
-
-        refresh()
-
-        // Show different success messages based on whether user was invited or added
-        if (response.invited) {
-            toast.add({
-                icon: 'i-lucide-mail',
-                title: 'Invitation Sent',
-                description: `Invitation sent to ${data.email}. They will receive an email to join the organization.`
+        try {
+            await $fetch('/api/slack/unlink-user', {
+                method: 'POST' as const,
+                body: {
+                    slackUserId,
+                    teamId
+                }
             })
-        } else {
+
             toast.add({
                 icon: 'i-lucide-check',
-                title: 'User Added',
-                description: `${data.email} has been added to the organization.`
+                title: 'Success',
+                description: 'Slack account has been unlinked successfully.'
             })
+
+            refresh()
+        } catch (error) {
+            toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error unlinking Slack user: ${error}` })
         }
+    },
+    addUser = async (data: z.infer<typeof createSchema>) => {
+        try {
+            const response = await $fetch(`/api/appusers/`, {
+                method: 'POST',
+                body: {
+                    email: data.email,
+                    organizationSlug,
+                    role: data.role
+                }
+            })
 
-        refresh()
-    } catch (error) {
-        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error adding/inviting user: ${error}` })
-    }
-}
+            refresh()
 
-const updateUser = async (data: z.infer<typeof editSchema>) => {
-    try {
-        await $fetch(`/api/appusers/${data.id}`, {
-            method: 'PUT',
-            body: {
-                organizationSlug,
-                role: data.role
+            // Show different success messages based on whether user was invited or added
+            if (response.invited) {
+                toast.add({
+                    icon: 'i-lucide-mail',
+                    title: 'Invitation Sent',
+                    description: `Invitation sent to ${data.email}. They will receive an email to join the organization.`
+                })
+            } else {
+                toast.add({
+                    icon: 'i-lucide-check',
+                    title: 'User Added',
+                    description: `${data.email} has been added to the organization.`
+                })
             }
-        })
-        refresh()
 
-        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'User updated successfully' })
+            refresh()
+        } catch (error) {
+            toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error adding/inviting user: ${error}` })
+        }
+    },
+    updateUser = async (data: z.infer<typeof editSchema>) => {
+        try {
+            await $fetch(`/api/appusers/${data.id}`, {
+                method: 'PUT',
+                body: {
+                    organizationSlug,
+                    role: data.role
+                }
+            })
+            refresh()
 
-        closeEdit()
-    } catch (error) {
-        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error updating user: ${error}` })
+            toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'User updated successfully' })
+
+            closeEdit()
+        } catch (error) {
+            toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error updating user: ${error}` })
+        }
+    },
+    closeEdit = () => {
+        editModalOpenState.value = false
+        editModalItem.value = Object.create(null)
+    },
+    addModalOpenState = ref(false),
+    addModalItem = ref<z.infer<typeof createSchema> | null>(null),
+    openAddModal = () => {
+        addModalItem.value = Object.create(null)
+        addModalOpenState.value = true
+    },
+    closeAddModal = () => {
+        addModalItem.value = Object.create(null)
+        addModalOpenState.value = false
+    },
+    onAddModalSubmit = async (data: z.infer<typeof createSchema>) => {
+        await addUser(data)
+        closeAddModal()
     }
-}
-
-const closeEdit = () => {
-    editModalOpenState.value = false
-    editModalItem.value = Object.create(null)
-}
-
-const addModalOpenState = ref(false),
-    addModalItem = ref<z.infer<typeof createSchema> | null>(null)
-
-const openAddModal = () => {
-    addModalItem.value = Object.create(null)
-    addModalOpenState.value = true
-}
-
-const closeAddModal = () => {
-    addModalItem.value = Object.create(null)
-    addModalOpenState.value = false
-}
-
-const onAddModalSubmit = async (data: z.infer<typeof createSchema>) => {
-    await addUser(data)
-    closeAddModal()
-}
 </script>
 
 <template>

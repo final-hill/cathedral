@@ -109,15 +109,13 @@ export function defineOAuthEntraExternalIDEventHandler({
             return onError(event, error)
         }
 
-        const tenant = resolvedConfig.tenant
-        const tenantDomain = tenant.replace('.onmicrosoft.com', '')
-
-        const authorizationURL = resolvedConfig.authorizationURL || `https://${tenantDomain}.ciamlogin.com/${tenant}/oauth2/v2.0/authorize`
-        const tokenURL = resolvedConfig.tokenURL || `https://${tenantDomain}.ciamlogin.com/${tenant}/oauth2/v2.0/token`
-        const userURL = resolvedConfig.userURL || 'https://graph.microsoft.com/v1.0/me'
-        const scope = resolvedConfig.scope || ENTRA_OAUTH_SCOPES
-
-        const redirectURL = resolvedConfig.redirectURL
+        const tenant = resolvedConfig.tenant,
+            tenantDomain = tenant.replace('.onmicrosoft.com', ''),
+            authorizationURL = resolvedConfig.authorizationURL || `https://${tenantDomain}.ciamlogin.com/${tenant}/oauth2/v2.0/authorize`,
+            tokenURL = resolvedConfig.tokenURL || `https://${tenantDomain}.ciamlogin.com/${tenant}/oauth2/v2.0/token`,
+            userURL = resolvedConfig.userURL || 'https://graph.microsoft.com/v1.0/me',
+            scope = resolvedConfig.scope || ENTRA_OAUTH_SCOPES,
+            redirectURL = resolvedConfig.redirectURL
 
         if (!query.code) {
             return sendRedirect(
@@ -156,11 +154,13 @@ export function defineOAuthEntraExternalIDEventHandler({
             } else {
                 console.error('Token exchange error:', error instanceof Error ? error.message : 'Unknown error')
             }
+
             const tokenExchangeError = createError({
                 statusCode: 500,
                 message: 'Token exchange failed',
                 data: { error: 'token_exchange_failed', details: process.env.NODE_ENV === 'production' ? undefined : error }
             })
+
             if (!onError) throw tokenExchangeError
             return onError(event, tokenExchangeError)
         }
@@ -171,6 +171,7 @@ export function defineOAuthEntraExternalIDEventHandler({
                 message: `Token exchange failed: ${tokens.error_description || tokens.error || 'Unknown error'}`,
                 data: tokens
             })
+
             if (!onError) throw error
             return onError(event, error)
         }

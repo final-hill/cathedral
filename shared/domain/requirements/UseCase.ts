@@ -3,9 +3,9 @@ import { Scenario } from './Scenario.js'
 import { ReqType } from './ReqType.js'
 
 export const UseCase = Scenario.extend({
-    reqId: z.string().regex(/^S\.4\.\d+$/, 'Format must be S.4.#').optional()
+    reqId: z.string().regex(/^S\.4\.2\.\d+$/, 'Format must be S.4.2.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
-    reqIdPrefix: z.literal('S.4.').default('S.4.'),
+    reqIdPrefix: z.literal('S.4.2.').default('S.4.2.'),
     // TODO: <https://github.com/final-hill/cathedral/issues/154>
     scope: z.string().max(100)
         .describe('The scope of the use case'),
@@ -52,3 +52,5 @@ export const UseCase = Scenario.extend({
     // stakeHoldersAndInterests: z.array(z.string().max(100)).describe('The stakeholders and interests of the use case')
     reqType: z.nativeEnum(ReqType).default(ReqType.USE_CASE)
 }).describe('A Use Case describes a complete interaction between an actor and the system to achieve a goal.')
+
+export type UseCaseType = z.infer<typeof UseCase>

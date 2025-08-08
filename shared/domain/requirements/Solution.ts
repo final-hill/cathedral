@@ -26,3 +26,5 @@ export const Solution = MetaRequirement.extend({
     value => value.slug === slugify(value.name),
     'The slug must be the slugified version of the name'
 ).describe('A Solution is the aggregation of a Project, Environment, Goals, and a System')
+
+export type SolutionType = z.infer<typeof Solution>

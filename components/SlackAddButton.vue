@@ -5,10 +5,9 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    variant: 'default'
-})
-
-const slackOAuthUrl = `/api/slack/oauth/authorize?organizationSlug=${props.organizationSlug}`
+        variant: 'default'
+    }),
+    slackOAuthUrl = `/api/slack/oauth/authorize?organizationSlug=${props.organizationSlug}`
 </script>
 
 <template>

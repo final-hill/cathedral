@@ -19,3 +19,5 @@ export const SystemComponent = Component.extend({
     A System Component is a self-contained part of a system.
     These are often hierarchical and can be used to describe the structure of a System.
 `))
+
+export type SystemComponentType = z.infer<typeof SystemComponent>

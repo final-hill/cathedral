@@ -1,6 +1,6 @@
 import type { H3Event } from 'h3'
 import { SlackRepository } from '~/server/data/repositories'
-import { createEntraGroupService } from './createEntraGroupService'
+import { createEntraService } from './createEntraService'
 import type { UserSession } from '#auth-utils'
 
 /**
@@ -13,35 +13,31 @@ export async function resolveSlackUserSession(
     teamId: string
 ): Promise<UserSession | null> {
     try {
-        const slackRepository = new SlackRepository({ em: event.context.em })
-
-        const cathedralUserId = await slackRepository.getCathedralUserIdForSlackUser({
-            slackUserId,
-            teamId
-        })
+        const slackRepository = new SlackRepository({ em: event.context.em }),
+            cathedralUserId = await slackRepository.getCathedralUserIdForSlackUser({
+                slackUserId,
+                teamId
+            })
 
         if (!cathedralUserId) {
             return null // User not linked to Cathedral
         }
 
-        const groupService = createEntraGroupService(),
-            userInfo = await groupService.getUser(cathedralUserId),
-            userGroups = await groupService.getUserGroupsDirect(cathedralUserId),
-            parsedPermissions = groupService.parseGroups(userGroups)
-
-        console.log(`Resolved Slack user ${slackUserId} to Cathedral user ${cathedralUserId} with ${parsedPermissions.organizationRoles.length} org roles, isSystemAdmin: ${parsedPermissions.isSystemAdmin}`)
-
-        const userSession: UserSession = {
-            id: cathedralUserId,
-            user: {
+        const entraService = createEntraService(),
+            userInfo = await entraService.getUser(cathedralUserId),
+            userGroups = await entraService.getUserGroupsDirect(cathedralUserId),
+            parsedPermissions = entraService.parseGroups(userGroups),
+            userSession: UserSession = {
                 id: cathedralUserId,
-                name: userInfo.name,
-                email: userInfo.email,
-                isSystemAdmin: parsedPermissions.isSystemAdmin,
-                organizationRoles: parsedPermissions.organizationRoles
-            },
-            loggedInAt: Date.now()
-        }
+                user: {
+                    id: cathedralUserId,
+                    name: userInfo.name,
+                    email: userInfo.email,
+                    isSystemAdmin: parsedPermissions.isSystemAdmin,
+                    organizationRoles: parsedPermissions.organizationRoles
+                },
+                loggedInAt: Date.now()
+            }
 
         return userSession
     } catch (error) {

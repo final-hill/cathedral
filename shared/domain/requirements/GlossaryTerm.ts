@@ -8,3 +8,5 @@ export const GlossaryTerm = Component.extend({
     reqIdPrefix: z.literal('E.1.').default('E.1.'),
     reqType: z.nativeEnum(ReqType).default(ReqType.GLOSSARY_TERM)
 }).describe('A Glossary is a list of terms in a particular domain of knowledge with the definitions for those terms.')
+
+export type GlossaryTermType = z.infer<typeof GlossaryTerm>

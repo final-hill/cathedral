@@ -13,72 +13,65 @@ const props = defineProps<{
     state: Partial<z.output<F>>
     onSubmit: (data: z.output<F>) => Promise<void>
     onCancel?: () => void
-}>()
-
-const emit = defineEmits<{
-    'update:state': [value: Partial<z.output<F>>]
-}>()
-
-// Nuxt UI still doesn't support resetting of a form <https://github.com/nuxt/ui/issues/964#issuecomment-1810253480>
-
-const form = useTemplateRef('form'),
+}>(),
+    emit = defineEmits<{
+        'update:state': [value: Partial<z.output<F>>]
+    }>(),
+    // Nuxt UI doesn't support resetting of a form <https://github.com/nuxt/ui/issues/964#issuecomment-1810253480>
+    form = useTemplateRef('form'),
     localState = reactive({ ...props.state }) as z.output<F>,
     backupState = reactive(Object.create(props.state)),
     toast = useToast(),
     isSubmitting = ref(false)
 
-// Watch for changes in localState and emit updates
 watch(localState, (newState) => {
     emit('update:state', newState)
 }, { deep: true })
 
-// Watch for prop state changes and update local state
 watch(() => props.state, (newState) => {
     Object.assign(localState, newState)
 }, { deep: true, immediate: true })
 
 const onSubmit = async ({ data }: FormSubmitEvent<z.output<F>>) => {
-    isSubmitting.value = true
-    try {
-        await props.onSubmit(data)
-        toast.add({
-            icon: 'i-lucide-check',
-            title: 'Success',
-            description: 'Data saved successfully'
-        })
-    } catch {
+        isSubmitting.value = true
+        try {
+            await props.onSubmit(data)
+            toast.add({
+                icon: 'i-lucide-check',
+                title: 'Success',
+                description: 'Data saved successfully'
+            })
+        } catch {
         // Error handling is done by the parent component
         // The toast error will be shown by the error handler
-    } finally {
-        isSubmitting.value = false
-    }
-}
+        } finally {
+            isSubmitting.value = false
+        }
+    },
+    onCancel = () => {
+        form.value?.clear()
+        Object.assign(localState, backupState)
 
-const onCancel = () => {
-    form.value?.clear()
-    Object.assign(localState, backupState)
+        if (props.onCancel)
+            props.onCancel()
+    },
 
-    if (props.onCancel)
-        props.onCancel()
-}
-
-const schemaFields = getSchemaFields(props.schema)
+    schemaFields = getSchemaFields(props.schema)
 
 // Autocomplete data for UInputMenu
 type RouteType = { solutionslug?: string, organizationslug?: string }
-const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute().params as RouteType
-
-const autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field) => {
-    const reqType = field.reqType
-    if (field.isObject) {
-        return {
-            [field.key]: await useFetch('/api/autocomplete', {
-                query: { solutionSlug, organizationSlug, reqType }
-            })
+const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute().params as RouteType,
+    autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field) => {
+        const reqType = field.reqType
+        if (field.isObject) {
+            return {
+                [field.key]: await useFetch('/api/autocomplete', {
+                    query: { solutionSlug, organizationSlug, reqType }
+                })
+            }
         }
-    }
-    return {}
-})).then(results => results.reduce((acc, result) => ({ ...acc, ...result }), {}))
+        return {}
+    })).then(results => results.reduce((acc, result) => ({ ...acc, ...result }), {}))
 </script>
 
 <template>

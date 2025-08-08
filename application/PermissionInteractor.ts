@@ -1,8 +1,7 @@
-import type { AppUserOrganizationRole, Organization, AppUser } from '#shared/domain'
+import type { AppUserType, OrganizationType, AppUserOrganizationRoleType } from '#shared/domain'
 import { AppRole, NotFoundException, PermissionDeniedException } from '#shared/domain'
-import type { EntraGroupService } from '~/server/data/services/EntraGroupService'
+import type { EntraService } from '~/server/data/services/EntraService'
 import type { UserSession } from '#auth-utils'
-import type { z } from 'zod'
 import type { H3Event } from 'h3'
 
 /**
@@ -12,29 +11,28 @@ import type { H3Event } from 'h3'
 export class PermissionInteractor {
     private readonly _session: UserSession
     private readonly _event?: H3Event
-    private readonly _groupService: EntraGroupService
+    private readonly _entraService: EntraService
 
     constructor(props: {
         session: UserSession
         event?: H3Event
-        groupService: EntraGroupService
+        entraService: EntraService
     }) {
         this._session = props.session
         this._event = props.event
-        this._groupService = props.groupService
+        this._entraService = props.entraService
 
-        // Ensure we have a valid user session
         if (!this._session.user) {
             throw new PermissionDeniedException('Invalid user session: user not found')
         }
     }
 
-    get userId(): z.infer<typeof AppUser>['id'] {
+    get userId(): AppUserType['id'] {
         return this._session.user!.id
     }
 
-    get groupService(): EntraGroupService {
-        return this._groupService
+    get entraService(): EntraService {
+        return this._entraService
     }
 
     /**
@@ -42,7 +40,7 @@ export class PermissionInteractor {
      * @param organizationId Optional organization ID for organization-specific checks
      * @throws {PermissionDeniedException} If the user is not an organization admin
      */
-    assertOrganizationAdmin(organizationId: z.infer<typeof Organization>['id']): void {
+    assertOrganizationAdmin(organizationId: OrganizationType['id']): void {
         if (!this.isOrganizationAdmin(organizationId))
             throw new PermissionDeniedException('Forbidden: You do not have admin permissions.')
     }
@@ -52,7 +50,7 @@ export class PermissionInteractor {
      * @param organizationId Optional organization ID for organization-specific checks
      * @throws {PermissionDeniedException} If the user is not an organization contributor
      */
-    assertOrganizationContributor(organizationId: z.infer<typeof Organization>['id']): void {
+    assertOrganizationContributor(organizationId: OrganizationType['id']): void {
         if (!this.isOrganizationContributor(organizationId))
             throw new PermissionDeniedException('Forbidden: You do not have contributor permissions.')
     }
@@ -62,7 +60,7 @@ export class PermissionInteractor {
      * @param organizationId Optional organization ID for organization-specific checks
      * @throws {PermissionDeniedException} If the user is not an organization reader
      */
-    assertOrganizationReader(organizationId: z.infer<typeof Organization>['id']): void {
+    assertOrganizationReader(organizationId: OrganizationType['id']): void {
         if (!this.isOrganizationReader(organizationId))
             throw new PermissionDeniedException('Forbidden: You do not have reader permissions.')
     }
@@ -74,11 +72,9 @@ export class PermissionInteractor {
      * @param props.role The role to assign to the app user
      */
     async addAppUserOrganizationRole(props: { appUserId: string, organizationId: string, role: AppRole }): Promise<void> {
-        // Ensure the current user has permission to manage roles in this organization
         this.assertOrganizationAdmin(props.organizationId)
 
-        // Add the user to the appropriate Entra group
-        await this._groupService.addUserToOrganizationGroup({
+        await this._entraService.addUserToOrganizationGroup({
             userId: props.appUserId,
             organizationId: props.organizationId,
             role: props.role
@@ -94,8 +90,7 @@ export class PermissionInteractor {
      */
     async addOrganizationCreatorRole(props: { appUserId: string, organizationId: string, role: AppRole }): Promise<void> {
         // No permission check needed - this is for the creator during organization creation
-        // Add the user to the appropriate Entra group
-        await this._groupService.addUserToOrganizationGroup({
+        await this._entraService.addUserToOrganizationGroup({
             userId: props.appUserId,
             organizationId: props.organizationId,
             role: props.role
@@ -113,11 +108,9 @@ export class PermissionInteractor {
      * @param props.organizationId The id of the organization to remove the app user from
      */
     async deleteAppUserOrganizationRole(props: { appUserId: string, organizationId: string }): Promise<void> {
-        // Ensure the current user has permission to manage roles in this organization
         this.assertOrganizationAdmin(props.organizationId)
 
-        // Remove the user from all organization groups
-        await this._groupService.removeUserFromOrganizationGroup({
+        await this._entraService.removeUserFromOrganizationGroup({
             userId: props.appUserId,
             organizationId: props.organizationId
         })
@@ -130,29 +123,22 @@ export class PermissionInteractor {
      * @param props.role - The role of the app user in the organization
      * @returns Array of user-role mappings from Entra groups
      */
-    async findAppUserOrganizationRoles(props: { appUserId?: z.infer<typeof AppUser>['id'], organizationId: z.infer<typeof Organization>['id'], role?: AppRole }): Promise<z.infer<typeof AppUserOrganizationRole>[]> {
-        // Ensure the current user has permission to read roles in this organization
+    async findAppUserOrganizationRoles(props: { appUserId?: AppUserType['id'], organizationId: OrganizationType['id'], role?: AppRole }): Promise<AppUserOrganizationRoleType[]> {
         this.assertOrganizationReader(props.organizationId)
 
-        // Get users and their roles from Entra groups
-        const organizationUsers = await this._groupService.getOrganizationUsers(props.organizationId)
+        const organizationUsers = await this._entraService.getOrganizationUsers(props.organizationId),
+            filteredUsers = props.appUserId
+                ? organizationUsers.filter(orgUser => orgUser.user.id === props.appUserId)
+                : organizationUsers,
+            roleFilteredUsers = props.role
+                ? filteredUsers.filter(orgUser => orgUser.role === props.role)
+                : filteredUsers
 
-        // Filter by specific user if requested
-        const filteredUsers = props.appUserId
-            ? organizationUsers.filter(orgUser => orgUser.user.id === props.appUserId)
-            : organizationUsers
-
-        // Filter by role if requested
-        const roleFilteredUsers = props.role
-            ? filteredUsers.filter(orgUser => orgUser.role === props.role)
-            : filteredUsers
-
-        // Convert to AppUserOrganizationRole format
         return roleFilteredUsers.map(orgUser => ({
             appUser: { id: orgUser.user.id, name: orgUser.user.name },
             organization: { id: props.organizationId, name: '' }, // TODO: Get org name from somewhere
             role: orgUser.role
-        } as z.infer<typeof AppUserOrganizationRole>))
+        } as AppUserOrganizationRoleType))
     }
 
     /**
@@ -162,8 +148,7 @@ export class PermissionInteractor {
      * @returns The AppUserOrganizationRole from Entra groups
      * @throws {NotFoundException} If the user is not found in the organization
      */
-    async getAppUserOrganizationRole(props: { appUserId: z.infer<typeof AppUser>['id'], organizationId: z.infer<typeof Organization>['id'] }): Promise<z.infer<typeof AppUserOrganizationRole>> {
-        // Find the user's roles in this organization
+    async getAppUserOrganizationRole(props: { appUserId: AppUserType['id'], organizationId: OrganizationType['id'] }): Promise<AppUserOrganizationRoleType> {
         const roles = await this.findAppUserOrganizationRoles({
             appUserId: props.appUserId,
             organizationId: props.organizationId
@@ -173,7 +158,6 @@ export class PermissionInteractor {
             throw new NotFoundException('User is not a member of this organization')
         }
 
-        // Return the first role (users should only have one role per organization)
         return roles[0]
     }
 
@@ -198,7 +182,7 @@ export class PermissionInteractor {
      * @param organizationId Optional organization ID for organization-specific checks
      * @returns True if the user is an organization admin
      */
-    isOrganizationAdmin(organizationId: z.infer<typeof Organization>['id']): boolean {
+    isOrganizationAdmin(organizationId: OrganizationType['id']): boolean {
         if (this._session.user!.isSystemAdmin) {
             return true
         }
@@ -212,7 +196,7 @@ export class PermissionInteractor {
      * @param organizationId Optional organization ID for organization-specific checks
      * @returns True if the user is an organization contributor
      */
-    isOrganizationContributor(organizationId: z.infer<typeof Organization>['id']): boolean {
+    isOrganizationContributor(organizationId: OrganizationType['id']): boolean {
         if (this._session.user!.isSystemAdmin) {
             return true
         }
@@ -226,7 +210,7 @@ export class PermissionInteractor {
      * @param organizationId Optional organization ID for organization-specific checks
      * @returns True if the user is an organization reader
      */
-    isOrganizationReader(organizationId: z.infer<typeof Organization>['id']): boolean {
+    isOrganizationReader(organizationId: OrganizationType['id']): boolean {
         if (this._session.user!.isSystemAdmin) {
             return true
         }
@@ -241,12 +225,10 @@ export class PermissionInteractor {
      * @param props.organizationId The id of the organization to update the target user in
      * @param props.role The new role to assign to the target user
      */
-    async updateAppUserRole(props: { appUserId: z.infer<typeof AppUser>['id'], organizationId: z.infer<typeof Organization>['id'], role: AppRole }): Promise<void> {
-        // Ensure the current user has permission to manage roles in this organization
+    async updateAppUserRole(props: { appUserId: AppUserType['id'], organizationId: OrganizationType['id'], role: AppRole }): Promise<void> {
         this.assertOrganizationAdmin(props.organizationId)
 
-        // Update the user's role in Entra groups
-        await this._groupService.updateUserOrganizationRole({
+        await this._entraService.updateUserOrganizationRole({
             userId: props.appUserId,
             organizationId: props.organizationId,
             newRole: props.role

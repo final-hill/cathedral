@@ -25,10 +25,8 @@ export default defineEventHandler(async (event) => {
 
         if (error === 'access_denied') {
             const stateData: { organizationSlug: string, timestamp: number, nonce: string }
-                = JSON.parse(atob(state))
-
-            // Redirect back to organization page with error message
-            const redirectUrl = new URL(`/o/${stateData.organizationSlug}`, config.origin)
+                = JSON.parse(atob(state)),
+                redirectUrl = new URL(`/o/${stateData.organizationSlug}`, config.origin)
             redirectUrl.searchParams.set('slack_install', 'error')
             redirectUrl.searchParams.set('error_message', error_description || 'Access was denied by the user')
             await sendRedirect(event, redirectUrl.toString())
@@ -70,24 +68,22 @@ export default defineEventHandler(async (event) => {
     }
 
     // Exchange authorization code for access token using SlackService
-    const slackOAuthOrigin = config.slackOauthOrigin || config.origin
-    const tokenData = await SlackService.exchangeOAuthCode({
-        clientId: process.env.NUXT_PUBLIC_SLACK_CLIENT_ID!,
-        clientSecret: config.slackClientSecret,
-        code: code,
-        redirectUri: `${slackOAuthOrigin}/api/slack/oauth/callback`
-    })
-
-    const orgRepo = new OrganizationRepository({
+    const slackOAuthOrigin = config.slackOauthOrigin || config.origin,
+        tokenData = await SlackService.exchangeOAuthCode({
+            clientId: process.env.NUXT_PUBLIC_SLACK_CLIENT_ID!,
+            clientSecret: config.slackClientSecret,
+            code: code,
+            redirectUri: `${slackOAuthOrigin}/api/slack/oauth/callback`
+        }),
+        orgRepo = new OrganizationRepository({
             em,
             organizationSlug: stateData.organizationSlug
         }),
-        organization = await orgRepo.getOrganization()
-
-    const workspaceInteractor = createSlackWorkspaceInteractor({
-        em,
-        session
-    })
+        organization = await orgRepo.getOrganization(),
+        workspaceInteractor = createSlackWorkspaceInteractor({
+            em,
+            session
+        })
 
     await workspaceInteractor.installWorkspaceForOrganization({
         organizationId: organization.id,

@@ -1,5 +1,5 @@
-import type { z } from 'zod'
 import { Organization, DuplicateEntityException, NotFoundException, WorkflowState } from '#shared/domain'
+import type { OrganizationType } from '#shared/domain'
 import { slugify } from '#shared/utils'
 import { Repository } from './Repository'
 import { OrganizationRepository } from './OrganizationRepository'
@@ -10,7 +10,7 @@ import type { CreationInfo } from './CreationInfo'
 import type { DeletionInfo } from './DeletionInfo'
 import type { UpdationInfo } from './UpdationInfo'
 
-export class OrganizationCollectionRepository extends Repository<z.infer<typeof Organization>> {
+export class OrganizationCollectionRepository extends Repository<OrganizationType> {
     /**
      * Creates a new organization
      * @param props.name - The name of the organization
@@ -20,7 +20,7 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
      * @returns The id of the organization
      * @throws {DuplicateEntityException} If the organization already exists that is not in a deleted state
      */
-    async createOrganization(props: Pick<z.infer<typeof Organization>, 'name' | 'description'> & CreationInfo): Promise<z.infer<typeof Organization>['id']> {
+    async createOrganization(props: Pick<OrganizationType, 'name' | 'description'> & CreationInfo): Promise<OrganizationType['id']> {
         const em = this._em,
             orgRepo = new OrganizationRepository({ em, organizationSlug: slugify(props.name) }),
             existingOrg = await orgRepo.getOrganization().catch(() => undefined)
@@ -55,7 +55,7 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
      * @param props.deletedById - The id of the user deleting the organization
      * @throws {NotFoundException} If the organization does not exist
      */
-    async deleteOrganization(props: Pick<z.infer<typeof Organization>, 'id'> & DeletionInfo): Promise<void> {
+    async deleteOrganization(props: Pick<OrganizationType, 'id'> & DeletionInfo): Promise<void> {
         const em = this._em,
             orgRepo = new OrganizationRepository({ em, organizationId: props.id }),
             organization = await orgRepo.getOrganization()
@@ -99,18 +99,16 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
      * @param query - The query parameters to filter organizations by
      * @returns The organizations that match the query parameters
      */
-    async findOrganizations(query: Partial<z.infer<typeof Organization>>): Promise<z.infer<typeof Organization>[]> {
+    async findOrganizations(query: Partial<OrganizationType>): Promise<OrganizationType[]> {
         const { id, createdBy, creationDate } = query,
             effectiveDate = new Date(),
-            volatileQuery = await new ReqQueryToModelQuery().map(query)
-
-        const orgModels = await this._em.find(OrganizationModel, {
-            id,
-            createdById: createdBy?.id,
-            creationDate
-        }, { populate: ['*'] })
-
-        const mapper = new DataModelToDomainModel(),
+            volatileQuery = await new ReqQueryToModelQuery().map(query),
+            orgModels = await this._em.find(OrganizationModel, {
+                id,
+                createdById: createdBy?.id,
+                creationDate
+            }, { populate: ['*'] }),
+            mapper = new DataModelToDomainModel(),
             organizations = await Promise.all(orgModels.map(async (org) => {
                 // Get the truly latest version (including deleted versions) to check deletion status
                 const latestVersion = await org.getLatestVersionIncludingDeleted(effectiveDate, volatileQuery)
@@ -120,12 +118,13 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
                     return null
                 }
 
-                const combinedData = { ...org, ...latestVersion }
-                const mappedData = await mapper.map(combinedData)
+                const combinedData = { ...org, ...latestVersion },
+                    mappedData = await mapper.map(combinedData)
+
                 return Organization.parse(mappedData)
             }))
 
-        return organizations.filter(org => org !== null) as z.infer<typeof Organization>[]
+        return organizations.filter(org => org !== null) as OrganizationType[]
     }
 
     /**
@@ -134,7 +133,7 @@ export class OrganizationCollectionRepository extends Repository<z.infer<typeof 
      * @throws {NotFoundException} If the organization does not exist
      * @throws {MismatchException} If the provided name is already taken
      */
-    async updateOrganizationById(id: z.infer<typeof Organization>['id'], props: Pick<Partial<z.infer<typeof Organization>>, 'name' | 'description'> & UpdationInfo): Promise<void> {
+    async updateOrganizationById(id: OrganizationType['id'], props: Pick<Partial<OrganizationType>, 'name' | 'description'> & UpdationInfo): Promise<void> {
         const em = this._em,
             organization = await em.findOne(OrganizationModel, { id }),
             // Check if organization is deleted by getting the truly latest version

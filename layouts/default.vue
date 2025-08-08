@@ -1,25 +1,24 @@
 <script lang="ts" setup>
 const { $eventBus } = useNuxtApp(),
-    toast = useToast()
+    toast = useToast(),
+    showError = (e: unknown) => {
+        let error = ''
 
-const showError = (e: unknown) => {
-    let error = ''
+        if (e instanceof Error)
+            error = e.message
+        else if (typeof e === 'string')
+            error = e
+        else
+            error = 'An error occurred. Check the browser console for more details.'
 
-    if (e instanceof Error)
-        error = e.message
-    else if (typeof e === 'string')
-        error = e
-    else
-        error = 'An error occurred. Check the browser console for more details.'
-
-    console.error(error)
-    toast.add({
-        title: 'Error',
-        description: error,
-        color: 'error',
-        icon: 'i-lucide-octagon-alert'
-    })
-}
+        console.error(error)
+        toast.add({
+            title: 'Error',
+            description: error,
+            color: 'error',
+            icon: 'i-lucide-octagon-alert'
+        })
+    }
 
 $eventBus.$on('page-error', showError)
 </script>
@@ -67,14 +66,17 @@ $eventBus.$on('page-error', showError)
 
         & h1 {
             font-size: 1.5em;
+            margin-bottom: 1em;
         }
 
         & h2 {
             font-size: 1.25em;
+            margin-bottom: 0.75em;
         }
 
         & h3 {
             font-size: 1.1em;
+            margin-bottom: 0.5em;
         }
     }
 

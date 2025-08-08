@@ -5,15 +5,14 @@ import { slackSlashCommandSchema } from '~/server/data/slack-zod-schemas'
 import handleDomainException from '~/server/utils/handleDomainException'
 import { resolveSlackUserSession } from '~/server/utils/resolveSlackUser'
 
-const config = useRuntimeConfig()
-
-const slackService = new SlackService(config.slackBotToken, config.slackSigningSecret)
-const nlrService = new NaturalLanguageToRequirementService({
-    apiKey: config.azureOpenaiApiKey,
-    apiVersion: config.azureOpenaiApiVersion,
-    endpoint: config.azureOpenaiEndpoint,
-    deployment: config.azureOpenaiDeploymentId
-})
+const config = useRuntimeConfig(),
+    slackService = new SlackService(config.slackBotToken, config.slackSigningSecret),
+    nlrService = new NaturalLanguageToRequirementService({
+        apiKey: config.azureOpenaiApiKey,
+        apiVersion: config.azureOpenaiApiVersion,
+        endpoint: config.azureOpenaiEndpoint,
+        deployment: config.azureOpenaiDeploymentId
+    })
 
 /**
  * Slack slash command endpoint for /cathedral
@@ -25,13 +24,11 @@ export default defineEventHandler(async (event) => {
 
     slackService.assertValidSlackRequest(headers, rawBody)
 
-    const body = await validateEventBody(event, slackSlashCommandSchema)
-
-    const userSession = await resolveSlackUserSession(event, body.user_id, body.team_id)
-
-    // For most slash commands, we need a valid user session
-    // However, some commands like help and link-user can work without authentication
-    const requiresAuth = !['cathedral', 'cathedral-help', 'cathedral-link-user'].includes(body.command)
+    const body = await validateEventBody(event, slackSlashCommandSchema),
+        userSession = await resolveSlackUserSession(event, body.user_id, body.team_id),
+        // For most slash commands, we need a valid user session
+        // However, some commands like help and link-user can work without authentication
+        requiresAuth = !['cathedral', 'cathedral-help', 'cathedral-link-user'].includes(body.command)
 
     if (requiresAuth && !userSession) {
         return {
@@ -42,23 +39,22 @@ export default defineEventHandler(async (event) => {
 
     // Use resolved session or create a minimal session for non-authenticated commands
     const sessionToUse = userSession || {
-        id: `slack-${body.user_id}`, // Temporary ID for unlinked users
-        user: {
-            id: `slack-${body.user_id}`,
-            name: 'Unlinked Slack User',
-            email: `${body.user_id}@slack.local`,
-            isSystemAdmin: false,
-            organizationRoles: []
+            id: `slack-${body.user_id}`, // Temporary ID for unlinked users
+            user: {
+                id: `slack-${body.user_id}`,
+                name: 'Unlinked Slack User',
+                email: `${body.user_id}@slack.local`,
+                isSystemAdmin: false,
+                organizationRoles: []
+            },
+            loggedInAt: Date.now()
         },
-        loggedInAt: Date.now()
-    }
-
-    const eventInteractor = createSlackEventInteractor({
-        em: event.context.em,
-        session: sessionToUse,
-        slackService,
-        nlrService
-    })
+        eventInteractor = createSlackEventInteractor({
+            em: event.context.em,
+            session: sessionToUse,
+            slackService,
+            nlrService
+        })
 
     return eventInteractor.handleSlashCommand(body).catch(handleDomainException)
 })

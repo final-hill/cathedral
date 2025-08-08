@@ -161,16 +161,15 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
      * @returns Slack message with authentication link
      */
     createUserLinkMessage(slackUserId: string, teamId: string) {
-        const config = useRuntimeConfig()
+        const config = useRuntimeConfig(),
+            token = jwt.sign({
+                slackUserId,
+                teamId,
+                ts: Date.now()
+            }, config.slackLinkSecret, { expiresIn: '10m' }),
+            baseUrl = config.origin,
+            slackLinkUrl = new URL('/auth/slack-link', baseUrl)
 
-        const token = jwt.sign({
-            slackUserId,
-            teamId,
-            ts: Date.now()
-        }, config.slackLinkSecret, { expiresIn: '10m' })
-
-        const baseUrl = config.origin
-        const slackLinkUrl = new URL('/auth/slack-link', baseUrl)
         slackLinkUrl.searchParams.set('slackUserId', slackUserId)
         slackLinkUrl.searchParams.set('teamId', teamId)
         slackLinkUrl.searchParams.set('token', token)

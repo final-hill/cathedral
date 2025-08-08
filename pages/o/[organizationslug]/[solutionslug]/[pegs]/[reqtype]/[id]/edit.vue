@@ -1,0 +1,98 @@
+<script lang="ts" setup>
+import { ReqType } from '#shared/domain'
+import * as req from '#shared/domain/requirements'
+import type { RequirementType } from '~/shared/domain'
+import { transformRequirementDates } from '~/shared/utils/date-transform'
+import { snakeCaseToPascalCase, slugToSnakeCase, deSlugify } from '#shared/utils'
+import type { FormSchema } from '~/components/XForm.vue'
+import { z } from 'zod'
+
+const route = useRoute(),
+    { solutionslug: solutionSlug, organizationslug: organizationSlug, id, reqtype } = route.params as {
+        solutionslug: string
+        organizationslug: string
+        id: string
+        reqtype: string
+    },
+    // Convert reqtype to ReqType enum value (e.g., 'assumption' -> 'ASSUMPTION', 'glossary-term' -> 'GLOSSARY_TERM')
+    reqTypeSnakeCase = slugToSnakeCase(reqtype),
+    reqTypeValue = reqTypeSnakeCase.toUpperCase() as keyof typeof ReqType,
+    actualReqType = ReqType[reqTypeValue]
+
+if (!actualReqType) {
+    throw createError({
+        statusCode: 404,
+        statusMessage: `Unknown requirement type: ${reqtype}`
+    })
+}
+
+const ReqTypePascal = snakeCaseToPascalCase(actualReqType) as keyof typeof req,
+    RequirementSchema = req[ReqTypePascal]
+
+if (!RequirementSchema) {
+    throw createError({
+        statusCode: 404,
+        statusMessage: `Requirement entity not found for: ${reqtype}`
+    })
+}
+
+const title = `Edit ${snakeCaseToPascalCase(reqtype)}`
+
+useHead({ title })
+definePageMeta({ middleware: 'auth' })
+
+const { data: requirement, error } = await useFetch<RequirementType>(`/api/requirements/${actualReqType}/${id}`, {
+    query: {
+        solutionSlug,
+        organizationSlug
+    },
+    transform: (data: unknown) => transformRequirementDates(data as { creationDate: string, lastModified: string }) as unknown as RequirementType
+})
+
+if (error.value) {
+    throw createError({
+        statusCode: 404,
+        statusMessage: `${snakeCaseToPascalCase(reqtype)} not found`
+    })
+}
+
+// Helper type for requirement entity
+type ZodEntityWithOmit = { omit: (fields: Record<string, boolean>) => FormSchema }
+
+const innerSchema = RequirementSchema instanceof z.ZodEffects
+        ? RequirementSchema.innerType()
+        : RequirementSchema,
+    editSchema = (innerSchema as unknown as ZodEntityWithOmit).omit({
+        workflowState: true,
+        reqId: true,
+        reqIdPrefix: true,
+        createdBy: true,
+        creationDate: true,
+        lastModified: true,
+        reqType: true,
+        isDeleted: true,
+        modifiedBy: true,
+        solution: true,
+        parsedRequirements: true
+    }),
+    onSaved = (_savedRequirement: Record<string, unknown>) => {
+        // The form component handles navigation
+    }
+</script>
+
+<template>
+    <h1>{{ title }}</h1>
+    <p>
+        Modify the {{ deSlugify(reqtype) }} details.
+    </p>
+
+    <RequirementForm
+        :schema="editSchema"
+        :req-type="actualReqType"
+        :organization-slug="organizationSlug"
+        :solution-slug="solutionSlug"
+        :is-edit="true"
+        :requirement="requirement"
+        @saved="onSaved"
+    />
+</template>

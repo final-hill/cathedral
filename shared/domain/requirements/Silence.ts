@@ -13,6 +13,8 @@ export const Silence = Requirement.extend({
     - Cannot be approved or put in review
     - Cannot be revised (only removed)
     - Once removed, cannot be restored
-    
+
     The description contains the offending text that could not be parsed.
 `))
+
+export type SilenceType = z.infer<typeof Silence>

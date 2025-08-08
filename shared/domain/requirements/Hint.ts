@@ -5,3 +5,5 @@ import { ReqType } from './ReqType.js'
 export const Hint = Noise.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.HINT)
 }).describe('Design or implementation suggestion')
+
+export type HintType = z.infer<typeof Hint>

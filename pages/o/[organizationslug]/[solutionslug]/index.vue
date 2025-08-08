@@ -14,24 +14,42 @@ if (solutionError.value)
     $eventBus.$emit('page-error', solutionError.value)
 
 const links = [
-    { name: 'Project' as const, icon: 'i-lucide-box', label: 'Project', reqId: 'P' },
-    { name: 'Environment' as const, icon: 'i-lucide-cloud', label: 'Environment', reqId: 'E' },
-    { name: 'Goals' as const, icon: 'i-lucide-target', label: 'Goals', reqId: 'G' },
-    { name: 'System' as const, icon: 'i-lucide-building-2', label: 'System', reqId: 'S' }
-]
-
-const handleSolutionDelete = async () => {
-    await $fetch(`/api/solution/${slug}`, {
-        method: 'delete',
-        body: { organizationSlug }
-    }).catch(e => $eventBus.$emit('page-error', e))
-    deleteConfirmModalOpenState.value = false
-    router.push({ name: 'Organization', params: { organizationslug: organizationSlug } })
-}
-
-const handleSolutionEdit = () => {
-    router.push({ name: 'Edit Solution', params: { solutionslug: slug, organizationslug: organizationSlug } })
-}
+        {
+            label: 'Project',
+            icon: 'i-lucide-box',
+            reqId: 'P',
+            path: `/o/${organizationSlug}/${slug}/project`
+        },
+        {
+            label: 'Environment',
+            icon: 'i-lucide-cloud',
+            reqId: 'E',
+            path: `/o/${organizationSlug}/${slug}/environment`
+        },
+        {
+            label: 'Goals',
+            icon: 'i-lucide-target',
+            reqId: 'G',
+            path: `/o/${organizationSlug}/${slug}/goals`
+        },
+        {
+            label: 'System',
+            icon: 'i-lucide-building-2',
+            reqId: 'S',
+            path: `/o/${organizationSlug}/${slug}/system`
+        }
+    ],
+    handleSolutionDelete = async () => {
+        await $fetch(`/api/solution/${slug}`, {
+            method: 'delete',
+            body: { organizationSlug }
+        }).catch(e => $eventBus.$emit('page-error', e))
+        deleteConfirmModalOpenState.value = false
+        router.push({ name: 'Organization', params: { organizationslug: organizationSlug } })
+    },
+    handleSolutionEdit = () => {
+        router.push({ name: 'Edit Solution', params: { solutionslug: slug, organizationslug: organizationSlug } })
+    }
 </script>
 
 <template>

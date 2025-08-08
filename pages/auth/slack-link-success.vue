@@ -3,14 +3,14 @@ import { useRoute, useRouter } from 'vue-router'
 
 definePageMeta({ name: 'SlackLinkSuccess' })
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute(),
+    router = useRouter(),
 
-const isLinked = route.query.linked === 'true'
+    isLinked = route.query.linked === 'true',
 
-const goHome = () => {
-    router.push('/')
-}
+    goHome = () => {
+        router.push('/')
+    }
 
 // Redirect to homepage after 5 seconds
 setTimeout(() => {

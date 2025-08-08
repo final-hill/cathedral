@@ -6,17 +6,15 @@ import { slackInteractivePayloadSchema } from '~/server/data/slack-zod-schemas'
 import handleDomainException from '~/server/utils/handleDomainException'
 import { resolveSlackUserSession } from '~/server/utils/resolveSlackUser'
 
-const config = useRuntimeConfig()
-
-const slackService = new SlackService(config.slackBotToken, config.slackSigningSecret),
+const config = useRuntimeConfig(),
+    slackService = new SlackService(config.slackBotToken, config.slackSigningSecret),
     nlrService = new NaturalLanguageToRequirementService({
         apiKey: config.azureOpenaiApiKey,
         apiVersion: config.azureOpenaiApiVersion,
         endpoint: config.azureOpenaiEndpoint,
         deployment: config.azureOpenaiDeploymentId
-    })
-
-const slackInteractiveOuterSchema = z.object({ payload: z.string() })
+    }),
+    slackInteractiveOuterSchema = z.object({ payload: z.string() })
 
 /**
  * Slack interactive endpoint for Block Kit actions (e.g., solution select menu)
@@ -30,10 +28,9 @@ export default defineEventHandler(async (event) => {
 
     // Slack sends the payload as application/x-www-form-urlencoded with a 'payload' key containing a JSON string.
     // We first validate the outer form, then parse the JSON string, then validate the inner payload.
-    const { payload: payloadStr } = await validateEventBody(event, slackInteractiveOuterSchema)
-    const payload = slackInteractivePayloadSchema.parse(JSON.parse(payloadStr))
-
-    const userSession = await resolveSlackUserSession(event, payload.user?.id || '', payload.team?.id || '')
+    const { payload: payloadStr } = await validateEventBody(event, slackInteractiveOuterSchema),
+        payload = slackInteractivePayloadSchema.parse(JSON.parse(payloadStr)),
+        userSession = await resolveSlackUserSession(event, payload.user?.id || '', payload.team?.id || '')
 
     if (!userSession) {
         return {

@@ -2,7 +2,7 @@ import { OrganizationCollectionInteractor, PermissionInteractor } from '~/applic
 import { OrganizationCollectionRepository } from '~/server/data/repositories'
 import handleDomainException from '~/server/utils/handleDomainException'
 import { Organization } from '#shared/domain'
-import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
+import { createEntraService } from '~/server/utils/createEntraService'
 
 const paramSchema = Organization.innerType().pick({ slug: true })
 
@@ -12,16 +12,12 @@ const paramSchema = Organization.innerType().pick({ slug: true })
 export default defineEventHandler(async (event) => {
     const { slug } = await validateEventParams(event, paramSchema),
         session = await requireUserSession(event),
-        entraGroupService = createEntraGroupService(),
-        permissionInteractor = new PermissionInteractor({
-            event,
-            session,
-            groupService: entraGroupService
-        }),
+        entraService = createEntraService(),
+        permissionInteractor = new PermissionInteractor({ event, session, entraService }),
         organizationInteractor = new OrganizationCollectionInteractor({
             permissionInteractor,
             repository: new OrganizationCollectionRepository({ em: event.context.em }),
-            entraGroupService
+            entraService
         })
 
     return await organizationInteractor.deleteOrganizationBySlug(slug).catch(handleDomainException)

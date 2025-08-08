@@ -10,3 +10,5 @@ export const Goal = Requirement.extend({
     an objective of the project or system, in terms
     of their desired effect on the environment
 `))
+
+export type GoalType = z.infer<typeof Goal>

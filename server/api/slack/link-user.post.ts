@@ -4,16 +4,15 @@ import jwt from 'jsonwebtoken'
 import { PermissionInteractor, SlackUserInteractor } from '~/application/'
 import { SlackRepository } from '~/server/data/repositories'
 import { SlackService } from '~/server/data/services'
-import { createEntraGroupService } from '~/server/utils/createEntraGroupService'
+import { createEntraService } from '~/server/utils/createEntraService'
 import handleDomainException from '~/server/utils/handleDomainException'
 
-const { verify } = jwt
-
-const bodySchema = z.object({
-    slackUserId: z.string(),
-    teamId: z.string(),
-    token: z.string()
-})
+const { verify } = jwt,
+    bodySchema = z.object({
+        slackUserId: z.string(),
+        teamId: z.string(),
+        token: z.string()
+    })
 
 /**
  * Link a Slack user to a Cathedral user after authentication
@@ -22,21 +21,19 @@ export default defineEventHandler(async (event) => {
     const { slackUserId, teamId, token } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
         config = useRuntimeConfig(),
-        em = event.context.em
-
-    const userPermissionInteractor = new PermissionInteractor({
-        event,
-        session,
-        groupService: createEntraGroupService()
-    })
-
-    const slackUserInteractor = new SlackUserInteractor({
-        repository: new SlackRepository({ em }),
-        permissionInteractor: userPermissionInteractor,
-        slackService: new SlackService(config.slackBotToken, config.slackSigningSecret)
-    })
-
-    const payload = verify(token, config.slackLinkSecret)
+        em = event.context.em,
+        entraService = createEntraService(),
+        userPermissionInteractor = new PermissionInteractor({
+            event,
+            session,
+            entraService
+        }),
+        slackUserInteractor = new SlackUserInteractor({
+            repository: new SlackRepository({ em }),
+            permissionInteractor: userPermissionInteractor,
+            slackService: new SlackService(config.slackBotToken, config.slackSigningSecret)
+        }),
+        payload = verify(token, config.slackLinkSecret)
 
     if (typeof payload === 'string' || !payload || typeof payload !== 'object')
         handleDomainException('Invalid token payload')

@@ -11,3 +11,5 @@ export const AppUser = z.object({
         creationDate: z.date().describe('When the association was created')
     })).optional().describe('Slack user associations for this Cathedral user')
 }).describe('The users of the application')
+
+export type AppUserType = z.infer<typeof AppUser>

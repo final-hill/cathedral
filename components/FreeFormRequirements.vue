@@ -3,25 +3,24 @@ import type { z } from 'zod'
 import { reactive } from 'vue'
 import type { ButtonProps, FormSubmitEvent } from '@nuxt/ui'
 import { ParsedRequirements } from '~/shared/domain/requirements/ParsedRequirements'
+import type { ParsedRequirementsType } from '~/shared/domain/requirements/ParsedRequirements'
 import { getSchemaFields } from '~/shared/utils'
 import { ReqType } from '~/shared/domain'
 
 const props = defineProps<{
     organizationSlug: string
     solutionSlug: string
-}>()
-
-const requirementsFormSchema = ParsedRequirements.pick({
-    description: true
-})
+}>(),
+    requirementsFormSchema = ParsedRequirements.pick({
+        description: true
+    })
 
 type RequirementsFormSchema = z.infer<typeof requirementsFormSchema>
 
 const requirementsFormState = reactive<RequirementsFormSchema>({
-    description: ''
-})
-
-const schemaField = getSchemaFields(requirementsFormSchema).filter(field => field.key === 'description')[0]
+        description: ''
+    }),
+    schemaField = getSchemaFields(requirementsFormSchema).filter(field => field.key === 'description')[0]
 
 /**
  * The type of the parsed requirements result
@@ -43,22 +42,21 @@ async function submitRequirements({ data: { description } }: FormSubmitEvent<Req
         isLoading.value = true
 
         const parsedResultId = await $fetch(`/api/requirements/${ReqType.PARSED_REQUIREMENTS}/propose`, {
-            method: 'PUT',
-            body: {
-                solutionSlug: props.solutionSlug,
-                organizationSlug: props.organizationSlug,
-                name: 'Free-form requirements',
-                description
-            }
-        }) as string
-
-        const parsedResult = await $fetch(`/api/requirements/${ReqType.PARSED_REQUIREMENTS}/${parsedResultId}`, {
+                method: 'PUT',
+                body: {
+                    solutionSlug: props.solutionSlug,
+                    organizationSlug: props.organizationSlug,
+                    name: 'Free-form requirements',
+                    description
+                }
+            }) as string,
+            parsedResult = await $fetch(`/api/requirements/${ReqType.PARSED_REQUIREMENTS}/${parsedResultId}`, {
                 method: 'GET',
                 params: {
                     solutionSlug: props.solutionSlug,
                     organizationSlug: props.organizationSlug
                 }
-            }) as z.infer<typeof ParsedRequirements>,
+            }) as ParsedRequirementsType,
             parsedReq = ParsedRequirements.parse({
                 ...parsedResult,
                 creationDate: new Date(parsedResult.creationDate),
@@ -75,12 +73,7 @@ async function submitRequirements({ data: { description } }: FormSubmitEvent<Req
             color: 'neutral',
             variant: 'solid',
             to: {
-                name: 'Parsed Requirements Details',
-                params: {
-                    organizationslug: props.organizationSlug,
-                    solutionslug: props.solutionSlug,
-                    id: parsedResultId
-                }
+                path: `/o/${props.organizationSlug}/${props.solutionSlug}/project/parsed-requirements/${parsedResultId}`
             }
         }]
 
