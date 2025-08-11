@@ -203,10 +203,13 @@ export class FunctionalityModel extends BehaviorModel { }
 export class FunctionalityVersionsModel extends BehaviorVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.FUNCTIONAL_BEHAVIOR })
-export class FunctionalBehaviorModel extends FunctionalityModel { }
+export class FunctionalBehaviorModel extends BehaviorModel { }
 
 @Entity({ discriminatorValue: ReqType.FUNCTIONAL_BEHAVIOR })
-export class FunctionalBehaviorVersionsModel extends FunctionalityVersionsModel { }
+export class FunctionalBehaviorVersionsModel extends BehaviorVersionsModel {
+    @ManyToOne({ entity: () => FunctionalityModel, nullable: true })
+    readonly functionality?: Ref<FunctionalityModel>
+}
 
 @Entity({ discriminatorValue: ReqType.GLOSSARY_TERM })
 export class GlossaryTermModel extends ComponentModel { }
@@ -263,10 +266,13 @@ export class HintModel extends NoiseModel { }
 export class HintVersionsModel extends NoiseVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.NON_FUNCTIONAL_BEHAVIOR })
-export class NonFunctionalBehaviorModel extends FunctionalityModel { }
+export class NonFunctionalBehaviorModel extends BehaviorModel { }
 
 @Entity({ discriminatorValue: ReqType.NON_FUNCTIONAL_BEHAVIOR })
-export class NonFunctionalBehaviorVersionsModel extends FunctionalityVersionsModel { }
+export class NonFunctionalBehaviorVersionsModel extends BehaviorVersionsModel {
+    @ManyToOne({ entity: () => FunctionalityModel, nullable: true })
+    readonly functionality?: Ref<FunctionalityModel>
+}
 
 @Entity({ discriminatorValue: ReqType.OBSTACLE })
 export class ObstacleModel extends GoalModel { }

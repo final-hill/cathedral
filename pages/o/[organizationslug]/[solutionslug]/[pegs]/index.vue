@@ -127,9 +127,7 @@ const pegsMap: Record<string, Array<{
             label: 'Functionality',
             icon: 'i-lucide-settings',
             reqId: req.Functionality.shape.reqIdPrefix._def.defaultValue(),
-            // FIXME: https://github.com/final-hill/cathedral/issues/628
-            // path: `/o/${organizationslug}/${solutionslug}/goals/functionality`
-            disabled: true
+            path: `/o/${organizationslug}/${solutionslug}/goals/functionality`
         },
         {
             label: 'Scenarios (Epics)',
