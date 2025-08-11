@@ -68,7 +68,6 @@
             "non_functional_behavior",
             "obstacle",
             "project",
-            "situation",
             "organization",
             "outcome",
             "parsed_requirements",
@@ -215,7 +214,6 @@
             "non_functional_behavior",
             "obstacle",
             "project",
-            "situation",
             "organization",
             "outcome",
             "parsed_requirements",
@@ -327,6 +325,15 @@
           "primary": false,
           "nullable": true,
           "length": 6,
+          "mappedType": "uuid"
+        },
+        "functionality_id": {
+          "name": "functionality_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
           "mappedType": "uuid"
         },
         "email": {
@@ -566,6 +573,19 @@
             "requirement_id"
           ],
           "referencedTableName": "public.requirement_versions",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_versions_functionality_id_foreign": {
+          "constraintName": "requirement_versions_functionality_id_foreign",
+          "columnNames": [
+            "functionality_id"
+          ],
+          "localTableName": "public.requirement_versions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
