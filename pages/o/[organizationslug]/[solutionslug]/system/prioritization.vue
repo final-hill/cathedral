@@ -6,6 +6,7 @@ import { snakeCaseToTitleCase } from '#shared/utils'
 definePageMeta({ middleware: 'auth' })
 
 const route = useRoute(),
+    toast = useToast(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug } = route.params as {
         solutionslug: string
         organizationslug: string
@@ -205,7 +206,13 @@ const priorityOptions = [
                     endpoint = `/api/requirements/${update.reqTypeSlug}/active/${update.id}/edit`
                 } else {
                     // If this section is ever reached we have a problem
-                    throw createError(`Unexpected workflow state: ${update.workflowState}`)
+                    toast.add({
+                        icon: 'i-lucide-alert-circle',
+                        title: 'Error',
+                        description: `Unexpected workflow state: ${update.workflowState}`,
+                        color: 'error'
+                    })
+                    return
                 }
 
                 await $fetch(endpoint, {
@@ -219,12 +226,26 @@ const priorityOptions = [
 
             // Show appropriate success message based on workflow state
             if (selectedWorkflowState.value === WorkflowState.Active) {
-                console.log('Priority changes saved. New Proposed versions created that require review and approval.')
+                toast.add({
+                    icon: 'i-lucide-check',
+                    title: 'Priority changes saved',
+                    description: 'New Proposed versions created that require review and approval.'
+                })
             } else {
-                console.log('Priority changes saved successfully.')
+                toast.add({
+                    icon: 'i-lucide-check',
+                    title: 'Success',
+                    description: 'Priority changes saved successfully.'
+                })
             }
         } catch (error) {
-            throw createError(`Failed to save priority changes: ${error}`)
+            const message = error instanceof Error ? error.message : String(error)
+            toast.add({
+                icon: 'i-lucide-alert-circle',
+                title: 'Error',
+                description: `Failed to save priority changes: ${message}`,
+                color: 'error'
+            })
         }
     },
     draggedRequirement = ref<BehaviorType | ScenarioType | null>(null),

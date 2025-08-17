@@ -22,10 +22,7 @@ export default defineEventHandler(async (event) => {
 
     try {
         const newOrgId = await organizationCollectionInteractor.createOrganization({ name, description }),
-
-            // Try to find the organization
             organizations = await organizationCollectionInteractor.findOrganizations({ id: newOrgId! }),
-
             newOrg = organizations[0]
 
         if (!newOrg) {
