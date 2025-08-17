@@ -23,34 +23,24 @@ const { data: behaviors, status: behaviorsStatus, refresh: refreshBehaviors } = 
         query: { solutionSlug, organizationSlug },
         transform: (data: unknown[]) => data as ScenarioType[]
     }),
-
-    // Combine all requirements that can have priorities
     allRequirements = computed(() => {
         const requirements: (BehaviorType | ScenarioType)[] = []
 
-        // Add behaviors (includes all behavior subtypes via inheritance)
         if (behaviors.value) requirements.push(...behaviors.value)
 
-        // Add scenarios (includes all scenario subtypes via inheritance)
         if (scenarios.value) requirements.push(...scenarios.value)
 
         return requirements.filter(req => req.workflowState === selectedWorkflowState.value)
     }),
-
-    // Check if any request is loading
     isLoading = computed(() =>
         [behaviorsStatus.value, scenariosStatus.value].some(status => status === 'pending')
     ),
-
-    // Refresh all data
     refresh = async () => {
         await Promise.all([
             refreshBehaviors(),
             refreshScenarios()
         ])
     },
-
-    // Workflow state filter
     selectedWorkflowState = ref<WorkflowState>(WorkflowState.Proposed),
     workflowStateOptions = [
         { label: WorkflowState.Active, value: WorkflowState.Active },
@@ -69,9 +59,8 @@ const moscowPriorityLabels: Record<MoscowPriority, string> = {
     [MoscowPriority.SHOULD]: 'Should Have',
     [MoscowPriority.COULD]: 'Could Have',
     [MoscowPriority.WONT]: 'Won\'t Have'
-}
-
-const priorityOptions = [
+},
+    priorityOptions = [
         {
             label: moscowPriorityLabels[MoscowPriority.MUST],
             value: MoscowPriority.MUST,
@@ -292,7 +281,7 @@ const priorityOptions = [
             // If the requirement originally had a priority, we need to explicitly set it to null
             // If it didn't have a priority originally, we can just remove any local changes
             if (requirement.priority) {
-                localPriorityChanges.value.set(requirement.id, null as any)
+                localPriorityChanges.value.set(requirement.id, null)
             } else {
                 localPriorityChanges.value.delete(requirement.id)
             }
