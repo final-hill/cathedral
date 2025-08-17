@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { Behavior } from './Behavior.js'
+import { BehaviorBase } from './BehaviorBase.js'
 import { ReqType } from './ReqType.js'
 
-export const Example = Behavior.extend({
+export const Example = BehaviorBase.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.EXAMPLE)
 }).describe('Illustration of behavior through a usage scenario')
 

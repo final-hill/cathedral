@@ -258,14 +258,12 @@ export class PermissionInteractor {
                         ]
                     }
                 })
-                console.log(`Updated session permissions: added ${role} role for organization ${organizationId}`)
             } else {
                 // For non-HTTP contexts (like Slack operations), just update the in-memory session
                 this._session.user!.organizationRoles = [
                     ...this._session.user!.organizationRoles,
                     { orgId: organizationId, role }
                 ]
-                console.log(`Updated in-memory session permissions: added ${role} role for organization ${organizationId}`)
             }
         }
     }

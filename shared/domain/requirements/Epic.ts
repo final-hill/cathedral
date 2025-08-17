@@ -1,9 +1,9 @@
 import { z } from 'zod'
-import { Scenario } from './Scenario.js'
+import { Goal } from './Goal.js'
 import { dedent } from '../../../shared/utils/dedent.js'
 import { ReqType } from './ReqType.js'
 
-export const Epic = Scenario.extend({
+export const Epic = Goal.extend({
     reqId: z.string().regex(/^G\.5\.\d+$/, 'Format must be G.5.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('G.5.').default('G.5.'),

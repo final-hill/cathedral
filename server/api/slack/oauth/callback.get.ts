@@ -96,14 +96,6 @@ export default defineEventHandler(async (event) => {
         appId: tokenData.app_id || config.public.slackAppId
     })
 
-    console.log('Slack OAuth successful:', {
-        team: tokenData.team,
-        organizationSlug: stateData.organizationSlug,
-        botUserId: tokenData.bot_user_id,
-        appId: tokenData.app_id,
-        installedBy: session.user.id
-    })
-
     // Redirect back to the organization page with success message
     const redirectUrl = new URL(`/o/${stateData.organizationSlug}`, config.origin)
     redirectUrl.searchParams.set('slack_install', 'success')

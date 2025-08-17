@@ -1,9 +1,9 @@
 import { dedent } from '../../../shared/utils/dedent.js'
 import { z } from 'zod'
-import { Example } from './Example.js'
+import { Scenario } from './Scenario.js'
 import { ReqType } from './ReqType.js'
 
-export const TestCase = Example.extend({
+export const TestCase = Scenario.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.TEST_CASE)
 }).describe(dedent(`
     A TestCase is a specification of the inputs, execution conditions,

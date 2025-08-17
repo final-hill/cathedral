@@ -14,8 +14,6 @@ export default defineOAuthEntraExternalIDEventHandler({
         }
     },
     async onSuccess(event, { user, tokens }) {
-        console.log('OAuth success:', { user, tokenType: tokens.token_type })
-
         // Parse group memberships from ID token claims (required with optional claims)
         const entraService = createEntraService()
 

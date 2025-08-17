@@ -1,8 +1,9 @@
 import { z } from 'zod'
-import { Example } from './Example.js'
+import { Requirement } from './Requirement.js'
+import { MoscowPriority } from './MoscowPriority.js'
 import { ReqType } from './ReqType.js'
 
-export const Scenario = Example.extend({
+export const Scenario = Requirement.extend({
     primaryActor: z.object({
         reqType: z.nativeEnum(ReqType).default(ReqType.STAKEHOLDER),
         id: z.string().uuid()
@@ -17,7 +18,8 @@ export const Scenario = Example.extend({
         name: z.string()
             .describe('The name of the outcome (goal) that the scenario is aiming to achieve')
     }).describe('The outcome (goal) that the scenario is aiming to achieve'),
+    priority: z.nativeEnum(MoscowPriority).optional().describe('The Moscow Priority of the scenario'),
     reqType: z.nativeEnum(ReqType).default(ReqType.SCENARIO)
-}).describe('A Scenario specifies system behavior by describing paths of interaction between actors and the system.')
+}).describe('A Scenario specifies system behavior by describing paths of interaction between actors and the system. Supertype for use cases, user stories, epics, and test cases.')
 
 export type ScenarioType = z.infer<typeof Scenario>

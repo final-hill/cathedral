@@ -190,7 +190,7 @@ const pegsMap: Record<string, Array<{
             label: 'Prioritization',
             icon: 'i-lucide-arrow-up-down',
             reqId: 'S.5',
-            disabled: true
+            path: `/o/${organizationslug}/${solutionslug}/system/prioritization`
         },
         {
             label: 'Verification and acceptance criteria',

@@ -4,3 +4,26 @@
 @theme static {
     --font-sans: Verdana, Geneva, Tahoma, sans-serif;
 }
+
+/* Custom scrollbar styles for priority columns */
+.priority-scrollable {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(115 115 115 / 0.3) transparent;
+}
+
+.priority-scrollable::-webkit-scrollbar {
+    width: 6px;
+}
+
+.priority-scrollable::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.priority-scrollable::-webkit-scrollbar-thumb {
+    background-color: rgb(115 115 115 / 0.3);
+    border-radius: 3px;
+}
+
+.priority-scrollable::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(115 115 115 / 0.5);
+}
