@@ -46,6 +46,73 @@ A production build can be run via: `npm run build` followed by `npm run preview`
 
 The database is in Version Normal Form to support temporal data. More details available [here](https://github.com/final-hill/cathedral/issues/435).
 
+## Requirements Domain Inheritance Hierarchy
+
+The Cathedral system implements a comprehensive inheritance hierarchy for requirement entities based on requirements framework literature. Understanding this hierarchy is crucial for developers working with the domain model.
+
+### Complete Inheritance Tree
+
+```
+Requirement (base for all requirements)
+│
+├── Goal
+│   ├── ContextAndObjective (G.1.#)
+│   ├── Obstacle (G.2.#)
+│   ├── Outcome (G.3.#)
+│   ├── Functionality (G.4.#)
+│   └── Epic (G.5.#)
+│
+├── BehaviorBase
+│   ├── Example
+│   └── Behavior
+│       ├── FunctionalBehavior (S.2.1.#)
+│       └── NonFunctionalBehavior (S.2.2.#)
+│
+├── Scenario
+│   ├── UseCase (S.4.2.#)
+│   ├── UserStory (S.4.1.#)
+│   └── TestCase (S.6.#)
+│
+├── Actor
+│   ├── Person (P.1.#)
+│   └── Component
+│       ├── EnvironmentComponent (E.2.#)
+│       ├── SystemComponent (S.1.#)
+│       ├── GlossaryTerm (E.1.#)
+│       └── Stakeholder (G.7.#)
+│
+├── Responsibility
+│   └── Role
+│
+├── MetaRequirement
+│   ├── ParsedRequirements (P.7.#)
+│   ├── Justification
+│   ├── Goals
+│   ├── Project
+│   ├── System
+│   ├── Solution
+│   ├── Environment
+│   └── Organization
+│
+├── Task
+├── Constraint (E.3.#)
+├── Invariant (E.6.#)
+├── Effect (E.5.#)
+├── Assumption (E.4.#)
+├── Limit (G.6.#)
+├── Silence
+├── Product (P.2.#)
+└── Noise
+    └── Hint
+```
+
+### ORM Implementation
+
+The inheritance hierarchy is implemented in the ORM using Single Table Inheritance with discriminator fields. This allows:
+- Querying parent types returns all subtypes automatically
+- Efficient database operations across the entire hierarchy
+- Type-safe domain model with proper inheritance relationships
+
 ## Application Architecture
 
 The application is a [monolith](https://martinfowler.com/bliki/MonolithFirst.html) following a layered architecture. The application is split into the following layers:
@@ -272,7 +339,7 @@ The workflow is primarily managed through the `RequirementList.vue` component an
 
 #### Autocomplete and Reference Validation
 
-**Autocomplete Behavior**: 
+**Autocomplete Behavior**:
 - The `/api/autocomplete` endpoint provides dropdown options for requirement references (Primary Actor, Outcome, etc.)
 - During editing, autocomplete shows requirements from all visible workflow states: Active, Proposed, and Review
 - Each option displays the workflow state (e.g., "HR Manager (Active)", "Screening Process (Proposed)") to help users make informed choices

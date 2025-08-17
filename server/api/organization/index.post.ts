@@ -20,18 +20,13 @@ export default defineEventHandler(async (event) => {
             entraService
         })
 
-    console.log('Creating organization. with session: ', session)
-
     try {
-        const newOrgId = await organizationCollectionInteractor.createOrganization({ name, description })
+        const newOrgId = await organizationCollectionInteractor.createOrganization({ name, description }),
 
-        console.log(`Organization created with ID: ${newOrgId}`)
+            // Try to find the organization
+            organizations = await organizationCollectionInteractor.findOrganizations({ id: newOrgId! }),
 
-        // Try to find the organization
-        const organizations = await organizationCollectionInteractor.findOrganizations({ id: newOrgId! })
-        console.log(`Found ${organizations.length} organizations with ID: ${newOrgId}`)
-
-        const newOrg = organizations[0]
+            newOrg = organizations[0]
 
         if (!newOrg) {
             console.error(`Failed to find newly created organization for id: ${newOrgId}`)
@@ -41,7 +36,6 @@ export default defineEventHandler(async (event) => {
             })
         }
 
-        console.log(`Returning organization slug: ${newOrg.slug}`)
         return newOrg.slug
     } catch (error: unknown) {
         return handleDomainException(error)

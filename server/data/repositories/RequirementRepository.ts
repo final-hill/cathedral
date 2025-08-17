@@ -179,6 +179,27 @@ export class RequirementRepository extends Repository<RequirementType> {
                 })
             }
 
+            // Create related behavior for Functionality requirements
+            const newFunctionalityRelatedBehaviorId = req.functionalityRelatedBehaviorName ? uuid7() : undefined
+            if (newFunctionalityRelatedBehaviorId) {
+                em.create(reqModels.FunctionalBehaviorVersionsModel, {
+                    requirement: em.create(reqModels.FunctionalBehaviorModel, {
+                        id: newFunctionalityRelatedBehaviorId,
+                        createdById: props.createdById,
+                        creationDate: props.creationDate,
+                        parsedRequirements: parsedReqsId
+                    }),
+                    isDeleted: false,
+                    effectiveFrom: props.creationDate,
+                    modifiedById: props.createdById,
+                    description: req.functionalityRelatedBehaviorName!,
+                    workflowState: WorkflowState.Proposed,
+                    solution: props.solutionId,
+                    name: req.functionalityRelatedBehaviorName!,
+                    priority: MoscowPriority.MUST
+                })
+            }
+
             em.create(ReqVersionsModel, {
                 requirement: em.create(ReqStaticModel, {
                     id: newId,
@@ -193,7 +214,7 @@ export class RequirementRepository extends Repository<RequirementType> {
                 solution: props.solutionId,
                 description: req.description,
                 name: req.name,
-                ...(req.moscowPriority && { priority: req.moscowPriority }),
+                ...(req.priority && { priority: req.priority }),
                 ...(req.email && { email: req.email }),
                 ...(newPrimaryActorId && { primaryActor: newPrimaryActorId }),
                 ...(newOutcomeId && { outcome: newOutcomeId }),

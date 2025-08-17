@@ -153,8 +153,8 @@ export class BehaviorModel extends RequirementModel { }
 
 @Entity({ discriminatorValue: ReqType.BEHAVIOR })
 export class BehaviorVersionsModel extends RequirementVersionsModel {
-    @Enum({ items: () => MoscowPriority })
-    readonly priority!: MoscowPriority
+    @Enum({ items: () => MoscowPriority, nullable: true })
+    readonly priority?: MoscowPriority
 }
 
 @Entity({ discriminatorValue: ReqType.COMPONENT })
@@ -196,12 +196,6 @@ export class ExampleModel extends BehaviorModel { }
 @Entity({ discriminatorValue: ReqType.EXAMPLE })
 export class ExampleVersionsModel extends BehaviorVersionsModel { }
 
-@Entity({ discriminatorValue: ReqType.FUNCTIONALITY })
-export class FunctionalityModel extends BehaviorModel { }
-
-@Entity({ discriminatorValue: ReqType.FUNCTIONALITY })
-export class FunctionalityVersionsModel extends BehaviorVersionsModel { }
-
 @Entity({ discriminatorValue: ReqType.FUNCTIONAL_BEHAVIOR })
 export class FunctionalBehaviorModel extends BehaviorModel { }
 
@@ -222,6 +216,12 @@ export class GoalModel extends RequirementModel { }
 
 @Entity({ discriminatorValue: ReqType.GOAL })
 export class GoalVersionsModel extends RequirementVersionsModel { }
+
+@Entity({ discriminatorValue: ReqType.FUNCTIONALITY })
+export class FunctionalityModel extends GoalModel { }
+
+@Entity({ discriminatorValue: ReqType.FUNCTIONALITY })
+export class FunctionalityVersionsModel extends GoalVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.CONTEXT_AND_OBJECTIVE })
 export class ContextAndObjectiveModel extends GoalModel { }
@@ -375,10 +375,13 @@ export class StakeholderVersionsModel extends ComponentVersionsModel {
 }
 
 @Entity({ discriminatorValue: ReqType.SCENARIO })
-export class ScenarioModel extends ExampleModel { }
+export class ScenarioModel extends RequirementModel { }
 
 @Entity({ discriminatorValue: ReqType.SCENARIO })
-export class ScenarioVersionsModel extends ExampleVersionsModel {
+export class ScenarioVersionsModel extends RequirementVersionsModel {
+    @Enum({ items: () => MoscowPriority, nullable: true })
+    readonly priority?: MoscowPriority
+
     @ManyToOne({ entity: () => StakeholderModel })
     readonly primaryActor!: StakeholderModel
 
@@ -387,10 +390,10 @@ export class ScenarioVersionsModel extends ExampleVersionsModel {
 }
 
 @Entity({ discriminatorValue: ReqType.EPIC })
-export class EpicModel extends ScenarioModel { }
+export class EpicModel extends GoalModel { }
 
 @Entity({ discriminatorValue: ReqType.EPIC })
-export class EpicVersionsModel extends ScenarioVersionsModel {
+export class EpicVersionsModel extends GoalVersionsModel {
     @ManyToOne({ entity: () => FunctionalBehaviorModel })
     readonly functionalBehavior!: FunctionalBehaviorModel
 }
@@ -408,10 +411,10 @@ export class TaskModel extends RequirementModel { }
 export class TaskVersionsModel extends RequirementVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.TEST_CASE })
-export class TestCaseModel extends RequirementModel { }
+export class TestCaseModel extends ScenarioModel { }
 
 @Entity({ discriminatorValue: ReqType.TEST_CASE })
-export class TestCaseVersionsModel extends RequirementVersionsModel { }
+export class TestCaseVersionsModel extends ScenarioVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.USE_CASE })
 export class UseCaseModel extends ScenarioModel { }

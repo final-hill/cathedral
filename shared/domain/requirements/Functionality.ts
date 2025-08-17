@@ -1,9 +1,9 @@
 import { z } from 'zod'
-import { Behavior } from './Behavior.js'
+import { Goal } from './Goal.js'
 import { ReqType } from './ReqType.js'
 import { dedent } from '../../../shared/utils/dedent.js'
 
-export const Functionality = Behavior.extend({
+export const Functionality = Goal.extend({
     reqId: z.string().regex(/^G\.4\.\d+$/, 'Format must be G.4.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('G.4.').default('G.4.'),
