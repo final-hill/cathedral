@@ -4,12 +4,9 @@ const { $eventBus } = useNuxtApp(),
     showError = (e: unknown) => {
         let error = ''
 
-        if (e instanceof Error)
-            error = e.message
-        else if (typeof e === 'string')
-            error = e
-        else
-            error = 'An error occurred. Check the browser console for more details.'
+        if (e instanceof Error) error = e.message
+        else if (typeof e === 'string') error = e
+        else error = 'An error occurred. Check the browser console for more details.'
 
         console.error(error)
         toast.add({

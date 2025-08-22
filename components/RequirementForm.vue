@@ -33,11 +33,10 @@ const route = useRoute(),
     // Derive the current path from the router, removing the ID and action parts
     currentPath = computed(() => {
         const path = route.path
-        if (isEditValue.value) {
+        if (isEditValue.value)
             return path.replace(/\/[^/]+\/edit$/, '')
-        } else {
+        else
             return path.replace(/\/new$/, '')
-        }
     }),
     formState = ref((() => {
         if (!requirement?.value) return {} as Partial<req.RequirementType>
@@ -47,9 +46,8 @@ const route = useRoute(),
             filteredData: Partial<req.RequirementType> = {}
 
         for (const key of schemaKeys) {
-            if (key in requirement.value) {
+            if (key in requirement.value)
                 (filteredData as Record<string, unknown>)[key] = (requirement.value as Record<string, unknown>)[key]
-            }
         }
 
         return filteredData

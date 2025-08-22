@@ -13,9 +13,8 @@ const _props = defineProps({
         // Store current path in sessionStorage for post-auth redirect (client-side only)
             if (import.meta.client) {
                 const currentPath = useRoute().fullPath
-                if (currentPath !== '/error') {
+                if (currentPath !== '/error')
                     sessionStorage.setItem('auth-redirect', currentPath)
-                }
             }
             navigateTo('/auth/entra-external-id', { external: true })
             return

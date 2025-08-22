@@ -13,8 +13,7 @@ const { id: organizationId, slug: organizationSlug } = Organization.innerType().
 export default defineEventHandler(async (event) => {
     const { id, reqType } = await validateEventParams(event, paramSchema)
 
-    if (reqType === ReqType.PARSED_REQUIREMENTS)
-        throw createError({ statusCode: 400, message: 'PARSED_REQUIREMENTS is not a valid reqType for this operation.' })
+    if (reqType === ReqType.PARSED_REQUIREMENTS) throw createError({ statusCode: 400, message: 'PARSED_REQUIREMENTS is not a valid reqType for this operation.' })
 
     const bodySchema = z.object({
             solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,

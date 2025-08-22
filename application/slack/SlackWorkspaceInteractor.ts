@@ -113,8 +113,7 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
     async getWorkspaceConfiguration(teamId: string) {
         const workspaceInfo = await this.repository.getWorkspaceByTeamId(teamId)
 
-        if (!workspaceInfo)
-            throw new NotFoundException('Slack workspace integration not found')
+        if (!workspaceInfo) throw new NotFoundException('Slack workspace integration not found')
 
         this._permissionInteractor.assertOrganizationReader(workspaceInfo.organization.id)
 
@@ -136,8 +135,7 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
     }) {
         const workspaceInfo = await this.repository.getWorkspaceByTeamId(teamId)
 
-        if (!workspaceInfo)
-            throw new NotFoundException('Slack workspace integration not found')
+        if (!workspaceInfo) throw new NotFoundException('Slack workspace integration not found')
 
         this._permissionInteractor.assertOrganizationContributor(workspaceInfo.organization.id)
 
@@ -162,8 +160,7 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
     async refreshWorkspaceFromSlackAPI(teamId: string) {
         const workspaceConfig = await this.repository.getWorkspaceByTeamId(teamId)
 
-        if (!workspaceConfig)
-            throw new NotFoundException('Slack workspace integration not found')
+        if (!workspaceConfig) throw new NotFoundException('Slack workspace integration not found')
 
         this._permissionInteractor.assertOrganizationContributor(workspaceConfig.organization.id)
 
@@ -181,8 +178,7 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
 
         const updatedConfig = await this.repository.getWorkspaceConfiguration(teamId)
 
-        if (!updatedConfig)
-            throw new NotFoundException('Slack workspace integration not found after update')
+        if (!updatedConfig) throw new NotFoundException('Slack workspace integration not found after update')
 
         return updatedConfig
     }

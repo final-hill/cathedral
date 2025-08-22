@@ -58,9 +58,8 @@ export class AppUserSlackInteractor extends Interactor<AppUserType> {
     async getAppUsersWithSlack(): Promise<AppUserType[]> {
         const users = await this._organizationInteractor.getAppUsers()
 
-        if (users.length === 0) {
+        if (users.length === 0)
             return users
-        }
 
         // Bulk load Slack associations for all users
         const usersWithSlack = await Promise.all(

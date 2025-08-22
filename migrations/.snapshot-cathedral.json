@@ -53,6 +53,7 @@
             "environment",
             "environment_component",
             "epic",
+            "event",
             "example",
             "functional_behavior",
             "functionality",
@@ -60,6 +61,7 @@
             "goal",
             "goals",
             "hint",
+            "interaction_requirement",
             "invariant",
             "justification",
             "limit",
@@ -77,6 +79,7 @@
             "responsibility",
             "role",
             "scenario",
+            "scenario_step",
             "silence",
             "solution",
             "stakeholder",
@@ -91,6 +94,33 @@
         },
         "parsed_requirements_id": {
           "name": "parsed_requirements_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
+        "scenario_step_id": {
+          "name": "scenario_step_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
+        "parent_scenario_id": {
+          "name": "parent_scenario_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
+        "use_case_id": {
+          "name": "use_case_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
@@ -129,6 +159,45 @@
           "constraintName": "requirement_parsed_requirements_id_foreign",
           "columnNames": [
             "parsed_requirements_id"
+          ],
+          "localTableName": "public.requirement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_scenario_step_id_foreign": {
+          "constraintName": "requirement_scenario_step_id_foreign",
+          "columnNames": [
+            "scenario_step_id"
+          ],
+          "localTableName": "public.requirement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_parent_scenario_id_foreign": {
+          "constraintName": "requirement_parent_scenario_id_foreign",
+          "columnNames": [
+            "parent_scenario_id"
+          ],
+          "localTableName": "public.requirement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_use_case_id_foreign": {
+          "constraintName": "requirement_use_case_id_foreign",
+          "columnNames": [
+            "use_case_id"
           ],
           "localTableName": "public.requirement",
           "referencedColumnNames": [
@@ -199,6 +268,7 @@
             "environment",
             "environment_component",
             "epic",
+            "event",
             "example",
             "functional_behavior",
             "functionality",
@@ -206,6 +276,7 @@
             "goal",
             "goals",
             "hint",
+            "interaction_requirement",
             "invariant",
             "justification",
             "limit",
@@ -223,6 +294,7 @@
             "responsibility",
             "role",
             "scenario",
+            "scenario_step",
             "silence",
             "solution",
             "stakeholder",
@@ -292,39 +364,13 @@
           "length": 255,
           "mappedType": "string"
         },
-        "priority": {
-          "name": "priority",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "enumItems": [
-            "MUST",
-            "SHOULD",
-            "COULD",
-            "WONT"
-          ],
-          "mappedType": "enum"
-        },
-        "parent_component_effective_from": {
-          "name": "parent_component_effective_from",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "parent_component_requirement_id": {
-          "name": "parent_component_requirement_id",
+        "parent_component_id": {
+          "name": "parent_component_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "length": 6,
           "mappedType": "uuid"
         },
         "functionality_id": {
@@ -346,6 +392,44 @@
           "length": 254,
           "mappedType": "string"
         },
+        "step_number": {
+          "name": "step_number",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "step_type": {
+          "name": "step_type",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "enumItems": [
+            "Action",
+            "Condition"
+          ],
+          "mappedType": "enum"
+        },
+        "priority": {
+          "name": "priority",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "enumItems": [
+            "MUST",
+            "SHOULD",
+            "COULD",
+            "WONT"
+          ],
+          "mappedType": "enum"
+        },
         "primary_actor_id": {
           "name": "primary_actor_id",
           "type": "uuid",
@@ -357,6 +441,15 @@
         },
         "outcome_id": {
           "name": "outcome_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
+        "functional_behavior_id": {
+          "name": "functional_behavior_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
@@ -432,28 +525,8 @@
           "nullable": true,
           "mappedType": "integer"
         },
-        "scope": {
-          "name": "scope",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "level": {
-          "name": "level",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "precondition_id": {
-          "name": "precondition_id",
+        "scope_id": {
+          "name": "scope_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
@@ -463,44 +536,6 @@
         },
         "trigger_id": {
           "name": "trigger_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        },
-        "main_success_scenario": {
-          "name": "main_success_scenario",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "success_guarantee_id": {
-          "name": "success_guarantee_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        },
-        "extensions": {
-          "name": "extensions",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "functional_behavior_id": {
-          "name": "functional_behavior_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
@@ -561,18 +596,16 @@
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
-        "requirement_versions_parent_component_effective__e6046_foreign": {
-          "constraintName": "requirement_versions_parent_component_effective__e6046_foreign",
+        "requirement_versions_parent_component_id_foreign": {
+          "constraintName": "requirement_versions_parent_component_id_foreign",
           "columnNames": [
-            "parent_component_effective_from",
-            "parent_component_requirement_id"
+            "parent_component_id"
           ],
           "localTableName": "public.requirement_versions",
           "referencedColumnNames": [
-            "effective_from",
-            "requirement_id"
+            "id"
           ],
-          "referencedTableName": "public.requirement_versions",
+          "referencedTableName": "public.requirement",
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -615,6 +648,19 @@
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
+        "requirement_versions_functional_behavior_id_foreign": {
+          "constraintName": "requirement_versions_functional_behavior_id_foreign",
+          "columnNames": [
+            "functional_behavior_id"
+          ],
+          "localTableName": "public.requirement_versions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
         "requirement_versions_organization_id_foreign": {
           "constraintName": "requirement_versions_organization_id_foreign",
           "columnNames": [
@@ -628,36 +674,10 @@
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
-        "requirement_versions_precondition_id_foreign": {
-          "constraintName": "requirement_versions_precondition_id_foreign",
+        "requirement_versions_scope_id_foreign": {
+          "constraintName": "requirement_versions_scope_id_foreign",
           "columnNames": [
-            "precondition_id"
-          ],
-          "localTableName": "public.requirement_versions",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "requirement_versions_success_guarantee_id_foreign": {
-          "constraintName": "requirement_versions_success_guarantee_id_foreign",
-          "columnNames": [
-            "success_guarantee_id"
-          ],
-          "localTableName": "public.requirement_versions",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.requirement",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "requirement_versions_functional_behavior_id_foreign": {
-          "constraintName": "requirement_versions_functional_behavior_id_foreign",
-          "columnNames": [
-            "functional_behavior_id"
+            "scope_id"
           ],
           "localTableName": "public.requirement_versions",
           "referencedColumnNames": [

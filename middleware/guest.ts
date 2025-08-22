@@ -19,9 +19,9 @@ export default defineNuxtRouteMiddleware((to) => {
 
     if (loggedIn.value) {
         const redirectPath = to.query.redirect as string
-        if (redirectPath && isSafeRedirectPath(redirectPath)) {
+        if (redirectPath && isSafeRedirectPath(redirectPath))
             return navigateTo(redirectPath)
-        }
+
         return navigateTo('/')
     }
 })

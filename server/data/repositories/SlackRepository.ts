@@ -33,16 +33,14 @@ export class SlackRepository extends Repository<unknown> {
                 populate: ['solution']
             })
 
-        if (!channelMeta || !channelMeta.solution) {
+        if (!channelMeta || !channelMeta.solution)
             return null
-        }
 
         const solutionModel = channelMeta.solution,
             latestVersion = await solutionModel.getLatestVersion(new Date()) as SolutionVersionsModel | null
 
-        if (!latestVersion?.organization) {
+        if (!latestVersion?.organization)
             return null
-        }
 
         // Get the organization details
         const organizationId = latestVersion.organization.id,
@@ -89,9 +87,8 @@ export class SlackRepository extends Repository<unknown> {
                 teamId: props.teamId
             })
 
-        if (existing) {
+        if (existing)
             throw new DuplicateEntityException('Channel is already linked to a solution')
-        }
 
         const slackChannelMeta = em.create(SlackChannelMetaModel, {
             channelId: props.channelId,
@@ -120,8 +117,7 @@ export class SlackRepository extends Repository<unknown> {
                 teamId: props.teamId
             })
 
-        if (!existing)
-            throw new NotFoundException('Channel link not found')
+        if (!existing) throw new NotFoundException('Channel link not found')
 
         await em.removeAndFlush(existing)
     }
@@ -139,8 +135,7 @@ export class SlackRepository extends Repository<unknown> {
                 slackUserId: props.slackUserId,
                 teamId: props.teamId
             })
-        if (existing)
-            throw new DuplicateEntityException(`Slack user ${props.slackUserId} in team ${props.teamId} is already linked to a Cathedral user.`)
+        if (existing) throw new DuplicateEntityException(`Slack user ${props.slackUserId} in team ${props.teamId} is already linked to a Cathedral user.`)
 
         // Create the SlackUserMetaModel
         const slackUserMeta = em.create(SlackUserMetaModel, {
@@ -165,9 +160,9 @@ export class SlackRepository extends Repository<unknown> {
                 slackUserId: props.slackUserId,
                 teamId: props.teamId
             })
-        if (!existing) {
+        if (!existing)
             throw new NotFoundException(`No Slack user link found for user ${props.slackUserId} in team ${props.teamId}`)
-        }
+
         await em.removeAndFlush(existing)
     }
 
@@ -195,8 +190,7 @@ export class SlackRepository extends Repository<unknown> {
     async getCathedralUserIdForSlackUser({ slackUserId, teamId }: { slackUserId: string, teamId: string }): Promise<string | null> {
         const em = this._em,
             meta = await em.findOne(SlackUserMetaModel, { slackUserId, teamId })
-        if (!meta || !meta.appUserId)
-            return null
+        if (!meta || !meta.appUserId) return null
         return meta.appUserId
     }
 

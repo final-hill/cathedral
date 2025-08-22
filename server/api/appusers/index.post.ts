@@ -35,14 +35,12 @@ export default defineEventHandler(async (event) => {
     try {
         const orgId = organizationId ?? (await organizationInteractor.findOrganizations({ slug: organizationSlug }))[0]?.id
 
-        if (!orgId) {
+        if (!orgId)
             throw new NotFoundException(`Organization not found`)
-        }
 
         const redirectUrl = config.oauth?.microsoft?.redirectURL
-        if (!redirectUrl) {
+        if (!redirectUrl)
             throw new Error('OAuth redirect URL not configured')
-        }
 
         const result = await appUserInteractor.addOrInviteUserToOrganization(email, orgId, role, redirectUrl)
 

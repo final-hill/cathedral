@@ -31,9 +31,8 @@ const route = useRoute(),
                 const groupedByType = Object.groupBy(fieldValue, req => req.reqType)
                 grouped[field.key] = {}
                 for (const [key, value] of Object.entries(groupedByType)) {
-                    if (value && value.length > 0) {
+                    if (value && value.length > 0)
                         grouped[field.key][key] = value
-                    }
                 }
             }
         }

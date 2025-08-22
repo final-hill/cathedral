@@ -13,11 +13,9 @@ const { id: organizationId, slug: organizationSlug } = Organization.innerType().
 export default defineEventHandler(async (event) => {
     const { id, reqType } = await validateEventParams(event, paramSchema)
 
-    if (reqType === ReqType.PARSED_REQUIREMENTS)
-        throw createError({ statusCode: 400, statusMessage: 'ReqType.PARSED_REQUIREMENTS is not allowed.' })
+    if (reqType === ReqType.PARSED_REQUIREMENTS) throw createError({ statusCode: 400, statusMessage: 'ReqType.PARSED_REQUIREMENTS is not allowed.' })
 
-    if (reqType === ReqType.SILENCE)
-        throw createError({ statusCode: 400, statusMessage: 'Silence requirements cannot be submitted for review.' })
+    if (reqType === ReqType.SILENCE) throw createError({ statusCode: 400, statusMessage: 'Silence requirements cannot be submitted for review.' })
 
     const bodySchema = z.object({
             solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,

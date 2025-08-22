@@ -3,8 +3,7 @@ import { useAzureMonitor } from '@azure/monitor-opentelemetry'
 import type { AzureMonitorOpenTelemetryOptions } from '@azure/monitor-opentelemetry'
 
 export default defineNuxtPlugin(async (_nuxtApp) => {
-    if (!process.env.APPLICATIONINSIGHTS_CONNECTION_STRING)
-        return
+    if (!process.env.APPLICATIONINSIGHTS_CONNECTION_STRING) return
 
     // https://www.npmjs.com/package/@azure/monitor-opentelemetry
     const options: AzureMonitorOpenTelemetryOptions = {

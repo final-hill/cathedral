@@ -35,11 +35,9 @@ export default defineEventHandler(async (event) => {
         }),
         payload = verify(token, config.slackLinkSecret)
 
-    if (typeof payload === 'string' || !payload || typeof payload !== 'object')
-        handleDomainException('Invalid token payload')
+    if (typeof payload === 'string' || !payload || typeof payload !== 'object') handleDomainException('Invalid token payload')
 
-    if (payload.slackUserId !== slackUserId)
-        handleDomainException('Token mismatch')
+    if (payload.slackUserId !== slackUserId) handleDomainException('Token mismatch')
 
     await slackUserInteractor.linkUser({
         slackUserId,

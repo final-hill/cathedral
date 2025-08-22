@@ -4,7 +4,7 @@ import { Repository } from './Repository'
 import * as req from '#shared/domain/requirements'
 import * as reqModels from '../models/requirements'
 import type { AuditMetadataType, RequirementType } from '~/shared/domain'
-import { ConstraintCategory, MoscowPriority, NotFoundException, ReqType, StakeholderCategory, StakeholderSegmentation, WorkflowState } from '~/shared/domain'
+import { ConstraintCategory, MoscowPriority, NotFoundException, ReqType, ScenarioStepTypeEnum, StakeholderCategory, StakeholderSegmentation, WorkflowState } from '~/shared/domain'
 import { snakeCaseToPascalCase, resolveReqTypeFromModel } from '~/shared/utils'
 import { DataModelToDomainModel, ReqQueryToModelQuery } from '../mappers'
 import type { CreationInfo } from './CreationInfo'
@@ -56,7 +56,212 @@ export class RequirementRepository extends Repository<RequirementType> {
         reqData: z.infer<typeof llmRequirementSchema>[]
     }): Promise<reqModels.ParsedRequirementsModel['id']> {
         const em = this._em,
-            parsedReqsId = uuid7()
+            parsedReqsId = uuid7(),
+            // Create lookup maps for reusable entities to avoid duplicates
+            // Map<name, id>
+            actorMap = new Map<string, string>(),
+            functionalBehaviorMap = new Map<string, string>(),
+            outcomeMap = new Map<string, string>(),
+            systemComponentMap = new Map<string, string>(),
+            assumptionMap = new Map<string, string>(),
+            effectMap = new Map<string, string>(),
+            stakeholderMap = new Map<string, string>(),
+            // Map for scenario step conditions: "stepId:conditionName" -> assumptionId
+            stepConditionMap = new Map<string, string>(),
+            getOrCreateActor = (name: string): string => {
+                if (actorMap.has(name)) return actorMap.get(name)!
+
+                const id = uuid7()
+                em.create(reqModels.StakeholderVersionsModel, {
+                    requirement: em.create(reqModels.StakeholderModel, {
+                        id,
+                        createdById: props.createdById,
+                        creationDate: props.creationDate,
+                        parsedRequirements: parsedReqsId
+                    }),
+                    isDeleted: false,
+                    effectiveFrom: props.creationDate,
+                    modifiedById: props.createdById,
+                    description: name,
+                    workflowState: WorkflowState.Proposed,
+                    solution: props.solutionId,
+                    name,
+                    category: StakeholderCategory['Key Stakeholder'],
+                    segmentation: StakeholderSegmentation.Client,
+                    interest: 75,
+                    influence: 75
+                })
+                actorMap.set(name, id)
+                return id
+            },
+            getOrCreateFunctionalBehavior = (name: string): string => {
+                if (functionalBehaviorMap.has(name)) return functionalBehaviorMap.get(name)!
+                const id = uuid7()
+                em.create(reqModels.FunctionalBehaviorVersionsModel, {
+                    requirement: em.create(reqModels.FunctionalBehaviorModel, {
+                        id,
+                        createdById: props.createdById,
+                        creationDate: props.creationDate,
+                        parsedRequirements: parsedReqsId
+                    }),
+                    isDeleted: false,
+                    effectiveFrom: props.creationDate,
+                    modifiedById: props.createdById,
+                    description: name,
+                    workflowState: WorkflowState.Proposed,
+                    solution: props.solutionId,
+                    name,
+                    priority: MoscowPriority.MUST
+                })
+                functionalBehaviorMap.set(name, id)
+                return id
+            },
+            getOrCreateOutcome = (name: string): string => {
+                if (outcomeMap.has(name)) return outcomeMap.get(name)!
+
+                const id = uuid7()
+                em.create(reqModels.OutcomeVersionsModel, {
+                    requirement: em.create(reqModels.OutcomeModel, {
+                        id,
+                        createdById: props.createdById,
+                        creationDate: props.creationDate,
+                        parsedRequirements: parsedReqsId
+                    }),
+                    isDeleted: false,
+                    effectiveFrom: props.creationDate,
+                    modifiedById: props.createdById,
+                    workflowState: WorkflowState.Proposed,
+                    solution: props.solutionId,
+                    name,
+                    description: name
+                })
+                outcomeMap.set(name, id)
+                return id
+            },
+            getOrCreateSystemComponent = (name: string): string => {
+                if (systemComponentMap.has(name))
+                    return systemComponentMap.get(name)!
+
+                const id = uuid7()
+                em.create(reqModels.SystemComponentVersionsModel, {
+                    requirement: em.create(reqModels.SystemComponentModel, {
+                        id,
+                        createdById: props.createdById,
+                        creationDate: props.creationDate,
+                        parsedRequirements: parsedReqsId
+                    }),
+                    isDeleted: false,
+                    effectiveFrom: props.creationDate,
+                    modifiedById: props.createdById,
+                    workflowState: WorkflowState.Proposed,
+                    solution: props.solutionId,
+                    name,
+                    description: name
+                })
+                systemComponentMap.set(name, id)
+                return id
+            },
+            getOrCreateAssumption = (name: string): string => {
+                if (assumptionMap.has(name))
+                    return assumptionMap.get(name)!
+
+                const id = uuid7()
+                em.create(reqModels.AssumptionVersionsModel, {
+                    requirement: em.create(reqModels.AssumptionModel, {
+                        id,
+                        createdById: props.createdById,
+                        creationDate: props.creationDate,
+                        parsedRequirements: parsedReqsId
+                    }),
+                    isDeleted: false,
+                    effectiveFrom: props.creationDate,
+                    modifiedById: props.createdById,
+                    workflowState: WorkflowState.Proposed,
+                    solution: props.solutionId,
+                    name,
+                    description: name
+                })
+                assumptionMap.set(name, id)
+                return id
+            },
+            getOrCreateEffect = (name: string): string => {
+                if (effectMap.has(name))
+                    return effectMap.get(name)!
+
+                const id = uuid7()
+                em.create(reqModels.EffectVersionsModel, {
+                    requirement: em.create(reqModels.EffectModel, {
+                        id,
+                        createdById: props.createdById,
+                        creationDate: props.creationDate,
+                        parsedRequirements: parsedReqsId
+                    }),
+                    isDeleted: false,
+                    effectiveFrom: props.creationDate,
+                    modifiedById: props.createdById,
+                    workflowState: WorkflowState.Proposed,
+                    solution: props.solutionId,
+                    name,
+                    description: name
+                })
+                effectMap.set(name, id)
+                return id
+            },
+            getOrCreateStakeholder = (name: string): string => {
+                if (stakeholderMap.has(name))
+                    return stakeholderMap.get(name)!
+
+                const id = uuid7()
+                em.create(reqModels.StakeholderVersionsModel, {
+                    requirement: em.create(reqModels.StakeholderModel, {
+                        id,
+                        createdById: props.createdById,
+                        creationDate: props.creationDate,
+                        parsedRequirements: parsedReqsId
+                    }),
+                    isDeleted: false,
+                    effectiveFrom: props.creationDate,
+                    modifiedById: props.createdById,
+                    workflowState: WorkflowState.Proposed,
+                    solution: props.solutionId,
+                    name,
+                    description: name,
+                    segmentation: StakeholderSegmentation.Client,
+                    category: StakeholderCategory['Key Stakeholder'],
+                    interest: 75,
+                    influence: 75
+                })
+                stakeholderMap.set(name, id)
+                return id
+            },
+            createConditionAssumption = (name: string, scenarioStep: reqModels.ScenarioStepVersionsModel): string => {
+                const stepConditionKey = `${scenarioStep.requirement.id}:${name}`
+
+                // Check if we already created this condition for this scenario step
+                if (stepConditionMap.has(stepConditionKey))
+                    return stepConditionMap.get(stepConditionKey)!
+
+                const id = uuid7()
+                em.create(reqModels.AssumptionVersionsModel, {
+                    requirement: em.create(reqModels.AssumptionModel, {
+                        id,
+                        createdById: props.createdById,
+                        creationDate: props.creationDate,
+                        parsedRequirements: parsedReqsId,
+                        scenarioStep: scenarioStep.requirement
+                    }),
+                    isDeleted: false,
+                    effectiveFrom: props.creationDate,
+                    modifiedById: props.createdById,
+                    workflowState: WorkflowState.Proposed,
+                    solution: props.solutionId,
+                    name,
+                    description: name
+                })
+
+                stepConditionMap.set(stepConditionKey, id)
+                return id
+            }
 
         em.create(reqModels.ParsedRequirementsVersionsModel, {
             requirement: em.create(reqModels.ParsedRequirementsModel, {
@@ -78,126 +283,26 @@ export class RequirementRepository extends Repository<RequirementType> {
                 ReqStaticModel = reqModels[`${reqTypePascal}Model` as keyof typeof reqModels] as typeof reqModels.RequirementModel,
                 ReqVersionsModel = reqModels[`${reqTypePascal}VersionsModel` as keyof typeof reqModels] as typeof reqModels.RequirementVersionsModel,
                 newId = uuid7(),
-                newPrimaryActorId = req.primaryActorName ? uuid7() : undefined
-
-            if (newPrimaryActorId) {
-                em.create(reqModels.StakeholderVersionsModel, {
-                    requirement: em.create(reqModels.StakeholderModel, {
-                        id: newPrimaryActorId,
-                        createdById: props.createdById,
-                        creationDate: props.creationDate,
-                        parsedRequirements: parsedReqsId
-                    }),
-                    isDeleted: false,
-                    effectiveFrom: props.creationDate,
-                    modifiedById: props.createdById,
-                    workflowState: WorkflowState.Proposed,
-                    solution: props.solutionId,
-                    name: req.primaryActorName!,
-                    description: req.primaryActorName!,
-                    category: StakeholderCategory['Key Stakeholder'],
-                    segmentation: StakeholderSegmentation.Vendor,
-                    interest: 75,
-                    influence: 75
-                })
+                newPrimaryActorId = req.primaryActorName ? getOrCreateActor(req.primaryActorName) : undefined,
+                newOutcomeId = req.outcomeName ? getOrCreateOutcome(req.outcomeName) : undefined,
+                newPreconditionIds: string[] = [],
+                newSuccessGuaranteeIds: string[] = [],
+                newStakeholderIds: string[] = [],
+                newScopeSystemComponentId = req.useCaseScopeName ? getOrCreateSystemComponent(req.useCaseScopeName) : undefined,
+                newFunctionalBehaviorId = req.scenarioFunctionalBehaviorName ? getOrCreateFunctionalBehavior(req.scenarioFunctionalBehaviorName) : undefined
+            if (req.useCasePreconditionNames && req.useCasePreconditionNames.length > 0) {
+                for (const preconditionName of req.useCasePreconditionNames)
+                    newPreconditionIds.push(getOrCreateAssumption(preconditionName))
             }
 
-            const newOutcomeId = req.outcomeName ? uuid7() : undefined
-            if (newOutcomeId) {
-                em.create(reqModels.OutcomeVersionsModel, {
-                    requirement: em.create(reqModels.OutcomeModel, {
-                        id: newOutcomeId,
-                        createdById: props.createdById,
-                        creationDate: props.creationDate,
-                        parsedRequirements: parsedReqsId
-                    }),
-                    isDeleted: false,
-                    effectiveFrom: props.creationDate,
-                    modifiedById: props.createdById,
-                    workflowState: WorkflowState.Proposed,
-                    solution: props.solutionId,
-                    name: req.outcomeName!,
-                    description: req.outcomeName!
-                })
+            if (req.useCaseSuccessGuaranteeNames && req.useCaseSuccessGuaranteeNames.length > 0) {
+                for (const successGuaranteeName of req.useCaseSuccessGuaranteeNames)
+                    newSuccessGuaranteeIds.push(getOrCreateEffect(successGuaranteeName))
             }
 
-            const newPreconditionId = req.useCasePreconditionName ? uuid7() : undefined
-            if (newPreconditionId) {
-                em.create(reqModels.AssumptionVersionsModel, {
-                    requirement: em.create(reqModels.AssumptionModel, {
-                        id: newPreconditionId,
-                        createdById: props.createdById,
-                        creationDate: props.creationDate,
-                        parsedRequirements: parsedReqsId
-                    }),
-                    isDeleted: false,
-                    effectiveFrom: props.creationDate,
-                    modifiedById: props.createdById,
-                    workflowState: WorkflowState.Proposed,
-                    solution: props.solutionId,
-                    name: req.useCasePreconditionName!,
-                    description: req.useCasePreconditionName!
-                })
-            }
-
-            const newSuccessGuaranteeId = req.useCaseSuccessGuaranteeName ? uuid7() : undefined
-            if (newSuccessGuaranteeId) {
-                em.create(reqModels.EffectVersionsModel, {
-                    requirement: em.create(reqModels.EffectModel, {
-                        id: newSuccessGuaranteeId,
-                        createdById: props.createdById,
-                        creationDate: props.creationDate,
-                        parsedRequirements: parsedReqsId
-                    }),
-                    isDeleted: false,
-                    effectiveFrom: props.creationDate,
-                    modifiedById: props.createdById,
-                    workflowState: WorkflowState.Proposed,
-                    solution: props.solutionId,
-                    name: req.useCaseSuccessGuaranteeName!,
-                    description: req.useCaseSuccessGuaranteeName!
-                })
-            }
-
-            const newFunctionalBehaviorId = req.userStoryFunctionalBehaviorName ? uuid7() : undefined
-            if (newFunctionalBehaviorId) {
-                em.create(reqModels.FunctionalBehaviorVersionsModel, {
-                    requirement: em.create(reqModels.FunctionalBehaviorModel, {
-                        id: newFunctionalBehaviorId,
-                        createdById: props.createdById,
-                        creationDate: props.creationDate,
-                        parsedRequirements: parsedReqsId
-                    }),
-                    isDeleted: false,
-                    effectiveFrom: props.creationDate,
-                    modifiedById: props.createdById,
-                    description: req.userStoryFunctionalBehaviorName!,
-                    workflowState: WorkflowState.Proposed,
-                    solution: props.solutionId,
-                    name: req.userStoryFunctionalBehaviorName!,
-                    priority: MoscowPriority.MUST
-                })
-            }
-
-            // Create related behavior for Functionality requirements
-            const newFunctionalityRelatedBehaviorId = req.functionalityRelatedBehaviorName ? uuid7() : undefined
-            if (newFunctionalityRelatedBehaviorId) {
-                em.create(reqModels.FunctionalBehaviorVersionsModel, {
-                    requirement: em.create(reqModels.FunctionalBehaviorModel, {
-                        id: newFunctionalityRelatedBehaviorId,
-                        createdById: props.createdById,
-                        creationDate: props.creationDate,
-                        parsedRequirements: parsedReqsId
-                    }),
-                    isDeleted: false,
-                    effectiveFrom: props.creationDate,
-                    modifiedById: props.createdById,
-                    description: req.functionalityRelatedBehaviorName!,
-                    workflowState: WorkflowState.Proposed,
-                    solution: props.solutionId,
-                    name: req.functionalityRelatedBehaviorName!,
-                    priority: MoscowPriority.MUST
-                })
+            if (req.useCaseStakeholderNames && req.useCaseStakeholderNames.length > 0) {
+                for (const stakeholderName of req.useCaseStakeholderNames)
+                    newStakeholderIds.push(getOrCreateStakeholder(stakeholderName))
             }
 
             em.create(ReqVersionsModel, {
@@ -221,14 +326,81 @@ export class RequirementRepository extends Repository<RequirementType> {
                 ...(req.stakeholderSegmentation && { segmentation: req.stakeholderSegmentation }),
                 ...(req.stakeholderCategory && { category: req.stakeholderCategory }),
                 ...(req.reqType === ReqType.CONSTRAINT && { category: req.constraintCategory || ConstraintCategory['Business Rule'] }),
-                ...(req.useCaseScope && { scope: req.useCaseScope }),
-                ...(req.useCaseLevel && { level: req.useCaseLevel }),
-                ...(newPreconditionId && { precondition: newPreconditionId }),
-                ...(req.useCaseMainSuccessScenario && { mainSuccessScenario: req.useCaseMainSuccessScenario }),
-                ...(newSuccessGuaranteeId && { successGuarantee: newSuccessGuaranteeId }),
-                ...(req.useCaseExtensions && { extensions: req.useCaseExtensions }),
-                ...(newFunctionalBehaviorId && { functionalBehavior: newFunctionalBehaviorId })
+                ...(newScopeSystemComponentId && { scope: newScopeSystemComponentId }),
+                ...(newFunctionalBehaviorId && { functionalBehavior: newFunctionalBehaviorId }),
+                ...(req.reqType === ReqType.USE_CASE && newPreconditionIds.length > 0 && { preconditions: newPreconditionIds }),
+                ...(req.reqType === ReqType.USE_CASE && newSuccessGuaranteeIds.length > 0 && { successGuarantees: newSuccessGuaranteeIds }),
+                ...(req.reqType === ReqType.USE_CASE && newStakeholderIds.length > 0 && { stakeholders: newStakeholderIds })
             })
+
+            // Create ScenarioStep entities for UseCase main success scenario steps
+            const useCaseReq = req as z.infer<typeof llmRequirementSchema>
+            if (req.reqType === ReqType.USE_CASE && useCaseReq.useCaseMainSuccessScenarioSteps) {
+                for (const step of useCaseReq.useCaseMainSuccessScenarioSteps) {
+                    const stepId = uuid7(),
+                        stepActorId = step.actorName ? getOrCreateActor(step.actorName) : undefined,
+                        stepFunctionalBehaviorId = step.functionalBehaviorName ? getOrCreateFunctionalBehavior(step.functionalBehaviorName) : undefined
+
+                    // Create the scenario step
+                    em.create(reqModels.ScenarioStepVersionsModel, {
+                        requirement: em.create(reqModels.ScenarioStepModel, {
+                            id: stepId,
+                            createdById: props.createdById,
+                            creationDate: props.creationDate,
+                            parsedRequirements: parsedReqsId,
+                            parentScenario: newId
+                        }),
+                        isDeleted: false,
+                        effectiveFrom: props.creationDate,
+                        modifiedById: props.createdById,
+                        description: step.description,
+                        workflowState: WorkflowState.Proposed,
+                        solution: props.solutionId,
+                        name: step.name,
+                        stepNumber: step.stepNumber,
+                        stepType: ScenarioStepTypeEnum.Action,
+                        primaryActor: stepActorId || newPrimaryActorId!,
+                        outcome: newOutcomeId!,
+                        functionalBehavior: stepFunctionalBehaviorId || newFunctionalBehaviorId!
+                    })
+                }
+            }
+
+            // Create ScenarioStep entities for UseCase extension steps
+            if (req.reqType === ReqType.USE_CASE && useCaseReq.useCaseExtensionSteps) {
+                for (const step of useCaseReq.useCaseExtensionSteps) {
+                    const stepId = uuid7(),
+                        stepActorId = step.actorName ? getOrCreateActor(step.actorName) : undefined,
+                        stepFunctionalBehaviorId = step.functionalBehaviorName ? getOrCreateFunctionalBehavior(step.functionalBehaviorName) : undefined,
+                        scenarioStepVersionsModel = em.create(reqModels.ScenarioStepVersionsModel, {
+                            requirement: em.create(reqModels.ScenarioStepModel, {
+                                id: stepId,
+                                createdById: props.createdById,
+                                creationDate: props.creationDate,
+                                parsedRequirements: parsedReqsId,
+                                parentScenario: newId
+                            }),
+                            isDeleted: false,
+                            effectiveFrom: props.creationDate,
+                            modifiedById: props.createdById,
+                            description: step.description,
+                            workflowState: WorkflowState.Proposed,
+                            solution: props.solutionId,
+                            name: step.name,
+                            stepNumber: step.stepNumber,
+                            stepType: step.stepType,
+                            primaryActor: stepActorId || newPrimaryActorId!,
+                            outcome: newOutcomeId!,
+                            functionalBehavior: stepFunctionalBehaviorId || newFunctionalBehaviorId!
+                        })
+
+                    // Create preconditions for CONDITION steps
+                    if (step.stepType === ScenarioStepTypeEnum.Condition && step.conditionNames) {
+                        for (const conditionName of step.conditionNames)
+                            createConditionAssumption(conditionName, scenarioStepVersionsModel)
+                    }
+                }
+            }
         }
 
         await em.flush()
@@ -275,8 +447,7 @@ export class RequirementRepository extends Repository<RequirementType> {
                     latestRemoved = versions.find(v => v.workflowState === WorkflowState.Removed)
 
                 // Compare effectiveFrom dates to determine validity
-                if (latestRemoved && (!latestActive || latestRemoved.effectiveFrom > latestActive.effectiveFrom))
-                    return undefined // A newer Removed version exists, so no Active version is valid
+                if (latestRemoved && (!latestActive || latestRemoved.effectiveFrom > latestActive.effectiveFrom)) return undefined // A newer Removed version exists, so no Active version is valid
 
                 return req[reqTypePascal].parse(
                     await mapper.map({ ...reqStatic, ...latestActive })
@@ -327,8 +498,7 @@ export class RequirementRepository extends Repository<RequirementType> {
                     }),
                     latestVersion = versions[0]
 
-                if (!latestVersion)
-                    return undefined
+                if (!latestVersion) return undefined
 
                 return req[reqTypePascal].parse(
                     await mapper.map({ ...reqStatic, ...latestVersion })
@@ -376,8 +546,7 @@ export class RequirementRepository extends Repository<RequirementType> {
                     }),
                     latestVersion = versions[0]
 
-                if (!latestVersion)
-                    return undefined
+                if (!latestVersion) return undefined
 
                 return req[reqTypePascal].parse(
                     await mapper.map({ ...reqStatic, ...latestVersion })
@@ -400,8 +569,7 @@ export class RequirementRepository extends Repository<RequirementType> {
             }),
             reqLatestVersion = await reqStatic?.getLatestVersion(new Date())
 
-        if (!reqStatic || !reqLatestVersion)
-            throw new NotFoundException(`Requirement with id ${id} not found`)
+        if (!reqStatic || !reqLatestVersion) throw new NotFoundException(`Requirement with id ${id} not found`)
 
         // Use utility function to resolve req_type from the model instance
         const req_type = resolveReqTypeFromModel(reqStatic),
@@ -433,8 +601,7 @@ export class RequirementRepository extends Repository<RequirementType> {
             existingReqStatic = await em.findOne(ReqStaticModel, { id: props.reqProps.id }),
             existingReqVersion = await existingReqStatic?.getLatestVersion(props.modifiedDate)
 
-        if (!existingReqStatic || !existingReqVersion)
-            throw new NotFoundException(`Requirement with id ${props.reqProps.id} not found`)
+        if (!existingReqStatic || !existingReqVersion) throw new NotFoundException(`Requirement with id ${props.reqProps.id} not found`)
 
         em.create(ReqVersionsModel, {
             ...existingReqVersion,
@@ -460,16 +627,14 @@ export class RequirementRepository extends Repository<RequirementType> {
         const em = this._em,
             requirement = await em.findOne(reqModels.RequirementModel, { id: requirementId })
 
-        if (!requirement) {
+        if (!requirement)
             return false
-        }
 
         // Get the latest active version
         const latestActiveVersion = await requirement.getLatestActiveVersion()
 
-        if (!latestActiveVersion) {
+        if (!latestActiveVersion)
             return false
-        }
 
         // Check if there are any versions in Proposed or Review states that are newer than the active version
         // This indicates parallel development is already in progress

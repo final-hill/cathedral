@@ -91,8 +91,7 @@ export class OrganizationRepository extends Repository<OrganizationType> {
             }),
             solLatestVersion = maybeSolLatestVersion?.isDeleted ? undefined : maybeSolLatestVersion
 
-        if (!solLatestVersion)
-            throw new NotFoundException('Solution does not exist')
+        if (!solLatestVersion) throw new NotFoundException('Solution does not exist')
 
         const solution = solLatestVersion.requirement
 
@@ -175,8 +174,7 @@ export class OrganizationRepository extends Repository<OrganizationType> {
             organizationId = this._organizationId,
             organizationSlug = this._organizationSlug
 
-        if (!organizationId && !organizationSlug)
-            throw new NotFoundException('Organization id or slug must be provided')
+        if (!organizationId && !organizationSlug) throw new NotFoundException('Organization id or slug must be provided')
 
         const tempResult = await em.findOne(reqModels.OrganizationVersionsModel, {
                 requirement: {
@@ -190,11 +188,9 @@ export class OrganizationRepository extends Repository<OrganizationType> {
             result = tempResult?.requirement,
             latestVersion = await result?.getLatestVersion(new Date()) as reqModels.OrganizationVersionsModel
 
-        if (!result || !latestVersion)
-            throw new NotFoundException('Organization does not exist')
+        if (!result || !latestVersion) throw new NotFoundException('Organization does not exist')
 
-        if (organizationSlug && latestVersion.slug !== organizationSlug)
-            throw new NotFoundException('Organization does not exist')
+        if (organizationSlug && latestVersion.slug !== organizationSlug) throw new NotFoundException('Organization does not exist')
 
         const mapper = new DataModelToDomainModel(),
             dataModel = await mapper.map({ ...result, ...latestVersion })
@@ -269,8 +265,7 @@ export class OrganizationRepository extends Repository<OrganizationType> {
     async getSolutionBySlug(solutionSlug: SolutionType['slug']): Promise<SolutionType> {
         const solutions = (await this.findSolutions({ slug: solutionSlug }))
 
-        if (solutions.length === 0)
-            throw new NotFoundException('Solution does not exist in the organization')
+        if (solutions.length === 0) throw new NotFoundException('Solution does not exist in the organization')
 
         return solutions[0]
     }
@@ -293,8 +288,7 @@ export class OrganizationRepository extends Repository<OrganizationType> {
                 slug
             } as FilterQuery<reqModels.SolutionVersionsModel>)
 
-        if (!existingSolutionVersion)
-            throw new NotFoundException('Solution does not exist')
+        if (!existingSolutionVersion) throw new NotFoundException('Solution does not exist')
 
         em.create(reqModels.SolutionVersionsModel, {
             organization: organizationId,

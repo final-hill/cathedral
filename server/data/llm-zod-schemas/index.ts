@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ConstraintCategory, MoscowPriority, ReqType, StakeholderCategory, StakeholderSegmentation, UseCase } from '~/shared/domain'
+import { ConstraintCategory, MoscowPriority, ReqType, ScenarioStepTypeEnum, StakeholderCategory, StakeholderSegmentation } from '~/shared/domain'
 
 export const llmRequirementSchema = z.object({
     reqType: z.nativeEnum(ReqType),
@@ -18,18 +18,36 @@ export const llmRequirementSchema = z.object({
     stakeholderSegmentation: z.nativeEnum(StakeholderSegmentation).describe('The segmentation of the stakeholder').or(z.null()),
     stakeholderCategory: z.nativeEnum(StakeholderCategory).describe('The category of the stakeholder').or(z.null()),
     constraintCategory: z.nativeEnum(ConstraintCategory).describe('The category of the constraint').or(z.null()),
-    useCaseScope: z.string().describe(UseCase.shape.scope.description!).or(z.null()),
-    useCaseLevel: z.string().describe(UseCase.shape.level.description!).or(z.null()),
-    useCasePreconditionName: z.string().describe(
-        'The name of the precondition (Assumption) associated with the Use Case'
+    useCaseScopeName: z.string().describe(
+        'The name of the SystemComponent that defines the boundary of the Use Case'
     ).or(z.null()),
-    useCaseMainSuccessScenario: z.string().describe(UseCase.shape.mainSuccessScenario.description!).or(z.null()),
-    useCaseSuccessGuaranteeName: z.string().describe(
-        'The name of the success guarantee (Effect) associated with the Use Case'
+    useCasePreconditionNames: z.array(z.string()).describe(
+        'The names of the preconditions (Assumptions) associated with the Use Case'
     ).or(z.null()),
-    useCaseExtensions: z.string().describe(UseCase.shape.extensions.description!).or(z.null()),
-    userStoryFunctionalBehaviorName: z.string().describe(
-        'The name of the functional behavior associated with the User Story'
+    useCaseMainSuccessScenarioSteps: z.array(z.object({
+        stepNumber: z.string(),
+        name: z.string(),
+        description: z.string(),
+        actorName: z.string(),
+        functionalBehaviorName: z.string()
+    })).describe('Structured main success scenario steps with actor and behavior information').or(z.null()),
+    useCaseSuccessGuaranteeNames: z.array(z.string()).describe(
+        'The names of the success guarantees (Effects) associated with the Use Case'
+    ).or(z.null()),
+    useCaseExtensionSteps: z.array(z.object({
+        stepNumber: z.string(),
+        name: z.string(),
+        description: z.string(),
+        stepType: z.nativeEnum(ScenarioStepTypeEnum),
+        conditionNames: z.array(z.string()).optional(),
+        actorName: z.string().optional(),
+        functionalBehaviorName: z.string().optional()
+    })).describe('Extension steps including both conditions and actions').or(z.null()),
+    useCaseStakeholderNames: z.array(z.string()).describe(
+        'The names of the stakeholders associated with the Use Case'
+    ).or(z.null()),
+    scenarioFunctionalBehaviorName: z.string().describe(
+        'The name of the functional behavior associated with the Scenario (User Story, Use Case, or Test Case)'
     ).or(z.null()),
     functionalityRelatedBehaviorName: z.string().describe(
         'The name of the functional behavior that implements this high-level functionality'

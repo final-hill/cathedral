@@ -8,6 +8,8 @@ import type { PermissionInteractor, AppUserInteractor } from './'
 import type { AuditMetadata, AuditMetadataType } from '~/shared/domain'
 import type { RequirementRepository } from '~/server/data/repositories/RequirementRepository'
 import type { NaturalLanguageToRequirementService } from '~/server/data/services/NaturalLanguageToRequirementService'
+import type { ScenarioStepParsingService } from '~/server/data/services/ScenarioStepParsingService'
+import type { ScenarioStepSuggestionType } from '~/shared/domain/requirements/EntityReferences'
 import { dedent } from '~/shared/utils'
 
 type ReqTypeName = keyof typeof req
@@ -107,10 +109,8 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
             try {
                 const result = await this.repository.getById(id)
 
-                if (key === 'solution') {
-                    if (result.id !== this._solutionId)
-                        throw new MismatchException(`Requirement with id ${reqProps['id']} does not belong to the solution`)
-                }
+                if (key === 'solution')
+                    if (result.id !== this._solutionId) throw new MismatchException(`Requirement with id ${reqProps['id']} does not belong to the solution`)
             } catch {
                 throw new MismatchException(`Requirement with id ${value} does not belong to the solution`)
             }
@@ -150,9 +150,9 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
                     )
                 }
             } catch (error) {
-                if (error instanceof InvalidWorkflowStateException) {
+                if (error instanceof InvalidWorkflowStateException)
                     throw error
-                }
+
                 throw new MismatchException(`Referenced requirement with id ${id} not found`)
             }
         }
@@ -171,8 +171,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
         const result = await this.repository.getById(id)
 
-        if (result.reqType !== reqType)
-            throw new MismatchException(`Requirement with id ${id} is not of type ${reqType}`)
+        if (result.reqType !== reqType) throw new MismatchException(`Requirement with id ${id} is not of type ${reqType}`)
 
         const enrichedResult = await this._enrichUserData(result)
 
@@ -255,9 +254,9 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
             // Flatten and return unique requirements (deduplicate by id)
             flatRequirements = allRequirements.flat(),
             uniqueRequirements = flatRequirements.reduce((acc, req) => {
-                if (!acc.find(existing => existing.id === req.id)) {
+                if (!acc.find(existing => existing.id === req.id))
                     acc.push(req)
-                }
+
                 return acc
             }, [] as z.infer<typeof req[R]>[])
 
@@ -282,8 +281,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         const currentUserId = this._permissionInteractor.userId,
             results = await props.service.parse(props.statement)
 
-        if (!results || results.length === 0)
-            throw new MismatchException('No requirements found in the statement')
+        if (!results || results.length === 0) throw new MismatchException('No requirements found in the statement')
 
         const newId = await this.repository.addParsedRequirements({
             createdById: currentUserId,
@@ -313,13 +311,12 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         const currentUserId = this._permissionInteractor.userId
 
         let workflowState: WorkflowState
-        if (props.reqType === ReqType.SILENCE) {
+        if (props.reqType === ReqType.SILENCE)
             workflowState = WorkflowState.Rejected
-        } else if (props.reqType === ReqType.PARSED_REQUIREMENTS) {
+        else if (props.reqType === ReqType.PARSED_REQUIREMENTS)
             workflowState = WorkflowState.Parsed
-        } else {
+        else
             workflowState = WorkflowState.Proposed
-        }
 
         return this.repository.add({
             reqProps: {
@@ -349,8 +346,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         const currentRequirement = await this.repository.getById(reqProps.id),
             currentUserId = this._permissionInteractor.userId
 
-        if (currentRequirement.workflowState !== WorkflowState.Proposed)
-            throw new InvalidWorkflowStateException(`Requirement with id ${reqProps.id} is not in the Proposed state`)
+        if (currentRequirement.workflowState !== WorkflowState.Proposed) throw new InvalidWorkflowStateException(`Requirement with id ${reqProps.id} is not in the Proposed state`)
 
         return this.repository.update({
             reqProps: {
@@ -379,8 +375,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
         const currentRequirement = await this.repository.getById(id)
 
-        if (currentRequirement.workflowState !== WorkflowState.Proposed)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Proposed state`)
+        if (currentRequirement.workflowState !== WorkflowState.Proposed) throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Proposed state`)
 
         return this.repository.update({
             reqProps: {
@@ -408,8 +403,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
         const currentRequirement = await this.repository.getById(id)
 
-        if (currentRequirement.workflowState !== WorkflowState.Proposed)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Proposed state`)
+        if (currentRequirement.workflowState !== WorkflowState.Proposed) throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Proposed state`)
 
         return this.repository.update({
             reqProps: {
@@ -437,8 +431,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
         const currentRequirement = await this.repository.getById(id)
 
-        if (currentRequirement.workflowState !== WorkflowState.Review)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Review state`)
+        if (currentRequirement.workflowState !== WorkflowState.Review) throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Review state`)
 
         return this.repository.update({
             reqProps: {
@@ -466,8 +459,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
         const currentRequirement = await this.repository.getById(id)
 
-        if (currentRequirement.workflowState !== WorkflowState.Review)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Review state`)
+        if (currentRequirement.workflowState !== WorkflowState.Review) throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Review state`)
 
         // Validate that all referenced requirements are Active before approving
         await this.assertReferencedRequirementsAreActive(currentRequirement)
@@ -498,12 +490,10 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
         const currentRequirement = await this.repository.getById(id)
 
-        if (currentRequirement.workflowState !== WorkflowState.Rejected)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Rejected state`)
+        if (currentRequirement.workflowState !== WorkflowState.Rejected) throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Rejected state`)
 
         // Silence requirements cannot be revised - they can only be removed
-        if (currentRequirement.reqType === ReqType.SILENCE)
-            throw new InvalidWorkflowStateException(`Silence requirements cannot be revised. They can only be removed.`)
+        if (currentRequirement.reqType === ReqType.SILENCE) throw new InvalidWorkflowStateException(`Silence requirements cannot be revised. They can only be removed.`)
 
         return this.repository.update({
             reqProps: {
@@ -531,8 +521,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
         const currentRequirement = await this.repository.getById(id)
 
-        if (currentRequirement.workflowState !== WorkflowState.Rejected)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Rejected state`)
+        if (currentRequirement.workflowState !== WorkflowState.Rejected) throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Rejected state`)
 
         return this.repository.update({
             reqProps: {
@@ -560,12 +549,10 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
         const currentRequirement = await this.repository.getById(id)
 
-        if (currentRequirement.workflowState !== WorkflowState.Removed)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Removed state`)
+        if (currentRequirement.workflowState !== WorkflowState.Removed) throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Removed state`)
 
         // Silence requirements cannot be restored - they remain in the Removed state permanently
-        if (currentRequirement.reqType === ReqType.SILENCE)
-            throw new InvalidWorkflowStateException(`Silence requirements cannot be restored once removed.`)
+        if (currentRequirement.reqType === ReqType.SILENCE) throw new InvalidWorkflowStateException(`Silence requirements cannot be restored once removed.`)
 
         return this.repository.update({
             reqProps: {
@@ -595,12 +582,10 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
         const currentRequirement = await this.repository.getById(id)
 
-        if (currentRequirement.workflowState !== WorkflowState.Active)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Active state`)
+        if (currentRequirement.workflowState !== WorkflowState.Active) throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Active state`)
 
         const hasNewerVersions = await this.repository.hasNewerProposedOrReviewVersions(id)
-        if (hasNewerVersions)
-            throw new InvalidWorkflowStateException(`Cannot revise active requirement ${id} because there are already newer versions in Proposed or Review states. Only one revision process can be active at a time to prevent conflicting changes.`)
+        if (hasNewerVersions) throw new InvalidWorkflowStateException(`Cannot revise active requirement ${id} because there are already newer versions in Proposed or Review states. Only one revision process can be active at a time to prevent conflicting changes.`)
 
         return this.repository.update({
             reqProps: {
@@ -628,8 +613,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
         const currentRequirement = await this.repository.getById(id)
 
-        if (currentRequirement.workflowState !== WorkflowState.Active)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Active state`)
+        if (currentRequirement.workflowState !== WorkflowState.Active) throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Active state`)
 
         return this.repository.update({
             reqProps: {
@@ -640,5 +624,42 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
             modifiedById: this._permissionInteractor.userId,
             modifiedDate: new Date()
         })
+    }
+
+    /**
+     * Parse scenario steps from HTML content using AI service
+     *
+     * @param htmlContent - The HTML content
+     * @param service - The AI parsing service
+     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
+     * @throws {MismatchException} If the content cannot be interpreted as scenario steps
+     * @returns Array of structured scenario step suggestions
+     */
+    async parseScenarioSteps(htmlContent: string, service: ScenarioStepParsingService): Promise<ScenarioStepSuggestionType[]> {
+        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+
+        const parseResult = await service.parseScenarioSteps(htmlContent)
+
+        if (!parseResult.parseable || parseResult.steps.length === 0) {
+            throw new MismatchException(
+                dedent(`
+                    The provided content cannot be interpreted as scenario steps.
+                    Please provide clear, actionable steps that describe user or system behaviors.
+
+                    Example format:
+                    1. User enters login credentials
+                    2. System validates credentials
+                    3. If credentials are invalid, display error message
+                    4. If credentials are valid, redirect to dashboard
+                `)
+            )
+        }
+
+        return parseResult.steps.map(step => ({
+            reqType: ReqType.SCENARIO_STEP,
+            name: step.content,
+            stepNumber: step.stepNumber,
+            stepType: step.stepType
+        }))
     }
 }

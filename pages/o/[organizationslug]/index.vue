@@ -19,8 +19,7 @@ if (!organization.value) {
     throw new Error('Organization not found')
 }
 
-if (getSolutionError.value)
-    $eventBus.$emit('page-error', getSolutionError.value)
+if (getSolutionError.value) $eventBus.$emit('page-error', getSolutionError.value)
 
 const handleOrganizationDelete = async (organization: OrganizationType) => {
         await $fetch(`/api/organization/${organization.slug}`, {

@@ -7,9 +7,8 @@
  * @param path The path to redirect to after login
  */
 export function storeAuthRedirect(path: string) {
-    if (import.meta.client) {
+    if (import.meta.client)
         sessionStorage.setItem('auth-redirect', path)
-    }
 }
 
 /**
@@ -32,8 +31,8 @@ export function getAndClearAuthRedirect(): string | null {
  * @returns True if there's a stored redirect path
  */
 export function hasPendingAuthRedirect(): boolean {
-    if (import.meta.client) {
+    if (import.meta.client)
         return sessionStorage.getItem('auth-redirect') !== null
-    }
+
     return false
 }

@@ -183,8 +183,7 @@ const pegsMap: Record<string, Array<{
             label: 'Use Cases',
             icon: 'i-lucide-briefcase',
             reqId: req.UseCase.shape.reqIdPrefix._def.defaultValue(),
-            // path: `/o/${organizationslug}/${solutionslug}/system/use-case`
-            disabled: true
+            path: `/o/${organizationslug}/${solutionslug}/system/use-case`
         },
         {
             label: 'Prioritization',

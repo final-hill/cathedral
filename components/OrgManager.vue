@@ -12,8 +12,7 @@ const router = useRouter(),
     { $eventBus } = useNuxtApp(),
     deleteModalOpenState = ref(false)
 
-if (getOrgError.value)
-    $eventBus.$emit('page-error', getOrgError.value)
+if (getOrgError.value) $eventBus.$emit('page-error', getOrgError.value)
 
 const handleDelete = async (organization: OrganizationType) => {
         await $fetch(`/api/organization/${organization.slug}`, {

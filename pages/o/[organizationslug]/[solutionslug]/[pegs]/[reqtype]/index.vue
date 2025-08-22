@@ -51,7 +51,7 @@ const { data: requirements, refresh, status } = await useFetch<RequirementType[]
 
 <template>
     <h1>{{ title }}</h1>
-    <p>
+    <p class="whitespace-pre">
         {{ (RequirementSchema as unknown as RequirementEntity).description }}
     </p>
 

@@ -232,13 +232,13 @@ const props = defineProps<{
                     endpoint = `/api/requirements/${reqType.value}/review/${requirement.id}/reject`
                     break
                 case 'revise':
-                    if (requirement.workflowState === WorkflowState.Rejected) {
+                    if (requirement.workflowState === WorkflowState.Rejected)
                         endpoint = `/api/requirements/${reqType.value}/rejected/${requirement.id}/revise`
-                    } else if (requirement.workflowState === WorkflowState.Active) {
+                    else if (requirement.workflowState === WorkflowState.Active)
                         endpoint = `/api/requirements/${reqType.value}/active/${requirement.id}/edit`
-                    } else {
+                    else
                         throw new Error(`Invalid revise action for requirement in ${requirement.workflowState} state`)
-                    }
+
                     break
                 case 'remove':
                     endpoint = `/api/requirements/${reqType.value}/${requirement.workflowState.toLowerCase()}/${requirement.id}/remove`
@@ -307,9 +307,8 @@ const props = defineProps<{
     },
     confirmAndPerformAction = async (requirement: req.RequirementType, action: WorkflowAction, confirmMessage: string) => {
         const confirmed = confirm(confirmMessage)
-        if (confirmed) {
+        if (confirmed)
             await performWorkflowAction(requirement, action)
-        }
     },
     createNewRequirement = () => {
         const { pegs } = route.params as Record<string, string>

@@ -31,8 +31,7 @@ const formState = reactive<FormSchema>({
         if (newSlug) {
             await refreshSession()
             router.push({ name: 'Organization', params: { organizationslug: newSlug } })
-        } else
-            $eventBus.$emit('page-error', 'Failed to create organization. No organization ID returned.')
+        } else $eventBus.$emit('page-error', 'Failed to create organization. No organization ID returned.')
     },
     cancel = () => {
         router.push({ name: 'Home' })
@@ -43,9 +42,8 @@ const formState = reactive<FormSchema>({
 
         Object.assign(formState, newState)
 
-        if (nameChanged && newName) {
+        if (nameChanged && newName)
             formState.slug = slugify(newName)
-        }
     }
 </script>
 

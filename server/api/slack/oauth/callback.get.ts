@@ -50,8 +50,7 @@ export default defineEventHandler(async (event) => {
     let stateData: { organizationSlug: string, timestamp: number, nonce: string }
     try {
         stateData = JSON.parse(atob(state))
-        if (!stateData)
-            throw new Error('State data is null')
+        if (!stateData) throw new Error('State data is null')
     } catch {
         throw createError({
             statusCode: 400,

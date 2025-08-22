@@ -60,9 +60,8 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
      * @throws {MismatchException} When the user IDs don't match
      */
     private assertUserIdentity(cathedralUserId: string): void {
-        if (this._permissionInteractor.userId !== cathedralUserId) {
+        if (this._permissionInteractor.userId !== cathedralUserId)
             throw new MismatchException('Cathedral user mismatch - authenticated user does not match expected user')
-        }
     }
 
     /**
@@ -109,8 +108,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         const statement = data.text.trim(),
             messageKey = `${data.channel}:${data.user}:${data.ts}`
 
-        if (!this.shouldProcessMessage(data, messageKey))
-            return
+        if (!this.shouldProcessMessage(data, messageKey)) return
 
         // Establish transaction boundary
         const em = this.repository['_em']
@@ -175,24 +173,23 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
      * Handle organization selection from interactive components
      */
     async handleOrganizationSelectCallback(payload: SlackInteractivePayload) {
-        if (!payload.user?.id)
-            throw new MismatchException('Missing user information')
+        if (!payload.user?.id) throw new MismatchException('Missing user information')
 
         const cathedralUserId = payload.actions?.[0]?.selected_option?.value
-        if (!cathedralUserId)
-            throw new MismatchException('No Cathedral user selected')
+        if (!cathedralUserId) throw new MismatchException('No Cathedral user selected')
 
         const existingCathedralUserId = await this._userInteractor.getCathedralUserIdForSlackUser({
             slackUserId: payload.user.id,
             teamId: payload.team?.id || ''
         })
 
-        if (existingCathedralUserId)
+        if (existingCathedralUserId) {
             return {
                 response_type: 'ephemeral',
                 replace_original: true,
                 text: '❌ Your Slack account is already linked to a Cathedral user.'
             }
+        }
 
         this.assertUserIdentity(cathedralUserId)
 
@@ -216,12 +213,10 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
      * Handle solution selection from interactive components
      */
     async handleSolutionSelectCallback(payload: SlackInteractivePayload) {
-        if (!payload.user?.id || !payload.channel?.id)
-            throw new MismatchException('Missing user or channel information')
+        if (!payload.user?.id || !payload.channel?.id) throw new MismatchException('Missing user or channel information')
 
         const solutionId = payload.actions?.[0]?.selected_option?.value
-        if (!solutionId)
-            throw new MismatchException('No solution selected')
+        if (!solutionId) throw new MismatchException('No solution selected')
 
         const cathedralUserId = this._permissionInteractor.userId,
             em = this.repository['_em'],
@@ -231,8 +226,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
                 return null
             })
 
-        if (!solution)
-            throw new MismatchException('Invalid solution selected. Please try again.')
+        if (!solution) throw new MismatchException('Invalid solution selected. Please try again.')
 
         this._permissionInteractor.assertOrganizationContributor(solution.organization.id)
 
@@ -262,8 +256,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         // Add simple deduplication by checking if we've processed this exact message recently
         const recentProcessedKey = `slack_processed_${messageKey}`
 
-        if (cache.get(recentProcessedKey))
-            return false
+        if (cache.get(recentProcessedKey)) return false
 
         // Mark this message as being processed (expires in 5 minutes)
         cache.set(recentProcessedKey, true, { ttl: 5 * 60 })
@@ -271,8 +264,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         // Additional check: ensure this message wasn't sent more than 30 seconds ago
         const messageTimestamp = parseFloat(data.ts),
             currentTime = Date.now() / 1000
-        if (currentTime - messageTimestamp > 30)
-            return false
+        if (currentTime - messageTimestamp > 30) return false
 
         return true
     }
@@ -468,8 +460,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
                     entraService: entraGroupService
                 }),
                 orgs = (await orgCollectionInteractor.findOrganizations()).filter(Boolean)
-            if (!orgs || orgs.length === 0)
-                return this._slackService.createErrorMessage('No Cathedral organizations available to link.')
+            if (!orgs || orgs.length === 0) return this._slackService.createErrorMessage('No Cathedral organizations available to link.')
 
             return this._slackService.createOrganizationDropdown(orgs)
         }
@@ -477,8 +468,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         // 2. If orgId but no solutionId, show solution dropdown for org
         if (!solutionId) {
             const solutions = await new OrganizationRepository({ em, organizationId: orgId }).findSolutions({})
-            if (!solutions || solutions.length === 0)
-                return this._slackService.createErrorMessage('No solutions available in this organization.')
+            if (!solutions || solutions.length === 0) return this._slackService.createErrorMessage('No solutions available in this organization.')
 
             return this._slackService.createSolutionDropdown(solutions, orgId, 'cathedral_link_solution_select', false)
         }
@@ -489,8 +479,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
                 console.error('Failed to get solution by ID:', err)
                 return null
             })
-        if (!solution)
-            return this._slackService.createErrorMessage('Invalid solution selected. Please try again.')
+        if (!solution) return this._slackService.createErrorMessage('Invalid solution selected. Please try again.')
 
         await this._channelInteractor.linkChannelToSolution({
             channelId,
@@ -514,15 +503,13 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         const teamId = parsed.team_id,
             channelId = parsed.channel_id,
             channelMeta = await this.repository.getChannelMeta({ channelId, teamId })
-        if (!channelMeta || !channelMeta.solutionId) {
+        if (!channelMeta || !channelMeta.solutionId)
             return this._slackService.createChannelNotLinkedMessage()
-        }
 
         // Get the full channel configuration to determine the organization
         const channelConfig = await this._channelInteractor.getChannelConfiguration(channelId, teamId)
-        if (!channelConfig) {
+        if (!channelConfig)
             return this._slackService.createChannelNotLinkedMessage()
-        }
 
         this._permissionInteractor.assertOrganizationContributor(channelConfig.organizationId)
 
