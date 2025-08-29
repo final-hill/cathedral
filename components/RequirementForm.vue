@@ -87,11 +87,29 @@ const route = useRoute(),
     onSubmit = async (data?: Record<string, unknown>) => {
         isSubmitting.value = true
         try {
-            let result: req.RequirementType
+            let result: req.RequirementType,
+                // For Use Cases, use formState directly (includes scenario data)
+                // For other types, use data from XForm
+                submitData = isUseCase.value ? formState.value : (data || {})
 
-            // For Use Cases, use formState directly (includes scenario data)
-            // For other types, use data from XForm
-            const submitData = isUseCase.value ? formState.value : (data || {})
+            // Trim string values in the submit data
+            submitData = Object.keys(submitData).reduce((acc, key) => {
+                const value = submitData[key as keyof typeof submitData]
+                if (typeof value === 'string')
+                    acc[key] = value.trim()
+                else if (Array.isArray(value)) {
+                    // Handle scenario steps array - trim description fields
+                    acc[key] = value.map((item) => {
+                        if (item && typeof item === 'object' && 'name' in item && typeof item.name === 'string')
+                            return { ...item, name: item.name.trim() }
+
+                        return item
+                    })
+                } else
+                    acc[key] = value
+
+                return acc
+            }, {} as Record<string, unknown>)
 
             if (isEditValue.value && requirement?.value?.id) {
                 const endpoint = `/api/requirements/${reqType.value}/${requirement.value.workflowState.toLowerCase()}/${requirement.value.id}/edit`
