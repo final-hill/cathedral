@@ -113,8 +113,7 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
                 organization: organizationId
             })
 
-        if (!workspace)
-            throw new NotFoundException(`Slack workspace integration not found for team ID: ${teamId} in organization ID: ${organizationId}`)
+        if (!workspace) throw new NotFoundException(`Slack workspace integration not found for team ID: ${teamId} in organization ID: ${organizationId}`)
 
         await em.removeAndFlush(workspace)
     }
@@ -138,9 +137,8 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
                 populate: ['organization']
             })
 
-        if (!workspace) {
+        if (!workspace)
             return null
-        }
 
         return {
             teamId: workspace.teamId,
@@ -167,15 +165,11 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
                 teamId
             })
 
-        if (!workspace)
-            return false
+        if (!workspace) return false
 
-        if (updates.teamName !== undefined)
-            workspace.teamName = updates.teamName
-        if (updates.botUserId !== undefined)
-            workspace.botUserId = updates.botUserId
-        if (updates.lastMetadataRefresh !== undefined)
-            workspace.lastRefreshDate = updates.lastMetadataRefresh
+        if (updates.teamName !== undefined) workspace.teamName = updates.teamName
+        if (updates.botUserId !== undefined) workspace.botUserId = updates.botUserId
+        if (updates.lastMetadataRefresh !== undefined) workspace.lastRefreshDate = updates.lastMetadataRefresh
 
         await em.persistAndFlush(workspace)
         return true

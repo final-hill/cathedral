@@ -18,9 +18,8 @@ export default defineOAuthEntraExternalIDEventHandler({
         const entraService = createEntraService()
 
         try {
-            if (!tokens.id_token) {
+            if (!tokens.id_token)
                 throw new Error('ID token is required for group claims')
-            }
 
             const userGroups = await entraService.getUserGroups(tokens.id_token),
                 parsedPermissions = entraService.parseGroups(userGroups)

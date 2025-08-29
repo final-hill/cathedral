@@ -10,8 +10,7 @@ const { $eventBus } = useNuxtApp(),
     }),
     deleteConfirmModalOpenState = ref(false)
 
-if (solutionError.value)
-    $eventBus.$emit('page-error', solutionError.value)
+if (solutionError.value) $eventBus.$emit('page-error', solutionError.value)
 
 const links = [
         {

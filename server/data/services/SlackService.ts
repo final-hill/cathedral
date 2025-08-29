@@ -61,8 +61,7 @@ export class SlackService {
             }
         } catch (error) {
             // Re-throw createError instances (they have statusCode property)
-            if (error && typeof error === 'object' && 'statusCode' in error)
-                throw error
+            if (error && typeof error === 'object' && 'statusCode' in error) throw error
 
             throw createError({
                 statusCode: 500,
@@ -144,9 +143,8 @@ export class SlackService {
                 ]
             }
 
-        if (replaceOriginal) {
+        if (replaceOriginal)
             payload.replace_original = true
-        }
 
         return payload
     }
@@ -163,9 +161,8 @@ export class SlackService {
             text: `This Slack channel is now linked to Cathedral solution: *${solutionName}*.`
         }
 
-        if (replaceOriginal) {
+        if (replaceOriginal)
             payload.replace_original = true
-        }
 
         return payload
     }
@@ -453,12 +450,13 @@ export class SlackService {
                 .digest('hex'),
             computedSignature = `v0=${hmac}`
 
-        if (computedSignature !== slackSignature)
+        if (computedSignature !== slackSignature) {
             throw createError({
                 statusCode: 403,
                 statusMessage: 'Forbidden',
                 message: 'Invalid Slack request signature'
             })
+        }
     }
 
     /**

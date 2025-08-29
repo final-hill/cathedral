@@ -11,6 +11,7 @@ export default createConfigForNuxt({
 }).append({
     rules: {
         'vue/no-multiple-template-root': 'off',
-        'one-var': ['error', 'consecutive']
+        'one-var': ['error', 'consecutive'],
+        'curly': ['error', 'multi-or-nest']
     }
 })

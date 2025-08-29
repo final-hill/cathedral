@@ -6,9 +6,8 @@ const route = useRoute(),
     redirectPath = route.query.redirect as string
 
 // Store redirect in sessionStorage before starting OAuth (client-side only)
-if (import.meta.client && redirectPath && redirectPath.startsWith('/')) {
+if (import.meta.client && redirectPath && redirectPath.startsWith('/'))
     sessionStorage.setItem('auth-redirect', redirectPath)
-}
 
 // Redirect to OAuth
 await navigateTo('/auth/entra-external-id', { external: true })

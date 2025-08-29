@@ -19,9 +19,8 @@ export async function resolveSlackUserSession(
                 teamId
             })
 
-        if (!cathedralUserId) {
+        if (!cathedralUserId)
             return null // User not linked to Cathedral
-        }
 
         const entraService = createEntraService(),
             userInfo = await entraService.getUser(cathedralUserId),

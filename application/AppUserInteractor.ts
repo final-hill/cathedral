@@ -47,9 +47,8 @@ export class AppUserInteractor extends Interactor<AppUserType> {
         try {
             const entraUser = await this._entraService.getUserByEmail(email)
 
-            if (!entraUser) {
+            if (!entraUser)
                 throw new NotFoundException(`User with email ${email} not found in Entra External ID tenant. User must be invited through the Entra admin portal first.`)
-            }
 
             await this._permissionInteractor.addAppUserOrganizationRole({
                 appUserId: entraUser.id,
@@ -60,9 +59,9 @@ export class AppUserInteractor extends Interactor<AppUserType> {
             return entraUser.id
         } catch (error) {
             // If it's a Microsoft Graph API error, provide more context
-            if (error instanceof Error && error.message.includes('Graph API')) {
+            if (error instanceof Error && error.message.includes('Graph API'))
                 throw new PermissionDeniedException(`Failed to invite user via Entra External ID: ${error.message}`)
-            }
+
             throw error
         }
     }
@@ -105,9 +104,9 @@ export class AppUserInteractor extends Interactor<AppUserType> {
             return { userId: entraUser.id, invited }
         } catch (error) {
             // If it's a Microsoft Graph API error, provide more context
-            if (error instanceof Error && error.message.includes('Graph API')) {
+            if (error instanceof Error && error.message.includes('Graph API'))
                 throw new PermissionDeniedException(`Failed to add/invite user via Entra External ID: ${error.message}`)
-            }
+
             throw error
         }
     }
@@ -125,9 +124,8 @@ export class AppUserInteractor extends Interactor<AppUserType> {
 
         try {
             const entraUser = await this._entraService.getUser(id)
-            if (!entraUser) {
+            if (!entraUser)
                 throw new NotFoundException(`User with id ${id} does not exist in Entra External ID`)
-            }
 
             return AppUser.parse({
                 id: entraUser.id,
@@ -153,9 +151,8 @@ export class AppUserInteractor extends Interactor<AppUserType> {
 
         try {
             const entraUser = await this._entraService.getUserByEmail(email)
-            if (!entraUser) {
+            if (!entraUser)
                 throw new NotFoundException(`User with email ${email} does not exist in Entra External ID`)
-            }
 
             return AppUser.parse({
                 id: entraUser.id,

@@ -65,11 +65,9 @@ export class NaturalLanguageToRequirementService {
             }),
             result = completion.choices[0].message
 
-        if (result.refusal)
-            throw new Error(result.refusal)
+        if (result.refusal) throw new Error(result.refusal)
 
-        if (!result.content)
-            throw null
+        if (!result.content) throw null
 
         return JSON.parse(result.content).requirements
     }

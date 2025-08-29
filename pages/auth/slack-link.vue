@@ -14,9 +14,8 @@ const route = useRoute(),
     token = route.query.token as string
 
 // Validate required parameters
-if (!slackUserId || !teamId || !token) {
+if (!slackUserId || !teamId || !token)
     error.value = 'Missing Slack user information.'
-}
 
 const { user, clear } = useUserSession(),
     currentUser = computed(() => ({

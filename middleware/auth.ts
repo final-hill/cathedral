@@ -3,9 +3,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
     if (!loggedIn.value) {
         // Store the intended destination in sessionStorage (client-side only)
-        if (import.meta.client && to.fullPath !== '/') {
+        if (import.meta.client && to.fullPath !== '/')
             sessionStorage.setItem('auth-redirect', to.fullPath)
-        }
+
         return navigateTo('/auth/entra-external-id', { external: true })
     }
 })

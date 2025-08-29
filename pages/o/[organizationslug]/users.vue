@@ -40,8 +40,7 @@ const { $eventBus } = useNuxtApp(),
         query: { organizationSlug, includeSlack: true }
     })
 
-if (getUserError.value)
-    $eventBus.$emit('page-error', getUserError.value)
+if (getUserError.value) $eventBus.$emit('page-error', getUserError.value)
 
 const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
         const column: TableColumn<SchemaType> = {

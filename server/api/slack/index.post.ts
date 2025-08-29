@@ -23,9 +23,9 @@ export default defineEventHandler(async (event) => {
             teamId = ''
 
         if (data.type === 'event_callback' && data.event) {
-            if ('user' in data.event) {
+            if ('user' in data.event)
                 slackUserId = data.event.user || ''
-            }
+
             teamId = data.authorizations?.[0]?.team_id || ''
         }
 

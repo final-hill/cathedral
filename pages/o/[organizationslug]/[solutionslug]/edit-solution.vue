@@ -54,9 +54,8 @@ const formState = reactive<FormSchema>({
 
         Object.assign(formState, newState)
 
-        if (nameChanged && newName) {
+        if (nameChanged && newName)
             formState.slug = slugify(newName)
-        }
     }
 </script>
 

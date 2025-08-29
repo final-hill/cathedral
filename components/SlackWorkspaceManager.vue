@@ -61,8 +61,7 @@ const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useFetc
                 title: `Are you sure you want to disconnect workspace "${workspaceDisplayName}"? This will remove the app installation and all associated channel links.`
             }).result
 
-        if (!result)
-            return
+        if (!result) return
 
         disconnectingWorkspaces.value.add(teamId)
 
@@ -152,9 +151,9 @@ const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useFetc
             header: 'Last Refreshed',
             cell: ({ row }: { row: Row<SlackWorkspaceMetaType> }) => {
                 const lastRefresh = row.original.lastRefreshDate
-                if (!lastRefresh) {
+                if (!lastRefresh)
                     return <span class="text-muted text-sm">Never</span>
-                }
+
                 const refreshDate = lastRefresh
                 return <time datetime={refreshDate.toISOString()} class="text-sm">{refreshDate.toLocaleDateString()}</time>
             }

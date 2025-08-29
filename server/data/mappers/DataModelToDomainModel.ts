@@ -57,14 +57,10 @@ export class DataModelToDomainModel<
         const updatedModel = await replaceReferenceMembers(model),
 
             entries = await Promise.all(Object.entries(updatedModel).map(async ([key, value]) => {
-                if (['req_type', 'requirement', 'versions'].includes(key))
-                    return [key, undefined] // skip
-                else if (key === 'effectiveFrom')
-                    return ['lastModified', value]
-                else if (key === 'createdById')
-                    return ['createdBy', { id: value, name: 'Unknown User' }] // Will be enriched by interactor
-                else if (key === 'modifiedById')
-                    return ['modifiedBy', { id: value, name: 'Unknown User' }] // Will be enriched by interactor
+                if (['req_type', 'requirement', 'versions'].includes(key)) return [key, undefined] // skip
+                else if (key === 'effectiveFrom') return ['lastModified', value]
+                else if (key === 'createdById') return ['createdBy', { id: value, name: 'Unknown User' }] // Will be enriched by interactor
+                else if (key === 'modifiedById') return ['modifiedBy', { id: value, name: 'Unknown User' }] // Will be enriched by interactor
                 else if (value instanceof Collection) {
                     const items = await value.loadItems(),
                         processedItems = await Promise.all(items.map(async (item) => {
@@ -85,17 +81,13 @@ export class DataModelToDomainModel<
                         }))
                     // Filter out any undefined/null values
                     return [key, processedItems.filter(Boolean)]
-                } else if (objectSchema.safeParse(value).success)
-                    return [key, objectSchema.parse(value)]
-                else if (value == null)
-                    return [key, undefined] // convert null to undefined
-                else
-                    return [key, value]
+                } else if (objectSchema.safeParse(value).success) return [key, objectSchema.parse(value)]
+                else if (value == null) return [key, undefined] // convert null to undefined
+                else return [key, value]
             })),
 
             newProps = entries.reduce((acc, [key, value]) => {
-                if (value !== undefined)
-                    acc[key as string] = value
+                if (value !== undefined) acc[key as string] = value
                 return acc
             }, {} as Record<string, unknown>)
 

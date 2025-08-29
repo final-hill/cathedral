@@ -22,9 +22,8 @@ export class PermissionInteractor {
         this._event = props.event
         this._entraService = props.entraService
 
-        if (!this._session.user) {
+        if (!this._session.user)
             throw new PermissionDeniedException('Invalid user session: user not found')
-        }
     }
 
     get userId(): AppUserType['id'] {
@@ -41,8 +40,7 @@ export class PermissionInteractor {
      * @throws {PermissionDeniedException} If the user is not an organization admin
      */
     assertOrganizationAdmin(organizationId: OrganizationType['id']): void {
-        if (!this.isOrganizationAdmin(organizationId))
-            throw new PermissionDeniedException('Forbidden: You do not have admin permissions.')
+        if (!this.isOrganizationAdmin(organizationId)) throw new PermissionDeniedException('Forbidden: You do not have admin permissions.')
     }
 
     /**
@@ -51,8 +49,7 @@ export class PermissionInteractor {
      * @throws {PermissionDeniedException} If the user is not an organization contributor
      */
     assertOrganizationContributor(organizationId: OrganizationType['id']): void {
-        if (!this.isOrganizationContributor(organizationId))
-            throw new PermissionDeniedException('Forbidden: You do not have contributor permissions.')
+        if (!this.isOrganizationContributor(organizationId)) throw new PermissionDeniedException('Forbidden: You do not have contributor permissions.')
     }
 
     /**
@@ -61,8 +58,7 @@ export class PermissionInteractor {
      * @throws {PermissionDeniedException} If the user is not an organization reader
      */
     assertOrganizationReader(organizationId: OrganizationType['id']): void {
-        if (!this.isOrganizationReader(organizationId))
-            throw new PermissionDeniedException('Forbidden: You do not have reader permissions.')
+        if (!this.isOrganizationReader(organizationId)) throw new PermissionDeniedException('Forbidden: You do not have reader permissions.')
     }
 
     /**
@@ -97,9 +93,8 @@ export class PermissionInteractor {
         })
 
         // Dynamically update session groups if this is for the current user
-        if (props.appUserId === this.userId) {
+        if (props.appUserId === this.userId)
             await this.refreshSessionGroups(props.organizationId, props.role)
-        }
     }
 
     /**
@@ -154,9 +149,8 @@ export class PermissionInteractor {
             organizationId: props.organizationId
         })
 
-        if (roles.length === 0) {
+        if (roles.length === 0)
             throw new NotFoundException('User is not a member of this organization')
-        }
 
         return roles[0]
     }
@@ -183,9 +177,8 @@ export class PermissionInteractor {
      * @returns True if the user is an organization admin
      */
     isOrganizationAdmin(organizationId: OrganizationType['id']): boolean {
-        if (this._session.user!.isSystemAdmin) {
+        if (this._session.user!.isSystemAdmin)
             return true
-        }
 
         const orgRole = this._session.user!.organizationRoles.find(role => role.orgId === organizationId)
         return orgRole?.role === AppRole.ORGANIZATION_ADMIN
@@ -197,9 +190,8 @@ export class PermissionInteractor {
      * @returns True if the user is an organization contributor
      */
     isOrganizationContributor(organizationId: OrganizationType['id']): boolean {
-        if (this._session.user!.isSystemAdmin) {
+        if (this._session.user!.isSystemAdmin)
             return true
-        }
 
         const orgRole = this._session.user!.organizationRoles.find(role => role.orgId === organizationId)
         return orgRole?.role ? [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR].includes(orgRole.role) : false
@@ -211,9 +203,8 @@ export class PermissionInteractor {
      * @returns True if the user is an organization reader
      */
     isOrganizationReader(organizationId: OrganizationType['id']): boolean {
-        if (this._session.user!.isSystemAdmin) {
+        if (this._session.user!.isSystemAdmin)
             return true
-        }
 
         const orgRole = this._session.user!.organizationRoles.find(role => role.orgId === organizationId)
         return orgRole?.role ? [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR, AppRole.ORGANIZATION_READER].includes(orgRole.role) : false

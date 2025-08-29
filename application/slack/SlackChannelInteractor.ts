@@ -43,8 +43,7 @@ export class SlackChannelInteractor extends Interactor<SlackChannelMetaType> {
      * @returns true if names are considered stale (never refreshed or older than threshold)
      */
     private isNameDataStale(lastNameRefresh?: Date): boolean {
-        if (!lastNameRefresh)
-            return true
+        if (!lastNameRefresh) return true
 
         const now = new Date(),
             thresholdMs = SlackChannelInteractor.STALENESS_THRESHOLD_DAYS * 24 * 60 * 60 * 1000,

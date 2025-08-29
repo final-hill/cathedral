@@ -18,9 +18,8 @@ import { pascalCaseToSnakeCase } from './pascalCaseToSnakeCase'
  */
 export function resolveReqTypeFromModel(requirementModel: { req_type?: ReqType, constructor: { name: string } }): ReqType {
     // Try the direct property first (might work in some cases)
-    if (requirementModel.req_type) {
+    if (requirementModel.req_type)
         return requirementModel.req_type
-    }
 
     // Fallback: derive from constructor name using utilities
     const constructorName = requirementModel.constructor.name

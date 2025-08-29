@@ -118,11 +118,10 @@ const moscowPriorityLabels: Record<MoscowPriority, string> = {
 
         allRequirements.value.forEach((req) => {
             const effectivePriority = getEffectivePriority(req)
-            if (effectivePriority) {
+            if (effectivePriority)
                 grouped[effectivePriority].push(req)
-            } else {
+            else
                 grouped.unset.push(req)
-            }
         })
 
         return grouped
@@ -141,11 +140,10 @@ const moscowPriorityLabels: Record<MoscowPriority, string> = {
 
         allRequirements.value.forEach((req) => {
             const effectivePriority = getEffectivePriority(req)
-            if (effectivePriority) {
+            if (effectivePriority)
                 stats[effectivePriority]++
-            } else {
+            else
                 stats.unset++
-            }
         })
 
         return stats
@@ -249,16 +247,14 @@ const moscowPriorityLabels: Record<MoscowPriority, string> = {
         event.dataTransfer.setData('text/plain', requirement.id)
 
         // Add visual feedback to the dragged element
-        if (event.target instanceof HTMLElement) {
+        if (event.target instanceof HTMLElement)
             event.target.style.opacity = '0.5'
-        }
     },
-
     onDragEnd = (event: DragEvent) => {
         // Reset visual state
-        if (event.target instanceof HTMLElement) {
+        if (event.target instanceof HTMLElement)
             event.target.style.opacity = ''
-        }
+
         draggedRequirement.value = null
         dragOverTarget.value = null
     },
@@ -280,14 +276,12 @@ const moscowPriorityLabels: Record<MoscowPriority, string> = {
         if (targetPriority === 'unset') {
             // If the requirement originally had a priority, we need to explicitly set it to null
             // If it didn't have a priority originally, we can just remove any local changes
-            if (requirement.priority) {
+            if (requirement.priority)
                 localPriorityChanges.value.set(requirement.id, null)
-            } else {
+            else
                 localPriorityChanges.value.delete(requirement.id)
-            }
-        } else {
+        } else
             localPriorityChanges.value.set(requirement.id, targetPriority)
-        }
 
         // Reset drag state
         draggedRequirement.value = null

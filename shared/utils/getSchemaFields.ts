@@ -3,12 +3,11 @@ import { camelCaseToTitleCase } from './camelCaseToTitleCase'
 
 const enumToLabelValue = (enumObject: Record<string, string>) =>
         Object.entries(enumObject).map(([_key, value]) => ({ value, label: value })),
-
     /**
- * Get the fields of a Zod schema as an array of objects with metadata
- * @param schema The Zod schema to get the fields of
- * @returns An array of objects with metadata about the fields of the schema
- */
+     * Get the fields of a Zod schema as an array of objects with metadata
+     * @param schema The Zod schema to get the fields of
+     * @returns An array of objects with metadata about the fields of the schema
+     */
     getSchemaFields = (schema: z.ZodObject<z.ZodRawShape>) => Object.entries(schema.shape)
         .filter(([, fieldType]) => fieldType != null) // Filter out undefined field types
         .map(([key, fieldType]) => {
@@ -22,6 +21,8 @@ const enumToLabelValue = (enumObject: Record<string, string>) =>
                     fieldType,
                     isOptional: false,
                     isObject: false,
+                    isArray: false,
+                    isArrayOfObjects: false,
                     reqType: undefined,
                     isReadOnly: false,
                     innerType: fieldType,
@@ -43,16 +44,26 @@ const enumToLabelValue = (enumObject: Record<string, string>) =>
                 ),
                 isEffect = fieldType instanceof z.ZodEffects,
                 isReadOnly = fieldType instanceof z.ZodReadonly,
+                isDefault = fieldType instanceof z.ZodDefault,
                 innerType = isOptional
                     ? (fieldType instanceof z.ZodOptional ? fieldType._def.innerType : fieldType)
                     : isEffect
                         ? fieldType._def.schema
                         : isReadOnly
                             ? fieldType._def.innerType
-                            : fieldType,
+                            : isDefault
+                                ? fieldType._def.innerType
+                                : fieldType,
                 isEnum = innerType instanceof z.ZodNativeEnum || innerType instanceof z.ZodEnum,
+                isArray = innerType instanceof z.ZodArray,
+                arrayElementType = isArray ? innerType._def.type : undefined,
+                isArrayOfObjects = isArray && arrayElementType instanceof z.ZodObject,
                 isObject = innerType instanceof z.ZodObject,
-                reqType = isObject ? innerType._def?.shape()?.reqType?._def?.defaultValue() : undefined,
+                reqType = isObject
+                    ? innerType._def?.shape()?.reqType._def.defaultValue()
+                    : isArrayOfObjects
+                        ? arrayElementType._def?.shape()?.reqType._def.defaultValue()
+                        : undefined,
                 maxLength = innerType instanceof z.ZodString ? innerType._def.checks.find(check => check.kind === 'max')?.value : undefined,
                 min = innerType instanceof z.ZodNumber ? innerType._def.checks.find(check => check.kind === 'min')?.value : undefined,
                 max = innerType instanceof z.ZodNumber ? innerType._def.checks.find(check => check.kind === 'max')?.value : undefined,
@@ -65,6 +76,8 @@ const enumToLabelValue = (enumObject: Record<string, string>) =>
                 fieldType,
                 isOptional,
                 isObject,
+                isArray,
+                isArrayOfObjects,
                 reqType,
                 isReadOnly,
                 innerType,

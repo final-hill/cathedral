@@ -69,9 +69,8 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
      */
     async unlinkUser(props: { slackUserId: string, teamId: string }): Promise<void> {
         // Only system admins can perform admin-level user unlinking operations
-        if (!this._permissionInteractor.isSystemAdmin()) {
+        if (!this._permissionInteractor.isSystemAdmin())
             throw new PermissionDeniedException('Only system administrators can unlink users through admin operations')
-        }
 
         await this.repository.unlinkSlackUser(props)
     }
@@ -84,9 +83,8 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
      * @throws {PermissionDeniedException} If the current user is not a system admin
      */
     async isSlackUserLinked(props: { slackUserId: string, teamId: string }): Promise<boolean> {
-        if (!this._permissionInteractor.isSystemAdmin()) {
+        if (!this._permissionInteractor.isSystemAdmin())
             throw new PermissionDeniedException('Only system administrators can check user linking status')
-        }
 
         return this.repository.isSlackUserLinked(props)
     }

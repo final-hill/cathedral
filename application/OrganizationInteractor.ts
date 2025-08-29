@@ -73,8 +73,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
             pi = this._permissionInteractor,
             currentUserId = pi.userId
 
-        if (!(pi.isOrganizationAdmin(organization.id)) && id !== currentUserId)
-            throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
+        if (!(pi.isOrganizationAdmin(organization.id)) && id !== currentUserId) throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
 
         const targetUserAuor = await pi.getAppUserOrganizationRole({
                 appUserId: id,
@@ -85,8 +84,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
                 role: AppRole.ORGANIZATION_ADMIN
             }).then(roles => roles.length)
 
-        if (targetUserAuor.role === AppRole.ORGANIZATION_ADMIN && orgAdminCount === 1)
-            throw new PermissionDeniedException('Forbidden: You cannot delete the last organization admin.')
+        if (targetUserAuor.role === AppRole.ORGANIZATION_ADMIN && orgAdminCount === 1) throw new PermissionDeniedException('Forbidden: You cannot delete the last organization admin.')
 
         return pi.deleteAppUserOrganizationRole({
             appUserId: id,
@@ -240,8 +238,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
     private async _assertSolutionSlugIsUnique(slug: req.SolutionType['slug']): Promise<void> {
         const solutions = (await this.findSolutions({ slug }))
 
-        if (solutions.length > 0)
-            throw new MismatchException(`Solution with slug ${slug} already exists in the organization`)
+        if (solutions.length > 0) throw new MismatchException(`Solution with slug ${slug} already exists in the organization`)
     }
 
     /**
@@ -259,8 +256,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
 
         this._permissionInteractor.assertOrganizationContributor(org.id)
 
-        if (props.name)
-            await this._assertSolutionSlugIsUnique(props.name)
+        if (props.name) await this._assertSolutionSlugIsUnique(props.name)
 
         await this.repository.updateSolutionBySlug(slug, {
             modifiedById: currentUserId,

@@ -21,9 +21,8 @@ export default defineEventHandler(async (event) => {
         slackRepository = new SlackRepository({ em: event.context.em })
 
     // Only system admins can unlink users via the admin interface
-    if (!permissionInteractor.isSystemAdmin()) {
+    if (!permissionInteractor.isSystemAdmin())
         throw new PermissionDeniedException('Forbidden: Only system administrators can unlink Slack users.')
-    }
 
     return await slackRepository.unlinkSlackUser({ slackUserId, teamId })
         .catch(handleDomainException)

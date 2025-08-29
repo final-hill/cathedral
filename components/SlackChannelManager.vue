@@ -41,9 +41,8 @@ const props = withDefaults(defineProps<Props>(), {
                 title: `Are you sure you want to unlink Slack channel ${channelDisplayName}?`
             }).result
 
-        if (!result) {
+        if (!result)
             return
-        }
 
         const channelKey = `${channelId}:${teamId}`
         unlinkingChannels.value.add(channelKey)
@@ -161,9 +160,9 @@ const props = withDefaults(defineProps<Props>(), {
             header: 'Names Updated',
             cell: ({ row }: { row: Row<SlackChannelMetaType> }) => {
                 const lastRefresh = row.original.lastNameRefresh
-                if (!lastRefresh) {
+                if (!lastRefresh)
                     return <span class="text-muted text-sm">Never</span>
-                }
+
                 const refreshDate = lastRefresh instanceof Date ? lastRefresh : new Date(lastRefresh)
                 return <time datetime={refreshDate.toISOString()} class="text-sm">{refreshDate.toLocaleDateString()}</time>
             }

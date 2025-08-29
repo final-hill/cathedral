@@ -69,7 +69,9 @@ const { data: requirement, status } = await useFetch<RequirementType>(`/api/requ
 <template>
     <h1>{{ title }}</h1>
 
-    <p> {{ RequirementSchema.description }} </p>
+    <p class="whitespace-pre">
+        {{ RequirementSchema.description }}
+    </p>
 
     <RequirementView
         :requirement="requirement"

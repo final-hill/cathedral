@@ -2,6 +2,7 @@
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { z } from 'zod'
 import { getSchemaFields } from '~/shared/utils'
+import { ReqType } from '~/shared/domain/requirements/ReqType'
 
 export type FormSchema = z.ZodObject<{ [key: string]: z.ZodTypeAny }>
 
@@ -22,7 +23,10 @@ const props = defineProps<{
     localState = reactive({ ...props.state }) as z.output<F>,
     backupState = reactive(Object.create(props.state)),
     toast = useToast(),
-    isSubmitting = ref(false)
+    isSubmitting = ref(false),
+    isValidating = ref(false),
+    // Store validation functions from child components (e.g., ScenarioStepsEditor)
+    childValidators = ref<Map<string, () => Promise<{ isValid: boolean, message?: string }>>>(new Map())
 
 watch(localState, (newState) => {
     emit('update:state', newState)
@@ -31,6 +35,53 @@ watch(localState, (newState) => {
 watch(() => props.state, (newState) => {
     Object.assign(localState, newState)
 }, { deep: true, immediate: true })
+
+// Custom validation function to run child component validators
+const customValidate = async (): Promise<{ name: string, message: string }[]> => {
+        const errors: { name: string, message: string }[] = []
+
+        // Set validation loading state if there are child validators to run
+        if (childValidators.value.size > 0)
+            isValidating.value = true
+
+        try {
+            // Run all child component validators
+            for (const [fieldName, validator] of childValidators.value) {
+                try {
+                    const result = await validator()
+                    if (!result.isValid) {
+                        errors.push({
+                            name: fieldName,
+                            message: result.message || 'Invalid content - please check the data you entered'
+                        })
+                    }
+                } catch (error) {
+                    console.error(`Validation error for field ${fieldName}:`, error)
+                    errors.push({
+                        name: fieldName,
+                        message: 'Validation failed - please try again'
+                    })
+                }
+            }
+        } finally {
+            isValidating.value = false
+        }
+
+        return errors
+    },
+    // Function to register a child validator
+    registerChildValidator = (fieldName: string, validator: () => Promise<{ isValid: boolean, message?: string }>) => {
+        childValidators.value.set(fieldName, validator)
+    },
+    // Function to unregister a child validator (for future use)
+    _unregisterChildValidator = (fieldName: string) => {
+        childValidators.value.delete(fieldName)
+    }
+
+// Clean up validators when component unmounts
+onBeforeUnmount(() => {
+    childValidators.value.clear()
+})
 
 const onSubmit = async ({ data }: FormSubmitEvent<z.output<F>>) => {
         isSubmitting.value = true
@@ -52,8 +103,7 @@ const onSubmit = async ({ data }: FormSubmitEvent<z.output<F>>) => {
         form.value?.clear()
         Object.assign(localState, backupState)
 
-        if (props.onCancel)
-            props.onCancel()
+        if (props.onCancel) props.onCancel()
     },
 
     schemaFields = getSchemaFields(props.schema)
@@ -63,7 +113,7 @@ type RouteType = { solutionslug?: string, organizationslug?: string }
 const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute().params as RouteType,
     autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field) => {
         const reqType = field.reqType
-        if (field.isObject) {
+        if ((field.isObject || (field.isArrayOfObjects && reqType !== ReqType.SCENARIO_STEP)) && reqType) {
             return {
                 [field.key]: await useFetch('/api/autocomplete', {
                     query: { solutionSlug, organizationSlug, reqType }
@@ -80,6 +130,7 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
         ref="form"
         :state="localState as any"
         :schema="props.schema as any"
+        :validate="customValidate"
         :class="`gap-4 flex flex-col ${props.class}`"
         autocomplete="off"
         :disabled="props.disabled"
@@ -180,6 +231,21 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
                     tabindex="-1"
                     class="w-full"
                 />
+                <UInput
+                    v-else-if="field.isArrayOfObjects && props.disabled && field.reqType !== ReqType.SCENARIO_STEP"
+                    :value="((localState as any)[field.key] as any[])?.map(item => item.name).join(', ') || ''"
+                    type="text"
+                    disabled
+                    tabindex="-1"
+                    class="w-full"
+                />
+                <ScenarioStepsEditor
+                    v-else-if="field.isArrayOfObjects && field.reqType === ReqType.SCENARIO_STEP"
+                    v-model="(localState as any)[field.key]"
+                    :label="field.label"
+                    :disabled="props.disabled"
+                    @validation-ready="(validator) => registerChildValidator(field.key, validator)"
+                />
                 <UInputMenu
                     v-else-if="field.isObject && !props.disabled"
                     v-model="(localState as any)[field.key]"
@@ -188,6 +254,16 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
                     :loading="(autocompleteFetchObjects[field.key].status as any) === 'pending'"
                     class="w-full"
                     placeholder="Search for an item"
+                />
+                <UInputMenu
+                    v-else-if="field.isArrayOfObjects && !props.disabled && field.reqType !== ReqType.SCENARIO_STEP"
+                    v-model="(localState as any)[field.key]"
+                    :items="(autocompleteFetchObjects[field.key].data.value || []) as any"
+                    value-key="value"
+                    :loading="(autocompleteFetchObjects[field.key].status as any) === 'pending'"
+                    multiple
+                    class="w-full"
+                    placeholder="Search for items"
                 />
                 <UInput
                     v-else-if="field.innerType instanceof z.ZodString && field.isEmail"
@@ -204,9 +280,17 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
         </template>
 
         <UProgress
-            v-if="isSubmitting"
+            v-if="isSubmitting || isValidating"
             animation="carousel"
             class="w-full"
+        />
+
+        <UAlert
+            v-if="isValidating"
+            title="Validating scenario steps..."
+            icon="i-lucide-sparkles"
+            color="info"
+            variant="soft"
         />
 
         <div
@@ -217,8 +301,8 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
                 label="Submit"
                 type="submit"
                 color="primary"
-                :loading="isSubmitting"
-                :disabled="isSubmitting"
+                :loading="isSubmitting || isValidating"
+                :disabled="isSubmitting || isValidating"
             />
             <UButton
                 label="Cancel"

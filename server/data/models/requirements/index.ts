@@ -1,6 +1,6 @@
 import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, PrimaryKey, Property, types } from '@mikro-orm/core'
 import type { FilterQuery, OrderDefinition, Ref, Rel } from '@mikro-orm/core'
-import { ConstraintCategory, MoscowPriority, ReqType, StakeholderCategory, StakeholderSegmentation, WorkflowState } from '../../../../shared/domain/requirements/enums.js'
+import { ConstraintCategory, MoscowPriority, ReqType, ScenarioStepTypeEnum, StakeholderCategory, StakeholderSegmentation, WorkflowState } from '../../../../shared/domain/requirements/enums.js'
 import { SlackChannelMetaModel } from '../application/index.js'
 import type { ReqId } from '../../../../shared/domain/index.js'
 
@@ -103,8 +103,7 @@ export abstract class RequirementModel extends StaticAuditModel<RequirementVersi
             latestRemoved = versions.find(v => v.workflowState === WorkflowState.Removed)
 
         // Compare effectiveFrom dates to determine validity
-        if (latestRemoved && (!latestActive || latestRemoved.effectiveFrom > latestActive.effectiveFrom))
-            return undefined // A newer Removed version exists, so no Active version is valid
+        if (latestRemoved && (!latestActive || latestRemoved.effectiveFrom > latestActive.effectiveFrom)) return undefined // A newer Removed version exists, so no Active version is valid
 
         return latestActive // Return the latest Active version if no newer Removed version exists
     }
@@ -143,7 +142,13 @@ export class ActorModel extends RequirementModel { }
 export class ActorVersionsModel extends RequirementVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.ASSUMPTION })
-export class AssumptionModel extends RequirementModel { }
+export class AssumptionModel extends RequirementModel {
+    @ManyToOne({ entity: () => UseCaseModel, nullable: true, inversedBy: 'preconditions' })
+    readonly useCase?: Ref<UseCaseModel>
+
+    @ManyToOne({ entity: () => ScenarioStepModel, nullable: true, inversedBy: 'preconditions' })
+    readonly scenarioStep?: Ref<ScenarioStepModel>
+}
 
 @Entity({ discriminatorValue: ReqType.ASSUMPTION })
 export class AssumptionVersionsModel extends RequirementVersionsModel { }
@@ -162,10 +167,7 @@ export class ComponentModel extends ActorModel { }
 
 @Entity({ discriminatorValue: ReqType.COMPONENT })
 export class ComponentVersionsModel extends ActorVersionsModel {
-    /**
-     * The parent component that this component belongs to
-     */
-    @ManyToOne({ entity: () => ComponentVersionsModel, nullable: true })
+    @ManyToOne({ entity: () => ComponentModel, nullable: true })
     readonly parentComponent?: Ref<ComponentModel>
 }
 
@@ -179,7 +181,10 @@ export class ConstraintVersionsModel extends RequirementVersionsModel {
 }
 
 @Entity({ discriminatorValue: ReqType.EFFECT })
-export class EffectModel extends RequirementModel { }
+export class EffectModel extends RequirementModel {
+    @ManyToOne({ entity: () => UseCaseModel, nullable: true, inversedBy: 'successGuarantees' })
+    readonly useCase?: Ref<UseCaseModel>
+}
 
 @Entity({ discriminatorValue: ReqType.EFFECT })
 export class EffectVersionsModel extends RequirementVersionsModel { }
@@ -264,6 +269,18 @@ export class HintModel extends NoiseModel { }
 
 @Entity({ discriminatorValue: ReqType.HINT })
 export class HintVersionsModel extends NoiseVersionsModel { }
+
+@Entity({ discriminatorValue: ReqType.INTERACTION_REQUIREMENT })
+export class InteractionRequirementModel extends RequirementModel { }
+
+@Entity({ discriminatorValue: ReqType.INTERACTION_REQUIREMENT })
+export class InteractionRequirementVersionsModel extends RequirementVersionsModel { }
+
+@Entity({ discriminatorValue: ReqType.EVENT })
+export class EventModel extends InteractionRequirementModel { }
+
+@Entity({ discriminatorValue: ReqType.EVENT })
+export class EventVersionsModel extends InteractionRequirementVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.NON_FUNCTIONAL_BEHAVIOR })
 export class NonFunctionalBehaviorModel extends BehaviorModel { }
@@ -357,7 +374,10 @@ export class SolutionVersionsModel extends MetaRequirementVersionsModel {
 }
 
 @Entity({ discriminatorValue: ReqType.STAKEHOLDER })
-export class StakeholderModel extends ComponentModel { }
+export class StakeholderModel extends ComponentModel {
+    @ManyToOne({ entity: () => UseCaseModel, nullable: true, inversedBy: 'stakeholders' })
+    readonly useCase?: Ref<UseCaseModel>
+}
 
 @Entity({ discriminatorValue: ReqType.STAKEHOLDER })
 export class StakeholderVersionsModel extends ComponentVersionsModel {
@@ -387,6 +407,30 @@ export class ScenarioVersionsModel extends RequirementVersionsModel {
 
     @ManyToOne({ entity: () => OutcomeModel })
     readonly outcome!: OutcomeModel
+
+    @ManyToOne({ entity: () => FunctionalBehaviorModel })
+    readonly functionalBehavior!: FunctionalBehaviorModel
+}
+
+@Entity({ discriminatorValue: ReqType.SCENARIO_STEP })
+export class ScenarioStepModel extends ScenarioModel {
+    @ManyToOne({ entity: () => UseCaseModel, inversedBy: 'scenarioSteps' })
+    readonly parentScenario!: Ref<UseCaseModel>
+
+    @ManyToOne({ entity: () => ScenarioStepModel, nullable: true })
+    readonly parentStep?: Ref<ScenarioStepModel>
+
+    @OneToMany({ entity: () => AssumptionModel, mappedBy: 'scenarioStep' })
+    readonly preconditions = new Collection<AssumptionModel>(this)
+}
+
+@Entity({ discriminatorValue: ReqType.SCENARIO_STEP })
+export class ScenarioStepVersionsModel extends ScenarioVersionsModel {
+    @Property({ type: types.integer })
+    readonly order!: number
+
+    @Enum({ items: () => ScenarioStepTypeEnum })
+    readonly stepType!: ScenarioStepTypeEnum
 }
 
 @Entity({ discriminatorValue: ReqType.EPIC })
@@ -417,37 +461,31 @@ export class TestCaseModel extends ScenarioModel { }
 export class TestCaseVersionsModel extends ScenarioVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.USE_CASE })
-export class UseCaseModel extends ScenarioModel { }
+export class UseCaseModel extends ScenarioModel {
+    @OneToMany({ entity: () => AssumptionModel, mappedBy: 'useCase' })
+    readonly preconditions = new Collection<AssumptionModel>(this)
+
+    @OneToMany({ entity: () => ScenarioStepModel, mappedBy: 'parentScenario' })
+    readonly scenarioSteps = new Collection<ScenarioStepModel>(this)
+
+    @OneToMany({ entity: () => EffectModel, mappedBy: 'useCase' })
+    readonly successGuarantees = new Collection<EffectModel>(this)
+
+    @OneToMany({ entity: () => StakeholderModel, mappedBy: 'useCase' })
+    readonly stakeholders = new Collection<StakeholderModel>(this)
+}
 
 @Entity({ discriminatorValue: ReqType.USE_CASE })
 export class UseCaseVersionsModel extends ScenarioVersionsModel {
-    @Property({ type: types.string })
-    readonly scope!: string
-
-    @Property({ type: types.string })
-    readonly level!: string
-
-    @ManyToOne({ entity: () => AssumptionModel })
-    readonly precondition!: AssumptionModel
+    @ManyToOne({ entity: () => SystemComponentModel })
+    readonly scope!: Ref<SystemComponentModel>
 
     @Property({ type: types.uuid })
     readonly triggerId!: string
-
-    @Property({ type: types.string })
-    readonly mainSuccessScenario!: string
-
-    @ManyToOne({ entity: () => EffectModel })
-    readonly successGuarantee!: EffectModel
-
-    @Property({ type: types.string })
-    readonly extensions!: string
 }
 
 @Entity({ discriminatorValue: ReqType.USER_STORY })
 export class UserStoryModel extends ScenarioModel { }
 
 @Entity({ discriminatorValue: ReqType.USER_STORY })
-export class UserStoryVersionsModel extends ScenarioVersionsModel {
-    @ManyToOne({ entity: () => FunctionalBehaviorModel })
-    readonly functionalBehavior!: FunctionalBehaviorModel
-}
+export class UserStoryVersionsModel extends ScenarioVersionsModel { }

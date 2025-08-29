@@ -87,8 +87,7 @@ export class OrganizationCollectionInteractor extends Interactor<OrganizationTyp
     async deleteOrganizationBySlug(slug: OrganizationType['slug']): Promise<void> {
         const org = (await this.repository.findOrganizations({ slug }))[0]
 
-        if (!org)
-            throw new NotFoundException('Organization not found')
+        if (!org) throw new NotFoundException('Organization not found')
 
         this._permissionInteractor.assertOrganizationAdmin(org.id)
         return this.deleteOrganizationById(org.id)
@@ -176,15 +175,13 @@ export class OrganizationCollectionInteractor extends Interactor<OrganizationTyp
             existingOrg = (await this.repository.findOrganizations({ slug }))[0],
             newSlug = props.name ? slugify(props.name) : existingOrg.slug
 
-        if (!existingOrg)
-            throw new NotFoundException(`Organization not found with slug: ${slug}`)
+        if (!existingOrg) throw new NotFoundException(`Organization not found with slug: ${slug}`)
 
         this._permissionInteractor.assertOrganizationContributor(existingOrg.id)
 
         const existingSlugOrg = (await this.repository.findOrganizations({ slug: newSlug }))[0]
 
-        if (existingSlugOrg && existingSlugOrg.id !== existingOrg.id)
-            throw new DuplicateEntityException('Organization already exists with that name')
+        if (existingSlugOrg && existingSlugOrg.id !== existingOrg.id) throw new DuplicateEntityException('Organization already exists with that name')
 
         await this.repository.updateOrganizationById(existingOrg.id, {
             modifiedById: currentUserId,

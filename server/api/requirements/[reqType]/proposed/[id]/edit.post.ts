@@ -16,8 +16,7 @@ const { id: organizationId, slug: organizationSlug } = Organization.innerType().
 export default defineEventHandler(async (event) => {
     const { reqType, id } = await validateEventParams(event, paramSchema)
 
-    if (reqType === ReqType.PARSED_REQUIREMENTS)
-        throw new Error('ReqType.PARSED_REQUIREMENTS is not allowed.')
+    if (reqType === ReqType.PARSED_REQUIREMENTS) throw new Error('ReqType.PARSED_REQUIREMENTS is not allowed.')
 
     const ReqPascal = snakeCaseToPascalCase(reqType) as keyof typeof req,
         ReqCons = req[ReqPascal] as typeof req.Requirement,

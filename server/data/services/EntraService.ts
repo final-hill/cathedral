@@ -65,14 +65,12 @@ export class EntraService {
      * Type guard to check if a string is a valid Cathedral group name
      */
     private isCathedralGroupName(value: string): value is CathedralGroupName {
-        if (!value.startsWith(this.groupPrefix)) {
+        if (!value.startsWith(this.groupPrefix))
             return false
-        }
 
         // Check if it's the system admin group
-        if (value === this.systemAdminGroup) {
+        if (value === this.systemAdminGroup)
             return true
-        }
 
         return UUID_ROLE_PATTERN.test(value)
     }
@@ -88,23 +86,20 @@ export class EntraService {
      * Parses an organization group name to extract organization ID and role
      */
     private parseOrganizationGroupName(groupName: CathedralGroupName): { orgId: string, role: AppRole } | null {
-        if (groupName === this.systemAdminGroup) {
+        if (groupName === this.systemAdminGroup)
             return null // System admin is not organization-specific
-        }
 
         // Match Cathedral-{UUID}-{role} pattern
         const match = groupName.match(UUID_ROLE_PATTERN)
 
-        if (!match) {
+        if (!match)
             return null
-        }
 
         const [, orgId, roleStr] = match,
             role = this.groupSuffixToRole[roleStr]
 
-        if (!role) {
+        if (!role)
             return null
-        }
 
         return { orgId, role }
     }
@@ -132,9 +127,8 @@ export class EntraService {
                 scopes: ['https://graph.microsoft.com/.default']
             })
 
-            if (!tokens?.accessToken) {
+            if (!tokens?.accessToken)
                 throw new Error('No access token received')
-            }
 
             return tokens.accessToken
         } catch (error) {
@@ -163,15 +157,13 @@ export class EntraService {
 
         // Handle responses with no content (like 204 No Content)
         const contentLength = response.headers.get('content-length')
-        if (response.status === 204 || contentLength === '0') {
+        if (response.status === 204 || contentLength === '0')
             return undefined as T
-        }
 
         // Only try to parse JSON if there's content
         const responseText = await response.text()
-        if (!responseText.trim()) {
+        if (!responseText.trim())
             return undefined as T
-        }
 
         return JSON.parse(responseText) as T
     }
@@ -198,9 +190,8 @@ export class EntraService {
                 `/users/${userId}/memberOf?$select=id,displayName&$filter=securityEnabled eq true`
             )
 
-            if (!memberOfResponse.value) {
+            if (!memberOfResponse.value)
                 return [] as CathedralGroups
-            }
 
             // Extract group names, filtering for Cathedral groups
             const groupNames = memberOfResponse.value
@@ -224,14 +215,12 @@ export class EntraService {
             organizationRoles: Array<{ orgId: string, role: AppRole }> = []
 
         for (const group of groups) {
-            if (group === this.systemAdminGroup) {
+            if (group === this.systemAdminGroup)
                 continue // Already handled
-            }
 
             const parsed = this.parseOrganizationGroupName(group)
-            if (parsed) {
+            if (parsed)
                 organizationRoles.push(parsed)
-            }
         }
 
         return {
@@ -262,9 +251,8 @@ export class EntraService {
      * Resolve group IDs to group names using Microsoft Graph API
      */
     private async resolveGroupIdsToNames(groupIds: string[]): Promise<string[]> {
-        if (groupIds.length === 0) {
+        if (groupIds.length === 0)
             return []
-        }
 
         try {
             const groupNames: string[] = [],
@@ -278,9 +266,8 @@ export class EntraService {
 
                 if (groups.value) {
                     for (const group of groups.value) {
-                        if (group.displayName) {
+                        if (group.displayName)
                             groupNames.push(group.displayName)
-                        }
                     }
                 }
             }
@@ -321,9 +308,8 @@ export class EntraService {
         const parsedPermissions = this.parseGroups(groups)
 
         // System admins have admin access to all organizations
-        if (parsedPermissions.isSystemAdmin) {
+        if (parsedPermissions.isSystemAdmin)
             return AppRole.ORGANIZATION_ADMIN
-        }
 
         const orgRole = parsedPermissions.organizationRoles.find(role => role.orgId === orgId)
         return orgRole?.role || null
@@ -380,9 +366,8 @@ export class EntraService {
             const escapedGroupName = this.escapeODataString(groupName),
                 existingGroups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
 
-            if (existingGroups.value && existingGroups.value.length > 0) {
+            if (existingGroups.value && existingGroups.value.length > 0)
                 return existingGroups.value[0]
-            }
 
             // Group doesn't exist, create it
             const newGroup = await this.graphRequest<Group>('/groups', {
@@ -552,9 +537,8 @@ export class EntraService {
                 // Use the Microsoft Graph filter to search for users by mail or userPrincipalName
                 users = await this.graphRequest<{ value: User[] }>(`/users?$filter=mail eq '${escapedEmail}' or userPrincipalName eq '${escapedEmail}'&$select=id,displayName,userPrincipalName,mail`)
 
-            if (!users.value || users.value.length === 0) {
+            if (!users.value || users.value.length === 0)
                 return null
-            }
 
             const user = users.value[0]
             return {

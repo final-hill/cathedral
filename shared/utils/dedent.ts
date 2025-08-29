@@ -4,8 +4,7 @@
 const dedent = (str: string) => {
     const match = str.match(/^[ \t]*(?=\S)/gm)
 
-    if (!match)
-        return str
+    if (!match) return str
 
     // Find the smallest indentation
     const indent = Math.min(...match.map(x => x.length)),

@@ -25,8 +25,7 @@ export class OrganizationCollectionRepository extends Repository<OrganizationTyp
             orgRepo = new OrganizationRepository({ em, organizationSlug: slugify(props.name) }),
             existingOrg = await orgRepo.getOrganization().catch(() => undefined)
 
-        if (existingOrg)
-            throw new DuplicateEntityException('Organization already exists with the same name')
+        if (existingOrg) throw new DuplicateEntityException('Organization already exists with the same name')
 
         const newId = uuid7()
 
@@ -60,9 +59,8 @@ export class OrganizationCollectionRepository extends Repository<OrganizationTyp
             orgRepo = new OrganizationRepository({ em, organizationId: props.id }),
             organization = await orgRepo.getOrganization()
 
-        if (organization.isDeleted) {
+        if (organization.isDeleted)
             throw new NotFoundException('Organization has already been deleted')
-        }
 
         const solutions = await orgRepo.findSolutions({})
 
@@ -76,9 +74,8 @@ export class OrganizationCollectionRepository extends Repository<OrganizationTyp
         }
 
         const organizationModel = await em.findOne(OrganizationModel, { id: props.id })
-        if (!organizationModel) {
+        if (!organizationModel)
             throw new NotFoundException('Organization does not exist')
-        }
 
         em.create(OrganizationVersionsModel, {
             isDeleted: true,
@@ -114,9 +111,8 @@ export class OrganizationCollectionRepository extends Repository<OrganizationTyp
                 const latestVersion = await org.getLatestVersionIncludingDeleted(effectiveDate, volatileQuery)
 
                 // Skip organizations that don't have a latest version or are deleted
-                if (!latestVersion || latestVersion.isDeleted) {
+                if (!latestVersion || latestVersion.isDeleted)
                     return null
-                }
 
                 const combinedData = { ...org, ...latestVersion },
                     mappedData = await mapper.map(combinedData)
@@ -141,13 +137,11 @@ export class OrganizationCollectionRepository extends Repository<OrganizationTyp
             // Get the latest non-deleted version for update base
             orgLatestVersion = await organization?.getLatestVersion(props.modifiedDate) as OrganizationVersionsModel | undefined
 
-        if (!organization || !orgLatestVersion)
-            throw new NotFoundException('Organization does not exist')
+        if (!organization || !orgLatestVersion) throw new NotFoundException('Organization does not exist')
 
         // Prevent updating deleted organizations
-        if (latestVersionAny?.isDeleted) {
+        if (latestVersionAny?.isDeleted)
             throw new NotFoundException('Organization has been deleted')
-        }
 
         em.create(OrganizationVersionsModel, {
             isDeleted: false,

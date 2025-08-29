@@ -68,9 +68,13 @@ Requirement (base for all requirements)
 │       ├── FunctionalBehavior (S.2.1.#)
 │       └── NonFunctionalBehavior (S.2.2.#)
 │
+├── InteractionRequirement
+│   └── Event (S.3.#)
+│
 ├── Scenario
 │   ├── UseCase (S.4.2.#)
 │   ├── UserStory (S.4.1.#)
+│   ├── ScenarioStep
 │   └── TestCase (S.6.#)
 │
 ├── Actor
