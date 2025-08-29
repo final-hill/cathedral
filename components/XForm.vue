@@ -86,7 +86,14 @@ onBeforeUnmount(() => {
 const onSubmit = async ({ data }: FormSubmitEvent<z.output<F>>) => {
         isSubmitting.value = true
         try {
-            await props.onSubmit(data)
+            // Trim all string values before submission
+            const trimmedData = Object.keys(data).reduce((acc, key) => {
+                const value = data[key as keyof typeof data]
+                acc[key as keyof typeof acc] = typeof value === 'string' ? value.trim() : value
+                return acc
+            }, {} as z.output<F>)
+
+            await props.onSubmit(trimmedData)
             toast.add({
                 icon: 'i-lucide-check',
                 title: 'Success',
@@ -173,7 +180,7 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
                 />
                 <UInput
                     v-else-if="field.innerType instanceof z.ZodString && field.maxLength && field.maxLength <= 254 && !field.isEmail"
-                    v-model.trim="(localState as any)[field.key]"
+                    v-model="(localState as any)[field.key]"
                     type="text"
                     class="w-full"
                     aria-describedby="character-count"
@@ -192,13 +199,13 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
                 </UInput>
                 <UTextarea
                     v-else-if="field.innerType instanceof z.ZodString && field.maxLength && field.maxLength > 254 && !field.isEmail"
-                    v-model.trim="(localState as any)[field.key]"
+                    v-model="(localState as any)[field.key]"
                     class="w-full"
                     autoresize
                 />
                 <UInput
                     v-else-if="field.isReadOnly"
-                    v-model.trim="(localState as any)[field.key]"
+                    v-model="(localState as any)[field.key]"
                     type="text"
                     disabled
                     tabindex="-1"
@@ -206,14 +213,14 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
                 />
                 <UInputNumber
                     v-else-if="field.innerType instanceof z.ZodNumber"
-                    v-model.trim="(localState as any)[field.key]"
+                    v-model="(localState as any)[field.key]"
                     :min="field.min"
                     :max="field.max"
                     class="w-full"
                 />
                 <UInput
                     v-else-if="field.innerType instanceof z.ZodDate"
-                    v-model.trim="(localState as any)[field.key]"
+                    v-model="(localState as any)[field.key]"
                     type="datetime-local"
                     class="w-full"
                 />
@@ -267,13 +274,13 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
                 />
                 <UInput
                     v-else-if="field.innerType instanceof z.ZodString && field.isEmail"
-                    v-model.trim="(localState as any)[field.key]"
+                    v-model="(localState as any)[field.key]"
                     type="email"
                     class="w-full"
                 />
                 <UInput
                     v-else
-                    v-model.trim="(localState as any)[field.key]"
+                    v-model="(localState as any)[field.key]"
                     class="w-full"
                 />
             </UFormField>

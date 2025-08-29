@@ -2,7 +2,7 @@
     <li class="main-step-item">
         <UInput
             :ref="(el) => emit('set-step-ref', `main-step-${props.step.id}`, el)"
-            v-model.trim="stepDescription"
+            v-model="stepDescription"
             placeholder="Enter step description..."
             :disabled="disabled"
             class="step-input"
@@ -75,13 +75,11 @@ const props = defineProps<{
         'set-step-ref': [key: string, el: ComponentPublicInstance | Element | null]
         'update-step-description': [stepId: string, description: string]
     }>(),
-    // Create a computed property for two-way binding with proper event emission
     stepDescription = computed({
         get() {
             return props.step.description
         },
         set(value: string) {
-            // Emit event to parent to update step description (avoids prop mutation)
             emit('update-step-description', props.step.id, value)
             emit('step-update')
         }

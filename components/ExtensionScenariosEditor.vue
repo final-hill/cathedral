@@ -29,7 +29,7 @@
                     <strong class="extension-label">{{ group.groupKey }}.</strong>
                     <UInput
                         :ref="el => setStepRef(`ext-header-${group.groupKey}`, el)"
-                        v-model.trim="extensionGroupsMap.get(group.groupKey)!.title"
+                        v-model="extensionGroupsMap.get(group.groupKey)!.title"
                         placeholder="Enter extension scenario..."
                         :disabled="disabled"
                         class="extension-title-input"
