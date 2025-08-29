@@ -20,7 +20,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="flex items-center justify-center min-h-screen">
+    <div class="flex items-center justify-center h-full">
         <div class="text-center">
             <h2 class="text-xl font-semibold mb-4">
                 Authentication successful!
