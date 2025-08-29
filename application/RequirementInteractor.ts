@@ -8,8 +8,6 @@ import type { PermissionInteractor, AppUserInteractor } from './'
 import type { AuditMetadata, AuditMetadataType } from '~/shared/domain'
 import type { RequirementRepository } from '~/server/data/repositories/RequirementRepository'
 import type { NaturalLanguageToRequirementService } from '~/server/data/services/NaturalLanguageToRequirementService'
-import type { ScenarioStepParsingService } from '~/server/data/services/ScenarioStepParsingService'
-import type { ScenarioStepSuggestionType } from '~/shared/domain/requirements/EntityReferences'
 import { dedent } from '~/shared/utils'
 
 type ReqTypeName = keyof typeof req
@@ -624,42 +622,5 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
             modifiedById: this._permissionInteractor.userId,
             modifiedDate: new Date()
         })
-    }
-
-    /**
-     * Parse scenario steps from HTML content using AI service
-     *
-     * @param htmlContent - The HTML content
-     * @param service - The AI parsing service
-     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
-     * @throws {MismatchException} If the content cannot be interpreted as scenario steps
-     * @returns Array of structured scenario step suggestions
-     */
-    async parseScenarioSteps(htmlContent: string, service: ScenarioStepParsingService): Promise<ScenarioStepSuggestionType[]> {
-        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
-
-        const parseResult = await service.parseScenarioSteps(htmlContent)
-
-        if (!parseResult.parseable || parseResult.steps.length === 0) {
-            throw new MismatchException(
-                dedent(`
-                    The provided content cannot be interpreted as scenario steps.
-                    Please provide clear, actionable steps that describe user or system behaviors.
-
-                    Example format:
-                    1. User enters login credentials
-                    2. System validates credentials
-                    3. If credentials are invalid, display error message
-                    4. If credentials are valid, redirect to dashboard
-                `)
-            )
-        }
-
-        return parseResult.steps.map(step => ({
-            reqType: ReqType.SCENARIO_STEP,
-            name: step.content,
-            stepNumber: step.stepNumber,
-            stepType: step.stepType
-        }))
     }
 }

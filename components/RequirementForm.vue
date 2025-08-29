@@ -2,6 +2,9 @@
 import type * as req from '#shared/domain/requirements'
 import type { FormSchema } from '~/components/XForm.vue'
 import { WorkflowState } from '#shared/domain/requirements/enums'
+import { ReqType } from '#shared/domain/requirements/ReqType'
+import type { ScenarioStepReferenceType } from '~/shared/domain/requirements/EntityReferences'
+import ScenarioStepsEditor from '~/components/ScenarioStepsEditor.vue'
 
 const props = defineProps<{
     requirement?: req.RequirementType | null
@@ -30,6 +33,18 @@ if (isEditValue.value && requirement?.value && ![WorkflowState.Proposed, Workflo
 const route = useRoute(),
     router = useRouter(),
     toast = useToast(),
+    // Check if this is a Use Case requirement
+    isUseCase = computed(() => reqType.value === ReqType.USE_CASE),
+    // For Use Cases, create a schema without scenario fields
+    nonScenarioSchema = computed(() => {
+        if (isUseCase.value) {
+            return schema.value.omit({
+                mainSuccessScenario: true,
+                extensions: true
+            })
+        }
+        return schema.value
+    }),
     // Derive the current path from the router, removing the ID and action parts
     currentPath = computed(() => {
         const path = route.path
@@ -52,18 +67,38 @@ const route = useRoute(),
 
         return filteredData
     })()),
+    // Adapter for ScenarioStepsEditor (Use Case only)
+    scenarioStepsAdapter = computed({
+        get: () => {
+            if (!isUseCase.value) return []
+            const formData = formState.value as Record<string, unknown>,
+                main = (formData.mainSuccessScenario as ScenarioStepReferenceType[]) || [],
+                extensions = (formData.extensions as ScenarioStepReferenceType[]) || []
+            return [...main, ...extensions]
+        },
+        set: (combined: ScenarioStepReferenceType[]) => {
+            if (!isUseCase.value) return
+            const formData = formState.value as Record<string, unknown>
+            formData.mainSuccessScenario = combined.filter(step => !step.parentStepId)
+            formData.extensions = combined.filter(step => step.parentStepId)
+        }
+    }),
     isSubmitting = ref(false),
-    onSubmit = async (data: Record<string, unknown>) => {
+    onSubmit = async (data?: Record<string, unknown>) => {
         isSubmitting.value = true
         try {
             let result: req.RequirementType
+
+            // For Use Cases, use formState directly (includes scenario data)
+            // For other types, use data from XForm
+            const submitData = isUseCase.value ? formState.value : (data || {})
 
             if (isEditValue.value && requirement?.value?.id) {
                 const endpoint = `/api/requirements/${reqType.value}/${requirement.value.workflowState.toLowerCase()}/${requirement.value.id}/edit`
                 result = await $fetch(endpoint, {
                     method: 'POST',
                     body: {
-                        ...data,
+                        ...submitData,
                         solutionSlug: solutionSlug.value,
                         organizationSlug: organizationSlug.value
                     }
@@ -73,7 +108,7 @@ const route = useRoute(),
                 const newId = await $fetch(`/api/requirements/${reqType.value}/propose`, {
                     method: 'PUT',
                     body: {
-                        ...data,
+                        ...submitData,
                         solutionSlug: solutionSlug.value,
                         organizationSlug: organizationSlug.value
                     }
@@ -109,10 +144,15 @@ const route = useRoute(),
             isSubmitting.value = false
         }
     },
-
     onCancel = () => {
         emit('cancelled')
         router.back()
+    },
+    // Wrapper for Use Case submit (no data parameter needed)
+    onUseCaseSubmit = () => onSubmit(),
+    // Dummy submit handler for XForm in Use Case mode (buttons will be hidden)
+    dummySubmit = async () => {
+        // Do nothing - buttons are hidden and real submit is handled by our custom button
     }
 </script>
 
@@ -150,7 +190,51 @@ const route = useRoute(),
                 </div>
             </template>
 
+            <!-- Use Case gets special treatment -->
+            <div
+                v-if="isUseCase"
+                class="space-y-6"
+            >
+                <!-- Regular fields via XForm (without scenarios) -->
+                <div class="use-case-form">
+                    <XForm
+                        v-model:state="formState"
+                        :schema="nonScenarioSchema"
+                        :disabled="isSubmitting"
+                        :on-submit="dummySubmit"
+                        :on-cancel="onCancel"
+                    />
+                </div>
+
+                <!-- Scenario fields via custom component -->
+                <ScenarioStepsEditor
+                    v-model="scenarioStepsAdapter"
+                    label="Scenarios"
+                    :disabled="isSubmitting"
+                />
+
+                <!-- Submit buttons -->
+                <div class="flex gap-3 justify-end">
+                    <UButton
+                        color="neutral"
+                        variant="outline"
+                        :disabled="isSubmitting"
+                        @click="onCancel"
+                    >
+                        Cancel
+                    </UButton>
+                    <UButton
+                        :loading="isSubmitting"
+                        @click="onUseCaseSubmit"
+                    >
+                        {{ isEditValue ? 'Update' : 'Create' }}
+                    </UButton>
+                </div>
+            </div>
+
+            <!-- All other requirement types -->
             <XForm
+                v-else
                 v-model:state="formState"
                 :schema="schema"
                 :on-submit="onSubmit"
@@ -161,3 +245,10 @@ const route = useRoute(),
         </UCard>
     </div>
 </template>
+
+<style scoped>
+/* Hide XForm buttons for Use Cases since we provide our own */
+.use-case-form :deep(.flex.gap-2) {
+    display: none;
+}
+</style>

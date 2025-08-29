@@ -44,15 +44,17 @@ export const UseCaseReference = BaseEntityReference.extend({
 
 export const ScenarioStepReference = BaseEntityReference.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.SCENARIO_STEP),
-    stepNumber: z.string(),
-    stepType: z.nativeEnum(ScenarioStepTypeEnum)
+    stepType: z.nativeEnum(ScenarioStepTypeEnum),
+    parentStepId: z.string().uuid().optional().describe('Reference to parent step for hierarchical structure'),
+    order: z.number().int().min(0).describe('Position among sibling steps (0-based, determines display order)')
 })
 
 export const ScenarioStepSuggestion = z.object({
     reqType: z.nativeEnum(ReqType).default(ReqType.SCENARIO_STEP),
     name: z.string(),
-    stepNumber: z.string(),
-    stepType: z.nativeEnum(ScenarioStepTypeEnum)
+    stepType: z.nativeEnum(ScenarioStepTypeEnum),
+    parentStepId: z.string().uuid().optional().describe('Reference to parent step for hierarchical structure'),
+    order: z.number().int().min(0).describe('Position among sibling steps (0-based, determines display order)')
 })
 
 export const EventReference = BaseEntityReference.extend({

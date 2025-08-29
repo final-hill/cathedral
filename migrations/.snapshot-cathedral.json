@@ -119,6 +119,15 @@
           "nullable": true,
           "mappedType": "uuid"
         },
+        "parent_step_id": {
+          "name": "parent_step_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
         "use_case_id": {
           "name": "use_case_id",
           "type": "uuid",
@@ -185,6 +194,19 @@
           "constraintName": "requirement_parent_scenario_id_foreign",
           "columnNames": [
             "parent_scenario_id"
+          ],
+          "localTableName": "public.requirement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_parent_step_id_foreign": {
+          "constraintName": "requirement_parent_step_id_foreign",
+          "columnNames": [
+            "parent_step_id"
           ],
           "localTableName": "public.requirement",
           "referencedColumnNames": [
@@ -392,15 +414,14 @@
           "length": 254,
           "mappedType": "string"
         },
-        "step_number": {
-          "name": "step_number",
-          "type": "varchar(255)",
+        "order": {
+          "name": "order",
+          "type": "int",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "length": 255,
-          "mappedType": "string"
+          "mappedType": "integer"
         },
         "step_type": {
           "name": "step_type",

@@ -25,24 +25,26 @@ export const llmRequirementSchema = z.object({
         'The names of the preconditions (Assumptions) associated with the Use Case'
     ).or(z.null()),
     useCaseMainSuccessScenarioSteps: z.array(z.object({
-        stepNumber: z.string(),
-        name: z.string(),
-        description: z.string(),
-        actorName: z.string(),
-        functionalBehaviorName: z.string()
-    })).describe('Structured main success scenario steps with actor and behavior information').or(z.null()),
+        stepNumber: z.string().describe('Step number in sequence (e.g., "1", "2", "3")'),
+        name: z.string().describe('Brief step name'),
+        description: z.string().describe('Detailed step description'),
+        stepType: z.nativeEnum(ScenarioStepTypeEnum).describe('Whether this is an action or conditional branch'),
+        actorName: z.string().optional().describe('Name of the actor performing this step'),
+        functionalBehaviorName: z.string().optional().describe('Name of the functional behavior for this step')
+    })).describe('Main success scenario steps for Use Cases').or(z.null()),
     useCaseSuccessGuaranteeNames: z.array(z.string()).describe(
         'The names of the success guarantees (Effects) associated with the Use Case'
     ).or(z.null()),
     useCaseExtensionSteps: z.array(z.object({
-        stepNumber: z.string(),
-        name: z.string(),
-        description: z.string(),
-        stepType: z.nativeEnum(ScenarioStepTypeEnum),
-        conditionNames: z.array(z.string()).optional(),
-        actorName: z.string().optional(),
-        functionalBehaviorName: z.string().optional()
-    })).describe('Extension steps including both conditions and actions').or(z.null()),
+        parentStepNumber: z.string().describe('The main step this extends (e.g., "1", "2") or extension type ("A", "B" for top-level)'),
+        stepNumber: z.string().describe('Extension step identifier (e.g., "1a.1", "2a.1", "A.1", "B.1")'),
+        name: z.string().describe('Brief step name'),
+        description: z.string().describe('Detailed step description'),
+        stepType: z.nativeEnum(ScenarioStepTypeEnum).describe('Whether this is an action or conditional branch'),
+        conditionNames: z.array(z.string()).optional().describe('Condition names for conditional steps'),
+        actorName: z.string().optional().describe('Name of the actor performing this step'),
+        functionalBehaviorName: z.string().optional().describe('Name of the functional behavior for this step')
+    })).describe('Extension and alternative flow steps for Use Cases').or(z.null()),
     useCaseStakeholderNames: z.array(z.string()).describe(
         'The names of the stakeholders associated with the Use Case'
     ).or(z.null()),

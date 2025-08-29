@@ -417,14 +417,17 @@ export class ScenarioStepModel extends ScenarioModel {
     @ManyToOne({ entity: () => UseCaseModel, inversedBy: 'scenarioSteps' })
     readonly parentScenario!: Ref<UseCaseModel>
 
+    @ManyToOne({ entity: () => ScenarioStepModel, nullable: true })
+    readonly parentStep?: Ref<ScenarioStepModel>
+
     @OneToMany({ entity: () => AssumptionModel, mappedBy: 'scenarioStep' })
     readonly preconditions = new Collection<AssumptionModel>(this)
 }
 
 @Entity({ discriminatorValue: ReqType.SCENARIO_STEP })
 export class ScenarioStepVersionsModel extends ScenarioVersionsModel {
-    @Property({ type: types.string })
-    readonly stepNumber!: string
+    @Property({ type: types.integer })
+    readonly order!: number
 
     @Enum({ items: () => ScenarioStepTypeEnum })
     readonly stepType!: ScenarioStepTypeEnum

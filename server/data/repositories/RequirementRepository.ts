@@ -66,8 +66,6 @@ export class RequirementRepository extends Repository<RequirementType> {
             assumptionMap = new Map<string, string>(),
             effectMap = new Map<string, string>(),
             stakeholderMap = new Map<string, string>(),
-            // Map for scenario step conditions: "stepId:conditionName" -> assumptionId
-            stepConditionMap = new Map<string, string>(),
             getOrCreateActor = (name: string): string => {
                 if (actorMap.has(name)) return actorMap.get(name)!
 
@@ -233,34 +231,6 @@ export class RequirementRepository extends Repository<RequirementType> {
                 })
                 stakeholderMap.set(name, id)
                 return id
-            },
-            createConditionAssumption = (name: string, scenarioStep: reqModels.ScenarioStepVersionsModel): string => {
-                const stepConditionKey = `${scenarioStep.requirement.id}:${name}`
-
-                // Check if we already created this condition for this scenario step
-                if (stepConditionMap.has(stepConditionKey))
-                    return stepConditionMap.get(stepConditionKey)!
-
-                const id = uuid7()
-                em.create(reqModels.AssumptionVersionsModel, {
-                    requirement: em.create(reqModels.AssumptionModel, {
-                        id,
-                        createdById: props.createdById,
-                        creationDate: props.creationDate,
-                        parsedRequirements: parsedReqsId,
-                        scenarioStep: scenarioStep.requirement
-                    }),
-                    isDeleted: false,
-                    effectiveFrom: props.creationDate,
-                    modifiedById: props.createdById,
-                    workflowState: WorkflowState.Proposed,
-                    solution: props.solutionId,
-                    name,
-                    description: name
-                })
-
-                stepConditionMap.set(stepConditionKey, id)
-                return id
             }
 
         em.create(reqModels.ParsedRequirementsVersionsModel, {
@@ -305,101 +275,84 @@ export class RequirementRepository extends Repository<RequirementType> {
                     newStakeholderIds.push(getOrCreateStakeholder(stakeholderName))
             }
 
-            em.create(ReqVersionsModel, {
-                requirement: em.create(ReqStaticModel, {
-                    id: newId,
-                    createdById: props.createdById,
-                    creationDate: props.creationDate,
-                    parsedRequirements: parsedReqsId
+            const newVersionModel = em.create(ReqVersionsModel, {
+                    requirement: em.create(ReqStaticModel, {
+                        id: newId,
+                        createdById: props.createdById,
+                        creationDate: props.creationDate,
+                        parsedRequirements: parsedReqsId
+                    }),
+                    isDeleted: false,
+                    effectiveFrom: props.creationDate,
+                    modifiedById: props.createdById,
+                    workflowState: WorkflowState.Proposed,
+                    solution: props.solutionId,
+                    description: req.description,
+                    name: req.name,
+                    ...(req.priority && { priority: req.priority }),
+                    ...(req.email && { email: req.email }),
+                    ...(newPrimaryActorId && { primaryActor: newPrimaryActorId }),
+                    ...(newOutcomeId && { outcome: newOutcomeId }),
+                    ...(req.stakeholderSegmentation && { segmentation: req.stakeholderSegmentation }),
+                    ...(req.stakeholderCategory && { category: req.stakeholderCategory }),
+                    ...(req.reqType === ReqType.CONSTRAINT && { category: req.constraintCategory || ConstraintCategory['Business Rule'] }),
+                    ...(newScopeSystemComponentId && { scope: newScopeSystemComponentId }),
+                    ...(newFunctionalBehaviorId && { functionalBehavior: newFunctionalBehaviorId }),
+                    ...(req.reqType === ReqType.USE_CASE && newPreconditionIds.length > 0 && { preconditions: newPreconditionIds }),
+                    ...(req.reqType === ReqType.USE_CASE && newSuccessGuaranteeIds.length > 0 && { successGuarantees: newSuccessGuaranteeIds }),
+                    ...(req.reqType === ReqType.USE_CASE && newStakeholderIds.length > 0 && { stakeholders: newStakeholderIds })
                 }),
-                isDeleted: false,
-                effectiveFrom: props.creationDate,
-                modifiedById: props.createdById,
-                workflowState: WorkflowState.Proposed,
-                solution: props.solutionId,
-                description: req.description,
-                name: req.name,
-                ...(req.priority && { priority: req.priority }),
-                ...(req.email && { email: req.email }),
-                ...(newPrimaryActorId && { primaryActor: newPrimaryActorId }),
-                ...(newOutcomeId && { outcome: newOutcomeId }),
-                ...(req.stakeholderSegmentation && { segmentation: req.stakeholderSegmentation }),
-                ...(req.stakeholderCategory && { category: req.stakeholderCategory }),
-                ...(req.reqType === ReqType.CONSTRAINT && { category: req.constraintCategory || ConstraintCategory['Business Rule'] }),
-                ...(newScopeSystemComponentId && { scope: newScopeSystemComponentId }),
-                ...(newFunctionalBehaviorId && { functionalBehavior: newFunctionalBehaviorId }),
-                ...(req.reqType === ReqType.USE_CASE && newPreconditionIds.length > 0 && { preconditions: newPreconditionIds }),
-                ...(req.reqType === ReqType.USE_CASE && newSuccessGuaranteeIds.length > 0 && { successGuarantees: newSuccessGuaranteeIds }),
-                ...(req.reqType === ReqType.USE_CASE && newStakeholderIds.length > 0 && { stakeholders: newStakeholderIds })
-            })
 
-            // Create ScenarioStep entities for UseCase main success scenario steps
-            const useCaseReq = req as z.infer<typeof llmRequirementSchema>
+                // Create embedded scenario steps for UseCase
+                useCaseReq = req as z.infer<typeof llmRequirementSchema>
+            let mainSuccessScenario: { reqType: ReqType, id: string, name: string, stepType: ScenarioStepTypeEnum, parentStepId?: string, order: number }[] = [],
+                extensions: { reqType: ReqType, id: string, name: string, stepType: ScenarioStepTypeEnum, parentStepId?: string, order: number }[] = []
+
             if (req.reqType === ReqType.USE_CASE && useCaseReq.useCaseMainSuccessScenarioSteps) {
-                for (const step of useCaseReq.useCaseMainSuccessScenarioSteps) {
-                    const stepId = uuid7(),
-                        stepActorId = step.actorName ? getOrCreateActor(step.actorName) : undefined,
-                        stepFunctionalBehaviorId = step.functionalBehaviorName ? getOrCreateFunctionalBehavior(step.functionalBehaviorName) : undefined
-
-                    // Create the scenario step
-                    em.create(reqModels.ScenarioStepVersionsModel, {
-                        requirement: em.create(reqModels.ScenarioStepModel, {
-                            id: stepId,
-                            createdById: props.createdById,
-                            creationDate: props.creationDate,
-                            parsedRequirements: parsedReqsId,
-                            parentScenario: newId
-                        }),
-                        isDeleted: false,
-                        effectiveFrom: props.creationDate,
-                        modifiedById: props.createdById,
-                        description: step.description,
-                        workflowState: WorkflowState.Proposed,
-                        solution: props.solutionId,
-                        name: step.name,
-                        stepNumber: step.stepNumber,
-                        stepType: ScenarioStepTypeEnum.Action,
-                        primaryActor: stepActorId || newPrimaryActorId!,
-                        outcome: newOutcomeId!,
-                        functionalBehavior: stepFunctionalBehaviorId || newFunctionalBehaviorId!
-                    })
-                }
+                mainSuccessScenario = useCaseReq.useCaseMainSuccessScenarioSteps.map((step, stepIndex) => ({
+                    reqType: ReqType.SCENARIO_STEP,
+                    id: uuid7(),
+                    name: step.name,
+                    stepType: step.stepType || ScenarioStepTypeEnum.Action,
+                    parentStepId: undefined, // Main scenario steps have no parent
+                    order: stepIndex
+                }))
             }
 
-            // Create ScenarioStep entities for UseCase extension steps
             if (req.reqType === ReqType.USE_CASE && useCaseReq.useCaseExtensionSteps) {
-                for (const step of useCaseReq.useCaseExtensionSteps) {
-                    const stepId = uuid7(),
-                        stepActorId = step.actorName ? getOrCreateActor(step.actorName) : undefined,
-                        stepFunctionalBehaviorId = step.functionalBehaviorName ? getOrCreateFunctionalBehavior(step.functionalBehaviorName) : undefined,
-                        scenarioStepVersionsModel = em.create(reqModels.ScenarioStepVersionsModel, {
-                            requirement: em.create(reqModels.ScenarioStepModel, {
-                                id: stepId,
-                                createdById: props.createdById,
-                                creationDate: props.creationDate,
-                                parsedRequirements: parsedReqsId,
-                                parentScenario: newId
-                            }),
-                            isDeleted: false,
-                            effectiveFrom: props.creationDate,
-                            modifiedById: props.createdById,
-                            description: step.description,
-                            workflowState: WorkflowState.Proposed,
-                            solution: props.solutionId,
-                            name: step.name,
-                            stepNumber: step.stepNumber,
-                            stepType: step.stepType,
-                            primaryActor: stepActorId || newPrimaryActorId!,
-                            outcome: newOutcomeId!,
-                            functionalBehavior: stepFunctionalBehaviorId || newFunctionalBehaviorId!
-                        })
+            // Group extensions and find parent steps
+                const parentStepMap = new Map<string, string>() // parentStepNumber -> parentStepId
 
-                    // Create preconditions for CONDITION steps
-                    if (step.stepType === ScenarioStepTypeEnum.Condition && step.conditionNames) {
-                        for (const conditionName of step.conditionNames)
-                            createConditionAssumption(conditionName, scenarioStepVersionsModel)
+                mainSuccessScenario.forEach((step, index) => {
+                    parentStepMap.set((index + 1).toString(), step.id) // "1", "2", "3" -> stepId
+                })
+
+                extensions = useCaseReq.useCaseExtensionSteps.map((step, stepIndex) => {
+                // Determine parentStepId based on parentStepNumber
+                    let parentStepId: string | undefined
+
+                    // Check if it's a step-specific extension (e.g., "1", "2")
+                    if (parentStepMap.has(step.parentStepNumber))
+                        parentStepId = parentStepMap.get(step.parentStepNumber)
+                    // For top-level extensions ("A", "B"), parentStepId remains undefined
+
+                    return {
+                        reqType: ReqType.SCENARIO_STEP,
+                        id: uuid7(),
+                        name: step.name,
+                        stepType: step.stepType,
+                        parentStepId,
+                        order: stepIndex
                     }
-                }
+                })
+            }
+
+            // Add the scenario arrays to the requirement model
+            if (req.reqType === ReqType.USE_CASE) {
+                Object.assign(newVersionModel, {
+                    mainSuccessScenario,
+                    extensions
+                })
             }
         }
 
