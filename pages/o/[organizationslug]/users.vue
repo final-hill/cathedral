@@ -1,32 +1,30 @@
 <script setup lang="tsx">
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui'
 import { UButton, UCard, UCheckbox, UDropdownMenu, UIcon, XConfirmModal } from '#components'
-import { AppUser, AppRole } from '#shared/domain/application'
-import { z } from 'zod'
+import { AppUserWithRoleDto, AppUserWithRoleAndSlackDto } from '~/application/dto'
+import type { AppUserWithRoleAndSlackDtoType } from '~/application/dto'
+import type { z } from 'zod'
 import { getSchemaFields } from '~/shared/utils'
 
 useHead({ title: 'Users' })
 definePageMeta({ name: 'Organization Users', middleware: 'auth' })
 
-const AppUserWithRole = AppUser.extend({
-        role: z.nativeEnum(AppRole).describe('The role of the user in this organization')
-    }),
-    viewSchema = AppUserWithRole.pick({
+const viewSchema = AppUserWithRoleDto.pick({
         name: true,
         email: true,
         role: true
     }),
-    editSchema = AppUserWithRole.pick({
+    editSchema = AppUserWithRoleDto.pick({
         id: true,
         email: true,
         role: true
     }),
-    createSchema = AppUserWithRole.pick({
+    createSchema = AppUserWithRoleDto.pick({
         email: true,
         role: true
     })
 
-type SchemaType = z.infer<typeof AppUserWithRole>
+type SchemaType = AppUserWithRoleAndSlackDtoType
 
 const { $eventBus } = useNuxtApp(),
     overlay = useOverlay(),
@@ -297,7 +295,7 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
 <template>
     <h1>Application Users</h1>
 
-    <p>{{ AppUser.description }}</p>
+    <p>{{ AppUserWithRoleAndSlackDto.description }}</p>
     <p>
         <strong>Add/Invite Users:</strong> If the user already exists in the system, they will be added immediately to the organization.
         If they don't exist, an invitation will be sent to their email address.

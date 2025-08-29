@@ -1,11 +1,13 @@
 import type * as req from '#shared/domain/requirements'
 import { ReqType } from '#shared/domain/requirements/enums'
-import { AppRole, AppUser } from '#shared/domain/application'
+import { AppRole } from '#shared/domain/application'
 import type { AppUserType } from '#shared/domain/application'
 import { MismatchException, PermissionDeniedException } from '#shared/domain/exceptions'
 import type { OrganizationRepository } from '~/server/data/repositories'
 import type { PermissionInteractor, AppUserInteractor } from './'
 import { Interactor } from './Interactor'
+import { AppUserWithRoleDto } from './dto/AppUserWithRoleDto'
+import type { AppUserWithRoleDtoType } from './dto/AppUserWithRoleDto'
 
 /**
  * The OrganizationInteractor class contains the business logic for interacting with an organization.
@@ -149,19 +151,20 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      * @throws {PermissionDeniedException} If the user is trying to get an app user that is not in the same organization
      */
-    async getAppUserById(id: AppUserType['id']): Promise<AppUserType> {
+    async getAppUserById(id: AppUserType['id']): Promise<AppUserWithRoleDtoType> {
         const org = await this.repository.getOrganization(),
             pi = this._permissionInteractor,
             aui = this._appUserInteractor
 
         pi.assertOrganizationReader(org.id)
         const auor = await pi.getAppUserOrganizationRole({
-            appUserId: id,
-            organizationId: org.id
-        })
+                appUserId: id,
+                organizationId: org.id
+            }),
 
-        return AppUser.parse({
-            ...await aui.getUserById(auor.appUser.id, org.id),
+            userData = await aui.getUserById(auor.appUser.id, org.id)
+        return AppUserWithRoleDto.parse({
+            ...userData,
             role: auor.role,
             organizations: [{
                 reqType: ReqType.ORGANIZATION,
@@ -177,7 +180,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      * @returns The app users with their associated roles
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
-    async getAppUsers(): Promise<AppUserType[]> {
+    async getAppUsers(): Promise<AppUserWithRoleDtoType[]> {
         const org = await this.repository.getOrganization(),
             pi = this._permissionInteractor,
             aui = this._appUserInteractor
@@ -187,15 +190,18 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
         const auors = await pi.findAppUserOrganizationRoles({
                 organizationId: org.id
             }),
-            appUsers = await Promise.all(auors.map(async auor => AppUser.parse({
-                ...await aui.getUserById(auor.appUser.id, org.id),
-                role: auor.role,
-                organizations: [{
-                    reqType: ReqType.ORGANIZATION,
-                    id: org.id,
-                    name: org.name
-                }]
-            })))
+            appUsers = await Promise.all(auors.map(async (auor) => {
+                const userData = await aui.getUserById(auor.appUser.id, org.id)
+                return AppUserWithRoleDto.parse({
+                    ...userData,
+                    role: auor.role,
+                    organizations: [{
+                        reqType: ReqType.ORGANIZATION,
+                        id: org.id,
+                        name: org.name
+                    }]
+                })
+            }))
 
         return appUsers
     }

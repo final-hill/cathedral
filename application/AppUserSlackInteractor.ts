@@ -2,6 +2,8 @@ import { Interactor } from './Interactor'
 import type { OrganizationInteractor } from './OrganizationInteractor'
 import type { SlackUserInteractor } from './slack/SlackUserInteractor'
 import type { AppUserType } from '#shared/domain/application'
+import { AppUserWithRoleAndSlackDto } from './dto/AppUserWithRoleDto'
+import type { AppUserWithRoleAndSlackDtoType } from './dto/AppUserWithRoleDto'
 
 /**
  * Composite interactor that handles AppUser operations with Slack associations
@@ -31,21 +33,21 @@ export class AppUserSlackInteractor extends Interactor<AppUserType> {
      * @throws {NotFoundException} If the user does not exist
      * @throws {PermissionDeniedException} If not authorized to view the user
      */
-    async getAppUserByIdWithSlack(userId: string): Promise<AppUserType> {
+    async getAppUserByIdWithSlack(userId: string): Promise<AppUserWithRoleAndSlackDtoType> {
         const user = await this._organizationInteractor.getAppUserById(userId)
 
         try {
             const slackAssociations = await this._slackUserInteractor.getSlackUsersForCathedralUser(userId)
-            return {
+            return AppUserWithRoleAndSlackDto.parse({
                 ...user,
                 slackAssociations
-            }
+            })
         } catch {
             // If Slack lookup fails, return user without associations
-            return {
+            return AppUserWithRoleAndSlackDto.parse({
                 ...user,
                 slackAssociations: []
-            }
+            })
         }
     }
 
@@ -55,21 +57,27 @@ export class AppUserSlackInteractor extends Interactor<AppUserType> {
      * @returns All users with their Slack associations
      * @throws {PermissionDeniedException} If not authorized to view users
      */
-    async getAppUsersWithSlack(): Promise<AppUserType[]> {
+    async getAppUsersWithSlack(): Promise<AppUserWithRoleAndSlackDtoType[]> {
         const users = await this._organizationInteractor.getAppUsers()
 
         if (users.length === 0)
-            return users
+            return []
 
         // Bulk load Slack associations for all users
         const usersWithSlack = await Promise.all(
             users.map(async (user) => {
                 try {
                     const slackAssociations = await this._slackUserInteractor.getSlackUsersForCathedralUser(user.id)
-                    return { ...user, slackAssociations }
+                    return AppUserWithRoleAndSlackDto.parse({
+                        ...user,
+                        slackAssociations
+                    })
                 } catch (error) {
                     console.warn(`Failed to load Slack associations for user ${user.id}:`, error)
-                    return { ...user, slackAssociations: [] }
+                    return AppUserWithRoleAndSlackDto.parse({
+                        ...user,
+                        slackAssociations: []
+                    })
                 }
             })
         )
