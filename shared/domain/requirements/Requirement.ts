@@ -12,7 +12,7 @@ export const Requirement = AuditMetadata.extend({
         .describe('The unique identifier'),
     reqId: z.string().regex(reqIdPattern, 'Format must be [P|E|G|S|0].[number].[number]').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
-    reqIdPrefix: z.string().regex(/^[P|E|G|S|0]\.[0-9]+\.$/, 'Format must be [P|E|G|S|0].[number].').optional()
+    reqIdPrefix: z.string().regex(/^[PEGS0]\.([0-9]+\.)+$/, 'Format must be [P|E|G|S|0].[number]...').optional()
         .describe('The prefix of the requirement ID'),
     name: z.string().max(100).nonempty()
         .describe('The name'),
