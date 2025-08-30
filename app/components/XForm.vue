@@ -1,8 +1,8 @@
 <script lang="ts" generic="F extends FormSchema" setup>
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { z } from 'zod'
-import { getSchemaFields } from '#shared/utils'
-import { ReqType } from '#shared/domain'
+import { getSchemaFields } from '~~/shared/utils'
+import { ReqType } from '~~/shared/domain'
 
 export type FormSchema = z.ZodObject<{ [key: string]: z.ZodTypeAny }>
 
