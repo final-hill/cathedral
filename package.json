@@ -52,7 +52,7 @@
         "eslint": "^9.34.0",
         "jsdom": "^26.1.0",
         "jsonwebtoken": "^9.0.2",
-        "mermaid": "^11.7.0",
+        "mermaid": "^11.10.1",
         "mitt": "^3.0.1",
         "node-cache": "^5.1.2",
         "nuxt": "^4.0.3",
