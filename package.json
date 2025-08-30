@@ -76,7 +76,7 @@
         "@types/uuid": "^10.0.0",
         "@vite-pwa/assets-generator": "^1.0.0",
         "@vue/test-utils": "^2.4.6",
-        "playwright-core": "^1.53.1",
+        "playwright-core": "^1.55.0",
         "ts-node": "^10.9.2",
         "tsx": "^4.20.5",
         "typescript": "^5.8.3",
