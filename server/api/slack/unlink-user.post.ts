@@ -1,8 +1,6 @@
 import { z } from 'zod'
-import { PermissionInteractor } from '~/application'
-import { SlackRepository } from '~/server/data/repositories'
-import handleDomainException from '~/server/utils/handleDomainException'
-import { createEntraService } from '~/server/utils/createEntraService'
+import { PermissionInteractor } from '~~/server/application'
+import { SlackRepository } from '~~/server/data/repositories'
 import { PermissionDeniedException } from '#shared/domain'
 
 const bodySchema = z.object({

@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { Component } from './Component.js'
 import { StakeholderCategory } from './StakeholderCategory.js'
 import { StakeholderSegmentation } from './StakeholderSegmentation.js'
-import { dedent } from '../../../shared/utils/dedent.js'
+import { dedent } from '../../utils/dedent.js'
 import { ReqType } from './ReqType.js'
 
 const computeInterestAndInfluence = (category: StakeholderCategory) => {

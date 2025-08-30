@@ -1,7 +1,3 @@
-import { defineOAuthEntraExternalIDEventHandler } from '~/server/utils/oauth-entra-external-id'
-import { createEntraService } from '~/server/utils/createEntraService'
-import { ENTRA_OAUTH_SCOPES } from '~/server/utils/oauth-constants'
-
 export default defineOAuthEntraExternalIDEventHandler({
     async config(event) {
         const runtimeConfig = useRuntimeConfig(event)

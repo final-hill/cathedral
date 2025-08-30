@@ -6,8 +6,6 @@ import type { RequirementVersionsModel } from '../models'
 import { RequirementModel } from '../models'
 import type { Mapper } from './Mapper'
 import { Collection } from '@mikro-orm/core'
-import { resolveReqTypeFromModel } from '~/shared/utils'
-import { snakeCaseToPascalCase } from '#shared/utils'
 
 const objectSchema = z.object({
         id: z.string().uuid(),

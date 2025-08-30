@@ -1,7 +1,7 @@
 import { Requirement } from './Requirement.js'
 import { ConstraintCategory } from './ConstraintCategory.js'
 import { z } from 'zod'
-import { dedent } from '../../../shared/utils/dedent.js'
+import { dedent } from '../../utils/dedent.js'
 import { ReqType } from './ReqType.js'
 
 export const Constraint = Requirement.extend({

@@ -1,9 +1,7 @@
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~/application'
-import { OrganizationRepository, RequirementRepository } from '~/server/data/repositories'
-import handleDomainException from '~/server/utils/handleDomainException'
-import { Organization, ReqType, Solution } from '~/shared/domain'
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~~/server/application'
+import { OrganizationRepository, RequirementRepository } from '~~/server/data/repositories'
+import { Organization, ReqType, Solution } from '~~/shared/domain'
 import { z } from 'zod'
-import { createEntraService } from '~/server/utils/createEntraService'
 
 const paramSchema = z.object({
         reqType: z.nativeEnum(ReqType),

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { Goal } from './Goal.js'
 import { ReqType } from './ReqType.js'
-import { dedent } from '../../../shared/utils/dedent.js'
+import { dedent } from '../../utils/dedent.js'
 
 export const Functionality = Goal.extend({
     reqId: z.string().regex(/^G\.4\.\d+$/, 'Format must be G.4.#').optional()

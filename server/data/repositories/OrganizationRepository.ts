@@ -1,6 +1,5 @@
 import { v7 as uuid7 } from 'uuid'
 import type { FilterQuery } from '@mikro-orm/core'
-import { slugify } from '#shared/utils'
 import { WorkflowState } from '#shared/domain'
 import type { OrganizationType, SolutionType } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
@@ -253,7 +252,11 @@ export class OrganizationRepository extends Repository<OrganizationType> {
      * @throws {NotFoundException} If the solution does not exist in the organization
      */
     async getSolutionById(solutionId: SolutionType['id']): Promise<SolutionType> {
-        return (await this.findSolutions({ id: solutionId }))[0]
+        const solutions = await this.findSolutions({ id: solutionId }),
+            solution = solutions[0]
+        if (!solution)
+            throw new NotFoundException(`Solution with id ${solutionId} not found`)
+        return solution
     }
 
     /**
@@ -267,7 +270,11 @@ export class OrganizationRepository extends Repository<OrganizationType> {
 
         if (solutions.length === 0) throw new NotFoundException('Solution does not exist in the organization')
 
-        return solutions[0]
+        const solution = solutions[0]
+        if (!solution)
+            throw new NotFoundException(`Solution with slug ${solutionSlug} not found`)
+
+        return solution
     }
 
     /**

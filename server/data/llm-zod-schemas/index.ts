@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ConstraintCategory, MoscowPriority, ReqType, ScenarioStepTypeEnum, StakeholderCategory, StakeholderSegmentation } from '~/shared/domain'
+import { ConstraintCategory, MoscowPriority, ReqType, ScenarioStepTypeEnum, StakeholderCategory, StakeholderSegmentation } from '~~/shared/domain'
 
 export const llmRequirementSchema = z.object({
     reqType: z.nativeEnum(ReqType),

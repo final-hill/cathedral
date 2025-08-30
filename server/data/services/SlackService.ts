@@ -6,7 +6,7 @@ import type {
     OrganizationData,
     SolutionData,
     SlackBlock
-} from '~/server/data/slack-zod-schemas'
+} from '~~/server/data/slack-zod-schemas'
 
 export class SlackService {
     private client: WebClient

@@ -1,7 +1,6 @@
 import { z } from 'zod'
 import { MetaRequirement } from './MetaRequirement'
 import { ReqType } from './ReqType'
-import { dedent } from '~/shared/utils'
 
 export const Goals = MetaRequirement.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.GOALS)

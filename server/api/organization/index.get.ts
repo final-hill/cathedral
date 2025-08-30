@@ -1,8 +1,6 @@
-import { OrganizationCollectionInteractor, PermissionInteractor } from '~/application'
-import { OrganizationCollectionRepository } from '~/server/data/repositories'
-import handleDomainException from '~/server/utils/handleDomainException'
+import { OrganizationCollectionInteractor, PermissionInteractor } from '~~/server/application'
+import { OrganizationCollectionRepository } from '~~/server/data/repositories'
 import { Organization } from '#shared/domain'
-import { createEntraService } from '~/server/utils/createEntraService'
 
 const querySchema = Organization.innerType().partial()
 

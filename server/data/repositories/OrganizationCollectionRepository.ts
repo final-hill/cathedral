@@ -1,6 +1,5 @@
 import { Organization, DuplicateEntityException, NotFoundException, WorkflowState } from '#shared/domain'
 import type { OrganizationType } from '#shared/domain'
-import { slugify } from '#shared/utils'
 import { Repository } from './Repository'
 import { OrganizationRepository } from './OrganizationRepository'
 import { OrganizationModel, OrganizationVersionsModel } from '../models'

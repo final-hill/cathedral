@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { Scenario } from './Scenario.js'
-import { dedent } from '../../../shared/utils/dedent.js'
+import { dedent } from '../../utils/dedent.js'
 import { ReqType } from './ReqType.js'
 
 export const UserStory = Scenario.extend({

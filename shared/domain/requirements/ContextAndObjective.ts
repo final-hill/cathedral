@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { Goal } from './Goal.js'
 import { ReqType } from './ReqType.js'
-import { dedent } from '../../../shared/utils/dedent.js'
+import { dedent } from '../../utils/dedent.js'
 
 export const ContextAndObjective = Goal.extend({
     name: z.literal('Context And Objective')
