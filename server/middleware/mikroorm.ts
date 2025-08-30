@@ -1,4 +1,4 @@
-import { getConnection } from '~/mikro-orm.config'
+import { getConnection } from '~~/mikro-orm.config'
 
 // ref: https://github.com/nuxt/nuxt/discussions/17103
 export default eventHandler(async (event) => {

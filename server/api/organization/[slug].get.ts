@@ -1,8 +1,6 @@
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~/application'
-import { OrganizationRepository } from '~/server/data/repositories'
-import { createEntraService } from '~/server/utils/createEntraService'
-import handleDomainException from '~/server/utils/handleDomainException'
-import { Organization } from '~/shared/domain'
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~~/server/application'
+import { OrganizationRepository } from '~~/server/data/repositories'
+import { Organization } from '~~/shared/domain'
 
 const paramSchema = Organization.innerType().pick({ slug: true })
 

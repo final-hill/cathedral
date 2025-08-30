@@ -1,9 +1,8 @@
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~/application'
-import { OrganizationRepository, RequirementRepository } from '~/server/data/repositories'
 import handleDomainException from '../handleDomainException'
-import { Organization, ReqType, Solution } from '~/shared/domain'
 import { z } from 'zod'
-import { createEntraService } from '~/server/utils/createEntraService'
+import { Organization, ReqType, Solution } from '~~/shared/domain'
+import { OrganizationRepository, RequirementRepository } from '~~/server/data/repositories'
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~~/server/application'
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
 
@@ -43,7 +42,7 @@ export default function getAllByType() {
         return requirementInteractor.getAllRequirementsByType({
             reqType,
             staticQuery: {
-                // @ts-expect-error - parsedRequirements field mapping is complex
+                // @ts-expect-error - a direct ID is legal for the ORM
                 parsedRequirements: parsedReqParentId
             }
         }).catch(handleDomainException)

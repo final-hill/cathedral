@@ -3,14 +3,13 @@ import { v7 as uuid7 } from 'uuid'
 import { Repository } from './Repository'
 import * as req from '#shared/domain/requirements'
 import * as reqModels from '../models/requirements'
-import type { AuditMetadataType, RequirementType } from '~/shared/domain'
-import { ConstraintCategory, MoscowPriority, NotFoundException, ReqType, ScenarioStepTypeEnum, StakeholderCategory, StakeholderSegmentation, WorkflowState } from '~/shared/domain'
-import { snakeCaseToPascalCase, resolveReqTypeFromModel } from '~/shared/utils'
 import { DataModelToDomainModel, ReqQueryToModelQuery } from '../mappers'
 import type { CreationInfo } from './CreationInfo'
 import type { UpdationInfo } from './UpdationInfo'
 import type { llmRequirementSchema } from '../llm-zod-schemas'
 import type { ObjectQuery } from '@mikro-orm/core'
+import type { RequirementType, AuditMetadataType } from '~~/shared/domain'
+import { ConstraintCategory, MoscowPriority, NotFoundException, ReqType, ScenarioStepTypeEnum, StakeholderCategory, StakeholderSegmentation, WorkflowState } from '~~/shared/domain'
 
 export class RequirementRepository extends Repository<RequirementType> {
     /**
@@ -21,8 +20,8 @@ export class RequirementRepository extends Repository<RequirementType> {
      * @returns The id of the requirement
      */
     async add(props: CreationInfo & {
-        reqProps: Omit<req.RequirementType, 'reqId' | 'reqIdPrefix' | 'id' | keyof AuditMetadataType>
-    }): Promise<req.RequirementType['id']> {
+        reqProps: Omit<RequirementType, 'reqId' | 'reqIdPrefix' | 'id' | keyof AuditMetadataType>
+    }): Promise<RequirementType['id']> {
         const em = this._em,
             { reqType, ...reqProps } = props.reqProps,
             ReqTypePascal = snakeCaseToPascalCase(reqType) as keyof typeof req,

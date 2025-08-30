@@ -1,10 +1,8 @@
 import { z } from 'zod'
-import handleDomainException from '~/server/utils/handleDomainException'
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~/application'
-import { OrganizationRepository, RequirementRepository } from '~/server/data/repositories'
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~~/server/application'
+import { OrganizationRepository, RequirementRepository } from '~~/server/data/repositories'
 import { ReqType } from '#shared/domain/requirements/ReqType'
 import { Organization, Solution } from '#shared/domain'
-import { createEntraService } from '~/server/utils/createEntraService'
 
 const querySchema = z.object({
     solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,

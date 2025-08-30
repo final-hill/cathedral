@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { OrganizationRepository } from '~/server/data/repositories'
-import { SlackService } from '~/server/data/services'
-import { createSlackWorkspaceInteractor } from '~/application/slack/factory'
+import { OrganizationRepository } from '~~/server/data/repositories'
+import { SlackService } from '~~/server/data/services'
+import { createSlackWorkspaceInteractor } from '~~/server/application/slack/factory'
 
 const querySchema = z.object({
     code: z.string().optional(),

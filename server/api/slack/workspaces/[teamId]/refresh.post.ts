@@ -1,6 +1,5 @@
 import { z } from 'zod'
-import { createSlackWorkspaceInteractor } from '~/application/slack/factory'
-import handleDomainException from '~/server/utils/handleDomainException'
+import { createSlackWorkspaceInteractor } from '~~/server/application/slack/factory'
 
 const paramsSchema = z.object({
     teamId: z.string().min(1, 'Team ID is required')

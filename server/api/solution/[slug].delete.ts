@@ -1,9 +1,7 @@
 import { z } from 'zod'
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~/application'
-import { OrganizationRepository } from '~/server/data/repositories'
-import handleDomainException from '~/server/utils/handleDomainException'
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~~/server/application'
+import { OrganizationRepository } from '~~/server/data/repositories'
 import { Organization, Solution } from '#shared/domain'
-import { createEntraService } from '~/server/utils/createEntraService'
 
 // TODO: this feels backwards. Shouldn't the param be the organizationSlug and the body be the solutionSlug?
 

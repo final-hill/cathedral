@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { Goal } from './Goal.js'
-import { dedent } from '../../../shared/utils/dedent.js'
+import { dedent } from '../../utils/dedent.js'
 import { ReqType } from './ReqType.js'
 import { FunctionalBehavior } from './FunctionalBehavior.js'
 

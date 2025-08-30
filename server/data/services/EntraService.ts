@@ -95,8 +95,12 @@ export class EntraService {
         if (!match)
             return null
 
-        const [, orgId, roleStr] = match,
-            role = this.groupSuffixToRole[roleStr]
+        const [, orgId, roleStr] = match
+
+        if (!orgId || !roleStr)
+            return null
+
+        const role = this.groupSuffixToRole[roleStr]
 
         if (!role)
             return null
@@ -236,8 +240,15 @@ export class EntraService {
     private extractGroupIdsFromRoleClaims(idToken: string): string[] {
         try {
             // Decode JWT payload (note: this doesn't verify signature, but it's fine for reading claims)
-            const base64Payload = idToken.split('.')[1],
-                payload = JSON.parse(atob(base64Payload)),
+            const tokenParts = idToken.split('.')
+            if (tokenParts.length !== 3)
+                throw new Error('Invalid JWT format')
+
+            const base64Payload = tokenParts[1]
+            if (!base64Payload)
+                throw new Error('Missing JWT payload')
+
+            const payload = JSON.parse(atob(base64Payload)),
                 // Groups are in the 'roles' claim as an array of group IDs (GUIDs)
                 roles = payload.roles || []
 
@@ -342,11 +353,12 @@ export class EntraService {
 
                     if (groups.value && groups.value.length > 0) {
                         const group = groups.value[0]
-
-                        // Delete the group
-                        await this.graphRequest(`/groups/${group.id}`, {
-                            method: 'DELETE'
-                        })
+                        if (group?.id) {
+                            // Delete the group
+                            await this.graphRequest(`/groups/${group.id}`, {
+                                method: 'DELETE'
+                            })
+                        }
                     }
                 } catch {
                     // Continue with other groups even if one fails
@@ -366,8 +378,11 @@ export class EntraService {
             const escapedGroupName = this.escapeODataString(groupName),
                 existingGroups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
 
-            if (existingGroups.value && existingGroups.value.length > 0)
-                return existingGroups.value[0]
+            if (existingGroups.value && existingGroups.value.length > 0) {
+                const group = existingGroups.value[0]
+                if (group)
+                    return group
+            }
 
             // Group doesn't exist, create it
             const newGroup = await this.graphRequest<Group>('/groups', {
@@ -452,16 +467,17 @@ export class EntraService {
                         groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
 
                     if (groups.value && groups.value.length > 0) {
-                        const group = groups.value[0],
-
+                        const group = groups.value[0]
+                        if (group?.id) {
                             // Check if user is a member of this group
-                            members = await this.graphRequest<{ value: User[] }>(`/groups/${group.id}/members?$filter=id eq '${props.userId}'`)
+                            const members = await this.graphRequest<{ value: User[] }>(`/groups/${group.id}/members?$filter=id eq '${props.userId}'`)
 
-                        if (members.value && members.value.length > 0) {
-                            // Remove user from this group
-                            await this.graphRequest(`/groups/${group.id}/members/${props.userId}/$ref`, {
-                                method: 'DELETE'
-                            })
+                            if (members.value && members.value.length > 0) {
+                                // Remove user from this group
+                                await this.graphRequest(`/groups/${group.id}/members/${props.userId}/$ref`, {
+                                    method: 'DELETE'
+                                })
+                            }
                         }
                     }
                 } catch {
@@ -541,8 +557,11 @@ export class EntraService {
                 return null
 
             const user = users.value[0]
+            if (!user?.id)
+                return null
+
             return {
-                id: user.id!,
+                id: user.id,
                 name: user.displayName || user.userPrincipalName || 'Unknown User',
                 email: user.mail || user.userPrincipalName || ''
             }
@@ -579,10 +598,14 @@ export class EntraService {
                     })
                 }),
 
-                user = invitation.invitedUser
+                user = invitation.invitedUser,
+                userName = user.displayName || displayName || email.split('@')[0]
+            if (!userName)
+                throw new Error('Unable to determine user name')
+
             return {
                 id: user.id!,
-                name: user.displayName || displayName || email.split('@')[0],
+                name: userName,
                 email: user.mail || user.userPrincipalName || email
             }
         } catch (error) {
@@ -614,23 +637,24 @@ export class EntraService {
                         groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
 
                     if (groups.value && groups.value.length > 0) {
-                        const group = groups.value[0],
-
+                        const group = groups.value[0]
+                        if (group?.id) {
                             // Get group members
-                            members = await this.graphRequest<{ value: User[] }>(`/groups/${group.id}/members?$select=id,displayName,userPrincipalName,mail`)
+                            const members = await this.graphRequest<{ value: User[] }>(`/groups/${group.id}/members?$select=id,displayName,userPrincipalName,mail`)
 
-                        if (members.value) {
-                            for (const member of members.value) {
-                                const user = member as User
-                                if (user.id) {
-                                    userRoleMap.set(user.id, {
-                                        user: {
-                                            id: user.id,
-                                            name: user.displayName || user.userPrincipalName || 'Unknown User',
-                                            email: user.mail || user.userPrincipalName || ''
-                                        },
-                                        role
-                                    })
+                            if (members.value) {
+                                for (const member of members.value) {
+                                    const user = member as User
+                                    if (user.id) {
+                                        userRoleMap.set(user.id, {
+                                            user: {
+                                                id: user.id,
+                                                name: user.displayName || user.userPrincipalName || 'Unknown User',
+                                                email: user.mail || user.userPrincipalName || ''
+                                            },
+                                            role
+                                        })
+                                    }
                                 }
                             }
                         }

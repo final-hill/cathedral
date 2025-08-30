@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { SlackService } from '~/server/data/services'
+import { SlackService } from '~~/server/data/services'
 
 const querySchema = z.object({
     organizationSlug: z.string().min(1, 'Organization slug is required')

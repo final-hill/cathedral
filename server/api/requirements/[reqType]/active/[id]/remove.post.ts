@@ -1,8 +1,7 @@
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~/application'
-import { OrganizationRepository, RequirementRepository } from '~/server/data/repositories'
-import { Organization, ReqType, Solution } from '~/shared/domain'
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~~/server/application'
+import { OrganizationRepository, RequirementRepository } from '~~/server/data/repositories'
+import { Organization, ReqType, Solution } from '~~/shared/domain'
 import { z } from 'zod'
-import { createEntraService } from '~/server/utils/createEntraService'
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
     paramSchema = z.object({

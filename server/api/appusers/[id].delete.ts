@@ -1,9 +1,7 @@
 import { z } from 'zod'
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~/application'
-import { OrganizationRepository } from '~/server/data/repositories'
-import handleDomainException from '~/server/utils/handleDomainException'
+import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~~/server/application'
+import { OrganizationRepository } from '~~/server/data/repositories'
 import { AppUser, Organization } from '#shared/domain'
-import { createEntraService } from '~/server/utils/createEntraService'
 
 const paramSchema = AppUser.pick({ id: true }),
     { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,

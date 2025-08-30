@@ -4,9 +4,8 @@ import zodSchema from '../llm-zod-schemas/index.js'
 import { zodResponseFormat } from 'openai/helpers/zod'
 import { dedent } from '../../../shared/utils/dedent.js'
 import type { z } from 'zod'
-import { ReqType } from '~/shared/domain/index.js'
-import * as reqs from '~/shared/domain/requirements/index.js'
-import { snakeCaseToPascalCase } from '~/shared/utils/snakeCaseToPascalCase.js'
+import { ReqType } from '~~/shared/domain/index.js'
+import * as reqs from '~~/shared/domain/requirements/index.js'
 
 export class NaturalLanguageToRequirementService {
     private _aiClient: AzureOpenAI
@@ -63,7 +62,12 @@ export class NaturalLanguageToRequirementService {
                 }],
                 response_format: zodResponseFormat(zodSchema, 'requirements')
             }),
-            result = completion.choices[0].message
+            choice = completion.choices[0]
+
+        if (!choice)
+            throw new Error('No completion choice returned')
+
+        const result = choice.message
 
         if (result.refusal) throw new Error(result.refusal)
 

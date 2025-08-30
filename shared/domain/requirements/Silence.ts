@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { Requirement } from './Requirement.js'
 import { ReqType } from './ReqType.js'
 import { WorkflowState } from './WorkflowState.js'
-import { dedent } from '../../../shared/utils/dedent.js'
+import { dedent } from '../../utils/dedent.js'
 
 export const Silence = Requirement.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.SILENCE),

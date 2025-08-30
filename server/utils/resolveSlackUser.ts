@@ -1,7 +1,7 @@
 import type { H3Event } from 'h3'
-import { SlackRepository } from '~/server/data/repositories'
 import { createEntraService } from './createEntraService'
 import type { UserSession } from '#auth-utils'
+import { SlackRepository } from '../data/repositories'
 
 /**
  * Resolves a Slack user to a Cathedral user session

@@ -1,8 +1,6 @@
 import { z } from 'zod'
-import { PermissionInteractor, OrganizationInteractor, SlackWorkspaceInteractor } from '~/application'
-import { OrganizationRepository, SlackWorkspaceRepository } from '~/server/data/repositories'
-import { createEntraService } from '~/server/utils/createEntraService'
-import handleDomainException from '~/server/utils/handleDomainException'
+import { PermissionInteractor, OrganizationInteractor, SlackWorkspaceInteractor } from '~~/server/application'
+import { OrganizationRepository, SlackWorkspaceRepository } from '~~/server/data/repositories'
 
 const querySchema = z.object({
     organizationSlug: z.string().min(1, 'Organization slug is required')

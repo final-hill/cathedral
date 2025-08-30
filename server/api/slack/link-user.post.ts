@@ -1,11 +1,9 @@
 import { z } from 'zod'
 import { useRuntimeConfig } from '#imports'
 import jwt from 'jsonwebtoken'
-import { PermissionInteractor, SlackUserInteractor } from '~/application/'
-import { SlackRepository } from '~/server/data/repositories'
-import { SlackService } from '~/server/data/services'
-import { createEntraService } from '~/server/utils/createEntraService'
-import handleDomainException from '~/server/utils/handleDomainException'
+import { PermissionInteractor, SlackUserInteractor } from '~~/server/application/'
+import { SlackRepository } from '~~/server/data/repositories'
+import { SlackService } from '~~/server/data/services'
 
 const { verify } = jwt,
     bodySchema = z.object({

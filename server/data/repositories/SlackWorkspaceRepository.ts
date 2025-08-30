@@ -1,7 +1,7 @@
 import { Repository } from './Repository'
 import { SlackWorkspaceMetaModel } from '../models/application/SlackWorkspaceMetaModel'
 import type { SlackWorkspaceMetaPublicType } from '#shared/domain/application'
-import { NotFoundException } from '~/shared/domain'
+import { NotFoundException } from '~~/shared/domain'
 
 /**
  * Repository for managing Slack workspace data operations

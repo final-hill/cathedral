@@ -1,10 +1,7 @@
 import { z } from 'zod'
 import { AppUser, AppUserOrganizationRole, Organization, NotFoundException } from '#shared/domain'
-import { OrganizationCollectionInteractor, PermissionInteractor } from '~/application'
-import { OrganizationCollectionRepository } from '~/server/data/repositories'
-import { AppUserInteractor } from '~/application/AppUserInteractor'
-import handleDomainException from '~/server/utils/handleDomainException'
-import { createEntraService } from '~/server/utils/createEntraService'
+import { OrganizationCollectionRepository } from '~~/server/data/repositories'
+import { AppUserInteractor, OrganizationCollectionInteractor, PermissionInteractor } from '~~/server/application'
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
     bodySchema = z.object({

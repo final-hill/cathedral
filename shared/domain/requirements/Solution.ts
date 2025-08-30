@@ -1,4 +1,4 @@
-import { slugify } from '../../../shared/utils/slugify.js'
+import { slugify } from '../../utils/slugify.js'
 import { z } from 'zod'
 import { ReqType } from './ReqType.js'
 import { MetaRequirement } from './MetaRequirement.js'

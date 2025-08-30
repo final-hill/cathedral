@@ -1,9 +1,7 @@
 import { z } from 'zod'
-import { PermissionInteractor, OrganizationInteractor } from '~/application'
-import { OrganizationRepository } from '~/server/data/repositories'
-import { createEntraService } from '~/server/utils/createEntraService'
-import { createSlackWorkspaceInteractor } from '~/application/slack/factory'
-import handleDomainException from '~/server/utils/handleDomainException'
+import { PermissionInteractor, OrganizationInteractor } from '~~/server/application'
+import { OrganizationRepository } from '~~/server/data/repositories'
+import { createSlackWorkspaceInteractor } from '~~/server/application/slack/factory'
 
 const paramsSchema = z.object({
         teamId: z.string().min(1, 'Team ID is required')

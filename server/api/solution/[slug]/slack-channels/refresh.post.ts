@@ -1,9 +1,7 @@
 import { z } from 'zod'
-import { SlackChannelInteractor, PermissionInteractor, OrganizationInteractor } from '~/application'
-import { SlackRepository, OrganizationRepository } from '~/server/data/repositories'
-import { SlackService } from '~/server/data/services'
-import { createEntraService } from '~/server/utils/createEntraService'
-import handleDomainException from '~/server/utils/handleDomainException'
+import { SlackChannelInteractor, PermissionInteractor, OrganizationInteractor } from '~~/server/application'
+import { SlackRepository, OrganizationRepository } from '~~/server/data/repositories'
+import { SlackService } from '~~/server/data/services'
 import { Organization, Solution } from '#shared/domain'
 
 const paramSchema = Solution.innerType().pick({ slug: true }),
