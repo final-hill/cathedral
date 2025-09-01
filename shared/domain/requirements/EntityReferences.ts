@@ -61,6 +61,14 @@ export const EventReference = BaseEntityReference.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.EVENT)
 })
 
+export const InterfaceReference = BaseEntityReference.extend({
+    reqType: z.nativeEnum(ReqType).default(ReqType.INTERFACE)
+})
+
+export const ActorReference = BaseEntityReference.extend({
+    reqType: z.nativeEnum(ReqType).default(ReqType.ACTOR)
+})
+
 // Export types for use in other files
 export type BaseEntityReferenceType = z.infer<typeof BaseEntityReference>
 export type StakeholderReferenceType = z.infer<typeof StakeholderReference>
@@ -73,3 +81,5 @@ export type UseCaseReferenceType = z.infer<typeof UseCaseReference>
 export type ScenarioStepReferenceType = z.infer<typeof ScenarioStepReference>
 export type ScenarioStepSuggestionType = z.infer<typeof ScenarioStepSuggestion>
 export type EventReferenceType = z.infer<typeof EventReference>
+export type InterfaceReferenceType = z.infer<typeof InterfaceReference>
+export type ActorReferenceType = z.infer<typeof ActorReference>
