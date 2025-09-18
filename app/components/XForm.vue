@@ -170,10 +170,8 @@ watch(
                     const matchingItem = autocompleteData.find(item =>
                         item.value?.id === expectedId
                     )
-                    if (matchingItem && matchingItem.value) {
-                        console.log(`Auto-populating ${fieldKey} with:`, matchingItem.value);
+                    if (matchingItem && matchingItem.value)
                         (localState as Record<string, unknown>)[fieldKey] = matchingItem.value
-                    }
                 }
             })
         }
