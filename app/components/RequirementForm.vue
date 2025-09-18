@@ -89,13 +89,8 @@ const router = useRouter(),
             }
         }
 
-        if (import.meta.client)
-            console.log('Final form state:', initialData)
-
         Object.assign(formState, initialData)
     }
-
-console.log('current formState:', Object.keys(formState))
 
 initializeFormState()
 
