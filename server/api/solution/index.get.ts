@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~~/server/application'
 import { OrganizationRepository } from '~~/server/data/repositories'
-import { Organization, Solution } from '~~/shared/domain'
+import { Organization, Solution } from '#shared/domain'
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
     querySchema = z.object({

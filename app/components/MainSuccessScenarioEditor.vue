@@ -42,8 +42,8 @@
 import { useStepHierarchy } from '~/composables/useStepHierarchy'
 import type { BaseStep } from '~/composables/useStepHierarchy'
 import { useStepRefs } from '~/composables/useStepRefs'
-import { ReqType, ScenarioStepTypeEnum } from '~~/shared/domain'
-import type { ScenarioStepReferenceType } from '~~/shared/domain/requirements/EntityReferences'
+import { ScenarioStepTypeEnum } from '#shared/domain'
+import { ScenarioStepReference, type ScenarioStepReferenceType } from '#shared/domain/requirements/EntityReferences'
 
 interface MainStep extends BaseStep {
     description: string
@@ -179,14 +179,15 @@ function handleStepDescriptionUpdate(stepId: string, description: string) {
 }
 
 function emitMainSteps() {
-    const mainStepRefs: ScenarioStepReferenceType[] = mainSteps.value.map(step => ({
-        id: step.id,
-        name: step.description,
-        reqType: ReqType.SCENARIO_STEP,
-        stepType: ScenarioStepTypeEnum.Action,
-        parentStepId: step.parentStepId,
-        order: step.order
-    }))
+    const mainStepRefs: ScenarioStepReferenceType[] = mainSteps.value.map(step =>
+        ScenarioStepReference.parse({
+            id: step.id,
+            name: step.description,
+            stepType: ScenarioStepTypeEnum.Action,
+            parentStepId: step.parentStepId,
+            order: step.order
+        })
+    )
 
     emit('update:modelValue', mainStepRefs)
 }
@@ -247,8 +248,8 @@ onMounted(() => {
 
 <style scoped>
 .main-scenario-list {
-  counter-reset: section;
-  padding-left: 0;
-  list-style: none;
+    counter-reset: section;
+    padding-left: 0;
+    list-style: none;
 }
 </style>

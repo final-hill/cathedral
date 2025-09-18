@@ -53,7 +53,6 @@
             "environment",
             "environment_component",
             "epic",
-            "event",
             "example",
             "functional_behavior",
             "functionality",
@@ -93,7 +92,7 @@
             "interface_operation",
             "interface_input",
             "interface_output",
-            "interface_data_type",
+            "interface_schema",
             "interface_flow"
           ],
           "mappedType": "enum"
@@ -109,6 +108,24 @@
         },
         "scenario_step_id": {
           "name": "scenario_step_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
+        "interface_id": {
+          "name": "interface_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
+        "behavior_id": {
+          "name": "behavior_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
@@ -188,6 +205,34 @@
           "constraintName": "requirement_scenario_step_id_foreign",
           "columnNames": [
             "scenario_step_id"
+          ],
+          "localTableName": "public.requirement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_interface_id_foreign": {
+          "constraintName": "requirement_interface_id_foreign",
+          "columnNames": [
+            "interface_id"
+          ],
+          "localTableName": "public.requirement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_behavior_id_foreign": {
+          "constraintName": "requirement_behavior_id_foreign",
+          "columnNames": [
+            "behavior_id"
           ],
           "localTableName": "public.requirement",
           "referencedColumnNames": [
@@ -301,7 +346,6 @@
             "environment",
             "environment_component",
             "epic",
-            "event",
             "example",
             "functional_behavior",
             "functionality",
@@ -341,7 +385,7 @@
             "interface_operation",
             "interface_input",
             "interface_output",
-            "interface_data_type",
+            "interface_schema",
             "interface_flow"
           ],
           "mappedType": "enum"
@@ -402,6 +446,21 @@
           "length": 255,
           "mappedType": "string"
         },
+        "priority": {
+          "name": "priority",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "enumItems": [
+            "MUST",
+            "SHOULD",
+            "COULD",
+            "WONT"
+          ],
+          "mappedType": "enum"
+        },
         "parent_component_id": {
           "name": "parent_component_id",
           "type": "uuid",
@@ -410,67 +469,6 @@
           "primary": false,
           "nullable": true,
           "mappedType": "uuid"
-        },
-        "initiator_id": {
-          "name": "initiator_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        },
-        "interface_id": {
-          "name": "interface_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        },
-        "payload_schema": {
-          "name": "payload_schema",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "text"
-        },
-        "type_name": {
-          "name": "type_name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "kind": {
-          "name": "kind",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "enumItems": [
-            "Primitive",
-            "Product",
-            "Sum",
-            "Collection"
-          ],
-          "mappedType": "enum"
-        },
-        "schema": {
-          "name": "schema",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "text"
         },
         "flow_name": {
           "name": "flow_name",
@@ -541,16 +539,6 @@
           "default": "false",
           "mappedType": "boolean"
         },
-        "operation_id": {
-          "name": "operation_id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 255,
-          "mappedType": "string"
-        },
         "constraints": {
           "name": "constraints",
           "type": "varchar(255)",
@@ -611,6 +599,25 @@
           "length": 255,
           "mappedType": "string"
         },
+        "schema": {
+          "name": "schema",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "json"
+        },
+        "version": {
+          "name": "version",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
         "interface_type": {
           "name": "interface_type",
           "type": "text",
@@ -663,21 +670,6 @@
           "enumItems": [
             "Action",
             "Condition"
-          ],
-          "mappedType": "enum"
-        },
-        "priority": {
-          "name": "priority",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "enumItems": [
-            "MUST",
-            "SHOULD",
-            "COULD",
-            "WONT"
           ],
           "mappedType": "enum"
         },
@@ -853,34 +845,6 @@
           "constraintName": "requirement_versions_parent_component_id_foreign",
           "columnNames": [
             "parent_component_id"
-          ],
-          "localTableName": "public.requirement_versions",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "requirement_versions_initiator_id_foreign": {
-          "constraintName": "requirement_versions_initiator_id_foreign",
-          "columnNames": [
-            "initiator_id"
-          ],
-          "localTableName": "public.requirement_versions",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "requirement_versions_interface_id_foreign": {
-          "constraintName": "requirement_versions_interface_id_foreign",
-          "columnNames": [
-            "interface_id"
           ],
           "localTableName": "public.requirement_versions",
           "referencedColumnNames": [

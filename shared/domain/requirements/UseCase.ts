@@ -2,7 +2,8 @@ import { z } from 'zod'
 import { Scenario } from './Scenario.js'
 import { ReqType } from './ReqType.js'
 import { SystemComponent } from './SystemComponent.js'
-import { AssumptionReference, EffectReference, ScenarioStepReference, StakeholderReference, EventReference } from './EntityReferences.js'
+import { AssumptionReference, EffectReference, ScenarioStepReference, StakeholderReference, InterfaceOperationReference } from './EntityReferences.js'
+import { uiBasePathTemplates } from './uiBasePathTemplates.js'
 
 export const UseCase = Scenario.extend({
     reqId: z.string().regex(/^S\.4\.2\.\d+$/, 'Format must be S.4.2.#').optional()
@@ -14,8 +15,8 @@ export const UseCase = Scenario.extend({
     // 'level' is subsumed by the inherited 'outcome' field
     preconditions: z.array(AssumptionReference).default([])
         .describe('State the system must be in before the use case starts'),
-    trigger: EventReference
-        .describe('The action upon the system that starts the use case.'),
+    trigger: InterfaceOperationReference
+        .describe('The interface operation that starts this use case.'),
     mainSuccessScenario: z.array(
         ScenarioStepReference
     ).default([]).describe('Structured sequence of action steps in the main success scenario'),
@@ -26,7 +27,9 @@ export const UseCase = Scenario.extend({
     ).default([]).describe('Alternative and exception flows with both conditions and actions'),
     stakeholders: z.array(StakeholderReference).default([])
         .describe('The stakeholders in the use case'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.USE_CASE)
+    reqType: z.nativeEnum(ReqType).default(ReqType.USE_CASE),
+    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.USE_CASE])
+        .describe('The UI path template for navigating to this requirement in the web interface')
 }).describe('A Use Case describes a complete interaction between an actor and the system to achieve a goal.')
 
 export type UseCaseType = z.infer<typeof UseCase>

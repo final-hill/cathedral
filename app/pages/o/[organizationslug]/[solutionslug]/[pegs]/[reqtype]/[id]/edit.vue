@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ReqType } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
-import type { RequirementType } from '~~/shared/domain'
+import type { RequirementType } from '#shared/domain'
 import type { FormSchema } from '~/components/XForm.vue'
 import { z } from 'zod'
 
@@ -44,7 +44,7 @@ const { data: requirement, error } = await useFetch<RequirementType>(`/api/requi
         solutionSlug,
         organizationSlug
     },
-    transform: (data: unknown) => transformRequirementDates(data as { creationDate: string, lastModified: string }) as unknown as RequirementType
+    transform: transformRequirementDates
 })
 
 if (error.value) {
@@ -54,38 +54,18 @@ if (error.value) {
     })
 }
 
-// Helper type for requirement entity
-type ZodEntityWithOmit = { omit: (fields: Record<string, boolean>) => FormSchema }
-
 const innerSchema = RequirementSchema instanceof z.ZodEffects
         ? RequirementSchema.innerType()
         : RequirementSchema,
-    editSchema = (innerSchema as unknown as ZodEntityWithOmit).omit({
-        workflowState: true,
-        reqId: true,
-        reqIdPrefix: true,
-        createdBy: true,
-        creationDate: true,
-        lastModified: true,
-        reqType: true,
-        isDeleted: true,
-        modifiedBy: true,
-        solution: true,
-        parsedRequirements: true
-    }),
+    baseSchema = innerSchema as FormSchema,
     onSaved = (_savedRequirement: Record<string, unknown>) => {
         // The form component handles navigation
     }
 </script>
 
 <template>
-    <h1>{{ title }}</h1>
-    <p>
-        Modify the {{ deSlugify(reqtype) }} details.
-    </p>
-
     <RequirementForm
-        :schema="editSchema"
+        :schema="baseSchema"
         :req-type="actualReqType"
         :organization-slug="organizationSlug"
         :solution-slug="solutionSlug"

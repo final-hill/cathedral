@@ -1,6 +1,6 @@
 import handleDomainException from '../handleDomainException'
 import { z } from 'zod'
-import { Organization, ReqType, Solution } from '~~/shared/domain'
+import { Organization, ReqType, Solution } from '#shared/domain'
 import { OrganizationRepository, RequirementRepository } from '~~/server/data/repositories'
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~~/server/application'
 
@@ -11,15 +11,14 @@ export default function getAllByType() {
         validatedQuerySchema = z.object({
             solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
             organizationId,
-            organizationSlug,
-            parsedReqParentId: z.string().optional()
-        }).refine((value) => {
+            organizationSlug
+        }).passthrough().refine((value) => {
             return value.organizationId !== undefined || value.organizationSlug !== undefined
         }, 'At least one of organizationId or organizationSlug should be provided')
 
     return defineEventHandler(async (event) => {
         const { reqType } = await validateEventParams(event, paramSchema),
-            { solutionSlug, organizationId, organizationSlug, parsedReqParentId } = await validateEventQuery(event, validatedQuerySchema),
+            { solutionSlug, organizationId, organizationSlug, ...query } = await validateEventQuery(event, validatedQuerySchema),
             session = await requireUserSession(event),
             entraService = createEntraService(),
             permissionInteractor = new PermissionInteractor({ event, session, entraService }),
@@ -41,10 +40,10 @@ export default function getAllByType() {
 
         return requirementInteractor.getAllRequirementsByType({
             reqType,
-            staticQuery: {
-                // @ts-expect-error - a direct ID is legal for the ORM
-                parsedRequirements: parsedReqParentId
-            }
-        }).catch(handleDomainException)
+            query
+        }).catch((error) => {
+            console.error('[getAllByType] Error caught:', error)
+            return handleDomainException(error)
+        })
     })
 }

@@ -2,14 +2,16 @@
  * Transforms date strings to Date objects for requirement objects
  */
 
+import type { AuditMetadataType } from '../domain'
+
 /**
  * Transforms date string properties to Date objects for a single requirement item
  * @param item - Object with creationDate and lastModified as strings
  * @returns Object with creationDate and lastModified as Date objects
  */
-export function transformRequirementDates<T extends { creationDate: string, lastModified: string }>(
+export function transformRequirementDates<T extends AuditMetadataType>(
     item: T
-): T & { creationDate: Date, lastModified: Date } {
+): T {
     return {
         ...item,
         creationDate: new Date(item.creationDate),

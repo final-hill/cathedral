@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ReqType } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
-import type { RequirementType } from '~~/shared/domain'
+import type { RequirementType } from '#shared/domain/requirements'
 
 const route = useRoute(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug, reqtype } = route.params as {
@@ -43,7 +43,7 @@ const { data: requirements, refresh, status } = await useFetch<RequirementType[]
         solutionSlug,
         organizationSlug
     },
-    transform: (data: unknown[]) => data.map(item => transformRequirementDates(item as { creationDate: string, lastModified: string }) as unknown as RequirementType)
+    transform: data => data.map(transformRequirementDates)
 })
 </script>
 

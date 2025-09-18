@@ -1,7 +1,7 @@
 // Description: This file handles the editing of a proposed requirement in the system. It validates the request parameters and body, checks permissions, and updates the requirement in the database.
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~~/server/application'
 import { OrganizationRepository, RequirementRepository } from '~~/server/data/repositories'
-import { Organization, ReqType, Solution } from '~~/shared/domain'
+import { Organization, ReqType, Solution } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
 import { z } from 'zod'
 

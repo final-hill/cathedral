@@ -37,7 +37,8 @@ export const Requirement = AuditMetadata.extend({
             .describe('The id of the solution'),
         name: z.string()
             .describe('The name of the solution')
-    }).optional().describe('The solution that the requirement belongs to')
+    }).optional().describe('The solution that the requirement belongs to'),
+    uiBasePathTemplate: z.string()
 }).describe('A Requirement is a statement that specifies a property.')
 
 export type RequirementType = z.infer<typeof Requirement>

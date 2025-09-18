@@ -2,8 +2,8 @@
 import type { z } from 'zod'
 import { reactive } from 'vue'
 import type { ButtonProps, FormSubmitEvent } from '@nuxt/ui'
-import { ParsedRequirements, ReqType } from '~~/shared/domain'
-import type { ParsedRequirementsType } from '~~/shared/domain'
+import { ParsedRequirements, ReqType } from '#shared/domain'
+import type { ParsedRequirementsType } from '#shared/domain'
 
 const props = defineProps<{
     organizationSlug: string

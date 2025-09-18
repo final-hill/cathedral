@@ -3,7 +3,7 @@ import type { PermissionInteractor } from '../PermissionInteractor'
 import type { SlackRepository } from '~~/server/data/repositories'
 import type { SlackService } from '~~/server/data/services'
 import type { SlackChannelMetaType, SlackChannelMetaRepositoryType } from '#shared/domain/application'
-import { NotFoundException } from '~~/shared/domain'
+import { NotFoundException } from '#shared/domain'
 
 /**
  * Slack Channel Interactor

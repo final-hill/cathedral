@@ -1,9 +1,10 @@
 <script lang="tsx" setup>
 import type * as req from '#shared/domain/requirements'
-import type { ReqType } from '#shared/domain/requirements/enums'
+import type { ReqType } from '#shared/domain/requirements/ReqType'
 import type { TableColumn } from '@nuxt/ui'
-import { UBadge, UButton, UTable, UDropdownMenu } from '#components'
+import { UBadge, UButton, UTable, UDropdownMenu, XConfirmModal } from '#components'
 import { WorkflowState } from '#shared/domain/requirements/enums'
+import { uiBasePathTemplates } from '#shared/domain/requirements/uiBasePathTemplates'
 
 type WorkflowAction = 'review' | 'remove' | 'approve' | 'reject' | 'revise' | 'restore'
 
@@ -14,28 +15,22 @@ const props = defineProps<{
     solutionSlug: string
     loading?: boolean
     hideHeader?: boolean
+    parentReferences?: Record<string, string> // field name -> parent ID for OneToMany relationships
 }>(),
     emit = defineEmits<{
         refresh: []
     }>(),
-    { requirements, reqType, organizationSlug, solutionSlug, loading = false, hideHeader = false } = toRefs(props),
+    { requirements, reqType, organizationSlug, solutionSlug, loading = false, hideHeader = false, parentReferences } = toRefs(props),
     router = useRouter(),
-    route = useRoute(),
     toast = useToast(),
-    getPegsFromReqIdPrefix = (reqIdPrefix: string): string => {
-        const prefixMap = new Map([
-                ['P', 'project'],
-                ['E', 'environment'],
-                ['G', 'goals'],
-                ['S', 'system']
-            ]),
-            prefix = reqIdPrefix.charAt(0).toUpperCase()
-        return prefixMap.get(prefix)!
-    },
-    getBasePath = (requirement: req.RequirementType): string => {
-        const pegs = getPegsFromReqIdPrefix(requirement.reqIdPrefix!)
-        return `/o/${organizationSlug.value}/${solutionSlug.value}/${pegs}/${requirement.reqType}`
-    },
+    overlay = useOverlay(),
+    confirmModal = overlay.create(XConfirmModal, {}),
+    basePath = computed(() => {
+        const template = uiBasePathTemplates[reqType.value as keyof typeof uiBasePathTemplates]
+        return template
+            .replace('[org]', organizationSlug.value)
+            .replace('[solutionslug]', solutionSlug.value)
+    }),
     columns: TableColumn<req.RequirementType>[] = [
         {
             id: 'reqId',
@@ -116,7 +111,7 @@ const props = defineProps<{
             label: 'View',
             icon: 'i-lucide-eye',
             color: 'info',
-            onSelect: () => { router.push(`${getBasePath(requirement)}/${requirement.id}`) }
+            onSelect: () => { router.push(`${basePath.value}/${requirement.id}`) }
         })
 
         // Edit/Revise actions - based on workflow state
@@ -125,7 +120,7 @@ const props = defineProps<{
                 label: 'Edit',
                 icon: 'i-lucide-pen',
                 color: 'primary',
-                onSelect: () => { router.push(`${getBasePath(requirement)}/${requirement.id}/edit`) }
+                onSelect: () => { router.push(`${basePath.value}/${requirement.id}/edit`) }
             })
         }
 
@@ -156,7 +151,7 @@ const props = defineProps<{
                         label: 'Review',
                         icon: 'i-lucide-clipboard-check',
                         color: 'warning',
-                        onSelect: () => { router.push(`${getBasePath(requirement)}/${requirement.id}/review`) }
+                        onSelect: () => { router.push(`${basePath.value}/${requirement.id}/review`) }
                     },
                     {
                         label: 'Quick Approve',
@@ -264,7 +259,7 @@ const props = defineProps<{
             })
 
             // Navigate to appropriate detail page after successful state transition
-            const detailBasePath = `${getBasePath(requirement)}/${requirement.id}`
+            const detailBasePath = `${basePath.value}/${requirement.id}`
 
             switch (action) {
                 case 'review':
@@ -305,13 +300,24 @@ const props = defineProps<{
         }
     },
     confirmAndPerformAction = async (requirement: req.RequirementType, action: WorkflowAction, confirmMessage: string) => {
-        const confirmed = confirm(confirmMessage)
-        if (confirmed)
+        const result = await confirmModal.open({
+            title: confirmMessage
+        }).result
+
+        if (result)
             await performWorkflowAction(requirement, action)
     },
     createNewRequirement = () => {
-        const { pegs } = route.params as Record<string, string>
-        router.push(`/o/${organizationSlug.value}/${solutionSlug.value}/${pegs}/${reqType.value}/new`)
+        const url = new URL(`${basePath.value}/new`, window.location.origin)
+
+        // Add parent references as query parameters
+        if (parentReferences?.value) {
+            Object.entries(parentReferences.value).forEach(([field, id]) => {
+                url.searchParams.set(field, id)
+            })
+        }
+
+        router.push(url.pathname + url.search)
     }
 </script>
 
@@ -327,7 +333,7 @@ const props = defineProps<{
             <UButton
                 color="success"
                 icon="i-lucide-plus"
-                label="New Requirement"
+                :label="'New ' + snakeCaseToTitleCase(reqType)"
                 @click="createNewRequirement"
             />
         </div>

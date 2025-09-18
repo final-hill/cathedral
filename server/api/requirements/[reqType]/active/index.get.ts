@@ -1,7 +1,7 @@
 // Get the current Active requirements by type
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~~/server/application'
 import { OrganizationRepository, RequirementRepository } from '~~/server/data/repositories'
-import { Organization, ReqType, Solution } from '~~/shared/domain'
+import { Organization, ReqType, Solution } from '#shared/domain'
 import { z } from 'zod'
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,

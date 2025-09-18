@@ -6,8 +6,8 @@ import { MismatchException, PermissionDeniedException } from '#shared/domain/exc
 import type { OrganizationRepository } from '~~/server/data/repositories'
 import type { PermissionInteractor, AppUserInteractor } from '.'
 import { Interactor } from './Interactor'
-import { AppUserWithRoleDto } from './dto/AppUserWithRoleDto'
-import type { AppUserWithRoleDtoType } from './dto/AppUserWithRoleDto'
+import { AppUserWithRoleDto } from '#shared/dto/AppUserWithRoleDto'
+import type { AppUserWithRoleDtoType } from '#shared/dto/AppUserWithRoleDto'
 
 /**
  * The OrganizationInteractor class contains the business logic for interacting with an organization.

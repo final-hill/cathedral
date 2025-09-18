@@ -1,6 +1,6 @@
 import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, PrimaryKey, Property, types } from '@mikro-orm/core'
 import type { FilterQuery, OrderDefinition, Ref, Rel } from '@mikro-orm/core'
-import { ConstraintCategory, ReqType, ScenarioStepTypeEnum, StakeholderCategory, StakeholderSegmentation, WorkflowState, InterfaceType, InterfaceDataTypeKind } from '../../../../shared/domain/requirements/enums.js'
+import { ConstraintCategory, ReqType, ScenarioStepTypeEnum, StakeholderCategory, StakeholderSegmentation, WorkflowState, InterfaceType } from '../../../../shared/domain/requirements/enums.js'
 import { SlackChannelMetaModel } from '../application/index.js'
 import type { ReqId } from '../../../../shared/domain/index.js'
 import { Prioritizable } from './mixins/index.js'
@@ -28,7 +28,6 @@ export abstract class StaticAuditModel<V extends VolatileAuditModel> {
                 isDeleted: false,
                 ...filter
             } as FilterQuery<V>,
-
             latestVersion = (await this.versions.matching({
                 where,
                 orderBy: { effectiveFrom: 'desc' } as OrderDefinition<V>,
@@ -155,7 +154,10 @@ export class AssumptionModel extends RequirementModel {
 export class AssumptionVersionsModel extends RequirementVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.BEHAVIOR })
-export class BehaviorModel extends RequirementModel { }
+export class BehaviorModel extends RequirementModel {
+    @OneToMany({ entity: () => InterfaceOperationModel, mappedBy: 'behavior' })
+    readonly interfaceOperations = new Collection<InterfaceOperationModel>(this)
+}
 
 @Entity({ discriminatorValue: ReqType.BEHAVIOR })
 export class BehaviorVersionsModel extends Prioritizable(RequirementVersionsModel) {
@@ -276,30 +278,15 @@ export class InteractionModel extends RequirementModel { }
 export class InteractionVersionsModel extends RequirementVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.INTERFACE })
-export class InterfaceModel extends InteractionModel { }
+export class InterfaceModel extends InteractionModel {
+    @OneToMany({ entity: () => InterfaceOperationModel, mappedBy: 'interface' })
+    readonly operations = new Collection<InterfaceOperationModel>(this)
+}
 
 @Entity({ discriminatorValue: ReqType.INTERFACE })
 export class InterfaceVersionsModel extends Prioritizable(InteractionVersionsModel) {
     @Enum({ items: () => InterfaceType })
     readonly interfaceType!: InterfaceType
-}
-
-@Entity({ discriminatorValue: ReqType.EVENT })
-export class EventModel extends InteractionModel { }
-
-@Entity({ discriminatorValue: ReqType.EVENT })
-export class EventVersionsModel extends InteractionVersionsModel {
-    @ManyToOne({ entity: () => ActorModel, nullable: true })
-    readonly initiator?: ActorModel
-
-    @ManyToOne({ entity: () => InterfaceModel, nullable: true })
-    readonly interface?: InterfaceModel
-
-    @Property({ type: types.string, nullable: true })
-    readonly operationId?: string
-
-    @Property({ type: types.text, nullable: true })
-    readonly payloadSchema?: string
 }
 
 // InterfaceArtifact hierarchy
@@ -310,13 +297,16 @@ export class InterfaceArtifactModel extends RequirementModel { }
 export class InterfaceArtifactVersionsModel extends RequirementVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.INTERFACE_OPERATION })
-export class InterfaceOperationModel extends InterfaceArtifactModel { }
+export class InterfaceOperationModel extends InterfaceArtifactModel {
+    @ManyToOne({ entity: () => InterfaceModel, inversedBy: 'operations' })
+    readonly interface!: Ref<InterfaceModel>
+
+    @ManyToOne({ entity: () => BehaviorModel, nullable: true, inversedBy: 'interfaceOperations' })
+    readonly behavior?: Ref<BehaviorModel>
+}
 
 @Entity({ discriminatorValue: ReqType.INTERFACE_OPERATION })
 export class InterfaceOperationVersionsModel extends InterfaceArtifactVersionsModel {
-    @Property({ type: types.string })
-    readonly operationId!: string
-
     @Property({ type: types.string, nullable: true })
     readonly verb?: string
 
@@ -357,22 +347,16 @@ export class InterfaceOutputVersionsModel extends InterfaceArtifactVersionsModel
     readonly format?: string
 }
 
-@Entity({ discriminatorValue: ReqType.INTERFACE_DATA_TYPE })
-export class InterfaceDataTypeModel extends InterfaceArtifactModel { }
+@Entity({ discriminatorValue: ReqType.INTERFACE_SCHEMA })
+export class InterfaceSchemaModel extends InterfaceArtifactModel { }
 
-@Entity({ discriminatorValue: ReqType.INTERFACE_DATA_TYPE })
-export class InterfaceDataTypeVersionsModel extends InterfaceArtifactVersionsModel {
-    @Property({ type: types.string })
-    readonly typeName!: string
-
-    @Enum({ items: () => InterfaceDataTypeKind })
-    readonly kind!: InterfaceDataTypeKind
-
-    @Property({ type: types.text, nullable: true })
-    readonly schema?: string
+@Entity({ discriminatorValue: ReqType.INTERFACE_SCHEMA })
+export class InterfaceSchemaVersionsModel extends InterfaceArtifactVersionsModel {
+    @Property({ type: 'json', nullable: true })
+    readonly schema?: object
 
     @Property({ type: types.string, nullable: true })
-    readonly constraints?: string
+    readonly version?: string
 }
 
 @Entity({ discriminatorValue: ReqType.INTERFACE_FLOW })

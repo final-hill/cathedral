@@ -3,21 +3,46 @@ import type * as req from '#shared/domain/requirements'
 import type { FormSchema } from '~/components/XForm.vue'
 import type { ReqType } from '#shared/domain/requirements/enums'
 import { WorkflowState } from '#shared/domain/requirements/enums'
-import type { RequirementType } from '~~/shared/domain'
+import type { RequirementType } from '#shared/domain'
 import { z } from 'zod'
 
 const route = useRoute(),
-    organizationSlug = computed(() => (route.params as Record<string, string>).organizationslug || ''),
-    solutionSlug = computed(() => (route.params as Record<string, string>).solutionslug || ''),
     props = defineProps<{
         requirement?: req.RequirementType | null
         schema: FormSchema
         loading?: boolean
     }>(),
     { requirement, schema, loading = false } = toRefs(props),
+    organizationSlug = computed(() => (route.params as Record<string, string>).organizationslug || ''),
+    solutionSlug = computed(() => (route.params as Record<string, string>).solutionslug || ''),
+    // Common fields to always omit from display
+    commonOmitFields = {
+        reqId: true,
+        reqIdPrefix: true,
+        createdBy: true,
+        creationDate: true,
+        lastModified: true,
+        id: true,
+        workflowState: true,
+        reqType: true,
+        isDeleted: true,
+        modifiedBy: true,
+        solution: true,
+        parsedRequirements: true,
+        uiBasePathTemplate: true
+    } as const,
+    displaySchema = computed(() => {
+        const rawSchema = schema.value
+
+        // If it's already a FormSchema (processed), return it as-is
+        if (!rawSchema || !('omit' in rawSchema) || typeof rawSchema.omit !== 'function')
+            return rawSchema as FormSchema
+
+        return (rawSchema as z.ZodObject<z.ZodRawShape>).omit(commonOmitFields) as FormSchema
+    }),
     displayFields = computed(() => {
-        if (!schema.value) return []
-        return getSchemaFields(schema.value)
+        if (!displaySchema.value) return []
+        return getSchemaFields(displaySchema.value)
     }),
     requirementAsRecord = computed(() => requirement.value as Record<string, unknown>),
     groupedTemplateRequirements = computed(() => {
@@ -150,26 +175,26 @@ const route = useRoute(),
             </template>
 
             <div class="grid gap-6">
-                <div v-if="requirement.description">
-                    <h3 class="text-lg font-semibold mb-2">
-                        Description
-                    </h3>
-                    <p class="text-muted whitespace-pre-wrap">
-                        {{ requirement.description }}
-                    </p>
-                </div>
-
-                <!-- Display all other fields dynamically based on schema -->
-                <div
+                <!-- Display all fields dynamically based on schema -->
+                <template
                     v-for="field in displayFields"
                     :key="field.key"
-                    class="grid gap-2"
                 >
-                    <template v-if="getFieldValue(field.key) != null && !isRequirementArray(getFieldValue(field.key))">
+                    <div v-if="getFieldValue(field.key) != null && !isRequirementArray(getFieldValue(field.key))">
                         <h3 class="text-lg font-semibold">
                             {{ field.label }}
                         </h3>
-                        <div v-if="field.isObject && getObjectName(getFieldValue(field.key))">
+
+                        <!-- Custom field slot - allows parent to provide custom display -->
+                        <slot
+                            v-if="$slots[`field-${field.key}`]"
+                            :name="`field-${field.key}`"
+                            :field="field"
+                            :model-value="getFieldValue(field.key)"
+                            :field-key="field.key"
+                        />
+                        <!-- Default rendering based on field type -->
+                        <div v-else-if="field.isObject && getObjectName(getFieldValue(field.key))">
                             <UBadge
                                 :label="getObjectName(getFieldValue(field.key))"
                                 color="info"
@@ -195,40 +220,60 @@ const route = useRoute(),
                             />
                         </div>
                         <div v-else>
+                            <!-- Default display for field values -->
                             <p class="text-muted">
                                 {{ getFieldValue(field.key) }}
                             </p>
                         </div>
-                    </template>
-                </div>
+                    </div>
+                </template>
 
-                <!-- Requirements sections in accordion -->
-                <div v-if="requirementAccordionItems.length > 0">
-                    <h3 class="text-lg font-semibold mb-4">
-                        Requirements
-                    </h3>
-                    <UAccordion
-                        type="multiple"
-                        :items="requirementAccordionItems"
-                        :unmount-on-hide="false"
-                    >
-                        <template
-                            v-for="item in requirementAccordionItems"
-                            :key="item.slot"
-                            #[item.slot]
-                        >
-                            <div class="pb-4">
-                                <RequirementList
-                                    :requirements="getRequirementsForSlot(item.slot) as RequirementType[]"
-                                    :req-type="getReqTypeFromSlot(item.slot) as ReqType"
-                                    :organization-slug="organizationSlug"
-                                    :solution-slug="solutionSlug"
-                                    :hide-header="true"
-                                />
-                            </div>
+                <!-- Requirements sections -->
+                <template
+                    v-for="field in displayFields"
+                    :key="`requirements-${field.key}`"
+                >
+                    <div v-if="getFieldValue(field.key) != null && isRequirementArray(getFieldValue(field.key))">
+                        <h3 class="text-lg font-semibold mb-4">
+                            {{ field.label }}
+                        </h3>
+
+                        <!-- Single reqType - show direct list -->
+                        <template v-if="requirementAccordionItems.filter(item => item.slot.startsWith(field.key)).length === 1">
+                            <RequirementList
+                                :requirements="getRequirementsForSlot(requirementAccordionItems.find(item => item.slot.startsWith(field.key))?.slot || '') as RequirementType[]"
+                                :req-type="getReqTypeFromSlot(requirementAccordionItems.find(item => item.slot.startsWith(field.key))?.slot || '') as ReqType"
+                                :organization-slug="organizationSlug"
+                                :solution-slug="solutionSlug"
+                                :hide-header="true"
+                            />
                         </template>
-                    </UAccordion>
-                </div>
+
+                        <!-- Multiple reqTypes - show accordion -->
+                        <UAccordion
+                            v-else-if="requirementAccordionItems.filter(item => item.slot.startsWith(field.key)).length > 1"
+                            type="multiple"
+                            :items="requirementAccordionItems.filter(item => item.slot.startsWith(field.key))"
+                            :unmount-on-hide="false"
+                        >
+                            <template
+                                v-for="item in requirementAccordionItems.filter(item => item.slot.startsWith(field.key))"
+                                :key="item.slot"
+                                #[item.slot]
+                            >
+                                <div class="pb-4">
+                                    <RequirementList
+                                        :requirements="getRequirementsForSlot(item.slot) as RequirementType[]"
+                                        :req-type="getReqTypeFromSlot(item.slot) as ReqType"
+                                        :organization-slug="organizationSlug"
+                                        :solution-slug="solutionSlug"
+                                        :hide-header="true"
+                                    />
+                                </div>
+                            </template>
+                        </UAccordion>
+                    </div>
+                </template>
             </div>
 
             <template #footer>

@@ -1,6 +1,6 @@
 import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~~/server/application'
 import { OrganizationRepository } from '~~/server/data/repositories'
-import { Organization } from '~~/shared/domain'
+import { Organization } from '#shared/domain'
 
 const paramSchema = Organization.innerType().pick({ slug: true })
 

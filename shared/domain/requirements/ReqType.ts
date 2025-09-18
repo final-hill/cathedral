@@ -9,7 +9,6 @@ export enum ReqType {
     ENVIRONMENT = 'environment',
     ENVIRONMENT_COMPONENT = 'environment_component',
     EPIC = 'epic',
-    EVENT = 'event',
     EXAMPLE = 'example',
     FUNCTIONAL_BEHAVIOR = 'functional_behavior',
     FUNCTIONALITY = 'functionality',
@@ -49,6 +48,6 @@ export enum ReqType {
     INTERFACE_OPERATION = 'interface_operation',
     INTERFACE_INPUT = 'interface_input',
     INTERFACE_OUTPUT = 'interface_output',
-    INTERFACE_DATA_TYPE = 'interface_data_type',
+    INTERFACE_SCHEMA = 'interface_schema',
     INTERFACE_FLOW = 'interface_flow'
 }

@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import { ReqType } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
-import type { RequirementType } from '~~/shared/domain'
 import { z } from 'zod'
-import type { ZodRawShape } from 'zod'
+import type { RequirementType } from '#shared/domain/requirements'
 
 const route = useRoute(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug, reqtype: reqType, id } = route.params as {
@@ -41,26 +40,11 @@ definePageMeta({ middleware: 'auth' })
 
 const { data: requirement, status } = await useFetch<RequirementType>(`/api/requirements/${actualReqType}/${id}`, {
         query: { solutionSlug, organizationSlug },
-        transform: (data: unknown) => transformRequirementDates(
-            data as { creationDate: string, lastModified: string }
-        ) as unknown as RequirementType
+        transform: transformRequirementDates
     }),
     innerSchema = RequirementSchema instanceof z.ZodEffects
         ? RequirementSchema.innerType()
         : RequirementSchema,
-    viewSchema = (innerSchema as z.ZodObject<ZodRawShape>).omit({
-        reqType: true,
-        createdBy: true,
-        creationDate: true,
-        lastModified: true,
-        id: true,
-        isDeleted: true,
-        modifiedBy: true,
-        solution: true,
-        parsedRequirements: true,
-        workflowState: true,
-        reqIdPrefix: true
-    }),
     isLoading = computed(() => status.value === 'pending')
 </script>
 
@@ -73,9 +57,7 @@ const { data: requirement, status } = await useFetch<RequirementType>(`/api/requ
 
     <RequirementView
         :requirement="requirement"
-        :schema="viewSchema"
+        :schema="innerSchema"
         :loading="isLoading"
-        :organization-slug="organizationSlug"
-        :solution-slug="solutionSlug"
     />
 </template>

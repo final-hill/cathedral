@@ -1,11 +1,16 @@
 <script lang="ts" setup>
 import { MoscowPriority, ReqType, WorkflowState } from '#shared/domain/requirements/enums'
 import type { BehaviorType, ScenarioType } from '#shared/domain/requirements'
+import { priorityColorMap } from '#shared/utils/priority-colors'
+import { priorityLabelMap } from '#shared/utils/priority-labels'
+import { XConfirmModal } from '#components'
 
 definePageMeta({ middleware: 'auth' })
 
 const route = useRoute(),
     toast = useToast(),
+    overlay = useOverlay(),
+    confirmModal = overlay.create(XConfirmModal, {}),
     { solutionslug: solutionSlug, organizationslug: organizationSlug } = route.params as {
         solutionslug: string
         organizationslug: string
@@ -16,11 +21,11 @@ useHead({ title: 'System Prioritization' })
 // Fetch behaviors and scenarios that can have priorities
 const { data: behaviors, status: behaviorsStatus, refresh: refreshBehaviors } = await useFetch<BehaviorType[]>(`/api/requirements/${ReqType.BEHAVIOR}`, {
         query: { solutionSlug, organizationSlug },
-        transform: (data: unknown[]) => data as BehaviorType[]
+        transform: data => data.map(transformRequirementDates)
     }),
     { data: scenarios, status: scenariosStatus, refresh: refreshScenarios } = await useFetch<ScenarioType[]>(`/api/requirements/${ReqType.SCENARIO}`, {
         query: { solutionSlug, organizationSlug },
-        transform: (data: unknown[]) => data as ScenarioType[]
+        transform: data => data.map(transformRequirementDates)
     }),
     allRequirements = computed(() => {
         const requirements: (BehaviorType | ScenarioType)[] = []
@@ -53,47 +58,40 @@ watch(selectedWorkflowState, () => {
     localPriorityChanges.value.clear()
 })
 
-const moscowPriorityLabels: Record<MoscowPriority, string> = {
-    [MoscowPriority.MUST]: 'Must Have',
-    [MoscowPriority.SHOULD]: 'Should Have',
-    [MoscowPriority.COULD]: 'Could Have',
-    [MoscowPriority.WONT]: 'Won\'t Have'
-},
-    priorityOptions = [
+const priorityOptions = [
         {
-            label: moscowPriorityLabels[MoscowPriority.MUST],
+            label: priorityLabelMap[MoscowPriority.MUST],
             value: MoscowPriority.MUST,
-            color: 'error',
+            color: priorityColorMap[MoscowPriority.MUST],
             description: 'Critical to system operation',
             bgClass: 'bg-error-50 dark:bg-error-950/30',
             borderClass: 'border-error-200 dark:border-error-800'
         },
         {
-            label: moscowPriorityLabels[MoscowPriority.SHOULD],
+            label: priorityLabelMap[MoscowPriority.SHOULD],
             value: MoscowPriority.SHOULD,
-            color: 'warning',
+            color: priorityColorMap[MoscowPriority.SHOULD],
             description: 'Important for system completeness',
             bgClass: 'bg-warning-50 dark:bg-warning-950/30',
             borderClass: 'border-warning-200 dark:border-warning-800'
         },
         {
-            label: moscowPriorityLabels[MoscowPriority.COULD],
+            label: priorityLabelMap[MoscowPriority.COULD],
             value: MoscowPriority.COULD,
-            color: 'info',
+            color: priorityColorMap[MoscowPriority.COULD],
             description: 'Desirable but not essential',
             bgClass: 'bg-info-50 dark:bg-info-950/30',
             borderClass: 'border-info-200 dark:border-info-800'
         },
         {
-            label: moscowPriorityLabels[MoscowPriority.WONT],
+            label: priorityLabelMap[MoscowPriority.WONT],
             value: MoscowPriority.WONT,
-            color: 'neutral',
+            color: priorityColorMap[MoscowPriority.WONT],
             description: 'Not required for this system currently',
             bgClass: 'bg-neutral-50 dark:bg-neutral-950/30',
             borderClass: 'border-neutral-200 dark:border-neutral-800'
         }
     ] as const,
-
     // Get effective priority (local override or original)
     getEffectivePriority = (requirement: BehaviorType | ScenarioType): MoscowPriority | null => {
         // Check if there's a local change first
@@ -104,7 +102,6 @@ const moscowPriorityLabels: Record<MoscowPriority, string> = {
         // Fall back to the original priority
         return requirement.priority || null
     },
-
     // Group requirements by their effective priority for matrix display
     requirementsByPriority = computed(() => {
         const grouped: Record<MoscowPriority | 'unset', (BehaviorType | ScenarioType)[]> = {
@@ -155,11 +152,12 @@ const moscowPriorityLabels: Record<MoscowPriority, string> = {
 
         // For Active requirements, show confirmation about creating new Proposed versions
         if (selectedWorkflowState.value === WorkflowState.Active) {
-            const confirmed = confirm(
-                'Priority changes to Active requirements will create new Proposed versions that require review and approval. '
-                + 'The original Active requirements will remain unchanged. Continue?'
-            )
-            if (!confirmed) return
+            const result = await confirmModal.open({
+                title: 'Priority changes to Active requirements will create new Proposed versions that require review and approval. '
+                    + 'The original Active requirements will remain unchanged. Continue?'
+            }).result
+
+            if (!result) return
         }
 
         const updates = Array.from(localPriorityChanges.value.entries()).map(([id, priority]) => {

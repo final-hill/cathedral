@@ -2,12 +2,8 @@
 import type { OrganizationType } from '#shared/domain'
 
 const router = useRouter(),
-    { status: _status, data: organizations, refresh, error: getOrgError } = await useFetch('/api/organization', {
-        transform: data => data.map(item => ({
-            ...item,
-            lastModified: new Date(item.lastModified),
-            creationDate: new Date(item.creationDate)
-        }))
+    { status: _status, data: organizations, refresh, error: getOrgError } = await useFetch<OrganizationType[]>('/api/organization', {
+        transform: data => data.map(transformRequirementDates)
     }),
     { $eventBus } = useNuxtApp(),
     deleteModalOpenState = ref(false)
