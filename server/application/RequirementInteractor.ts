@@ -5,7 +5,7 @@ import type * as req from '#shared/domain/requirements'
 import { ReqType, WorkflowState } from '#shared/domain/requirements/enums'
 import { InvalidWorkflowStateException, MismatchException } from '#shared/domain/exceptions'
 import type { PermissionInteractor, AppUserInteractor } from '.'
-import type { AuditMetadata, AuditMetadataType } from '~~/shared/domain'
+import type { AuditMetadata, AuditMetadataType } from '#shared/domain'
 import type { RequirementRepository } from '~~/server/data/repositories/RequirementRepository'
 import type { NaturalLanguageToRequirementService } from '~~/server/data/services/NaturalLanguageToRequirementService'
 
@@ -214,11 +214,11 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
     /**
      * Get all requirements of a given type across all workflow states.
      * @param reqType - The type of the requirements to get
-     * @param staticQuery - The optional static query to use to filter the requirements
+     * @param query - The optional query to use to filter the requirements
      * @returns The requirements of the given type across all workflow states
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
-    async getAllRequirementsByType<R extends ReqTypeName>(props: { reqType: ReqType, staticQuery?: Partial<z.infer<typeof req[R]>> }): Promise<z.infer<typeof req[R]>[]> {
+    async getAllRequirementsByType<R extends ReqTypeName>(props: { reqType: ReqType, query?: Partial<z.infer<typeof req[R]>> }): Promise<z.infer<typeof req[R]>[]> {
         this._permissionInteractor.assertOrganizationReader(this._organizationId)
 
         return this.repository.getAll({

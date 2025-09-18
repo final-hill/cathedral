@@ -2,8 +2,8 @@
 import { useStepHierarchy } from '~/composables/useStepHierarchy'
 import type { BaseStep } from '~/composables/useStepHierarchy'
 import { useStepRefs } from '~/composables/useStepRefs'
-import { ReqType, ScenarioStepTypeEnum } from '~~/shared/domain'
-import type { ScenarioStepReferenceType } from '~~/shared/domain/requirements/EntityReferences'
+import { ScenarioStepTypeEnum } from '#shared/domain'
+import { ScenarioStepReference, type ScenarioStepReferenceType } from '#shared/domain/requirements/EntityReferences'
 
 interface ExtensionStep extends BaseStep {
     description: string
@@ -299,14 +299,15 @@ function handleStepDescriptionUpdate(stepId: string, description: string) {
 
 function emitExtensions() {
     // Fold all steps from Map into emission format
-    const extensionRefs: ScenarioStepReferenceType[] = allExtensionSteps.value.map(step => ({
-        id: step.id,
-        name: step.description,
-        parentStepId: step.parentStepId,
-        order: step.order,
-        reqType: ReqType.SCENARIO_STEP,
-        stepType: ScenarioStepTypeEnum.Action
-    }))
+    const extensionRefs: ScenarioStepReferenceType[] = allExtensionSteps.value.map(step =>
+        ScenarioStepReference.parse({
+            id: step.id,
+            name: step.description,
+            parentStepId: step.parentStepId,
+            order: step.order,
+            stepType: ScenarioStepTypeEnum.Action
+        })
+    )
 
     isInternalUpdate.value = true
     emit('update:modelValue', extensionRefs)
@@ -422,44 +423,44 @@ onMounted(() => {
 <style scoped>
 /* Extension styling */
 .extension-group {
-  margin-left: 1rem;
-  margin-bottom: 1.5rem;
-  background: var(--ui-bg-muted);
-  padding: 1rem;
-  border-radius: 0.5rem;
+    margin-left: 1rem;
+    margin-bottom: 1.5rem;
+    background: var(--ui-bg-muted);
+    padding: 1rem;
+    border-radius: 0.5rem;
 }
 
 .extension-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .extension-label {
-  font-weight: 600;
-  color: var(--ui-primary);
-  min-width: 2rem;
+    font-weight: 600;
+    color: var(--ui-primary);
+    min-width: 2rem;
 }
 
 .extension-title-input {
-  flex: 1;
-  max-width: 300px;
+    flex: 1;
+    max-width: 300px;
 }
 
 .extension-colon {
-  color: var(--ui-text);
-  font-weight: 600;
+    color: var(--ui-text);
+    font-weight: 600;
 }
 
 .extension-list {
-  counter-reset: extension;
-  padding-left: 0;
-  list-style: none;
+    counter-reset: extension;
+    padding-left: 0;
+    list-style: none;
 }
 
 /* Dark mode support */
 .dark .extension-group {
-  background: var(--ui-bg-elevated);
+    background: var(--ui-bg-elevated);
 }
 </style>

@@ -2,8 +2,8 @@ import { Interactor } from './Interactor'
 import type { OrganizationInteractor } from './OrganizationInteractor'
 import type { SlackUserInteractor } from './slack/SlackUserInteractor'
 import type { AppUserType } from '#shared/domain/application'
-import { AppUserWithRoleAndSlackDto } from './dto/AppUserWithRoleDto'
-import type { AppUserWithRoleAndSlackDtoType } from './dto/AppUserWithRoleDto'
+import { AppUserWithRoleAndSlackDto } from '#shared/dto/AppUserWithRoleDto'
+import type { AppUserWithRoleAndSlackDtoType } from '#shared/dto/AppUserWithRoleDto'
 
 /**
  * Composite interactor that handles AppUser operations with Slack associations

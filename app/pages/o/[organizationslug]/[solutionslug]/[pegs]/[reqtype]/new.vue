@@ -37,35 +37,15 @@ const title = `New ${snakeCaseToPascalCase(reqtype)}`
 useHead({ title })
 definePageMeta({ middleware: 'auth' })
 
-type ZodEntityWithOmit = { omit: (fields: Record<string, boolean>) => FormSchema }
-
 const innerSchema = RequirementSchema instanceof z.ZodEffects
         ? RequirementSchema.innerType()
         : RequirementSchema,
-    createSchema = (innerSchema as unknown as ZodEntityWithOmit).omit({
-        reqId: true,
-        reqIdPrefix: true,
-        createdBy: true,
-        creationDate: true,
-        lastModified: true,
-        id: true,
-        workflowState: true,
-        reqType: true,
-        isDeleted: true,
-        modifiedBy: true,
-        solution: true,
-        parsedRequirements: true
-    })
+    baseSchema = innerSchema as FormSchema
 </script>
 
 <template>
-    <h1>{{ title }}</h1>
-    <p>
-        Create a new {{ deSlugify(reqtype) }}.
-    </p>
-
     <RequirementForm
-        :schema="createSchema"
+        :schema="baseSchema"
         :req-type="actualReqType"
         :organization-slug="organizationSlug"
         :solution-slug="solutionSlug"

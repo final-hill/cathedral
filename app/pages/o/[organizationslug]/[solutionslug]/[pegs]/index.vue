@@ -170,7 +170,7 @@ const pegsMap: Record<string, Array<{
             label: 'Interfaces',
             icon: 'i-lucide-plug',
             reqId: 'S.3',
-            disabled: true
+            path: `/o/${organizationslug}/${solutionslug}/${pegs}/interface`
         },
         {
             label: 'User Stories',

@@ -53,7 +53,6 @@
             "environment",
             "environment_component",
             "epic",
-            "event",
             "example",
             "functional_behavior",
             "functionality",
@@ -61,7 +60,8 @@
             "goal",
             "goals",
             "hint",
-            "interaction_requirement",
+            "interaction",
+            "interface",
             "invariant",
             "justification",
             "limit",
@@ -88,7 +88,12 @@
             "task",
             "test_case",
             "use_case",
-            "user_story"
+            "user_story",
+            "interface_operation",
+            "interface_input",
+            "interface_output",
+            "interface_schema",
+            "interface_flow"
           ],
           "mappedType": "enum"
         },
@@ -103,6 +108,24 @@
         },
         "scenario_step_id": {
           "name": "scenario_step_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
+        "interface_id": {
+          "name": "interface_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
+        "behavior_id": {
+          "name": "behavior_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
@@ -174,6 +197,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -187,6 +211,35 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_interface_id_foreign": {
+          "constraintName": "requirement_interface_id_foreign",
+          "columnNames": [
+            "interface_id"
+          ],
+          "localTableName": "public.requirement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_behavior_id_foreign": {
+          "constraintName": "requirement_behavior_id_foreign",
+          "columnNames": [
+            "behavior_id"
+          ],
+          "localTableName": "public.requirement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -200,6 +253,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -213,6 +267,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -226,6 +281,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         }
@@ -290,7 +346,6 @@
             "environment",
             "environment_component",
             "epic",
-            "event",
             "example",
             "functional_behavior",
             "functionality",
@@ -298,7 +353,8 @@
             "goal",
             "goals",
             "hint",
-            "interaction_requirement",
+            "interaction",
+            "interface",
             "invariant",
             "justification",
             "limit",
@@ -325,7 +381,12 @@
             "task",
             "test_case",
             "use_case",
-            "user_story"
+            "user_story",
+            "interface_operation",
+            "interface_input",
+            "interface_output",
+            "interface_schema",
+            "interface_flow"
           ],
           "mappedType": "enum"
         },
@@ -368,13 +429,12 @@
         },
         "description": {
           "name": "description",
-          "type": "varchar(1000)",
+          "type": "text",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 1000,
-          "mappedType": "string"
+          "mappedType": "text"
         },
         "req_id": {
           "name": "req_id",
@@ -386,6 +446,21 @@
           "length": 255,
           "mappedType": "string"
         },
+        "priority": {
+          "name": "priority",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "enumItems": [
+            "MUST",
+            "SHOULD",
+            "COULD",
+            "WONT"
+          ],
+          "mappedType": "enum"
+        },
         "parent_component_id": {
           "name": "parent_component_id",
           "type": "uuid",
@@ -394,6 +469,168 @@
           "primary": false,
           "nullable": true,
           "mappedType": "uuid"
+        },
+        "flow_name": {
+          "name": "flow_name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "states": {
+          "name": "states",
+          "type": "text[]",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "'{}'",
+          "mappedType": "array"
+        },
+        "initial_state": {
+          "name": "initial_state",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "final_states": {
+          "name": "final_states",
+          "type": "text[]",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "'{}'",
+          "mappedType": "array"
+        },
+        "transitions": {
+          "name": "transitions",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "text"
+        },
+        "input_name": {
+          "name": "input_name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "required": {
+          "name": "required",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "false",
+          "mappedType": "boolean"
+        },
+        "constraints": {
+          "name": "constraints",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "verb": {
+          "name": "verb",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "path": {
+          "name": "path",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "output_name": {
+          "name": "output_name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "data_type": {
+          "name": "data_type",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "format": {
+          "name": "format",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "schema": {
+          "name": "schema",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "json"
+        },
+        "version": {
+          "name": "version",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "interface_type": {
+          "name": "interface_type",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "enumItems": [
+            "API",
+            "CLI",
+            "UI"
+          ],
+          "mappedType": "enum"
         },
         "functionality_id": {
           "name": "functionality_id",
@@ -433,21 +670,6 @@
           "enumItems": [
             "Action",
             "Condition"
-          ],
-          "mappedType": "enum"
-        },
-        "priority": {
-          "name": "priority",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "enumItems": [
-            "MUST",
-            "SHOULD",
-            "COULD",
-            "WONT"
           ],
           "mappedType": "enum"
         },
@@ -602,6 +824,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         },
         "requirement_versions_solution_id_foreign": {
@@ -614,6 +837,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -627,6 +851,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -640,6 +865,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -653,6 +879,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -666,6 +893,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -679,6 +907,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -692,6 +921,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -705,6 +935,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         }
@@ -820,6 +1051,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         }
       },
@@ -1023,6 +1255,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         }
       },

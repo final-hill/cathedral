@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { Actor } from './Actor.js'
 import { dedent } from '../../utils/dedent.js'
 import { ReqType } from './ReqType.js'
+import { uiBasePathTemplates } from './uiBasePathTemplates.js'
 
 export const Person = Actor.extend({
     email: z.string().email().max(254).optional()
@@ -9,7 +10,8 @@ export const Person = Actor.extend({
     reqId: z.string().regex(/^P\.1\.\d+$/, 'Format must be P.1.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('P.1.').default('P.1.'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.PERSON)
+    reqType: z.nativeEnum(ReqType).default(ReqType.PERSON),
+    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.PERSON])
 }).describe(dedent(`
     A member of the Project staff with associated contact information, roles, and responsibilities.
 `))

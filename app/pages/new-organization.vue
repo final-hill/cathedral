@@ -50,8 +50,8 @@ const formState = reactive<FormSchema>({
     <XForm
         :schema="formSchema"
         :state="formState"
-        :on-submit="createOrganization"
-        :on-cancel="cancel"
         @update:state="handleStateUpdate"
+        @submit="createOrganization"
+        @cancel="cancel"
     />
 </template>

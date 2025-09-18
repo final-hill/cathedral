@@ -1,7 +1,7 @@
 <template>
     <div class="space-y-6">
         <MainSuccessScenarioEditor
-            v-model="mainSteps"
+            v-model="internalMainSteps"
             :disabled="disabled"
             @validation-ready="handleMainValidationReady"
             @add-extension-for-step="handleAddExtensionForStep"
@@ -9,7 +9,7 @@
 
         <ExtensionScenariosEditor
             ref="extensionEditor"
-            v-model="extensionSteps"
+            v-model="internalExtensionSteps"
             :disabled="disabled"
             @validation-ready="handleExtensionsValidationReady"
         />
@@ -17,47 +17,44 @@
 </template>
 
 <script setup lang="ts">
-import type { ScenarioStepReferenceType } from '~~/shared/domain/requirements/EntityReferences'
+import type { ScenarioStepReferenceType } from '#shared/domain/requirements/EntityReferences'
 import MainSuccessScenarioEditor from './MainSuccessScenarioEditor.vue'
 import ExtensionScenariosEditor from './ExtensionScenariosEditor.vue'
 
 const props = defineProps<{
-    modelValue?: ScenarioStepReferenceType[]
+    mainSteps?: ScenarioStepReferenceType[]
+    extensions?: ScenarioStepReferenceType[]
     label: string
     disabled?: boolean
 }>(),
     emit = defineEmits<{
-        'update:modelValue': [value: ScenarioStepReferenceType[]]
+        'update:mainSteps': [value: ScenarioStepReferenceType[]]
+        'update:extensions': [value: ScenarioStepReferenceType[]]
         'validation-ready': [validateFn: () => Promise<{ isValid: boolean, message?: string }>]
     }>(),
     extensionEditor = ref<InstanceType<typeof ExtensionScenariosEditor> | null>(null),
-    mainSteps = ref<ScenarioStepReferenceType[]>([]),
-    extensionSteps = ref<ScenarioStepReferenceType[]>([]),
+    internalMainSteps = ref<ScenarioStepReferenceType[]>([]),
+    internalExtensionSteps = ref<ScenarioStepReferenceType[]>([]),
     mainValidationFn = ref<(() => Promise<{ isValid: boolean, message?: string }>) | null>(null),
-    extensionsValidationFn = ref<(() => Promise<{ isValid: boolean, message?: string }>) | null>(null),
-    isInternalUpdate = ref(false)
+    extensionsValidationFn = ref<(() => Promise<{ isValid: boolean, message?: string }>) | null>(null)
 
-// Watch for prop changes and split them into main and extension steps
-watch(() => props.modelValue, (newValue) => {
-    if (isInternalUpdate.value) {
-        isInternalUpdate.value = false
-        return
-    }
-
-    if (!newValue) return
-
-    const main = newValue.filter(step => !step.parentStepId),
-        extensions = newValue.filter(step => step.parentStepId)
-
-    mainSteps.value = main
-    extensionSteps.value = extensions
+watch(() => props.mainSteps, (newValue) => {
+    if (newValue)
+        internalMainSteps.value = [...newValue]
 }, { immediate: true })
 
-// Watch for internal changes and emit combined updates
-watch([mainSteps, extensionSteps], () => {
-    isInternalUpdate.value = true
-    const combined = [...mainSteps.value, ...extensionSteps.value]
-    emit('update:modelValue', combined)
+watch(() => props.extensions, (newValue) => {
+    if (newValue)
+        internalExtensionSteps.value = [...newValue]
+}, { immediate: true })
+
+// Watch for internal changes and emit separate updates
+watch(internalMainSteps, (newMainSteps) => {
+    emit('update:mainSteps', [...newMainSteps])
+}, { deep: true })
+
+watch(internalExtensionSteps, (newExtensionSteps) => {
+    emit('update:extensions', [...newExtensionSteps])
 }, { deep: true })
 
 function handleMainValidationReady(validateFn: () => Promise<{ isValid: boolean, message?: string }>) {

@@ -1,47 +1,39 @@
 import { z } from 'zod'
 import type { RequirementType } from '#shared/domain/requirements'
-import * as req from '#shared/domain/requirements'
+import * as refs from '#shared/domain/requirements/EntityReferences'
 import { ReqType } from '#shared/domain/requirements/ReqType'
 import type { RequirementVersionsModel } from '../models'
 import { RequirementModel } from '../models'
-import type { Mapper } from './Mapper'
+import type { Mapper } from '#shared/types/Mapper'
 import { Collection } from '@mikro-orm/core'
+import { resolveReqTypeFromModel, snakeCaseToPascalCase } from '#shared/utils'
 
 const objectSchema = z.object({
-        id: z.string().uuid(),
-        name: z.string(),
-        reqType: z.nativeEnum(ReqType),
-        workflowState: z.string(),
-        lastModified: z.date()
-    }),
-    getReqIdPrefixForType = (reqType: ReqType): string | undefined => {
-        const reqTypePascal = snakeCaseToPascalCase(reqType) as keyof typeof req,
-            requirementSchema = req[reqTypePascal],
-            directValue = (requirementSchema as z.ZodObject<z.ZodRawShape>)?.shape?.reqIdPrefix?._def?.defaultValue?.(),
-            innerValue = (requirementSchema as z.ZodEffects<z.ZodObject<z.ZodRawShape>>)?.innerType?.()?.shape?.reqIdPrefix?._def?.defaultValue?.()
+    id: z.string().uuid(),
+    name: z.string(),
+    reqType: z.nativeEnum(ReqType),
+    workflowState: z.string(),
+    lastModified: z.date()
+})
 
-        return directValue || innerValue
-    }
+/**
+ * Creates a domain EntityReference from a RequirementModel
+ */
+async function createDomainReferenceFromModel(model: RequirementModel) {
+    const latestVersion = await model.getLatestVersion(new Date()),
+        reqType = resolveReqTypeFromModel(model),
+        reqTypePascal = snakeCaseToPascalCase(reqType),
+        refSchema = refs[`${reqTypePascal}Reference` as keyof typeof refs]
 
-async function replaceReferenceMembers<M extends Partial<Omit<RequirementModel, 'getLatestVersion'> & RequirementVersionsModel>>(model: M): Promise<M> {
-    const updatedModel = { ...model }
+    if (!refSchema)
+        throw new Error(`No reference schema found for requirement type: ${reqType}`)
 
-    for (const [key, value] of Object.entries(model)) {
-        if (value instanceof RequirementModel) {
-            const latestVersion = await value.getLatestVersion(new Date()),
-                reqType = resolveReqTypeFromModel(value)
-            Reflect.set(updatedModel, key, {
-                id: value.id,
-                name: latestVersion?.name,
-                reqType,
-                workflowState: latestVersion?.workflowState,
-                lastModified: latestVersion?.effectiveFrom,
-                reqIdPrefix: getReqIdPrefixForType(reqType)
-            })
-        }
-    }
-
-    return updatedModel
+    return refSchema.parse({
+        id: model.id,
+        name: latestVersion?.name,
+        workflowState: latestVersion?.workflowState,
+        lastModified: latestVersion?.effectiveFrom
+    })
 }
 
 /**
@@ -52,30 +44,18 @@ export class DataModelToDomainModel<
     To extends RequirementType
 > implements Mapper<From, To> {
     async map(model: From): Promise<To> {
-        const updatedModel = await replaceReferenceMembers(model),
-
-            entries = await Promise.all(Object.entries(updatedModel).map(async ([key, value]) => {
+        const entries = await Promise.all(Object.entries(model).map(async ([key, value]) => {
                 if (['req_type', 'requirement', 'versions'].includes(key)) return [key, undefined] // skip
                 else if (key === 'effectiveFrom') return ['lastModified', value]
                 else if (key === 'createdById') return ['createdBy', { id: value, name: 'Unknown User' }] // Will be enriched by interactor
                 else if (key === 'modifiedById') return ['modifiedBy', { id: value, name: 'Unknown User' }] // Will be enriched by interactor
+                else if (value instanceof RequirementModel)
+                    return [key, await createDomainReferenceFromModel(value)]
                 else if (value instanceof Collection) {
                     const items = await value.loadItems(),
                         processedItems = await Promise.all(items.map(async (item) => {
-                            if (item instanceof RequirementModel) {
-                                const latestVersion = await item.getLatestVersion(new Date()),
-                                    reqType = resolveReqTypeFromModel(item)
-                                return {
-                                    id: item.id,
-                                    name: latestVersion?.name,
-                                    reqType,
-                                    workflowState: latestVersion?.workflowState,
-                                    lastModified: latestVersion?.effectiveFrom,
-                                    reqIdPrefix: getReqIdPrefixForType(reqType)
-                                }
-                            }
-                            // This should not happen if all model types are handled
-                            throw new Error(`Unhandled model type in collection: ${item.constructor.name}`)
+                            if (item instanceof RequirementModel)
+                                return await createDomainReferenceFromModel(item)
                         }))
                     // Filter out any undefined/null values
                     return [key, processedItems.filter(Boolean)]
@@ -83,7 +63,6 @@ export class DataModelToDomainModel<
                 else if (value == null) return [key, undefined] // convert null to undefined
                 else return [key, value]
             })),
-
             newProps = entries.reduce((acc, [key, value]) => {
                 if (value !== undefined) acc[key as string] = value
                 return acc

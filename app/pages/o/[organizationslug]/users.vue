@@ -1,8 +1,8 @@
 <script setup lang="tsx">
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui'
 import { UButton, UCard, UCheckbox, UDropdownMenu, UIcon, XConfirmModal } from '#components'
-import { AppUserWithRoleDto, AppUserWithRoleAndSlackDto } from '~~/server/application/dto'
-import type { AppUserWithRoleAndSlackDtoType } from '~~/server/application/dto'
+import { AppUserWithRoleDto, AppUserWithRoleAndSlackDto } from '#shared/dto'
+import type { AppUserWithRoleAndSlackDtoType } from '#shared/dto'
 import type { z } from 'zod'
 
 useHead({ title: 'Users' })
@@ -393,8 +393,8 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
             <XForm
                 :state="addModalItem as any"
                 :schema="createSchema"
-                :on-submit="onAddModalSubmit"
-                :on-cancel="closeAddModal"
+                @submit="onAddModalSubmit"
+                @cancel="closeAddModal"
             />
         </template>
     </UModal>
@@ -407,8 +407,8 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
             <XForm
                 :state="editModalItem as any"
                 :schema="editSchema"
-                :on-submit="updateUser"
-                :on-cancel="closeEdit"
+                @submit="updateUser"
+                @cancel="closeEdit"
             />
         </template>
     </UModal>

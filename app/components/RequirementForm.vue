@@ -1,10 +1,9 @@
 <script lang="ts" setup>
+import { z } from 'zod'
 import type * as req from '#shared/domain/requirements'
 import type { FormSchema } from '~/components/XForm.vue'
 import { WorkflowState } from '#shared/domain/requirements/enums'
-import { ReqType } from '#shared/domain/requirements/ReqType'
-import type { ScenarioStepReferenceType } from '~~/shared/domain/requirements/EntityReferences'
-import ScenarioStepsEditor from '~/components/ScenarioStepsEditor.vue'
+import { uiBasePathTemplates } from '#shared/domain/requirements/uiBasePathTemplates'
 
 const props = defineProps<{
     requirement?: req.RequirementType | null
@@ -16,11 +15,40 @@ const props = defineProps<{
     loading?: boolean
 }>(),
     emit = defineEmits<{
-        saved: [requirement: Record<string, unknown>] // Allow any requirement type since we pass through what the API returns
+        saved: [requirement: Record<string, unknown>]
         cancelled: []
+        beforeSave: [data: Record<string, unknown>]
     }>(),
     { requirement, schema, reqType, organizationSlug, solutionSlug, isEdit, loading = false } = toRefs(props),
-    isEditValue = computed(() => isEdit?.value ?? false)
+    isEditValue = computed(() => isEdit?.value ?? false),
+    basePath = computed(() => {
+        const template = uiBasePathTemplates[reqType.value as keyof typeof uiBasePathTemplates]
+        return template
+            .replace('[org]', organizationSlug.value)
+            .replace('[solutionslug]', solutionSlug.value)
+    }),
+    commonOmits = {
+        reqId: true,
+        reqIdPrefix: true,
+        createdBy: true,
+        creationDate: true,
+        lastModified: true,
+        id: true,
+        workflowState: true,
+        reqType: true,
+        isDeleted: true,
+        modifiedBy: true,
+        solution: true,
+        parsedRequirements: true,
+        uiBasePathTemplate: true
+    } as const,
+    formSchema = computed(() => {
+        const innerSchema = schema.value instanceof z.ZodEffects
+            ? schema.value.innerType()
+            : schema.value
+
+        return (innerSchema as z.ZodObject<z.ZodRawShape>).omit(commonOmits)
+    })
 
 // Validate that the requirement can be edited based on workflow state when in edit mode
 if (isEditValue.value && requirement?.value && ![WorkflowState.Proposed, WorkflowState.Active].includes(requirement.value.workflowState)) {
@@ -30,67 +58,56 @@ if (isEditValue.value && requirement?.value && ![WorkflowState.Proposed, Workflo
     })
 }
 
-const route = useRoute(),
-    router = useRouter(),
+const router = useRouter(),
+    route = useRoute(),
     toast = useToast(),
-    // Check if this is a Use Case requirement
-    isUseCase = computed(() => reqType.value === ReqType.USE_CASE),
-    // For Use Cases, create a schema without scenario fields
-    nonScenarioSchema = computed(() => {
-        if (isUseCase.value) {
-            return schema.value.omit({
-                mainSuccessScenario: true,
-                extensions: true
-            })
-        }
-        return schema.value
-    }),
-    // Derive the current path from the router, removing the ID and action parts
-    currentPath = computed(() => {
-        const path = route.path
-        if (isEditValue.value)
-            return path.replace(/\/[^/]+\/edit$/, '')
-        else
-            return path.replace(/\/new$/, '')
-    }),
-    formState = ref((() => {
-        if (!requirement?.value) return {} as Partial<req.RequirementType>
-
-        // Filter the requirement data to only include fields that are in the schema
-        const schemaKeys = Object.keys(schema.value.shape),
-            filteredData: Partial<req.RequirementType> = {}
-
-        for (const key of schemaKeys) {
-            if (key in requirement.value)
-                (filteredData as Record<string, unknown>)[key] = (requirement.value as Record<string, unknown>)[key]
-        }
-
-        return filteredData
-    })()),
-    // Adapter for ScenarioStepsEditor (Use Case only)
-    scenarioStepsAdapter = computed({
-        get: () => {
-            if (!isUseCase.value) return []
-            const formData = formState.value as Record<string, unknown>,
-                main = (formData.mainSuccessScenario as ScenarioStepReferenceType[]) || [],
-                extensions = (formData.extensions as ScenarioStepReferenceType[]) || []
-            return [...main, ...extensions]
-        },
-        set: (combined: ScenarioStepReferenceType[]) => {
-            if (!isUseCase.value) return
-            const formData = formState.value as Record<string, unknown>
-            formData.mainSuccessScenario = combined.filter(step => !step.parentStepId)
-            formData.extensions = combined.filter(step => step.parentStepId)
-        }
-    }),
+    formState = reactive<Partial<req.RequirementType>>({}),
     isSubmitting = ref(false),
-    onSubmit = async (data?: Record<string, unknown>) => {
+    // Create autocomplete context from URL parameters for new requirements
+    autocompleteContext = computed(() => {
+        if (isEditValue.value || !route.query) return {}
+
+        const context: Record<string, string> = {}
+        Object.entries(route.query).forEach(([key, value]) => {
+            if (typeof value === 'string' && value.trim())
+                context[key] = value.trim()
+        })
+        return context
+    }),
+    initializeFormState = () => {
+        const initialData = {} as Partial<req.RequirementType>
+
+        if (requirement?.value) {
+            for (const [key, value] of Object.entries(requirement.value)) {
+            // Transform reference objects to match autocomplete format
+                if (value && typeof value === 'object' && 'reqType' in value && 'id' in value && 'name' in value) {
+                    // With value-key="value", the model value should be the {id, name} object
+                    // UInputMenu will find the matching item in the list and display its label
+                    (initialData as Record<string, unknown>)[key] = { id: value.id, name: value.name }
+                } else
+                    (initialData as Record<string, unknown>)[key] = value
+            }
+        }
+
+        Object.assign(formState, initialData)
+    }
+
+initializeFormState()
+
+// Watch for route changes and reinitialize
+watch(() => route.query, () => {
+    if (!isEditValue.value)
+        initializeFormState()
+}, { deep: true })
+
+const onSubmit = async (data?: Record<string, unknown>) => {
         isSubmitting.value = true
         try {
             let result: req.RequirementType,
-                // For Use Cases, use formState directly (includes scenario data)
-                // For other types, use data from XForm
-                submitData = isUseCase.value ? formState.value : (data || {})
+                submitData = data || {}
+
+            // Emit beforeSave event to allow parent to modify data
+            emit('beforeSave', submitData)
 
             // Trim string values in the submit data
             submitData = Object.keys(submitData).reduce((acc, key) => {
@@ -98,7 +115,6 @@ const route = useRoute(),
                 if (typeof value === 'string')
                     acc[key] = value.trim()
                 else if (Array.isArray(value)) {
-                    // Handle scenario steps array - trim description fields
                     acc[key] = value.map((item) => {
                         if (item && typeof item === 'object' && 'name' in item && typeof item.name === 'string')
                             return { ...item, name: item.name.trim() }
@@ -119,7 +135,7 @@ const route = useRoute(),
                         ...submitData,
                         solutionSlug: solutionSlug.value,
                         organizationSlug: organizationSlug.value
-                    }
+                    } as Record<string, unknown>
                 })
                 result = requirement.value
             } else {
@@ -149,7 +165,7 @@ const route = useRoute(),
 
             emit('saved', result)
 
-            router.push(`${currentPath.value}/${result.id}`)
+            router.push(`${basePath.value}/${result.id}`)
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : String(error)
             toast.add({
@@ -165,21 +181,17 @@ const route = useRoute(),
     onCancel = () => {
         emit('cancelled')
         router.back()
-    },
-    // Wrapper for Use Case submit (no data parameter needed)
-    onUseCaseSubmit = () => onSubmit(),
-    // Dummy submit handler for XForm in Use Case mode (buttons will be hidden)
-    dummySubmit = async () => {
-        // Do nothing - buttons are hidden and real submit is handled by our custom button
     }
 </script>
 
 <template>
-    <div class="requirement-form">
+    <article class="requirement-form">
         <!-- Loading State -->
-        <div
+        <section
             v-if="loading"
             class="flex items-center justify-center min-h-96"
+            aria-live="polite"
+            aria-label="Loading requirement"
         >
             <div class="text-center">
                 <UIcon
@@ -190,83 +202,50 @@ const route = useRoute(),
                     Loading requirement...
                 </p>
             </div>
-        </div>
+        </section>
 
         <!-- Form Content -->
         <UCard v-else>
             <template #header>
-                <div class="flex items-center justify-between">
+                <header class="flex items-center justify-between">
                     <h1 class="text-2xl font-bold text-highlighted">
-                        {{ isEditValue ? 'Edit' : 'New' }} Requirement
+                        {{ isEditValue ? 'Edit' : 'New' }} {{ snakeCaseToTitleCase(reqType) }}
                     </h1>
                     <UButton
                         color="neutral"
                         variant="ghost"
                         icon="i-lucide-x"
+                        aria-label="Cancel and close form"
                         @click="onCancel"
                     />
-                </div>
+                </header>
             </template>
 
-            <!-- Use Case gets special treatment -->
-            <div
-                v-if="isUseCase"
-                class="space-y-6"
+            <section
+                aria-label="Requirement Form"
             >
-                <!-- Regular fields via XForm (without scenarios) -->
-                <div class="use-case-form">
-                    <XForm
-                        v-model:state="formState"
-                        :schema="nonScenarioSchema"
-                        :disabled="isSubmitting"
-                        :on-submit="dummySubmit"
-                        :on-cancel="onCancel"
-                    />
-                </div>
-
-                <!-- Scenario fields via custom component -->
-                <ScenarioStepsEditor
-                    v-model="scenarioStepsAdapter"
-                    label="Scenarios"
+                <XForm
+                    :state="formState"
+                    :schema="formSchema"
                     :disabled="isSubmitting"
-                />
-
-                <!-- Submit buttons -->
-                <div class="flex gap-3 justify-end">
-                    <UButton
-                        color="neutral"
-                        variant="outline"
-                        :disabled="isSubmitting"
-                        @click="onCancel"
+                    :autocomplete-context="autocompleteContext"
+                    class="space-y-6"
+                    @submit="onSubmit"
+                    @cancel="onCancel"
+                >
+                    <!-- Pass through all slots from parent -->
+                    <template
+                        v-for="(_, slotName) in $slots"
+                        :key="slotName"
+                        #[slotName]="slotProps"
                     >
-                        Cancel
-                    </UButton>
-                    <UButton
-                        :loading="isSubmitting"
-                        @click="onUseCaseSubmit"
-                    >
-                        {{ isEditValue ? 'Update' : 'Create' }}
-                    </UButton>
-                </div>
-            </div>
-
-            <!-- All other requirement types -->
-            <XForm
-                v-else
-                v-model:state="formState"
-                :schema="schema"
-                :on-submit="onSubmit"
-                :on-cancel="onCancel"
-                :disabled="isSubmitting"
-                class="space-y-6"
-            />
+                        <slot
+                            :name="slotName"
+                            v-bind="slotProps"
+                        />
+                    </template>
+                </XForm>
+            </section>
         </UCard>
-    </div>
+    </article>
 </template>
-
-<style scoped>
-/* Hide XForm buttons for Use Cases since we provide our own */
-.use-case-form :deep(.flex.gap-2) {
-    display: none;
-}
-</style>

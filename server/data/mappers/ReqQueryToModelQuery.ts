@@ -1,5 +1,5 @@
 import type { RequirementType } from '#shared/domain/requirements'
-import type { Mapper } from './Mapper'
+import type { Mapper } from '#shared/types/Mapper'
 
 /**
  * Converts a Requirement query to a model query

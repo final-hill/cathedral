@@ -60,9 +60,9 @@ const enumToLabelValue = (enumObject: Record<string, string>) =>
                 isArrayOfObjects = isArray && arrayElementType instanceof z.ZodObject,
                 isObject = innerType instanceof z.ZodObject,
                 reqType = isObject
-                    ? innerType._def?.shape()?.reqType._def.defaultValue()
+                    ? innerType._def?.shape()?.reqType?._def?.defaultValue?.()
                     : isArrayOfObjects
-                        ? arrayElementType._def?.shape()?.reqType._def.defaultValue()
+                        ? arrayElementType._def?.shape()?.reqType?._def?.defaultValue?.()
                         : undefined,
                 maxLength = innerType instanceof z.ZodString ? innerType._def.checks.find(check => check.kind === 'max')?.value : undefined,
                 min = innerType instanceof z.ZodNumber ? innerType._def.checks.find(check => check.kind === 'min')?.value : undefined,

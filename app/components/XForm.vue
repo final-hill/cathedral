@@ -1,10 +1,14 @@
 <script lang="ts" generic="F extends FormSchema" setup>
-import type { FormSubmitEvent } from '@nuxt/ui'
+import type { FormSubmitEvent, FormError, SelectItem } from '@nuxt/ui'
 import { z } from 'zod'
-import { getSchemaFields } from '~~/shared/utils'
-import { ReqType } from '~~/shared/domain'
+import { getSchemaFields } from '#shared/utils'
 
 export type FormSchema = z.ZodObject<{ [key: string]: z.ZodTypeAny }>
+
+type AutocompleteItem = {
+    label: string
+    value: { id: string, name: string } | undefined
+}
 
 const props = defineProps<{
     id?: string
@@ -12,11 +16,13 @@ const props = defineProps<{
     class?: string
     schema: F
     state: Partial<z.output<F>>
-    onSubmit: (data: z.output<F>) => Promise<void>
-    onCancel?: () => void
+    attach?: boolean
+    autocompleteContext?: Record<string, string> // Additional context for autocomplete
 }>(),
     emit = defineEmits<{
         'update:state': [value: Partial<z.output<F>>]
+        'submit': [data: z.output<F>]
+        'cancel': []
     }>(),
     // Nuxt UI doesn't support resetting of a form
     // https://github.com/nuxt/ui/issues/964#issuecomment-1810253480
@@ -38,8 +44,8 @@ watch(() => props.state, (newState) => {
 }, { deep: true, immediate: true })
 
 // Custom validation function to run child component validators
-const customValidate = async (): Promise<{ name: string, message: string }[]> => {
-        const errors: { name: string, message: string }[] = []
+const customValidate = async (_state: z.output<F>): Promise<FormError[]> => {
+        const errors: FormError[] = []
 
         // Set validation loading state if there are child validators to run
         if (childValidators.value.size > 0)
@@ -94,14 +100,15 @@ const onSubmit = async ({ data }: FormSubmitEvent<z.output<F>>) => {
                 return acc
             }, {} as z.output<F>)
 
-            await props.onSubmit(trimmedData)
+            emit('submit', trimmedData)
 
             toast.add({
                 icon: 'i-lucide-check',
                 title: 'Success',
                 description: 'Data saved successfully'
             })
-        } catch {
+        } catch (error) {
+            console.error('Error in XForm onSubmit:', error)
         // Error handling is done by the parent component
         // The toast error will be shown by the error handler
         } finally {
@@ -111,24 +118,66 @@ const onSubmit = async ({ data }: FormSubmitEvent<z.output<F>>) => {
     onCancel = () => {
         form.value?.clear()
         Object.assign(localState, backupState)
-        if (props.onCancel) props.onCancel()
+        emit('cancel')
     },
-    schemaFields = getSchemaFields(props.schema)
+    schemaFields = getSchemaFields(props.schema),
+    // Helper function to add empty option for optional select fields
+    getSelectOptions = (field: { isOptional: boolean, enumOptions?: unknown[] }): SelectItem[] => {
+        if (field.isOptional && field.enumOptions) {
+            return [{ label: '-None-', value: undefined }, ...field.enumOptions.map((option: unknown) =>
+                typeof option === 'string' ? { label: option, value: option } : option as SelectItem
+            )]
+        }
+        return field.enumOptions?.map((option: unknown) =>
+            typeof option === 'string' ? { label: option, value: option } : option as SelectItem
+        ) || []
+    },
+    // Helper function to add empty option for autocomplete fields
+    getAutocompleteOptions = (items: AutocompleteItem[], isOptional: boolean): AutocompleteItem[] => {
+        if (isOptional && items.length > 0)
+            return [{ label: '-None-', value: undefined }, ...items]
+
+        return items
+    }
 
 // Autocomplete data for UInputMenu
 type RouteType = { solutionslug?: string, organizationslug?: string }
 const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute().params as RouteType,
     autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field) => {
         const reqType = field.reqType
-        if ((field.isObject || (field.isArrayOfObjects && reqType !== ReqType.SCENARIO_STEP)) && reqType) {
+        if ((field.isObject || field.isArrayOfObjects) && reqType) {
             return {
                 [field.key]: await useFetch('/api/autocomplete', {
-                    query: { solutionSlug, organizationSlug, reqType }
+                    query: {
+                        solutionSlug,
+                        organizationSlug,
+                        reqType
+                    }
                 })
             }
         }
         return {}
     })).then(results => results.reduce((acc, result) => ({ ...acc, ...result }), {}))
+
+// Auto-populate form fields from autocompleteContext when data is available
+watch(
+    () => autocompleteFetchObjects,
+    () => {
+        if (props.autocompleteContext) {
+            Object.entries(props.autocompleteContext).forEach(([fieldKey, expectedId]) => {
+                const autocompleteData = autocompleteFetchObjects[fieldKey]?.data.value as AutocompleteItem[]
+                if (autocompleteData && Array.isArray(autocompleteData)) {
+                    const matchingItem = autocompleteData.find(item =>
+                        item.value?.id === expectedId
+                    )
+                    if (matchingItem && matchingItem.value)
+                        (localState as Record<string, unknown>)[fieldKey] = matchingItem.value
+                }
+            })
+        }
+    },
+    { deep: true, immediate: true }
+)
 </script>
 
 <template>
@@ -141,6 +190,7 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
         :class="`gap-4 flex flex-col ${props.class}`"
         autocomplete="off"
         :disabled="props.disabled"
+        :attach="props.attach ?? true"
         :aria-disabled="props.disabled ? 'true' : undefined"
         @submit="onSubmit"
     >
@@ -207,8 +257,24 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
                     autoresize
                 />
                 <UInput
-                    v-else-if="field.isReadOnly"
+                    v-else-if="field.isReadOnly && !field.isObject && !field.isArrayOfObjects"
                     v-model="(localState as any)[field.key]"
+                    type="text"
+                    disabled
+                    tabindex="-1"
+                    class="w-full"
+                />
+                <UInput
+                    v-else-if="field.isReadOnly && field.isObject"
+                    :value="(localState as any)[field.key]?.name || ''"
+                    type="text"
+                    disabled
+                    tabindex="-1"
+                    class="w-full"
+                />
+                <UInput
+                    v-else-if="field.isReadOnly && field.isArrayOfObjects"
+                    :value="((localState as any)[field.key] as any[])?.map(item => item.name).join(', ') || ''"
                     type="text"
                     disabled
                     tabindex="-1"
@@ -230,7 +296,7 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
                 <USelect
                     v-else-if="field.isEnum"
                     v-model="(localState as any)[field.key]"
-                    :items="field.enumOptions"
+                    :items="getSelectOptions(field)"
                     class="w-full"
                 />
                 <UInput
@@ -242,35 +308,38 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
                     class="w-full"
                 />
                 <UInput
-                    v-else-if="field.isArrayOfObjects && props.disabled && field.reqType !== ReqType.SCENARIO_STEP"
+                    v-else-if="field.isArrayOfObjects && props.disabled"
                     :value="((localState as any)[field.key] as any[])?.map(item => item.name).join(', ') || ''"
                     type="text"
                     disabled
                     tabindex="-1"
                     class="w-full"
                 />
-                <ScenarioStepsEditor
-                    v-else-if="field.isArrayOfObjects && field.reqType === ReqType.SCENARIO_STEP"
-                    v-model="(localState as any)[field.key]"
-                    :label="field.label"
+                <!-- Custom field slot - allows parent to provide custom editors -->
+                <slot
+                    v-else-if="$slots[`field-${field.key}`]"
+                    :name="`field-${field.key}`"
+                    :field="field"
+                    :model-value="(localState as any)[field.key]"
                     :disabled="props.disabled"
-                    @validation-ready="(validator) => registerChildValidator(field.key, validator)"
+                    :update-model-value="(value: any) => (localState as any)[field.key] = value"
+                    :register-validator="(validator: () => Promise<{ isValid: boolean, message?: string }>) => registerChildValidator(field.key, validator)"
                 />
                 <UInputMenu
                     v-else-if="field.isObject && !props.disabled"
                     v-model="(localState as any)[field.key]"
-                    :items="(autocompleteFetchObjects[field.key]?.data.value || []) as any"
-                    value-key="value"
+                    :items="getAutocompleteOptions((autocompleteFetchObjects[field.key]?.data.value || []) as AutocompleteItem[], field.isOptional)"
                     :loading="(autocompleteFetchObjects[field.key]?.status as any) === 'pending'"
+                    value-key="value"
                     class="w-full"
                     placeholder="Search for an item"
                 />
                 <UInputMenu
-                    v-else-if="field.isArrayOfObjects && !props.disabled && field.reqType !== ReqType.SCENARIO_STEP"
+                    v-else-if="field.isArrayOfObjects && !props.disabled"
                     v-model="(localState as any)[field.key]"
-                    :items="(autocompleteFetchObjects[field.key]?.data.value || []) as any"
-                    value-key="value"
+                    :items="getAutocompleteOptions((autocompleteFetchObjects[field.key]?.data.value || []) as AutocompleteItem[], field.isOptional)"
                     :loading="(autocompleteFetchObjects[field.key]?.status as any) === 'pending'"
+                    value-key="value"
                     multiple
                     class="w-full"
                     placeholder="Search for items"
@@ -288,6 +357,9 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
                 />
             </UFormField>
         </template>
+
+        <!-- Generic slot for additional content that's not tied to specific fields -->
+        <slot name="additional-content" />
 
         <UProgress
             v-if="isSubmitting || isValidating"

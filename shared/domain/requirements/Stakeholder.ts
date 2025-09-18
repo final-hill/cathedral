@@ -4,6 +4,7 @@ import { StakeholderCategory } from './StakeholderCategory.js'
 import { StakeholderSegmentation } from './StakeholderSegmentation.js'
 import { dedent } from '../../utils/dedent.js'
 import { ReqType } from './ReqType.js'
+import { uiBasePathTemplates } from './uiBasePathTemplates.js'
 
 const computeInterestAndInfluence = (category: StakeholderCategory) => {
     switch (category) {
@@ -24,6 +25,8 @@ export const Stakeholder = Component.extend({
     reqId: z.string().regex(/^G\.7\.\d+$/, 'Format must be G.7.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('G.7.').default('G.7.'),
+    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.STAKEHOLDER])
+        .describe('The UI path template for navigating to this requirement in the web interface'),
     segmentation: z.nativeEnum(StakeholderSegmentation)
         .describe('The segmentation of the stakeholder'),
     category: z.nativeEnum(StakeholderCategory)

@@ -2,12 +2,15 @@ import { dedent } from '../../utils/dedent.js'
 import { Component } from './Component.js'
 import { z } from 'zod'
 import { ReqType } from './ReqType.js'
+import { uiBasePathTemplates } from './uiBasePathTemplates.js'
 
 export const _SystemComponent = Component.extend({
     reqId: z.string().regex(/^S\.1\.\d+$/, 'Format must be S.1.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('S.1.').default('S.1.'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.SYSTEM_COMPONENT)
+    reqType: z.nativeEnum(ReqType).default(ReqType.SYSTEM_COMPONENT),
+    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.SYSTEM_COMPONENT])
+        .describe('The UI path template for navigating to this requirement in the web interface')
 })
 
 export const SystemComponent = _SystemComponent.extend({

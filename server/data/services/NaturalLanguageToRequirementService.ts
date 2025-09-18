@@ -4,8 +4,8 @@ import zodSchema from '../llm-zod-schemas/index.js'
 import { zodResponseFormat } from 'openai/helpers/zod'
 import { dedent } from '../../../shared/utils/dedent.js'
 import type { z } from 'zod'
-import { ReqType } from '~~/shared/domain/index.js'
-import * as reqs from '~~/shared/domain/requirements/index.js'
+import { ReqType } from '#shared/domain/index.js'
+import * as reqs from '#shared/domain/requirements/index.js'
 
 export class NaturalLanguageToRequirementService {
     private _aiClient: AzureOpenAI

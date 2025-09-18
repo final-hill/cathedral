@@ -9,7 +9,6 @@ export enum ReqType {
     ENVIRONMENT = 'environment',
     ENVIRONMENT_COMPONENT = 'environment_component',
     EPIC = 'epic',
-    EVENT = 'event',
     EXAMPLE = 'example',
     FUNCTIONAL_BEHAVIOR = 'functional_behavior',
     FUNCTIONALITY = 'functionality',
@@ -17,7 +16,8 @@ export enum ReqType {
     GOAL = 'goal',
     GOALS = 'goals',
     HINT = 'hint',
-    INTERACTION_REQUIREMENT = 'interaction_requirement',
+    INTERACTION = 'interaction',
+    INTERFACE = 'interface',
     INVARIANT = 'invariant',
     JUSTIFICATION = 'justification',
     LIMIT = 'limit',
@@ -44,5 +44,10 @@ export enum ReqType {
     TASK = 'task',
     TEST_CASE = 'test_case',
     USE_CASE = 'use_case',
-    USER_STORY = 'user_story'
+    USER_STORY = 'user_story',
+    INTERFACE_OPERATION = 'interface_operation',
+    INTERFACE_INPUT = 'interface_input',
+    INTERFACE_OUTPUT = 'interface_output',
+    INTERFACE_SCHEMA = 'interface_schema',
+    INTERFACE_FLOW = 'interface_flow'
 }
