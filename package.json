@@ -15,6 +15,9 @@
     "author": "Michael L Haufe <michael.haufe@final-hill.com> (https://final-hill.com)",
     "license": "AGPL-3.0-only",
     "type": "module",
+    "engines": {
+        "node": ">=24.8.0"
+    },
     "scripts": {
         "analyze-build": "nuxt analyze",
         "build": "nuxt build",

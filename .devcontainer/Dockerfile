@@ -1,4 +1,4 @@
-ARG NODE_VERSION=22.15.0
+ARG NODE_VERSION=24.8.0
 ARG NODE_ENV=development
 
 # Use the parameterized Node.js version

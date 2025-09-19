@@ -46,7 +46,7 @@ jobs:
     - name: Set up Node.js for build
       uses: actions/setup-node@v4
       with:
-        node-version: '22.x'
+        node-version: '24.x'
         cache: 'npm'
 
     - name: Restore Cache
@@ -99,7 +99,7 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
-          NODE_VERSION=22.15.0
+          NODE_VERSION=24.8.0
         # Read Docker layer cache from GitHub Actions cache
         cache-from: type=gha
         # Write Docker layer cache to GitHub Actions cache (max mode stores all layers)
