@@ -6,14 +6,14 @@ import { WorkflowState } from '#shared/domain/requirements/enums'
 import { uiBasePathTemplates } from '#shared/domain/requirements/uiBasePathTemplates'
 
 const props = defineProps<{
-    requirement?: req.RequirementType | null
-    schema: FormSchema
-    reqType: string
-    organizationSlug: string
-    solutionSlug: string
-    isEdit?: boolean
-    loading?: boolean
-}>(),
+        requirement?: req.RequirementType | null
+        schema: FormSchema
+        reqType: string
+        organizationSlug: string
+        solutionSlug: string
+        isEdit?: boolean
+        loading?: boolean
+    }>(),
     emit = defineEmits<{
         saved: [requirement: Record<string, unknown>]
         cancelled: []

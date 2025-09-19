@@ -22,11 +22,11 @@ import MainSuccessScenarioEditor from './MainSuccessScenarioEditor.vue'
 import ExtensionScenariosEditor from './ExtensionScenariosEditor.vue'
 
 const props = defineProps<{
-    mainSteps?: ScenarioStepReferenceType[]
-    extensions?: ScenarioStepReferenceType[]
-    label: string
-    disabled?: boolean
-}>(),
+        mainSteps?: ScenarioStepReferenceType[]
+        extensions?: ScenarioStepReferenceType[]
+        label: string
+        disabled?: boolean
+    }>(),
     emit = defineEmits<{
         'update:mainSteps': [value: ScenarioStepReferenceType[]]
         'update:extensions': [value: ScenarioStepReferenceType[]]

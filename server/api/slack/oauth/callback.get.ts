@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
 
         if (error === 'access_denied') {
             const stateData: { organizationSlug: string, timestamp: number, nonce: string }
-                = JSON.parse(atob(state)),
+                    = JSON.parse(atob(state)),
                 redirectUrl = new URL(`/o/${stateData.organizationSlug}`, config.origin)
             redirectUrl.searchParams.set('slack_install', 'error')
             redirectUrl.searchParams.set('error_message', error_description || 'Access was denied by the user')

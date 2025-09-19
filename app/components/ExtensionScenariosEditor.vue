@@ -22,9 +22,9 @@ interface ExtensionGroup {
 }
 
 const props = defineProps<{
-    modelValue?: ScenarioStepReferenceType[]
-    disabled?: boolean
-}>(),
+        modelValue?: ScenarioStepReferenceType[]
+        disabled?: boolean
+    }>(),
     emit = defineEmits<{
         'update:modelValue': [value: ScenarioStepReferenceType[]]
         'validation-ready': [validateFn: () => Promise<{ isValid: boolean, message?: string }>]

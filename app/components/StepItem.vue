@@ -64,9 +64,9 @@ interface NestedStep {
 }
 
 const props = defineProps<{
-    step: NestedStep
-    disabled?: boolean
-}>(),
+        step: NestedStep
+        disabled?: boolean
+    }>(),
     emit = defineEmits<{
         'step-update': []
         'step-keydown': [event: KeyboardEvent, step: NestedStep]
