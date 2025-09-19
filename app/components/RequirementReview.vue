@@ -7,13 +7,13 @@ import { workflowColorMap } from '#shared/utils/workflow-colors'
 import { getSchemaFields } from '#shared/utils/getSchemaFields'
 
 const props = defineProps<{
-    requirement: req.RequirementType
-    schema: FormSchema
-    reqType: string
-    organizationSlug: string
-    solutionSlug: string
-    loading?: boolean
-}>(),
+        requirement: req.RequirementType
+        schema: FormSchema
+        reqType: string
+        organizationSlug: string
+        solutionSlug: string
+        loading?: boolean
+    }>(),
     emit = defineEmits<{
         approved: [requirement: req.RequirementType]
         rejected: [requirement: req.RequirementType]

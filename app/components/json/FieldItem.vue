@@ -391,10 +391,10 @@
 import type { JsonSchemaField } from './SchemaEditor.vue'
 
 const props = defineProps<{
-    field: JsonSchemaField
-    index: number
-    disabled?: boolean
-}>(),
+        field: JsonSchemaField
+        index: number
+        disabled?: boolean
+    }>(),
     emit = defineEmits<{
         (event: 'update', field: JsonSchemaField): void
         (event: 'remove'): void

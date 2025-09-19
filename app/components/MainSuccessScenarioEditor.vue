@@ -54,9 +54,9 @@ interface NestedStep extends MainStep {
 }
 
 const props = defineProps<{
-    modelValue?: ScenarioStepReferenceType[]
-    disabled?: boolean
-}>(),
+        modelValue?: ScenarioStepReferenceType[]
+        disabled?: boolean
+    }>(),
 
     emit = defineEmits<{
         'update:modelValue': [value: ScenarioStepReferenceType[]]

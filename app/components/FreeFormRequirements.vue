@@ -6,9 +6,9 @@ import { ParsedRequirements, ReqType } from '#shared/domain'
 import type { ParsedRequirementsType } from '#shared/domain'
 
 const props = defineProps<{
-    organizationSlug: string
-    solutionSlug: string
-}>(),
+        organizationSlug: string
+        solutionSlug: string
+    }>(),
     requirementsFormSchema = ParsedRequirements.pick({
         description: true
     })

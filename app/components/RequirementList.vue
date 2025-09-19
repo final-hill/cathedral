@@ -9,14 +9,14 @@ import { uiBasePathTemplates } from '#shared/domain/requirements/uiBasePathTempl
 type WorkflowAction = 'review' | 'remove' | 'approve' | 'reject' | 'revise' | 'restore'
 
 const props = defineProps<{
-    requirements: req.RequirementType[]
-    reqType: ReqType
-    organizationSlug: string
-    solutionSlug: string
-    loading?: boolean
-    hideHeader?: boolean
-    parentReferences?: Record<string, string> // field name -> parent ID for OneToMany relationships
-}>(),
+        requirements: req.RequirementType[]
+        reqType: ReqType
+        organizationSlug: string
+        solutionSlug: string
+        loading?: boolean
+        hideHeader?: boolean
+        parentReferences?: Record<string, string> // field name -> parent ID for OneToMany relationships
+    }>(),
     emit = defineEmits<{
         refresh: []
     }>(),

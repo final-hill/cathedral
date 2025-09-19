@@ -11,14 +11,14 @@ type AutocompleteItem = {
 }
 
 const props = defineProps<{
-    id?: string
-    disabled?: boolean
-    class?: string
-    schema: F
-    state: Partial<z.output<F>>
-    attach?: boolean
-    autocompleteContext?: Record<string, string> // Additional context for autocomplete
-}>(),
+        id?: string
+        disabled?: boolean
+        class?: string
+        schema: F
+        state: Partial<z.output<F>>
+        attach?: boolean
+        autocompleteContext?: Record<string, string> // Additional context for autocomplete
+    }>(),
     emit = defineEmits<{
         'update:state': [value: Partial<z.output<F>>]
         'submit': [data: z.output<F>]

@@ -584,11 +584,11 @@ export class EntraService {
     }> {
         try {
             const invitation = await this.graphRequest<{
-                id: string
-                inviteRedeemUrl: string
-                invitedUser: User
-                status: string
-            }>('/invitations', {
+                    id: string
+                    inviteRedeemUrl: string
+                    invitedUser: User
+                    status: string
+                }>('/invitations', {
                     method: 'POST',
                     body: JSON.stringify({
                         invitedUserEmailAddress: email,

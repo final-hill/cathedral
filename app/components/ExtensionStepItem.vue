@@ -53,10 +53,10 @@ interface ExtensionStep {
 }
 
 const props = defineProps<{
-    step: ExtensionStep
-    groupKey: string
-    disabled?: boolean
-}>(),
+        step: ExtensionStep
+        groupKey: string
+        disabled?: boolean
+    }>(),
     emit = defineEmits<{
         'step-update': []
         'step-keydown': [event: KeyboardEvent, step: ExtensionStep]

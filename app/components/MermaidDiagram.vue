@@ -2,8 +2,8 @@
 import mermaid from 'mermaid'
 
 const props = defineProps<{
-    value: string
-}>(),
+        value: string
+    }>(),
     colorMode = useColorMode()
 
 enum themeMap {

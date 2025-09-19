@@ -35,7 +35,10 @@ export default defineEventHandler(async (event) => {
 
     if (typeof payload === 'string' || !payload || typeof payload !== 'object') handleDomainException('Invalid token payload')
 
-    if (payload.slackUserId !== slackUserId) handleDomainException('Token mismatch')
+    // Type assertion after validation
+    const jwtPayload = payload as jwt.JwtPayload & { slackUserId: string }
+
+    if (jwtPayload.slackUserId !== slackUserId) handleDomainException('Token mismatch')
 
     await slackUserInteractor.linkUser({
         slackUserId,

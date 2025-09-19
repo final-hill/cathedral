@@ -57,9 +57,9 @@ interface JsonSchemaProperty {
 }
 
 const props = withDefaults(defineProps<{
-    modelValue?: object
-    disabled?: boolean
-}>(), {
+        modelValue?: object
+        disabled?: boolean
+    }>(), {
         disabled: false
     }),
     emit = defineEmits<{
