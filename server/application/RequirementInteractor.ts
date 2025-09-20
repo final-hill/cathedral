@@ -558,7 +558,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         const currentRequirement = await this.repository.getById(id)
 
         if (currentRequirement.reqType === ReqType.PARSED_REQUIREMENTS)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is of type PARSED_REQUIREMENTS and cannot be removed`)
+            throw new MismatchException(`Requirement with id ${id} is of type PARSED_REQUIREMENTS and cannot be removed`)
 
         if (currentRequirement.workflowState !== WorkflowState.Rejected)
             throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Rejected state`)
