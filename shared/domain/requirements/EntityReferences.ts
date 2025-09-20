@@ -155,3 +155,9 @@ export const ParsedRequirementsReference = RequirementReference.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.PARSED_REQUIREMENTS),
     uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.PARSED_REQUIREMENTS])
 })
+
+export type PersonReferenceType = z.infer<typeof PersonReference>
+export const PersonReference = RequirementReference.extend({
+    reqType: z.nativeEnum(ReqType).default(ReqType.PERSON),
+    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.PERSON])
+})

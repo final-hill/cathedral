@@ -1,5 +1,7 @@
 <script lang="ts" setup>
 import * as req from '#shared/domain/requirements'
+import { ReqType } from '#shared/domain'
+import type { PegsCard } from '#shared/types'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -14,13 +16,7 @@ const route = useRoute(),
 
 useHead({ title })
 
-const pegsMap: Record<string, Array<{
-    label: string
-    icon: string
-    reqId: string
-    path?: string
-    disabled?: boolean
-}>> = {
+const pegsMap: Record<string, PegsCard[]> = {
     project: [
         {
             label: 'Roles & Personnel',
@@ -38,13 +34,15 @@ const pegsMap: Record<string, Array<{
             label: 'Schedule and milestones',
             icon: 'i-lucide-calendar',
             reqId: 'P.3',
-            disabled: true
+            disabled: true,
+            minActiveReqTypes: [ReqType.MILESTONE]
         },
         {
             label: 'Tasks and deliverables',
             icon: 'i-lucide-clipboard-list',
             reqId: 'P.4',
-            disabled: true
+            disabled: true,
+            minActiveReqTypes: [ReqType.TASK]
         },
         {
             label: 'Required technology elements',
@@ -82,7 +80,8 @@ const pegsMap: Record<string, Array<{
             label: 'Constraints',
             icon: 'i-lucide-link',
             reqId: req.Constraint.shape.reqIdPrefix._def.defaultValue(),
-            path: `/o/${organizationslug}/${solutionslug}/environment/constraint`
+            path: `/o/${organizationslug}/${solutionslug}/environment/constraint`,
+            minActiveReqTypes: [ReqType.CONSTRAINT]
         },
         {
             label: 'Assumptions',
@@ -108,7 +107,8 @@ const pegsMap: Record<string, Array<{
             label: 'Context and Objective',
             icon: 'i-lucide-target',
             reqId: req.ContextAndObjective.shape.reqIdPrefix._def.defaultValue(),
-            path: `/o/${organizationslug}/${solutionslug}/goals/context-and-objective`
+            path: `/o/${organizationslug}/${solutionslug}/goals/context-and-objective`,
+            minActiveReqTypes: [ReqType.CONTEXT_AND_OBJECTIVE]
         },
         {
             label: 'Situation',
@@ -120,7 +120,8 @@ const pegsMap: Record<string, Array<{
             label: 'Outcomes',
             icon: 'i-lucide-circle-check-big',
             reqId: req.Outcome.shape.reqIdPrefix._def.defaultValue(),
-            path: `/o/${organizationslug}/${solutionslug}/goals/outcome`
+            path: `/o/${organizationslug}/${solutionslug}/goals/outcome`,
+            minActiveReqTypes: [ReqType.OUTCOME]
         },
         {
             label: 'Functionality',
@@ -144,7 +145,8 @@ const pegsMap: Record<string, Array<{
             label: 'Stakeholders',
             icon: 'i-lucide-users',
             reqId: req.Stakeholder.innerType().shape.reqIdPrefix._def.defaultValue(),
-            path: `/o/${organizationslug}/${solutionslug}/goals/stakeholder`
+            path: `/o/${organizationslug}/${solutionslug}/goals/stakeholder`,
+            minActiveReqTypes: [ReqType.STAKEHOLDER]
         }
     ],
     system: [
@@ -152,13 +154,15 @@ const pegsMap: Record<string, Array<{
             label: 'Components',
             icon: 'i-lucide-blocks',
             reqId: req.SystemComponent.shape.reqIdPrefix._def.defaultValue(),
-            path: `/o/${organizationslug}/${solutionslug}/system/system-component`
+            path: `/o/${organizationslug}/${solutionslug}/system/system-component`,
+            minActiveReqTypes: [ReqType.SYSTEM_COMPONENT]
         },
         {
             label: 'Functional Behavior',
             icon: 'i-lucide-square-function',
             reqId: req.FunctionalBehavior.shape.reqIdPrefix._def.defaultValue(),
-            path: `/o/${organizationslug}/${solutionslug}/system/functional-behavior`
+            path: `/o/${organizationslug}/${solutionslug}/system/functional-behavior`,
+            minActiveReqTypes: [ReqType.FUNCTIONAL_BEHAVIOR]
         },
         {
             label: 'Non-Functional Behavior',

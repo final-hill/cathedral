@@ -66,6 +66,7 @@
             "justification",
             "limit",
             "meta_requirement",
+            "milestone",
             "noise",
             "non_functional_behavior",
             "obstacle",
@@ -359,6 +360,7 @@
             "justification",
             "limit",
             "meta_requirement",
+            "milestone",
             "noise",
             "non_functional_behavior",
             "obstacle",
@@ -768,6 +770,36 @@
           "nullable": true,
           "mappedType": "integer"
         },
+        "estimated_hours": {
+          "name": "estimated_hours",
+          "type": "numeric(10,0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "precision": 10,
+          "scale": 0,
+          "mappedType": "decimal"
+        },
+        "assigned_to_id": {
+          "name": "assigned_to_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
+        "due_date": {
+          "name": "due_date",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 0,
+          "mappedType": "date"
+        },
         "scope_id": {
           "name": "scope_id",
           "type": "uuid",
@@ -915,6 +947,20 @@
           "constraintName": "requirement_versions_organization_id_foreign",
           "columnNames": [
             "organization_id"
+          ],
+          "localTableName": "public.requirement_versions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_versions_assigned_to_id_foreign": {
+          "constraintName": "requirement_versions_assigned_to_id_foreign",
+          "columnNames": [
+            "assigned_to_id"
           ],
           "localTableName": "public.requirement_versions",
           "referencedColumnNames": [
