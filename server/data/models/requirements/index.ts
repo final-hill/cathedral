@@ -543,11 +543,29 @@ export class SystemComponentModel extends ComponentModel { }
 @Entity({ discriminatorValue: ReqType.SYSTEM_COMPONENT })
 export class SystemComponentVersionsModel extends ComponentVersionsModel { }
 
+@Entity({ discriminatorValue: ReqType.MILESTONE })
+export class MilestoneModel extends RequirementModel { }
+
+@Entity({ discriminatorValue: ReqType.MILESTONE })
+export class MilestoneVersionsModel extends RequirementVersionsModel {
+    @Property({ type: types.date, nullable: true })
+    readonly dueDate?: Date
+}
+
 @Entity({ discriminatorValue: ReqType.TASK })
 export class TaskModel extends RequirementModel { }
 
 @Entity({ discriminatorValue: ReqType.TASK })
-export class TaskVersionsModel extends RequirementVersionsModel { }
+export class TaskVersionsModel extends RequirementVersionsModel {
+    @Property({ type: types.decimal, nullable: true })
+    readonly estimatedHours?: number
+
+    @ManyToOne({ entity: () => PersonModel, nullable: true })
+    readonly assignedTo?: Ref<PersonModel>
+
+    @Property({ type: types.date, nullable: true })
+    readonly dueDate?: Date
+}
 
 @Entity({ discriminatorValue: ReqType.TEST_CASE })
 export class TestCaseModel extends ScenarioModel { }

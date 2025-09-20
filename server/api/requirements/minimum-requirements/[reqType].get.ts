@@ -1,5 +1,7 @@
-// Get the current Active requirements by type
-import { Organization, ReqType, Solution } from '#shared/domain'
+// Check if a specific requirement type is missing active items for minimum requirements
+import { Organization, Solution, ReqType } from '#shared/domain'
+import { MINIMUM_REQUIREMENT_TYPES } from '#shared/domain/requirements/minimumRequirements'
+import { createRequirementInteractor } from '~~/server/utils/createRequirementInteractor'
 import { z } from 'zod'
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
@@ -22,8 +24,13 @@ export default defineEventHandler(async (event) => {
             organizationId,
             organizationSlug,
             solutionSlug
-        })
+        }),
+        isMinimumRequirement = MINIMUM_REQUIREMENT_TYPES.includes(reqType)
 
-    return requirementInteractor.getCurrentActiveRequirementsByType(reqType)
+    if (!isMinimumRequirement)
+        return false
+
+    return requirementInteractor.hasActiveRequirements(reqType)
+        .then(hasActive => !hasActive)
         .catch(handleDomainException)
 })

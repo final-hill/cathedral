@@ -1,7 +1,5 @@
 // Create a proposed requirement
 import { z } from 'zod'
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~~/server/application'
-import { OrganizationRepository, RequirementRepository } from '~~/server/data/repositories'
 import { NaturalLanguageToRequirementService } from '~~/server/data/services'
 import { Organization, ReqType, Solution } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
@@ -37,26 +35,12 @@ export default defineEventHandler(async (event) => {
         }, 'At least one of organizationId or organizationSlug should be provided'),
         { solutionSlug, organizationId: orgId, organizationSlug: orgSlug, ...reqProps } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
-        entraService = createEntraService(),
-        permissionInteractor = new PermissionInteractor({ event, session, entraService }),
-        appUserInteractor = new AppUserInteractor({ permissionInteractor, entraService }),
-        organizationInteractor = new OrganizationInteractor({
-            repository: new OrganizationRepository({
-                em: event.context.em,
-                organizationId: orgId,
-                organizationSlug: orgSlug
-            }),
-            permissionInteractor,
-            appUserInteractor
-        }),
-        org = await organizationInteractor.getOrganization(),
-        solution = await organizationInteractor.getSolutionBySlug(solutionSlug),
-        requirementInteractor = new RequirementInteractor({
-            repository: new RequirementRepository({ em: event.context.em }),
-            permissionInteractor,
-            appUserInteractor,
-            organizationId: org.id,
-            solutionId: solution.id
+        requirementInteractor = await createRequirementInteractor({
+            event,
+            session,
+            organizationId: orgId,
+            organizationSlug: orgSlug,
+            solutionSlug
         })
 
     if (reqType === ReqType.PARSED_REQUIREMENTS) {

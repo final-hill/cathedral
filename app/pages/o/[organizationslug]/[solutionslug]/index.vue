@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { ReqType } from '#shared/domain'
+
 useHead({ title: 'Solution' })
 definePageMeta({ name: 'Solution', middleware: 'auth' })
 
@@ -12,30 +14,56 @@ const { $eventBus } = useNuxtApp(),
 
 if (solutionError.value) $eventBus.$emit('page-error', solutionError.value)
 
+// Minimum requirements validation
+const { getMissingRequirementsBySection } = useMinimumRequirements(),
+    missingRequirements = ref<{ reqType: ReqType, label: string, section: string, code: string, path: string }[]>([]),
+    drawerOpen = ref(false)
+
+// Load missing requirements when solution is available
+watch(solution, async (newSolution) => {
+    if (newSolution) {
+        try {
+            const groupedMissing = await getMissingRequirementsBySection({
+                organizationSlug: organizationSlug as string,
+                solutionSlug: slug as string
+            })
+            // Flatten the grouped results back to an array for the drawer
+            missingRequirements.value = Object.values(groupedMissing).flat()
+        } catch (error) {
+            console.warn('Failed to load missing requirements:', error)
+            missingRequirements.value = []
+        }
+    }
+}, { immediate: true })
+
 const links = [
         {
             label: 'Project',
             icon: 'i-lucide-box',
             reqId: 'P',
-            path: `/o/${organizationSlug}/${slug}/project`
+            path: `/o/${organizationSlug}/${slug}/project`,
+            minActiveReqTypes: [ReqType.MILESTONE, ReqType.TASK]
         },
         {
             label: 'Environment',
             icon: 'i-lucide-cloud',
             reqId: 'E',
-            path: `/o/${organizationSlug}/${slug}/environment`
+            path: `/o/${organizationSlug}/${slug}/environment`,
+            minActiveReqTypes: [ReqType.CONSTRAINT]
         },
         {
             label: 'Goals',
             icon: 'i-lucide-target',
             reqId: 'G',
-            path: `/o/${organizationSlug}/${slug}/goals`
+            path: `/o/${organizationSlug}/${slug}/goals`,
+            minActiveReqTypes: [ReqType.CONTEXT_AND_OBJECTIVE, ReqType.OUTCOME, ReqType.STAKEHOLDER]
         },
         {
             label: 'System',
             icon: 'i-lucide-building-2',
             reqId: 'S',
-            path: `/o/${organizationSlug}/${slug}/system`
+            path: `/o/${organizationSlug}/${slug}/system`,
+            minActiveReqTypes: [ReqType.SYSTEM_COMPONENT, ReqType.FUNCTIONAL_BEHAVIOR]
         }
     ],
     handleSolutionDelete = async () => {
@@ -108,5 +136,10 @@ const links = [
     <FreeFormRequirements
         :solution-slug="slug"
         :organization-slug="organizationSlug"
+    />
+
+    <MinimumRequirementsDrawer
+        v-model:open="drawerOpen"
+        :missing-requirements="missingRequirements"
     />
 </template>

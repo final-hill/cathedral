@@ -1,6 +1,4 @@
-// Description: This file handles the editing of a proposed requirement in the system. It validates the request parameters and body, checks permissions, and updates the requirement in the database.
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~~/server/application'
-import { OrganizationRepository, RequirementRepository } from '~~/server/data/repositories'
+// This file handles the editing of a proposed requirement in the system. It validates the request parameters and body, checks permissions, and updates the requirement in the database.
 import { Organization, ReqType, Solution } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
 import { z } from 'zod'
@@ -12,11 +10,8 @@ const { id: organizationId, slug: organizationSlug } = Organization.innerType().
     })
 
 export default defineEventHandler(async (event) => {
-    const { reqType, id } = await validateEventParams(event, paramSchema)
-
-    if (reqType === ReqType.PARSED_REQUIREMENTS) throw new Error('ReqType.PARSED_REQUIREMENTS is not allowed.')
-
-    const ReqPascal = snakeCaseToPascalCase(reqType) as keyof typeof req,
+    const { reqType, id } = await validateEventParams(event, paramSchema),
+        ReqPascal = snakeCaseToPascalCase(reqType) as keyof typeof req,
         ReqCons = req[ReqPascal] as typeof req.Requirement,
         innerSchema = (ReqCons as unknown) instanceof z.ZodEffects
             ? (ReqCons as unknown as z.ZodEffects<z.ZodTypeAny>)._def.schema
@@ -40,26 +35,12 @@ export default defineEventHandler(async (event) => {
         }, 'At least one of organizationId or organizationSlug should be provided'),
         { solutionSlug, organizationId: orgId, organizationSlug: orgSlug, ...reqProps } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
-        entraService = createEntraService(),
-        permissionInteractor = new PermissionInteractor({ event, session, entraService }),
-        appUserInteractor = new AppUserInteractor({ permissionInteractor, entraService }),
-        organizationInteractor = new OrganizationInteractor({
-            repository: new OrganizationRepository({
-                em: event.context.em,
-                organizationId: orgId,
-                organizationSlug: orgSlug
-            }),
-            permissionInteractor,
-            appUserInteractor
-        }),
-        org = await organizationInteractor.getOrganization(),
-        solution = await organizationInteractor.getSolutionBySlug(solutionSlug),
-        requirementInteractor = new RequirementInteractor({
-            repository: new RequirementRepository({ em: event.context.em }),
-            permissionInteractor,
-            appUserInteractor,
-            organizationId: org.id,
-            solutionId: solution.id
+        requirementInteractor = await createRequirementInteractor({
+            event,
+            session,
+            organizationId: orgId,
+            organizationSlug: orgSlug,
+            solutionSlug
         })
 
     return requirementInteractor.updateProposedRequirement({ id, ...reqProps })

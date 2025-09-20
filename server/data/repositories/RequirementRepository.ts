@@ -377,6 +377,7 @@ export class RequirementRepository extends Repository<RequirementType> {
      * Get all active requirements with the given solution id.
      * @param props.solutionId The id of the solution to find requirements for
      * @param props.reqType The type of requirement to find
+     * @returns The active requirements
      */
     async getAllActive<R extends RequirementType>(props: {
         solutionId: string

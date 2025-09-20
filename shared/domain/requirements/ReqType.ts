@@ -22,6 +22,7 @@ export enum ReqType {
     JUSTIFICATION = 'justification',
     LIMIT = 'limit',
     META_REQUIREMENT = 'meta_requirement',
+    MILESTONE = 'milestone',
     NOISE = 'noise',
     NON_FUNCTIONAL_BEHAVIOR = 'non_functional_behavior',
     OBSTACLE = 'obstacle',

@@ -1,9 +1,9 @@
-// Get the current Active requirements by type
-import { Organization, ReqType, Solution } from '#shared/domain'
+// Get missing minimum requirements for a solution
+import { Organization, Solution } from '#shared/domain'
+import { createRequirementInteractor } from '~~/server/utils/createRequirementInteractor'
 import { z } from 'zod'
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
-    paramSchema = z.object({ reqType: z.nativeEnum(ReqType) }),
     querySchema = z.object({
         solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
         organizationId,
@@ -13,8 +13,7 @@ const { id: organizationId, slug: organizationSlug } = Organization.innerType().
     }, 'At least one of organizationId or organizationSlug should be provided')
 
 export default defineEventHandler(async (event) => {
-    const { reqType } = await validateEventParams(event, paramSchema),
-        { solutionSlug, organizationId, organizationSlug } = await validateEventQuery(event, querySchema),
+    const { solutionSlug, organizationId, organizationSlug } = await validateEventQuery(event, querySchema),
         session = await requireUserSession(event),
         requirementInteractor = await createRequirementInteractor({
             event,
@@ -24,6 +23,6 @@ export default defineEventHandler(async (event) => {
             solutionSlug
         })
 
-    return requirementInteractor.getCurrentActiveRequirementsByType(reqType)
+    return requirementInteractor.getMissingMinimumRequirements()
         .catch(handleDomainException)
 })

@@ -129,7 +129,7 @@ const onSubmit = async (data?: Record<string, unknown>) => {
 
             if (isEditValue.value && requirement?.value?.id) {
                 const endpoint = `/api/requirements/${reqType.value}/${requirement.value.workflowState.toLowerCase()}/${requirement.value.id}/edit`
-                result = await $fetch(endpoint, {
+                result = await $fetch<req.RequirementType>(endpoint, {
                     method: 'POST',
                     body: {
                         ...submitData,
@@ -139,16 +139,16 @@ const onSubmit = async (data?: Record<string, unknown>) => {
                 })
                 result = requirement.value
             } else {
-                const newId = await $fetch(`/api/requirements/${reqType.value}/propose`, {
+                const newId = await $fetch<string>(`/api/requirements/${reqType.value}/propose`, {
                     method: 'PUT',
                     body: {
                         ...submitData,
                         solutionSlug: solutionSlug.value,
                         organizationSlug: organizationSlug.value
                     }
-                }) as string
+                })
 
-                result = await $fetch(`/api/requirements/${reqType.value}/${newId}`, {
+                result = await $fetch<req.RequirementType>(`/api/requirements/${reqType.value}/${newId}`, {
                     method: 'GET',
                     params: {
                         solutionSlug: solutionSlug.value,

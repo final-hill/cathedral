@@ -24,6 +24,7 @@ export const uiBasePathTemplates = {
     [ReqType.INTERFACE_SCHEMA]: '/o/[org]/[solutionslug]/system/interface/interface-schema',
     [ReqType.INVARIANT]: '/o/[org]/[solutionslug]/environment/invariant',
     [ReqType.LIMIT]: '/o/[org]/[solutionslug]/goals/limit',
+    [ReqType.MILESTONE]: '/o/[org]/[solutionslug]/project/milestone',
     [ReqType.NON_FUNCTIONAL_BEHAVIOR]: '/o/[org]/[solutionslug]/system/non-functional-behavior',
     [ReqType.OBSTACLE]: '/o/[org]/[solutionslug]/goals/obstacle',
     [ReqType.ORGANIZATION]: '/o/[org]',
@@ -36,6 +37,7 @@ export const uiBasePathTemplates = {
     [ReqType.STAKEHOLDER]: '/o/[org]/[solutionslug]/goals/stakeholder',
     [ReqType.SYSTEM]: '/o/[org]/[solutionslug]/system',
     [ReqType.SYSTEM_COMPONENT]: '/o/[org]/[solutionslug]/system/system-component',
+    [ReqType.TASK]: '/o/[org]/[solutionslug]/project/task',
     [ReqType.USE_CASE]: '/o/[org]/[solutionslug]/system/use-case',
     [ReqType.USER_STORY]: '/o/[org]/[solutionslug]/system/user-story'
 } as const
