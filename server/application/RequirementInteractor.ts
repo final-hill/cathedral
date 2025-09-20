@@ -484,7 +484,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         const currentRequirement = await this.repository.getById(id)
 
         if (currentRequirement.reqType === ReqType.PARSED_REQUIREMENTS)
-            throw new MismatchException(`Requirement with id ${id} is of type PARSED_REQUIREMENTS and cannot be restored`)
+            throw new MismatchException(`Requirement with id ${id} is of type PARSED_REQUIREMENTS and cannot be approved`)
 
         if (currentRequirement.reqType === ReqType.SILENCE)
             throw new MismatchException(`Silence requirements cannot be approved.`)
