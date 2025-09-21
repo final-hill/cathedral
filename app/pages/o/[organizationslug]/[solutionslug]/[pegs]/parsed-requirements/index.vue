@@ -12,9 +12,8 @@ const route = useRoute(),
     // Convert reqtype to ReqType enum value (e.g., 'assumption' -> 'ASSUMPTION', 'glossary-term' -> 'GLOSSARY_TERM')
     reqTypeSnakeCase = slugToSnakeCase(reqType),
     reqTypeValue = reqTypeSnakeCase.toUpperCase() as keyof typeof ReqType,
-    actualReqType = ReqType[reqTypeValue]
-
-const ReqTypePascal = snakeCaseToPascalCase(actualReqType) as keyof typeof req,
+    actualReqType = ReqType[reqTypeValue],
+    ReqTypePascal = snakeCaseToPascalCase(actualReqType) as keyof typeof req,
     RequirementSchema = req[ReqTypePascal]
 
 type RequirementEntity = { reqIdPrefix: string, description: string }
@@ -73,7 +72,7 @@ watch([requirements], async () => {
         :solution-slug="solutionSlug"
         :loading="status === 'pending'"
         :hide-header="true"
-        :selected-workflow-states="[ WorkflowState.Parsed ]"
+        :selected-workflow-states="[WorkflowState.Parsed]"
         @refresh="refresh"
     />
 </template>
