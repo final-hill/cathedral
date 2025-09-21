@@ -71,7 +71,7 @@ watch([requirements], async () => {
         :organization-slug="organizationSlug"
         :solution-slug="solutionSlug"
         :loading="status === 'pending'"
-        :hide-header="true"
+        :hide-header="false"
         :selected-workflow-states="[WorkflowState.Parsed]"
         @refresh="refresh"
     />

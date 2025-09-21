@@ -392,12 +392,17 @@ watch(internalSelectedStates, (newStates) => {
                         </template>
                     </USelectMenu>
                 </UFormField>
-                <UButton
-                    color="success"
-                    icon="i-lucide-plus"
-                    :label="'New ' + snakeCaseToTitleCase(reqType)"
-                    @click="createNewRequirement"
-                />
+                <UFormField
+                    label="&nbsp;"
+                    size="md"
+                >
+                    <UButton
+                        color="success"
+                        icon="i-lucide-plus"
+                        :label="'New ' + snakeCaseToTitleCase(reqType)"
+                        @click="createNewRequirement"
+                    />
+                </UFormField>
             </div>
         </div>
 
