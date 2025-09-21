@@ -245,7 +245,7 @@ const route = useRoute(),
                                 :req-type="getReqTypeFromSlot(requirementAccordionItems.find(item => item.slot.startsWith(field.key))?.slot || '') as ReqType"
                                 :organization-slug="organizationSlug"
                                 :solution-slug="solutionSlug"
-                                :hide-header="true"
+                                :hide-header="false"
                             />
                         </template>
 
@@ -267,7 +267,7 @@ const route = useRoute(),
                                         :req-type="getReqTypeFromSlot(item.slot) as ReqType"
                                         :organization-slug="organizationSlug"
                                         :solution-slug="solutionSlug"
-                                        :hide-header="true"
+                                        :hide-header="false"
                                     />
                                 </div>
                             </template>

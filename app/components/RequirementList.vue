@@ -2,9 +2,11 @@
 import type * as req from '#shared/domain/requirements'
 import type { ReqType } from '#shared/domain/requirements/ReqType'
 import type { TableColumn } from '@nuxt/ui'
-import { UBadge, UButton, UTable, UDropdownMenu, XConfirmModal } from '#components'
+import { UBadge, UButton, UTable, UDropdownMenu, XConfirmModal, USelectMenu, UFormField } from '#components'
 import { WorkflowState } from '#shared/domain/requirements/enums'
 import { uiBasePathTemplates } from '#shared/domain/requirements/uiBasePathTemplates'
+import { workflowColorMap } from '#shared/utils/workflow-colors'
+import { snakeCaseToTitleCase } from '#shared/utils'
 
 type WorkflowAction = 'review' | 'remove' | 'approve' | 'reject' | 'revise' | 'restore'
 
@@ -16,11 +18,13 @@ const props = defineProps<{
         loading?: boolean
         hideHeader?: boolean
         parentReferences?: Record<string, string> // field name -> parent ID for OneToMany relationships
+        selectedWorkflowStates?: WorkflowState[]
     }>(),
     emit = defineEmits<{
-        refresh: []
+        'refresh': []
+        'update:selectedWorkflowStates': [states: WorkflowState[]]
     }>(),
-    { requirements, reqType, organizationSlug, solutionSlug, loading = false, hideHeader = false, parentReferences } = toRefs(props),
+    { requirements, reqType, organizationSlug, solutionSlug, loading = false, hideHeader = false, parentReferences, selectedWorkflowStates } = toRefs(props),
     router = useRouter(),
     toast = useToast(),
     overlay = useOverlay(),
@@ -30,6 +34,21 @@ const props = defineProps<{
         return template
             .replace('[org]', organizationSlug.value)
             .replace('[solutionslug]', solutionSlug.value)
+    }),
+    // Default to Active state only
+    internalSelectedStates = ref<WorkflowState[]>(selectedWorkflowStates?.value ?? [WorkflowState.Active]),
+    workflowStateOptions = computed(() =>
+        Object.values(WorkflowState).map(state => ({
+            label: state,
+            value: state,
+            color: workflowColorMap[state]
+        }))
+    ),
+    filteredRequirements = computed(() => {
+        if (!internalSelectedStates.value.length) return requirements.value
+        return requirements.value.filter(req =>
+            internalSelectedStates.value.includes(req.workflowState)
+        )
     }),
     columns: TableColumn<req.RequirementType>[] = [
         {
@@ -319,6 +338,17 @@ const props = defineProps<{
 
         router.push(url.pathname + url.search)
     }
+
+// Watch for changes to external prop and sync internal state
+watch(selectedWorkflowStates, (newStates) => {
+    if (newStates)
+        internalSelectedStates.value = [...newStates]
+}, { immediate: true })
+
+// Watch for changes to internal state and emit to parent
+watch(internalSelectedStates, (newStates) => {
+    emit('update:selectedWorkflowStates', [...newStates])
+}, { deep: true })
 </script>
 
 <template>
@@ -330,17 +360,50 @@ const props = defineProps<{
             <h2 class="text-xl font-semibold">
                 Requirements
             </h2>
-            <UButton
-                color="success"
-                icon="i-lucide-plus"
-                :label="'New ' + snakeCaseToTitleCase(reqType)"
-                @click="createNewRequirement"
-            />
+            <div class="flex items-center gap-4">
+                <UFormField
+                    label="Filter by Status:"
+                    size="md"
+                    class="min-w-48"
+                >
+                    <USelectMenu
+                        v-model="internalSelectedStates"
+                        :items="workflowStateOptions"
+                        multiple
+                        placeholder="Select states..."
+                        value-key="value"
+                        :ui="{
+                            base: 'min-w-48'
+                        }"
+                    >
+                        <template #default>
+                            <span
+                                v-if="internalSelectedStates.length === 0"
+                                class="text-muted"
+                            >
+                                All States
+                            </span>
+                            <span v-else-if="internalSelectedStates.length === 1">
+                                {{ internalSelectedStates[0] }}
+                            </span>
+                            <span v-else>
+                                {{ internalSelectedStates.length }} states selected
+                            </span>
+                        </template>
+                    </USelectMenu>
+                </UFormField>
+                <UButton
+                    color="success"
+                    icon="i-lucide-plus"
+                    :label="'New ' + snakeCaseToTitleCase(reqType)"
+                    @click="createNewRequirement"
+                />
+            </div>
         </div>
 
         <UTable
             :columns="columns"
-            :data="requirements"
+            :data="filteredRequirements"
             :loading="loading"
             :empty-state="{ icon: 'i-lucide-database', label: 'No requirements found.' }"
         />
