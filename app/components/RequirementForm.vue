@@ -139,7 +139,7 @@ const onSubmit = async (data?: Record<string, unknown>) => {
                 })
                 result = requirement.value
             } else {
-                const newId = await $fetch<string>(`/api/requirements/${reqType.value}/propose`, {
+                const newId = await $fetch<string>(`/api/requirements/${reqType.value}/proposed`, {
                     method: 'PUT',
                     body: {
                         ...submitData,
