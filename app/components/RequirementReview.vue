@@ -280,7 +280,7 @@ const router = useRouter(),
                             :key="field.key"
                             class="space-y-2"
                         >
-                            <dt class="block text-sm font-medium text-toned">
+                            <dt class="text-sm font-medium text-toned">
                                 {{ field.label }}
                             </dt>
 
