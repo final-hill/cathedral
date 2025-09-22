@@ -42,7 +42,7 @@ async function submitRequirements({ data: { description } }: FormSubmitEvent<Req
 
         isLoading.value = true
 
-        const parsedResultId = await $fetch<string>(`/api/requirements/${ReqType.PARSED_REQUIREMENTS}/propose`, {
+        const parsedResultId = await $fetch<string>(`/api/requirements/${ReqType.PARSED_REQUIREMENTS}/proposed`, {
                 method: 'PUT',
                 body: {
                     solutionSlug: props.solutionSlug,
