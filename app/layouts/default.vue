@@ -63,17 +63,14 @@ $eventBus.$on('page-error', showError)
 
         & h1 {
             font-size: 1.5em;
-            margin-bottom: 1em;
         }
 
         & h2 {
             font-size: 1.25em;
-            margin-bottom: 0.75em;
         }
 
         & h3 {
             font-size: 1.1em;
-            margin-bottom: 0.5em;
         }
     }
 
