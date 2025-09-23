@@ -32,6 +32,8 @@ export const uiBasePathTemplates = {
     [ReqType.PARSED_REQUIREMENTS]: '/o/[org]/[solutionslug]/project/parsed-requirements',
     [ReqType.PERSON]: '/o/[org]/[solutionslug]/project/person',
     [ReqType.PROJECT]: '/o/[org]/[solutionslug]/project',
+    [ReqType.RESPONSIBILITY]: '/o/[org]/[solutionslug]/project/responsibility',
+    [ReqType.ROLE]: '/o/[org]/[solutionslug]/project/role',
     [ReqType.SCENARIO]: '/o/[org]/[solutionslug]',
     [ReqType.SOLUTION]: '/o/[org]/[solutionslug]',
     [ReqType.STAKEHOLDER]: '/o/[org]/[solutionslug]/goals/stakeholder',

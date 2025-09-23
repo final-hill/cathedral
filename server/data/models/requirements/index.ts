@@ -1,4 +1,4 @@
-import { Collection, Entity, Enum, ManyToOne, OneToMany, OptionalProps, PrimaryKey, Property, types } from '@mikro-orm/core'
+import { Collection, Entity, Enum, ManyToOne, OneToMany, ManyToMany, OptionalProps, PrimaryKey, Property, types } from '@mikro-orm/core'
 import type { FilterQuery, OrderDefinition, Ref, Rel } from '@mikro-orm/core'
 import { ConstraintCategory, ReqType, ScenarioStepTypeEnum, StakeholderCategory, StakeholderSegmentation, WorkflowState, InterfaceType } from '../../../../shared/domain/requirements/enums.js'
 import { SlackChannelMetaModel } from '../application/index.js'
@@ -421,7 +421,13 @@ export class ParsedRequirementsModel extends MetaRequirementModel {
 export class ParsedRequirementsVersionsModel extends MetaRequirementVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.PERSON })
-export class PersonModel extends ActorModel { }
+export class PersonModel extends ActorModel {
+    @ManyToMany(() => RoleModel, role => role.persons, { owner: true })
+    readonly roles = new Collection<RoleModel>(this)
+
+    @ManyToMany(() => StakeholderModel, stakeholder => stakeholder.persons, { owner: true })
+    readonly stakeholders = new Collection<StakeholderModel>(this)
+}
 
 @Entity({ discriminatorValue: ReqType.PERSON })
 export class PersonVersionsModel extends ActorVersionsModel {
@@ -442,7 +448,10 @@ export class ResponsibilityModel extends RequirementModel { }
 export class ResponsibilityVersionsModel extends RequirementVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.ROLE })
-export class RoleModel extends ResponsibilityModel { }
+export class RoleModel extends ResponsibilityModel {
+    @ManyToMany(() => PersonModel, person => person.roles)
+    readonly persons = new Collection<PersonModel>(this)
+}
 
 @Entity({ discriminatorValue: ReqType.ROLE })
 export class RoleVersionsModel extends ResponsibilityVersionsModel { }
@@ -475,6 +484,9 @@ export class SolutionVersionsModel extends MetaRequirementVersionsModel {
 export class StakeholderModel extends ComponentModel {
     @ManyToOne({ entity: () => UseCaseModel, nullable: true, inversedBy: 'stakeholders' })
     readonly useCase?: Ref<UseCaseModel>
+
+    @ManyToMany(() => PersonModel, person => person.stakeholders)
+    readonly persons = new Collection<PersonModel>(this)
 }
 
 @Entity({ discriminatorValue: ReqType.STAKEHOLDER })

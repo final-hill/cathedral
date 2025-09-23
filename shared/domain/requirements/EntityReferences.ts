@@ -161,3 +161,9 @@ export const PersonReference = RequirementReference.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.PERSON),
     uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.PERSON])
 })
+
+export type RoleReferenceType = z.infer<typeof RoleReference>
+export const RoleReference = RequirementReference.extend({
+    reqType: z.nativeEnum(ReqType).default(ReqType.ROLE),
+    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.ROLE])
+})
