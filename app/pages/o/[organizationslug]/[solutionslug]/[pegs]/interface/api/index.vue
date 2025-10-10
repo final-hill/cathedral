@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ReqType } from '#shared/domain/requirements/ReqType'
 import { InterfaceType } from '#shared/domain/requirements/InterfaceType'
+import { Interface } from '#shared/domain/requirements'
 import type { RequirementType } from '#shared/domain'
+import { z } from 'zod'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -13,12 +15,12 @@ const route = useRoute(),
         solutionslug: string
         pegs: string
     },
-    { data: allInterfaces, refresh, status } = await useFetch<RequirementType[]>(`/api/requirements/${ReqType.INTERFACE}`, {
+    { data: allInterfaces, refresh, status } = await useApiRequest(`/api/requirements/${ReqType.INTERFACE}`, {
         query: {
             solutionSlug: solutionslug,
             organizationSlug: organizationslug
         },
-        transform: data => data.map(transformRequirementDates)
+        schema: z.array(Interface)
     }),
     apiInterfaces = computed(() => {
         return allInterfaces.value?.filter((interface_: RequirementType & { interfaceType?: InterfaceType }) =>

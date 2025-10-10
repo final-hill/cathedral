@@ -8,7 +8,7 @@ import { uiBasePathTemplates } from '#shared/domain/requirements/uiBasePathTempl
 import { workflowColorMap } from '#shared/utils/workflow-colors'
 import { snakeCaseToTitleCase } from '#shared/utils'
 
-type WorkflowAction = 'review' | 'remove' | 'approve' | 'reject' | 'revise' | 'restore'
+type WorkflowAction = 'review' | 'remove' | 'revise' | 'restore'
 
 const props = defineProps<{
         requirements: req.RequirementType[]
@@ -165,26 +165,12 @@ const props = defineProps<{
                 )
                 break
             case WorkflowState.Review:
-                actions.push(
-                    {
-                        label: 'Review',
-                        icon: 'i-lucide-clipboard-check',
-                        color: 'warning',
-                        onSelect: () => { router.push(`${basePath.value}/${requirement.id}/review`) }
-                    },
-                    {
-                        label: 'Quick Approve',
-                        icon: 'i-lucide-check',
-                        color: 'success',
-                        onSelect: () => { performWorkflowAction(requirement, 'approve') }
-                    },
-                    {
-                        label: 'Quick Reject',
-                        icon: 'i-lucide-x',
-                        color: 'error',
-                        onSelect: () => { performWorkflowAction(requirement, 'reject') }
-                    }
-                )
+                actions.push({
+                    label: 'Review',
+                    icon: 'i-lucide-clipboard-check',
+                    color: 'warning',
+                    onSelect: () => { router.push(`${basePath.value}/${requirement.id}/review`) }
+                })
                 break
             case WorkflowState.Active:
                 actions.push(
@@ -238,12 +224,6 @@ const props = defineProps<{
                 case 'review':
                     endpoint = `/api/requirements/${reqType.value}/proposed/${requirement.id}/review`
                     break
-                case 'approve':
-                    endpoint = `/api/requirements/${reqType.value}/review/${requirement.id}/approve`
-                    break
-                case 'reject':
-                    endpoint = `/api/requirements/${reqType.value}/review/${requirement.id}/reject`
-                    break
                 case 'revise':
                     if (requirement.workflowState === WorkflowState.Rejected)
                         endpoint = `/api/requirements/${reqType.value}/rejected/${requirement.id}/revise`
@@ -287,8 +267,6 @@ const props = defineProps<{
                 case 'revise':
                     await navigateTo(`${detailBasePath}/edit`)
                     break
-                case 'approve':
-                case 'reject':
                 case 'remove':
                 case 'restore':
                     emit('refresh')

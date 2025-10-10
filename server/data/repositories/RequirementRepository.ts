@@ -99,7 +99,14 @@ export class RequirementRepository extends Repository<RequirementType> {
                     category: StakeholderCategory['Key Stakeholder'],
                     segmentation: StakeholderSegmentation.Client,
                     interest: 75,
-                    influence: 75
+                    influence: 75,
+                    // Actor properties
+                    isProductOwner: false,
+                    isImplementationOwner: false,
+                    canEndorseProjectRequirements: false,
+                    canEndorseEnvironmentRequirements: false,
+                    canEndorseGoalsRequirements: false,
+                    canEndorseSystemRequirements: false
                 })
                 actorMap.set(name, id)
                 return id
@@ -166,7 +173,14 @@ export class RequirementRepository extends Repository<RequirementType> {
                     workflowState: WorkflowState.Proposed,
                     solution: props.solutionId,
                     name,
-                    description: name
+                    description: name,
+                    // Actor properties
+                    isProductOwner: false,
+                    isImplementationOwner: false,
+                    canEndorseProjectRequirements: false,
+                    canEndorseEnvironmentRequirements: false,
+                    canEndorseGoalsRequirements: false,
+                    canEndorseSystemRequirements: false
                 })
                 systemComponentMap.set(name, id)
                 return id
@@ -239,7 +253,14 @@ export class RequirementRepository extends Repository<RequirementType> {
                     segmentation: StakeholderSegmentation.Client,
                     category: StakeholderCategory['Key Stakeholder'],
                     interest: 75,
-                    influence: 75
+                    influence: 75,
+                    // Actor properties
+                    isProductOwner: false,
+                    isImplementationOwner: false,
+                    canEndorseProjectRequirements: false,
+                    canEndorseEnvironmentRequirements: false,
+                    canEndorseGoalsRequirements: false,
+                    canEndorseSystemRequirements: false
                 })
                 stakeholderMap.set(name, id)
                 return id
@@ -537,14 +558,16 @@ export class RequirementRepository extends Repository<RequirementType> {
         const em = this._em,
             reqStatic = await em.findOne(reqModels.RequirementModel, id, {
                 populate: ['*']
-            }),
-            reqLatestVersion = await reqStatic?.getLatestVersion(new Date())
+            })
 
-        if (!reqStatic || !reqLatestVersion) throw new NotFoundException(`Requirement with id ${id} not found`)
+        if (!reqStatic) throw new NotFoundException(`Requirement with id ${id} not found`)
 
-        // Use utility function to resolve req_type from the model instance
-        const req_type = resolveReqTypeFromModel(reqStatic),
-            reqTypePascal = snakeCaseToPascalCase(req_type) as keyof typeof req,
+        const reqType = resolveReqTypeFromModel(reqStatic),
+            reqLatestVersion = await reqStatic.getLatestVersion(new Date())
+
+        if (!reqLatestVersion) throw new NotFoundException(`Requirement with id ${id} not found`)
+
+        const reqTypePascal = snakeCaseToPascalCase(reqType) as keyof typeof req,
             mapper = new DataModelToDomainModel()
 
         return req[reqTypePascal].parse(

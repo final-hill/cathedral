@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { ReqType } from '#shared/domain'
+import { ReqType, Solution } from '#shared/domain'
+import { z } from 'zod'
 
 useHead({ title: 'Solution' })
 definePageMeta({ name: 'Solution', middleware: 'auth' })
@@ -7,8 +8,10 @@ definePageMeta({ name: 'Solution', middleware: 'auth' })
 const { $eventBus } = useNuxtApp(),
     { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Solution').params,
     router = useRouter(),
-    { data: solution, error: solutionError } = await useFetch(`/api/solution/${slug}`, {
-        query: { organizationSlug }
+    { data: solution, error: solutionError } = await useApiRequest(`/api/solution/${slug}`, {
+        schema: Solution,
+        query: { organizationSlug },
+        errorMessage: 'Failed to load solution'
     }),
     deleteConfirmModalOpenState = ref(false)
 
@@ -67,10 +70,14 @@ const links = [
         }
     ],
     handleSolutionDelete = async () => {
-        await $fetch(`/api/solution/${slug}`, {
-            method: 'delete',
-            body: { organizationSlug }
-        }).catch(e => $eventBus.$emit('page-error', e))
+        await useApiRequest(`/api/solution/${slug}`, {
+            method: 'DELETE',
+            schema: z.unknown(),
+            body: { organizationSlug },
+            showSuccessToast: true,
+            successMessage: 'Solution deleted successfully',
+            errorMessage: 'Failed to delete solution'
+        })
         deleteConfirmModalOpenState.value = false
         router.push({ name: 'Organization', params: { organizationslug: organizationSlug } })
     },
@@ -80,6 +87,11 @@ const links = [
 </script>
 
 <template>
+    <PendingReviewsNotification
+        :organization-slug="organizationSlug"
+        :solution-slug="slug"
+    />
+
     <PegsLanding
         :cards="links"
         :solutionslug="slug"

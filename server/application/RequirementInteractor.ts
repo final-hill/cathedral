@@ -1,20 +1,23 @@
 import type { z } from 'zod'
 import { validate as validateUuid } from 'uuid'
 import { Interactor } from './Interactor'
+import type { ReviewInteractor } from './ReviewInteractor'
 import type * as req from '#shared/domain/requirements'
-import { ReqType, WorkflowState } from '#shared/domain/requirements/enums'
-import { MINIMUM_REQUIREMENT_TYPES } from '#shared/domain/requirements/minimumRequirements'
-import { InvalidWorkflowStateException, MismatchException } from '#shared/domain/exceptions'
-import type { PermissionInteractor, AppUserInteractor } from '.'
+import { ReqType, WorkflowState, InvalidWorkflowStateException, MismatchException } from '#shared/domain'
 import type { AuditMetadata, AuditMetadataType } from '#shared/domain'
+import type { RequirementReferenceType } from '#shared/domain/requirements/EntityReferences'
+import { MINIMUM_REQUIREMENT_TYPES } from '#shared/domain/requirements/minimumRequirements'
+import type { PermissionInteractor, AppUserInteractor } from '.'
 import type { RequirementRepository } from '~~/server/data/repositories/RequirementRepository'
 import type { NaturalLanguageToRequirementService } from '~~/server/data/services/NaturalLanguageToRequirementService'
+import type { AppUserReferenceType } from '~~/shared/domain/application/EntityReferences'
 
 type ReqTypeName = keyof typeof req
 
 export class RequirementInteractor extends Interactor<req.RequirementType> {
     private readonly _permissionInteractor: PermissionInteractor
     private readonly _appUserInteractor: AppUserInteractor
+    private readonly _reviewInteractor: ReviewInteractor
     private readonly _solutionId: string
     private readonly _organizationId: string
 
@@ -24,12 +27,14 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
      * @param props.repository - The repository to use
      * @param props.permissionInteractor - The PermissionInteractor instance
      * @param props.appUserInteractor - The AppUserInteractor instance
+     * @param props.reviewInteractor - The ReviewInteractor instance
      */
     constructor(props: {
         // FIXME: Repository<req.RequirementType>
         repository: RequirementRepository
         permissionInteractor: PermissionInteractor
         appUserInteractor: AppUserInteractor
+        reviewInteractor: ReviewInteractor
         solutionId: string
         organizationId: string
     }) {
@@ -38,6 +43,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         this._solutionId = props.solutionId
         this._permissionInteractor = props.permissionInteractor
         this._appUserInteractor = props.appUserInteractor
+        this._reviewInteractor = props.reviewInteractor
 
         // TODO: Implement, or update to only rely on the solutionId as a dependency
         // this._assertSolutionBelongsToOrganization();
@@ -57,7 +63,8 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
                     const createdByUser = await this._appUserInteractor.getUserById(requirement.createdBy.id, this._organizationId)
                     enrichedRequirement.createdBy = {
                         id: createdByUser.id,
-                        name: createdByUser.name
+                        name: createdByUser.name,
+                        entityType: 'app_user' as const
                     }
                 } catch {
                     // Keep the existing data if user lookup fails
@@ -69,10 +76,29 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
                     const modifiedByUser = await this._appUserInteractor.getUserById(requirement.modifiedBy.id, this._organizationId)
                     enrichedRequirement.modifiedBy = {
                         id: modifiedByUser.id,
-                        name: modifiedByUser.name
+                        name: modifiedByUser.name,
+                        entityType: 'app_user' as const
                     }
                 } catch {
                     // Keep the existing data if user lookup fails
+                }
+            }
+
+            // Enrich the appUser field
+            if ('appUser' in requirement && requirement.appUser) {
+                const req = requirement as T & { appUser?: AppUserReferenceType }
+                if (req.appUser?.id) {
+                    try {
+                        const appUser = await this._appUserInteractor.getUserById(req.appUser.id, this._organizationId),
+                            enrichedPerson = enrichedRequirement as T & { appUser?: AppUserReferenceType }
+                        enrichedPerson.appUser = {
+                            id: appUser.id,
+                            name: appUser.name,
+                            entityType: 'app_user' as const
+                        }
+                    } catch {
+                        // Keep the existing data if user lookup fails
+                    }
                 }
             }
 
@@ -97,62 +123,81 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
     private async assertReferencedRequirementsBelongToSolution(
         reqProps: Partial<Omit<req.RequirementType, 'reqId' | keyof typeof AuditMetadata>>
     ) {
-        for (const [key, value] of Object.entries(reqProps) as [keyof typeof reqProps, string | { id: string }][]) {
-            const id = typeof value === 'string' && validateUuid(value)
-                ? value
-                : typeof value === 'object' && 'id' in value ? value.id : undefined
+        for (const [key, value] of Object.entries(reqProps)) {
+            if (key === 'organization') continue
 
-            if (!id) continue
+            if (Array.isArray(value)) {
+                for (const item of value) {
+                    const id = typeof item === 'string' && validateUuid(item)
+                        ? item
+                        : typeof item === 'object' && item && 'id' in item ? (item as { id: string }).id : undefined
 
-            try {
-                const result = await this.repository.getById(id)
+                    if (!id) continue
 
-                if (key === 'solution')
-                    if (result.id !== this._solutionId) throw new MismatchException(`Requirement with id ${reqProps['id']} does not belong to the solution`)
-            } catch {
-                throw new MismatchException(`Requirement with id ${value} does not belong to the solution`)
+                    await this.validateReferenceScope(id, key, reqProps)
+                }
+            } else {
+                const id = typeof value === 'string' && validateUuid(value)
+                    ? value
+                    : typeof value === 'object' && value && 'id' in value ? (value as { id: string }).id : undefined
+
+                if (!id) continue
+
+                await this.validateReferenceScope(id, key, reqProps)
             }
         }
     }
 
     /**
-     * Asserts that all referenced requirements are in the Active workflow state.
-     * This is used during approval to ensure that a requirement can only reference Active requirements.
-     * @param reqProps The properties of the requirements to check
-     * @throws {InvalidWorkflowStateException} If a referenced requirement is not in the Active state
+     * Validate that a referenced entity belongs to the appropriate scope.
+     * For requirements: must belong to the current solution.
+     * For AppUsers: must be a member of the current organization.
+     * @param id - The ID of the referenced entity
+     * @param key - The property name containing the reference
+     * @param reqProps - The original requirement properties for context
+     * @throws {MismatchException} If the referenced entity does not belong to the appropriate scope
      */
-    private async assertReferencedRequirementsAreActive(
-        reqProps: Partial<Omit<req.RequirementType, 'reqId' | keyof AuditMetadataType>>
+    private async validateReferenceScope(
+        id: string,
+        key: string,
+        reqProps: Partial<Omit<req.RequirementType, 'reqId' | keyof typeof AuditMetadata>>
     ) {
-        for (const [key, value] of Object.entries(reqProps) as [keyof typeof reqProps, string | { id: string }][]) {
-            // Skip non-reference fields
-            if (key === 'solution') continue
-
-            const id = typeof value === 'string' && validateUuid(value)
-                ? value
-                : typeof value === 'object' && 'id' in value ? value.id : undefined
-
-            if (!id) continue
-
+        // Check if this is an AppUser reference (Ex: From the Person entity)
+        if (key === 'appUser') {
+            // For AppUser references, validate they belong to the organization
             try {
-                const result = await this.repository.getById(id)
-
-                if (result.workflowState !== WorkflowState.Active) {
-                    throw new InvalidWorkflowStateException(
-                        dedent(`
-                            Cannot approve requirement because referenced requirement
-                            '${result.name}' (${key}) is in ${result.workflowState} state
-                            instead of Active. All referenced requirements must be Active
-                            before this requirement can be approved.
-                        `)
-                    )
-                }
-            } catch (error) {
-                if (error instanceof InvalidWorkflowStateException)
-                    throw error
-
-                throw new MismatchException(`Referenced requirement with id ${id} not found`)
+                await this._permissionInteractor.getAppUserOrganizationRole({
+                    appUserId: id,
+                    organizationId: this._organizationId
+                })
+                // If we get here, the user is a member of the organization
+                return
+            } catch {
+                throw new MismatchException(`Referenced AppUser with id ${id} is not a member of the organization`)
             }
+        }
+
+        // For requirement references, validate they belong to the solution
+        try {
+            const result = await this.repository.getById(id)
+
+            // For solution references, ensure it matches the current solution
+            if (key === 'solution') {
+                if (result.id !== this._solutionId)
+                    throw new MismatchException(`Requirement with id ${reqProps['id']} references solution ${result.id} but should reference current solution ${this._solutionId}`)
+            } else {
+                // For all other requirement references, ensure they belong to the current solution
+                // Skip if the referenced item doesn't have a solution property (e.g., organization-level entities)
+                if ('solution' in result && result.solution && typeof result.solution === 'object' && 'id' in result.solution) {
+                    if ((result.solution as { id: string }).id !== this._solutionId)
+                        throw new MismatchException(`Referenced requirement with id ${id} belongs to solution ${(result.solution as { id: string }).id} but should belong to current solution ${this._solutionId}`)
+                }
+            }
+        } catch (error) {
+            if (error instanceof MismatchException)
+                throw error
+
+            throw new MismatchException(`Referenced requirement with id ${id} does not belong to the solution`)
         }
     }
 
@@ -235,6 +280,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
      * @returns The requirements of the given type across visible workflow states
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
+    // FIXME: This implementation is suspicious
     async getAllVisibleRequirementsByType<R extends ReqTypeName>(reqType: ReqType): Promise<z.infer<typeof req[R]>[]> {
         this._permissionInteractor.assertOrganizationReader(this._organizationId)
 
@@ -249,16 +295,56 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
                     })
                 )
             ),
-            // Flatten and return unique requirements (deduplicate by id)
+            // Flatten and return unique requirements (deduplicate by id, prioritizing most advanced workflow state)
             flatRequirements = allRequirements.flat(),
+            // Create workflow state priority map (higher number = more advanced state)
+            workflowPriority = new Map([
+                [WorkflowState.Proposed, 1],
+                [WorkflowState.Review, 2],
+                [WorkflowState.Active, 3]
+            ]),
             uniqueRequirements = flatRequirements.reduce((acc, req) => {
-                if (!acc.find(existing => existing.id === req.id))
+                const existingIndex = acc.findIndex(existing => existing.id === req.id)
+                if (existingIndex === -1) {
+                    // New requirement, add it
                     acc.push(req)
+                } else {
+                    // Duplicate ID found, keep the one with higher workflow priority
+                    const existing = acc[existingIndex]!, // Safe because findIndex returned a valid index
+                        reqPriority = workflowPriority.get(req.workflowState as WorkflowState) || 0,
+                        existingPriority = workflowPriority.get(existing.workflowState as WorkflowState) || 0
 
+                    if (reqPriority > existingPriority) {
+                        // Replace with higher priority workflow state
+                        acc[existingIndex] = req
+                    }
+                }
                 return acc
             }, [] as z.infer<typeof req[R]>[])
 
         return uniqueRequirements
+    }
+
+    /**
+     * Get all visible requirements by type as domain references
+     * @param reqType - The requirement type to filter by
+     * @returns Array of domain references for the requirements
+     * @throws {PermissionDeniedException} If the user is not an organization reader or better
+     */
+    async getVisibleRequirementReferences(reqType: ReqType): Promise<RequirementReferenceType[]> {
+        // Get filtered requirements using existing business logic
+        const requirements = await this.getAllVisibleRequirementsByType(reqType)
+
+        // Convert full domain objects to references (extract just the reference fields)
+        return requirements.map(req => ({
+            id: req.id,
+            name: req.name,
+            reqType: req.reqType,
+            workflowState: req.workflowState,
+            lastModified: req.lastModified,
+            reqIdPrefix: req.reqIdPrefix,
+            uiBasePathTemplate: req.uiBasePathTemplate
+        }))
     }
 
     /**
@@ -382,6 +468,9 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         if (currentRequirement.reqType === ReqType.PARSED_REQUIREMENTS)
             throw new MismatchException('ReqType.PARSED_REQUIREMENTS is not allowed.')
 
+        if (currentRequirement.reqType === ReqType.PERSON)
+            await this.validatePersonProtection(id)
+
         if (currentRequirement.workflowState !== WorkflowState.Proposed)
             throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Proposed state`)
 
@@ -420,7 +509,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         if (currentRequirement.workflowState !== WorkflowState.Proposed)
             throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Proposed state`)
 
-        return this.repository.update({
+        await this.repository.update({
             reqProps: {
                 id,
                 reqType: currentRequirement.reqType,
@@ -429,81 +518,8 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
             modifiedById: this._permissionInteractor.userId,
             modifiedDate: new Date()
         })
-    }
 
-    /**
-     * Rejects a requirement currently in the Review state.
-     * This will change the state to Rejected.
-     * @param id - The id of the requirement to reject
-     * @throws {InvalidWorkflowStateException} If the requirement is not currently in the Review state.
-     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
-     * @throws {MismatchException} If ReqType.SILENCE or ReqType.PARSED_REQUIREMENTS is provided
-     * @throws {NotFoundException} If the requirement does not exist
-     */
-    async rejectRequirement(
-        id: req.RequirementType['id']
-    ): Promise<void> {
-        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
-
-        const currentRequirement = await this.repository.getById(id)
-
-        if (currentRequirement.reqType === ReqType.PARSED_REQUIREMENTS)
-            throw new MismatchException('ReqType.PARSED_REQUIREMENTS is not allowed.')
-
-        if (currentRequirement.reqType === ReqType.SILENCE)
-            throw new MismatchException('Silence requirements cannot be rejected. They can only be removed.')
-
-        if (currentRequirement.workflowState !== WorkflowState.Review)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Review state`)
-
-        return this.repository.update({
-            reqProps: {
-                id,
-                reqType: currentRequirement.reqType,
-                workflowState: WorkflowState.Rejected
-            },
-            modifiedById: this._permissionInteractor.userId,
-            modifiedDate: new Date()
-        })
-    }
-
-    /**
-     * Approves a requirement currently in the Review state.
-     * This will change the state to Active.
-     * @param id - The id of the requirement to approve
-     * @throws {InvalidWorkflowStateException} If the requirement is not currently in the Review state or if referenced requirements are not Active.
-     * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
-     * @throws {MismatchException} If ReqType.SILENCE or ReqType.PARSED_REQUIREMENTS is provided
-     * @throws {NotFoundException} If the requirement does not exist
-     */
-    async approveRequirement(
-        id: req.RequirementType['id']
-    ): Promise<void> {
-        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
-
-        const currentRequirement = await this.repository.getById(id)
-
-        if (currentRequirement.reqType === ReqType.PARSED_REQUIREMENTS)
-            throw new MismatchException(`Requirement with id ${id} is of type PARSED_REQUIREMENTS and cannot be approved`)
-
-        if (currentRequirement.reqType === ReqType.SILENCE)
-            throw new MismatchException(`Silence requirements cannot be approved.`)
-
-        if (currentRequirement.workflowState !== WorkflowState.Review)
-            throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Review state`)
-
-        // Validate that all referenced requirements are Active before approving
-        await this.assertReferencedRequirementsAreActive(currentRequirement)
-
-        return this.repository.update({
-            reqProps: {
-                id,
-                reqType: currentRequirement.reqType,
-                workflowState: WorkflowState.Active
-            },
-            modifiedById: this._permissionInteractor.userId,
-            modifiedDate: new Date()
-        })
+        await this._reviewInteractor.createMandatoryEndorsements(id)
     }
 
     /**
@@ -559,6 +575,9 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
         if (currentRequirement.reqType === ReqType.PARSED_REQUIREMENTS)
             throw new MismatchException(`Requirement with id ${id} is of type PARSED_REQUIREMENTS and cannot be removed`)
+
+        if (currentRequirement.reqType === ReqType.PERSON)
+            await this.validatePersonProtection(id)
 
         if (currentRequirement.workflowState !== WorkflowState.Rejected)
             throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Rejected state`)
@@ -668,6 +687,9 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         if (currentRequirement.reqType === ReqType.PARSED_REQUIREMENTS)
             throw new MismatchException('ReqType.PARSED_REQUIREMENTS is not allowed.')
 
+        if (currentRequirement.reqType === ReqType.PERSON)
+            await this.validatePersonProtection(id)
+
         if (currentRequirement.workflowState !== WorkflowState.Active)
             throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Active state`)
 
@@ -716,5 +738,20 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         }
 
         return missing
+    }
+
+    /**
+     * Validates that mandatory persons cannot be deleted
+     * @param personId - The person ID to validate
+     * @throws {MismatchException} If attempting to delete a mandatory person
+     */
+    private async validatePersonProtection(personId: string): Promise<void> {
+        const person = await this.getRequirementTypeById({ id: personId, reqType: ReqType.PERSON }) as req.PersonType
+
+        if (person.isProductOwner)
+            throw new MismatchException('Product Owner person cannot be deleted. This person is required for the solution.')
+
+        if (person.isImplementationOwner)
+            throw new MismatchException('Implementation Owner person cannot be deleted. This person is required for the solution.')
     }
 }

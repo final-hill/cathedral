@@ -11,6 +11,7 @@ export class ReqQueryToModelQuery implements Mapper<Partial<RequirementType>, Re
             else if (value === undefined) return acc
 
             if (key === 'lastModified') key = 'effectiveFrom'
+            else if (key === 'appUser') key = 'appUserId'
             else if (typeof value === 'object' && value !== null && 'id' in value) value = value.id
             return { ...acc, [key]: value }
         }, {})

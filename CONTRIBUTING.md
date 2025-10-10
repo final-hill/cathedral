@@ -93,7 +93,6 @@ Requirement (base for all requirements)
 │       └── Stakeholder (G.7.#)
 │
 ├── Responsibility
-│   └── Role
 │
 ├── MetaRequirement
 │   ├── ParsedRequirements (P.7.#)
@@ -167,6 +166,55 @@ Update the Slackbot configuration (Event Subscriptions) to point to the generate
 Note that this will only work if the server is running locally (`npm run dev`).
 
 Once the local server is stopped, the ngrok tunnel will be closed and the Slackbot will no longer work.
+
+## Solution Initialization and Personnel Management
+
+### Automatic Solution Setup
+
+When a Solution is created, Cathedral automatically initializes the project with essential personnel to eliminate bootstrapping challenges:
+
+#### Automatic Personnel Creation
+1. **Solution Creator Person**: A Person entity is automatically created for the solution creator with comprehensive role capabilities
+2. **AppUser-Person Linking**: The Solution Creator Person is linked to the solution creator's AppUser
+3. **Role Capabilities**: The Solution Creator Person is automatically granted both Product Owner and Implementation Owner capabilities
+4. **Active Workflow State**: The Solution Creator Person is created in the `Active` workflow state
+5. **Endorsement Capability**: This ensures endorsers exist from the moment the Solution is created
+
+#### Person Role Capabilities
+The Solution Creator Person is automatically configured with:
+- **isProductOwner: true** - Full Product Owner capabilities and permissions
+- **isImplementationOwner: true** - Full Implementation Owner capabilities and permissions
+- **All Endorsement Permissions** - Can endorse all requirement categories
+
+#### Initial Requirements Summary
+For each new Solution, the following requirement is automatically created in `Active` state:
+- **One Solution Creator Person** (linked to solution creator's AppUser with both Product Owner and Implementation Owner capabilities)
+
+### Person-Based Endorsement Permissions
+
+Cathedral implements granular endorsement permissions to control which persons can endorse different requirement categories:
+
+#### Endorsement Permission Flags
+- **canEndorseProjectRequirements**: Can endorse Person, Product requirements
+- **canEndorseEnvironmentRequirements**: Can endorse Environment, Constraint, Assumption, Effect, Invariant requirements
+- **canEndorseGoalsRequirements**: Can endorse Goal, Outcome, Obstacle, Epic, Limit requirements
+- **canEndorseSystemRequirements**: Can endorse System, Component, Interface, Behavior, Scenario requirements
+
+#### Special Role Capabilities
+- **Product Owner** (`isProductOwner: true`): Automatically has all endorsement permissions
+- **Implementation Owner** (`isImplementationOwner: true`): Automatically has all endorsement permissions
+- **UI Behavior**: The `isProductOwner` and `isImplementationOwner` flags are not directly editable in the UI
+
+### Person Protection Rules
+
+#### Mandatory Capability Protection
+1. **Deletion Prevention**: Persons with Product Owner or Implementation Owner capabilities cannot be removed
+2. **Capability Preservation**: System ensures at least one person with each mandatory capability exists
+3. **Validation**: System prevents removing persons who are the sole holders of mandatory capabilities
+
+#### AppUser-Person Synchronization
+- **Deactivation Handling**: When an AppUser is deactivated, corresponding Person entities are updated
+- **Capability Continuity**: System ensures mandatory capabilities are maintained during personnel changes
 
 ## Requirements Workflow
 
@@ -255,8 +303,8 @@ stateDiagram-v2
     Proposed --> Review : Submit for Review
     Proposed --> Removed : Remove
 
-    Review --> Active : Approve
-    Review --> Rejected : Reject
+    Review --> Active : Auto-Approve<br>(All Endorsed + Deps Active)
+    Review --> Rejected : Auto-Reject<br>(Any Endorsement Rejected)
 
     Active --> Proposed : Revise (new version)
     Active --> Removed : Remove
@@ -266,10 +314,10 @@ stateDiagram-v2
 
     Removed --> Proposed : Restore<br>(normal requirements only)
 
-    note right of Active : Generates unique ReqId
+    note right of Active : Generates unique ReqId<br>Auto-transition when complete
     note right of Proposed : New version created<br>when revising Active
-    note right of Rejected : Silence requirements<br>Remove only<br>no restore
-    note left of Review : Approval requires all<br>referenced requirements<br>to be Active
+    note right of Rejected : Silence requirements<br>Remove only<br>no restore<br>Auto-transition on rejection
+    note left of Review : Auto-transitions when<br>all endorsements complete<br>+ dependencies satisfied
 ```
 
 ### Permission Requirements
@@ -279,6 +327,54 @@ All workflow operations require specific permission levels:
 - **Organization Reader**: Can view requirements in all states
 - **Organization Contributor**: Can perform all workflow operations (create, edit, review, approve, reject, remove, restore)
 - **Organization Admin**: Has all contributor permissions plus user management capabilities
+
+### Endorsement Workflow
+
+#### Endorsement Creation
+When a requirement is submitted for review (`Proposed → Review`), the system automatically creates endorsement requests for persons with the appropriate mandatory capabilities based on requirement type.
+
+#### Endorsement Resolution
+- **Endorsement**: Approves the requirement for the specific person's capability domain
+- **Rejection**: Immediately transitions the requirement to `Rejected` state with mandatory reason
+- **Person Matching**: Only users linked to persons with endorsing capabilities can provide endorsements
+- **Automatic Coverage**: The solution creator is automatically granted mandatory capabilities, ensuring endorsers are always available
+- **Automatic Transition**: When all endorsements are complete, requirements automatically transition to Active (if all approved) or Rejected (if any rejected) states
+
+#### Approval Requirements
+Requirements automatically transition from `Review → Active` when:
+1. **All Mandatory Endorsements**: Are completed and approved (no pending or rejected endorsements)
+2. **Reference Validation**: All referenced requirements are in `Active` state
+3. **Automatic Processing**: Transitions happen immediately when endorsements are completed
+4. **Dependency Blocking**: If referenced requirements are not Active, the requirement remains in Review state until dependencies are resolved
+
+#### Requirement Review Interface
+
+The Cathedral system provides a centralized review interface through the `RequirementReview.vue` component for monitoring review progress:
+
+**Automatic Transitions**:
+- **Auto-Approval**: When all endorsements are approved and all referenced requirements are Active - automatically transitions requirement from Review → Active state
+- **Auto-Rejection**: When any endorsements are rejected - automatically transitions requirement from Review → Rejected state
+- **Dependency Validation**: If all endorsements are approved but referenced requirements are not Active, the requirement remains in Review state until dependencies are resolved
+
+**Review Status Display**:
+- **"Review In Progress" Status**: Displayed for requirements in Review state
+  - Shows that the requirement is actively being reviewed
+  - Automatic transition occurs when all review items are complete
+
+**Permission-Based Access**:
+- **Organization Contributors**: Can complete requirements when all endorsements are finished (approved or rejected)
+- **Organization Readers**: View-only access, can see review status and endorsement progress
+- **Endorsing Persons**: Can provide endorsements based on their capability permissions
+
+**Centralized Review Decision**:
+Requirements automatically transition based on endorsement completion:
+- Endorsement approvals accumulate until all required endorsements are complete
+- Requirements automatically transition to Active state when all endorsements are approved and dependencies are satisfied
+- Requirements automatically transition to Rejected state when any endorsements are rejected
+- This provides immediate feedback while maintaining proper workflow validation
+
+**Generic Review Status System**:
+The system implements a generic review status interface that can accommodate future review components beyond endorsements (correctness checks, completeness reviews, security assessments, etc.). Each review component exposes a consistent status interface with standard states: `none`, `pending`, `partial`, `approved`, and `rejected`.
 
 ### Requirement Versioning and Parallel Development
 
@@ -317,13 +413,19 @@ The workflow is implemented through RESTful API endpoints following the pattern:
 - `POST /api/requirements/[reqType]/proposed/[id]/edit` - Edit proposed requirement
 - `POST /api/requirements/[reqType]/proposed/[id]/review` - Submit for review
 - `POST /api/requirements/[reqType]/proposed/[id]/remove` - Remove proposed requirement
-- `POST /api/requirements/[reqType]/review/[id]/approve` - Approve requirement
-- `POST /api/requirements/[reqType]/review/[id]/reject` - Reject requirement
+- `POST /api/requirements/[reqType]/review/[id]/approve` - Approve requirement (called from review interface)
+- `POST /api/requirements/[reqType]/review/[id]/reject` - Reject requirement (called from review interface)
 - `POST /api/requirements/[reqType]/rejected/[id]/revise` - Revise rejected requirement
 - `POST /api/requirements/[reqType]/rejected/[id]/remove` - Remove rejected requirement
 - `POST /api/requirements/[reqType]/active/[id]/edit` - Revise active requirement (fails if newer versions exist in Proposed or Review states to prevent parallel conflicts)
 - `POST /api/requirements/[reqType]/active/[id]/remove` - Remove active requirement
 - `POST /api/requirements/[reqType]/removed/[id]/restore` - Restore removed requirement
+
+**Backend Review Validation**:
+Endorsement endpoints now include automatic workflow transition logic:
+- **Automatic Transitions**: When endorsements are completed, requirements automatically transition to appropriate states
+- **Business Logic Enforcement**: All validation rules are enforced during automatic transitions
+- **Future Extensibility**: Validation framework ready for additional review checklist items (correctness, completeness, security, etc.)
 
 **Note**: For Silence requirements (`reqType` = "silence"):
 - Silence requirements are automatically created in the Rejected state

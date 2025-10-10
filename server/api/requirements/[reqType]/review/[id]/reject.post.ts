@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
         }, 'At least one of organizationId or organizationSlug should be provided'),
         { solutionSlug, organizationId: orgId, organizationSlug: orgSlug } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
-        requirementInteractor = await createRequirementInteractor({
+        reviewInteractor = await createReviewInteractor({
             event,
             session,
             organizationId: orgId,
@@ -23,6 +23,6 @@ export default defineEventHandler(async (event) => {
             solutionSlug
         })
 
-    return requirementInteractor.rejectRequirement(id)
+    return reviewInteractor.rejectRequirement(id)
         .catch(handleDomainException)
 })

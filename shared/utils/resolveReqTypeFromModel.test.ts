@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { resolveReqTypeFromModel } from './resolveReqTypeFromModel'
-import { ReqType } from '#shared/domain/requirements/ReqType'
+import { ReqType } from '../../shared/domain/requirements/ReqType'
 
 describe('resolveReqTypeFromModel', () => {
     it('should return req_type when property is available', () => {

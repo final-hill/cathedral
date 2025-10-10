@@ -2,7 +2,6 @@
 import { ReqType } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
 import { z } from 'zod'
-import type { RequirementType } from '#shared/domain/requirements'
 
 const route = useRoute(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug, reqtype: reqType, id } = route.params as {
@@ -38,9 +37,9 @@ const title = `${snakeCaseToPascalCase(reqType)} Details`
 useHead({ title })
 definePageMeta({ middleware: 'auth' })
 
-const { data: requirement, status } = await useFetch<RequirementType>(`/api/requirements/${actualReqType}/${id}`, {
+const { data: requirement, status } = await useApiRequest(`/api/requirements/${actualReqType}/${id}`, {
         query: { solutionSlug, organizationSlug },
-        transform: transformRequirementDates
+        schema: RequirementSchema
     }),
     innerSchema = RequirementSchema instanceof z.ZodEffects
         ? RequirementSchema.innerType()

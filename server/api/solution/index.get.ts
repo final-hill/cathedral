@@ -1,6 +1,4 @@
 import { z } from 'zod'
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~~/server/application'
-import { OrganizationRepository } from '~~/server/data/repositories'
 import { Organization, Solution } from '#shared/domain'
 
 const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
@@ -18,13 +16,7 @@ const { id: organizationId, slug: organizationSlug } = Organization.innerType().
 export default defineEventHandler(async (event) => {
     const { description, name, organizationId, organizationSlug, slug } = await validateEventQuery(event, querySchema),
         session = await requireUserSession(event),
-        entraService = createEntraService(),
-        permissionInteractor = new PermissionInteractor({ event, session, entraService }),
-        organizationInteractor = new OrganizationInteractor({
-            permissionInteractor,
-            appUserInteractor: new AppUserInteractor({ permissionInteractor, entraService }),
-            repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug })
-        })
+        organizationInteractor = createOrganizationInteractor({ event, session, organizationId, organizationSlug })
 
     return await organizationInteractor.findSolutions({ description, name, slug }).catch(handleDomainException)
 })

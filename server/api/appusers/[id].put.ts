@@ -1,6 +1,5 @@
 import { z } from 'zod'
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~~/server/application'
-import { OrganizationRepository } from '~~/server/data/repositories'
+import { PermissionInteractor } from '~~/server/application'
 import { AppUser, AppUserOrganizationRole, Organization } from '#shared/domain'
 
 const paramSchema = AppUser.pick({ id: true }),
@@ -22,11 +21,7 @@ export default defineEventHandler(async (event) => {
         session = await requireUserSession(event),
         entraService = createEntraService(),
         permissionInteractor = new PermissionInteractor({ event, session, entraService }),
-        organizationInteractor = new OrganizationInteractor({
-            permissionInteractor,
-            appUserInteractor: new AppUserInteractor({ permissionInteractor, entraService }),
-            repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug })
-        }),
+        organizationInteractor = createOrganizationInteractor({ event, session, organizationId, organizationSlug }),
         orgId = (await organizationInteractor.getOrganization()).id
 
     return await permissionInteractor.updateAppUserRole({ appUserId: id, organizationId: orgId, role })

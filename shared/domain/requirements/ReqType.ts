@@ -34,7 +34,6 @@ export enum ReqType {
     PRODUCT = 'product',
     REQUIREMENT = 'requirement',
     RESPONSIBILITY = 'responsibility',
-    ROLE = 'role',
     SCENARIO = 'scenario',
     SCENARIO_STEP = 'scenario_step',
     SILENCE = 'silence',

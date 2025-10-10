@@ -3,7 +3,7 @@ import type { DropdownMenuItem, TableColumn } from '@nuxt/ui'
 import { UButton, UCard, UCheckbox, UDropdownMenu, UIcon, XConfirmModal } from '#components'
 import { AppUserWithRoleDto, AppUserWithRoleAndSlackDto } from '#shared/dto'
 import type { AppUserWithRoleAndSlackDtoType } from '#shared/dto'
-import type { z } from 'zod'
+import { z } from 'zod'
 
 useHead({ title: 'Users' })
 definePageMeta({ name: 'Organization Users', middleware: 'auth' })
@@ -33,8 +33,10 @@ const { $eventBus } = useNuxtApp(),
     editModalItem = ref<SchemaType | null>(null),
     toast = useToast(),
     { organizationslug: organizationSlug } = useRoute('Organization Users').params,
-    { data: users, status, refresh, error: getUserError } = await useFetch('/api/appusers', {
-        query: { organizationSlug, includeSlack: true }
+    { data: users, status, refresh, error: getUserError } = await useApiRequest('/api/appusers', {
+        schema: z.array(AppUserWithRoleAndSlackDto),
+        query: { organizationSlug, includeSlack: true },
+        errorMessage: 'Failed to load users'
     })
 
 if (getUserError.value) $eventBus.$emit('page-error', getUserError.value)
@@ -171,16 +173,15 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
                 }).result
 
                 if (result) {
-                    try {
-                        await $fetch(`/api/appusers/${item.id}`, {
-                            method: 'DELETE',
-                            body: { organizationSlug }
-                        })
-                        toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'User removed successfully' })
-                        refresh()
-                    } catch (error) {
-                        toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error removing user: ${error}` })
-                    }
+                    await useApiRequest(`/api/appusers/${item.id}`, {
+                        method: 'DELETE',
+                        schema: z.unknown(),
+                        body: { organizationSlug },
+                        showSuccessToast: true,
+                        successMessage: 'User removed successfully',
+                        errorMessage: 'Failed to remove user'
+                    })
+                    refresh()
                 }
             }
         })
@@ -200,76 +201,68 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
 
         if (!result) return
 
-        try {
-            await $fetch('/api/slack/unlink-user', {
-                method: 'POST' as const,
-                body: {
-                    slackUserId,
-                    teamId
-                }
-            })
+        await useApiRequest('/api/slack/unlink-user', {
+            method: 'POST',
+            schema: z.unknown(),
+            body: {
+                slackUserId,
+                teamId
+            },
+            showSuccessToast: true,
+            successMessage: 'Slack account has been unlinked successfully.',
+            errorMessage: 'Failed to unlink Slack user'
+        })
 
-            toast.add({
-                icon: 'i-lucide-check',
-                title: 'Success',
-                description: 'Slack account has been unlinked successfully.'
-            })
-
-            refresh()
-        } catch (error) {
-            toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error unlinking Slack user: ${error}` })
-        }
+        refresh()
     },
     addUser = async (data: z.infer<typeof createSchema>) => {
-        try {
-            const response = await $fetch(`/api/appusers/`, {
-                method: 'POST',
-                body: {
-                    email: data.email,
-                    organizationSlug,
-                    role: data.role
-                }
+        const { data: response } = await useApiRequest(`/api/appusers/`, {
+            method: 'POST',
+            schema: z.object({
+                invited: z.boolean().optional()
+            }),
+            body: {
+                email: data.email,
+                organizationSlug,
+                role: data.role
+            },
+            errorMessage: 'Failed to add/invite user'
+        })
+
+        refresh()
+
+        // Show different success messages based on whether user was invited or added
+        if (response.value?.invited) {
+            toast.add({
+                icon: 'i-lucide-mail',
+                title: 'Invitation Sent',
+                description: `Invitation sent to ${data.email}. They will receive an email to join the organization.`
             })
-
-            refresh()
-
-            // Show different success messages based on whether user was invited or added
-            if (response.invited) {
-                toast.add({
-                    icon: 'i-lucide-mail',
-                    title: 'Invitation Sent',
-                    description: `Invitation sent to ${data.email}. They will receive an email to join the organization.`
-                })
-            } else {
-                toast.add({
-                    icon: 'i-lucide-check',
-                    title: 'User Added',
-                    description: `${data.email} has been added to the organization.`
-                })
-            }
-
-            refresh()
-        } catch (error) {
-            toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error adding/inviting user: ${error}` })
+        } else {
+            toast.add({
+                icon: 'i-lucide-check',
+                title: 'User Added',
+                description: `${data.email} has been added to the organization.`
+            })
         }
+
+        refresh()
     },
     updateUser = async (data: z.infer<typeof editSchema>) => {
-        try {
-            await $fetch(`/api/appusers/${data.id}`, {
-                method: 'PUT',
-                body: {
-                    organizationSlug,
-                    role: data.role
-                }
-            })
-            refresh()
+        await useApiRequest(`/api/appusers/${data.id}`, {
+            method: 'PUT',
+            schema: z.unknown(),
+            body: {
+                organizationSlug,
+                role: data.role
+            },
+            showSuccessToast: true,
+            successMessage: 'User updated successfully',
+            errorMessage: 'Failed to update user'
+        })
+        refresh()
 
-            toast.add({ icon: 'i-lucide-check', title: 'Success', description: 'User updated successfully' })
-
-            closeEdit()
-        } catch (error) {
-            toast.add({ icon: 'i-lucide-alert-circle', title: 'Error', description: `Error updating user: ${error}` })
-        }
+        closeEdit()
     },
     closeEdit = () => {
         editModalOpenState.value = false

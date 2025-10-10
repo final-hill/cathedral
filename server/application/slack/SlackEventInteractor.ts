@@ -1,9 +1,9 @@
 import type { NaturalLanguageToRequirementService, SlackService } from '~~/server/data/services'
 import { Interactor } from '../Interactor'
 import type { PermissionInteractor, SlackWorkspaceInteractor, SlackChannelInteractor, SlackUserInteractor } from '..'
-import { RequirementInteractor, OrganizationCollectionInteractor, AppUserInteractor } from '..'
+import { RequirementInteractor, ReviewInteractor, OrganizationCollectionInteractor, AppUserInteractor } from '..'
 import type { SlackRepository } from '~~/server/data/repositories'
-import { RequirementRepository, OrganizationCollectionRepository, OrganizationRepository } from '~~/server/data/repositories'
+import { RequirementRepository, OrganizationCollectionRepository, OrganizationRepository, EndorsementRepository } from '~~/server/data/repositories'
 import type { z } from 'zod'
 import type { slackAppMentionSchema, slackMessageSchema, SlackInteractivePayload, SlackResponseMessage } from '~~/server/data/slack-zod-schemas'
 import { slackBodySchema, slackSlashCommandSchema } from '~~/server/data/slack-zod-schemas'
@@ -316,16 +316,27 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
 
         this.assertUserIdentity(cathedralUserId)
 
-        const requirementInteractor = new RequirementInteractor({
-            repository: new RequirementRepository({ em }),
-            permissionInteractor: this._permissionInteractor,
-            appUserInteractor: new AppUserInteractor({
+        const appUserInteractor = new AppUserInteractor({
                 permissionInteractor: this._permissionInteractor,
                 entraService: createEntraService()
             }),
-            organizationId: channelConfig.organizationId,
-            solutionId: channelConfig.solutionId
-        })
+            requirementRepository = new RequirementRepository({ em }),
+            endorsementRepository = new EndorsementRepository({ em }),
+            reviewInteractor = new ReviewInteractor({
+                permissionInteractor: this._permissionInteractor,
+                endorsementRepository,
+                requirementRepository,
+                organizationId: channelConfig.organizationId,
+                solutionId: channelConfig.solutionId
+            }),
+            requirementInteractor = new RequirementInteractor({
+                repository: requirementRepository,
+                permissionInteractor: this._permissionInteractor,
+                appUserInteractor,
+                reviewInteractor,
+                organizationId: channelConfig.organizationId,
+                solutionId: channelConfig.solutionId
+            })
 
         try {
             return await requirementInteractor.parseRequirements({
@@ -361,13 +372,24 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         try {
             this.assertUserIdentity(cathedralUserId)
 
-            const requirementInteractor = new RequirementInteractor({
-                    repository: new RequirementRepository({ em }),
+            const appUserInteractor = new AppUserInteractor({
                     permissionInteractor: this._permissionInteractor,
-                    appUserInteractor: new AppUserInteractor({
-                        permissionInteractor: this._permissionInteractor,
-                        entraService: createEntraService()
-                    }),
+                    entraService: createEntraService()
+                }),
+                requirementRepository = new RequirementRepository({ em }),
+                endorsementRepository = new EndorsementRepository({ em }),
+                reviewInteractor = new ReviewInteractor({
+                    permissionInteractor: this._permissionInteractor,
+                    endorsementRepository,
+                    requirementRepository,
+                    organizationId: channelConfig.organizationId,
+                    solutionId: channelConfig.solutionId
+                }),
+                requirementInteractor = new RequirementInteractor({
+                    repository: requirementRepository,
+                    permissionInteractor: this._permissionInteractor,
+                    appUserInteractor,
+                    reviewInteractor,
                     organizationId: channelConfig.organizationId,
                     solutionId: channelConfig.solutionId
                 }),

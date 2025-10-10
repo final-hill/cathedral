@@ -1,5 +1,6 @@
 import type { OrganizationType } from '#shared/domain'
 import { AppRole, DuplicateEntityException, NotFoundException } from '#shared/domain'
+import { slugify } from '#shared/utils'
 import type { OrganizationCollectionRepository } from '../data/repositories'
 import type { EntraService } from '../data/services'
 import { Interactor } from './Interactor'
@@ -149,11 +150,13 @@ export class OrganizationCollectionInteractor extends Interactor<OrganizationTyp
                     ...org,
                     createdBy: {
                         id: org.createdBy?.id || '',
-                        name: createdByName
+                        name: createdByName,
+                        entityType: 'app_user' as const
                     },
                     modifiedBy: {
                         id: org.modifiedBy?.id || '',
-                        name: modifiedByName
+                        name: modifiedByName,
+                        entityType: 'app_user' as const
                     }
                 }
             })

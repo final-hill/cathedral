@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { z } from 'zod'
-import type { InterfaceEntityType, InterfaceOperationType } from '#shared/domain'
-import { Interface, ReqType } from '#shared/domain'
+import { Interface, InterfaceOperation, ReqType } from '#shared/domain'
 import type { FormSchema } from '~/components/XForm.vue'
 
 const innerSchema = Interface instanceof z.ZodEffects
@@ -23,21 +22,20 @@ const route = useRoute(),
         pegs: string
         id: string
     },
-    { data: interfaceData } = await useFetch<InterfaceEntityType>(`/api/requirements/interface/${id}`, {
+    { data: interfaceData } = await useApiRequest(`/api/requirements/interface/${id}`, {
         query: {
             solutionSlug: solutionslug,
             organizationSlug: organizationslug
         },
-        transform: transformRequirementDates
+        schema: Interface
     }),
-    { data: operations, refresh: refreshOperations } = await useFetch<InterfaceOperationType[]>(`/api/requirements/${ReqType.INTERFACE_OPERATION}`, {
+    { data: operations, refresh: refreshOperations } = await useApiRequest(`/api/requirements/${ReqType.INTERFACE_OPERATION}`, {
         query: {
             organizationSlug: organizationslug,
             solutionSlug: solutionslug,
             interface: id
         },
-        transform: data => data.map(transformRequirementDates),
-        default: () => []
+        schema: z.array(InterfaceOperation)
     }),
     goBack = () => {
         router.push(`/o/${organizationslug}/${solutionslug}/${pegs}/interface/api/${id}`)

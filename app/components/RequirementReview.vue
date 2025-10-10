@@ -2,10 +2,11 @@
 import { z } from 'zod'
 import type * as req from '#shared/domain/requirements'
 import type { FormSchema } from '~/components/XForm.vue'
-import type { AccordionItem } from '@nuxt/ui'
 import { WorkflowState } from '#shared/domain/requirements/enums'
+import { AppRole } from '#shared/domain/application'
 import { workflowColorMap } from '#shared/utils/workflow-colors'
 import { getSchemaFields } from '#shared/utils/getSchemaFields'
+import { ReviewState, ReviewCategory as ReviewCategoryEnum } from '#shared/domain/endorsement'
 
 const props = defineProps<{
         requirement: req.RequirementType
@@ -15,13 +16,20 @@ const props = defineProps<{
         solutionSlug: string
         loading?: boolean
     }>(),
-    emit = defineEmits<{
-        approved: [requirement: req.RequirementType]
-        rejected: [requirement: req.RequirementType]
-        cancelled: []
-    }>(),
     { requirement, schema, reqType, organizationSlug, solutionSlug, loading = false } = toRefs(props),
-    // Apply common review omits - same as RequirementView
+    { user } = useUserSession(),
+    toast = useToast(),
+    router = useRouter(),
+    processing = ref(false),
+    // Permission checks
+    userOrgRole = computed(() => {
+        if (!user.value) return null
+        return user.value.organizationRoles.find(role => role.orgId === organizationSlug.value)
+    }),
+    isOrgContributor = computed(() =>
+        user.value?.isSystemAdmin
+        || [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR].includes(userOrgRole.value?.role as AppRole)
+    ),
     commonOmitFields = {
         reqId: true,
         reqIdPrefix: true,
@@ -56,168 +64,101 @@ const props = defineProps<{
     getBooleanValue = (value: unknown): boolean => value as boolean,
     getDateValue = (value: unknown): Date => value as Date,
     getStringValue = (value: unknown): string => value as string,
-    reviewCategories = computed((): AccordionItem[] => [
-        {
-            label: 'Correctness - (Coming Soon)',
-            icon: 'i-lucide-check-circle',
-            slot: 'correctness' as const,
-            class: 'text-warning'
+    { data: reviewStateData } = useApiRequest(`/api/requirements/${reqType.value}/${requirement.value.id}/review-status`, {
+        query: {
+            organizationSlug: organizationSlug.value,
+            solutionSlug: solutionSlug.value
         },
-        {
-            label: 'Justifiability - (Coming Soon)',
-            icon: 'i-lucide-lightbulb',
-            slot: 'justifiability' as const,
-            class: 'text-warning'
-        },
-        {
-            label: 'Completeness - (Coming Soon)',
-            icon: 'i-lucide-list-checks',
-            slot: 'completeness' as const,
-            class: 'text-warning'
-        },
-        {
-            label: 'Consistency - (Coming Soon)',
-            icon: 'i-lucide-align-center',
-            slot: 'consistency' as const,
-            class: 'text-warning'
-        },
-        {
-            label: 'Non-ambiguity - (Coming Soon)',
-            icon: 'i-lucide-eye',
-            slot: 'non-ambiguity' as const,
-            class: 'text-warning'
-        },
-        {
-            label: 'Feasibility - (Coming Soon)',
-            icon: 'i-lucide-wrench',
-            slot: 'feasibility' as const,
-            class: 'text-warning'
-        },
-        {
-            label: 'Abstractness - (Coming Soon)',
-            icon: 'i-lucide-layers',
-            slot: 'abstractness' as const,
-            class: 'text-warning'
-        },
-        {
-            label: 'Traceability - (Coming Soon)',
-            icon: 'i-lucide-git-branch',
-            slot: 'traceability' as const,
-            class: 'text-warning'
-        },
-        {
-            label: 'Delimitedness - (Coming Soon)',
-            icon: 'i-lucide-square-dashed-bottom-code',
-            slot: 'delimitedness' as const,
-            class: 'text-warning'
-        },
-        {
-            label: 'Readability - (Coming Soon)',
-            icon: 'i-lucide-book-open',
-            slot: 'readability' as const,
-            class: 'text-warning'
-        },
-        {
-            label: 'Modifiability - (Coming Soon)',
-            icon: 'i-lucide-edit',
-            slot: 'modifiability' as const,
-            class: 'text-warning'
-        },
-        {
-            label: 'Verifiability - (Coming Soon)',
-            icon: 'i-lucide-shield-check',
-            slot: 'verifiability' as const,
-            class: 'text-warning'
-        },
-        {
-            label: 'Prioritization - (Coming Soon)',
-            icon: 'i-lucide-arrow-up',
-            slot: 'prioritization' as const,
-            class: 'text-warning'
-        },
-        {
-            label: 'Endorsement - (Coming Soon)',
-            icon: 'i-lucide-thumbs-up',
-            slot: 'endorsement' as const,
-            class: 'text-warning'
-        }
-    ])
+        schema: ReviewState,
+        errorMessage: 'Failed to load review status'
+    }),
+    reviewState = computed(() => reviewStateData.value ?? null),
+    // Group review items by category for display (excluding ENDORSEMENT as it's handled separately)
+    // TODO: we need to determine a way to generalize this in the future I think. Otherwise a Custom Component might be needed for each
+    reviewCategories = computed(() => {
+        if (!reviewState.value?.items) return []
 
-// Validate that the requirement can be reviewed
-if (requirement.value.workflowState !== WorkflowState.Review) {
+        // Icon mapping for review categories
+        const categoryIcons: Record<ReviewCategoryEnum, string> = {
+                [ReviewCategoryEnum.ENDORSEMENT]: 'i-lucide-users',
+                [ReviewCategoryEnum.CORRECTNESS]: 'i-lucide-check-circle',
+                [ReviewCategoryEnum.JUSTIFIABILITY]: 'i-lucide-lightbulb',
+                [ReviewCategoryEnum.COMPLETENESS]: 'i-lucide-list-checks',
+                [ReviewCategoryEnum.CONSISTENCY]: 'i-lucide-equal',
+                [ReviewCategoryEnum.NON_AMBIGUITY]: 'i-lucide-target',
+                [ReviewCategoryEnum.FEASIBILITY]: 'i-lucide-gauge',
+                [ReviewCategoryEnum.TRACEABILITY]: 'i-lucide-git-branch',
+                [ReviewCategoryEnum.VERIFIABILITY]: 'i-lucide-check-circle',
+                [ReviewCategoryEnum.ABSTRACTNESS]: 'i-lucide-layers',
+                [ReviewCategoryEnum.DELIMITEDNESS]: 'i-lucide-square-dashed-bottom-code',
+                [ReviewCategoryEnum.READABILITY]: 'i-lucide-book-open',
+                [ReviewCategoryEnum.MODIFIABILITY]: 'i-lucide-edit',
+                [ReviewCategoryEnum.PRIORITIZATION]: 'i-lucide-arrow-up'
+            },
+            itemsByCategory = Object.groupBy(reviewState.value.items, item => item.category)
+
+        // Transform grouped items into category format, excluding ENDORSEMENT category
+        return Object.entries(itemsByCategory)
+            .filter(([categoryKey]) => categoryKey !== ReviewCategoryEnum.ENDORSEMENT)
+            .map(([categoryKey, items]) => {
+                const category = categoryKey as ReviewCategoryEnum,
+                    firstItem = items?.[0]
+
+                return {
+                    name: categoryKey,
+                    title: category,
+                    description: firstItem?.description || '',
+                    icon: categoryIcons[category] || 'i-lucide-check-circle',
+                    items: items || []
+                }
+            })
+    }),
+    onCancel = () => {
+        router.back()
+    },
+    onReviseRequirement = async () => {
+        if (!isOrgContributor.value) {
+            toast.add({
+                icon: 'i-lucide-alert-triangle',
+                title: 'Permission Denied',
+                description: 'You do not have permission to revise requirements',
+                color: 'error'
+            })
+            return
+        }
+
+        processing.value = true
+        try {
+            const endpoint = `/api/requirements/${reqType.value}/rejected/${requirement.value.id}/revise`,
+                successMessage = 'Requirement revised successfully',
+                errorMessage = 'Failed to revise requirement'
+
+            await useApiRequest(endpoint, {
+                method: 'POST',
+                schema: z.unknown(),
+                body: {
+                    solutionSlug: solutionSlug.value,
+                    organizationSlug: organizationSlug.value
+                },
+                showSuccessToast: true,
+                successMessage,
+                errorMessage
+            })
+
+            // Navigate back to requirements list
+            await navigateTo(`/${organizationSlug.value}/${solutionSlug.value}/requirements`)
+        } finally {
+            processing.value = false
+        }
+    }
+
+// Validate that the requirement can be reviewed or is rejected (for revision)
+if (requirement.value.workflowState !== WorkflowState.Review && requirement.value.workflowState !== WorkflowState.Rejected) {
     throw createError({
         statusCode: 403,
-        statusMessage: `Cannot review requirement in ${requirement.value.workflowState} state. Only requirements in Review state can be reviewed.`
+        statusMessage: `Cannot view requirement in ${requirement.value.workflowState} state. Only requirements in Review or Rejected state can be viewed.`
     })
 }
-
-const router = useRouter(),
-    toast = useToast(),
-    isProcessing = ref(false),
-    onApprove = async () => {
-        isProcessing.value = true
-        try {
-            await $fetch(`/api/requirements/${reqType.value}/review/${requirement.value.id}/approve`, {
-                method: 'POST',
-                body: {
-                    solutionSlug: solutionSlug.value,
-                    organizationSlug: organizationSlug.value
-                }
-            })
-
-            toast.add({
-                icon: 'i-lucide-check',
-                title: 'Success',
-                description: 'Requirement approved successfully'
-            })
-
-            emit('approved', requirement.value)
-        } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : String(error)
-            toast.add({
-                icon: 'i-lucide-alert-circle',
-                title: 'Error',
-                description: `Error approving requirement: ${message}`,
-                color: 'error'
-            })
-        } finally {
-            isProcessing.value = false
-        }
-    },
-    onReject = async () => {
-        isProcessing.value = true
-        try {
-            await $fetch(`/api/requirements/${reqType.value}/review/${requirement.value.id}/reject`, {
-                method: 'POST',
-                body: {
-                    solutionSlug: solutionSlug.value,
-                    organizationSlug: organizationSlug.value
-                }
-            })
-
-            toast.add({
-                icon: 'i-lucide-check',
-                title: 'Success',
-                description: 'Requirement rejected'
-            })
-
-            emit('rejected', requirement.value)
-        } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : String(error)
-            toast.add({
-                icon: 'i-lucide-alert-circle',
-                title: 'Error',
-                description: `Error rejecting requirement: ${message}`,
-                color: 'error'
-            })
-        } finally {
-            isProcessing.value = false
-        }
-    },
-    onCancel = () => {
-        emit('cancelled')
-        router.back()
-    }
 </script>
 
 <template>
@@ -351,244 +292,85 @@ const router = useRouter(),
                             Review Checklist
                         </h2>
 
-                        <!-- Review Categories Accordion -->
-                        <UAccordion
-                            type="multiple"
-                            :items="reviewCategories"
-                            class="w-full"
-                        >
-                            <!-- Correctness -->
-                            <template #correctness>
-                                <div class="space-y-3">
-                                    <p class="text-sm text-muted">
-                                        The requirement is correct if it is compatible with actual project parameters,
-                                        properties of the environment (Constraints, Assumptions, Effects, Invariants),
-                                        organizational goals (Outcomes), and Stakeholder expectations.
-                                    </p>
-                                    <p class="text-sm text-muted italic">
-                                        Review items for Correctness will be implemented here.
-                                    </p>
-                                </div>
+                        <!-- Review Categories -->
+                        <div class="space-y-4">
+                            <template v-if="reviewState && reviewCategories.length > 0">
+                                <ReviewCategory
+                                    v-for="category in reviewCategories"
+                                    :key="category.name"
+                                    :review-state="{ overall: reviewState.overall, items: category.items }"
+                                    :category-name="category.name"
+                                    :category-title="category.title"
+                                    :category-description="category.description"
+                                    :category-icon="category.icon"
+                                />
                             </template>
+                            <div
+                                v-else-if="!reviewState"
+                                class="flex items-center justify-center p-6"
+                            >
+                                <UIcon
+                                    name="i-lucide-loader-2"
+                                    class="w-5 h-5 animate-spin text-muted"
+                                />
+                                <span class="ml-2 text-sm text-muted">Loading review status...</span>
+                            </div>
+                            <div
+                                v-else
+                                class="p-6 text-center text-muted"
+                            >
+                                <p>No review items available.</p>
+                            </div>
 
-                            <!-- Justifiability -->
-                            <template #justifiability>
-                                <div class="space-y-3">
-                                    <p class="text-sm text-muted">
-                                        The requirement is justified if it helps reach a goal (Outcome), resolve an Obstacle, or satisfy a Constraint.
-                                    </p>
-                                    <p class="text-sm text-muted italic">
-                                        Review items for Justifiability will be implemented here.
-                                    </p>
-                                </div>
-                            </template>
-
-                            <!-- Completeness -->
-                            <template #completeness>
-                                <div class="space-y-3">
-                                    <p class="text-sm text-muted">
-                                        The requirement is considered complete if it includes:
-                                    </p>
-                                    <ul class="text-sm text-muted ml-4 space-y-1">
-                                        <li>No TBD comments</li>
-                                        <li>If this is a Goal requirement, it must reference a Project or System Requirement to ensure the achievement of the goal.</li>
-                                        <li>If this is an Epic (G.5), or a Scenario (S.4), There must be Functionality (S.2) to realize it</li>
-                                        <li>
-                                            Environment Completeness: System Properties must be compatible with Environment Properties. There must be no contradictions.
-                                            For example, if there is an Environmental Assumption that "The system will operate in a high-temperature environment",
-                                            there should not be a System Use Case that requires "The system will operate only at room temperature".
-                                        </li>
-                                        <li>
-                                            If this is a System Requirement, it must identify all Required Technology Elements (P.5),
-                                            Environment Component Interfaces (E.2) it depends on, and what interfaces it provides (S.3)
-                                        </li>
-                                        <li>
-                                            <div class="space-y-1">
-                                                <p>
-                                                    If this is a System Requirement, make sure that the System description
-                                                    determines the effect of every operation on every property of the affected objects.
-                                                </p>
-                                                <p class="ml-4">
-                                                    They define the effect of every operation on every observable property.
-                                                </p>
-                                                <p class="ml-4">
-                                                    It should be possible to determine the effect of every action of the system in terms
-                                                    of visible changes in the answers to questions that we may ask of the system.
-                                                </p>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                    <p class="text-sm text-muted italic">
-                                        Review items for Completeness will be implemented here.
-                                    </p>
-                                </div>
-                            </template>
-
-                            <!-- Consistency -->
-                            <template #consistency>
-                                <div class="space-y-3">
-                                    <p class="text-sm text-muted">
-                                        A requirement is consistent if it contains no contradiction with other Active Requirements
-                                    </p>
-                                    <p class="text-sm text-muted italic">
-                                        Review items for Consistency will be implemented here.
-                                    </p>
-                                </div>
-                            </template>
-
-                            <!-- Non-ambiguity -->
-                            <template #non-ambiguity>
-                                <div class="space-y-3">
-                                    <p class="text-sm text-muted">
-                                        A set of requirements is unambiguous if none of its elements is so expressed as to lend itself to two significantly different understandings.
-                                        Technical language must utilize Ubiquitous Language (A Domain of Discourse) and leverage the glossary
-                                    </p>
-                                    <p class="text-sm text-muted italic">
-                                        Review items for Non-ambiguity will be implemented here.
-                                    </p>
-                                </div>
-                            </template>
-
-                            <!-- Feasibility -->
-                            <template #feasibility>
-                                <div class="space-y-3">
-                                    <p class="text-sm text-muted">
-                                        A System (resp. Project) requirement is feasible if it is possible, within the constraints of the Environment and Goals, to produce an implementation (resp. schedule) that satisfies it
-                                    </p>
-                                    <p class="text-sm text-muted italic">
-                                        Review items for Feasibility will be implemented here.
-                                    </p>
-                                </div>
-                            </template>
-
-                            <!-- Abstractness -->
-                            <template #abstractness>
-                                <div class="space-y-3">
-                                    <p class="text-sm text-muted">
-                                        A System requirement is abstract if it specifies a desired system property without prescribing or favoring specific design or implementation choices. The requirement should be expressed without prescribing a specific implementation.
-                                    </p>
-                                    <p class="text-sm text-muted italic">
-                                        Review items for Abstractness will be implemented here.
-                                    </p>
-                                </div>
-                            </template>
-
-                            <!-- Traceability -->
-                            <template #traceability>
-                                <div class="space-y-3">
-                                    <p class="text-sm text-muted">
-                                        A PEGS requirement is traceable if it is possible to follow its consequences, both ways, in other project artifacts including design, implementation and verification elements.
-                                    </p>
-                                    <p class="text-sm text-muted italic">
-                                        Review items for Traceability will be implemented here.
-                                    </p>
-                                </div>
-                            </template>
-
-                            <!-- Delimitedness -->
-                            <template #delimitedness>
-                                <div class="space-y-3">
-                                    <p class="text-sm text-muted">
-                                        A set of Goals or System requirements is delimited if it specifies the scope of the future system, making it possible to determine what functionality lies beyond that scope
-                                    </p>
-                                    <p class="text-sm text-muted italic">
-                                        Review items for Delimitedness will be implemented here.
-                                    </p>
-                                </div>
-                            </template>
-
-                            <!-- Readability -->
-                            <template #readability>
-                                <div class="space-y-3">
-                                    <p class="text-sm text-muted">
-                                        A requirement is readable if it can be readily understood by its intended audience. All requirements are checked for Readability. Goal requirements must be more readable than other requirements due to the broader audience (non-SMEs).
-                                    </p>
-                                    <p class="text-sm text-muted italic">
-                                        Review items for Readability will be implemented here.
-                                    </p>
-                                </div>
-                            </template>
-
-                            <!-- Modifiability -->
-                            <template #modifiability>
-                                <div class="space-y-3">
-                                    <p class="text-sm text-muted">
-                                        A set of requirements is modifiable if it can be adapted in case of changes to Project, Environment, Goals or System properties, through an effort commensurate with the extent of the changes
-                                    </p>
-                                    <p class="text-sm text-muted italic">
-                                        Review items for Modifiability will be implemented here.
-                                    </p>
-                                </div>
-                            </template>
-
-                            <!-- Verifiability -->
-                            <template #verifiability>
-                                <div class="space-y-3">
-                                    <p class="text-sm text-muted">
-                                        A System (resp. Project) requirement is verifiable if it is expressed in such a way as to allow determining whether a proposed implementation (resp. the sequence of events in the actual project) satisfies it.
-                                    </p>
-                                    <p class="text-sm text-muted italic">
-                                        Review items for Verifiability will be implemented here.
-                                    </p>
-                                </div>
-                            </template>
-
-                            <!-- Prioritization -->
-                            <template #prioritization>
-                                <div class="space-y-3">
-                                    <p class="text-sm text-muted">
-                                        System requirements must have a priority associated with them.
-                                    </p>
-                                    <p class="text-sm text-muted italic">
-                                        Review items for Prioritization will be implemented here.
-                                    </p>
-                                </div>
-                            </template>
-
-                            <!-- Endorsement -->
-                            <template #endorsement>
-                                <div class="space-y-3">
-                                    <p class="text-sm text-muted">
-                                        A requirement is endorsed if it has been approved by relevant Key Stakeholders
-                                    </p>
-                                    <p class="text-sm text-muted italic">
-                                        Review items for Endorsement will be implemented here.
-                                    </p>
-                                </div>
-                            </template>
-                        </UAccordion>
+                            <!-- Endorsements - Stays as custom workflow component -->
+                            <ReviewEndorsements
+                                v-if="reviewState"
+                                :requirement-id="requirement.id"
+                                :req-type="reqType"
+                                :organization-slug="organizationSlug"
+                                :solution-slug="solutionSlug"
+                            />
+                        </div>
                     </aside>
                 </div>
             </section>
 
             <!-- Actions Section -->
             <footer class="pt-4 border-t border-default">
-                <nav class="flex justify-end gap-3">
+                <nav class="flex justify-between gap-3">
                     <UButton
                         variant="ghost"
                         color="neutral"
-                        :loading="loading || isProcessing"
+                        :loading="loading || processing"
                         @click="onCancel"
                     >
-                        Cancel
+                        Back
                     </UButton>
-                    <UButton
-                        variant="outline"
-                        color="error"
-                        :loading="isProcessing"
-                        :disabled="loading"
-                        @click="onReject"
-                    >
-                        Reject
-                    </UButton>
-                    <UButton
-                        color="success"
-                        :loading="isProcessing"
-                        :disabled="loading"
-                        @click="onApprove"
-                    >
-                        Approve
-                    </UButton>
+
+                    <div class="flex gap-3">
+                        <!-- Revise Button - when requirement is rejected -->
+                        <UButton
+                            v-if="isOrgContributor && requirement.workflowState === WorkflowState.Rejected"
+                            color="primary"
+                            icon="i-lucide-edit"
+                            :loading="processing"
+                            :disabled="loading"
+                            @click="onReviseRequirement"
+                        >
+                            Revise
+                        </UButton>
+
+                        <!-- Status display for review requirements -->
+                        <UButton
+                            v-else-if="requirement.workflowState === WorkflowState.Review"
+                            color="neutral"
+                            variant="ghost"
+                            icon="i-lucide-eye"
+                            disabled
+                        >
+                            Review In Progress
+                        </UButton>
+                    </div>
                 </nav>
             </footer>
         </div>

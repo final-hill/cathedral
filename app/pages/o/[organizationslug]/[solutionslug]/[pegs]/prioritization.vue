@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 import { MoscowPriority, ReqType, WorkflowState } from '#shared/domain/requirements/enums'
 import type { BehaviorType, ScenarioType } from '#shared/domain/requirements'
+import { Behavior, Scenario } from '#shared/domain/requirements'
 import { priorityColorMap } from '#shared/utils/priority-colors'
 import { priorityLabelMap } from '#shared/utils/priority-labels'
 import { XConfirmModal } from '#components'
+import { z } from 'zod'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -19,14 +21,20 @@ const route = useRoute(),
 useHead({ title: 'System Prioritization' })
 
 // Fetch behaviors and scenarios that can have priorities
-const { data: behaviors, status: behaviorsStatus, refresh: refreshBehaviors } = await useFetch<BehaviorType[]>(`/api/requirements/${ReqType.BEHAVIOR}`, {
-        query: { solutionSlug, organizationSlug },
-        transform: data => data.map(transformRequirementDates)
-    }),
-    { data: scenarios, status: scenariosStatus, refresh: refreshScenarios } = await useFetch<ScenarioType[]>(`/api/requirements/${ReqType.SCENARIO}`, {
-        query: { solutionSlug, organizationSlug },
-        transform: data => data.map(transformRequirementDates)
-    }),
+const { data: behaviors, status: behaviorsStatus, refresh: refreshBehaviors } = await useApiRequest(
+        `/api/requirements/${ReqType.BEHAVIOR}`,
+        {
+            query: { solutionSlug, organizationSlug },
+            schema: z.array(Behavior)
+        }
+    ),
+    { data: scenarios, status: scenariosStatus, refresh: refreshScenarios } = await useApiRequest(
+        `/api/requirements/${ReqType.SCENARIO}`,
+        {
+            query: { solutionSlug, organizationSlug },
+            schema: z.array(Scenario)
+        }
+    ),
     allRequirements = computed(() => {
         const requirements: (BehaviorType | ScenarioType)[] = []
 
@@ -199,10 +207,17 @@ const priorityOptions = [
                     return
                 }
 
-                await $fetch(endpoint, {
-                    method: 'POST',
-                    body: { priority: update.priority === null ? undefined : update.priority }
-                })
+                const { error } = await useApiRequest(
+                    endpoint,
+                    {
+                        method: 'POST',
+                        schema: z.any(),
+                        body: { priority: update.priority === null ? undefined : update.priority }
+                    }
+                )
+
+                if (error.value)
+                    throw new Error(error.value.message || 'Failed to update priority')
             }))
 
             localPriorityChanges.value.clear()

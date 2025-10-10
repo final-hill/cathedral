@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { PermissionInteractor, OrganizationInteractor, SlackWorkspaceInteractor } from '~~/server/application'
-import { OrganizationRepository, SlackWorkspaceRepository } from '~~/server/data/repositories'
+import { PermissionInteractor, SlackWorkspaceInteractor } from '~~/server/application'
+import { SlackWorkspaceRepository } from '~~/server/data/repositories'
 
 const querySchema = z.object({
     organizationSlug: z.string().min(1, 'Organization slug is required')
@@ -15,11 +15,7 @@ export default defineEventHandler(async (event) => {
         em = event.context.em,
         entraService = createEntraService(),
         permissionInteractor = new PermissionInteractor({ event, session, entraService }),
-        organizationInteractor = new OrganizationInteractor({
-            repository: new OrganizationRepository({ em, organizationSlug }),
-            permissionInteractor,
-            appUserInteractor: null as never // We don't need this for this operation
-        }),
+        organizationInteractor = createOrganizationInteractor({ event, session, organizationSlug }),
         organization = await organizationInteractor.getOrganization(),
         slackWorkspaceInteractor = new SlackWorkspaceInteractor({
             repository: new SlackWorkspaceRepository({ em }),

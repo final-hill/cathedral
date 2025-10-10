@@ -1,8 +1,10 @@
 <script lang="tsx" setup>
 import type { SlackWorkspaceMetaType } from '#shared/domain/application'
+import { SlackWorkspaceMeta } from '#shared/domain/application'
 import type { TableColumn } from '@nuxt/ui'
 import type { Row } from '@tanstack/vue-table'
 import { UButton, UTable, UIcon, UBadge, XConfirmModal } from '#components'
+import { z } from 'zod'
 
 interface Props {
     organizationSlug: string
@@ -37,9 +39,10 @@ if (route.query.slack_install === 'success') {
     router.replace({ query: {} })
 }
 
-const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useFetch<SlackWorkspaceMetaType[]>(
+const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useApiRequest(
         `/api/slack/workspaces`,
         {
+            schema: z.array(SlackWorkspaceMeta),
             query: { organizationSlug: props.organizationSlug },
             transform: (data: SlackWorkspaceMetaType[]): SlackWorkspaceMetaType[] => {
                 return data?.map(workspace => ({
@@ -47,7 +50,8 @@ const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useFetc
                     installationDate: new Date(workspace.installationDate),
                     lastRefreshDate: workspace.lastRefreshDate ? new Date(workspace.lastRefreshDate) : undefined
                 })) || []
-            }
+            },
+            errorMessage: 'Failed to load Slack workspaces'
         }
     ),
     disconnectingWorkspaces = ref<Set<string>>(new Set()),
@@ -66,26 +70,18 @@ const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useFetc
         disconnectingWorkspaces.value.add(teamId)
 
         try {
-            await $fetch(`/api/slack/workspaces/${teamId}`, {
+            await useApiRequest(`/api/slack/workspaces/${teamId}`, {
                 method: 'DELETE',
+                schema: z.unknown(),
                 body: {
                     organizationSlug: props.organizationSlug
-                }
-            })
-
-            toast.add({
-                icon: 'i-lucide-check',
-                title: 'Success',
-                description: 'Slack workspace disconnected successfully'
+                },
+                showSuccessToast: true,
+                successMessage: 'Slack workspace disconnected successfully',
+                errorMessage: 'Failed to disconnect Slack workspace'
             })
 
             await refreshSlackWorkspaces()
-        } catch (error: unknown) {
-            toast.add({
-                icon: 'i-lucide-alert-circle',
-                title: 'Error',
-                description: `Failed to disconnect Slack workspace: ${(error as { data?: { message?: string }, message?: string })?.data?.message || (error as { message?: string })?.message}`
-            })
         } finally {
             disconnectingWorkspaces.value.delete(teamId)
         }
@@ -94,26 +90,18 @@ const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useFetc
         refreshingWorkspaces.value.add(teamId)
 
         try {
-            await $fetch(`/api/slack/workspaces/${teamId}/refresh`, {
+            await useApiRequest(`/api/slack/workspaces/${teamId}/refresh`, {
                 method: 'POST',
+                schema: z.unknown(),
                 body: {
                     organizationSlug: props.organizationSlug
-                }
-            })
-
-            toast.add({
-                icon: 'i-lucide-check',
-                title: 'Success',
-                description: 'Workspace tokens refreshed successfully'
+                },
+                showSuccessToast: true,
+                successMessage: 'Workspace tokens refreshed successfully',
+                errorMessage: 'Failed to refresh workspace tokens'
             })
 
             await refreshSlackWorkspaces()
-        } catch (error: unknown) {
-            toast.add({
-                icon: 'i-lucide-alert-circle',
-                title: 'Error',
-                description: `Failed to refresh workspace tokens: ${(error as { data?: { message?: string }, message?: string })?.data?.message || (error as { message?: string })?.message}`
-            })
         } finally {
             refreshingWorkspaces.value.delete(teamId)
         }

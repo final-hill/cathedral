@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { ReqType } from './ReqType.js'
 import { ScenarioStepTypeEnum } from './ScenarioStepTypeEnum.js'
 import { uiBasePathTemplates } from './uiBasePathTemplates.js'
+import { WorkflowState } from './WorkflowState.js'
 
 /**
  * Base entity reference schema for requirements
@@ -11,8 +12,22 @@ export const RequirementReference = z.object({
     reqType: z.nativeEnum(ReqType),
     id: z.string().uuid(),
     name: z.string(),
-    workflowState: z.string(),
-    lastModified: z.date(),
+    workflowState: z.nativeEnum(WorkflowState),
+    lastModified: z.coerce.date(),
+    reqIdPrefix: z.string().optional(),
+    uiBasePathTemplate: z.string().optional()
+})
+
+/**
+ * Reference to a specific version of a requirement
+ */
+export type RequirementVersionReferenceType = z.infer<typeof RequirementVersionReference>
+export const RequirementVersionReference = z.object({
+    reqType: z.nativeEnum(ReqType),
+    requirementId: z.string().uuid(),
+    effectiveFrom: z.coerce.date(),
+    name: z.string(),
+    workflowState: z.nativeEnum(WorkflowState),
     reqIdPrefix: z.string().optional(),
     uiBasePathTemplate: z.string().optional()
 })
@@ -160,10 +175,4 @@ export type PersonReferenceType = z.infer<typeof PersonReference>
 export const PersonReference = RequirementReference.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.PERSON),
     uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.PERSON])
-})
-
-export type RoleReferenceType = z.infer<typeof RoleReference>
-export const RoleReference = RequirementReference.extend({
-    reqType: z.nativeEnum(ReqType).default(ReqType.ROLE),
-    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.ROLE])
 })

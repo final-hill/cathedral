@@ -1,4 +1,4 @@
-import { ReqType } from './ReqType'
+import { ReqType } from './ReqType.js'
 
 /**
  * The UI path templates for navigating to this requirement in the web interface
@@ -33,7 +33,6 @@ export const uiBasePathTemplates = {
     [ReqType.PERSON]: '/o/[org]/[solutionslug]/project/person',
     [ReqType.PROJECT]: '/o/[org]/[solutionslug]/project',
     [ReqType.RESPONSIBILITY]: '/o/[org]/[solutionslug]/project/responsibility',
-    [ReqType.ROLE]: '/o/[org]/[solutionslug]/project/role',
     [ReqType.SCENARIO]: '/o/[org]/[solutionslug]',
     [ReqType.SOLUTION]: '/o/[org]/[solutionslug]',
     [ReqType.STAKEHOLDER]: '/o/[org]/[solutionslug]/goals/stakeholder',

@@ -1,6 +1,4 @@
 import { z } from 'zod'
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor } from '~~/server/application'
-import { OrganizationRepository } from '~~/server/data/repositories'
 import { Organization, Solution } from '#shared/domain'
 
 // TODO: this feels backwards. Shouldn't the param be the organizationSlug and the body be the solutionSlug?
@@ -21,13 +19,7 @@ export default defineEventHandler(async (event) => {
     const { slug } = await validateEventParams(event, paramSchema),
         { organizationId, organizationSlug } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
-        entraService = createEntraService(),
-        permissionInteractor = new PermissionInteractor({ event, session, entraService }),
-        organizationInteractor = new OrganizationInteractor({
-            permissionInteractor,
-            repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug }),
-            appUserInteractor: new AppUserInteractor({ permissionInteractor, entraService })
-        })
+        organizationInteractor = createOrganizationInteractor({ event, session, organizationId, organizationSlug })
 
     await organizationInteractor.deleteSolutionBySlug(slug).catch(handleDomainException)
 })

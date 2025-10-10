@@ -19,7 +19,7 @@ const objectSchema = z.object({
 /**
  * Creates a domain EntityReference from a RequirementModel
  */
-async function createDomainReferenceFromModel(model: RequirementModel) {
+export async function createDomainReferenceFromModel(model: RequirementModel) {
     const latestVersion = await model.getLatestVersion(new Date()),
         reqType = resolveReqTypeFromModel(model),
         reqTypePascal = snakeCaseToPascalCase(reqType),
@@ -37,6 +37,21 @@ async function createDomainReferenceFromModel(model: RequirementModel) {
 }
 
 /**
+ * Creates a domain RequirementVersionReference from a RequirementVersionsModel
+ */
+export async function createDomainVersionReferenceFromModel(versionModel: RequirementVersionsModel) {
+    const reqType = resolveReqTypeFromModel(versionModel)
+
+    return refs.RequirementVersionReference.parse({
+        reqType,
+        requirementId: versionModel.requirement.id,
+        effectiveFrom: versionModel.effectiveFrom,
+        name: versionModel.name,
+        workflowState: versionModel.workflowState
+    })
+}
+
+/**
  * Converts a data model to a domain model
  */
 export class DataModelToDomainModel<
@@ -47,6 +62,7 @@ export class DataModelToDomainModel<
         const entries = await Promise.all(Object.entries(model).map(async ([key, value]) => {
                 if (['req_type', 'requirement', 'versions'].includes(key)) return [key, undefined] // skip
                 else if (key === 'effectiveFrom') return ['lastModified', value]
+                else if (key === 'appUserId') return ['appUser', value ? { id: value, name: 'Unknown User', entityType: 'app_user' } : undefined] // Convert appUserId to appUser reference
                 else if (key === 'createdById') return ['createdBy', { id: value, name: 'Unknown User' }] // Will be enriched by interactor
                 else if (key === 'modifiedById') return ['modifiedBy', { id: value, name: 'Unknown User' }] // Will be enriched by interactor
                 else if (value instanceof RequirementModel)
