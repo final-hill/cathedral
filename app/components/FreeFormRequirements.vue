@@ -93,7 +93,7 @@ function resetRequirements() {
 </script>
 
 <template>
-    <UCard class="w-2xl m-auto">
+    <UCard class="w-2xl m-auto min-h-105">
         <template #header>
             <h2 class="text-lg font-semibold leading-6">
                 Add Requirement

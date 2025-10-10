@@ -87,11 +87,6 @@ const links = [
 </script>
 
 <template>
-    <PendingReviewsNotification
-        :organization-slug="organizationSlug"
-        :solution-slug="slug"
-    />
-
     <PegsLanding
         :cards="links"
         :solutionslug="slug"
@@ -100,6 +95,16 @@ const links = [
         <template #header>
             <h1>{{ solution!.name }}</h1>
             <p>{{ solution!.description }}</p>
+
+            <PendingReviewsNotification
+                :organization-slug="organizationSlug"
+                :solution-slug="slug"
+            />
+
+            <MinimumRequirementsDrawer
+                v-model:open="drawerOpen"
+                :missing-requirements="missingRequirements"
+            />
 
             <section class="flex space-x-4 justify-center">
                 <UButton
@@ -148,10 +153,5 @@ const links = [
     <FreeFormRequirements
         :solution-slug="slug"
         :organization-slug="organizationSlug"
-    />
-
-    <MinimumRequirementsDrawer
-        v-model:open="drawerOpen"
-        :missing-requirements="missingRequirements"
     />
 </template>

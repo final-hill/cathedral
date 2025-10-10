@@ -44,7 +44,6 @@ $eventBus.$on('page-error', showError)
     grid-template-rows: 0.6in 1fr 0.6in;
     grid-template-areas: "header" "content" "footer";
     height: 100vh;
-    overflow: hidden;
 
     /* box-shadow: 2px 0 5px 0px var(--shadow-color);
     line-height: 1.5;
