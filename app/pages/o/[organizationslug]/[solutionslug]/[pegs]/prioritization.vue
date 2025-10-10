@@ -442,7 +442,7 @@ const priorityOptions = [
                         </div>
                     </template>
 
-                    <div class="space-y-2 overflow-y-auto max-h-[calc(100vh-31.25rem)] min-h-[300px] priority-scrollable">
+                    <div class="space-y-2 overflow-y-auto min-h-[300px]">
                         <div
                             v-for="requirement in requirementsByPriority.unset"
                             :key="requirement.id"
@@ -533,7 +533,7 @@ const priorityOptions = [
                                 </div>
                             </template>
 
-                            <div class="space-y-2 overflow-y-auto flex-1 max-h-[calc(100vh-31.25rem)] min-h-[300px] priority-scrollable">
+                            <div class="space-y-2 overflow-y-auto flex-1 min-h-[300px]">
                                 <div
                                     v-for="requirement in requirementsByPriority[option.value]"
                                     :key="requirement.id"
