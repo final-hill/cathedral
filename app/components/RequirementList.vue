@@ -35,8 +35,8 @@ const props = defineProps<{
             .replace('[org]', organizationSlug.value)
             .replace('[solutionslug]', solutionSlug.value)
     }),
-    // Default to Active state only
-    internalSelectedStates = ref<WorkflowState[]>(selectedWorkflowStates?.value ?? [WorkflowState.Active]),
+    // Default to Proposed, Active, and Review states
+    internalSelectedStates = ref<WorkflowState[]>(selectedWorkflowStates?.value ?? [WorkflowState.Proposed, WorkflowState.Active, WorkflowState.Review]),
     workflowStateOptions = computed(() =>
         Object.values(WorkflowState).map(state => ({
             label: state,
