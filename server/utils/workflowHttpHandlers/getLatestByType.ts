@@ -1,5 +1,3 @@
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '~~/server/application'
-import { OrganizationRepository, RequirementRepository } from '~~/server/data/repositories'
 import handleDomainException from '../handleDomainException'
 import type { WorkflowState } from '#shared/domain'
 import { Organization, ReqType, Solution } from '#shared/domain'
@@ -21,23 +19,7 @@ export default function getLatestByType(workflowState: WorkflowState) {
         const { reqType } = await validateEventParams(event, paramSchema),
             { solutionSlug, organizationId, organizationSlug } = await validateEventQuery(event, validatedQuerySchema),
             session = await requireUserSession(event),
-            entraService = createEntraService(),
-            permissionInteractor = new PermissionInteractor({ event, session, entraService }),
-            appUserInteractor = new AppUserInteractor({ permissionInteractor, entraService }),
-            organizationInteractor = new OrganizationInteractor({
-                repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug }),
-                permissionInteractor,
-                appUserInteractor
-            }),
-            org = await organizationInteractor.getOrganization(),
-            solution = await organizationInteractor.getSolutionBySlug(solutionSlug),
-            requirementInteractor = new RequirementInteractor({
-                repository: new RequirementRepository({ em: event.context.em }),
-                permissionInteractor,
-                appUserInteractor,
-                organizationId: org.id,
-                solutionId: solution.id
-            })
+            requirementInteractor = await createRequirementInteractor({ event, session, organizationId, organizationSlug, solutionSlug })
 
         return requirementInteractor.getLatestRequirementsByType({
             reqType,

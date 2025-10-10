@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { z } from 'zod'
 import { InterfaceType, ReqType, Interface, WorkflowState } from '#shared/domain'
-import type { InterfaceEntityType } from '#shared/domain'
 import { workflowColorMap } from '#shared/utils/workflow-colors'
 import type { FormSchema } from '~/components/XForm.vue'
 
 definePageMeta({ middleware: 'auth' })
 
 const route = useRoute(),
-    router = useRouter(),
     { organizationslug, solutionslug, pegs: _pegs, id } = route.params as {
         organizationslug: string
         solutionslug: string
@@ -19,12 +17,12 @@ const route = useRoute(),
 
 useHead({ title })
 
-const { data: requirement, status, error } = await useFetch<InterfaceEntityType>(`/api/requirements/${ReqType.INTERFACE}/${id}`, {
+const { data: requirement, status, error } = await useApiRequest(`/api/requirements/${ReqType.INTERFACE}/${id}`, {
     query: {
         solutionSlug: solutionslug,
         organizationSlug: organizationslug
     },
-    transform: transformRequirementDates
+    schema: Interface
 })
 
 if (error.value) {
@@ -46,9 +44,6 @@ const innerSchema = Interface instanceof z.ZodEffects
         ? Interface.innerType()
         : Interface,
     baseSchema = innerSchema as FormSchema,
-    onApproved = () => { router.back() },
-    onRejected = () => { router.back() },
-    onCancelled = () => { router.back() },
     getTypeColor = (type: InterfaceType) => {
         switch (type) {
             case InterfaceType.API: return 'info'
@@ -68,9 +63,6 @@ const innerSchema = Interface instanceof z.ZodEffects
         :organization-slug="organizationslug"
         :solution-slug="solutionslug"
         :loading="status === 'pending'"
-        @approved="onApproved"
-        @rejected="onRejected"
-        @cancelled="onCancelled"
     >
         <!-- Custom field for interface type with color coding -->
         <template #field-interfaceType="{ modelValue }">

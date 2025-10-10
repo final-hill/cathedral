@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ReqType } from '#shared/domain/requirements/ReqType'
-import type { RequirementType } from '#shared/domain'
+import { InterfaceSchema } from '#shared/domain/requirements/InterfaceSchema'
+import { z } from 'zod'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -12,12 +13,12 @@ const route = useRoute(),
         solutionslug: string
         pegs: string
     },
-    { data: requirements, refresh, status } = await useFetch<RequirementType[]>(`/api/requirements/${ReqType.INTERFACE_SCHEMA}`, {
+    { data: requirements, refresh, status } = await useApiRequest(`/api/requirements/${ReqType.INTERFACE_SCHEMA}`, {
         query: {
             solutionSlug: solutionslug,
             organizationSlug: organizationslug
         },
-        transform: data => data.map(transformRequirementDates)
+        schema: z.array(InterfaceSchema)
     })
 </script>
 

@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { ReqType } from '#shared/domain'
 import { UseCase } from '#shared/domain/requirements'
-import type { UseCaseType } from '#shared/domain/requirements'
 import type { FormSchema } from '~/components/XForm.vue'
 import { z } from 'zod'
 
@@ -16,12 +15,12 @@ const route = useRoute(),
 useHead({ title })
 definePageMeta({ middleware: 'auth' })
 
-const { data: requirement, error } = await useFetch<UseCaseType>(`/api/requirements/${ReqType.USE_CASE}/${id}`, {
+const { data: requirement, error } = await useApiRequest(`/api/requirements/${ReqType.USE_CASE}/${id}`, {
     query: {
         solutionSlug,
         organizationSlug
     },
-    transform: transformRequirementDates
+    schema: UseCase
 })
 
 if (error.value) {

@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, AppUserSlackInteractor, SlackUserInteractor } from '~~/server/application'
-import { OrganizationRepository, SlackRepository } from '~~/server/data/repositories'
+import { PermissionInteractor, AppUserSlackInteractor, SlackUserInteractor } from '~~/server/application'
+import { SlackRepository } from '~~/server/data/repositories'
 import { SlackService } from '~~/server/data/services'
 import { AppUser, Organization } from '#shared/domain'
 
@@ -24,11 +24,7 @@ export default defineEventHandler(async (event) => {
         config = useRuntimeConfig(),
         entraService = createEntraService(),
         permissionInteractor = new PermissionInteractor({ event, session, entraService }),
-        organizationInteractor = new OrganizationInteractor({
-            permissionInteractor,
-            appUserInteractor: new AppUserInteractor({ permissionInteractor, entraService }),
-            repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug })
-        }),
+        organizationInteractor = createOrganizationInteractor({ event, session, organizationId, organizationSlug }),
         orgId = (await organizationInteractor.getOrganization()).id,
         auor = await permissionInteractor.getAppUserOrganizationRole({ appUserId: id, organizationId: orgId })
             .catch(handleDomainException)

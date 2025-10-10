@@ -1,8 +1,10 @@
 <script lang="tsx" setup>
 import type { SlackChannelMetaType } from '#shared/domain/application'
+import { SlackChannelMeta } from '#shared/domain/application'
 import type { TableColumn } from '@nuxt/ui'
 import type { Row } from '@tanstack/vue-table'
 import { UButton, UTable, UIcon, UBadge, XConfirmModal } from '#components'
+import { z } from 'zod'
 
 interface Props {
     organizationSlug: string
@@ -15,10 +17,10 @@ const props = withDefaults(defineProps<Props>(), {
     }),
     overlay = useOverlay(),
     confirmUnlinkModal = overlay.create(XConfirmModal, {}),
-    toast = useToast(),
-    { data: slackChannels, refresh: refreshSlackChannels } = await useFetch<SlackChannelMetaType[]>(
+    { data: slackChannels, refresh: refreshSlackChannels } = await useApiRequest(
         `/api/solution/${props.solutionSlug}/slack-channels`,
         {
+            schema: z.array(SlackChannelMeta),
             query: { organizationSlug: props.organizationSlug },
             transform: (data: SlackChannelMetaType[]): SlackChannelMetaType[] => {
             // Ensure dates are properly transformed
@@ -27,7 +29,8 @@ const props = withDefaults(defineProps<Props>(), {
                     creationDate: new Date(channel.creationDate),
                     lastNameRefresh: channel.lastNameRefresh ? new Date(channel.lastNameRefresh) : undefined
                 })) || []
-            }
+            },
+            errorMessage: 'Failed to load Slack channels'
         }
     ),
     unlinkingChannels = ref<Set<string>>(new Set()),
@@ -48,28 +51,20 @@ const props = withDefaults(defineProps<Props>(), {
         unlinkingChannels.value.add(channelKey)
 
         try {
-            await $fetch(`/api/solution/${props.solutionSlug}/slack-channels`, {
+            await useApiRequest(`/api/solution/${props.solutionSlug}/slack-channels`, {
                 method: 'DELETE',
+                schema: z.unknown(),
                 body: {
                     organizationSlug: props.organizationSlug,
                     channelId,
                     teamId
-                }
-            })
-
-            toast.add({
-                icon: 'i-lucide-check',
-                title: 'Success',
-                description: 'Slack channel unlinked successfully'
+                },
+                showSuccessToast: true,
+                successMessage: 'Slack channel unlinked successfully',
+                errorMessage: 'Failed to unlink Slack channel'
             })
 
             await refreshSlackChannels()
-        } catch (error: unknown) {
-            toast.add({
-                icon: 'i-lucide-alert-circle',
-                title: 'Error',
-                description: `Failed to unlink Slack channel: ${(error as { data?: { message?: string }, message?: string })?.data?.message || (error as { message?: string })?.message}`
-            })
         } finally {
             unlinkingChannels.value.delete(channelKey)
         }
@@ -79,28 +74,20 @@ const props = withDefaults(defineProps<Props>(), {
         refreshingChannels.value.add(channelKey)
 
         try {
-            await $fetch(`/api/solution/${props.solutionSlug}/slack-channels/refresh`, {
+            await useApiRequest(`/api/solution/${props.solutionSlug}/slack-channels/refresh`, {
                 method: 'POST',
+                schema: z.unknown(),
                 body: {
                     organizationSlug: props.organizationSlug,
                     channelId,
                     teamId
-                }
-            })
-
-            toast.add({
-                icon: 'i-lucide-check',
-                title: 'Success',
-                description: 'Channel names refreshed successfully'
+                },
+                showSuccessToast: true,
+                successMessage: 'Channel names refreshed successfully',
+                errorMessage: 'Failed to refresh channel names'
             })
 
             await refreshSlackChannels()
-        } catch (error: unknown) {
-            toast.add({
-                icon: 'i-lucide-alert-circle',
-                title: 'Error',
-                description: `Failed to refresh channel names: ${(error as { data?: { message?: string }, message?: string })?.data?.message || (error as { message?: string })?.message}`
-            })
         } finally {
             refreshingChannels.value.delete(channelKey)
         }

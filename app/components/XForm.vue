@@ -1,13 +1,16 @@
 <script lang="ts" generic="F extends FormSchema" setup>
-import type { FormSubmitEvent, FormError, SelectItem } from '@nuxt/ui'
+import type { FormSubmitEvent, FormError, FormErrorEvent, SelectItem } from '@nuxt/ui'
 import { z } from 'zod'
 import { getSchemaFields } from '#shared/utils'
+import * as refs from '#shared/domain/requirements/EntityReferences'
+import { AppUserReference } from '#shared/domain/application/EntityReferences'
+import { ReqType } from '#shared/domain/requirements/enums'
 
 export type FormSchema = z.ZodObject<{ [key: string]: z.ZodTypeAny }>
 
 type AutocompleteItem = {
     label: string
-    value: { id: string, name: string } | undefined
+    value: unknown | undefined
 }
 
 const props = defineProps<{
@@ -64,6 +67,12 @@ const customValidate = async (_state: z.output<F>): Promise<FormError[]> => {
                     }
                 } catch (error) {
                     console.error(`Validation error for field ${fieldName}:`, error)
+                    toast.add({
+                        icon: 'i-lucide-alert-circle',
+                        title: 'Validation Error',
+                        description: `Field "${fieldName}" validation failed - please check your input`,
+                        color: 'error'
+                    })
                     errors.push({
                         name: fieldName,
                         message: 'Validation failed - please try again'
@@ -109,6 +118,12 @@ const onSubmit = async ({ data }: FormSubmitEvent<z.output<F>>) => {
             })
         } catch (error) {
             console.error('Error in XForm onSubmit:', error)
+            toast.add({
+                icon: 'i-lucide-alert-triangle',
+                title: 'Submission Error',
+                description: 'Failed to submit form - please try again',
+                color: 'error'
+            })
         // Error handling is done by the parent component
         // The toast error will be shown by the error handler
         } finally {
@@ -119,6 +134,15 @@ const onSubmit = async ({ data }: FormSubmitEvent<z.output<F>>) => {
         form.value?.clear()
         Object.assign(localState, backupState)
         emit('cancel')
+    },
+    onError = (event: FormErrorEvent) => {
+        console.error('Form validation errors:', event.errors)
+        toast.add({
+            icon: 'i-lucide-x-circle',
+            title: 'Form Validation Failed',
+            description: 'Please correct the highlighted errors and try again',
+            color: 'error'
+        })
     },
     schemaFields = getSchemaFields(props.schema),
     // Helper function to add empty option for optional select fields
@@ -133,8 +157,9 @@ const onSubmit = async ({ data }: FormSubmitEvent<z.output<F>>) => {
         ) || []
     },
     // Helper function to add empty option for autocomplete fields
-    getAutocompleteOptions = (items: AutocompleteItem[], isOptional: boolean): AutocompleteItem[] => {
-        if (isOptional && items.length > 0)
+    getAutocompleteOptions = (items: AutocompleteItem[], isOptional: boolean, isMultiple: boolean = false): AutocompleteItem[] => {
+        // Don't add -None- option for multi-select fields since they can be left empty
+        if (isOptional && items.length > 0 && !isMultiple)
             return [{ label: '-None-', value: undefined }, ...items]
 
         return items
@@ -143,17 +168,58 @@ const onSubmit = async ({ data }: FormSubmitEvent<z.output<F>>) => {
 // Autocomplete data for UInputMenu
 type RouteType = { solutionslug?: string, organizationslug?: string }
 const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRoute().params as RouteType,
+    AutocompleteResponseSchema = z.array(z.object({
+        label: z.string(),
+        value: z.unknown().optional()
+    })),
     autocompleteFetchObjects = await Promise.all(schemaFields.map(async (field) => {
-        const reqType = field.reqType
-        if ((field.isObject || field.isArrayOfObjects) && reqType) {
-            return {
-                [field.key]: await useFetch('/api/autocomplete', {
-                    query: {
-                        solutionSlug,
-                        organizationSlug,
-                        reqType
-                    }
-                })
+        const reqType = field.reqType,
+            entityType = field.entityType
+
+        if ((field.isObject || field.isArrayOfObjects) && (reqType || entityType)) {
+            // Handle special case for app_user entity type
+            if (entityType === 'app_user') {
+                return {
+                    [field.key]: await useApiRequest('/api/autocomplete', {
+                        schema: AutocompleteResponseSchema,
+                        query: {
+                            solutionSlug,
+                            organizationSlug,
+                            entityType: 'app_user'
+                        },
+                        transform: (data: { label: string, value?: unknown }[]) => data.map(item => ({
+                            ...item,
+                            value: item.value ? AppUserReference.parse(item.value) : item.value
+                        })),
+                        errorMessage: `Failed to load autocomplete data for ${field.label}`
+                    })
+                }
+            }
+
+            // Handle regular requirement types
+            if (reqType) {
+                const reqTypeSnakeCase = slugToSnakeCase(reqType),
+                    reqTypeValue = reqTypeSnakeCase.toUpperCase() as keyof typeof ReqType,
+                    actualReqType = ReqType[reqTypeValue],
+                    ReqTypePascal = snakeCaseToPascalCase(actualReqType) as keyof typeof refs,
+                    RequirementReferenceSchema = `${ReqTypePascal}Reference` as keyof typeof refs,
+                    RequirementSchema = refs[RequirementReferenceSchema]
+
+                return {
+                    [field.key]: await useApiRequest('/api/autocomplete', {
+                        schema: AutocompleteResponseSchema,
+                        query: {
+                            solutionSlug,
+                            organizationSlug,
+                            reqType
+                        },
+                        transform: (data: { label: string, value?: unknown }[]) => data.map(item => ({
+                            ...item,
+                            value: item.value ? RequirementSchema.parse(item.value) : item.value
+                        })),
+                        errorMessage: `Failed to load autocomplete data for ${field.label}`
+                    })
+                }
             }
         }
         return {}
@@ -168,7 +234,8 @@ watch(
                 const autocompleteData = autocompleteFetchObjects[fieldKey]?.data.value as AutocompleteItem[]
                 if (autocompleteData && Array.isArray(autocompleteData)) {
                     const matchingItem = autocompleteData.find(item =>
-                        item.value?.id === expectedId
+                        item.value && typeof item.value === 'object' && 'id' in item.value
+                        && (item.value as { id: string }).id === expectedId
                     )
                     if (matchingItem && matchingItem.value)
                         (localState as Record<string, unknown>)[fieldKey] = matchingItem.value
@@ -193,6 +260,7 @@ watch(
         :attach="props.attach ?? true"
         :aria-disabled="props.disabled ? 'true' : undefined"
         @submit="onSubmit"
+        @error="onError"
     >
         <template
             v-for="field of schemaFields"
@@ -337,7 +405,7 @@ watch(
                 <UInputMenu
                     v-else-if="field.isArrayOfObjects && !props.disabled"
                     v-model="(localState as any)[field.key]"
-                    :items="getAutocompleteOptions((autocompleteFetchObjects[field.key]?.data.value || []) as AutocompleteItem[], field.isOptional)"
+                    :items="getAutocompleteOptions((autocompleteFetchObjects[field.key]?.data.value || []) as AutocompleteItem[], field.isOptional, true)"
                     :loading="(autocompleteFetchObjects[field.key]?.status as any) === 'pending'"
                     value-key="value"
                     multiple

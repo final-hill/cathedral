@@ -78,7 +78,6 @@
             "product",
             "requirement",
             "responsibility",
-            "role",
             "scenario",
             "scenario_step",
             "silence",
@@ -291,8 +290,17 @@
     },
     {
       "columns": {
-        "requirement_model_id": {
-          "name": "requirement_model_id",
+        "person_id": {
+          "name": "person_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "stakeholder_id": {
+          "name": "stakeholder_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
@@ -301,15 +309,16 @@
           "mappedType": "uuid"
         }
       },
-      "name": "requirement_stakeholders",
+      "name": "person_stakeholders",
       "schema": "public",
       "indexes": [
         {
-          "keyName": "requirement_stakeholders_pkey",
+          "keyName": "person_stakeholders_pkey",
           "columnNames": [
-            "requirement_model_id"
+            "person_id",
+            "stakeholder_id"
           ],
-          "composite": false,
+          "composite": true,
           "constraint": true,
           "primary": true,
           "unique": true
@@ -317,12 +326,12 @@
       ],
       "checks": [],
       "foreignKeys": {
-        "requirement_stakeholders_requirement_model_id_foreign": {
-          "constraintName": "requirement_stakeholders_requirement_model_id_foreign",
+        "person_stakeholders_person_id_foreign": {
+          "constraintName": "person_stakeholders_person_id_foreign",
           "columnNames": [
-            "requirement_model_id"
+            "person_id"
           ],
-          "localTableName": "public.requirement_stakeholders",
+          "localTableName": "public.person_stakeholders",
           "referencedColumnNames": [
             "id"
           ],
@@ -330,44 +339,13 @@
           "createForeignKeyConstraint": true,
           "deleteRule": "cascade",
           "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {}
-    },
-    {
-      "columns": {
-        "requirement_model_id": {
-          "name": "requirement_model_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "requirement_roles",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "requirement_roles_pkey",
+        },
+        "person_stakeholders_stakeholder_id_foreign": {
+          "constraintName": "person_stakeholders_stakeholder_id_foreign",
           "columnNames": [
-            "requirement_model_id"
+            "stakeholder_id"
           ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "requirement_roles_requirement_model_id_foreign": {
-          "constraintName": "requirement_roles_requirement_model_id_foreign",
-          "columnNames": [
-            "requirement_model_id"
-          ],
-          "localTableName": "public.requirement_roles",
+          "localTableName": "public.person_stakeholders",
           "referencedColumnNames": [
             "id"
           ],
@@ -462,7 +440,6 @@
             "product",
             "requirement",
             "responsibility",
-            "role",
             "scenario",
             "scenario_step",
             "silence",
@@ -552,6 +529,66 @@
             "WONT"
           ],
           "mappedType": "enum"
+        },
+        "is_product_owner": {
+          "name": "is_product_owner",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "false",
+          "mappedType": "boolean"
+        },
+        "is_implementation_owner": {
+          "name": "is_implementation_owner",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "false",
+          "mappedType": "boolean"
+        },
+        "can_endorse_project_requirements": {
+          "name": "can_endorse_project_requirements",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "false",
+          "mappedType": "boolean"
+        },
+        "can_endorse_environment_requirements": {
+          "name": "can_endorse_environment_requirements",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "false",
+          "mappedType": "boolean"
+        },
+        "can_endorse_goals_requirements": {
+          "name": "can_endorse_goals_requirements",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "false",
+          "mappedType": "boolean"
+        },
+        "can_endorse_system_requirements": {
+          "name": "can_endorse_system_requirements",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "default": "false",
+          "mappedType": "boolean"
         },
         "parent_component_id": {
           "name": "parent_component_id",
@@ -733,14 +770,14 @@
           "nullable": true,
           "mappedType": "uuid"
         },
-        "email": {
-          "name": "email",
-          "type": "varchar(254)",
+        "app_user_id": {
+          "name": "app_user_id",
+          "type": "varchar(766)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "length": 254,
+          "length": 766,
           "mappedType": "string"
         },
         "order": {
@@ -1073,6 +1110,175 @@
           "referencedTableName": "public.requirement",
           "createForeignKeyConstraint": true,
           "deleteRule": "set null",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "requirement_version_effective_from": {
+          "name": "requirement_version_effective_from",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "requirement_version_requirement_id": {
+          "name": "requirement_version_requirement_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "uuid"
+        },
+        "endorsed_by_id": {
+          "name": "endorsed_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "enumItems": [
+            "role_based",
+            "correctness",
+            "justifiability",
+            "completeness",
+            "consistency",
+            "non_ambiguity",
+            "feasibility",
+            "abstractness",
+            "traceability",
+            "delimitedness",
+            "readability",
+            "modifiability",
+            "verifiability",
+            "prioritization"
+          ],
+          "mappedType": "enum"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "enumItems": [
+            "pending",
+            "approved",
+            "rejected"
+          ],
+          "mappedType": "enum"
+        },
+        "endorsed_at": {
+          "name": "endorsed_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "rejected_at": {
+          "name": "rejected_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "comments": {
+          "name": "comments",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "text"
+        }
+      },
+      "name": "endorsement",
+      "schema": "public",
+      "indexes": [
+        {
+          "keyName": "endorsement_requirement_version_effective_from_re_246e0_unique",
+          "columnNames": [
+            "requirement_version_effective_from",
+            "requirement_version_requirement_id",
+            "endorsed_by_id",
+            "category"
+          ],
+          "composite": true,
+          "constraint": true,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "endorsement_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "endorsement_requirement_version_effective_from_r_18e9e_foreign": {
+          "constraintName": "endorsement_requirement_version_effective_from_r_18e9e_foreign",
+          "columnNames": [
+            "requirement_version_effective_from",
+            "requirement_version_requirement_id"
+          ],
+          "localTableName": "public.endorsement",
+          "referencedColumnNames": [
+            "effective_from",
+            "requirement_id"
+          ],
+          "referencedTableName": "public.requirement_versions",
+          "createForeignKeyConstraint": true,
+          "updateRule": "cascade"
+        },
+        "endorsement_endorsed_by_id_foreign": {
+          "constraintName": "endorsement_endorsed_by_id_foreign",
+          "columnNames": [
+            "endorsed_by_id"
+          ],
+          "localTableName": "public.endorsement",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         }
       },

@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { z } from 'zod'
-import type { InterfaceSchemaType } from '#shared/domain'
 import { ReqType, WorkflowState, InterfaceSchema } from '#shared/domain'
 import type { FormSchema } from '~/components/XForm.vue'
 
 definePageMeta({ middleware: 'auth' })
 
 const route = useRoute(),
-    router = useRouter(),
     { organizationslug, solutionslug, pegs: _pegs, id } = route.params as {
         organizationslug: string
         solutionslug: string
@@ -18,12 +16,12 @@ const route = useRoute(),
 
 useHead({ title })
 
-const { data: requirement, status, error } = await useFetch<InterfaceSchemaType>(`/api/requirements/${ReqType.INTERFACE_SCHEMA}/${id}`, {
+const { data: requirement, status, error } = await useApiRequest(`/api/requirements/${ReqType.INTERFACE_SCHEMA}/${id}`, {
     query: {
         solutionSlug: solutionslug,
         organizationSlug: organizationslug
     },
-    transform: transformRequirementDates
+    schema: InterfaceSchema
 })
 
 if (error.value) {
@@ -44,10 +42,7 @@ if (requirement.value && requirement.value.workflowState !== WorkflowState.Revie
 const innerSchema = InterfaceSchema instanceof z.ZodEffects
         ? InterfaceSchema.innerType()
         : InterfaceSchema,
-    baseSchema = innerSchema as FormSchema,
-    onApproved = () => { router.back() },
-    onRejected = () => { router.back() },
-    onCancelled = () => { router.back() }
+    baseSchema = innerSchema as FormSchema
 </script>
 
 <template>
@@ -59,9 +54,6 @@ const innerSchema = InterfaceSchema instanceof z.ZodEffects
         :organization-slug="organizationslug"
         :solution-slug="solutionslug"
         :loading="status === 'pending'"
-        @approved="onApproved"
-        @rejected="onRejected"
-        @cancelled="onCancelled"
     >
         <!-- Custom JSON Schema editor for schema field -->
         <template #field-schema="{ modelValue }">

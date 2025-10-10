@@ -1,6 +1,4 @@
 import { z } from 'zod'
-import { PermissionInteractor, OrganizationInteractor } from '~~/server/application'
-import { OrganizationRepository } from '~~/server/data/repositories'
 import { createSlackWorkspaceInteractor } from '~~/server/application/slack/factory'
 
 const paramsSchema = z.object({
@@ -18,22 +16,9 @@ export default defineEventHandler(async (event) => {
         { organizationSlug } = await validateEventBody(event, bodySchema),
         session = await requireUserSession(event),
         em = event.context.em,
-        entraService = createEntraService(),
-        permissionInteractor = new PermissionInteractor({
-            event,
-            session,
-            entraService
-        }),
-        organizationInteractor = new OrganizationInteractor({
-            repository: new OrganizationRepository({ em, organizationSlug }),
-            permissionInteractor,
-            appUserInteractor: null as never // We don't need this for this operation
-        }),
+        organizationInteractor = createOrganizationInteractor({ event, session, organizationSlug }),
         organization = await organizationInteractor.getOrganization(),
-        workspaceInteractor = createSlackWorkspaceInteractor({
-            em,
-            session
-        })
+        workspaceInteractor = createSlackWorkspaceInteractor({ em, session })
 
     await workspaceInteractor.removeWorkspaceFromOrganization(
         organization.id,

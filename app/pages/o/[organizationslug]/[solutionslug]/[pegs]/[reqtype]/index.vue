@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ReqType } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
-import type { RequirementType } from '#shared/domain/requirements'
+import { z } from 'zod'
 
 const route = useRoute(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug, reqtype } = route.params as {
@@ -38,12 +38,12 @@ const title = (RequirementSchema as unknown as RequirementEntity).reqIdPrefix ? 
 useHead({ title })
 definePageMeta({ middleware: 'auth' })
 
-const { data: requirements, refresh, status } = await useFetch<RequirementType[]>(`/api/requirements/${actualReqType}`, {
+const { data: requirements, refresh, status } = await useApiRequest(`/api/requirements/${actualReqType}`, {
         query: {
             solutionSlug,
             organizationSlug
         },
-        transform: data => data.map(transformRequirementDates)
+        schema: z.array(RequirementSchema)
     }),
     // Check if this is a minimum requirement type and if it's missing
     { isMinimumRequirementType, isRequirementMissing } = useMinimumRequirements(),

@@ -8,6 +8,7 @@ import { TsMorphMetadataProvider } from '@mikro-orm/reflection'
 import { Migrator } from '@mikro-orm/migrations'
 import * as entities from './server/data/models/requirements/index.js'
 import * as appEntities from './server/data/models/application/index.js'
+import * as endorsementEntities from './server/data/models/endorsement/index.js'
 
 dotenv.config()
 const config: Options = {
@@ -24,7 +25,8 @@ const config: Options = {
     },
     entities: [
         ...Object.values(entities),
-        ...Object.values(appEntities)
+        ...Object.values(appEntities),
+        ...Object.values(endorsementEntities)
     ],
     ignoreUndefinedInQuery: true,
     populateWhere: PopulateHint.INFER,

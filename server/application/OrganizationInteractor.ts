@@ -1,9 +1,9 @@
-import type * as req from '#shared/domain/requirements'
-import { ReqType } from '#shared/domain/requirements/enums'
+import * as req from '#shared/domain/requirements'
+import { ReqType, WorkflowState } from '#shared/domain/requirements/enums'
 import { AppRole } from '#shared/domain/application'
 import type { AppUserType } from '#shared/domain/application'
 import { MismatchException, PermissionDeniedException } from '#shared/domain/exceptions'
-import type { OrganizationRepository } from '~~/server/data/repositories'
+import type { OrganizationRepository, RequirementRepository } from '~~/server/data/repositories'
 import type { PermissionInteractor, AppUserInteractor } from '.'
 import { Interactor } from './Interactor'
 import { AppUserWithRoleDto } from '#shared/dto/AppUserWithRoleDto'
@@ -15,22 +15,26 @@ import type { AppUserWithRoleDtoType } from '#shared/dto/AppUserWithRoleDto'
 export class OrganizationInteractor extends Interactor<req.OrganizationType> {
     private readonly _permissionInteractor: PermissionInteractor
     private readonly _appUserInteractor: AppUserInteractor
+    private readonly _requirementRepository?: RequirementRepository
 
     /**
      * Create a new OrganizationInteractor
      *
      * @param props.repository - The repository to use
+     * @param props.requirementRepository - The RequirementRepository instance (optional, required only for solution creation)
      * @param props.permissionInteractor - The PermissionInteractor instance
      */
     constructor(props: {
         // TODO: This should be Repository<Organization>
         repository: OrganizationRepository
+        requirementRepository?: RequirementRepository
         permissionInteractor: PermissionInteractor
         appUserInteractor: AppUserInteractor
     }) {
         super(props)
         this._permissionInteractor = props.permissionInteractor
         this._appUserInteractor = props.appUserInteractor
+        this._requirementRepository = props.requirementRepository
     }
 
     // FIXME: this shouldn't be necessary
@@ -39,25 +43,28 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
     }
 
     /**
-     * Add a solution to an organization
+     * Add a solution to an organization with default mandatory roles and personnel.
+     * This use case creates a solution and initializes it with Product Owner and
+     * Implementation Owner roles, automatically assigning Organization Admins to them.
      *
      * @param props The properties of the solution
-     * @returns The new solution
+     * @returns The new solution ID
      * @throws {PermissionDeniedException} If the user is not an admin of the organization
      * @throws {NotFoundException} If the organization does not exist
+     * @throws {NotFoundException} If no Organization Admins exist to assign to mandatory roles
      */
     async addSolution({ name, description }: Pick<req.SolutionType, 'name' | 'description'>): Promise<req.SolutionType['id']> {
         const organization = await this.repository.getOrganization(),
-            currentUserId = this._permissionInteractor.userId
+            currentUserId = this._permissionInteractor.userId,
+            creationDate = new Date()
 
         this._permissionInteractor.assertOrganizationAdmin(organization.id)
 
-        const repo = this.repository,
-            effectiveDate = new Date()
-
         await this._assertSolutionSlugIsUnique(name)
 
-        const newSolutionId = await repo.addSolution({ name, description, creationDate: effectiveDate, createdById: currentUserId })
+        const newSolutionId = await this.repository.addSolution({ name, description, creationDate, createdById: currentUserId })
+
+        await this._initializeSolutionRolesAndPersonnel(newSolutionId, organization.id, currentUserId, creationDate)
 
         return newSolutionId
     }
@@ -268,6 +275,56 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
             modifiedById: currentUserId,
             modifiedDate: new Date(),
             ...props
+        })
+    }
+
+    /**
+     * Initialize a newly created Solution with mandatory personnel and role capabilities.
+     * This private method creates a Person entity for the solution creator with both
+     * Product Owner and Implementation Owner capabilities enabled for endorsements.
+     *
+     * @param solutionId - The ID of the newly created solution
+     * @param organizationId - The ID of the organization
+     * @param createdById - The ID of the user creating the solution (current user)
+     * @param creationDate - The creation date
+     */
+    private async _initializeSolutionRolesAndPersonnel(
+        solutionId: string,
+        organizationId: string,
+        createdById: string,
+        creationDate: Date
+    ): Promise<void> {
+        // Get the current user (solution creator) information
+        const currentUser = await this._appUserInteractor.getUserById(createdById, organizationId),
+            // Create Person entity for the solution creator with both role capabilities
+            solutionCreatorPersonData = req.Person.parse({
+                name: currentUser.name,
+                description: `Solution Creator with Product Owner and Implementation Owner capabilities: ${currentUser.name}`,
+                appUser: {
+                    id: currentUser.id,
+                    name: currentUser.name,
+                    entityType: 'app_user' as const
+                },
+                // Enable both Product Owner and Implementation Owner capabilities
+                isProductOwner: true,
+                isImplementationOwner: true,
+                // Grant all endorsement permissions
+                canEndorseProjectRequirements: true,
+                canEndorseEnvironmentRequirements: true,
+                canEndorseGoalsRequirements: true,
+                canEndorseSystemRequirements: true,
+                solution: {
+                    id: solutionId,
+                    name: '',
+                    reqType: ReqType.SOLUTION
+                },
+                workflowState: WorkflowState.Active
+            })
+
+        await this._requirementRepository!.add({
+            reqProps: solutionCreatorPersonData,
+            createdById,
+            creationDate
         })
     }
 }

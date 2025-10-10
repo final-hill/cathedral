@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import type { z } from 'zod'
-import { Solution } from '#shared/domain'
+import { z } from 'zod'
+import { Solution, Organization } from '#shared/domain'
 
 useHead({ title: 'New Solution' })
 definePageMeta({ name: 'New Solution', middleware: 'auth' })
@@ -8,7 +8,10 @@ definePageMeta({ name: 'New Solution', middleware: 'auth' })
 const { $eventBus } = useNuxtApp(),
     { organizationslug: organizationSlug } = useRoute('New Solution').params,
     router = useRouter(),
-    { data: organization, error: getOrgError } = await useFetch(`/api/organization/${organizationSlug}`)
+    { data: organization, error: getOrgError } = await useApiRequest(`/api/organization/${organizationSlug}`, {
+        schema: Organization,
+        errorMessage: 'Failed to load organization'
+    })
 
 if (!organization.value) {
     $eventBus.$emit('page-error', getOrgError.value)
@@ -29,20 +32,20 @@ const formState = reactive<FormSchema>({
         description: ''
     }),
     createSolution = async (data: FormSchema) => {
-        try {
-            const newSolutionSlug = await $fetch('/api/solution', {
-                method: 'post',
-                body: {
-                    name: data.name,
-                    description: data.description,
-                    organizationSlug
-                }
-            })
+        const { data: newSolutionSlug } = await useApiRequest('/api/solution', {
+            method: 'POST',
+            schema: z.string(),
+            body: {
+                name: data.name,
+                description: data.description,
+                organizationSlug
+            },
+            showSuccessToast: true,
+            successMessage: 'Solution created successfully',
+            errorMessage: 'Failed to create solution'
+        })
 
-            router.push({ name: 'Solution', params: { organizationslug: organizationSlug, solutionslug: newSolutionSlug } })
-        } catch (error) {
-            $eventBus.$emit('page-error', error)
-        }
+        router.push({ name: 'Solution', params: { organizationslug: organizationSlug, solutionslug: newSolutionSlug.value! } })
     },
     cancel = () => {
         router.push({ name: 'Organization', params: { organizationslug: organizationSlug } })

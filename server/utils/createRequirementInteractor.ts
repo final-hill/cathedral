@@ -1,6 +1,7 @@
-import { AppUserInteractor, OrganizationInteractor, PermissionInteractor, RequirementInteractor } from '../application/index.js'
-import { OrganizationRepository, RequirementRepository } from '../data/repositories/index.js'
+import { AppUserInteractor, PermissionInteractor, RequirementInteractor, ReviewInteractor } from '../application/index.js'
+import { RequirementRepository, EndorsementRepository } from '../data/repositories/index.js'
 import { createEntraService } from './createEntraService.js'
+import { createOrganizationInteractor } from './createOrganizationInteractor.js'
 import type { H3Event } from 'h3'
 import type { UserSession } from '#auth-utils'
 
@@ -21,18 +22,24 @@ export const createRequirementInteractor = async ({ event, session, organization
     const entraService = createEntraService(),
         permissionInteractor = new PermissionInteractor({ event, session, entraService }),
         appUserInteractor = new AppUserInteractor({ permissionInteractor, entraService }),
-        organizationInteractor = new OrganizationInteractor({
-            repository: new OrganizationRepository({ em: event.context.em, organizationId, organizationSlug }),
-            permissionInteractor,
-            appUserInteractor
-        }),
+        requirementRepository = new RequirementRepository({ em: event.context.em }),
+        endorsementRepository = new EndorsementRepository({ em: event.context.em }),
+        organizationInteractor = createOrganizationInteractor({ event, session, organizationId, organizationSlug }),
         org = await organizationInteractor.getOrganization(),
-        solution = await organizationInteractor.getSolutionBySlug(solutionSlug)
+        solution = await organizationInteractor.getSolutionBySlug(solutionSlug),
+        reviewInteractor = new ReviewInteractor({
+            permissionInteractor,
+            endorsementRepository,
+            requirementRepository,
+            organizationId: org.id,
+            solutionId: solution.id
+        })
 
     return new RequirementInteractor({
-        repository: new RequirementRepository({ em: event.context.em }),
+        repository: requirementRepository,
         permissionInteractor,
         appUserInteractor,
+        reviewInteractor,
         organizationId: org.id,
         solutionId: solution.id
     })

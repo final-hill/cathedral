@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { SlackChannelInteractor, PermissionInteractor, OrganizationInteractor } from '~~/server/application'
-import { SlackRepository, OrganizationRepository } from '~~/server/data/repositories'
+import { SlackChannelInteractor, PermissionInteractor } from '~~/server/application'
+import { SlackRepository } from '~~/server/data/repositories'
 import { SlackService } from '~~/server/data/services'
 import { Organization, Solution } from '#shared/domain'
 
@@ -27,11 +27,7 @@ export default defineEventHandler(async (event) => {
         em = event.context.em,
         entraService = createEntraService(),
         permissionInteractor = new PermissionInteractor({ event, session, entraService }),
-        organizationInteractor = new OrganizationInteractor({
-            repository: new OrganizationRepository({ em, organizationId, organizationSlug }),
-            permissionInteractor,
-            appUserInteractor: null as never // Not needed for this operation
-        }),
+        organizationInteractor = createOrganizationInteractor({ event, session, organizationId, organizationSlug }),
         organization = await organizationInteractor.getOrganization(),
         slackChannelInteractor = new SlackChannelInteractor({
             repository: new SlackRepository({ em }),

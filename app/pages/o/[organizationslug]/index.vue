@@ -1,5 +1,7 @@
 <script lang="ts" setup>
 import type { OrganizationType, SolutionType } from '#shared/domain'
+import { Organization, Solution } from '#shared/domain'
+import { z } from 'zod'
 
 useHead({ title: 'Organization' })
 definePageMeta({ name: 'Organization', middleware: 'auth' })
@@ -7,8 +9,11 @@ definePageMeta({ name: 'Organization', middleware: 'auth' })
 const { $eventBus } = useNuxtApp(),
     { organizationslug: organizationSlug } = useRoute('Organization').params,
     router = useRouter(),
-    { data: organization, error: getOrgError, status: _orgStatus } = await useFetch<OrganizationType>(`/api/organization/${organizationSlug}`),
-    { refresh: refreshSolutions, status: _solStatus, data: solutions, error: getSolutionError } = await useFetch<SolutionType[]>('/api/solution', {
+    { data: organization, error: getOrgError, status: _orgStatus } = await useApiRequest(`/api/organization/${organizationSlug}`, {
+        schema: Organization
+    }),
+    { refresh: refreshSolutions, status: _solStatus, data: solutions, error: getSolutionError } = await useApiRequest('/api/solution', {
+        schema: z.array(Solution),
         query: { organizationSlug }
     }),
     solutionDeleteModalOpenState = ref(false),
@@ -22,9 +27,13 @@ if (!organization.value) {
 if (getSolutionError.value) $eventBus.$emit('page-error', getSolutionError.value)
 
 const handleOrganizationDelete = async (organization: OrganizationType) => {
-        await $fetch(`/api/organization/${organization.slug}`, {
-            method: 'delete'
-        }).catch(e => $eventBus.$emit('page-error', e))
+        await useApiRequest(`/api/organization/${organization.slug}`, {
+            method: 'DELETE',
+            schema: z.unknown(),
+            showSuccessToast: true,
+            successMessage: 'Organization deleted successfully',
+            errorMessage: 'Failed to delete organization'
+        })
         organizationDeleteModalOpenState.value = false
         router.push({ name: 'Home' })
     },
@@ -35,10 +44,14 @@ const handleOrganizationDelete = async (organization: OrganizationType) => {
         router.push({ name: 'Organization Users', params: { organizationslug: organization.slug } })
     },
     handleSolutionDelete = async (solution: SolutionType) => {
-        await $fetch(`/api/solution/${solution.slug}`, {
-            method: 'delete',
-            body: { organizationSlug }
-        }).catch(e => $eventBus.$emit('page-error', e))
+        await useApiRequest(`/api/solution/${solution.slug}`, {
+            method: 'DELETE',
+            schema: z.unknown(),
+            body: { organizationSlug },
+            showSuccessToast: true,
+            successMessage: 'Solution deleted successfully',
+            errorMessage: 'Failed to delete solution'
+        })
         solutionDeleteModalOpenState.value = false
         await refreshSolutions()
     },

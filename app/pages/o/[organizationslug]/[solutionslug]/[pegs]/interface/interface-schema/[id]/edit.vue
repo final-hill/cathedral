@@ -2,7 +2,6 @@
 import { z } from 'zod'
 import { InterfaceSchema } from '#shared/domain/requirements/InterfaceSchema'
 import type { FormSchema } from '~/components/XForm.vue'
-import type { InterfaceSchemaType } from '#shared/domain/requirements/InterfaceSchema'
 import { ReqType } from '#shared/domain'
 
 definePageMeta({ middleware: 'auth' })
@@ -14,12 +13,12 @@ const route = useRoute(),
         _pegs: string
         id: string
     },
-    { data: requirement } = await useFetch<InterfaceSchemaType>(`/api/requirements/${ReqType.INTERFACE_SCHEMA}/${id}`, {
+    { data: requirement } = await useApiRequest(`/api/requirements/${ReqType.INTERFACE_SCHEMA}/${id}`, {
         query: {
             organizationSlug: organizationslug,
             solutionSlug: solutionslug
         },
-        transform: transformRequirementDates
+        schema: InterfaceSchema
     })
 
 if (!requirement.value) {

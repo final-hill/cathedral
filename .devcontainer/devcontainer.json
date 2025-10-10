@@ -33,7 +33,8 @@
                 "vitest.explorer",
                 "kingwl.vscode-vitest-runner",
                 "bradlc.vscode-tailwindcss",
-                "xadamxk.prune-stale-git-branches"
+                "xadamxk.prune-stale-git-branches",
+                "ms-ossdata.vscode-pgsql"
             ]
         }
     }

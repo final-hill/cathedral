@@ -1,12 +1,10 @@
 <script lang="ts" setup>
 import { ReqType, WorkflowState } from '#shared/domain'
 import { UseCase } from '#shared/domain/requirements'
-import type { UseCaseType } from '#shared/domain/requirements'
 import type { FormSchema } from '~/components/XForm.vue'
 import { z } from 'zod'
 
 const route = useRoute(),
-    router = useRouter(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug, id } = route.params as {
         solutionslug: string
         organizationslug: string
@@ -17,9 +15,9 @@ const route = useRoute(),
 useHead({ title })
 definePageMeta({ middleware: 'auth' })
 
-const { data: requirement, status, error } = await useFetch<UseCaseType>(`/api/requirements/${ReqType.USE_CASE}/${id}`, {
+const { data: requirement, status, error } = await useApiRequest(`/api/requirements/${ReqType.USE_CASE}/${id}`, {
     query: { solutionSlug, organizationSlug },
-    transform: transformRequirementDates
+    schema: UseCase
 })
 
 if (error.value) {
@@ -40,10 +38,7 @@ if (requirement.value && requirement.value.workflowState !== WorkflowState.Revie
 const innerSchema = UseCase instanceof z.ZodEffects
         ? UseCase.innerType()
         : UseCase,
-    baseSchema = innerSchema as FormSchema,
-    onApproved = () => { router.back() },
-    onRejected = () => { router.back() },
-    onCancelled = () => { router.back() }
+    baseSchema = innerSchema as FormSchema
 </script>
 
 <template>
@@ -55,9 +50,6 @@ const innerSchema = UseCase instanceof z.ZodEffects
         :organization-slug="organizationSlug"
         :solution-slug="solutionSlug"
         :loading="status === 'pending'"
-        @approved="onApproved"
-        @rejected="onRejected"
-        @cancelled="onCancelled"
     >
         <!-- Use Case specific content -->
         <template #additional-content>

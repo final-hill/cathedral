@@ -1,12 +1,10 @@
 <script lang="ts" setup>
 import { ReqType, WorkflowState } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
-import type { RequirementType } from '#shared/domain/requirements'
 import type { FormSchema } from '~/components/XForm.vue'
 import { z } from 'zod'
 
 const route = useRoute(),
-    router = useRouter(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug, reqtype: reqType, id } = route.params as {
         solutionslug: string
         organizationslug: string
@@ -40,9 +38,9 @@ const title = `Review ${snakeCaseToPascalCase(reqType)}`
 useHead({ title })
 definePageMeta({ middleware: 'auth' })
 
-const { data: requirement, status, error } = await useFetch<RequirementType>(`/api/requirements/${actualReqType}/${id}`, {
+const { data: requirement, status, error } = await useApiRequest(`/api/requirements/${actualReqType}/${id}`, {
     query: { solutionSlug, organizationSlug },
-    transform: transformRequirementDates
+    schema: RequirementSchema
 })
 
 if (error.value) {
@@ -63,10 +61,7 @@ if (requirement.value && requirement.value.workflowState !== WorkflowState.Revie
 const innerSchema = RequirementSchema instanceof z.ZodEffects
         ? RequirementSchema.innerType()
         : RequirementSchema,
-    baseSchema = innerSchema as FormSchema,
-    onApproved = () => { router.back() },
-    onRejected = () => { router.back() },
-    onCancelled = () => { router.back() }
+    baseSchema = innerSchema as FormSchema
 </script>
 
 <template>
@@ -78,8 +73,5 @@ const innerSchema = RequirementSchema instanceof z.ZodEffects
         :organization-slug="organizationSlug"
         :solution-slug="solutionSlug"
         :loading="status === 'pending'"
-        @approved="onApproved"
-        @rejected="onRejected"
-        @cancelled="onCancelled"
     />
 </template>

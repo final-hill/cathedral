@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 import type { OrganizationType } from '#shared/domain'
+import { Organization } from '#shared/domain'
+import { z } from 'zod'
 
 const router = useRouter(),
-    { status: _status, data: organizations, refresh, error: getOrgError } = await useFetch<OrganizationType[]>('/api/organization', {
-        transform: data => data.map(transformRequirementDates)
+    { status: _status, data: organizations, refresh, error: getOrgError } = await useApiRequest('/api/organization', {
+        schema: z.array(Organization)
     }),
     { $eventBus } = useNuxtApp(),
     deleteModalOpenState = ref(false)
@@ -11,9 +13,14 @@ const router = useRouter(),
 if (getOrgError.value) $eventBus.$emit('page-error', getOrgError.value)
 
 const handleDelete = async (organization: OrganizationType) => {
-        await $fetch(`/api/organization/${organization.slug}`, {
-            method: 'delete'
-        }).catch(e => $eventBus.$emit('page-error', e))
+        await useApiRequest(`/api/organization/${organization.slug}`, {
+            method: 'DELETE',
+            schema: z.unknown(),
+            showSuccessToast: true,
+            successMessage: `Organization "${organization.name}" deleted successfully`,
+            errorMessage: `Failed to delete organization "${organization.name}"`
+        })
+
         deleteModalOpenState.value = false
         refresh()
     },

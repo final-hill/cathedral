@@ -139,7 +139,25 @@ export abstract class RequirementVersionsModel extends VolatileAuditModel {
 export class ActorModel extends RequirementModel { }
 
 @Entity({ discriminatorValue: ReqType.ACTOR })
-export class ActorVersionsModel extends RequirementVersionsModel { }
+export class ActorVersionsModel extends RequirementVersionsModel {
+    @Property({ type: types.boolean, default: false })
+    readonly isProductOwner!: boolean
+
+    @Property({ type: types.boolean, default: false })
+    readonly isImplementationOwner!: boolean
+
+    @Property({ type: types.boolean, default: false })
+    readonly canEndorseProjectRequirements!: boolean
+
+    @Property({ type: types.boolean, default: false })
+    readonly canEndorseEnvironmentRequirements!: boolean
+
+    @Property({ type: types.boolean, default: false })
+    readonly canEndorseGoalsRequirements!: boolean
+
+    @Property({ type: types.boolean, default: false })
+    readonly canEndorseSystemRequirements!: boolean
+}
 
 @Entity({ discriminatorValue: ReqType.ASSUMPTION })
 export class AssumptionModel extends RequirementModel {
@@ -422,17 +440,19 @@ export class ParsedRequirementsVersionsModel extends MetaRequirementVersionsMode
 
 @Entity({ discriminatorValue: ReqType.PERSON })
 export class PersonModel extends ActorModel {
-    @ManyToMany(() => RoleModel, role => role.persons, { owner: true })
-    readonly roles = new Collection<RoleModel>(this)
-
-    @ManyToMany(() => StakeholderModel, stakeholder => stakeholder.persons, { owner: true })
+    @ManyToMany(() => StakeholderModel, stakeholder => stakeholder.persons, {
+        owner: true,
+        pivotTable: 'person_stakeholders',
+        joinColumn: 'person_id',
+        inverseJoinColumn: 'stakeholder_id'
+    })
     readonly stakeholders = new Collection<StakeholderModel>(this)
 }
 
 @Entity({ discriminatorValue: ReqType.PERSON })
 export class PersonVersionsModel extends ActorVersionsModel {
-    @Property({ length: 254, type: types.string })
-    readonly email!: string
+    @Property({ length: 766, type: types.string, nullable: true })
+    readonly appUserId?: string
 }
 
 @Entity({ discriminatorValue: ReqType.PRODUCT })
@@ -446,15 +466,6 @@ export class ResponsibilityModel extends RequirementModel { }
 
 @Entity({ discriminatorValue: ReqType.RESPONSIBILITY })
 export class ResponsibilityVersionsModel extends RequirementVersionsModel { }
-
-@Entity({ discriminatorValue: ReqType.ROLE })
-export class RoleModel extends ResponsibilityModel {
-    @ManyToMany(() => PersonModel, person => person.roles)
-    readonly persons = new Collection<PersonModel>(this)
-}
-
-@Entity({ discriminatorValue: ReqType.ROLE })
-export class RoleVersionsModel extends ResponsibilityVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.SILENCE })
 export class SilenceModel extends RequirementModel { }
@@ -485,7 +496,11 @@ export class StakeholderModel extends ComponentModel {
     @ManyToOne({ entity: () => UseCaseModel, nullable: true, inversedBy: 'stakeholders' })
     readonly useCase?: Ref<UseCaseModel>
 
-    @ManyToMany(() => PersonModel, person => person.stakeholders)
+    @ManyToMany(() => PersonModel, person => person.stakeholders, {
+        pivotTable: 'person_stakeholders',
+        joinColumn: 'stakeholder_id',
+        inverseJoinColumn: 'person_id'
+    })
     readonly persons = new Collection<PersonModel>(this)
 }
 

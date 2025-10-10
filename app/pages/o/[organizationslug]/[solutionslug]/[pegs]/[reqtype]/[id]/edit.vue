@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { ReqType } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
-import type { RequirementType } from '#shared/domain'
 import type { FormSchema } from '~/components/XForm.vue'
 import { z } from 'zod'
 
@@ -39,12 +38,12 @@ const title = `Edit ${snakeCaseToPascalCase(reqtype)}`
 useHead({ title })
 definePageMeta({ middleware: 'auth' })
 
-const { data: requirement, error } = await useFetch<RequirementType>(`/api/requirements/${actualReqType}/${id}`, {
+const { data: requirement, error } = await useApiRequest(`/api/requirements/${actualReqType}/${id}`, {
     query: {
         solutionSlug,
         organizationSlug
     },
-    transform: transformRequirementDates
+    schema: RequirementSchema
 })
 
 if (error.value) {
