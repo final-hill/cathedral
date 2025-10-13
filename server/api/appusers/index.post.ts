@@ -17,7 +17,7 @@ const { id: organizationId, slug: organizationSlug } = Organization.innerType().
  * Invite an appuser to an organization with a role
  */
 export default defineEventHandler(async (event) => {
-    const { email, organizationId, organizationSlug, role } = await validateEventBody(event, bodySchema),
+    const { email, organizationId, organizationSlug, role } = await validateEventBody({ event, schema: bodySchema }),
         session = await requireUserSession(event),
         config = useRuntimeConfig(),
         entraService = createEntraService(),
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
         if (!redirectUrl)
             throw new Error('OAuth redirect URL not configured')
 
-        const result = await appUserInteractor.addOrInviteUserToOrganization(email, orgId, role, redirectUrl)
+        const result = await appUserInteractor.addOrInviteUserToOrganization({ email, organizationId: orgId, role, redirectUrl })
 
         return {
             success: true,

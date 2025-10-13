@@ -18,8 +18,8 @@ const paramSchema = AppUser.pick({ id: true }),
  * Returns an appuser by id in a given organization
  */
 export default defineEventHandler(async (event) => {
-    const { id } = await validateEventParams(event, paramSchema),
-        { organizationId, organizationSlug, includeSlack } = await validateEventQuery(event, querySchema),
+    const { id } = await validateEventParams({ event, schema: paramSchema }),
+        { organizationId, organizationSlug, includeSlack } = await validateEventQuery({ event, schema: querySchema }),
         session = await requireUserSession(event),
         config = useRuntimeConfig(),
         entraService = createEntraService(),
@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
         const slackUserInteractor = new SlackUserInteractor({
                 repository: new SlackRepository({ em: event.context.em }),
                 permissionInteractor,
-                slackService: new SlackService(config.slackBotToken, config.slackSigningSecret)
+                slackService: new SlackService({ token: config.slackBotToken, slackSigningSecret: config.slackSigningSecret })
             }),
             appUserSlackInteractor = new AppUserSlackInteractor({
                 organizationInteractor,

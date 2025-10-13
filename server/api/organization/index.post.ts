@@ -8,7 +8,7 @@ const bodySchema = Organization.innerType().pick({ name: true, description: true
  * Creates a new organization and returns its slug
  */
 export default defineEventHandler(async (event) => {
-    const { name, description } = await validateEventBody(event, bodySchema),
+    const { name, description } = await validateEventBody({ event, schema: bodySchema }),
         session = await requireUserSession(event),
         entraService = createEntraService(),
         permissionInteractor = new PermissionInteractor({ event, session, entraService }),

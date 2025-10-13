@@ -8,7 +8,7 @@ const paramSchema = Organization.innerType().pick({ slug: true })
  * Delete an organization by id.
  */
 export default defineEventHandler(async (event) => {
-    const { slug } = await validateEventParams(event, paramSchema),
+    const { slug } = await validateEventParams({ event, schema: paramSchema }),
         session = await requireUserSession(event),
         entraService = createEntraService(),
         permissionInteractor = new PermissionInteractor({ event, session, entraService }),

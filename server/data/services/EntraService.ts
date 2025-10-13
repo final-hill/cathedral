@@ -142,8 +142,12 @@ export class EntraService {
 
     /**
      * Make a request to Microsoft Graph API
+     * @param props - The request properties
+     * @param props.path - The API path (e.g., '/users')
+     * @param props.options - Optional fetch options (method, headers, body, etc.)
+     * @returns The parsed JSON response
      */
-    private async graphRequest<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
+    private async graphRequest<T = unknown>({ path, options = {} }: { path: string, options?: RequestInit }): Promise<T> {
         const accessToken = await this.getAccessToken(),
             response = await fetch(`https://graph.microsoft.com/v1.0${path}`, {
                 ...options,
@@ -190,9 +194,9 @@ export class EntraService {
     async getUserGroupsDirect(userId: string): Promise<CathedralGroups> {
         try {
             // Get user's group memberships using Microsoft Graph API
-            const memberOfResponse = await this.graphRequest<{ value: Array<{ id: string, displayName?: string }> }>(
-                `/users/${userId}/memberOf?$select=id,displayName&$filter=securityEnabled eq true`
-            )
+            const memberOfResponse = await this.graphRequest<{ value: Array<{ id: string, displayName?: string }> }>({
+                path: `/users/${userId}/memberOf?$select=id,displayName&$filter=securityEnabled eq true`
+            })
 
             if (!memberOfResponse.value)
                 return [] as CathedralGroups
@@ -273,7 +277,7 @@ export class EntraService {
                 const batch = groupIds.slice(i, i + batchSize),
                     // Build filter query for this batch
                     filterConditions = batch.map(id => `id eq '${this.escapeODataString(id)}'`).join(' or '),
-                    groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=${filterConditions}&$select=id,displayName`)
+                    groups = await this.graphRequest<{ value: Group[] }>({ path: `/groups?$filter=${filterConditions}&$select=id,displayName` })
 
                 if (groups.value) {
                     for (const group of groups.value) {
@@ -314,8 +318,12 @@ export class EntraService {
 
     /**
      * Get user's role for a specific organization
+     * @param props - The properties
+     * @param props.groups - The user's Cathedral groups
+     * @param props.orgId - The organization ID
+     * @return The user's role for the organization, or null if none
      */
-    getOrganizationRole(groups: CathedralGroups, orgId: string): AppRole | null {
+    getOrganizationRole({ groups, orgId }: { groups: CathedralGroups, orgId: string }): AppRole | null {
         const parsedPermissions = this.parseGroups(groups)
 
         // System admins have admin access to all organizations
@@ -328,6 +336,8 @@ export class EntraService {
 
     /**
      * Get all organizations the user has access to
+     * @param groups - The user's Cathedral groups
+     * @return Array of organization IDs and roles
      */
     getUserOrganizations(groups: CathedralGroups): Array<{ orgId: string, role: AppRole }> {
         const parsedPermissions = this.parseGroups(groups)
@@ -349,14 +359,15 @@ export class EntraService {
                 try {
                     // Find the group
                     const escapedGroupName = this.escapeODataString(groupName),
-                        groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
+                        groups = await this.graphRequest<{ value: Group[] }>({ path: `/groups?$filter=displayName eq '${escapedGroupName}'` })
 
                     if (groups.value && groups.value.length > 0) {
                         const group = groups.value[0]
                         if (group?.id) {
                             // Delete the group
-                            await this.graphRequest(`/groups/${group.id}`, {
-                                method: 'DELETE'
+                            await this.graphRequest({
+                                path: `/groups/${group.id}`,
+                                options: { method: 'DELETE' }
                             })
                         }
                     }
@@ -376,7 +387,7 @@ export class EntraService {
         try {
             // Try to find existing group by display name
             const escapedGroupName = this.escapeODataString(groupName),
-                existingGroups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
+                existingGroups = await this.graphRequest<{ value: Group[] }>({ path: `/groups?$filter=displayName eq '${escapedGroupName}'` })
 
             if (existingGroups.value && existingGroups.value.length > 0) {
                 const group = existingGroups.value[0]
@@ -385,7 +396,7 @@ export class EntraService {
             }
 
             // Group doesn't exist, create it
-            const newGroup = await this.graphRequest<Group>('/groups', {
+            const newGroup = await this.graphRequest<Group>({ path: '/groups', options: {
                 method: 'POST',
                 body: JSON.stringify({
                     displayName: groupName,
@@ -394,7 +405,7 @@ export class EntraService {
                     securityEnabled: true,
                     description: `Cathedral application group for ${groupName}`
                 })
-            })
+            } })
 
             return newGroup
         } catch (error) {
@@ -436,12 +447,12 @@ export class EntraService {
             const group = await this.findOrCreateGroup(targetGroupName)
 
             // 3. Add user to the group
-            await this.graphRequest(`/groups/${group.id}/members/$ref`, {
+            await this.graphRequest({ path: `/groups/${group.id}/members/$ref`, options: {
                 method: 'POST',
                 body: JSON.stringify({
                     '@odata.id': `https://graph.microsoft.com/v1.0/directoryObjects/${props.userId}`
                 })
-            })
+            } })
         } catch (error) {
             throw new MismatchException(`Failed to add user to group: ${error instanceof Error ? error.message : 'Unknown error'}`)
         }
@@ -464,19 +475,19 @@ export class EntraService {
                 try {
                     // Find the group
                     const escapedGroupName = this.escapeODataString(groupName),
-                        groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
+                        groups = await this.graphRequest<{ value: Group[] }>({ path: `/groups?$filter=displayName eq '${escapedGroupName}'` })
 
                     if (groups.value && groups.value.length > 0) {
                         const group = groups.value[0]
                         if (group?.id) {
                             // Check if user is a member of this group
-                            const members = await this.graphRequest<{ value: User[] }>(`/groups/${group.id}/members?$filter=id eq '${props.userId}'`)
+                            const members = await this.graphRequest<{ value: User[] }>({ path: `/groups/${group.id}/members?$filter=id eq '${props.userId}'` })
 
                             if (members.value && members.value.length > 0) {
                                 // Remove user from this group
-                                await this.graphRequest(`/groups/${group.id}/members/${props.userId}/$ref`, {
+                                await this.graphRequest({ path: `/groups/${group.id}/members/${props.userId}/$ref`, options: {
                                     method: 'DELETE'
-                                })
+                                } })
                             }
                         }
                     }
@@ -525,7 +536,7 @@ export class EntraService {
         email: string
     }> {
         try {
-            const user = await this.graphRequest<User>(`/users/${userId}?$select=id,displayName,userPrincipalName,mail`)
+            const user = await this.graphRequest<User>({ path: `/users/${userId}?$select=id,displayName,userPrincipalName,mail` })
 
             return {
                 id: user.id!,
@@ -551,7 +562,7 @@ export class EntraService {
             // Properly escape the email parameter for OData filter to prevent injection attacks
             const escapedEmail = this.escapeODataString(email),
                 // Use the Microsoft Graph filter to search for users by mail or userPrincipalName
-                users = await this.graphRequest<{ value: User[] }>(`/users?$filter=mail eq '${escapedEmail}' or userPrincipalName eq '${escapedEmail}'&$select=id,displayName,userPrincipalName,mail`)
+                users = await this.graphRequest<{ value: User[] }>({ path: `/users?$filter=mail eq '${escapedEmail}' or userPrincipalName eq '${escapedEmail}'&$select=id,displayName,userPrincipalName,mail` })
 
             if (!users.value || users.value.length === 0)
                 return null
@@ -572,12 +583,13 @@ export class EntraService {
 
     /**
      * Create an external user invitation via Microsoft Graph
-     * @param email - The email address to invite
-     * @param redirectUrl - The URL to redirect users to after accepting the invitation
-     * @param displayName - Optional display name for the invited user
+     * @param props - The invitation properties
+     * @param props.email - The email address to invite
+     * @param props.redirectUrl - The URL to redirect users to after accepting the invitation
+     * @param props.displayName - Optional display name for the invited user
      * @returns The invited user information
      */
-    async createExternalUserInvitation(email: string, redirectUrl: string, displayName?: string): Promise<{
+    async createExternalUserInvitation({ email, redirectUrl, displayName }: { email: string, redirectUrl: string, displayName?: string }): Promise<{
         id: string
         name: string
         email: string
@@ -588,7 +600,7 @@ export class EntraService {
                     inviteRedeemUrl: string
                     invitedUser: User
                     status: string
-                }>('/invitations', {
+                }>({ path: '/invitations', options: {
                     method: 'POST',
                     body: JSON.stringify({
                         invitedUserEmailAddress: email,
@@ -596,7 +608,7 @@ export class EntraService {
                         invitedUserDisplayName: displayName || email.split('@')[0],
                         sendInvitationMessage: true
                     })
-                }),
+                } }),
 
                 user = invitation.invitedUser,
                 userName = user.displayName || displayName || email.split('@')[0]
@@ -634,13 +646,13 @@ export class EntraService {
                 try {
                     // Find the group
                     const escapedGroupName = this.escapeODataString(groupName),
-                        groups = await this.graphRequest<{ value: Group[] }>(`/groups?$filter=displayName eq '${escapedGroupName}'`)
+                        groups = await this.graphRequest<{ value: Group[] }>({ path: `/groups?$filter=displayName eq '${escapedGroupName}'` })
 
                     if (groups.value && groups.value.length > 0) {
                         const group = groups.value[0]
                         if (group?.id) {
                             // Get group members
-                            const members = await this.graphRequest<{ value: User[] }>(`/groups/${group.id}/members?$select=id,displayName,userPrincipalName,mail`)
+                            const members = await this.graphRequest<{ value: User[] }>({ path: `/groups/${group.id}/members?$select=id,displayName,userPrincipalName,mail` })
 
                             if (members.value) {
                                 for (const member of members.value) {

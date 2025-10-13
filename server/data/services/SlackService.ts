@@ -12,7 +12,13 @@ export class SlackService {
     private client: WebClient
     private slackSigningSecret: string
 
-    constructor(token: string, slackSigningSecret: string) {
+    /**
+     * Initialize SlackService with bot token and signing secret
+     * @param props - Initialization properties
+     * @param props.token - Slack bot token for API access
+     * @param props.slackSigningSecret - Signing secret for request verification
+     */
+    constructor({ token, slackSigningSecret }: { token: string, slackSigningSecret: string }) {
         this.client = new WebClient(token)
         this.slackSigningSecret = slackSigningSecret
     }
@@ -35,12 +41,13 @@ export class SlackService {
      * Post a response to a Slack response URL (used for interactive callbacks)
      * Response URLs are webhook endpoints provided by Slack for responding to interactive components
      * and must be called within 3 seconds of receiving the original request.
-     * @param responseUrl - The response URL provided by Slack in the interactive payload
-     * @param payload - The response payload to send (should match Slack's response format)
+     * @param props - The properties for posting the response
+     * @param props.responseUrl - The response URL provided by Slack in the interactive payload
+     * @param props.payload - The response payload to send (should match Slack's response format)
      * @returns Promise that resolves when the response is posted successfully
      * @throws Error if the request fails or times out
      */
-    async postToResponseUrl(responseUrl: string, payload: SlackResponseMessage): Promise<void> {
+    async postToResponseUrl({ responseUrl, payload }: { responseUrl: string, payload: SlackResponseMessage }): Promise<void> {
         try {
             const response = await fetch(responseUrl, {
                 method: 'POST',
@@ -73,11 +80,15 @@ export class SlackService {
 
     /**
      * Create a dropdown selection message for organization selection
-     * @param organizations - Array of organizations with id and name
-     * @param actionId - The action ID for the dropdown
+     * @param props - The properties for creating the dropdown
+     * @param props.organizations - Array of organizations with id and name
+     * @param props.actionId - The action ID for the dropdown
      * @returns Slack message payload with dropdown
      */
-    createOrganizationDropdown(organizations: OrganizationData[], actionId: string = 'cathedral_link_org_select'): SlackResponseMessage {
+    createOrganizationDropdown({ organizations, actionId = 'cathedral_link_org_select' }: {
+        organizations: OrganizationData[]
+        actionId?: string
+    }): SlackResponseMessage {
         const options = organizations.map(org => ({
             text: { type: 'plain_text' as const, text: org.name, emoji: true },
             value: org.id
@@ -103,18 +114,19 @@ export class SlackService {
 
     /**
      * Create a dropdown selection message for solution selection
-     * @param solutions - Array of solutions with id, name, and organizationId
-     * @param organizationId - The organization ID to include in the option values
-     * @param actionId - The action ID for the dropdown
-     * @param replaceOriginal - Whether this should replace the original message
+     * @param props - The properties for creating the dropdown
+     * @param props.solutions - Array of solutions with id, name, and organizationId
+     * @param props.organizationId - The organization ID to include in the option values
+     * @param props.actionId - The action ID for the dropdown
+     * @param props.replaceOriginal - Whether this should replace the original message
      * @returns Slack message payload with dropdown
      */
-    createSolutionDropdown(
-        solutions: SolutionData[],
-        organizationId: string,
-        actionId: string = 'cathedral_link_solution_select',
-        replaceOriginal: boolean = true
-    ): SlackResponseMessage {
+    createSolutionDropdown({ solutions, organizationId, actionId = 'cathedral_link_solution_select', replaceOriginal = true }: {
+        solutions: SolutionData[]
+        organizationId: string
+        actionId?: string
+        replaceOriginal?: boolean
+    }): SlackResponseMessage {
         const options = solutions.slice(0, 100).map(sol => ({
                 text: { type: 'plain_text' as const, text: sol.name, emoji: true },
                 value: `${organizationId}:${sol.id}`
@@ -151,11 +163,15 @@ export class SlackService {
 
     /**
      * Create a success message for channel linking
-     * @param solutionName - Name of the solution that was linked
-     * @param replaceOriginal - Whether this should replace the original message
+     * @param props - The properties for creating the success message
+     * @param props.solutionName - Name of the solution that was linked
+     * @param props.replaceOriginal - Whether this should replace the original message
      * @returns Slack message payload
      */
-    createChannelLinkSuccessMessage(solutionName: string, replaceOriginal: boolean = true): SlackResponseMessage {
+    createChannelLinkSuccessMessage({ solutionName, replaceOriginal = true }: {
+        solutionName: string
+        replaceOriginal?: boolean
+    }): SlackResponseMessage {
         const payload: SlackResponseMessage = {
             response_type: 'in_channel' as const,
             text: `This Slack channel is now linked to Cathedral solution: *${solutionName}*.`
@@ -199,11 +215,12 @@ export class SlackService {
 
     /**
      * Create a user link message with authentication URL
-     * @param userId - The Slack user ID
-     * @param authUrl - The authentication URL for linking
+     * @param props - The properties for creating the user link message
+     * @param props.userId - The Slack user ID
+     * @param props.authUrl - The authentication URL for linking
      * @returns Slack message payload with link
      */
-    createUserLinkMessage(userId: string, authUrl: string): SlackResponseMessage {
+    createUserLinkMessage({ userId, authUrl }: { userId: string, authUrl: string }): SlackResponseMessage {
         return {
             response_type: 'ephemeral' as const,
             text: `Hi <@${userId}>, I need to connect your Slack account to the Cathedral requirements app. Click here to link your account: ${authUrl}.`
@@ -301,14 +318,15 @@ export class SlackService {
 
     /**
      * Post an interactive response using response_url with fallback to direct response
-     * @param responseUrl - The response URL from the interactive payload (optional)
-     * @param payload - The message payload to send
+     * @param props - The properties for posting the response
+     * @param props.responseUrl - The response URL from the interactive payload (optional)
+     * @param props.payload - The message payload to send
      * @returns The payload to return directly, or empty response if posted via response_url
      */
-    async postInteractiveResponse(responseUrl: string | undefined, payload: SlackResponseMessage): Promise<SlackResponseMessage> {
+    async postInteractiveResponse({ responseUrl, payload }: { responseUrl?: string, payload: SlackResponseMessage }): Promise<SlackResponseMessage> {
         if (responseUrl) {
             try {
-                await this.postToResponseUrl(responseUrl, payload)
+                await this.postToResponseUrl({ responseUrl, payload })
                 return { response_type: 'ephemeral' as const, text: '' } // Return empty response
             } catch (error) {
                 console.error('Failed to post to response_url:', error)
@@ -321,7 +339,7 @@ export class SlackService {
     /**
      * Send a team information error message
      */
-    async sendTeamInfoError(channel: string, thread_ts?: string): Promise<void> {
+    async sendTeamInfoError({ channel, thread_ts }: { channel: string, thread_ts?: string }): Promise<void> {
         await this.postMessage({
             channel,
             text: '❌ Unable to determine team information for this request.',
@@ -332,7 +350,7 @@ export class SlackService {
     /**
      * Send a channel not linked error message
      */
-    async sendChannelNotLinkedError(channel: string, thread_ts?: string): Promise<void> {
+    async sendChannelNotLinkedError({ channel, thread_ts }: { channel: string, thread_ts?: string }): Promise<void> {
         await this.postMessage({
             channel,
             text: '❌ This channel is not linked to any Cathedral solution. Please use `/cathedral-link-solution` first.',
@@ -343,7 +361,7 @@ export class SlackService {
     /**
      * Send a user not linked error message
      */
-    async sendUserNotLinkedError(channel: string, thread_ts?: string): Promise<void> {
+    async sendUserNotLinkedError({ channel, thread_ts }: { channel: string, thread_ts?: string }): Promise<void> {
         await this.postMessage({
             channel,
             text: '❌ Your Slack user is not linked to a Cathedral user. Please use `/cathedral-link-user` first.',
@@ -354,7 +372,7 @@ export class SlackService {
     /**
      * Send a requirements parsing error message
      */
-    async sendParsingError(channel: string, thread_ts?: string): Promise<void> {
+    async sendParsingError({ channel, thread_ts }: { channel: string, thread_ts?: string }): Promise<void> {
         await this.postMessage({
             channel,
             text: '❌ Unable to parse your message as requirements. Please try rephrasing your request or contact support if the issue persists.',
@@ -365,7 +383,7 @@ export class SlackService {
     /**
      * Send a simple success message when details can't be fetched
      */
-    async sendSimpleSuccessMessage(channel: string, thread_ts?: string): Promise<void> {
+    async sendSimpleSuccessMessage({ channel, thread_ts }: { channel: string, thread_ts?: string }): Promise<void> {
         await this.postMessage({
             channel,
             text: '✅ Requirements parsed and saved successfully!',
@@ -376,12 +394,12 @@ export class SlackService {
     /**
      * Send a detailed success message with requirements count and view button
      */
-    async sendDetailedSuccessMessage(
-        channel: string,
-        count: number,
-        requirementsUrl: string,
+    async sendDetailedSuccessMessage({ channel, count, requirementsUrl, thread_ts }: {
+        channel: string
+        count: number
+        requirementsUrl: string
         thread_ts?: string
-    ): Promise<void> {
+    }): Promise<void> {
         await this.postMessage({
             channel,
             text: `✅ Successfully parsed and saved *${count}* requirements from your message!`,
@@ -417,7 +435,7 @@ export class SlackService {
     /**
      * Send a generic error message for unexpected errors
      */
-    async sendUnexpectedError(channel: string, thread_ts?: string): Promise<void> {
+    async sendUnexpectedError({ channel, thread_ts }: { channel: string, thread_ts?: string }): Promise<void> {
         await this.postMessage({
             channel,
             text: '❌ An unexpected error occurred while processing your request. Please try again or contact support.',
@@ -426,7 +444,7 @@ export class SlackService {
     }
 
     // https://api.slack.com/authentication/verifying-requests-from-slack#validating-a-request
-    assertValidSlackRequest(headers: Headers, rawBody: string) {
+    assertValidSlackRequest({ headers, rawBody }: { headers: Headers, rawBody: string }) {
         const signingSecret = this.slackSigningSecret,
             timestamp = headers.get('X-Slack-Request-Timestamp')!,
             // Prevent replay attacks by checking the timestamp

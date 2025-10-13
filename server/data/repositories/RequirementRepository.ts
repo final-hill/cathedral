@@ -342,6 +342,7 @@ export class RequirementRepository extends Repository<RequirementType> {
                 extensions: { reqType: ReqType, id: string, name: string, stepType: ScenarioStepTypeEnum, parentStepId?: string, order: number }[] = []
 
             if (req.reqType === ReqType.USE_CASE && useCaseReq.useCaseMainSuccessScenarioSteps) {
+                // eslint-disable-next-line max-params
                 mainSuccessScenario = useCaseReq.useCaseMainSuccessScenarioSteps.map((step, stepIndex) => ({
                     reqType: ReqType.SCENARIO_STEP,
                     id: uuid7(),
@@ -356,10 +357,12 @@ export class RequirementRepository extends Repository<RequirementType> {
                 // Group extensions and find parent steps
                 const parentStepMap = new Map<string, string>() // parentStepNumber -> parentStepId
 
+                // eslint-disable-next-line max-params
                 mainSuccessScenario.forEach((step, index) => {
                     parentStepMap.set((index + 1).toString(), step.id) // "1", "2", "3" -> stepId
                 })
 
+                // eslint-disable-next-line max-params
                 extensions = useCaseReq.useCaseExtensionSteps.map((step, stepIndex) => {
                 // Determine parentStepId based on parentStepNumber
                     let parentStepId: string | undefined
@@ -419,14 +422,14 @@ export class RequirementRepository extends Repository<RequirementType> {
                 populate: ['*']
             }),
             requirements = await Promise.all(reqStatics.map(async (reqStatic) => {
-                const latestActive = await reqStatic.getLatestVersion(new Date(), {
+                const latestActive = await reqStatic.getLatestVersion({ effectiveDate: new Date(), filter: {
                         solution: { id: props.solutionId },
                         workflowState: WorkflowState.Active
-                    }),
-                    latestRemoved = await reqStatic.getLatestVersion(new Date(), {
+                    } }),
+                    latestRemoved = await reqStatic.getLatestVersion({ effectiveDate: new Date(), filter: {
                         solution: { id: props.solutionId },
                         workflowState: WorkflowState.Removed
-                    })
+                    } })
 
                 // Compare effectiveFrom dates to determine validity
                 if (latestRemoved && (!latestActive || latestRemoved.effectiveFrom > latestActive.effectiveFrom)) return undefined // A newer Removed version exists, so no Active version is valid
@@ -469,10 +472,10 @@ export class RequirementRepository extends Repository<RequirementType> {
                 populate: ['*']
             }),
             requirements = await Promise.all(reqStatics.map(async (reqStatic) => {
-                const latestVersion = await reqStatic.getLatestVersion(new Date(), {
+                const latestVersion = await reqStatic.getLatestVersion({ effectiveDate: new Date(), filter: {
                     solution: { id: props.solutionId },
                     workflowState: props.workflowState
-                })
+                } })
 
                 if (!latestVersion) return undefined
 
@@ -533,10 +536,10 @@ export class RequirementRepository extends Repository<RequirementType> {
                 populate: ['*']
             }),
             requirements = await Promise.all(reqStatics.map(async (reqStatic) => {
-                const latestVersion = await reqStatic.getLatestVersion(new Date(), {
+                const latestVersion = await reqStatic.getLatestVersion({ effectiveDate: new Date(), filter: {
                     solution: { id: props.solutionId },
                     ...volatileQuery as Record<string, unknown>
-                })
+                } })
 
                 if (!latestVersion) return undefined
 
@@ -563,7 +566,7 @@ export class RequirementRepository extends Repository<RequirementType> {
         if (!reqStatic) throw new NotFoundException(`Requirement with id ${id} not found`)
 
         const reqType = resolveReqTypeFromModel(reqStatic),
-            reqLatestVersion = await reqStatic.getLatestVersion(new Date())
+            reqLatestVersion = await reqStatic.getLatestVersion({ effectiveDate: new Date() })
 
         if (!reqLatestVersion) throw new NotFoundException(`Requirement with id ${id} not found`)
 
@@ -593,7 +596,7 @@ export class RequirementRepository extends Repository<RequirementType> {
             ReqVersionsModel = reqModels[`${ReqTypePascal}VersionsModel` as keyof typeof reqModels] as typeof reqModels.RequirementVersionsModel,
             mappedProps = await new ReqQueryToModelQuery().map(reqProps) as Record<string, unknown>,
             existingReqStatic = await em.findOne(ReqStaticModel, { id: props.reqProps.id }),
-            existingReqVersion = await existingReqStatic?.getLatestVersion(props.modifiedDate)
+            existingReqVersion = await existingReqStatic?.getLatestVersion({ effectiveDate: props.modifiedDate })
 
         if (!existingReqStatic || !existingReqVersion) throw new NotFoundException(`Requirement with id ${props.reqProps.id} not found`)
 

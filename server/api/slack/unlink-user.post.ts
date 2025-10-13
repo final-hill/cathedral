@@ -12,7 +12,7 @@ const bodySchema = z.object({
  * Unlink a Slack user from their Cathedral account (admin interface)
  */
 export default defineEventHandler(async (event) => {
-    const { slackUserId, teamId } = await validateEventBody(event, bodySchema),
+    const { slackUserId, teamId } = await validateEventBody({ event, schema: bodySchema }),
         session = await requireUserSession(event),
         entraService = createEntraService(),
         permissionInteractor = new PermissionInteractor({ event, session, entraService }),

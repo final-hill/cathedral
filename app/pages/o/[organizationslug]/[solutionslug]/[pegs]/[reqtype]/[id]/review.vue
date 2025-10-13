@@ -38,10 +38,10 @@ const title = `Review ${snakeCaseToPascalCase(reqType)}`
 useHead({ title })
 definePageMeta({ middleware: 'auth' })
 
-const { data: requirement, status, error } = await useApiRequest(`/api/requirements/${actualReqType}/${id}`, {
+const { data: requirement, status, error } = await useApiRequest({ url: `/api/requirements/${actualReqType}/${id}`, options: {
     query: { solutionSlug, organizationSlug },
     schema: RequirementSchema
-})
+} })
 
 if (error.value) {
     throw createError({

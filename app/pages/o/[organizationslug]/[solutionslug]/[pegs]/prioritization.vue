@@ -24,41 +24,41 @@ useHead({ title: 'System Prioritization' })
 
 // Fetch use cases that can have priorities
 // TODO: create a unified endpoint to fetch all prioritizable requirements at once
-const { data: useCases, status: useCasesStatus, refresh: refreshUseCases } = await useApiRequest(
-        `/api/requirements/${ReqType.USE_CASE}`,
-        {
+const { data: useCases, status: useCasesStatus, refresh: refreshUseCases } = await useApiRequest({
+        url: `/api/requirements/${ReqType.USE_CASE}`,
+        options: {
             query: { solutionSlug, organizationSlug },
             schema: z.array(UseCase)
         }
-    ),
-    { data: userStories, status: userStoriesStatus, refresh: refreshUserStories } = await useApiRequest(
-        `/api/requirements/${ReqType.USER_STORY}`,
-        {
+    }),
+    { data: userStories, status: userStoriesStatus, refresh: refreshUserStories } = await useApiRequest({
+        url: `/api/requirements/${ReqType.USER_STORY}`,
+        options: {
             query: { solutionSlug, organizationSlug },
             schema: z.array(UserStory)
         }
-    ),
-    { data: interfaces, status: interfacesStatus, refresh: refreshInterfaces } = await useApiRequest(
-        `/api/requirements/${ReqType.INTERFACE}`,
-        {
+    }),
+    { data: interfaces, status: interfacesStatus, refresh: refreshInterfaces } = await useApiRequest({
+        url: `/api/requirements/${ReqType.INTERFACE}`,
+        options: {
             query: { solutionSlug, organizationSlug },
             schema: z.array(Interface)
         }
-    ),
-    { data: functionalBehaviors, status: functionalBehaviorsStatus, refresh: refreshFunctionalBehaviors } = await useApiRequest(
-        `/api/requirements/${ReqType.FUNCTIONAL_BEHAVIOR}`,
-        {
+    }),
+    { data: functionalBehaviors, status: functionalBehaviorsStatus, refresh: refreshFunctionalBehaviors } = await useApiRequest({
+        url: `/api/requirements/${ReqType.FUNCTIONAL_BEHAVIOR}`,
+        options: {
             query: { solutionSlug, organizationSlug },
             schema: z.array(FunctionalBehavior)
         }
-    ),
-    { data: nonFunctionalBehaviors, status: nonFunctionalBehaviorsStatus, refresh: refreshNonFunctionalBehaviors } = await useApiRequest(
-        `/api/requirements/${ReqType.NON_FUNCTIONAL_BEHAVIOR}`,
-        {
+    }),
+    { data: nonFunctionalBehaviors, status: nonFunctionalBehaviorsStatus, refresh: refreshNonFunctionalBehaviors } = await useApiRequest({
+        url: `/api/requirements/${ReqType.NON_FUNCTIONAL_BEHAVIOR}`,
+        options: {
             query: { solutionSlug, organizationSlug },
             schema: z.array(NonFunctionalBehavior)
         }
-    ),
+    }),
     allRequirements = computed(() => {
         const requirements: PrioritizableEntityType[] = [
             ...(useCases.value || []),
@@ -242,14 +242,14 @@ const priorityOptions = [
                     return
                 }
 
-                const { error } = await useApiRequest(
-                    endpoint,
-                    {
+                const { error } = await useApiRequest({
+                    url: endpoint,
+                    options: {
                         method: 'POST',
                         schema: z.any(),
                         body: { priority: update.priority === null ? undefined : update.priority }
                     }
-                )
+                })
 
                 if (error.value)
                     throw new Error(error.value.message || 'Failed to update priority')
@@ -284,7 +284,7 @@ const priorityOptions = [
     },
     draggedRequirement = ref<PrioritizableEntityType | null>(null),
     dragOverTarget = ref<string | null>(null),
-    onDragStart = (event: DragEvent, requirement: PrioritizableEntityType) => {
+    onDragStart = ({ event, requirement }: { event: DragEvent, requirement: PrioritizableEntityType }) => {
         if (!event.dataTransfer) return
 
         draggedRequirement.value = requirement
@@ -303,7 +303,7 @@ const priorityOptions = [
         draggedRequirement.value = null
         dragOverTarget.value = null
     },
-    onDragOver = (event: DragEvent, targetPriority: MoscowPriority | 'unset') => {
+    onDragOver = ({ event, targetPriority }: { event: DragEvent, targetPriority: MoscowPriority | 'unset' }) => {
         event.preventDefault()
         event.dataTransfer!.dropEffect = 'move'
         dragOverTarget.value = targetPriority.toString()
@@ -311,7 +311,7 @@ const priorityOptions = [
     onDragLeave = () => {
         dragOverTarget.value = null
     },
-    onDrop = (event: DragEvent, targetPriority: MoscowPriority | 'unset') => {
+    onDrop = ({ event, targetPriority }: { event: DragEvent, targetPriority: MoscowPriority | 'unset' }) => {
         event.preventDefault()
 
         const requirement = draggedRequirement.value
@@ -454,9 +454,9 @@ const priorityOptions = [
                         'h-full transition-colors border-2 border-dashed',
                         dragOverTarget === 'unset' ? 'border-primary-400 bg-primary-50 dark:bg-primary-950/20' : 'border-default'
                     ]"
-                    @dragover="onDragOver($event, 'unset')"
+                    @dragover="onDragOver({ event: $event, targetPriority: 'unset' })"
                     @dragleave="onDragLeave"
-                    @drop="onDrop($event, 'unset')"
+                    @drop="onDrop({ event: $event, targetPriority: 'unset' })"
                 >
                     <template #header>
                         <div class="flex items-center gap-2">
@@ -481,7 +481,7 @@ const priorityOptions = [
                             :key="requirement.id"
                             class="p-3 border rounded-lg hover:shadow-sm cursor-move transition-all"
                             draggable="true"
-                            @dragstart="onDragStart($event, requirement)"
+                            @dragstart="onDragStart({ event: $event, requirement })"
                             @dragend="onDragEnd"
                         >
                             <div class="flex items-start justify-between gap-2">
@@ -546,9 +546,9 @@ const priorityOptions = [
                                 'border-2 border-dashed transition-colors',
                                 dragOverTarget === option.value ? 'border-primary-400 bg-primary-50 dark:bg-primary-950/20' : ''
                             ]"
-                            @dragover="onDragOver($event, option.value)"
+                            @dragover="onDragOver({ event: $event, targetPriority: option.value })"
                             @dragleave="onDragLeave"
-                            @drop="onDrop($event, option.value)"
+                            @drop="onDrop({ event: $event, targetPriority: option.value })"
                         >
                             <template #header>
                                 <div class="text-center">
@@ -572,7 +572,7 @@ const priorityOptions = [
                                     :key="requirement.id"
                                     class="p-2 bg-default dark:bg-elevated border border-default rounded-lg hover:shadow-sm cursor-move transition-all text-sm"
                                     draggable="true"
-                                    @dragstart="onDragStart($event, requirement)"
+                                    @dragstart="onDragStart({ event: $event, requirement })"
                                     @dragend="onDragEnd"
                                 >
                                     <div class="flex items-start justify-between gap-1">

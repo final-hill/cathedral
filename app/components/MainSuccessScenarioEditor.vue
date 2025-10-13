@@ -23,11 +23,11 @@
                 :step="step"
                 :disabled="disabled"
                 @step-update="handleStepUpdate"
-                @step-keydown="handleStepKeydown"
+                @step-keydown="(event, step) => handleStepKeydown({ event, step })"
                 @remove-step="removeStepById"
                 @add-extension="handleAddExtension"
-                @set-step-ref="setStepRef"
-                @update-step-description="handleStepDescriptionUpdate"
+                @set-step-ref="(key, el) => setStepRef({ key, el })"
+                @update-step-description="(stepId, description) => handleStepDescriptionUpdate({ stepId, description })"
             />
         </ol>
 
@@ -91,11 +91,11 @@ function initializeMainStepsFromProp(steps: ScenarioStepReferenceType[]) {
 }
 
 function removeStepById(stepId: string) {
-    mainSteps.value = removeStepAndDescendants(mainSteps.value, stepId)
+    mainSteps.value = removeStepAndDescendants({ steps: mainSteps.value, stepId })
     emitMainSteps()
 }
 
-function handleStepKeydown(event: KeyboardEvent, step: NestedStep) {
+function handleStepKeydown({ event, step }: { event: KeyboardEvent, step: NestedStep }) {
     if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault()
         addMainStepAfter(step.id)
@@ -109,7 +109,7 @@ function handleStepKeydown(event: KeyboardEvent, step: NestedStep) {
 }
 
 function addMainStep() {
-    const nextOrder = getNextSiblingOrder(mainSteps.value, undefined),
+    const nextOrder = getNextSiblingOrder({ steps: mainSteps.value, parentStepId: undefined }),
         newStep: MainStep = {
             id: crypto.randomUUID(),
             description: '',
@@ -127,7 +127,7 @@ function addMainStep() {
 }
 
 function indentMainStepById(stepId: string) {
-    const success = indentStep(mainSteps.value, stepId)
+    const success = indentStep({ steps: mainSteps.value, stepId })
     if (success) {
         emitMainSteps()
         nextTick(() => {
@@ -137,7 +137,7 @@ function indentMainStepById(stepId: string) {
 }
 
 function outdentMainStepById(stepId: string) {
-    const success = outdentStep(mainSteps.value, stepId)
+    const success = outdentStep({ steps: mainSteps.value, stepId })
     if (success) {
         emitMainSteps()
         nextTick(() => {
@@ -148,13 +148,16 @@ function outdentMainStepById(stepId: string) {
 
 function addMainStepAfter(stepId: string) {
     const newId = crypto.randomUUID(),
-        newStepFactory = (order: number, parentStepId?: string): MainStep => ({
-            id: newId,
-            description: '',
-            parentStepId,
-            order
-        }),
-        newStep = addStepAfter(mainSteps.value, stepId, newStepFactory)
+        newStep = addStepAfter({
+            steps: mainSteps.value,
+            targetStepId: stepId,
+            newStepFactory: ({ order, parentStepId }): MainStep => ({
+                id: newId,
+                description: '',
+                parentStepId,
+                order
+            })
+        })
 
     if (newStep) {
         nextTick(() => {
@@ -171,7 +174,7 @@ function handleStepUpdate() {
     })
 }
 
-function handleStepDescriptionUpdate(stepId: string, description: string) {
+function handleStepDescriptionUpdate({ stepId, description }: { stepId: string, description: string }) {
     // Find and update the step description
     const step = mainSteps.value.find(s => s.id === stepId)
     if (step)
@@ -207,7 +210,7 @@ function calculateStepNumber(stepId: string): string | null {
     if (stepIndex === -1) return null
 
     // Calculate the hierarchical number (like "3" or "3.2")
-    return calculateHierarchicalNumber(stepId, nestedMainSteps.value)
+    return calculateHierarchicalNumber({ stepId, steps: nestedMainSteps.value })
 }
 
 function flattenStepsInDisplayOrder(steps: NestedStep[]): NestedStep[] {
@@ -220,7 +223,7 @@ function flattenStepsInDisplayOrder(steps: NestedStep[]): NestedStep[] {
     return flattened
 }
 
-function calculateHierarchicalNumber(stepId: string, steps: NestedStep[], prefix: string = ''): string | null {
+function calculateHierarchicalNumber({ stepId, steps, prefix = '' }: { stepId: string, steps: NestedStep[], prefix?: string }): string | null {
     for (let i = 0; i < steps.length; i++) {
         const step = steps[i]!,
             currentNumber = prefix ? `${prefix}.${i + 1}` : `${i + 1}`
@@ -229,7 +232,7 @@ function calculateHierarchicalNumber(stepId: string, steps: NestedStep[], prefix
             return currentNumber
 
         if (step.children.length > 0) {
-            const childResult = calculateHierarchicalNumber(stepId, step.children, currentNumber)
+            const childResult = calculateHierarchicalNumber({ stepId, steps: step.children, prefix: currentNumber })
             if (childResult) return childResult
         }
     }

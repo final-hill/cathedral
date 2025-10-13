@@ -110,6 +110,7 @@ const onSubmit = async (data?: Record<string, unknown>) => {
             emit('beforeSave', submitData)
 
             // Trim string values in the submit data
+            // eslint-disable-next-line max-params
             submitData = Object.keys(submitData).reduce((acc, key) => {
                 const value = submitData[key as keyof typeof submitData]
                 if (typeof value === 'string')

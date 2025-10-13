@@ -17,7 +17,7 @@ const { id: organizationId, slug: organizationSlug } = Organization.innerType().
  * that the current user needs to review
  */
 export default defineEventHandler(async (event) => {
-    const { solutionSlug, organizationId, organizationSlug } = await validateEventQuery(event, querySchema),
+    const { solutionSlug, organizationId, organizationSlug } = await validateEventQuery({ event, schema: querySchema }),
         session = await requireUserSession(event),
         reviewInteractor = await createReviewInteractor({
             event,

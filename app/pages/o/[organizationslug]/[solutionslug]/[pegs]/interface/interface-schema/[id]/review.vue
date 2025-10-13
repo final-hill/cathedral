@@ -16,13 +16,13 @@ const route = useRoute(),
 
 useHead({ title })
 
-const { data: requirement, status, error } = await useApiRequest(`/api/requirements/${ReqType.INTERFACE_SCHEMA}/${id}`, {
+const { data: requirement, status, error } = await useApiRequest({ url: `/api/requirements/${ReqType.INTERFACE_SCHEMA}/${id}`, options: {
     query: {
         solutionSlug: solutionslug,
         organizationSlug: organizationslug
     },
     schema: InterfaceSchema
-})
+} })
 
 if (error.value) {
     throw createError({

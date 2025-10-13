@@ -3,7 +3,7 @@ import { createSlackEventInteractor } from '~~/server/application/slack'
 import { slackBodySchema } from '~~/server/data/slack-zod-schemas'
 
 const config = useRuntimeConfig(),
-    slackService = new SlackService(config.slackBotToken, config.slackSigningSecret),
+    slackService = new SlackService({ token: config.slackBotToken, slackSigningSecret: config.slackSigningSecret }),
     nlrService = new NaturalLanguageToRequirementService({
         apiKey: config.azureOpenaiApiKey,
         apiVersion: config.azureOpenaiApiVersion,
@@ -14,7 +14,7 @@ const config = useRuntimeConfig(),
 export default defineEventHandler(async (event) => {
     try {
         const rawBody = (await readRawBody(event))!,
-            data = await validateEventBody(event, slackBodySchema),
+            data = await validateEventBody({ event, schema: slackBodySchema }),
             headers = event.headers
 
         let slackUserId = '',
@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
             teamId = data.authorizations?.[0]?.team_id || ''
         }
 
-        const userSession = slackUserId ? await resolveSlackUserSession(event, slackUserId, teamId) : null
+        const userSession = slackUserId ? await resolveSlackUserSession({ event, slackUserId, teamId }) : null
 
         // For url_verification, we don't need user authentication
         if (data.type === 'url_verification') {
@@ -67,7 +67,7 @@ export default defineEventHandler(async (event) => {
             nlrService
         })
 
-        slackService.assertValidSlackRequest(headers, rawBody)
+        slackService.assertValidSlackRequest({ headers, rawBody })
 
         return eventInteractor.handleEvent(data).catch(handleDomainException)
     } catch {

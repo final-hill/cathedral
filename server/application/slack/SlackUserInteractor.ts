@@ -122,24 +122,30 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
      * - Sends appropriate error messages to Slack if user not linked
      * - Returns void if validation fails (error already sent)
      *
-     * @param slackUserId - The Slack user ID
-     * @param channelId - The Slack channel ID (for error messaging)
-     * @param teamId - The Slack team ID
-     * @param thread_ts - Optional thread timestamp for threaded responses
+     * @param params - Validation parameters
+     * @param params.slackUserId - The Slack user ID
+     * @param params.channelId - The Slack channel ID (for error messaging)
+     * @param params.teamId - The Slack team ID
+     * @param params.thread_ts - Optional thread timestamp for threaded responses
      * @returns Cathedral user ID if linked, void if not (with error sent)
      */
-    async validateUserAuthentication(
-        slackUserId: string,
-        channelId: string,
-        teamId: string,
+    async validateUserAuthentication({
+        slackUserId,
+        channelId,
+        teamId,
+        thread_ts
+    }: {
+        slackUserId: string
+        channelId: string
+        teamId: string
         thread_ts?: string
-    ): Promise<string | undefined> {
+    }): Promise<string | undefined> {
         const cathedralUserId = await this.repository
             .getCathedralUserIdForSlackUser({ slackUserId, teamId })
             .catch(() => void 0)
 
         if (!cathedralUserId) {
-            await this._slackService.sendUserNotLinkedError(channelId, thread_ts)
+            await this._slackService.sendUserNotLinkedError({ channel: channelId, thread_ts })
             return undefined
         }
 
@@ -154,11 +160,12 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
      * - Token expires in 10 minutes for security
      * - Redirects through account selection flow for proper user validation
      *
-     * @param slackUserId - The Slack user ID
-     * @param teamId - The Slack team ID
+     * @param params - Parameters for creating the link message
+     * @param params.slackUserId - The Slack user ID
+     * @param params.teamId - The Slack team ID
      * @returns Slack message with authentication link
      */
-    createUserLinkMessage(slackUserId: string, teamId: string) {
+    createUserLinkMessage({ slackUserId, teamId }: { slackUserId: string, teamId: string }) {
         const config = useRuntimeConfig(),
             token = jwt.sign({
                 slackUserId,
@@ -176,7 +183,7 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
         authUrl.searchParams.set('redirect', slackLinkUrl.pathname + slackLinkUrl.search)
 
         const link = authUrl.toString()
-        return this._slackService.createUserLinkMessage(slackUserId, link)
+        return this._slackService.createUserLinkMessage({ userId: slackUserId, authUrl: link })
     }
 
     /**

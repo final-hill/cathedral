@@ -107,7 +107,7 @@ export class OrganizationCollectionRepository extends Repository<OrganizationTyp
             mapper = new DataModelToDomainModel(),
             organizations = await Promise.all(orgModels.map(async (org) => {
                 // Get the truly latest version (including deleted versions) to check deletion status
-                const latestVersion = await org.getLatestVersionIncludingDeleted(effectiveDate, volatileQuery)
+                const latestVersion = await org.getLatestVersionIncludingDeleted({ effectiveDate, filter: volatileQuery })
 
                 // Skip organizations that don't have a latest version or are deleted
                 if (!latestVersion || latestVersion.isDeleted)
@@ -124,17 +124,17 @@ export class OrganizationCollectionRepository extends Repository<OrganizationTyp
 
     /**
      * Updates an organization
-     * @param props - The properties to update
+     * @param props - The properties to update ( id is required for identifying the organization )
      * @throws {NotFoundException} If the organization does not exist
      * @throws {MismatchException} If the provided name is already taken
      */
-    async updateOrganizationById(id: OrganizationType['id'], props: Pick<Partial<OrganizationType>, 'name' | 'description'> & UpdationInfo): Promise<void> {
+    async updateOrganizationById({ id, ...props }: Pick<OrganizationType, 'id'> & Pick<Partial<OrganizationType>, 'name' | 'description'> & UpdationInfo): Promise<void> {
         const em = this._em,
             organization = await em.findOne(OrganizationModel, { id }),
             // Check if organization is deleted by getting the truly latest version
-            latestVersionAny = await organization?.getLatestVersionIncludingDeleted(props.modifiedDate),
+            latestVersionAny = await organization?.getLatestVersionIncludingDeleted({ effectiveDate: props.modifiedDate }),
             // Get the latest non-deleted version for update base
-            orgLatestVersion = await organization?.getLatestVersion(props.modifiedDate) as OrganizationVersionsModel | undefined
+            orgLatestVersion = await organization?.getLatestVersion({ effectiveDate: props.modifiedDate }) as OrganizationVersionsModel | undefined
 
         if (!organization || !orgLatestVersion) throw new NotFoundException('Organization does not exist')
 

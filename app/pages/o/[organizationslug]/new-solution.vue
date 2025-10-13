@@ -8,10 +8,10 @@ definePageMeta({ name: 'New Solution', middleware: 'auth' })
 const { $eventBus } = useNuxtApp(),
     { organizationslug: organizationSlug } = useRoute('New Solution').params,
     router = useRouter(),
-    { data: organization, error: getOrgError } = await useApiRequest(`/api/organization/${organizationSlug}`, {
+    { data: organization, error: getOrgError } = await useApiRequest({ url: `/api/organization/${organizationSlug}`, options: {
         schema: Organization,
         errorMessage: 'Failed to load organization'
-    })
+    } })
 
 if (!organization.value) {
     $eventBus.$emit('page-error', getOrgError.value)
@@ -32,7 +32,7 @@ const formState = reactive<FormSchema>({
         description: ''
     }),
     createSolution = async (data: FormSchema) => {
-        const { data: newSolutionSlug } = await useApiRequest('/api/solution', {
+        const { data: newSolutionSlug } = await useApiRequest({ url: '/api/solution', options: {
             method: 'POST',
             schema: z.string(),
             body: {
@@ -43,7 +43,7 @@ const formState = reactive<FormSchema>({
             showSuccessToast: true,
             successMessage: 'Solution created successfully',
             errorMessage: 'Failed to create solution'
-        })
+        } })
 
         router.push({ name: 'Solution', params: { organizationslug: organizationSlug, solutionslug: newSolutionSlug.value! } })
     },

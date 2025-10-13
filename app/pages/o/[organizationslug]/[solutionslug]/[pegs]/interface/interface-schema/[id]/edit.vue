@@ -13,13 +13,13 @@ const route = useRoute(),
         _pegs: string
         id: string
     },
-    { data: requirement } = await useApiRequest(`/api/requirements/${ReqType.INTERFACE_SCHEMA}/${id}`, {
+    { data: requirement } = await useApiRequest({ url: `/api/requirements/${ReqType.INTERFACE_SCHEMA}/${id}`, options: {
         query: {
             organizationSlug: organizationslug,
             solutionSlug: solutionslug
         },
         schema: InterfaceSchema
-    })
+    } })
 
 if (!requirement.value) {
     throw createError({

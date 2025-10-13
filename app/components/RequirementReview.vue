@@ -64,14 +64,14 @@ const props = defineProps<{
     getBooleanValue = (value: unknown): boolean => value as boolean,
     getDateValue = (value: unknown): Date => value as Date,
     getStringValue = (value: unknown): string => value as string,
-    { data: reviewStateData } = useApiRequest(`/api/requirements/${reqType.value}/${requirement.value.id}/review-status`, {
+    { data: reviewStateData } = useApiRequest({ url: `/api/requirements/${reqType.value}/${requirement.value.id}/review-status`, options: {
         query: {
             organizationSlug: organizationSlug.value,
             solutionSlug: solutionSlug.value
         },
         schema: ReviewState,
         errorMessage: 'Failed to load review status'
-    }),
+    } }),
     reviewState = computed(() => reviewStateData.value ?? null),
     // Group review items by category for display (excluding ENDORSEMENT as it's handled separately)
     // TODO: we need to determine a way to generalize this in the future I think. Otherwise a Custom Component might be needed for each
@@ -133,7 +133,7 @@ const props = defineProps<{
                 successMessage = 'Requirement revised successfully',
                 errorMessage = 'Failed to revise requirement'
 
-            await useApiRequest(endpoint, {
+            await useApiRequest({ url: endpoint, options: {
                 method: 'POST',
                 schema: z.unknown(),
                 body: {
@@ -143,7 +143,7 @@ const props = defineProps<{
                 showSuccessToast: true,
                 successMessage,
                 errorMessage
-            })
+            } })
 
             // Navigate back to requirements list
             await navigateTo(`/${organizationSlug.value}/${solutionSlug.value}/requirements`)

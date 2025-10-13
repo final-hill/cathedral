@@ -20,8 +20,8 @@ const paramSchema = Solution.innerType().pick({ slug: true }),
  */
 export default defineEventHandler(async (event) => {
     // Note: slug parameter is extracted but not used - organization context comes from request body
-    const { slug: _solutionSlug } = await validateEventParams(event, paramSchema),
-        { organizationId, organizationSlug, channelId, teamId } = await validateEventBody(event, bodySchema),
+    const { slug: _solutionSlug } = await validateEventParams({ event, schema: paramSchema }),
+        { organizationId, organizationSlug, channelId, teamId } = await validateEventBody({ event, schema: bodySchema }),
         session = await requireUserSession(event),
         config = useRuntimeConfig(),
         em = event.context.em,
@@ -32,9 +32,9 @@ export default defineEventHandler(async (event) => {
         slackChannelInteractor = new SlackChannelInteractor({
             repository: new SlackRepository({ em }),
             permissionInteractor,
-            slackService: new SlackService(config.slackBotToken, config.slackSigningSecret)
+            slackService: new SlackService({ token: config.slackBotToken, slackSigningSecret: config.slackSigningSecret })
         })
 
-    return await slackChannelInteractor.refreshChannelNames(organization.id, channelId, teamId)
+    return await slackChannelInteractor.refreshChannelNames({ organizationId: organization.id, channelId, teamId })
         .catch(handleDomainException)
 })

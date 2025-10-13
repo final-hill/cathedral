@@ -14,13 +14,6 @@ interface NestedExtensionStep extends ExtensionStep {
     children: NestedExtensionStep[]
 }
 
-interface ExtensionGroup {
-    groupKey: string
-    title: string
-    allSteps: ExtensionStep[]
-    rootSteps: NestedExtensionStep[]
-}
-
 const props = defineProps<{
         modelValue?: ScenarioStepReferenceType[]
         disabled?: boolean
@@ -46,9 +39,12 @@ const extensionGroupsMap = ref<Map<string, ExtensionGroupData>>(new Map()),
             .map(([groupKey, data]) => ({
                 groupKey,
                 title: data.title,
+                // eslint-disable-next-line max-params
                 allSteps: data.steps.sort((a, b) => a.order - b.order),
+                // eslint-disable-next-line max-params
                 rootSteps: buildExtensionHierarchy(data.steps.sort((a, b) => a.order - b.order))
             }))
+            // eslint-disable-next-line max-params
             .sort((a, b) => a.groupKey.localeCompare(b.groupKey))
     ),
     // Flattened steps view for emission
@@ -80,6 +76,7 @@ function initializeExtensionsFromProp(steps: ScenarioStepReferenceType[]) {
             || step.name.match(/^Extension \d+[a-z]/)
             || step.name.toLowerCase().includes('extension')
         ))
+        // eslint-disable-next-line max-params
         .reduce((acc, step) => {
             // Extract extension key from name or default to 'A'
             let groupKey = 'A'
@@ -105,9 +102,10 @@ function initializeExtensionsFromProp(steps: ScenarioStepReferenceType[]) {
 
 function removeStep(stepId: string) {
     // Smart operation: update each group's steps and trigger reactivity
+    // eslint-disable-next-line max-params
     extensionGroupsMap.value.forEach((groupData, groupKey) => {
         const originalLength = groupData.steps.length
-        groupData.steps = removeStepAndDescendants(groupData.steps, stepId)
+        groupData.steps = removeStepAndDescendants({ steps: groupData.steps, stepId })
 
         // Trigger reactivity if steps were removed
         if (groupData.steps.length !== originalLength)
@@ -116,7 +114,7 @@ function removeStep(stepId: string) {
     emitExtensions()
 }
 
-function handleExtensionKeydown(event: KeyboardEvent, group: ExtensionGroup, step: ExtensionStep) {
+function handleExtensionKeydown({ event, step }: { event: KeyboardEvent, step: ExtensionStep }) {
     if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault()
         addExtensionStepAfter(step)
@@ -145,7 +143,7 @@ function removeExtensionGroup(groupKey: string) {
 
 function indentExtensionStep(step: ExtensionStep) {
     const groupData = extensionGroupsMap.value.get(step.extensionGroupKey)!,
-        success = indentStep(groupData.steps, step.id)
+        success = indentStep({ steps: groupData.steps, stepId: step.id })
     if (success) {
         // Trigger reactivity by reassigning the map entry
         extensionGroupsMap.value.set(step.extensionGroupKey, { ...groupData })
@@ -160,7 +158,7 @@ function indentExtensionStep(step: ExtensionStep) {
 
 function outdentExtensionStep(step: ExtensionStep) {
     const groupData = extensionGroupsMap.value.get(step.extensionGroupKey)!,
-        success = outdentStep(groupData.steps, step.id)
+        success = outdentStep({ steps: groupData.steps, stepId: step.id })
     if (success) {
         // Trigger reactivity by reassigning the map entry
         extensionGroupsMap.value.set(step.extensionGroupKey, { ...groupData })
@@ -175,7 +173,7 @@ function outdentExtensionStep(step: ExtensionStep) {
 
 function addExtensionStep(groupKey: string) {
     const groupData = extensionGroupsMap.value.get(groupKey)!,
-        nextOrder = getNextSiblingOrder(groupData.steps, undefined),
+        nextOrder = getNextSiblingOrder({ steps: groupData.steps, parentStepId: undefined }),
 
         newStep: ExtensionStep = {
             id: crypto.randomUUID(),
@@ -199,17 +197,17 @@ function addExtensionStep(groupKey: string) {
 
 function addExtensionStepAfter(currentStep: ExtensionStep) {
     const groupData = extensionGroupsMap.value.get(currentStep.extensionGroupKey)!,
-        newStep = addStepAfter(
-            groupData.steps,
-            currentStep.id,
-            (order: number, parentStepId?: string) => ({
+        newStep = addStepAfter({
+            steps: groupData.steps,
+            targetStepId: currentStep.id,
+            newStepFactory: ({ order, parentStepId }) => ({
                 id: crypto.randomUUID(),
                 description: '',
                 parentStepId,
                 order,
                 extensionGroupKey: currentStep.extensionGroupKey
             })
-        )
+        })
 
     if (newStep) {
         // Trigger reactivity by reassigning the map entry
@@ -239,7 +237,7 @@ function addNewExtensionGroup() {
     })
 }
 
-function addExtensionGroupForStep(stepNumber: string, title: string = '') {
+function addExtensionGroupForStep({ stepNumber, title = '' }: { stepNumber: string, title: string }) {
     // Create an extension group with a specific key pattern like "3a" for step 3
     const extensionKey = `${stepNumber}a`
 
@@ -273,7 +271,7 @@ function handleStepUpdate() {
     })
 }
 
-function handleStepDescriptionUpdate(stepId: string, description: string) {
+function handleStepDescriptionUpdate({ stepId, description }: { stepId: string, description: string }) {
     // Find the step in the extension groups and update its description
     for (const [groupKey, groupData] of extensionGroupsMap.value) {
         const findAndUpdateStep = (steps: (ExtensionStep & { children?: ExtensionStep[] })[]): boolean => {
@@ -354,12 +352,12 @@ onMounted(() => {
                 <div class="extension-header">
                     <strong class="extension-label">{{ group.groupKey }}.</strong>
                     <UInput
-                        :ref="el => setStepRef(`ext-header-${group.groupKey}`, el)"
+                        :ref="el => setStepRef({ key: `ext-header-${group.groupKey}`, el })"
                         v-model="extensionGroupsMap.get(group.groupKey)!.title"
                         placeholder="Enter extension scenario..."
                         :disabled="disabled"
                         class="extension-title-input"
-                        @keydown="(event: KeyboardEvent) => handleExtensionHeaderKeydown(event)"
+                        @keydown="handleExtensionHeaderKeydown"
                     />
                     <span class="extension-colon">:</span>
                     <UButton
@@ -391,10 +389,10 @@ onMounted(() => {
                         :group-key="group.groupKey"
                         :disabled="disabled"
                         @step-update="handleStepUpdate"
-                        @step-keydown="(event, step) => handleExtensionKeydown(event, group, step)"
+                        @step-keydown="(event, step) => handleExtensionKeydown({ event, step })"
                         @remove-step="removeStep"
-                        @set-step-ref="setStepRef"
-                        @update-step-description="handleStepDescriptionUpdate"
+                        @set-step-ref="(key, el) => setStepRef({ key, el })"
+                        @update-step-description="handleStepDescriptionUpdate({ stepId: step.id, description: step.description })"
                     />
                 </ol>
             </div>

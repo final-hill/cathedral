@@ -8,11 +8,11 @@ definePageMeta({ name: 'Solution', middleware: 'auth' })
 const { $eventBus } = useNuxtApp(),
     { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Solution').params,
     router = useRouter(),
-    { data: solution, error: solutionError } = await useApiRequest(`/api/solution/${slug}`, {
+    { data: solution, error: solutionError } = await useApiRequest({ url: `/api/solution/${slug}`, options: {
         schema: Solution,
         query: { organizationSlug },
         errorMessage: 'Failed to load solution'
-    }),
+    } }),
     deleteConfirmModalOpenState = ref(false)
 
 if (solutionError.value) $eventBus.$emit('page-error', solutionError.value)
@@ -70,14 +70,14 @@ const links = [
         }
     ],
     handleSolutionDelete = async () => {
-        await useApiRequest(`/api/solution/${slug}`, {
+        await useApiRequest({ url: `/api/solution/${slug}`, options: {
             method: 'DELETE',
             schema: z.unknown(),
             body: { organizationSlug },
             showSuccessToast: true,
             successMessage: 'Solution deleted successfully',
             errorMessage: 'Failed to delete solution'
-        })
+        } })
         deleteConfirmModalOpenState.value = false
         router.push({ name: 'Organization', params: { organizationslug: organizationSlug } })
     },

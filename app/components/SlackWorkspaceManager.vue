@@ -39,9 +39,9 @@ if (route.query.slack_install === 'success') {
     router.replace({ query: {} })
 }
 
-const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useApiRequest(
-        `/api/slack/workspaces`,
-        {
+const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useApiRequest({
+        url: `/api/slack/workspaces`,
+        options: {
             schema: z.array(SlackWorkspaceMeta),
             query: { organizationSlug: props.organizationSlug },
             transform: (data: SlackWorkspaceMetaType[]): SlackWorkspaceMetaType[] => {
@@ -53,7 +53,7 @@ const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useApiR
             },
             errorMessage: 'Failed to load Slack workspaces'
         }
-    ),
+    }),
     disconnectingWorkspaces = ref<Set<string>>(new Set()),
     refreshingWorkspaces = ref<Set<string>>(new Set()),
     addAnotherUrl = `/api/slack/oauth/authorize?organizationSlug=${props.organizationSlug}`,
@@ -70,7 +70,7 @@ const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useApiR
         disconnectingWorkspaces.value.add(teamId)
 
         try {
-            await useApiRequest(`/api/slack/workspaces/${teamId}`, {
+            await useApiRequest({ url: `/api/slack/workspaces/${teamId}`, options: {
                 method: 'DELETE',
                 schema: z.unknown(),
                 body: {
@@ -79,7 +79,7 @@ const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useApiR
                 showSuccessToast: true,
                 successMessage: 'Slack workspace disconnected successfully',
                 errorMessage: 'Failed to disconnect Slack workspace'
-            })
+            } })
 
             await refreshSlackWorkspaces()
         } finally {
@@ -90,7 +90,7 @@ const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useApiR
         refreshingWorkspaces.value.add(teamId)
 
         try {
-            await useApiRequest(`/api/slack/workspaces/${teamId}/refresh`, {
+            await useApiRequest({ url: `/api/slack/workspaces/${teamId}/refresh`, options: {
                 method: 'POST',
                 schema: z.unknown(),
                 body: {
@@ -99,7 +99,7 @@ const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useApiR
                 showSuccessToast: true,
                 successMessage: 'Workspace tokens refreshed successfully',
                 errorMessage: 'Failed to refresh workspace tokens'
-            })
+            } })
 
             await refreshSlackWorkspaces()
         } finally {

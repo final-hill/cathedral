@@ -7,7 +7,7 @@ import type { ComponentPublicInstance } from 'vue'
 export function useStepRefs() {
     const stepRefs = ref<Record<string, ComponentPublicInstance | Element>>({})
 
-    function setStepRef(key: string, el: ComponentPublicInstance | Element | null) {
+    function setStepRef({ key, el }: { key: string, el: ComponentPublicInstance | Element | null }) {
         if (el)
             stepRefs.value[key] = el
     }

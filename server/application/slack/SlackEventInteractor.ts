@@ -29,6 +29,17 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
     protected readonly _channelInteractor: SlackChannelInteractor
     protected readonly _userInteractor: SlackUserInteractor
 
+    /**
+     * Constructor for SlackEventInteractor
+     * @param props - The properties required to instantiate the interactor
+     * @param props.repository - The Slack repository for data access
+     * @param props.nlrService - The natural language to requirement service
+     * @param props.permissionInteractor - The permission interactor for access control
+     * @param props.slackService - The Slack service for sending messages
+     * @param props.workspaceInteractor - The Slack workspace interactor
+     * @param props.channelInteractor - The Slack channel interactor
+     * @param props.userInteractor - The Slack user interactor
+     */
     constructor(props: {
         repository: SlackRepository
         nlrService: NaturalLanguageToRequirementService
@@ -64,6 +75,9 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
 
     /**
      * Handle any Slack event (url_verification, event_callback, etc)
+     * @param body - The raw body of the Slack event request
+     * @returns A promise that resolves to a Slack response message or an empty object
+     * @throws {MismatchException} When the event type is unrecognized
      */
     async handleEvent(body: unknown) {
         const parsed = slackBodySchema.parse(body)
@@ -82,7 +96,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
                 switch (parsed.event.type) {
                     case 'app_mention':
                         // Handle app mention synchronously to prevent duplicate processing
-                        await this.handleAppMention(parsed.event, teamId)
+                        await this.handleAppMention({ data: parsed.event, teamId })
                         break
                     // A message in a channel where the bot is present
                     case 'message':
@@ -101,27 +115,37 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
      * Handle 'app_mention' events from Slack
      * Triggered when the bot is mentioned in a message: `@cathedral some message`
      * This will parse the message as a requirement statement using the NLR service and save it to the appropriate solution.
+     * @param params - The parameters for handling the app mention
+     * @param params.data - The Slack app mention event data
+     * @param params.teamId - The Slack team ID
      */
-    async handleAppMention(data: z.infer<typeof slackAppMentionSchema>, teamId: string): Promise<void> {
+    async handleAppMention({ data, teamId }: { data: z.infer<typeof slackAppMentionSchema>, teamId: string }): Promise<void> {
         const statement = data.text.trim(),
             messageKey = `${data.channel}:${data.user}:${data.ts}`
 
-        if (!this.shouldProcessMessage(data, messageKey)) return
+        if (!this.shouldProcessMessage({ data, messageKey })) return
 
         // Establish transaction boundary
         const em = this.repository['_em']
 
         try {
-            const parsedResultsId = await this.processRequirementsParsing(data, teamId, statement, em)
+            const parsedResultsId = await this.processRequirementsParsing({ data, teamId, statement, em })
             if (!parsedResultsId) return
 
-            const channelConfig = await this._channelInteractor.getChannelConfiguration(data.channel, teamId)
-            if (!channelConfig) return await this._slackService.sendSimpleSuccessMessage(data.channel, data.ts)
+            const channelConfig = await this._channelInteractor.getChannelConfiguration({ channelId: data.channel, teamId })
+            if (!channelConfig) return await this._slackService.sendSimpleSuccessMessage({ channel: data.channel, thread_ts: data.ts })
 
-            const cathedralUserId = await this._userInteractor.validateUserAuthentication(data.user, data.channel, teamId)
+            const cathedralUserId = await this._userInteractor.validateUserAuthentication({ slackUserId: data.user, channelId: data.channel, teamId })
             if (!cathedralUserId) return
 
-            await this.sendSuccessResponse(data.channel, parsedResultsId, channelConfig, cathedralUserId, em, data.ts)
+            await this.sendSuccessResponse({
+                channelId: data.channel,
+                parsedResultsId,
+                channelConfig,
+                cathedralUserId,
+                em,
+                thread_ts: data.ts
+            })
         } catch (error: unknown) {
             console.error('Unexpected error in handleAppMention:', {
                 error,
@@ -131,13 +155,15 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
                 statement
             })
 
-            await this._slackService.sendUnexpectedError(data.channel, data.ts)
+            await this._slackService.sendUnexpectedError({ channel: data.channel, thread_ts: data.ts })
         }
     }
 
     /**
      * Handle 'message' events from Slack
      * Called when any message is posted in a channel the bot is present in
+     * Currently a no-op, but could be extended for message analysis or other features
+     * @param data - The Slack message event data
      */
     async handleMessage(data: z.infer<typeof slackMessageSchema>): Promise<void> {
         // Currently no-op, but could be extended for message analysis
@@ -146,6 +172,9 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
 
     /**
      * Handle slash commands from Slack
+     * @param body - The raw body of the slash command request
+     * @returns A promise that resolves to a Slack response message
+     * @throws {MismatchException} When the command is unrecognized
      */
     async handleSlashCommand(body: z.infer<typeof slackSlashCommandSchema>) {
         const parsed = slackSlashCommandSchema.parse(body)
@@ -155,7 +184,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
             case '/cathedral-help':
                 return this._slackService.createHelpMessage()
             case '/cathedral-link-user':
-                return this._userInteractor.createUserLinkMessage(parsed.user_id, parsed.team_id)
+                return this._userInteractor.createUserLinkMessage({ slackUserId: parsed.user_id, teamId: parsed.team_id })
             case '/cathedral-unlink-user':
                 return this.handleUnlinkUserCommand(parsed)
             case '/cathedral-link-solution':
@@ -169,6 +198,9 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
 
     /**
      * Handle organization selection from interactive components
+     * @param payload - The Slack interactive payload
+     * @returns A promise that resolves to a Slack response message
+     * @throws {MismatchException} When required information is missing or invalid
      */
     async handleOrganizationSelectCallback(payload: SlackInteractivePayload) {
         if (!payload.user?.id) throw new MismatchException('Missing user information')
@@ -209,6 +241,9 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
 
     /**
      * Handle solution selection from interactive components
+     * @param payload - The Slack interactive payload
+     * @returns A promise that resolves to a Slack response message
+     * @throws {MismatchException} When required information is missing or invalid
      */
     async handleSolutionSelectCallback(payload: SlackInteractivePayload) {
         if (!payload.user?.id || !payload.channel?.id) throw new MismatchException('Missing user or channel information')
@@ -246,18 +281,22 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
 
     /**
      * Check if the message should be processed (deduplication and age validation)
+     * @param params - The parameters for checking message processing
+     * @param params.data - The Slack app mention event data
+     * @param params.messageKey - A unique key for the message (channel:user:ts)
+     * @returns True if the message should be processed, false otherwise
      */
-    private shouldProcessMessage(
-        data: z.infer<typeof slackAppMentionSchema>,
+    private shouldProcessMessage({ data, messageKey }: {
+        data: z.infer<typeof slackAppMentionSchema>
         messageKey: string
-    ): boolean {
+    }): boolean {
         // Add simple deduplication by checking if we've processed this exact message recently
         const recentProcessedKey = `slack_processed_${messageKey}`
 
         if (cache.get(recentProcessedKey)) return false
 
         // Mark this message as being processed (expires in 5 minutes)
-        cache.set(recentProcessedKey, true, { ttl: 5 * 60 })
+        cache.set({ key: recentProcessedKey, value: true, ttl: 5 * 60 })
 
         // Additional check: ensure this message wasn't sent more than 30 seconds ago
         const messageTimestamp = parseFloat(data.ts),
@@ -269,21 +308,32 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
 
     /**
      * Process requirements parsing with error handling and validation
+     * @param params - The parameters for processing requirements parsing
+     * @param params.data - The Slack app mention event data
+     * @param params.teamId - The Slack team ID
+     * @param params.statement - The requirement statement to parse
+     * @param params.em - The entity manager for database operations
+     * @returns The ID of the parsed requirements or undefined if processing failed
      */
-    private async processRequirementsParsing(
-        data: z.infer<typeof slackAppMentionSchema>,
-        teamId: string,
-        statement: string,
+    private async processRequirementsParsing({
+        data,
+        teamId,
+        statement,
+        em
+    }: {
+        data: z.infer<typeof slackAppMentionSchema>
+        teamId: string
+        statement: string
         em: SqlEntityManager<PostgreSqlDriver>
-    ): Promise<string | undefined> {
+    }): Promise<string | undefined> {
         if (!teamId) {
-            await this._slackService.sendTeamInfoError(data.channel, data.ts)
+            await this._slackService.sendTeamInfoError({ channel: data.channel, thread_ts: data.ts })
             return undefined
         }
 
-        const channelConfig = await this._channelInteractor.getChannelConfiguration(data.channel, teamId)
+        const channelConfig = await this._channelInteractor.getChannelConfiguration({ channelId: data.channel, teamId })
         if (!channelConfig) {
-            await this._slackService.sendChannelNotLinkedError(data.channel, data.ts)
+            await this._slackService.sendChannelNotLinkedError({ channel: data.channel, thread_ts: data.ts })
             return undefined
         }
 
@@ -303,6 +353,14 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
 
     /**
      * Parse requirements using the requirement interactor
+     * @param params - The parameters for parsing requirements
+     * @param params.channelConfig - The channel configuration including organization and solution details
+     * @param params.cathedralUserId - The Cathedral user ID of the requester
+     * @param params.statement - The requirement statement to parse
+     * @param params.channelId - The Slack channel ID
+     * @param params.em - The entity manager for database operations
+     * @param params.thread_ts - (Optional) The thread timestamp to reply in thread
+     * @returns The ID of the parsed requirements or undefined if parsing failed
      */
     private async parseRequirementsWithInteractor(params: {
         channelConfig: { organizationId: string, solutionId: string }
@@ -353,22 +411,30 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
                 solutionId: channelConfig.solutionId
             })
 
-            await this._slackService.sendParsingError(channelId, thread_ts)
+            await this._slackService.sendParsingError({ channel: channelId, thread_ts })
             return undefined
         }
     }
 
     /**
      * Send success response with requirements details
+     * @param params - The parameters for sending the success response
+     * @param params.channelId - The Slack channel ID
+     * @param params.parsedResultsId - The ID of the parsed results
+     * @param params.channelConfig - The channel configuration including organization and solution details
+     * @param params.cathedralUserId - The Cathedral user ID of the requester
+     * @param params.em - The entity manager for database operations
+     * @param params.thread_ts - (Optional) The thread timestamp to reply in thread
      */
-    private async sendSuccessResponse(
-        channelId: string,
-        parsedResultsId: string,
-        channelConfig: { organizationId: string, organizationSlug: string, solutionId: string, solutionSlug: string, solutionName: string },
-        cathedralUserId: string,
-        em: SqlEntityManager<PostgreSqlDriver>,
+    private async sendSuccessResponse(params: {
+        channelId: string
+        parsedResultsId: string
+        channelConfig: { organizationId: string, organizationSlug: string, solutionId: string, solutionSlug: string, solutionName: string }
+        cathedralUserId: string
+        em: SqlEntityManager<PostgreSqlDriver>
         thread_ts?: string
-    ): Promise<void> {
+    }): Promise<void> {
+        const { channelId, parsedResultsId, channelConfig, cathedralUserId, em, thread_ts } = params
         try {
             this.assertUserIdentity(cathedralUserId)
 
@@ -398,13 +464,18 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
                     reqType: ReqType.PARSED_REQUIREMENTS
                 }) as ParsedRequirementsType,
                 count = parsedReqObj?.requirements?.length || 0,
-                requirementsUrl = this.buildRequirementsUrl(
+                requirementsUrl = this.buildRequirementsUrl({
                     parsedResultsId,
-                    channelConfig.organizationSlug,
-                    channelConfig.solutionSlug
-                )
+                    orgSlug: channelConfig.organizationSlug,
+                    solutionSlug: channelConfig.solutionSlug
+                })
 
-            await this._slackService.sendDetailedSuccessMessage(channelId, count, requirementsUrl.toString(), thread_ts)
+            await this._slackService.sendDetailedSuccessMessage({
+                channel: channelId,
+                count,
+                requirementsUrl: requirementsUrl.toString(),
+                thread_ts
+            })
         } catch (err: unknown) {
             console.error('Failed to fetch parsed requirements details:', {
                 error: err,
@@ -413,14 +484,23 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
                 cathedralUserId
             })
 
-            await this._slackService.sendSimpleSuccessMessage(channelId, thread_ts)
+            await this._slackService.sendSimpleSuccessMessage({ channel: channelId, thread_ts })
         }
     }
 
     /**
      * Build the requirements URL for the success message
+     * @param params - The parameters for building the URL
+     * @param params.parsedResultsId - The ID of the parsed results
+     * @param params.orgSlug - The organization slug
+     * @param params.solutionSlug - The solution slug
+     * @returns The constructed URL object
      */
-    private buildRequirementsUrl(parsedResultsId: string, orgSlug: string, solutionSlug: string): URL {
+    private buildRequirementsUrl({ parsedResultsId, orgSlug, solutionSlug }: {
+        parsedResultsId: string
+        orgSlug: string
+        solutionSlug: string
+    }): URL {
         const config = useRuntimeConfig(),
             urlString = `${config.origin}/o/${orgSlug}/${solutionSlug}/project/requirements-process-report/${parsedResultsId}`
 
@@ -482,7 +562,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
                 orgs = (await orgCollectionInteractor.findOrganizations()).filter(Boolean)
             if (!orgs || orgs.length === 0) return this._slackService.createErrorMessage('No Cathedral organizations available to link.')
 
-            return this._slackService.createOrganizationDropdown(orgs)
+            return this._slackService.createOrganizationDropdown({ organizations: orgs })
         }
 
         // 2. If orgId but no solutionId, show solution dropdown for org
@@ -490,7 +570,12 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
             const solutions = await new OrganizationRepository({ em, organizationId: orgId }).findSolutions({})
             if (!solutions || solutions.length === 0) return this._slackService.createErrorMessage('No solutions available in this organization.')
 
-            return this._slackService.createSolutionDropdown(solutions, orgId, 'cathedral_link_solution_select', false)
+            return this._slackService.createSolutionDropdown({
+                solutions,
+                organizationId: orgId,
+                actionId: 'cathedral_link_solution_select',
+                replaceOriginal: false
+            })
         }
 
         // 3. Both orgId and solutionId present: perform the link
@@ -510,7 +595,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
             organizationId: orgId
         })
 
-        return this._slackService.createChannelLinkSuccessMessage(solution.name, false)
+        return this._slackService.createChannelLinkSuccessMessage({ solutionName: solution.name, replaceOriginal: false })
     }
 
     /**
@@ -527,7 +612,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
             return this._slackService.createChannelNotLinkedMessage()
 
         // Get the full channel configuration to determine the organization
-        const channelConfig = await this._channelInteractor.getChannelConfiguration(channelId, teamId)
+        const channelConfig = await this._channelInteractor.getChannelConfiguration({ channelId, teamId })
         if (!channelConfig)
             return this._slackService.createChannelNotLinkedMessage()
 

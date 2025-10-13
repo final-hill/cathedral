@@ -16,8 +16,8 @@ const paramSchema = Solution.innerType().pick({ slug: true }),
  * Delete a solution by slug.
  */
 export default defineEventHandler(async (event) => {
-    const { slug } = await validateEventParams(event, paramSchema),
-        { organizationId, organizationSlug } = await validateEventBody(event, bodySchema),
+    const { slug } = await validateEventParams({ event, schema: paramSchema }),
+        { organizationId, organizationSlug } = await validateEventBody({ event, schema: bodySchema }),
         session = await requireUserSession(event),
         organizationInteractor = createOrganizationInteractor({ event, session, organizationId, organizationSlug })
 

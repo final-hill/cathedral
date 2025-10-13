@@ -235,8 +235,8 @@ export class ReviewInteractor {
         const currentUserPerson = await this.getCurrentUserPerson(),
             personId = currentUserPerson.id
 
-        await this.validateUserCanEndorseForPerson(personId, input.requirementId)
-        await this.validateEndorsementEligibility(input.requirementId, personId)
+        await this.validateUserCanEndorseForPerson({ personId, requirementId: input.requirementId })
+        await this.validateEndorsementEligibility({ requirementId: input.requirementId, personId })
 
         const requirement = await this._requirementRepository.getById(input.requirementId),
             currentUserId = this._permissionInteractor.userId
@@ -272,8 +272,8 @@ export class ReviewInteractor {
 
         const personId = await this.getCurrentUserPerson().then(p => p.id)
 
-        await this.validateUserCanEndorseForPerson(personId, input.requirementId)
-        await this.validateEndorsementEligibility(input.requirementId, personId)
+        await this.validateUserCanEndorseForPerson({ personId, requirementId: input.requirementId })
+        await this.validateEndorsementEligibility({ requirementId: input.requirementId, personId })
 
         const requirement = await this._requirementRepository.getById(input.requirementId),
             currentUserId = this._permissionInteractor.userId
@@ -499,11 +499,12 @@ export class ReviewInteractor {
 
     /**
      * Validate that the current user can endorse through the specified person entity for the specific requirement
-     * @param personId - The person ID
-     * @param requirementId - The requirement ID to check endorsement capability for
+     * @param params - The parameters for validation
+     * @param params.personId - The person ID
+     * @param params.requirementId - The requirement ID to check endorsement capability for
      * @throws {MismatchException} If user cannot endorse through the specified person
      */
-    private async validateUserCanEndorseForPerson(personId: string, requirementId: string): Promise<void> {
+    private async validateUserCanEndorseForPerson({ personId, requirementId }: { personId: string, requirementId: string }): Promise<void> {
         const currentUserId = this._permissionInteractor.userId,
             person = await this._requirementRepository.getById(personId) as req.PersonType,
             requirement = await this._requirementRepository.getById(requirementId),
@@ -544,23 +545,24 @@ export class ReviewInteractor {
 
     /**
      * Validate that an endorsement is eligible for processing
-     * @param requirementId - The requirement ID
-     * @param personId - The person ID
+     * @param params - The parameters for validation
+     * @param params.requirementId - The requirement ID
+     * @param params.personId - The person ID
      * @throws {InvalidWorkflowStateException} If requirement is not in Review state or endorsement already processed
      * @throws {MismatchException} If no endorsement request exists for the person
      */
-    private async validateEndorsementEligibility(requirementId: string, personId: string): Promise<void> {
+    private async validateEndorsementEligibility({ requirementId, personId }: { requirementId: string, personId: string }): Promise<void> {
         // Verify requirement is in Review state
         const requirement = await this._requirementRepository.getById(requirementId)
         if (requirement.workflowState !== WorkflowState.Review)
             throw new InvalidWorkflowStateException(`Requirement with id ${requirementId} is not in the Review state`)
 
         // Verify endorsement exists and is pending
-        const endorsement = await this._endorsementRepository.findByRequirementInReviewActorAndCategory(
+        const endorsement = await this._endorsementRepository.findByRequirementInReviewActorAndCategory({
             requirementId,
-            personId,
-            EndorsementCategory.ROLE_BASED // Only validate role-based endorsements for manual actions
-        )
+            actorId: personId,
+            category: EndorsementCategory.ROLE_BASED // Only validate role-based endorsements for manual actions
+        })
         if (!endorsement)
             throw new MismatchException(`No endorsement request exists for person ${personId}`)
 

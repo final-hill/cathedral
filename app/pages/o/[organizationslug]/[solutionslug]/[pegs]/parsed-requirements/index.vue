@@ -23,13 +23,13 @@ const title = (RequirementSchema as unknown as RequirementEntity).reqIdPrefix ? 
 useHead({ title })
 definePageMeta({ middleware: 'auth' })
 
-const { data: requirements, refresh, status } = await useApiRequest(`/api/requirements/${actualReqType}`, {
+const { data: requirements, refresh, status } = await useApiRequest({ url: `/api/requirements/${actualReqType}`, options: {
         query: {
             solutionSlug,
             organizationSlug
         },
         schema: z.array(req.ParsedRequirements)
-    }),
+    } }),
     // Check if this is a minimum requirement type and if it's missing
     { isMinimumRequirementType, isRequirementMissing } = useMinimumRequirements(),
     isMinimumType = isMinimumRequirementType(actualReqType),

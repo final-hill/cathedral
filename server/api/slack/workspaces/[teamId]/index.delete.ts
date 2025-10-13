@@ -12,18 +12,18 @@ const paramsSchema = z.object({
  * Disconnect/deactivate a Slack workspace integration
  */
 export default defineEventHandler(async (event) => {
-    const { teamId } = await validateEventParams(event, paramsSchema),
-        { organizationSlug } = await validateEventBody(event, bodySchema),
+    const { teamId } = await validateEventParams({ event, schema: paramsSchema }),
+        { organizationSlug } = await validateEventBody({ event, schema: bodySchema }),
         session = await requireUserSession(event),
         em = event.context.em,
         organizationInteractor = createOrganizationInteractor({ event, session, organizationSlug }),
         organization = await organizationInteractor.getOrganization(),
         workspaceInteractor = createSlackWorkspaceInteractor({ em, session })
 
-    await workspaceInteractor.removeWorkspaceFromOrganization(
-        organization.id,
+    await workspaceInteractor.removeWorkspaceFromOrganization({
+        organizationId: organization.id,
         teamId
-    ).catch(handleDomainException)
+    }).catch(handleDomainException)
 
     return { success: true, message: 'Slack workspace disconnected successfully' }
 })

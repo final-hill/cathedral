@@ -9,11 +9,12 @@ import { NotFoundException } from '#shared/domain'
 export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel> {
     /**
      * Get all Slack workspace integrations for an organization
-     * @param organizationId - The organization ID
-     * @param organizationName - The organization name
+     * @param params - Parameters object
+     * @param params.organizationId - The organization ID
+     * @param params.organizationName - The organization name
      * @returns Array of Slack workspace metadata (excluding sensitive data)
      */
-    async getWorkspacesByOrganization(organizationId: string, organizationName: string): Promise<SlackWorkspaceMetaPublicType[]> {
+    async getWorkspacesByOrganization({ organizationId, organizationName }: { organizationId: string, organizationName: string }): Promise<SlackWorkspaceMetaPublicType[]> {
         const em = this._em,
             workspaceIntegrations = await em.find(SlackWorkspaceMetaModel, {
                 organization: organizationId
@@ -102,11 +103,12 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
 
     /**
      * Remove a Slack workspace integration from an organization
-     * @param organizationId - The organization ID
-     * @param teamId - The Slack team ID
+     * @param params - Parameters object
+     * @param params.organizationId - The organization ID
+     * @param params.teamId - The Slack team ID
      * @throws {NotFoundException} if workspace not found
      */
-    async removeWorkspace(organizationId: string, teamId: string): Promise<void> {
+    async removeWorkspace({ organizationId, teamId }: { organizationId: string, teamId: string }): Promise<void> {
         const em = this._em,
             workspace = await em.findOne(SlackWorkspaceMetaModel, {
                 teamId,
@@ -151,14 +153,18 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
 
     /**
      * Update workspace metadata
-     * @param teamId - The Slack team ID
-     * @param updates - Metadata updates
+     * @param params - Parameters object
+     * @param params.teamId - The Slack team ID
+     * @param params.updates - Metadata updates
      * @returns True if updated, false if workspace not found
      */
-    async updateWorkspaceMetadata(teamId: string, updates: {
-        teamName?: string
-        botUserId?: string
-        lastMetadataRefresh?: Date
+    async updateWorkspaceMetadata({ teamId, updates }: {
+        teamId: string
+        updates: {
+            teamName?: string
+            botUserId?: string
+            lastMetadataRefresh?: Date
+        }
     }): Promise<boolean> {
         const em = this._em,
             workspace = await em.findOne(SlackWorkspaceMetaModel, {

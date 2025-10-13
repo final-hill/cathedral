@@ -60,7 +60,10 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
             if (requirement.createdBy?.id) {
                 try {
-                    const createdByUser = await this._appUserInteractor.getUserById(requirement.createdBy.id, this._organizationId)
+                    const createdByUser = await this._appUserInteractor.getUserById({
+                        id: requirement.createdBy.id,
+                        organizationId: this._organizationId
+                    })
                     enrichedRequirement.createdBy = {
                         id: createdByUser.id,
                         name: createdByUser.name,
@@ -73,7 +76,10 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
             if (requirement.modifiedBy?.id) {
                 try {
-                    const modifiedByUser = await this._appUserInteractor.getUserById(requirement.modifiedBy.id, this._organizationId)
+                    const modifiedByUser = await this._appUserInteractor.getUserById({
+                        id: requirement.modifiedBy.id,
+                        organizationId: this._organizationId
+                    })
                     enrichedRequirement.modifiedBy = {
                         id: modifiedByUser.id,
                         name: modifiedByUser.name,
@@ -89,7 +95,10 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
                 const req = requirement as T & { appUser?: AppUserReferenceType }
                 if (req.appUser?.id) {
                     try {
-                        const appUser = await this._appUserInteractor.getUserById(req.appUser.id, this._organizationId),
+                        const appUser = await this._appUserInteractor.getUserById({
+                                id: req.appUser.id,
+                                organizationId: this._organizationId
+                            }),
                             enrichedPerson = enrichedRequirement as T & { appUser?: AppUserReferenceType }
                         enrichedPerson.appUser = {
                             id: appUser.id,
@@ -134,7 +143,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
                     if (!id) continue
 
-                    await this.validateReferenceScope(id, key, reqProps)
+                    await this.validateReferenceScope({ id, key, reqProps })
                 }
             } else {
                 const id = typeof value === 'string' && validateUuid(value)
@@ -143,7 +152,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
                 if (!id) continue
 
-                await this.validateReferenceScope(id, key, reqProps)
+                await this.validateReferenceScope({ id, key, reqProps })
             }
         }
     }
@@ -152,16 +161,17 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
      * Validate that a referenced entity belongs to the appropriate scope.
      * For requirements: must belong to the current solution.
      * For AppUsers: must be a member of the current organization.
-     * @param id - The ID of the referenced entity
-     * @param key - The property name containing the reference
-     * @param reqProps - The original requirement properties for context
+     * @param params - The parameters for validation
+     * @param params.id - The ID of the referenced entity
+     * @param params.key - The property name containing the reference
+     * @param params.reqProps - The original requirement properties for context
      * @throws {MismatchException} If the referenced entity does not belong to the appropriate scope
      */
-    private async validateReferenceScope(
-        id: string,
-        key: string,
+    private async validateReferenceScope({ id, key, reqProps }: {
+        id: string
+        key: string
         reqProps: Partial<Omit<req.RequirementType, 'reqId' | keyof typeof AuditMetadata>>
-    ) {
+    }) {
         // Check if this is an AppUser reference (Ex: From the Person entity)
         if (key === 'appUser') {
             // For AppUser references, validate they belong to the organization
@@ -303,6 +313,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
                 [WorkflowState.Review, 2],
                 [WorkflowState.Active, 3]
             ]),
+            // eslint-disable-next-line max-params
             uniqueRequirements = flatRequirements.reduce((acc, req) => {
                 const existingIndex = acc.findIndex(existing => existing.id === req.id)
                 if (existingIndex === -1) {

@@ -64,7 +64,12 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
 
         const newSolutionId = await this.repository.addSolution({ name, description, creationDate, createdById: currentUserId })
 
-        await this._initializeSolutionRolesAndPersonnel(newSolutionId, organization.id, currentUserId, creationDate)
+        await this._initializeSolutionRolesAndPersonnel({
+            solutionId: newSolutionId,
+            organizationId: organization.id,
+            createdById: currentUserId,
+            creationDate
+        })
 
         return newSolutionId
     }
@@ -169,7 +174,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
                 organizationId: org.id
             }),
 
-            userData = await aui.getUserById(auor.appUser.id, org.id)
+            userData = await aui.getUserById({ id: auor.appUser.id, organizationId: org.id })
         return AppUserWithRoleDto.parse({
             ...userData,
             role: auor.role,
@@ -198,7 +203,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
                 organizationId: org.id
             }),
             appUsers = await Promise.all(auors.map(async (auor) => {
-                const userData = await aui.getUserById(auor.appUser.id, org.id)
+                const userData = await aui.getUserById({ id: auor.appUser.id, organizationId: org.id })
                 return AppUserWithRoleDto.parse({
                     ...userData,
                     role: auor.role,
@@ -257,13 +262,14 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
     /**
      * Update a solution by slug with the given properties
      *
-     * @param slug The slug of the solution to update
-     * @param props The properties to update
+     * @param params The properties to update
+     * @param params.slug The slug of the solution to update
+     * @param params.props The properties to update
      * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
      * @throws {NotFoundException} If the solution does not exist
      * @throws {MismatchException} If the solution does not belong to the organization
      */
-    async updateSolutionBySlug(slug: req.SolutionType['slug'], props: Pick<Partial<req.SolutionType>, 'name' | 'description'>): Promise<void> {
+    async updateSolutionBySlug({ slug, ...props }: { slug: req.SolutionType['slug'] } & Pick<Partial<req.SolutionType>, 'name' | 'description'>): Promise<void> {
         const org = await this.repository.getOrganization(),
             currentUserId = this._permissionInteractor.userId
 
@@ -271,7 +277,8 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
 
         if (props.name) await this._assertSolutionSlugIsUnique(props.name)
 
-        await this.repository.updateSolutionBySlug(slug, {
+        await this.repository.updateSolutionBySlug({
+            slug,
             modifiedById: currentUserId,
             modifiedDate: new Date(),
             ...props
@@ -283,19 +290,20 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      * This private method creates a Person entity for the solution creator with both
      * Product Owner and Implementation Owner capabilities enabled for endorsements.
      *
-     * @param solutionId - The ID of the newly created solution
-     * @param organizationId - The ID of the organization
-     * @param createdById - The ID of the user creating the solution (current user)
-     * @param creationDate - The creation date
+     * @param params The parameters for initializing roles and personnel
+     * @param params.solutionId - The ID of the newly created solution
+     * @param params.organizationId - The ID of the organization
+     * @param params.createdById - The ID of the user creating the solution (current user)
+     * @param params.creationDate - The creation date
      */
-    private async _initializeSolutionRolesAndPersonnel(
-        solutionId: string,
-        organizationId: string,
-        createdById: string,
+    private async _initializeSolutionRolesAndPersonnel({ solutionId, organizationId, createdById, creationDate }: {
+        solutionId: string
+        organizationId: string
+        createdById: string
         creationDate: Date
-    ): Promise<void> {
+    }): Promise<void> {
         // Get the current user (solution creator) information
-        const currentUser = await this._appUserInteractor.getUserById(createdById, organizationId),
+        const currentUser = await this._appUserInteractor.getUserById({ id: createdById, organizationId }),
             // Create Person entity for the solution creator with both role capabilities
             solutionCreatorPersonData = req.Person.parse({
                 name: currentUser.name,

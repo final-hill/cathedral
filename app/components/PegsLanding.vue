@@ -20,6 +20,7 @@ watch([() => props.organizationslug, () => props.solutionslug, () => props.cards
         let hasMissingRequirement = false
 
         if (card.minActiveReqTypes && card.minActiveReqTypes.length > 0) {
+            // eslint-disable-next-line max-params
             hasMissingRequirement = await card.minActiveReqTypes.reduce(async (accPromise, reqType) => {
                 const acc = await accPromise
                 if (acc) return true // Already found missing, short-circuit

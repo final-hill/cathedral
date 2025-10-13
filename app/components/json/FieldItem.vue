@@ -15,7 +15,7 @@
                     v-if="!disabled"
                     :model-value="field.name"
                     placeholder="Enter field name"
-                    @update:model-value="updateField('name', $event)"
+                    @update:model-value="updateField({ key: 'name', value: $event })"
                 />
             </UFormField>
             <UFormField
@@ -45,7 +45,7 @@
                     v-if="!disabled"
                     class="mt-2"
                     :model-value="field.required"
-                    @update:model-value="updateField('required', $event)"
+                    @update:model-value="updateField({ key: 'required', value: $event })"
                 />
                 <strong
                     v-else
@@ -59,7 +59,7 @@
                     v-if="!disabled"
                     :model-value="field.description"
                     placeholder="Enter field description"
-                    @update:model-value="updateField('description', $event)"
+                    @update:model-value="updateField({ key: 'description', value: $event })"
                 />
                 <strong
                     v-else
@@ -84,7 +84,7 @@
         </div>
         <UCollapsible
             :model-value="field.isExpanded"
-            @update:model-value="updateField('isExpanded', $event)"
+            @update:model-value="updateField({ key: 'isExpanded', value: $event })"
         >
             <template #default="{ open }">
                 <UButton
@@ -107,7 +107,7 @@
                                     :model-value="field.minLength"
                                     :min="0"
                                     placeholder="No minimum"
-                                    @update:model-value="updateField('minLength', $event)"
+                                    @update:model-value="updateField({ key: 'minLength', value: $event })"
                                 />
                                 <strong
                                     v-else
@@ -122,7 +122,7 @@
                                     :model-value="field.maxLength"
                                     :min="0"
                                     placeholder="No maximum"
-                                    @update:model-value="updateField('maxLength', $event)"
+                                    @update:model-value="updateField({ key: 'maxLength', value: $event })"
                                 />
                                 <strong
                                     v-else
@@ -137,7 +137,7 @@
                                 v-if="!disabled"
                                 :model-value="field.pattern"
                                 placeholder="Regular expression pattern"
-                                @update:model-value="updateField('pattern', $event)"
+                                @update:model-value="updateField({ key: 'pattern', value: $event })"
                             />
                             <strong
                                 v-else
@@ -155,7 +155,7 @@
                                 label-key="label"
                                 placeholder="Select format"
                                 nullable
-                                @update:model-value="(value) => updateField('format', value as JsonSchemaField['format'])"
+                                @update:model-value="(value) => updateField({ key: 'format', value: value as JsonSchemaField['format'] })"
                             />
                             <strong
                                 v-else
@@ -172,7 +172,7 @@
                                     v-if="!disabled"
                                     :model-value="field.minimum"
                                     placeholder="No minimum"
-                                    @update:model-value="updateField('minimum', $event)"
+                                    @update:model-value="updateField({ key: 'minimum', value: $event })"
                                 />
                                 <strong
                                     v-else
@@ -186,7 +186,7 @@
                                     v-if="!disabled"
                                     :model-value="field.maximum"
                                     placeholder="No maximum"
-                                    @update:model-value="updateField('maximum', $event)"
+                                    @update:model-value="updateField({ key: 'maximum', value: $event })"
                                 />
                                 <strong
                                     v-else
@@ -202,7 +202,7 @@
                                     v-if="!disabled"
                                     :model-value="field.exclusiveMinimum"
                                     placeholder="No exclusive min"
-                                    @update:model-value="updateField('exclusiveMinimum', $event)"
+                                    @update:model-value="updateField({ key: 'exclusiveMinimum', value: $event })"
                                 />
                                 <strong
                                     v-else
@@ -216,7 +216,7 @@
                                     v-if="!disabled"
                                     :model-value="field.exclusiveMaximum"
                                     placeholder="No exclusive max"
-                                    @update:model-value="updateField('exclusiveMaximum', $event)"
+                                    @update:model-value="updateField({ key: 'exclusiveMaximum', value: $event })"
                                 />
                                 <strong
                                     v-else
@@ -233,7 +233,7 @@
                                 :min="0"
                                 :step="0.001"
                                 placeholder="No multiple constraint"
-                                @update:model-value="updateField('multipleOf', $event)"
+                                @update:model-value="updateField({ key: 'multipleOf', value: $event })"
                             />
                             <strong
                                 v-else
@@ -271,7 +271,7 @@
                                     :field="nestedField"
                                     :index="nestedIndex"
                                     :disabled="disabled"
-                                    @update="(updatedField) => updateNestedField(nestedIndex, updatedField)"
+                                    @update="(updatedField) => updateNestedField({ index: nestedIndex, updatedNestedField: updatedField })"
                                     @remove="() => removeNestedField(nestedIndex)"
                                 />
                             </div>
@@ -292,7 +292,7 @@
                                     :model-value="field.minItems"
                                     :min="0"
                                     placeholder="No minimum"
-                                    @update:model-value="updateField('minItems', $event)"
+                                    @update:model-value="updateField({ key: 'minItems', value: $event })"
                                 />
                                 <strong
                                     v-else
@@ -307,7 +307,7 @@
                                     :model-value="field.maxItems"
                                     :min="0"
                                     placeholder="No maximum"
-                                    @update:model-value="updateField('maxItems', $event)"
+                                    @update:model-value="updateField({ key: 'maxItems', value: $event })"
                                 />
                                 <strong
                                     v-else
@@ -322,7 +322,7 @@
                                 <USwitch
                                     v-if="!disabled"
                                     :model-value="field.uniqueItems || false"
-                                    @update:model-value="updateField('uniqueItems', $event)"
+                                    @update:model-value="updateField({ key: 'uniqueItems', value: $event })"
                                 />
                                 <span
                                     v-else
@@ -340,7 +340,7 @@
                                 :items="fieldTypeOptions"
                                 value-key="value"
                                 label-key="label"
-                                @update:model-value="(value) => updateField('itemType', value as JsonSchemaField['itemType'])"
+                                @update:model-value="(value) => updateField({ key: 'itemType', value: value as JsonSchemaField['itemType'] })"
                             />
                             <strong
                                 v-else
@@ -365,7 +365,7 @@
                                     v-if="!disabled"
                                     :model-value="field.enumValues || []"
                                     placeholder="Enter enum value and press Enter"
-                                    @update:model-value="(values) => updateField('enumValues', values.length > 0 ? values : undefined)"
+                                    @update:model-value="(values) => updateField({ key: 'enumValues', value: values.length > 0 ? values : undefined })"
                                 />
                                 <div
                                     v-else
@@ -417,7 +417,7 @@ const props = defineProps<{
         { label: 'IPv4', value: 'ipv4' },
         { label: 'IPv6', value: 'ipv6' }
     ],
-    updateField = (key: keyof JsonSchemaField, value: JsonSchemaField[keyof JsonSchemaField]) => {
+    updateField = ({ key, value }: { key: keyof JsonSchemaField, value: JsonSchemaField[keyof JsonSchemaField] }) => {
         const updatedField = { ...props.field, [key]: value }
         emit('update', updatedField)
     },
@@ -451,7 +451,7 @@ const props = defineProps<{
 
         emit('update', updatedField)
     },
-    updateNestedField = (index: number, updatedNestedField: JsonSchemaField) => {
+    updateNestedField = ({ index, updatedNestedField }: { index: number, updatedNestedField: JsonSchemaField }) => {
         if (!props.field.properties) return
 
         const newProperties = [...props.field.properties]

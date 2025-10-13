@@ -154,13 +154,13 @@ const props = defineProps<{
                         label: 'Submit for Review',
                         icon: 'i-lucide-check-circle',
                         color: 'warning',
-                        onSelect: () => { performWorkflowAction(requirement, 'review') }
+                        onSelect: () => { performWorkflowAction({ requirement, action: 'review' }) }
                     },
                     {
                         label: 'Remove',
                         icon: 'i-lucide-trash-2',
                         color: 'error',
-                        onSelect: () => confirmAndPerformAction(requirement, 'remove', `Are you sure you want to remove requirement "${requirement.name}"?`)
+                        onSelect: () => confirmAndPerformAction({ requirement, action: 'remove', confirmMessage: `Are you sure you want to remove requirement "${requirement.name}"?` })
                     }
                 )
                 break
@@ -178,13 +178,13 @@ const props = defineProps<{
                         label: 'Revise',
                         icon: 'i-lucide-pen',
                         color: 'info',
-                        onSelect: () => { performWorkflowAction(requirement, 'revise') }
+                        onSelect: () => { performWorkflowAction({ requirement, action: 'revise' }) }
                     },
                     {
                         label: 'Remove',
                         icon: 'i-lucide-trash-2',
                         color: 'error',
-                        onSelect: () => confirmAndPerformAction(requirement, 'remove', `Are you sure you want to remove requirement "${requirement.name}"?`)
+                        onSelect: () => confirmAndPerformAction({ requirement, action: 'remove', confirmMessage: `Are you sure you want to remove requirement "${requirement.name}"?` })
                     }
                 )
                 break
@@ -194,13 +194,13 @@ const props = defineProps<{
                         label: 'Revise',
                         icon: 'i-lucide-edit',
                         color: 'info',
-                        onSelect: () => { performWorkflowAction(requirement, 'revise') }
+                        onSelect: () => { performWorkflowAction({ requirement, action: 'revise' }) }
                     },
                     {
                         label: 'Remove',
                         icon: 'i-lucide-trash-2',
                         color: 'error',
-                        onSelect: () => confirmAndPerformAction(requirement, 'remove', `Are you sure you want to remove requirement "${requirement.name}"?`)
+                        onSelect: () => confirmAndPerformAction({ requirement, action: 'remove', confirmMessage: `Are you sure you want to remove requirement "${requirement.name}"?` })
                     }
                 )
                 break
@@ -209,14 +209,14 @@ const props = defineProps<{
                     label: 'Restore',
                     icon: 'i-lucide-refresh-cw',
                     color: 'neutral',
-                    onSelect: () => { performWorkflowAction(requirement, 'restore') }
+                    onSelect: () => { performWorkflowAction({ requirement, action: 'restore' }) }
                 })
                 break
         }
 
         return actions
     },
-    performWorkflowAction = async (requirement: req.RequirementType, action: WorkflowAction) => {
+    performWorkflowAction = async ({ requirement, action }: { requirement: req.RequirementType, action: WorkflowAction }) => {
         try {
             let endpoint: string
 
@@ -296,13 +296,13 @@ const props = defineProps<{
             }
         }
     },
-    confirmAndPerformAction = async (requirement: req.RequirementType, action: WorkflowAction, confirmMessage: string) => {
+    confirmAndPerformAction = async ({ requirement, action, confirmMessage }: { requirement: req.RequirementType, action: WorkflowAction, confirmMessage: string }) => {
         const result = await confirmModal.open({
             title: confirmMessage
         }).result
 
         if (result)
-            await performWorkflowAction(requirement, action)
+            await performWorkflowAction({ requirement, action })
     },
     createNewRequirement = () => {
         const url = new URL(`${basePath.value}/new`, window.location.origin)

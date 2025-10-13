@@ -15,10 +15,10 @@ const paramSchema = Solution.innerType().pick({ slug: true }),
  * Updates a solution by slug
  */
 export default defineEventHandler(async (event) => {
-    const { slug } = await validateEventParams(event, paramSchema),
-        { organizationId, organizationSlug, ...body } = await validateEventBody(event, bodySchema),
+    const { slug } = await validateEventParams({ event, schema: paramSchema }),
+        { organizationId, organizationSlug, ...body } = await validateEventBody({ event, schema: bodySchema }),
         session = await requireUserSession(event),
         organizationInteractor = createOrganizationInteractor({ event, session, organizationId, organizationSlug })
 
-    await organizationInteractor.updateSolutionBySlug(slug, body).catch(handleDomainException)
+    await organizationInteractor.updateSolutionBySlug({ slug, ...body }).catch(handleDomainException)
 })

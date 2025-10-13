@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { slackInteractivePayloadSchema } from '~~/server/data/slack-zod-schemas'
 
 const config = useRuntimeConfig(),
-    slackService = new SlackService(config.slackBotToken, config.slackSigningSecret),
+    slackService = new SlackService({ token: config.slackBotToken, slackSigningSecret: config.slackSigningSecret }),
     nlrService = new NaturalLanguageToRequirementService({
         apiKey: config.azureOpenaiApiKey,
         apiVersion: config.azureOpenaiApiVersion,
@@ -21,13 +21,13 @@ export default defineEventHandler(async (event) => {
     const headers = event.headers,
         rawBody = (await readRawBody(event))!
 
-    slackService.assertValidSlackRequest(headers, rawBody)
+    slackService.assertValidSlackRequest({ headers, rawBody })
 
     // Slack sends the payload as application/x-www-form-urlencoded with a 'payload' key containing a JSON string.
     // We first validate the outer form, then parse the JSON string, then validate the inner payload.
-    const { payload: payloadStr } = await validateEventBody(event, slackInteractiveOuterSchema),
+    const { payload: payloadStr } = await validateEventBody({ event, schema: slackInteractiveOuterSchema }),
         payload = slackInteractivePayloadSchema.parse(JSON.parse(payloadStr)),
-        userSession = await resolveSlackUserSession(event, payload.user?.id || '', payload.team?.id || '')
+        userSession = await resolveSlackUserSession({ event, slackUserId: payload.user?.id || '', teamId: payload.team?.id || '' })
 
     if (!userSession) {
         return {

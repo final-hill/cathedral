@@ -151,12 +151,17 @@ export class EndorsementRepository extends Repository<EndorsementType> {
 
     /**
      * Find a specific endorsement by requirement in Review state, actor, and category
-     * @param requirementId - The requirement ID
-     * @param actorId - The actor ID
-     * @param category - The endorsement category
+     * @param params - The search parameters
+     * @param params.requirementId - The requirement ID
+     * @param params.actorId - The actor ID
+     * @param params.category - The endorsement category
      * @returns The endorsement or null if not found
      */
-    async findByRequirementInReviewActorAndCategory(requirementId: string, actorId: string, category: EndorsementCategory): Promise<EndorsementType | null> {
+    async findByRequirementInReviewActorAndCategory({ requirementId, actorId, category }: {
+        requirementId: string
+        actorId: string
+        category: EndorsementCategory
+    }): Promise<EndorsementType | null> {
         const em = this._em,
             reviewVersion = await em.findOne(reqModels.RequirementVersionsModel, {
                 requirement: requirementId,

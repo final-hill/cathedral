@@ -9,11 +9,11 @@ const route = useRoute('Edit Solution'),
     { $eventBus } = useNuxtApp(),
     { organizationslug: organizationSlug, solutionslug: slug } = route.params,
     router = useRouter(),
-    { data: solution, error: getSolutionError } = await useApiRequest(`/api/solution/${slug}`, {
+    { data: solution, error: getSolutionError } = await useApiRequest({ url: `/api/solution/${slug}`, options: {
         schema: Solution,
         query: { organizationSlug },
         errorMessage: 'Failed to load solution'
-    })
+    } })
 
 if (!solution.value) {
     $eventBus.$emit('page-error', getSolutionError.value)
@@ -35,7 +35,7 @@ const formState = reactive<FormSchema>({
         description: solution.value.description
     }),
     updateSolution = async (data: FormSchema) => {
-        await useApiRequest(`/api/solution/${oldSlug}`, {
+        await useApiRequest({ url: `/api/solution/${oldSlug}`, options: {
             method: 'PUT',
             schema: Solution,
             body: {
@@ -46,7 +46,7 @@ const formState = reactive<FormSchema>({
             showSuccessToast: true,
             successMessage: 'Solution updated successfully',
             errorMessage: 'Failed to update solution'
-        })
+        } })
 
         router.push({ name: 'Organization', params: { organizationslug: organizationSlug } })
     },

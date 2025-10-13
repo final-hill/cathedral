@@ -86,7 +86,7 @@ const customValidate = async (_state: z.output<F>): Promise<FormError[]> => {
         return errors
     },
     // Function to register a child validator
-    registerChildValidator = (fieldName: string, validator: () => Promise<{ isValid: boolean, message?: string }>) => {
+    registerChildValidator = ({ fieldName, validator }: { fieldName: string, validator: () => Promise<{ isValid: boolean, message?: string }> }) => {
         childValidators.value.set(fieldName, validator)
     },
     // Function to unregister a child validator (for future use)
@@ -103,6 +103,7 @@ const onSubmit = async ({ data }: FormSubmitEvent<z.output<F>>) => {
         isSubmitting.value = true
         try {
             // Trim all string values before submission
+            // eslint-disable-next-line max-params
             const trimmedData = Object.keys(data).reduce((acc, key) => {
                 const value = data[key as keyof typeof data]
                 acc[key as keyof typeof acc] = typeof value === 'string' ? value.trim() : value
@@ -157,7 +158,7 @@ const onSubmit = async ({ data }: FormSubmitEvent<z.output<F>>) => {
         ) || []
     },
     // Helper function to add empty option for autocomplete fields
-    getAutocompleteOptions = (items: AutocompleteItem[], isOptional: boolean, isMultiple: boolean = false): AutocompleteItem[] => {
+    getAutocompleteOptions = ({ items, isOptional, isMultiple = false }: { items: AutocompleteItem[], isOptional: boolean, isMultiple?: boolean }): AutocompleteItem[] => {
         // Don't add -None- option for multi-select fields since they can be left empty
         if (isOptional && items.length > 0 && !isMultiple)
             return [{ label: '-None-', value: undefined }, ...items]
@@ -180,7 +181,7 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
             // Handle special case for app_user entity type
             if (entityType === 'app_user') {
                 return {
-                    [field.key]: await useApiRequest('/api/autocomplete', {
+                    [field.key]: await useApiRequest({ url: '/api/autocomplete', options: {
                         schema: AutocompleteResponseSchema,
                         query: {
                             solutionSlug,
@@ -192,7 +193,7 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
                             value: item.value ? AppUserReference.parse(item.value) : item.value
                         })),
                         errorMessage: `Failed to load autocomplete data for ${field.label}`
-                    })
+                    } })
                 }
             }
 
@@ -206,7 +207,7 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
                     RequirementSchema = refs[RequirementReferenceSchema]
 
                 return {
-                    [field.key]: await useApiRequest('/api/autocomplete', {
+                    [field.key]: await useApiRequest({ url: '/api/autocomplete', options: {
                         schema: AutocompleteResponseSchema,
                         query: {
                             solutionSlug,
@@ -218,11 +219,12 @@ const { solutionslug: solutionSlug, organizationslug: organizationSlug } = useRo
                             value: item.value ? RequirementSchema.parse(item.value) : item.value
                         })),
                         errorMessage: `Failed to load autocomplete data for ${field.label}`
-                    })
+                    } })
                 }
             }
         }
         return {}
+    // eslint-disable-next-line max-params
     })).then(results => results.reduce((acc, result) => ({ ...acc, ...result }), {}))
 
 // Auto-populate form fields from autocompleteContext when data is available
@@ -391,12 +393,12 @@ watch(
                     :model-value="(localState as any)[field.key]"
                     :disabled="props.disabled"
                     :update-model-value="(value: any) => (localState as any)[field.key] = value"
-                    :register-validator="(validator: () => Promise<{ isValid: boolean, message?: string }>) => registerChildValidator(field.key, validator)"
+                    :register-validator="(validator: () => Promise<{ isValid: boolean, message?: string }>) => registerChildValidator({ fieldName: field.key, validator })"
                 />
                 <UInputMenu
                     v-else-if="field.isObject && !props.disabled"
                     v-model="(localState as any)[field.key]"
-                    :items="getAutocompleteOptions((autocompleteFetchObjects[field.key]?.data.value || []) as AutocompleteItem[], field.isOptional)"
+                    :items="getAutocompleteOptions({ items: (autocompleteFetchObjects[field.key]?.data.value || []) as AutocompleteItem[], isOptional: field.isOptional })"
                     :loading="(autocompleteFetchObjects[field.key]?.status as any) === 'pending'"
                     value-key="value"
                     class="w-full"
@@ -405,7 +407,7 @@ watch(
                 <UInputMenu
                     v-else-if="field.isArrayOfObjects && !props.disabled"
                     v-model="(localState as any)[field.key]"
-                    :items="getAutocompleteOptions((autocompleteFetchObjects[field.key]?.data.value || []) as AutocompleteItem[], field.isOptional, true)"
+                    :items="getAutocompleteOptions({ items: (autocompleteFetchObjects[field.key]?.data.value || []) as AutocompleteItem[], isOptional: field.isOptional, isMultiple: true })"
                     :loading="(autocompleteFetchObjects[field.key]?.status as any) === 'pending'"
                     value-key="value"
                     multiple

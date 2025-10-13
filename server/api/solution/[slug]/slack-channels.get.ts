@@ -17,8 +17,8 @@ const paramSchema = Solution.innerType().pick({ slug: true }),
  * Get Slack channel links for a solution
  */
 export default defineEventHandler(async (event) => {
-    const { slug } = await validateEventParams(event, paramSchema),
-        { organizationId, organizationSlug } = await validateEventQuery(event, querySchema),
+    const { slug } = await validateEventParams({ event, schema: paramSchema }),
+        { organizationId, organizationSlug } = await validateEventQuery({ event, schema: querySchema }),
         session = await requireUserSession(event),
         config = useRuntimeConfig(),
         em = event.context.em,
@@ -30,9 +30,9 @@ export default defineEventHandler(async (event) => {
         slackChannelInteractor = new SlackChannelInteractor({
             repository: new SlackRepository({ em }),
             permissionInteractor,
-            slackService: new SlackService(config.slackBotToken, config.slackSigningSecret)
+            slackService: new SlackService({ token: config.slackBotToken, slackSigningSecret: config.slackSigningSecret })
         })
 
-    return await slackChannelInteractor.getChannelsForSolution(organization.id, solution.id)
+    return await slackChannelInteractor.getChannelsForSolution({ organizationId: organization.id, solutionId: solution.id })
         .catch(handleDomainException)
 })
