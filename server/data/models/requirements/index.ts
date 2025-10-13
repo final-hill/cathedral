@@ -178,7 +178,7 @@ export class BehaviorModel extends RequirementModel {
 }
 
 @Entity({ discriminatorValue: ReqType.BEHAVIOR })
-export class BehaviorVersionsModel extends Prioritizable(RequirementVersionsModel) {
+export class BehaviorVersionsModel extends RequirementVersionsModel {
 }
 
 @Entity({ discriminatorValue: ReqType.COMPONENT })
@@ -214,19 +214,65 @@ export class EnvironmentComponentModel extends ComponentModel { }
 @Entity({ discriminatorValue: ReqType.ENVIRONMENT_COMPONENT })
 export class EnvironmentComponentVersionsModel extends ComponentVersionsModel { }
 
+@Entity({ discriminatorValue: ReqType.STAKEHOLDER })
+export class StakeholderModel extends ComponentModel {
+    @ManyToOne({ entity: () => UseCaseModel, nullable: true, inversedBy: 'stakeholders' })
+    readonly useCase?: Ref<UseCaseModel>
+
+    @ManyToMany(() => PersonModel, person => person.stakeholders, {
+        pivotTable: 'person_stakeholders',
+        joinColumn: 'stakeholder_id',
+        inverseJoinColumn: 'person_id'
+    })
+    readonly persons = new Collection<PersonModel>(this)
+}
+
+@Entity({ discriminatorValue: ReqType.STAKEHOLDER })
+export class StakeholderVersionsModel extends ComponentVersionsModel {
+    @Enum({ items: () => StakeholderSegmentation })
+    readonly segmentation!: StakeholderSegmentation
+
+    @Enum({ items: () => StakeholderCategory })
+    readonly category!: StakeholderCategory
+
+    @Property<StakeholderVersionsModel>({ type: types.integer })
+    readonly interest!: number
+
+    @Property<StakeholderVersionsModel>({ type: types.integer })
+    readonly influence!: number
+}
+
+@Entity({ discriminatorValue: ReqType.GOAL })
+export class GoalModel extends RequirementModel { }
+
+@Entity({ discriminatorValue: ReqType.GOAL })
+export class GoalVersionsModel extends RequirementVersionsModel { }
+
+@Entity({ discriminatorValue: ReqType.OUTCOME })
+export class OutcomeModel extends GoalModel { }
+
+@Entity({ discriminatorValue: ReqType.OUTCOME })
+export class OutcomeVersionsModel extends GoalVersionsModel { }
+
 @Entity({ discriminatorValue: ReqType.EXAMPLE })
 export class ExampleModel extends BehaviorModel { }
 
 @Entity({ discriminatorValue: ReqType.EXAMPLE })
-export class ExampleVersionsModel extends BehaviorVersionsModel { }
+export abstract class ExampleVersionsModel extends BehaviorVersionsModel {
+    @ManyToOne({ entity: () => StakeholderModel })
+    readonly primaryActor!: StakeholderModel
+
+    @ManyToOne({ entity: () => OutcomeModel })
+    readonly outcome!: OutcomeModel
+}
 
 @Entity({ discriminatorValue: ReqType.FUNCTIONAL_BEHAVIOR })
 export class FunctionalBehaviorModel extends BehaviorModel { }
 
 @Entity({ discriminatorValue: ReqType.FUNCTIONAL_BEHAVIOR })
-export class FunctionalBehaviorVersionsModel extends BehaviorVersionsModel {
-    @ManyToOne({ entity: () => FunctionalityModel, nullable: true })
-    readonly functionality?: Ref<FunctionalityModel>
+export class FunctionalBehaviorVersionsModel extends Prioritizable(BehaviorVersionsModel) {
+    @ManyToOne({ entity: () => FunctionalityOverviewModel })
+    readonly goalFunctionality!: Ref<FunctionalityOverviewModel>
 }
 
 @Entity({ discriminatorValue: ReqType.GLOSSARY_TERM })
@@ -235,17 +281,17 @@ export class GlossaryTermModel extends ComponentModel { }
 @Entity({ discriminatorValue: ReqType.GLOSSARY_TERM })
 export class GlossaryTermVersionsModel extends ComponentVersionsModel { }
 
-@Entity({ discriminatorValue: ReqType.GOAL })
-export class GoalModel extends RequirementModel { }
-
-@Entity({ discriminatorValue: ReqType.GOAL })
-export class GoalVersionsModel extends RequirementVersionsModel { }
+@Entity({ discriminatorValue: ReqType.FUNCTIONALITY })
+export class FunctionalityModel extends BehaviorModel { }
 
 @Entity({ discriminatorValue: ReqType.FUNCTIONALITY })
-export class FunctionalityModel extends GoalModel { }
+export class FunctionalityVersionsModel extends BehaviorVersionsModel { }
 
-@Entity({ discriminatorValue: ReqType.FUNCTIONALITY })
-export class FunctionalityVersionsModel extends GoalVersionsModel { }
+@Entity({ discriminatorValue: ReqType.FUNCTIONALITY_OVERVIEW })
+export class FunctionalityOverviewModel extends FunctionalityModel { }
+
+@Entity({ discriminatorValue: ReqType.FUNCTIONALITY_OVERVIEW })
+export class FunctionalityOverviewVersionsModel extends FunctionalityVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.CONTEXT_AND_OBJECTIVE })
 export class ContextAndObjectiveModel extends GoalModel { }
@@ -289,20 +335,14 @@ export class HintModel extends NoiseModel { }
 @Entity({ discriminatorValue: ReqType.HINT })
 export class HintVersionsModel extends NoiseVersionsModel { }
 
-@Entity({ discriminatorValue: ReqType.INTERACTION })
-export class InteractionModel extends RequirementModel { }
-
-@Entity({ discriminatorValue: ReqType.INTERACTION })
-export class InteractionVersionsModel extends RequirementVersionsModel { }
-
 @Entity({ discriminatorValue: ReqType.INTERFACE })
-export class InterfaceModel extends InteractionModel {
+export class InterfaceModel extends RequirementModel {
     @OneToMany({ entity: () => InterfaceOperationModel, mappedBy: 'interface' })
     readonly operations = new Collection<InterfaceOperationModel>(this)
 }
 
 @Entity({ discriminatorValue: ReqType.INTERFACE })
-export class InterfaceVersionsModel extends Prioritizable(InteractionVersionsModel) {
+export class InterfaceVersionsModel extends RequirementVersionsModel {
     @Enum({ items: () => InterfaceType })
     readonly interfaceType!: InterfaceType
 }
@@ -402,9 +442,9 @@ export class InterfaceFlowVersionsModel extends InterfaceArtifactVersionsModel {
 export class NonFunctionalBehaviorModel extends BehaviorModel { }
 
 @Entity({ discriminatorValue: ReqType.NON_FUNCTIONAL_BEHAVIOR })
-export class NonFunctionalBehaviorVersionsModel extends BehaviorVersionsModel {
-    @ManyToOne({ entity: () => FunctionalityModel, nullable: true })
-    readonly functionality?: Ref<FunctionalityModel>
+export class NonFunctionalBehaviorVersionsModel extends Prioritizable(BehaviorVersionsModel) {
+    @ManyToOne({ entity: () => FunctionalityOverviewModel })
+    readonly goalFunctionality!: Ref<FunctionalityOverviewModel>
 }
 
 @Entity({ discriminatorValue: ReqType.OBSTACLE })
@@ -422,12 +462,6 @@ export class OrganizationVersionsModel extends MetaRequirementVersionsModel {
     @Property({ type: types.string })
     readonly slug!: string
 }
-
-@Entity({ discriminatorValue: ReqType.OUTCOME })
-export class OutcomeModel extends GoalModel { }
-
-@Entity({ discriminatorValue: ReqType.OUTCOME })
-export class OutcomeVersionsModel extends GoalVersionsModel { }
 
 @Entity({ discriminatorValue: ReqType.PARSED_REQUIREMENTS })
 export class ParsedRequirementsModel extends MetaRequirementModel {
@@ -491,51 +525,8 @@ export class SolutionVersionsModel extends MetaRequirementVersionsModel {
     readonly organization!: Ref<OrganizationModel>
 }
 
-@Entity({ discriminatorValue: ReqType.STAKEHOLDER })
-export class StakeholderModel extends ComponentModel {
-    @ManyToOne({ entity: () => UseCaseModel, nullable: true, inversedBy: 'stakeholders' })
-    readonly useCase?: Ref<UseCaseModel>
-
-    @ManyToMany(() => PersonModel, person => person.stakeholders, {
-        pivotTable: 'person_stakeholders',
-        joinColumn: 'stakeholder_id',
-        inverseJoinColumn: 'person_id'
-    })
-    readonly persons = new Collection<PersonModel>(this)
-}
-
-@Entity({ discriminatorValue: ReqType.STAKEHOLDER })
-export class StakeholderVersionsModel extends ComponentVersionsModel {
-    @Enum({ items: () => StakeholderSegmentation })
-    readonly segmentation!: StakeholderSegmentation
-
-    @Enum({ items: () => StakeholderCategory })
-    readonly category!: StakeholderCategory
-
-    @Property<StakeholderVersionsModel>({ type: types.integer })
-    readonly interest!: number
-
-    @Property<StakeholderVersionsModel>({ type: types.integer })
-    readonly influence!: number
-}
-
-@Entity({ discriminatorValue: ReqType.SCENARIO })
-export class ScenarioModel extends RequirementModel { }
-
-@Entity({ discriminatorValue: ReqType.SCENARIO })
-export class ScenarioVersionsModel extends Prioritizable(RequirementVersionsModel) {
-    @ManyToOne({ entity: () => StakeholderModel })
-    readonly primaryActor!: StakeholderModel
-
-    @ManyToOne({ entity: () => OutcomeModel })
-    readonly outcome!: OutcomeModel
-
-    @ManyToOne({ entity: () => FunctionalBehaviorModel })
-    readonly functionalBehavior!: FunctionalBehaviorModel
-}
-
 @Entity({ discriminatorValue: ReqType.SCENARIO_STEP })
-export class ScenarioStepModel extends ScenarioModel {
+export class ScenarioStepModel extends ExampleModel {
     @ManyToOne({ entity: () => UseCaseModel, inversedBy: 'scenarioSteps' })
     readonly parentScenario!: Ref<UseCaseModel>
 
@@ -547,21 +538,24 @@ export class ScenarioStepModel extends ScenarioModel {
 }
 
 @Entity({ discriminatorValue: ReqType.SCENARIO_STEP })
-export class ScenarioStepVersionsModel extends ScenarioVersionsModel {
+export class ScenarioStepVersionsModel extends ExampleVersionsModel {
     @Property({ type: types.integer })
     readonly order!: number
 
     @Enum({ items: () => ScenarioStepTypeEnum })
     readonly stepType!: ScenarioStepTypeEnum
+
+    @ManyToOne({ entity: () => FunctionalBehaviorModel, fieldName: 'functionality_id' })
+    readonly functionality!: Ref<FunctionalBehaviorModel>
 }
 
 @Entity({ discriminatorValue: ReqType.EPIC })
-export class EpicModel extends GoalModel { }
+export class EpicModel extends ExampleModel { }
 
 @Entity({ discriminatorValue: ReqType.EPIC })
-export class EpicVersionsModel extends GoalVersionsModel {
-    @ManyToOne({ entity: () => FunctionalBehaviorModel })
-    readonly functionalBehavior!: FunctionalBehaviorModel
+export class EpicVersionsModel extends ExampleVersionsModel {
+    @ManyToOne({ entity: () => FunctionalityOverviewModel, fieldName: 'functionality_id' })
+    readonly functionality!: Ref<FunctionalityOverviewModel>
 }
 
 @Entity({ discriminatorValue: ReqType.SYSTEM_COMPONENT })
@@ -595,13 +589,16 @@ export class TaskVersionsModel extends RequirementVersionsModel {
 }
 
 @Entity({ discriminatorValue: ReqType.TEST_CASE })
-export class TestCaseModel extends ScenarioModel { }
+export class TestCaseModel extends ExampleModel { }
 
 @Entity({ discriminatorValue: ReqType.TEST_CASE })
-export class TestCaseVersionsModel extends ScenarioVersionsModel { }
+export class TestCaseVersionsModel extends ExampleVersionsModel {
+    @ManyToOne({ entity: () => FunctionalBehaviorModel, fieldName: 'functionality_id' })
+    readonly functionality!: Ref<FunctionalBehaviorModel>
+}
 
 @Entity({ discriminatorValue: ReqType.USE_CASE })
-export class UseCaseModel extends ScenarioModel {
+export class UseCaseModel extends ExampleModel {
     @OneToMany({ entity: () => AssumptionModel, mappedBy: 'useCase' })
     readonly preconditions = new Collection<AssumptionModel>(this)
 
@@ -616,16 +613,22 @@ export class UseCaseModel extends ScenarioModel {
 }
 
 @Entity({ discriminatorValue: ReqType.USE_CASE })
-export class UseCaseVersionsModel extends ScenarioVersionsModel {
+export class UseCaseVersionsModel extends Prioritizable(ExampleVersionsModel) {
     @ManyToOne({ entity: () => SystemComponentModel })
     readonly scope!: Ref<SystemComponentModel>
 
     @Property({ type: types.uuid })
     readonly triggerId!: string
+
+    @ManyToOne({ entity: () => FunctionalBehaviorModel, fieldName: 'functionality_id' })
+    readonly functionality!: Ref<FunctionalBehaviorModel>
 }
 
 @Entity({ discriminatorValue: ReqType.USER_STORY })
-export class UserStoryModel extends ScenarioModel { }
+export class UserStoryModel extends ExampleModel { }
 
 @Entity({ discriminatorValue: ReqType.USER_STORY })
-export class UserStoryVersionsModel extends ScenarioVersionsModel { }
+export class UserStoryVersionsModel extends Prioritizable(ExampleVersionsModel) {
+    @ManyToOne({ entity: () => FunctionalBehaviorModel, fieldName: 'functionality_id' })
+    readonly functionality!: Ref<FunctionalBehaviorModel>
+}

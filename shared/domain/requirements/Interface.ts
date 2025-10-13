@@ -1,12 +1,12 @@
 import { z } from 'zod'
-import { Interaction } from './Interaction.js'
 import { ReqType } from './ReqType.js'
 import { Prioritizable } from './Prioritizable.js'
 import { InterfaceType } from './InterfaceType.js'
 import { InterfaceOperationReference } from './EntityReferences.js'
 import { uiBasePathTemplates } from './uiBasePathTemplates.js'
+import { Requirement } from './Requirement.js'
 
-export const Interface = Interaction.extend({
+export const Interface = Requirement.extend({
     reqId: z.string().regex(/^S\.3\.\d+$/, 'Format must be S.3.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('S.3.').default('S.3.'),

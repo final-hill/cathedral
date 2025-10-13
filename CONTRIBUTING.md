@@ -53,29 +53,26 @@ The Cathedral system implements a comprehensive inheritance hierarchy for requir
 ### Complete Inheritance Tree
 
 ```
-Requirement (base for all requirements)
+Requirement
 │
 ├── Goal
 │   ├── ContextAndObjective (G.1.#)
 │   ├── Obstacle (G.2.#)
-│   ├── Outcome (G.3.#)
-│   ├── Functionality (G.4.#)
-│   └── Epic (G.5.#)
+│   └── Outcome (G.3.#)
 │
-├── BehaviorBase
+├── Behavior
 │   ├── Example
-│   └── Behavior
-│       ├── FunctionalBehavior (S.2.1.#)
-│       └── NonFunctionalBehavior (S.2.2.#)
+│   │   ├── Epic (G.5.#)
+│   │   ├── UseCase (S.4.2.#) <: Prioritizable
+│   │   ├── UserStory (S.4.1.#) <: Prioritizable
+│   │   ├── TestCase (S.6.#)
+│   │   └── ScenarioStep
+│   └── Functionality
+│       ├── FunctionalityOverview (G.4.#)
+│       ├── FunctionalBehavior (S.2.1.#) <: Prioritizable
+│       └── NonFunctionalBehavior (S.2.2.#) <: Prioritizable
 │
-├── Interaction
-│   ├── Interface (S.3.#)
-│   ├── Event (S.3.#)
-│   └── Scenario
-│       ├── UseCase (S.4.2.#)
-│       ├── UserStory (S.4.1.#)
-│       ├── ScenarioStep
-│       └── TestCase (S.6.#)
+├── Interface (S.3.#) <: Prioritizable
 │
 ├── InterfaceArtifact
 │   ├── InterfaceOperation
@@ -195,10 +192,10 @@ For each new Solution, the following requirement is automatically created in `Ac
 Cathedral implements granular endorsement permissions to control which persons can endorse different requirement categories:
 
 #### Endorsement Permission Flags
-- **canEndorseProjectRequirements**: Can endorse Person, Product requirements
-- **canEndorseEnvironmentRequirements**: Can endorse Environment, Constraint, Assumption, Effect, Invariant requirements
-- **canEndorseGoalsRequirements**: Can endorse Goal, Outcome, Obstacle, Epic, Limit requirements
-- **canEndorseSystemRequirements**: Can endorse System, Component, Interface, Behavior, Scenario requirements
+- **canEndorseProjectRequirements**: Can endorse requirements under the Project category
+- **canEndorseEnvironmentRequirements**: Can endorse requirements under the Environment category
+- **canEndorseGoalsRequirements**: Can endorse requirements under the Goals category
+- **canEndorseSystemRequirements**: Can endorse requirements under the System category
 
 #### Special Role Capabilities
 - **Product Owner** (`isProductOwner: true`): Automatically has all endorsement permissions

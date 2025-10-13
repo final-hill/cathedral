@@ -83,6 +83,12 @@ export const FunctionalityReference = RequirementReference.extend({
     uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.FUNCTIONALITY])
 })
 
+export type FunctionalityOverviewReferenceType = z.infer<typeof FunctionalityOverviewReference>
+export const FunctionalityOverviewReference = RequirementReference.extend({
+    reqType: z.nativeEnum(ReqType).default(ReqType.FUNCTIONALITY_OVERVIEW),
+    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.FUNCTIONALITY_OVERVIEW])
+})
+
 export type FunctionalBehaviorReferenceType = z.infer<typeof FunctionalBehaviorReference>
 export const FunctionalBehaviorReference = RequirementReference.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.FUNCTIONAL_BEHAVIOR),
@@ -105,12 +111,6 @@ export type UserStoryReferenceType = z.infer<typeof UserStoryReference>
 export const UserStoryReference = RequirementReference.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.USER_STORY),
     uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.USER_STORY])
-})
-
-export type ScenarioReferenceType = z.infer<typeof ScenarioReference>
-export const ScenarioReference = RequirementReference.extend({
-    reqType: z.nativeEnum(ReqType).default(ReqType.SCENARIO),
-    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.SCENARIO])
 })
 
 export type ScenarioStepReferenceType = z.infer<typeof ScenarioStepReference>
@@ -175,4 +175,10 @@ export type PersonReferenceType = z.infer<typeof PersonReference>
 export const PersonReference = RequirementReference.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.PERSON),
     uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.PERSON])
+})
+
+export type ExampleReferenceType = z.infer<typeof ExampleReference>
+export const ExampleReference = RequirementReference.extend({
+    reqType: z.nativeEnum(ReqType).default(ReqType.EXAMPLE),
+    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.EXAMPLE])
 })

@@ -147,10 +147,10 @@ const pegsMap: Record<string, PegsCard[]> = {
             minActiveReqTypes: [ReqType.OUTCOME]
         },
         {
-            label: 'Functionality',
+            label: 'Functionality overview',
             icon: 'i-lucide-settings',
-            reqId: req.Functionality.shape.reqIdPrefix._def.defaultValue(),
-            path: uiBasePathTemplates[ReqType.FUNCTIONALITY]
+            reqId: req.FunctionalityOverview.shape.reqIdPrefix._def.defaultValue(),
+            path: uiBasePathTemplates[ReqType.FUNCTIONALITY_OVERVIEW]
                 .replace('[org]', organizationslug)
                 .replace('[solutionslug]', solutionslug)
         },

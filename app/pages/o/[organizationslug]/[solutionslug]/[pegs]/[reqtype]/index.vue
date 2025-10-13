@@ -33,7 +33,7 @@ if (!RequirementSchema) {
 
 type RequirementEntity = { reqIdPrefix: string, description: string }
 
-const title = (RequirementSchema as unknown as RequirementEntity).reqIdPrefix ? `${(RequirementSchema as unknown as RequirementEntity).reqIdPrefix} ${snakeCaseToPascalCase(reqtype)}` : snakeCaseToPascalCase(reqtype)
+const title = (RequirementSchema as unknown as RequirementEntity).reqIdPrefix ? `${(RequirementSchema as unknown as RequirementEntity).reqIdPrefix} ${snakeCaseToTitleCase(reqtype)}` : snakeCaseToTitleCase(reqtype)
 
 useHead({ title })
 definePageMeta({ middleware: 'auth' })

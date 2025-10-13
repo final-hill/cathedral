@@ -56,11 +56,11 @@
             "example",
             "functional_behavior",
             "functionality",
+            "functionality_overview",
             "glossary_term",
             "goal",
             "goals",
             "hint",
-            "interaction",
             "interface",
             "invariant",
             "justification",
@@ -78,7 +78,6 @@
             "product",
             "requirement",
             "responsibility",
-            "scenario",
             "scenario_step",
             "silence",
             "solution",
@@ -418,11 +417,11 @@
             "example",
             "functional_behavior",
             "functionality",
+            "functionality_overview",
             "glossary_term",
             "goal",
             "goals",
             "hint",
-            "interaction",
             "interface",
             "invariant",
             "justification",
@@ -440,7 +439,6 @@
             "product",
             "requirement",
             "responsibility",
-            "scenario",
             "scenario_step",
             "silence",
             "solution",
@@ -592,6 +590,33 @@
         },
         "parent_component_id": {
           "name": "parent_component_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
+        "primary_actor_id": {
+          "name": "primary_actor_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
+        "outcome_id": {
+          "name": "outcome_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
+        "functionality_id": {
+          "name": "functionality_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
@@ -761,8 +786,8 @@
           ],
           "mappedType": "enum"
         },
-        "functionality_id": {
-          "name": "functionality_id",
+        "goal_functionality_id": {
+          "name": "goal_functionality_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
@@ -801,33 +826,6 @@
             "Condition"
           ],
           "mappedType": "enum"
-        },
-        "primary_actor_id": {
-          "name": "primary_actor_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        },
-        "outcome_id": {
-          "name": "outcome_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        },
-        "functional_behavior_id": {
-          "name": "functional_behavior_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
         },
         "slug": {
           "name": "slug",
@@ -1014,20 +1012,6 @@
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
-        "requirement_versions_functionality_id_foreign": {
-          "constraintName": "requirement_versions_functionality_id_foreign",
-          "columnNames": [
-            "functionality_id"
-          ],
-          "localTableName": "public.requirement_versions",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
         "requirement_versions_primary_actor_id_foreign": {
           "constraintName": "requirement_versions_primary_actor_id_foreign",
           "columnNames": [
@@ -1056,10 +1040,24 @@
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
-        "requirement_versions_functional_behavior_id_foreign": {
-          "constraintName": "requirement_versions_functional_behavior_id_foreign",
+        "requirement_versions_functionality_id_foreign": {
+          "constraintName": "requirement_versions_functionality_id_foreign",
           "columnNames": [
-            "functional_behavior_id"
+            "functionality_id"
+          ],
+          "localTableName": "public.requirement_versions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "createForeignKeyConstraint": true,
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_versions_goal_functionality_id_foreign": {
+          "constraintName": "requirement_versions_goal_functionality_id_foreign",
+          "columnNames": [
+            "goal_functionality_id"
           ],
           "localTableName": "public.requirement_versions",
           "referencedColumnNames": [
