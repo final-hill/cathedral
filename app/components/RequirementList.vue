@@ -330,7 +330,7 @@ watch(internalSelectedStates, (newStates) => {
 </script>
 
 <template>
-    <div class="requirement-list">
+    <div class="mt-4">
         <div
             v-if="!hideHeader"
             class="flex items-center justify-between mb-6"
@@ -388,17 +388,8 @@ watch(internalSelectedStates, (newStates) => {
             :columns="columns"
             :data="filteredRequirements"
             :loading="loading"
+            class="mt-4"
             :empty-state="{ icon: 'i-lucide-database', label: 'No requirements found.' }"
         />
     </div>
 </template>
-
-<style scoped>
-.requirement-list {
-    margin-top: 1rem;
-
-    & .ut-table {
-        margin-top: 1rem;
-    }
-}
-</style>

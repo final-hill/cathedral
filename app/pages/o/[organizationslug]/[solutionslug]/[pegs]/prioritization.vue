@@ -1,13 +1,15 @@
 <script lang="ts" setup>
 import { MoscowPriority, ReqType, WorkflowState } from '#shared/domain/requirements/enums'
-import type { BehaviorType, ScenarioType } from '#shared/domain/requirements'
-import { Behavior, Scenario } from '#shared/domain/requirements'
+import type { UserStoryType, UseCaseType, NonFunctionalBehaviorType, FunctionalBehaviorType, InterfaceEntityType } from '#shared/domain/requirements'
+import { FunctionalBehavior, Interface, NonFunctionalBehavior, UseCase, UserStory } from '#shared/domain/requirements'
 import { priorityColorMap } from '#shared/utils/priority-colors'
 import { priorityLabelMap } from '#shared/utils/priority-labels'
 import { XConfirmModal } from '#components'
 import { z } from 'zod'
 
 definePageMeta({ middleware: 'auth' })
+
+type PrioritizableEntityType = UseCaseType | UserStoryType | FunctionalBehaviorType | NonFunctionalBehaviorType | InterfaceEntityType
 
 const route = useRoute(),
     toast = useToast(),
@@ -20,37 +22,70 @@ const route = useRoute(),
 
 useHead({ title: 'System Prioritization' })
 
-// Fetch behaviors and scenarios that can have priorities
-const { data: behaviors, status: behaviorsStatus, refresh: refreshBehaviors } = await useApiRequest(
-        `/api/requirements/${ReqType.BEHAVIOR}`,
+// Fetch use cases that can have priorities
+// TODO: create a unified endpoint to fetch all prioritizable requirements at once
+const { data: useCases, status: useCasesStatus, refresh: refreshUseCases } = await useApiRequest(
+        `/api/requirements/${ReqType.USE_CASE}`,
         {
             query: { solutionSlug, organizationSlug },
-            schema: z.array(Behavior)
+            schema: z.array(UseCase)
         }
     ),
-    { data: scenarios, status: scenariosStatus, refresh: refreshScenarios } = await useApiRequest(
-        `/api/requirements/${ReqType.SCENARIO}`,
+    { data: userStories, status: userStoriesStatus, refresh: refreshUserStories } = await useApiRequest(
+        `/api/requirements/${ReqType.USER_STORY}`,
         {
             query: { solutionSlug, organizationSlug },
-            schema: z.array(Scenario)
+            schema: z.array(UserStory)
+        }
+    ),
+    { data: interfaces, status: interfacesStatus, refresh: refreshInterfaces } = await useApiRequest(
+        `/api/requirements/${ReqType.INTERFACE}`,
+        {
+            query: { solutionSlug, organizationSlug },
+            schema: z.array(Interface)
+        }
+    ),
+    { data: functionalBehaviors, status: functionalBehaviorsStatus, refresh: refreshFunctionalBehaviors } = await useApiRequest(
+        `/api/requirements/${ReqType.FUNCTIONAL_BEHAVIOR}`,
+        {
+            query: { solutionSlug, organizationSlug },
+            schema: z.array(FunctionalBehavior)
+        }
+    ),
+    { data: nonFunctionalBehaviors, status: nonFunctionalBehaviorsStatus, refresh: refreshNonFunctionalBehaviors } = await useApiRequest(
+        `/api/requirements/${ReqType.NON_FUNCTIONAL_BEHAVIOR}`,
+        {
+            query: { solutionSlug, organizationSlug },
+            schema: z.array(NonFunctionalBehavior)
         }
     ),
     allRequirements = computed(() => {
-        const requirements: (BehaviorType | ScenarioType)[] = []
-
-        if (behaviors.value) requirements.push(...behaviors.value)
-
-        if (scenarios.value) requirements.push(...scenarios.value)
+        const requirements: PrioritizableEntityType[] = [
+            ...(useCases.value || []),
+            ...(userStories.value || []),
+            ...(functionalBehaviors.value || []),
+            ...(nonFunctionalBehaviors.value || []),
+            ...(interfaces.value || [])
+        ]
 
         return requirements.filter(req => req.workflowState === selectedWorkflowState.value)
     }),
     isLoading = computed(() =>
-        [behaviorsStatus.value, scenariosStatus.value].some(status => status === 'pending')
+        [
+            useCasesStatus.value,
+            userStoriesStatus.value,
+            functionalBehaviorsStatus.value,
+            nonFunctionalBehaviorsStatus.value,
+            interfacesStatus.value
+        ].some(status => status === 'pending')
     ),
     refresh = async () => {
         await Promise.all([
-            refreshBehaviors(),
-            refreshScenarios()
+            refreshUseCases(),
+            refreshUserStories(),
+            refreshFunctionalBehaviors(),
+            refreshNonFunctionalBehaviors(),
+            refreshInterfaces()
         ])
     },
     selectedWorkflowState = ref<WorkflowState>(WorkflowState.Proposed),
@@ -101,7 +136,7 @@ const priorityOptions = [
         }
     ] as const,
     // Get effective priority (local override or original)
-    getEffectivePriority = (requirement: BehaviorType | ScenarioType): MoscowPriority | null => {
+    getEffectivePriority = (requirement: PrioritizableEntityType): MoscowPriority | null => {
         // Check if there's a local change first
         if (localPriorityChanges.value.has(requirement.id)) {
             const localChange = localPriorityChanges.value.get(requirement.id)
@@ -112,7 +147,7 @@ const priorityOptions = [
     },
     // Group requirements by their effective priority for matrix display
     requirementsByPriority = computed(() => {
-        const grouped: Record<MoscowPriority | 'unset', (BehaviorType | ScenarioType)[]> = {
+        const grouped: Record<MoscowPriority | 'unset', PrioritizableEntityType[]> = {
             [MoscowPriority.MUST]: [],
             [MoscowPriority.SHOULD]: [],
             [MoscowPriority.COULD]: [],
@@ -247,11 +282,9 @@ const priorityOptions = [
             })
         }
     },
-    draggedRequirement = ref<BehaviorType | ScenarioType | null>(null),
+    draggedRequirement = ref<PrioritizableEntityType | null>(null),
     dragOverTarget = ref<string | null>(null),
-
-    // Drag and drop handlers
-    onDragStart = (event: DragEvent, requirement: BehaviorType | ScenarioType) => {
+    onDragStart = (event: DragEvent, requirement: PrioritizableEntityType) => {
         if (!event.dataTransfer) return
 
         draggedRequirement.value = requirement

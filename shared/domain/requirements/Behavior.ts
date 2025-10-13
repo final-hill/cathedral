@@ -1,13 +1,11 @@
-import { BehaviorBase } from './BehaviorBase.js'
-import { Prioritizable } from './Prioritizable.js'
 import { z } from 'zod'
 import { ReqType } from './ReqType.js'
 import { uiBasePathTemplates } from './uiBasePathTemplates.js'
+import { Requirement } from './Requirement.js'
 
-export const Behavior = BehaviorBase.extend({
+export const Behavior = Requirement.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.BEHAVIOR),
-    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.BEHAVIOR]),
-    ...Prioritizable.shape
-}).describe('Property of the operation of the system (System book category 1.6)')
+    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.BEHAVIOR])
+}).describe('Property of the operation of the system')
 
 export type BehaviorType = z.infer<typeof Behavior>
