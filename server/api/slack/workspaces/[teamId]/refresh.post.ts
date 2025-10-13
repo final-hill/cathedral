@@ -9,7 +9,7 @@ const paramsSchema = z.object({
  * Refresh Slack workspace information from Slack API
  */
 export default defineEventHandler(async (event) => {
-    const { teamId } = await validateEventParams(event, paramsSchema),
+    const { teamId } = await validateEventParams({ event, schema: paramsSchema }),
         session = await requireUserSession(event),
         em = event.context.em,
         workspaceInteractor = createSlackWorkspaceInteractor({

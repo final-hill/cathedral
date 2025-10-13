@@ -15,8 +15,8 @@ const paramSchema = AppUser.pick({ id: true }),
  * Delete an appuser by id in a given organization
  */
 export default defineEventHandler(async (event) => {
-    const { id } = await validateEventParams(event, paramSchema),
-        { organizationId, organizationSlug } = await validateEventBody(event, bodySchema),
+    const { id } = await validateEventParams({ event, schema: paramSchema }),
+        { organizationId, organizationSlug } = await validateEventBody({ event, schema: bodySchema }),
         session = await requireUserSession(event),
         organizationInteractor = createOrganizationInteractor({ event, session, organizationId, organizationSlug })
 

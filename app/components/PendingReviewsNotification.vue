@@ -13,11 +13,11 @@ const props = defineProps<{
         if (props.solutionSlug) params.solutionSlug = props.solutionSlug
         return params
     }),
-    { data: pendingReviews, refresh, pending, error } = useApiRequest('/api/pending-reviews', {
+    { data: pendingReviews, refresh, pending, error } = useApiRequest({ url: '/api/pending-reviews', options: {
         schema: PendingReviewsDto,
         query: queryParams,
         errorMessage: 'Failed to load pending reviews'
-    }),
+    } }),
     hasPendingReviews = computed(() => {
         return (pendingReviews.value || []).length > 0
     }),

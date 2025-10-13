@@ -17,7 +17,7 @@ const querySchema = z.object({
 export default defineEventHandler(async (event) => {
     const config = useRuntimeConfig(),
         session = await requireUserSession(event),
-        { code, state, error, error_description } = await validateEventQuery(event, querySchema),
+        { code, state, error, error_description } = await validateEventQuery({ event, schema: querySchema }),
         em = event.context.em
 
     if (error) {

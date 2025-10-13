@@ -12,7 +12,7 @@ const querySchema = z.object({
 }, 'Either reqType or entityType must be provided')
 
 export default defineEventHandler(async (event) => {
-    const { solutionSlug, organizationSlug, reqType, entityType } = await validateEventQuery(event, querySchema),
+    const { solutionSlug, organizationSlug, reqType, entityType } = await validateEventQuery({ event, schema: querySchema }),
         session = await requireUserSession(event)
 
     // Handle app_user entity type separately

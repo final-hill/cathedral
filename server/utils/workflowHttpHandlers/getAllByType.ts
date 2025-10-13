@@ -15,8 +15,8 @@ export default function getAllByType() {
         }, 'At least one of organizationId or organizationSlug should be provided')
 
     return defineEventHandler(async (event) => {
-        const { reqType } = await validateEventParams(event, paramSchema),
-            { solutionSlug, organizationId, organizationSlug, ...query } = await validateEventQuery(event, validatedQuerySchema),
+        const { reqType } = await validateEventParams({ event, schema: paramSchema }),
+            { solutionSlug, organizationId, organizationSlug, ...query } = await validateEventQuery({ event, schema: validatedQuerySchema }),
             session = await requireUserSession(event),
             requirementInteractor = await createRequirementInteractor({ event, session, organizationId, organizationSlug, solutionSlug })
 

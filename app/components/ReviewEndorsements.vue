@@ -30,11 +30,11 @@ const props = defineProps<{
         organizationSlug: props.organizationSlug,
         solutionSlug: props.solutionSlug
     })),
-    { data: endorsements, refresh } = useApiRequest(url, {
+    { data: endorsements, refresh } = useApiRequest({ url, options: {
         query,
         schema: z.array(Endorsement),
         errorMessage: 'Failed to load endorsements'
-    }),
+    } }),
     // State for action operations
     isEndorsing = ref(false),
     isRejecting = ref(false),
@@ -42,7 +42,7 @@ const props = defineProps<{
      * Check requirement workflow state and redirect if no longer in Review
      */
     checkWorkflowStateAndRedirect = async () => {
-        const { data: requirement } = await useApiRequest(`/api/requirements/${props.reqType}/${props.requirementId}`, {
+        const { data: requirement } = await useApiRequest({ url: `/api/requirements/${props.reqType}/${props.requirementId}`, options: {
             query: {
                 solutionSlug: props.solutionSlug,
                 organizationSlug: props.organizationSlug
@@ -52,7 +52,7 @@ const props = defineProps<{
                 name: z.string(),
                 reqType: z.string()
             })
-        })
+        } })
 
         if (requirement.value && requirement.value.workflowState !== 'Review') {
             // Show appropriate message based on the new workflow state
@@ -95,7 +95,7 @@ const props = defineProps<{
         try {
             const endorseUrl = `/api/requirements/${props.reqType}/${props.requirementId}/endorse`
 
-            await useApiRequest(endorseUrl, {
+            await useApiRequest({ url: endorseUrl, options: {
                 method: 'POST',
                 body: {
                     solutionSlug: props.solutionSlug,
@@ -106,7 +106,7 @@ const props = defineProps<{
                 showSuccessToast: true,
                 successMessage: 'Requirement endorsed successfully',
                 errorMessage: 'Failed to endorse requirement'
-            })
+            } })
 
             await refresh()
 
@@ -125,7 +125,7 @@ const props = defineProps<{
         try {
             const rejectUrl = `/api/requirements/${props.reqType}/${props.requirementId}/reject-endorsement`
 
-            await useApiRequest(rejectUrl, {
+            await useApiRequest({ url: rejectUrl, options: {
                 method: 'POST',
                 body: {
                     solutionSlug: props.solutionSlug,
@@ -136,7 +136,7 @@ const props = defineProps<{
                 showSuccessToast: true,
                 successMessage: 'Endorsement rejected successfully',
                 errorMessage: 'Failed to reject endorsement'
-            })
+            } })
 
             await refresh()
 
@@ -174,14 +174,14 @@ const endorsementStatus = computed(() => {
         [ReviewStatus.REJECTED]: 'text-error'
     },
     // Fetch person matching current user's appUserId for authorization
-    { data: userPerson } = await useApiRequest('/api/requirements/person', {
+    { data: userPerson } = await useApiRequest({ url: '/api/requirements/person', options: {
         schema: z.array(Person),
         query: {
             solutionSlug: props.solutionSlug,
             organizationSlug: props.organizationSlug,
             appUserId: user.value?.id
         }
-    }),
+    } }),
     endorsementProcessing = ref<string | null>(null),
     showEndorsementDialog = ref(false),
     currentEndorsement = ref<EndorsementType | null>(null),

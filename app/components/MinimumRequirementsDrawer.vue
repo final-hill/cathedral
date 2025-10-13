@@ -15,6 +15,7 @@ const props = defineProps<{
         set: value => emit('update:open', value)
     }),
     groupedMissing = computed(() => {
+        // eslint-disable-next-line max-params
         return props.missingRequirements.reduce((acc, req) => {
             if (!acc[req.section])
                 acc[req.section] = []

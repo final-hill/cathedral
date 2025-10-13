@@ -8,7 +8,7 @@ const querySchema = Organization.innerType().partial()
  * Returns all organizations that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const query = await validateEventQuery(event, querySchema),
+    const query = await validateEventQuery({ event, schema: querySchema }),
         session = await requireUserSession(event),
         entraService = createEntraService(),
         permissionInteractor = new PermissionInteractor({ session, event, entraService }),

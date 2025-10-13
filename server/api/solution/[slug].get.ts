@@ -15,8 +15,8 @@ const paramSchema = Solution.innerType().pick({ slug: true }),
  * Returns a solution by id
  */
 export default defineEventHandler(async (event) => {
-    const { slug } = await validateEventParams(event, paramSchema),
-        { organizationId, organizationSlug } = await validateEventQuery(event, querySchema),
+    const { slug } = await validateEventParams({ event, schema: paramSchema }),
+        { organizationId, organizationSlug } = await validateEventQuery({ event, schema: querySchema }),
         session = await requireUserSession(event),
         organizationInteractor = createOrganizationInteractor({ event, session, organizationId, organizationSlug })
 

@@ -13,8 +13,8 @@ const { id: organizationId, slug: organizationSlug } = Organization.innerType().
     }, 'At least one of organizationId or organizationSlug should be provided')
 
 export default defineEventHandler(async (event) => {
-    const { reqType } = await validateEventParams(event, paramSchema),
-        { solutionSlug, organizationId, organizationSlug } = await validateEventQuery(event, querySchema),
+    const { reqType } = await validateEventParams({ event, schema: paramSchema }),
+        { solutionSlug, organizationId, organizationSlug } = await validateEventQuery({ event, schema: querySchema }),
         session = await requireUserSession(event),
         requirementInteractor = await createRequirementInteractor({
             event,

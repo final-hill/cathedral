@@ -14,7 +14,7 @@ const { id: organizationId, slug: organizationSlug } = Organization.innerType().
  * Returns all solutions that match the query parameters
  */
 export default defineEventHandler(async (event) => {
-    const { description, name, organizationId, organizationSlug, slug } = await validateEventQuery(event, querySchema),
+    const { description, name, organizationId, organizationSlug, slug } = await validateEventQuery({ event, schema: querySchema }),
         session = await requireUserSession(event),
         organizationInteractor = createOrganizationInteractor({ event, session, organizationId, organizationSlug })
 

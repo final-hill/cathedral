@@ -17,7 +17,7 @@ const { id: organizationId, slug: organizationSlug } = Organization.innerType().
  * Returns all appusers for the organization with their associated role
  */
 export default defineEventHandler(async (event) => {
-    const { organizationId, organizationSlug, includeSlack } = await validateEventQuery(event, querySchema),
+    const { organizationId, organizationSlug, includeSlack } = await validateEventQuery({ event, schema: querySchema }),
         session = await requireUserSession(event),
         config = useRuntimeConfig(),
         entraService = createEntraService(),
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
         const slackUserInteractor = new SlackUserInteractor({
                 repository: new SlackRepository({ em: event.context.em }),
                 permissionInteractor,
-                slackService: new SlackService(config.slackBotToken, config.slackSigningSecret)
+                slackService: new SlackService({ token: config.slackBotToken, slackSigningSecret: config.slackSigningSecret })
             }),
             appUserSlackInteractor = new AppUserSlackInteractor({
                 organizationInteractor,

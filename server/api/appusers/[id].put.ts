@@ -16,8 +16,8 @@ const paramSchema = AppUser.pick({ id: true }),
  * Update an appuser by id in a given organization to have a new role
  */
 export default defineEventHandler(async (event) => {
-    const { id } = await validateEventParams(event, paramSchema),
-        { organizationId, organizationSlug, role } = await validateEventBody(event, bodySchema),
+    const { id } = await validateEventParams({ event, schema: paramSchema }),
+        { organizationId, organizationSlug, role } = await validateEventBody({ event, schema: bodySchema }),
         session = await requireUserSession(event),
         entraService = createEntraService(),
         permissionInteractor = new PermissionInteractor({ event, session, entraService }),

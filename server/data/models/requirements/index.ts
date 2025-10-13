@@ -18,11 +18,12 @@ export abstract class StaticAuditModel<V extends VolatileAuditModel> {
      * Gets the latest non-deleted version of this entity at the given effective date.
      * This is the standard method for retrieving the current active state of an entity.
      *
-     * @param effectiveDate - The date at which to evaluate the latest version
-     * @param filter - Additional filter criteria to apply when finding versions
+     * @param params - Parameters for finding the latest version
+     * @param params.effectiveDate - The date at which to evaluate the latest version
+     * @param params.filter - Additional filter criteria to apply when finding versions
      * @returns The latest non-deleted version, or undefined if none exists
      */
-    async getLatestVersion(effectiveDate: Date, filter: FilterQuery<V> = {}): Promise<V | undefined> {
+    async getLatestVersion({ effectiveDate, filter = {} }: { effectiveDate: Date, filter?: FilterQuery<V> }): Promise<V | undefined> {
         const where = {
                 effectiveFrom: { $lte: effectiveDate },
                 isDeleted: false,
@@ -42,8 +43,12 @@ export abstract class StaticAuditModel<V extends VolatileAuditModel> {
     /**
      * Gets the latest version of this entity at the given effective date, including deleted versions.
      * This is useful for checking the current state of an entity, including whether it has been deleted.
+     * @param params - Parameters for finding the latest version
+     * @param params.effectiveDate - The date at which to evaluate the latest version
+     * @param params.filter - Additional filter criteria to apply when finding versions
+     * @returns The latest version, or undefined if none exists
      */
-    async getLatestVersionIncludingDeleted(effectiveDate: Date, filter: FilterQuery<V> = {}): Promise<V | undefined> {
+    async getLatestVersionIncludingDeleted({ effectiveDate, filter = {} }: { effectiveDate: Date, filter?: FilterQuery<V> }): Promise<V | undefined> {
         const where = {
                 effectiveFrom: { $lte: effectiveDate },
                 ...filter

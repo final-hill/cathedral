@@ -9,13 +9,13 @@ definePageMeta({ name: 'Organization', middleware: 'auth' })
 const { $eventBus } = useNuxtApp(),
     { organizationslug: organizationSlug } = useRoute('Organization').params,
     router = useRouter(),
-    { data: organization, error: getOrgError, status: _orgStatus } = await useApiRequest(`/api/organization/${organizationSlug}`, {
+    { data: organization, error: getOrgError, status: _orgStatus } = await useApiRequest({ url: `/api/organization/${organizationSlug}`, options: {
         schema: Organization
-    }),
-    { refresh: refreshSolutions, status: _solStatus, data: solutions, error: getSolutionError } = await useApiRequest('/api/solution', {
+    } }),
+    { refresh: refreshSolutions, status: _solStatus, data: solutions, error: getSolutionError } = await useApiRequest({ url: '/api/solution', options: {
         schema: z.array(Solution),
         query: { organizationSlug }
-    }),
+    } }),
     solutionDeleteModalOpenState = ref(false),
     organizationDeleteModalOpenState = ref(false)
 
@@ -27,13 +27,13 @@ if (!organization.value) {
 if (getSolutionError.value) $eventBus.$emit('page-error', getSolutionError.value)
 
 const handleOrganizationDelete = async (organization: OrganizationType) => {
-        await useApiRequest(`/api/organization/${organization.slug}`, {
+        await useApiRequest({ url: `/api/organization/${organization.slug}`, options: {
             method: 'DELETE',
             schema: z.unknown(),
             showSuccessToast: true,
             successMessage: 'Organization deleted successfully',
             errorMessage: 'Failed to delete organization'
-        })
+        } })
         organizationDeleteModalOpenState.value = false
         router.push({ name: 'Home' })
     },
@@ -44,14 +44,14 @@ const handleOrganizationDelete = async (organization: OrganizationType) => {
         router.push({ name: 'Organization Users', params: { organizationslug: organization.slug } })
     },
     handleSolutionDelete = async (solution: SolutionType) => {
-        await useApiRequest(`/api/solution/${solution.slug}`, {
+        await useApiRequest({ url: `/api/solution/${solution.slug}`, options: {
             method: 'DELETE',
             schema: z.unknown(),
             body: { organizationSlug },
             showSuccessToast: true,
             successMessage: 'Solution deleted successfully',
             errorMessage: 'Failed to delete solution'
-        })
+        } })
         solutionDeleteModalOpenState.value = false
         await refreshSolutions()
     },

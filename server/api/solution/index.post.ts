@@ -14,7 +14,7 @@ const { id: organizationId, slug: organizationSlug } = Organization.innerType().
  * Creates a new solution and returns its slug
  */
 export default defineEventHandler(async (event) => {
-    const { description, name, organizationId, organizationSlug } = await validateEventBody(event, bodySchema),
+    const { description, name, organizationId, organizationSlug } = await validateEventBody({ event, schema: bodySchema }),
         session = await requireUserSession(event),
         organizationInteractor = createOrganizationInteractor({ event, session, organizationId, organizationSlug })
 

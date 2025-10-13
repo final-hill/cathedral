@@ -17,9 +17,9 @@ const props = withDefaults(defineProps<Props>(), {
     }),
     overlay = useOverlay(),
     confirmUnlinkModal = overlay.create(XConfirmModal, {}),
-    { data: slackChannels, refresh: refreshSlackChannels } = await useApiRequest(
-        `/api/solution/${props.solutionSlug}/slack-channels`,
-        {
+    { data: slackChannels, refresh: refreshSlackChannels } = await useApiRequest({
+        url: `/api/solution/${props.solutionSlug}/slack-channels`,
+        options: {
             schema: z.array(SlackChannelMeta),
             query: { organizationSlug: props.organizationSlug },
             transform: (data: SlackChannelMetaType[]): SlackChannelMetaType[] => {
@@ -32,10 +32,10 @@ const props = withDefaults(defineProps<Props>(), {
             },
             errorMessage: 'Failed to load Slack channels'
         }
-    ),
+    }),
     unlinkingChannels = ref<Set<string>>(new Set()),
     refreshingChannels = ref<Set<string>>(new Set()),
-    unlinkSlackChannel = async (channelId: string, teamId: string) => {
+    unlinkSlackChannel = async ({ channelId, teamId }: { channelId: string, teamId: string }) => {
         // Find the channel data to get the name for a better confirmation message
         const channelData = slackChannels.value?.find(ch => ch.channelId === channelId && ch.teamId === teamId),
             channelDisplayName = channelData?.channelName ? `#${channelData.channelName}` : channelId,
@@ -51,7 +51,7 @@ const props = withDefaults(defineProps<Props>(), {
         unlinkingChannels.value.add(channelKey)
 
         try {
-            await useApiRequest(`/api/solution/${props.solutionSlug}/slack-channels`, {
+            await useApiRequest({ url: `/api/solution/${props.solutionSlug}/slack-channels`, options: {
                 method: 'DELETE',
                 schema: z.unknown(),
                 body: {
@@ -62,19 +62,19 @@ const props = withDefaults(defineProps<Props>(), {
                 showSuccessToast: true,
                 successMessage: 'Slack channel unlinked successfully',
                 errorMessage: 'Failed to unlink Slack channel'
-            })
+            } })
 
             await refreshSlackChannels()
         } finally {
             unlinkingChannels.value.delete(channelKey)
         }
     },
-    refreshChannelNames = async (channelId: string, teamId: string) => {
+    refreshChannelNames = async ({ channelId, teamId }: { channelId: string, teamId: string }) => {
         const channelKey = `${channelId}:${teamId}`
         refreshingChannels.value.add(channelKey)
 
         try {
-            await useApiRequest(`/api/solution/${props.solutionSlug}/slack-channels/refresh`, {
+            await useApiRequest({ url: `/api/solution/${props.solutionSlug}/slack-channels/refresh`, options: {
                 method: 'POST',
                 schema: z.unknown(),
                 body: {
@@ -85,7 +85,7 @@ const props = withDefaults(defineProps<Props>(), {
                 showSuccessToast: true,
                 successMessage: 'Channel names refreshed successfully',
                 errorMessage: 'Failed to refresh channel names'
-            })
+            } })
 
             await refreshSlackChannels()
         } finally {
@@ -183,7 +183,7 @@ const props = withDefaults(defineProps<Props>(), {
                                     size="sm"
                                     loading={refreshingChannels.value.has(channelKey)}
                                     disabled={refreshingChannels.value.has(channelKey) || unlinkingChannels.value.has(channelKey)}
-                                    onClick={() => refreshChannelNames(channelId, teamId)}
+                                    onClick={() => refreshChannelNames({ channelId, teamId })}
                                     aria-label="Refresh channel names from Slack"
                                 />
                                 <UButton
@@ -193,7 +193,7 @@ const props = withDefaults(defineProps<Props>(), {
                                     size="sm"
                                     loading={unlinkingChannels.value.has(channelKey)}
                                     disabled={unlinkingChannels.value.has(channelKey) || refreshingChannels.value.has(channelKey)}
-                                    onClick={() => unlinkSlackChannel(channelId, teamId)}
+                                    onClick={() => unlinkSlackChannel({ channelId, teamId })}
                                     aria-label="Unlink channel from solution"
                                 />
                             </div>

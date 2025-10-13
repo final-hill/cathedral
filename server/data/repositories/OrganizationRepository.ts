@@ -107,7 +107,7 @@ export class OrganizationRepository extends Repository<OrganizationType> {
         })
 
         /** delete all requirements associated with the solution **/
-        const requirements = await this._getRequirementsInSolution(solution.id, props.deletedDate)
+        const requirements = await this._getRequirementsInSolution({ solutionId: solution.id, effectiveDate: props.deletedDate })
 
         for (const req of requirements) {
             em.create<reqModels.RequirementVersionsModel>(req.constructor as new () => reqModels.RequirementVersionsModel, {
@@ -146,7 +146,7 @@ export class OrganizationRepository extends Repository<OrganizationType> {
             })),
             mapper = new DataModelToDomainModel(),
             solutions = await Promise.all(solutionModels.map(async (sol) => {
-                const latestVersion = await sol.getLatestVersion(new Date(), modelQuery)
+                const latestVersion = await sol.getLatestVersion({ effectiveDate: new Date(), filter: modelQuery })
                 return req.Solution.parse(
                     await mapper.map({ ...sol, ...latestVersion })
                 )
@@ -185,7 +185,7 @@ export class OrganizationRepository extends Repository<OrganizationType> {
                 orderBy: { effectiveFrom: 'desc' }
             }),
             result = tempResult?.requirement,
-            latestVersion = await result?.getLatestVersion(new Date()) as reqModels.OrganizationVersionsModel
+            latestVersion = await result?.getLatestVersion({ effectiveDate: new Date() }) as reqModels.OrganizationVersionsModel
 
         if (!result || !latestVersion) throw new NotFoundException('Organization does not exist')
 
@@ -197,14 +197,15 @@ export class OrganizationRepository extends Repository<OrganizationType> {
         return req.Organization.parse(dataModel)
     }
 
-    /*
+    /**
      * Retrieves all requirements associated with a solution.
-     * @param solutionId - The id of the solution
-     * @param effectiveDate - The effective date to filter the requirements
-     * @param prefix - The prefix of the requirement id (optional)
+     * @param params - The parameters to filter the requirements
+     * @param params.solutionId - The id of the solution
+     * @param params.effectiveDate - The effective date to filter the requirements
+     * @param params.prefix - The prefix of the requirement id (optional)
      * @returns An array of the latest versions of requirements associated with the solution
      */
-    private async _getRequirementsInSolution(solutionId: string, effectiveDate: Date, filter: FilterQuery<Exclude<reqModels.RequirementVersionsModel, 'solution' | 'effectiveFrom'>> = {}): Promise<reqModels.RequirementVersionsModel[]> {
+    private async _getRequirementsInSolution({ solutionId, effectiveDate, filter = {} }: { solutionId: string, effectiveDate: Date, filter?: FilterQuery<Exclude<reqModels.RequirementVersionsModel, 'solution' | 'effectiveFrom'>> }): Promise<reqModels.RequirementVersionsModel[]> {
         const em = this._em,
             reqs = await em.find<reqModels.RequirementModel>(reqModels.RequirementModel, {
                 req_type: { $nin: [ReqType.ORGANIZATION, ReqType.SOLUTION] },
@@ -218,7 +219,7 @@ export class OrganizationRepository extends Repository<OrganizationType> {
                 }
             }),
             reqVersions = (await Promise.all(reqs.map(req =>
-                req.getLatestVersion(effectiveDate, filter)
+                req.getLatestVersion({ effectiveDate, filter })
             ))).filter(req => req != null)
 
         return reqVersions
@@ -279,21 +280,19 @@ export class OrganizationRepository extends Repository<OrganizationType> {
 
     /**
      * Updates a solution by slug
-     * @param props.slug - The slug of the solution to update
-     * @param props - The properties to update
+     * @param props - The properties to update the solution with (slug is used to identify the solution)
      * @throws {NotFoundException} If the solution does not belong to the organization
      */
-    async updateSolutionBySlug(slug: SolutionType['slug'], props: Pick<Partial<SolutionType>, 'name' | 'description'> & UpdationInfo): Promise<void> {
+    async updateSolutionBySlug({ slug, ...props }: { slug: SolutionType['slug'] } & Pick<Partial<SolutionType>, 'name' | 'description'> & UpdationInfo): Promise<void> {
         const em = this._em,
             organizationId = (await this.getOrganization()).id,
             solution = await this.getSolutionBySlug(slug),
             existingSolution = await em.findOne(reqModels.SolutionModel, {
                 id: solution.id
             }),
-            existingSolutionVersion = await existingSolution?.getLatestVersion(props.modifiedDate, {
-                organization: organizationId,
-                slug
-            } as FilterQuery<reqModels.SolutionVersionsModel>)
+            existingSolutionVersion = await existingSolution?.getLatestVersion({
+                effectiveDate: props.modifiedDate,
+                filter: { organization: organizationId, slug } as FilterQuery<reqModels.SolutionVersionsModel> })
 
         if (!existingSolutionVersion) throw new NotFoundException('Solution does not exist')
 

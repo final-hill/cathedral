@@ -14,8 +14,8 @@ const paramSchema = z.object({
     }, 'At least one of organizationId or organizationSlug should be provided')
 
 export default defineEventHandler(async (event) => {
-    const { reqType, id } = await validateEventParams(event, paramSchema),
-        { solutionSlug, organizationId, organizationSlug } = await validateEventQuery(event, querySchema),
+    const { reqType, id } = await validateEventParams({ event, schema: paramSchema }),
+        { solutionSlug, organizationId, organizationSlug } = await validateEventQuery({ event, schema: querySchema }),
         session = await requireUserSession(event),
         requirementInteractor = await createRequirementInteractor({
             event,

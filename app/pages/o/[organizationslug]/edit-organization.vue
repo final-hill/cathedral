@@ -8,9 +8,9 @@ useHead({ title: 'Edit Organization' })
 const router = useRouter(),
     { $eventBus } = useNuxtApp(),
     { organizationslug: organizationSlug } = useRoute('Edit Organization').params,
-    { data: organization, error: getOrgError } = await useApiRequest(`/api/organization/${organizationSlug}`, {
+    { data: organization, error: getOrgError } = await useApiRequest({ url: `/api/organization/${organizationSlug}`, options: {
         schema: Organization
-    })
+    } })
 
 if (!organization.value) {
     $eventBus.$emit('page-error', getOrgError.value)
@@ -33,14 +33,14 @@ const formState = reactive<FormSchema>({
     }),
     updateOrganization = async (data: FormSchema) => {
         try {
-            await useApiRequest(`/api/organization/${oldSlug}`, {
+            await useApiRequest({ url: `/api/organization/${oldSlug}`, options: {
                 method: 'PUT',
                 schema: Organization,
                 body: data,
                 showSuccessToast: true,
                 successMessage: 'Organization updated successfully',
                 errorMessage: 'Failed to update organization'
-            })
+            } })
 
             router.push({ name: 'Organization', params: { organizationslug: data.slug } })
         } catch (error) {

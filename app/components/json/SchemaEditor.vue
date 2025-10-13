@@ -74,12 +74,12 @@ const props = withDefaults(defineProps<{
     parseJsonSchemaToFields = (schema: JsonSchemaObject) => {
         if (schema.type === 'object' && schema.properties) {
             fields.value = Object.entries(schema.properties).map(([name, prop]: [string, JsonSchemaProperty]) =>
-                parseJsonSchemaProperty(name, prop, (schema.required || []))
+                parseJsonSchemaProperty({ name, prop, required: schema.required || [] })
             )
         } else
             fields.value = []
     },
-    parseJsonSchemaProperty = (name: string, prop: JsonSchemaProperty, required: string[] = []): JsonSchemaField => {
+    parseJsonSchemaProperty = ({ name, prop, required = [] }: { name: string, prop: JsonSchemaProperty, required?: string[] }): JsonSchemaField => {
         const fieldType = prop.type || 'string',
             validTypes = ['string', 'number', 'integer', 'boolean', 'object', 'array'] as const,
             type = validTypes.includes(fieldType as typeof validTypes[number]) ? fieldType as typeof validTypes[number] : 'string',
@@ -128,7 +128,7 @@ const props = withDefaults(defineProps<{
         // Recursively parse nested properties for object types
         if (prop.type === 'object' && prop.properties) {
             field.properties = Object.entries(prop.properties).map(([nestedName, nestedProp]: [string, JsonSchemaProperty]) =>
-                parseJsonSchemaProperty(nestedName, nestedProp, prop.required || [])
+                parseJsonSchemaProperty({ name: nestedName, prop: nestedProp, required: prop.required || [] })
             )
         }
 
@@ -225,7 +225,7 @@ const props = withDefaults(defineProps<{
         fields.value.splice(index, 1)
         generateAndEmitSchema()
     },
-    updateField = (index: number, updatedField: JsonSchemaField) => {
+    updateField = ({ index, updatedField }: { index: number, updatedField: JsonSchemaField }) => {
         fields.value[index] = updatedField
         generateAndEmitSchema()
     },
@@ -315,7 +315,7 @@ onMounted(() => {
             :field="field"
             :index="index"
             :disabled="disabled"
-            @update="(updatedField) => updateField(index, updatedField)"
+            @update="(updatedField) => updateField({ index, updatedField })"
             @remove="() => removeField(index)"
         />
 

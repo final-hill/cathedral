@@ -38,6 +38,7 @@ const enumToLabelValue = (enumObject: Record<string, string>) =>
             const isOptional = fieldType instanceof z.ZodOptional
                 || (fieldType instanceof z.ZodString
                     && fieldType._def.checks.reduce(
+                        // eslint-disable-next-line max-params
                         (acc, check) => check.kind === 'min' ? acc || check.value === 0 : acc,
                         !fieldType._def.checks.some(check => check.kind === 'min')
                     )

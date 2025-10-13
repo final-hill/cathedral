@@ -30,18 +30,19 @@ export class AppUserInteractor extends Interactor<AppUserType> {
      * Invite a user to the organization via Entra External ID
      * This method adds an existing Entra user to the appropriate groups
      *
-     * @param email - The email address of the user to invite
-     * @param organizationId - The ID of the organization to invite the user to
-     * @param role - The role to assign to the user in the organization
+     * @param params - The parameters for inviting the user
+     * @param params.email - The email address of the user to invite
+     * @param params.organizationId - The ID of the organization to invite the user to
+     * @param params.role - The role to assign to the user in the organization
      * @returns The ID of the Entra user
      * @throws {PermissionDeniedException} If the current user is not an admin of the organization
      * @throws {NotFoundException} If the user doesn't exist in Entra
      */
-    async inviteUserToOrganization(
-        email: string,
-        organizationId: string,
+    async inviteUserToOrganization({ email, organizationId, role }: {
+        email: string
+        organizationId: string
         role: AppRole
-    ): Promise<string> {
+    }): Promise<string> {
         this._permissionInteractor.assertOrganizationAdmin(organizationId)
 
         try {
@@ -71,19 +72,20 @@ export class AppUserInteractor extends Interactor<AppUserType> {
      * If the user exists in Entra, they will be added to the organization.
      * If the user doesn't exist, they will be invited via Entra External ID.
      *
-     * @param email - The email address of the user to add/invite
-     * @param organizationId - The ID of the organization
-     * @param role - The role to assign to the user in the organization
-     * @param redirectUrl - The URL to redirect users to after accepting the invitation
+     * @param params - The parameters for adding or inviting the user
+     * @param params.email - The email address of the user to add/invite
+     * @param params.organizationId - The ID of the organization
+     * @param params.role - The role to assign to the user in the organization
+     * @param params.redirectUrl - The URL to redirect users to after accepting the invitation
      * @returns Object containing user ID and whether an invitation was sent
      * @throws {PermissionDeniedException} If the current user is not an admin of the organization
      */
-    async addOrInviteUserToOrganization(
-        email: string,
-        organizationId: string,
-        role: AppRole,
+    async addOrInviteUserToOrganization({ email, organizationId, role, redirectUrl }: {
+        email: string
+        organizationId: string
+        role: AppRole
         redirectUrl: string
-    ): Promise<{ userId: string, invited: boolean }> {
+    }): Promise<{ userId: string, invited: boolean }> {
         this._permissionInteractor.assertOrganizationAdmin(organizationId)
 
         try {
@@ -91,7 +93,7 @@ export class AppUserInteractor extends Interactor<AppUserType> {
                 invited = false
 
             if (!entraUser) {
-                entraUser = await this._entraService.createExternalUserInvitation(email, redirectUrl)
+                entraUser = await this._entraService.createExternalUserInvitation({ email, redirectUrl })
                 invited = true
             }
 
@@ -113,13 +115,14 @@ export class AppUserInteractor extends Interactor<AppUserType> {
 
     /**
      * Get the app user by id from Entra External ID
-     * @param id - The Entra user id
-     * @param organizationId - Organization ID to check if user has access within that organization
+     * @param params - The parameters for getting the user
+     * @param params.id - The Entra user id
+     * @param params.organizationId - Organization ID to check if user has access within that organization
      * @returns The app user data from Entra
      * @throws {NotFoundException} If the user does not exist
      * @throws {PermissionDeniedException} If the current user doesn't have permission to access this user's information
      */
-    async getUserById(id: string, organizationId: string): Promise<AppUserType> {
+    async getUserById({ id, organizationId }: { id: string, organizationId: string }): Promise<AppUserType> {
         this._permissionInteractor.assertOrganizationReader(organizationId)
 
         try {
@@ -140,13 +143,14 @@ export class AppUserInteractor extends Interactor<AppUserType> {
 
     /**
      * Get the app user by email
-     * @param email - The email of the app user
-     * @param organizationId - Organization ID to check if user has access within that organization
+     * @param params - The parameters for getting the user
+     * @param params.email - The email of the app user
+     * @param params.organizationId - Organization ID to check if user has access within that organization
      * @returns The app user
      * @throws {NotFoundException} If the user does not exist
      * @throws {PermissionDeniedException} If the current user doesn't have permission to access this user's information
      */
-    async getUserByEmail(email: string, organizationId: string): Promise<AppUserType> {
+    async getUserByEmail({ email, organizationId }: { email: string, organizationId: string }): Promise<AppUserType> {
         this._permissionInteractor.assertOrganizationReader(organizationId)
 
         try {
@@ -167,12 +171,13 @@ export class AppUserInteractor extends Interactor<AppUserType> {
 
     /**
      * Check if the requested user exists
-     * @param email - The email of the user
-     * @param organizationId - Organization ID to check if user has access within that organization
+     * @param params - The parameters for checking the user existence
+     * @param params.email - The email of the user
+     * @param params.organizationId - Organization ID to check if user has access within that organization
      * @returns Whether the user exists
      * @throws {PermissionDeniedException} If the current user doesn't have permission to check this user's existence
      */
-    async hasUser(email: string, organizationId: string): Promise<boolean> {
+    async hasUser({ email, organizationId }: { email: string, organizationId: string }): Promise<boolean> {
         this._permissionInteractor.assertOrganizationReader(organizationId)
 
         try {

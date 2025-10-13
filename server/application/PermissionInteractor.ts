@@ -94,7 +94,7 @@ export class PermissionInteractor {
 
         // Dynamically update session groups if this is for the current user
         if (props.appUserId === this.userId)
-            await this.refreshSessionGroups(props.organizationId, props.role)
+            await this.refreshSessionGroups({ organizationId: props.organizationId, role: props.role })
     }
 
     /**
@@ -233,10 +233,11 @@ export class PermissionInteractor {
     /**
      * Refresh session permissions by adding the new organization role to the current session
      * This ensures permission checks work immediately after organization creation
-     * @param organizationId The organization ID that was just created
-     * @param role The role assigned to the current user
+     * @param params - The parameters for refreshing session groups
+     * @param params.organizationId - The organization ID that was just created
+     * @param params.role - The role assigned to the current user
      */
-    private async refreshSessionGroups(organizationId: string, role: AppRole): Promise<void> {
+    private async refreshSessionGroups({ organizationId, role }: { organizationId: string, role: AppRole }): Promise<void> {
         const existingOrgRole = this._session.user!.organizationRoles.find(
             orgRole => orgRole.orgId === organizationId
         )

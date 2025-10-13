@@ -33,16 +33,17 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
     /**
      * Get all Slack workspace integrations for an organization
      *
-     * @param organizationId - The organization ID
-     * @param organizationName - The organization name (for validation)
+     * @param params - Parameters object
+     * @param params.organizationId - The organization ID
+     * @param params.organizationName - The organization name (for validation)
      * @throws NotFoundException if organization not found
      * @throws PermissionException if user is not an organization reader
      * @returns Array of workspace integrations
      */
-    async getOrganizationWorkspaces(organizationId: string, organizationName: string): Promise<SlackWorkspaceMetaPublicType[]> {
+    async getOrganizationWorkspaces({ organizationId, organizationName }: { organizationId: string, organizationName: string }): Promise<SlackWorkspaceMetaPublicType[]> {
         this._permissionInteractor.assertOrganizationReader(organizationId)
 
-        const workspaces = await this.repository.getWorkspacesByOrganization(organizationId, organizationName),
+        const workspaces = await this.repository.getWorkspacesByOrganization({ organizationId, organizationName }),
             enrichedWorkspaces = await Promise.all(
                 workspaces.map(async (workspace) => {
                     try {
@@ -91,14 +92,15 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
     /**
      * Remove a Slack workspace integration from an organization
      *
-     * @param organizationId - The organization ID
-     * @param teamId - The Slack team/workspace ID
+     * @param params - Parameters object
+     * @param params.organizationId - The organization ID
+     * @param params.teamId - The Slack team/workspace ID
      * @throws { PermissionException } if user lacks contributor access
      */
-    async removeWorkspaceFromOrganization(organizationId: string, teamId: string) {
+    async removeWorkspaceFromOrganization({ organizationId, teamId }: { organizationId: string, teamId: string }) {
         this._permissionInteractor.assertOrganizationContributor(organizationId)
 
-        return await this.repository.removeWorkspace(organizationId, teamId)
+        return await this.repository.removeWorkspace({ organizationId, teamId })
             .catch(handleDomainException)
     }
 
@@ -122,15 +124,19 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
     /**
      * Update workspace metadata (e.g., team name, bot user info)
      *
-     * @param teamId - The Slack team/workspace ID
-     * @param updates - Metadata updates
+     * @param params - Parameters object
+     * @param params.teamId - The Slack team/workspace ID
+     * @param params.updates - Metadata updates
      * @throws { NotFoundException } if workspace not found
      * @throws { PermissionException } if user lacks organization contributor access
      */
-    async updateWorkspaceMetadata(teamId: string, updates: {
-        teamName?: string
-        botUserId?: string
-        lastMetadataRefresh?: Date
+    async updateWorkspaceMetadata({ teamId, updates }: {
+        teamId: string
+        updates: {
+            teamName?: string
+            botUserId?: string
+            lastMetadataRefresh?: Date
+        }
     }) {
         const workspaceInfo = await this.repository.getWorkspaceByTeamId(teamId)
 
@@ -138,10 +144,10 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
 
         this._permissionInteractor.assertOrganizationContributor(workspaceInfo.organization.id)
 
-        return await this.repository.updateWorkspaceMetadata(teamId, {
+        return await this.repository.updateWorkspaceMetadata({ teamId, updates: {
             ...updates,
             lastMetadataRefresh: updates.lastMetadataRefresh || new Date()
-        })
+        } })
     }
 
     /**
@@ -164,15 +170,15 @@ export class SlackWorkspaceInteractor extends Interactor<SlackWorkspaceMetaType>
         this._permissionInteractor.assertOrganizationContributor(workspaceConfig.organization.id)
 
         const config = useRuntimeConfig(),
-            slackService = new SlackService(workspaceConfig.accessToken, config.slackSigningSecret),
+            slackService = new SlackService({ token: workspaceConfig.accessToken, slackSigningSecret: config.slackSigningSecret }),
 
             teamInfo = await slackService.getTeamInfo(teamId)
 
         if (teamInfo && teamInfo.name) {
-            await this.repository.updateWorkspaceMetadata(teamId, {
+            await this.repository.updateWorkspaceMetadata({ teamId, updates: {
                 teamName: teamInfo.name,
                 lastMetadataRefresh: new Date()
-            })
+            } })
         }
 
         const updatedConfig = await this.repository.getWorkspaceConfiguration(teamId)

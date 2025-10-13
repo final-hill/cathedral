@@ -65,10 +65,10 @@ interface ApiRequestOptions<TSchema extends z.ZodTypeAny> extends Omit<UseFetchO
  *   errorMessage: 'Failed to load personnel data'
  * })
  */
-export function useApiRequest<TSchema extends z.ZodTypeAny>(
-    url: string | Request | Ref<string | Request> | (() => string | Request),
+export function useApiRequest<TSchema extends z.ZodTypeAny>({ url, options }: {
+    url: string | Request | Ref<string | Request> | (() => string | Request)
     options: ApiRequestOptions<TSchema>
-) {
+}) {
     const toast = useToast(),
         {
             schema,

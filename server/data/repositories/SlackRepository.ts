@@ -37,7 +37,7 @@ export class SlackRepository extends Repository<unknown> {
             return null
 
         const solutionModel = channelMeta.solution,
-            latestVersion = await solutionModel.getLatestVersion(new Date()) as SolutionVersionsModel | null
+            latestVersion = await solutionModel.getLatestVersion({ effectiveDate: new Date() }) as SolutionVersionsModel | null
 
         if (!latestVersion?.organization)
             return null

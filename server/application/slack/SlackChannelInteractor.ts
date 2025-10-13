@@ -125,13 +125,18 @@ export class SlackChannelInteractor extends Interactor<SlackChannelMetaType> {
     /**
      * Unlink a Slack channel from a Cathedral solution
      *
-     * @param organizationId - The organization ID
-     * @param channelId - The Slack channel ID
-     * @param teamId - The Slack team ID
+     * @param params - The parameters for unlinking the channel
+     * @param params.organizationId - The organization ID
+     * @param params.channelId - The Slack channel ID
+     * @param params.teamId - The Slack team ID
      * @throws If the user does not have contributor access
      * @throws If the channel is not linked to any solution
      */
-    async unlinkChannelFromSolution(organizationId: string, channelId: string, teamId: string): Promise<void> {
+    async unlinkChannelFromSolution({ organizationId, channelId, teamId }: {
+        organizationId: string
+        channelId: string
+        teamId: string
+    }): Promise<void> {
         this._permissionInteractor.assertOrganizationContributor(organizationId)
 
         // Verify the channel is linked before unlinking
@@ -148,12 +153,13 @@ export class SlackChannelInteractor extends Interactor<SlackChannelMetaType> {
     /**
      * Get all Slack channels linked to a solution
      *
-     * @param organizationId - The organization ID
-     * @param solutionId - The solution ID
+     * @param params - The parameters for fetching channels
+     * @param params.organizationId - The organization ID
+     * @param params.solutionId - The solution ID
      * @throws If the user does not have read access to the organization
      * @returns Array of channel metadata with staleness information
      */
-    async getChannelsForSolution(organizationId: string, solutionId: string): Promise<SlackChannelMetaType[]> {
+    async getChannelsForSolution({ organizationId, solutionId }: { organizationId: string, solutionId: string }): Promise<SlackChannelMetaType[]> {
         this._permissionInteractor.assertOrganizationReader(organizationId)
 
         const channels = await this.repository.getChannelsForSolution(solutionId)
@@ -163,13 +169,14 @@ export class SlackChannelInteractor extends Interactor<SlackChannelMetaType> {
     /**
      * Refresh Slack channel and team names from Slack API
      *
-     * @param organizationId - The organization ID
-     * @param channelId - The Slack channel ID
-     * @param teamId - The Slack team ID
+     * @param params - The parameters for refreshing channel names
+     * @param params.organizationId - The organization ID
+     * @param params.channelId - The Slack channel ID
+     * @param params.teamId - The Slack team ID
      * @throws If the user does not have contributor access
      * @returns Updated channel metadata with staleness information
      */
-    async refreshChannelNames(organizationId: string, channelId: string, teamId: string): Promise<SlackChannelMetaType | null> {
+    async refreshChannelNames({ organizationId, channelId, teamId }: { organizationId: string, channelId: string, teamId: string }): Promise<SlackChannelMetaType | null> {
         this._permissionInteractor.assertOrganizationContributor(organizationId)
 
         // Fetch fresh names from Slack API
@@ -196,22 +203,24 @@ export class SlackChannelInteractor extends Interactor<SlackChannelMetaType> {
     /**
      * Get channel configuration for message processing
      *
-     * @param channelId - The Slack channel ID
-     * @param teamId - The Slack team ID
+     * @param params - The parameters for fetching channel configuration
+     * @param params.channelId - The Slack channel ID
+     * @param params.teamId - The Slack team ID
      * @returns Channel configuration or null if not linked
      */
-    async getChannelConfiguration(channelId: string, teamId: string) {
+    async getChannelConfiguration({ channelId, teamId }: { channelId: string, teamId: string }) {
         return await this.repository.getChannelConfiguration({ channelId, teamId })
     }
 
     /**
      * Get basic channel metadata
      *
-     * @param channelId - The Slack channel ID
-     * @param teamId - The Slack team ID
+     * @param params - The parameters for fetching channel metadata
+     * @param params.channelId - The Slack channel ID
+     * @param params.teamId - The Slack team ID
      * @returns Basic channel metadata or null if not found
      */
-    async getChannelMeta(channelId: string, teamId: string) {
+    async getChannelMeta({ channelId, teamId }: { channelId: string, teamId: string }) {
         return await this.repository.getChannelMeta({ channelId, teamId })
     }
 }

@@ -166,13 +166,14 @@ export class OrganizationCollectionInteractor extends Interactor<OrganizationTyp
     /**
      * Update the organization with the given properties.
      *
-     * @param slug The slug of the organization to update
-     * @param props The properties to update
+     * @param params - The parameters for updating the organization
+     * @param params.slug The slug of the organization to update
+     * @param params.props The properties to update
      * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
      * @throws {NotFoundException} If the organization does not exist
      * @throws {DuplicateEntityException} If an organization already exists with the new name
      */
-    async updateOrganizationBySlug(slug: OrganizationType['slug'], props: Pick<Partial<OrganizationType>, 'name' | 'description'>): Promise<void> {
+    async updateOrganizationBySlug({ slug, ...props }: { slug: OrganizationType['slug'] } & Pick<Partial<OrganizationType>, 'name' | 'description'>): Promise<void> {
         const currentUserId = this._permissionInteractor.userId,
             existingOrg = (await this.repository.findOrganizations({ slug }))[0]
 
@@ -186,7 +187,8 @@ export class OrganizationCollectionInteractor extends Interactor<OrganizationTyp
 
         if (existingSlugOrg && existingSlugOrg.id !== existingOrg.id) throw new DuplicateEntityException('Organization already exists with that name')
 
-        await this.repository.updateOrganizationById(existingOrg.id, {
+        await this.repository.updateOrganizationById({
+            id: existingOrg.id,
             modifiedById: currentUserId,
             modifiedDate: new Date(),
             ...props

@@ -16,7 +16,7 @@ const { verify } = jwt,
  * Link a Slack user to a Cathedral user after authentication
  */
 export default defineEventHandler(async (event) => {
-    const { slackUserId, teamId, token } = await validateEventBody(event, bodySchema),
+    const { slackUserId, teamId, token } = await validateEventBody({ event, schema: bodySchema }),
         session = await requireUserSession(event),
         config = useRuntimeConfig(),
         em = event.context.em,
@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
         slackUserInteractor = new SlackUserInteractor({
             repository: new SlackRepository({ em }),
             permissionInteractor: userPermissionInteractor,
-            slackService: new SlackService(config.slackBotToken, config.slackSigningSecret)
+            slackService: new SlackService({ token: config.slackBotToken, slackSigningSecret: config.slackSigningSecret })
         }),
         payload = verify(token, config.slackLinkSecret)
 

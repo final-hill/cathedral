@@ -37,10 +37,10 @@ const title = `${snakeCaseToPascalCase(reqType)} Details`
 useHead({ title })
 definePageMeta({ middleware: 'auth' })
 
-const { data: requirement, status } = await useApiRequest(`/api/requirements/${actualReqType}/${id}`, {
+const { data: requirement, status } = await useApiRequest({ url: `/api/requirements/${actualReqType}/${id}`, options: {
         query: { solutionSlug, organizationSlug },
         schema: RequirementSchema
-    }),
+    } }),
     innerSchema = RequirementSchema instanceof z.ZodEffects
         ? RequirementSchema.innerType()
         : RequirementSchema,

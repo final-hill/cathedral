@@ -10,7 +10,7 @@ const querySchema = z.object({
  * Get Slack workspace integrations for an organization
  */
 export default defineEventHandler(async (event) => {
-    const { organizationSlug } = await validateEventQuery(event, querySchema),
+    const { organizationSlug } = await validateEventQuery({ event, schema: querySchema }),
         session = await requireUserSession(event),
         em = event.context.em,
         entraService = createEntraService(),
@@ -22,6 +22,6 @@ export default defineEventHandler(async (event) => {
             permissionInteractor
         })
 
-    return await slackWorkspaceInteractor.getOrganizationWorkspaces(organization.id, organization.name)
+    return await slackWorkspaceInteractor.getOrganizationWorkspaces({ organizationId: organization.id, organizationName: organization.name })
         .catch(handleDomainException)
 })

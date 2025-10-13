@@ -12,13 +12,13 @@ const route = useRoute(),
         _pegs: string
         id: string
     },
-    { data: requirement } = await useApiRequest(`/api/requirements/${ReqType.INTERFACE}/${id}`, {
+    { data: requirement } = await useApiRequest({ url: `/api/requirements/${ReqType.INTERFACE}/${id}`, options: {
         query: {
             organizationSlug: organizationslug,
             solutionSlug: solutionslug
         },
         schema: Interface
-    }),
+    } }),
     innerSchema = Interface instanceof z.ZodEffects
         ? Interface.innerType()
         : Interface,

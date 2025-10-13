@@ -52,8 +52,8 @@ type ConfigResolver = (event: H3Event) => OAuthEntraExternalIDConfig | Promise<O
 
 interface ExtendedOAuthConfig<T, U> {
     config: T | ConfigResolver
-    onSuccess: (event: H3Event, result: U) => Promise<unknown> | unknown
-    onError?: (event: H3Event, error: unknown) => Promise<unknown> | unknown
+    onSuccess: (parameters: { event: H3Event, result: U }) => Promise<unknown> | unknown
+    onError?: (parameters: { event: H3Event, error: unknown }) => Promise<unknown> | unknown
 }
 
 interface EntraExternalIDUser {
@@ -88,7 +88,7 @@ export function defineOAuthEntraExternalIDEventHandler({
                 data: query
             })
             if (!onError) throw error
-            return onError(event, error)
+            return onError({ event, error })
         }
 
         // Resolve config - it can be a function or a static object
@@ -106,7 +106,7 @@ export function defineOAuthEntraExternalIDEventHandler({
                 message: `Missing required configuration for Entra External ID: ${missingKeys.join(', ')} are required`
             })
             if (!onError) throw error
-            return onError(event, error)
+            return onError({ event, error })
         }
 
         const tenant = resolvedConfig.tenant,
@@ -161,7 +161,7 @@ export function defineOAuthEntraExternalIDEventHandler({
             })
 
             if (!onError) throw tokenExchangeError
-            return onError(event, tokenExchangeError)
+            return onError({ event, error: tokenExchangeError })
         }
 
         if (tokens.error) {
@@ -172,7 +172,7 @@ export function defineOAuthEntraExternalIDEventHandler({
             })
 
             if (!onError) throw error
-            return onError(event, error)
+            return onError({ event, error })
         }
 
         const accessToken = tokens.access_token
@@ -196,12 +196,12 @@ export function defineOAuthEntraExternalIDEventHandler({
                 data: user
             })
             if (!onError) throw error
-            return onError(event, error)
+            return onError({ event, error })
         }
 
-        return onSuccess(event, {
+        return onSuccess({ event, result: {
             user: user as EntraExternalIDUser,
             tokens: tokens as EntraExternalIDTokens
-        })
+        } })
     })
 }

@@ -4,7 +4,7 @@ import { NaturalLanguageToRequirementService } from '~~/server/data/services/Nat
 import { slackSlashCommandSchema } from '~~/server/data/slack-zod-schemas'
 
 const config = useRuntimeConfig(),
-    slackService = new SlackService(config.slackBotToken, config.slackSigningSecret),
+    slackService = new SlackService({ token: config.slackBotToken, slackSigningSecret: config.slackSigningSecret }),
     nlrService = new NaturalLanguageToRequirementService({
         apiKey: config.azureOpenaiApiKey,
         apiVersion: config.azureOpenaiApiVersion,
@@ -20,10 +20,10 @@ export default defineEventHandler(async (event) => {
     const headers = event.headers,
         rawBody = (await readRawBody(event))!
 
-    slackService.assertValidSlackRequest(headers, rawBody)
+    slackService.assertValidSlackRequest({ headers, rawBody })
 
-    const body = await validateEventBody(event, slackSlashCommandSchema),
-        userSession = await resolveSlackUserSession(event, body.user_id, body.team_id),
+    const body = await validateEventBody({ event, schema: slackSlashCommandSchema }),
+        userSession = await resolveSlackUserSession({ event, slackUserId: body.user_id, teamId: body.team_id }),
         // For most slash commands, we need a valid user session
         // However, some commands like help and link-user can work without authentication
         requiresAuth = !['cathedral', 'cathedral-help', 'cathedral-link-user'].includes(body.command)

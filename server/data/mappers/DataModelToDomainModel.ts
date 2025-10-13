@@ -20,7 +20,7 @@ const objectSchema = z.object({
  * Creates a domain EntityReference from a RequirementModel
  */
 export async function createDomainReferenceFromModel(model: RequirementModel) {
-    const latestVersion = await model.getLatestVersion(new Date()),
+    const latestVersion = await model.getLatestVersion({ effectiveDate: new Date() }),
         reqType = resolveReqTypeFromModel(model),
         reqTypePascal = snakeCaseToPascalCase(reqType),
         refSchema = refs[`${reqTypePascal}Reference` as keyof typeof refs]
@@ -79,6 +79,7 @@ export class DataModelToDomainModel<
                 else if (value == null) return [key, undefined] // convert null to undefined
                 else return [key, value]
             })),
+            // eslint-disable-next-line max-params
             newProps = entries.reduce((acc, [key, value]) => {
                 if (value !== undefined) acc[key as string] = value
                 return acc

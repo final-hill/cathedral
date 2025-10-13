@@ -7,7 +7,7 @@ const { id: organizationIdSchema, slug: organizationSlugSchema } = Organization.
     })
 
 export default defineEventHandler(async (event) => {
-    const { id } = await validateEventParams(event, paramSchema),
+    const { id } = await validateEventParams({ event, schema: paramSchema }),
         bodySchema = z.object({
             solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
             organizationId: organizationIdSchema,
@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
         }).refine((value) => {
             return value.organizationId !== undefined || value.organizationSlug !== undefined
         }, 'At least one of organizationId or organizationSlug should be provided'),
-        { solutionSlug, organizationId, organizationSlug } = await validateEventBody(event, bodySchema),
+        { solutionSlug, organizationId, organizationSlug } = await validateEventBody({ event, schema: bodySchema }),
         session = await requireUserSession(event),
         requirementInteractor = await createRequirementInteractor({
             event,

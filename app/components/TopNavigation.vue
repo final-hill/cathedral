@@ -9,6 +9,7 @@ const { loggedIn, user, session: _session, fetch: _fetch, clear } = useUserSessi
 
         return [
             { label: 'Home', to: '/' },
+            // eslint-disable-next-line max-params
             ...crumbs.map((crumb, index) => {
                 return {
                     label: deSlugify(crumb),

@@ -7,11 +7,15 @@ import { SlackRepository } from '../data/repositories'
  * Resolves a Slack user to a Cathedral user session
  * This should be called at the API boundary to establish user identity early
  */
-export async function resolveSlackUserSession(
-    event: H3Event,
-    slackUserId: string,
+export async function resolveSlackUserSession({
+    event,
+    slackUserId,
+    teamId
+}: {
+    event: H3Event
+    slackUserId: string
     teamId: string
-): Promise<UserSession | null> {
+}): Promise<UserSession | null> {
     try {
         const slackRepository = new SlackRepository({ em: event.context.em }),
             cathedralUserId = await slackRepository.getCathedralUserIdForSlackUser({

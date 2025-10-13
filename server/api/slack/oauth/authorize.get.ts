@@ -11,7 +11,7 @@ const querySchema = z.object({
  */
 export default defineEventHandler(async (event) => {
     const config = useRuntimeConfig(),
-        { organizationSlug } = await validateEventQuery(event, querySchema),
+        { organizationSlug } = await validateEventQuery({ event, schema: querySchema }),
         state = SlackService.generateOAuthState({
             organizationSlug
         }),

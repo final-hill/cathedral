@@ -9,7 +9,7 @@ export default defineOAuthEntraExternalIDEventHandler({
             scope: ENTRA_OAUTH_SCOPES
         }
     },
-    async onSuccess(event, { user, tokens }) {
+    async onSuccess({ event, result: { user, tokens } }) {
         // Parse group memberships from ID token claims (required with optional claims)
         const entraService = createEntraService()
 
@@ -57,7 +57,7 @@ export default defineOAuthEntraExternalIDEventHandler({
             return sendRedirect(event, '/auth/callback')
         }
     },
-    async onError(event, error) {
+    async onError({ event, error }) {
         console.error('OAuth error:', error)
         const message = error instanceof Error ? error.message : String(error)
 

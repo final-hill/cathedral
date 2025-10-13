@@ -6,6 +6,7 @@ import type { Mapper } from '#shared/types/Mapper'
  */
 export class ReqQueryToModelQuery implements Mapper<Partial<RequirementType>, Record<string, unknown>> {
     async map(query: Partial<RequirementType>): Promise<Record<string, unknown>> {
+        // eslint-disable-next-line max-params
         return Object.entries(query).reduce((acc, [key, value]: [string, unknown]) => {
             if (['createdBy', 'creationDate', 'id'].includes(key)) return acc
             else if (value === undefined) return acc

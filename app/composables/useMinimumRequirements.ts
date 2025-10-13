@@ -99,6 +99,7 @@ export function useMinimumRequirements() {
                     }
                 })
 
+            // eslint-disable-next-line max-params
             return enrichedMissing.reduce((acc: Record<string, { reqType: ReqType, label: string, section: string, code: string, path: string }[]>, requirement) => {
                 if (!acc[requirement.section])
                     acc[requirement.section] = []

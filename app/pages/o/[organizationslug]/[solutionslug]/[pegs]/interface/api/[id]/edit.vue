@@ -22,21 +22,21 @@ const route = useRoute(),
         pegs: string
         id: string
     },
-    { data: interfaceData } = await useApiRequest(`/api/requirements/interface/${id}`, {
+    { data: interfaceData } = await useApiRequest({ url: `/api/requirements/interface/${id}`, options: {
         query: {
             solutionSlug: solutionslug,
             organizationSlug: organizationslug
         },
         schema: Interface
-    }),
-    { data: operations, refresh: refreshOperations } = await useApiRequest(`/api/requirements/${ReqType.INTERFACE_OPERATION}`, {
+    } }),
+    { data: operations, refresh: refreshOperations } = await useApiRequest({ url: `/api/requirements/${ReqType.INTERFACE_OPERATION}`, options: {
         query: {
             organizationSlug: organizationslug,
             solutionSlug: solutionslug,
             interface: id
         },
         schema: z.array(InterfaceOperation)
-    }),
+    } }),
     goBack = () => {
         router.push(`/o/${organizationslug}/${solutionslug}/${pegs}/interface/api/${id}`)
     }

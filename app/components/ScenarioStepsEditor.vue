@@ -4,7 +4,7 @@
             v-model="internalMainSteps"
             :disabled="disabled"
             @validation-ready="handleMainValidationReady"
-            @add-extension-for-step="handleAddExtensionForStep"
+            @add-extension-for-step="(stepId, stepNumber) => handleAddExtensionForStep({ stepId, stepNumber })"
         />
 
         <ExtensionScenariosEditor
@@ -65,10 +65,10 @@ function handleExtensionsValidationReady(validateFn: () => Promise<{ isValid: bo
     extensionsValidationFn.value = validateFn
 }
 
-function handleAddExtensionForStep(stepId: string, stepNumber: string) {
+function handleAddExtensionForStep({ stepId: _, stepNumber }: { stepId: string, stepNumber: string }) {
     // Create an extension group for this step (e.g., "3a" for step 3)
     if (extensionEditor.value)
-        extensionEditor.value.addExtensionGroupForStep(stepNumber, `Extension for step ${stepNumber}`)
+        extensionEditor.value.addExtensionGroupForStep({ stepNumber, title: `Extension for step ${stepNumber}` })
 }
 
 // Combined validation

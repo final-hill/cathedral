@@ -9,8 +9,8 @@ const paramSchema = Organization.innerType().pick({ slug: true }),
  * Updates an organization by id.
  */
 export default defineEventHandler(async (event) => {
-    const { slug } = await validateEventParams(event, paramSchema),
-        body = await validateEventBody(event, bodySchema),
+    const { slug } = await validateEventParams({ event, schema: paramSchema }),
+        body = await validateEventBody({ event, schema: bodySchema }),
         session = await requireUserSession(event),
         entraService = createEntraService(),
         permissionInteractor = new PermissionInteractor({ event, session, entraService }),
@@ -20,5 +20,5 @@ export default defineEventHandler(async (event) => {
             entraService
         })
 
-    return await organizationInteractor.updateOrganizationBySlug(slug, body).catch(handleDomainException)
+    return await organizationInteractor.updateOrganizationBySlug({ slug, ...body }).catch(handleDomainException)
 })

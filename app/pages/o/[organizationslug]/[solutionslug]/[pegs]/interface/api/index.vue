@@ -15,13 +15,13 @@ const route = useRoute(),
         solutionslug: string
         pegs: string
     },
-    { data: allInterfaces, refresh, status } = await useApiRequest(`/api/requirements/${ReqType.INTERFACE}`, {
+    { data: allInterfaces, refresh, status } = await useApiRequest({ url: `/api/requirements/${ReqType.INTERFACE}`, options: {
         query: {
             solutionSlug: solutionslug,
             organizationSlug: organizationslug
         },
         schema: z.array(Interface)
-    }),
+    } }),
     apiInterfaces = computed(() => {
         return allInterfaces.value?.filter((interface_: RequirementType & { interfaceType?: InterfaceType }) =>
             interface_.interfaceType === InterfaceType.API

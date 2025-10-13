@@ -9,7 +9,7 @@ const { id: organizationId, slug: organizationSlug } = Organization.innerType().
     appConfig = useRuntimeConfig()
 
 export default defineEventHandler(async (event) => {
-    const { reqType } = await validateEventParams(event, paramSchema),
+    const { reqType } = await validateEventParams({ event, schema: paramSchema }),
         ReqPascal = snakeCaseToPascalCase(reqType) as keyof typeof req,
         ReqCons = req[ReqPascal] as typeof req.Requirement,
         innerSchema = (ReqCons as unknown) instanceof z.ZodEffects
@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
         }).refine((value) => {
             return value.organizationId !== undefined || value.organizationSlug !== undefined
         }, 'At least one of organizationId or organizationSlug should be provided'),
-        { solutionSlug, organizationId: orgId, organizationSlug: orgSlug, ...reqProps } = await validateEventBody(event, bodySchema),
+        { solutionSlug, organizationId: orgId, organizationSlug: orgSlug, ...reqProps } = await validateEventBody({ event, schema: bodySchema }),
         session = await requireUserSession(event),
         requirementInteractor = await createRequirementInteractor({
             event,

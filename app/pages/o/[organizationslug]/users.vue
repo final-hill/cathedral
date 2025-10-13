@@ -33,11 +33,11 @@ const { $eventBus } = useNuxtApp(),
     editModalItem = ref<SchemaType | null>(null),
     toast = useToast(),
     { organizationslug: organizationSlug } = useRoute('Organization Users').params,
-    { data: users, status, refresh, error: getUserError } = await useApiRequest('/api/appusers', {
+    { data: users, status, refresh, error: getUserError } = await useApiRequest({ url: '/api/appusers', options: {
         schema: z.array(AppUserWithRoleAndSlackDto),
         query: { organizationSlug, includeSlack: true },
         errorMessage: 'Failed to load users'
-    })
+    } })
 
 if (getUserError.value) $eventBus.$emit('page-error', getUserError.value)
 
@@ -173,14 +173,14 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
                 }).result
 
                 if (result) {
-                    await useApiRequest(`/api/appusers/${item.id}`, {
+                    await useApiRequest({ url: `/api/appusers/${item.id}`, options: {
                         method: 'DELETE',
                         schema: z.unknown(),
                         body: { organizationSlug },
                         showSuccessToast: true,
                         successMessage: 'User removed successfully',
                         errorMessage: 'Failed to remove user'
-                    })
+                    } })
                     refresh()
                 }
             }
@@ -194,14 +194,14 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
         right: ['Actions']
     }),
     expanded = ref<Record<string, boolean>>({}),
-    unlinkSlackUser = async (slackUserId: string, teamId: string, teamName: string) => {
+    unlinkSlackUser = async ({ slackUserId, teamId, teamName }: { slackUserId: string, teamId: string, teamName: string }) => {
         const result = await confirmUnlinkSlackModal.open({
             title: `Are you sure you want to unlink the Slack account from "${teamName}"? The user will need to re-link their account to perform interactions from Slack.`
         }).result
 
         if (!result) return
 
-        await useApiRequest('/api/slack/unlink-user', {
+        await useApiRequest({ url: '/api/slack/unlink-user', options: {
             method: 'POST',
             schema: z.unknown(),
             body: {
@@ -211,12 +211,12 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
             showSuccessToast: true,
             successMessage: 'Slack account has been unlinked successfully.',
             errorMessage: 'Failed to unlink Slack user'
-        })
+        } })
 
         refresh()
     },
     addUser = async (data: z.infer<typeof createSchema>) => {
-        const { data: response } = await useApiRequest(`/api/appusers/`, {
+        const { data: response } = await useApiRequest({ url: `/api/appusers/`, options: {
             method: 'POST',
             schema: z.object({
                 invited: z.boolean().optional()
@@ -227,7 +227,7 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
                 role: data.role
             },
             errorMessage: 'Failed to add/invite user'
-        })
+        } })
 
         refresh()
 
@@ -249,7 +249,7 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
         refresh()
     },
     updateUser = async (data: z.infer<typeof editSchema>) => {
-        await useApiRequest(`/api/appusers/${data.id}`, {
+        await useApiRequest({ url: `/api/appusers/${data.id}`, options: {
             method: 'PUT',
             schema: z.unknown(),
             body: {
@@ -259,7 +259,7 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
             showSuccessToast: true,
             successMessage: 'User updated successfully',
             errorMessage: 'Failed to update user'
-        })
+        } })
         refresh()
 
         closeEdit()
@@ -344,7 +344,11 @@ const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
                                     variant="ghost"
                                     size="xs"
                                     icon="i-lucide-unlink"
-                                    @click="unlinkSlackUser(assoc.slackUserId, assoc.teamId, assoc.teamName)"
+                                    @click="unlinkSlackUser({
+                                        slackUserId: assoc.slackUserId,
+                                        teamId: assoc.teamId,
+                                        teamName: assoc.teamName
+                                    })"
                                 >
                                     Unlink
                                 </UButton>

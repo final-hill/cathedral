@@ -15,10 +15,10 @@ const route = useRoute(),
 useHead({ title })
 definePageMeta({ middleware: 'auth' })
 
-const { data: requirement, status, error } = await useApiRequest(`/api/requirements/${ReqType.USE_CASE}/${id}`, {
+const { data: requirement, status, error } = await useApiRequest({ url: `/api/requirements/${ReqType.USE_CASE}/${id}`, options: {
     query: { solutionSlug, organizationSlug },
     schema: UseCase
-})
+} })
 
 if (error.value) {
     throw createError({

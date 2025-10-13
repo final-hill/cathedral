@@ -13,13 +13,13 @@ const route = useRoute(),
         solutionslug: string
         pegs: string
     },
-    { data: requirements, refresh, status } = await useApiRequest(`/api/requirements/${ReqType.INTERFACE_SCHEMA}`, {
+    { data: requirements, refresh, status } = await useApiRequest({ url: `/api/requirements/${ReqType.INTERFACE_SCHEMA}`, options: {
         query: {
             solutionSlug: solutionslug,
             organizationSlug: organizationslug
         },
         schema: z.array(InterfaceSchema)
-    })
+    } })
 </script>
 
 <template>
