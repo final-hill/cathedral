@@ -1,7 +1,6 @@
 // This file is referenced by the application as well as the migration CLI
 // The CLI use case requires the direct and indirect imports to have a .js extension.
 // Additionally, the imports can not use '~'
-import dotenv from 'dotenv'
 import { MikroORM, PopulateHint, PostgreSqlDriver } from '@mikro-orm/postgresql'
 import type { Options } from '@mikro-orm/postgresql'
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection'
@@ -10,7 +9,6 @@ import * as entities from './server/data/models/requirements/index.js'
 import * as appEntities from './server/data/models/application/index.js'
 import * as endorsementEntities from './server/data/models/endorsement/index.js'
 
-dotenv.config()
 const config: Options = {
     extensions: [Migrator],
     driver: PostgreSqlDriver,

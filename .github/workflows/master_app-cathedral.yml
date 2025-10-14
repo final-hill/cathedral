@@ -75,18 +75,16 @@ jobs:
     - name: Run database migrations
       env:
         NODE_ENV: production
-        POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-        POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
-        POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
-        POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        DOTENV_PRIVATE_KEY_PRODUCTION: ${{ secrets.DOTENV_PRIVATE_KEY_PRODUCTION }}
       run: |
+        echo "Installing dotenvx for decrypting .env.production"
+        curl -sfS https://dotenvx.sh/install.sh | sh
         echo "Running database migrations..."
-        npm run orm-debug
+        npm run orm-debug:production
         echo "Checking for pending migrations..."
-        npm run orm-list-pending-migrations
+        npm run orm-list-pending-migrations:production
         echo "Running pending migrations..."
-        npm run orm-run-pending-migrations
+        npm run orm-run-pending-migrations:production
         echo "Database migrations completed successfully"
 
     - name: Build and push container image to registry
@@ -118,6 +116,18 @@ jobs:
       contents: read
 
     steps:
+      # Deploy container with encrypted .env.production
+      # The decryption key (DOTENV_PRIVATE_KEY_PRODUCTION) must be set in Azure App Settings
+      # since publish profiles cannot modify configuration settings.
+      #
+      # To configure the decryption key (one-time setup):
+      # 1. Go to Azure Portal → app-cathedral → Configuration → Application Settings
+      # 2. Add: DOTENV_PRIVATE_KEY_PRODUCTION = <value-from-.env.keys>
+      # 3. Click Save
+      #
+      # The key value is stored in your .env.keys file (do not commit this file!)
+      # You only need to update Azure when rotating encryption keys.
+
       - name: Deploy to Azure Web App for Containers
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3

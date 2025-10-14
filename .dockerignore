@@ -5,10 +5,19 @@ npm-debug.log*
 .nuxt
 dist
 
-# Environment files (will be provided by Azure)
-.env
-.env.local
+# Plain text environment files (never include in images)
 .env.example
+
+# dotenvx private keys (NEVER include in Docker images - critical for security!)
+.env.keys
+
+# Encrypted environment files are INCLUDED in images (safe when encrypted with dotenvx)
+# .env
+# .env.local - development environment (encrypted)
+# .env.production - production environment (encrypted)
+# .env.staging - staging environment (encrypted)
+# These files are encrypted and safe to include in Docker images
+# They will be decrypted at runtime using DOTENV_PRIVATE_KEY_* environment variables
 
 # Development files
 .devcontainer
