@@ -6,6 +6,9 @@ FROM node:${NODE_VERSION}-bookworm
 # Set working directory
 WORKDIR /app
 
+# Install dotenvx
+RUN curl -sfS https://dotenvx.sh/install.sh | sh
+
 # Copy package files first for better Docker layer caching
 COPY package*.json ./
 
@@ -15,11 +18,14 @@ RUN npm ci
 # Copy pre-built application (built in CI/CD)
 COPY .output ./.output
 
+# Copy encrypted production env file (safe to include in image)
+COPY .env.production* ./
+
 # Set production environment
 ENV NODE_ENV=production
 
 # Expose the port that Nuxt/Nitro will run on
 EXPOSE 3000
 
-# Start the application directly (no migrations)
-CMD ["node", ".output/server/index.mjs"]
+# Start the application with dotenvx (decrypts .env.production using DOTENV_PRIVATE_KEY_PRODUCTION env var)
+CMD ["dotenvx", "run", "-f", ".env.production", "--", "node", ".output/server/index.mjs"]

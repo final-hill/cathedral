@@ -21,12 +21,20 @@
 
 2. Start Docker Desktop.
 3. Open the project in VS Code.
-4. The project should automatically detect the `.devcontainer` folder and ask you to reopen the project in a container. Before doing so, Copy the `.env.example` file to `.env` and fill in the necessary values.
+4. The project should automatically detect the `.devcontainer` folder and ask you to reopen the project in a container. You'll need the `.env.keys` file with the decryption key from your team (not committed to git).
 5. Reopen the project in the dev container. (You can also do this by clicking on the blue button in the bottom left corner of the window.)
 6. The project will now start downloading the necessary dependencies and setting up the environment.
   1. Docker images
   2. Node modules
   3. VS Code extensions
+
+### Environment Variables
+
+This project uses [dotenvx](https://dotenvx.com) for encrypted environment variable management. The `.env.local` file is encrypted and committed to version control, while `.env.keys` contains the private decryption keys (not committed). All npm scripts automatically decrypt and load environment variables at runtime using dotenvx. To update variables: use `npm run dotenvx:set KEY "value" -f .env.local` to encrypt a value, or `npm run dotenvx:decrypt:local` to edit manually, then `npm run dotenvx:encrypt:local` to re-encrypt.
+
+## Production Deployment
+
+For first-time production deployment, set `DOTENV_PRIVATE_KEY_PRODUCTION` in Azure Portal (app-cathedral → Configuration → Application Settings) using the value from your local `.env.keys` file. This is needed once to decrypt the encrypted `.env.production` file in the Docker container. Deploy by creating a release tag in GitHub (e.g., `v0.1.0`).
 
 ## Database population
 

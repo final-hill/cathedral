@@ -18,9 +18,15 @@ logs
 .fleet
 .idea
 
-# Local env files
-.env
-.env.*
+# dotenvx private keys (NEVER commit these)
+.env.keys
+
+# Allow encrypted env files (safe to commit when encrypted with dotenvx)
+!.env
+!.env.local
+!.env.development
+!.env.production
+!.env.staging
 !.env.example
 
 # Generated PWA assets

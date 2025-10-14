@@ -7,6 +7,9 @@ FROM node:${NODE_VERSION}-bookworm
 # Set working directory
 WORKDIR /app
 
+# Install dotenvx
+RUN curl -sfS https://dotenvx.sh/install.sh | sh
+
 # Copy package files first for better Docker layer caching
 COPY package*.json ./
 

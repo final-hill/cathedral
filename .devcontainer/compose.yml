@@ -1,18 +1,25 @@
 services:
   db:
-    image: postgres:16-bookworm
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres
     restart: unless-stopped
     ports:
       - 5432:5432
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    # Load environment variables from .env file
-    env_file:
-      - ../.env
+      - ../.env.local:/.env.local:ro
+      - ../.env.keys:/.env.keys:ro
+    working_dir: /
+    # Use dotenvx to decrypt .env.local and pass to official postgres entrypoint
+    # The 'exec' ensures signals (SIGTERM/SIGINT) reach postgres for graceful shutdown
+    # Solution from: https://github.com/dotenvx/dotenvx/issues/142#issuecomment-2135087252
     command: >
-        -c ssl=on
-        -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
-        -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+      sh -c "exec dotenvx run -f .env.local --
+      /usr/local/bin/docker-entrypoint.sh postgres
+      -c ssl=on
+      -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+      -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key"
     networks:
       - app-network
 
@@ -26,10 +33,9 @@ services:
     depends_on:
       - db
     restart: unless-stopped
-    # Load environment variables from .env file
-    env_file:
-      - ../.env
     # mounts the workspace folder from the local source tree into the Dev Container.
+    # .env.local and .env.keys are accessible in the workspace
+    # All npm scripts use dotenvx to decrypt and load variables at runtime
     volumes:
       - ..:/workspace/cathedral:cached
     # Overrides default command so things don't shut down after the process ends.
