@@ -52,6 +52,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      * @throws {PermissionDeniedException} If the user is not an admin of the organization
      * @throws {NotFoundException} If the organization does not exist
      * @throws {NotFoundException} If no Organization Admins exist to assign to mandatory roles
+     * @throws {MismatchException} If the solution name would create a reserved slug
      */
     async addSolution({ name, description }: Pick<req.SolutionType, 'name' | 'description'>): Promise<req.SolutionType['id']> {
         const organization = await this.repository.getOrganization(),
@@ -59,6 +60,8 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
             creationDate = new Date()
 
         this._permissionInteractor.assertOrganizationAdmin(organization.id)
+
+        assertSolutionNameNotReserved(name)
 
         await this._assertSolutionSlugIsUnique(name)
 
@@ -250,11 +253,12 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
 
     /**
      * Assert that the solution slug is unique within the organization
-     * @param slug The slug of the solution to check
+     * @param name The name of the solution (will be slugified to check uniqueness)
      * @throws {MismatchException} If the solution slug is not unique within the organization
      */
-    private async _assertSolutionSlugIsUnique(slug: req.SolutionType['slug']): Promise<void> {
-        const solutions = (await this.findSolutions({ slug }))
+    private async _assertSolutionSlugIsUnique(name: string): Promise<void> {
+        const slug = slugify(name),
+            solutions = (await this.findSolutions({ slug }))
 
         if (solutions.length > 0) throw new MismatchException(`Solution with slug ${slug} already exists in the organization`)
     }
@@ -268,6 +272,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      * @throws {PermissionDeniedException} If the user is not a contributor of the organization or better
      * @throws {NotFoundException} If the solution does not exist
      * @throws {MismatchException} If the solution does not belong to the organization
+     * @throws {MismatchException} If the new solution name would create a reserved slug
      */
     async updateSolutionBySlug({ slug, ...props }: { slug: req.SolutionType['slug'] } & Pick<Partial<req.SolutionType>, 'name' | 'description'>): Promise<void> {
         const org = await this.repository.getOrganization(),
@@ -275,7 +280,10 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
 
         this._permissionInteractor.assertOrganizationContributor(org.id)
 
-        if (props.name) await this._assertSolutionSlugIsUnique(props.name)
+        if (props.name) {
+            assertSolutionNameNotReserved(props.name)
+            await this._assertSolutionSlugIsUnique(props.name)
+        }
 
         await this.repository.updateSolutionBySlug({
             slug,

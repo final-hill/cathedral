@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { z } from 'zod'
 import { InterfaceSchema } from '#shared/domain/requirements/InterfaceSchema'
-import type { FormSchema } from '~/components/XForm.vue'
 import { ReqType } from '#shared/domain'
 
 definePageMeta({ middleware: 'auth' })
@@ -31,17 +29,12 @@ if (!requirement.value) {
 useHead({
     title: requirement.value?.name ? `Edit ${requirement.value.name}` : 'Edit Interface Data Type'
 })
-
-const innerSchema = InterfaceSchema instanceof z.ZodEffects
-        ? InterfaceSchema.innerType()
-        : InterfaceSchema,
-    baseSchema = innerSchema as FormSchema
 </script>
 
 <template>
     <RequirementForm
         :requirement="requirement"
-        :schema="baseSchema"
+        :schema="InterfaceSchema"
         :req-type="ReqType.INTERFACE_SCHEMA"
         :organization-slug="organizationslug"
         :solution-slug="solutionslug"

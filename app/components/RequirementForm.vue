@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { z } from 'zod'
 import type * as req from '#shared/domain/requirements'
 import type { FormSchema } from '~/components/XForm.vue'
 import { WorkflowState } from '#shared/domain/requirements/enums'
@@ -42,13 +41,7 @@ const props = defineProps<{
         parsedRequirements: true,
         uiBasePathTemplate: true
     } as const,
-    formSchema = computed(() => {
-        const innerSchema = schema.value instanceof z.ZodEffects
-            ? schema.value.innerType()
-            : schema.value
-
-        return (innerSchema as z.ZodObject<z.ZodRawShape>).omit(commonOmits)
-    })
+    formSchema = computed(() => schema.value.omit(commonOmits))
 
 // Validate that the requirement can be edited based on workflow state when in edit mode
 if (isEditValue.value && requirement?.value && ![WorkflowState.Proposed, WorkflowState.Active].includes(requirement.value.workflowState)) {

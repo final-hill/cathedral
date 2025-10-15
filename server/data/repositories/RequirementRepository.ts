@@ -8,7 +8,7 @@ import type { CreationInfo } from './CreationInfo'
 import type { UpdationInfo } from './UpdationInfo'
 import type { llmRequirementSchema } from '../llm-zod-schemas'
 import type { RequirementType, AuditMetadataType } from '#shared/domain'
-import { ConstraintCategory, MoscowPriority, NotFoundException, ReqType, ScenarioStepTypeEnum, StakeholderCategory, StakeholderSegmentation, WorkflowState } from '#shared/domain'
+import { ConstraintCategory, MoscowPriority, NotFoundException, ReqType, ScenarioStepTypeEnum, StakeholderSegmentation, WorkflowState } from '#shared/domain'
 
 export class RequirementRepository extends Repository<RequirementType> {
     /**
@@ -96,7 +96,6 @@ export class RequirementRepository extends Repository<RequirementType> {
                     workflowState: WorkflowState.Proposed,
                     solution: props.solutionId,
                     name,
-                    category: StakeholderCategory['Key Stakeholder'],
                     segmentation: StakeholderSegmentation.Client,
                     interest: 75,
                     influence: 75,
@@ -251,7 +250,6 @@ export class RequirementRepository extends Repository<RequirementType> {
                     name,
                     description: name,
                     segmentation: StakeholderSegmentation.Client,
-                    category: StakeholderCategory['Key Stakeholder'],
                     interest: 75,
                     influence: 75,
                     // Actor properties
@@ -327,7 +325,6 @@ export class RequirementRepository extends Repository<RequirementType> {
                     ...(newPrimaryActorId && { primaryActor: newPrimaryActorId }),
                     ...(newOutcomeId && { outcome: newOutcomeId }),
                     ...(req.stakeholderSegmentation && { segmentation: req.stakeholderSegmentation }),
-                    ...(req.stakeholderCategory && { category: req.stakeholderCategory }),
                     ...(req.reqType === ReqType.CONSTRAINT && { category: req.constraintCategory || ConstraintCategory['Business Rule'] }),
                     ...(newScopeSystemComponentId && { scope: newScopeSystemComponentId }),
                     ...(newFunctionalBehaviorId && { functionalBehavior: newFunctionalBehaviorId }),

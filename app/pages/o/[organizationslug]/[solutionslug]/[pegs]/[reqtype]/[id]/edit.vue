@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import { ReqType } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
-import type { FormSchema } from '~/components/XForm.vue'
-import { z } from 'zod'
 
 const route = useRoute(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug, id, reqtype } = route.params as {
@@ -53,18 +51,14 @@ if (error.value) {
     })
 }
 
-const innerSchema = RequirementSchema instanceof z.ZodEffects
-        ? RequirementSchema.innerType()
-        : RequirementSchema,
-    baseSchema = innerSchema as FormSchema,
-    onSaved = (_savedRequirement: Record<string, unknown>) => {
-        // The form component handles navigation
-    }
+const onSaved = (_savedRequirement: Record<string, unknown>) => {
+    // The form component handles navigation
+}
 </script>
 
 <template>
     <RequirementForm
-        :schema="baseSchema"
+        :schema="RequirementSchema"
         :req-type="actualReqType"
         :organization-slug="organizationSlug"
         :solution-slug="solutionSlug"

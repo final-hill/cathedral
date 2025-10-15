@@ -3,8 +3,8 @@ import { ReqType } from '#shared/domain/requirements/ReqType'
 import { Organization, Solution } from '#shared/domain'
 
 const querySchema = z.object({
-    solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
-    organizationSlug: Organization.innerType().pick({ slug: true }).shape.slug,
+    solutionSlug: Solution.pick({ slug: true }).shape.slug,
+    organizationSlug: Organization.pick({ slug: true }).shape.slug,
     reqType: z.nativeEnum(ReqType).optional(),
     entityType: z.literal('app_user').optional()
 }).refine((data) => {

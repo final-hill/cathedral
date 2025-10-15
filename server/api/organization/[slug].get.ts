@@ -1,6 +1,6 @@
 import { Organization } from '#shared/domain'
 
-const paramSchema = Organization.innerType().pick({ slug: true })
+const paramSchema = Organization.pick({ slug: true })
 
 /**
  * Returns an organization by slug

@@ -1,10 +1,10 @@
 import { z } from 'zod'
 import { Organization, Solution } from '#shared/domain'
 
-const paramSchema = Solution.innerType().pick({ slug: true }),
-    { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
+const paramSchema = Solution.pick({ slug: true }),
+    { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape,
     bodySchema = z.object({
-        ...Solution.innerType().pick({ name: true, description: true }).partial().shape,
+        ...Solution.pick({ name: true, description: true }).partial().shape,
         organizationId,
         organizationSlug
     }).refine((value) => {

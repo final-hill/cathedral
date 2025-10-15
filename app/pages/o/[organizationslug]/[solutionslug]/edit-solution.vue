@@ -18,7 +18,7 @@ if (!solution.value)
     throw new Error('Solution not found')
 
 const oldSlug = solution.value.slug,
-    formSchema = Solution.innerType().pick({
+    formSchema = Solution.pick({
         name: true,
         slug: true,
         description: true

@@ -2,12 +2,12 @@ import handleDomainException from '../handleDomainException'
 import { z } from 'zod'
 import { Organization, ReqType, Solution } from '#shared/domain'
 
-const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
+const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape
 
 export default function getAllByType() {
     const paramSchema = z.object({ reqType: z.nativeEnum(ReqType) }),
         validatedQuerySchema = z.object({
-            solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
+            solutionSlug: Solution.pick({ slug: true }).shape.slug,
             organizationId,
             organizationSlug
         }).passthrough().refine((value) => {

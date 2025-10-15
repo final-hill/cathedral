@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import { ReqType } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
-import type { FormSchema } from '~/components/XForm.vue'
-import { z } from 'zod'
 
 const route = useRoute(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug, reqtype } = route.params as {
@@ -36,16 +34,11 @@ const title = `New ${snakeCaseToPascalCase(reqtype)}`
 
 useHead({ title })
 definePageMeta({ middleware: 'auth' })
-
-const innerSchema = RequirementSchema instanceof z.ZodEffects
-        ? RequirementSchema.innerType()
-        : RequirementSchema,
-    baseSchema = innerSchema as FormSchema
 </script>
 
 <template>
     <RequirementForm
-        :schema="baseSchema"
+        :schema="RequirementSchema"
         :req-type="actualReqType"
         :organization-slug="organizationSlug"
         :solution-slug="solutionSlug"

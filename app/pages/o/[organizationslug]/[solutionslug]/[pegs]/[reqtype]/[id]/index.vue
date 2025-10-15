@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { ReqType } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
-import { z } from 'zod'
 
 const route = useRoute(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug, reqtype: reqType, id } = route.params as {
@@ -41,9 +40,6 @@ const { data: requirement, status } = await useApiRequest({ url: `/api/requireme
         query: { solutionSlug, organizationSlug },
         schema: RequirementSchema
     } }),
-    innerSchema = RequirementSchema instanceof z.ZodEffects
-        ? RequirementSchema.innerType()
-        : RequirementSchema,
     isLoading = computed(() => status.value === 'pending')
 </script>
 
@@ -56,7 +52,7 @@ const { data: requirement, status } = await useApiRequest({ url: `/api/requireme
 
     <RequirementView
         :requirement="requirement"
-        :schema="innerSchema"
+        :schema="RequirementSchema"
         :loading="isLoading"
     />
 </template>

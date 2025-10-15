@@ -1,14 +1,14 @@
 import { Organization, Solution } from '#shared/domain'
 import { z } from 'zod'
 
-const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
+const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape,
     paramSchema = z.object({ id: z.string().uuid() })
 
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams({ event, schema: paramSchema }),
 
         bodySchema = z.object({
-            solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
+            solutionSlug: Solution.pick({ slug: true }).shape.slug,
             organizationId,
             organizationSlug
         }).refine((value) => {

@@ -2,8 +2,8 @@ import { z } from 'zod'
 import { Organization, Solution } from '#shared/domain'
 import handleDomainException from '~~/server/utils/handleDomainException'
 
-const paramSchema = Solution.innerType().pick({ slug: true }),
-    { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
+const paramSchema = Solution.pick({ slug: true }),
+    { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape,
     querySchema = z.object({
         organizationId,
         organizationSlug

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { z } from 'zod'
 import { InterfaceSchema } from '#shared/domain/requirements/InterfaceSchema'
 import { ReqType } from '#shared/domain'
 
@@ -16,10 +15,7 @@ const route = useRoute(),
             solutionSlug: solutionslug
         },
         schema: InterfaceSchema
-    } }),
-    innerSchema = InterfaceSchema instanceof z.ZodEffects
-        ? InterfaceSchema.innerType()
-        : InterfaceSchema
+    } })
 
 definePageMeta({ middleware: 'auth' })
 
@@ -32,7 +28,7 @@ useHead({
     <RequirementView
         v-if="requirement"
         :requirement="requirement"
-        :schema="innerSchema"
+        :schema="InterfaceSchema"
     >
         <template #field-schema="{ modelValue }">
             <JsonSchemaEditor

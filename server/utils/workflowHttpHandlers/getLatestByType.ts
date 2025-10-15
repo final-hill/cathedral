@@ -3,12 +3,12 @@ import type { WorkflowState } from '#shared/domain'
 import { Organization, ReqType, Solution } from '#shared/domain'
 import { z } from 'zod'
 
-const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape
+const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape
 
 export default function getLatestByType(workflowState: WorkflowState) {
     const paramSchema = z.object({ reqType: z.nativeEnum(ReqType) }),
         validatedQuerySchema = z.object({
-            solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
+            solutionSlug: Solution.pick({ slug: true }).shape.slug,
             organizationId,
             organizationSlug
         }).refine((value) => {

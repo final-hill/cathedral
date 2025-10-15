@@ -6,9 +6,9 @@ const paramSchema = z.object({
         id: z.string().uuid()
     }),
     querySchema = z.object({
-        solutionSlug: Solution.innerType().pick({ slug: true }).shape.slug,
-        organizationId: Organization.innerType().pick({ id: true }).shape.id.optional(),
-        organizationSlug: Organization.innerType().pick({ slug: true }).shape.slug.optional()
+        solutionSlug: Solution.pick({ slug: true }).shape.slug,
+        organizationId: Organization.pick({ id: true }).shape.id.optional(),
+        organizationSlug: Organization.pick({ slug: true }).shape.slug.optional()
     }).refine((value) => {
         return value.organizationId !== undefined || value.organizationSlug !== undefined
     }, 'At least one of organizationId or organizationSlug should be provided')

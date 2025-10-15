@@ -3,7 +3,7 @@ import { createOrganizationInteractor } from '~~/server/utils/createOrganization
 import { AppUser, Organization } from '#shared/domain'
 
 const paramSchema = AppUser.pick({ id: true }),
-    { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
+    { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape,
     bodySchema = z.object({
         organizationId,
         organizationSlug

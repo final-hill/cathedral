@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { z } from 'zod'
 import { ReqType, WorkflowState, InterfaceSchema } from '#shared/domain'
-import type { FormSchema } from '~/components/XForm.vue'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -38,18 +36,13 @@ if (requirement.value && requirement.value.workflowState !== WorkflowState.Revie
         statusMessage: `Cannot review requirement in ${requirement.value.workflowState} state. Only requirements in Review state can be reviewed.`
     })
 }
-
-const innerSchema = InterfaceSchema instanceof z.ZodEffects
-        ? InterfaceSchema.innerType()
-        : InterfaceSchema,
-    baseSchema = innerSchema as FormSchema
 </script>
 
 <template>
     <RequirementReview
         v-if="requirement"
         :requirement="requirement"
-        :schema="baseSchema"
+        :schema="InterfaceSchema"
         :req-type="ReqType.INTERFACE_SCHEMA"
         :organization-slug="organizationslug"
         :solution-slug="solutionslug"
