@@ -1,12 +1,11 @@
 <script lang="ts" setup>
-import type { z } from 'zod'
+import { z } from 'zod'
 import { Organization } from '#shared/domain'
 
 definePageMeta({ name: 'New Organization', middleware: 'auth' })
 useHead({ title: 'New Organization' })
 
 const router = useRouter(),
-    { $eventBus } = useNuxtApp(),
     { fetch: refreshSession } = useUserSession(),
     formSchema = Organization.innerType().pick({
         name: true,
@@ -22,15 +21,19 @@ const formState = reactive<FormSchema>({
         description: ''
     }),
     createOrganization = async (data: FormSchema) => {
-        const newSlug = (await $fetch('/api/organization', {
-            method: 'post',
-            body: data
-        }).catch(e => $eventBus.$emit('page-error', e)))
+        const { data: newSlug } = await useApiRequest({ url: '/api/organization', options: {
+            method: 'POST',
+            body: data,
+            schema: z.string(),
+            showSuccessToast: true,
+            successMessage: 'Organization created successfully',
+            errorMessage: 'Failed to create organization'
+        } })
 
-        if (newSlug) {
+        if (newSlug.value) {
             await refreshSession()
-            router.push({ name: 'Organization', params: { organizationslug: newSlug } })
-        } else $eventBus.$emit('page-error', 'Failed to create organization. No organization ID returned.')
+            router.push({ name: 'Organization', params: { organizationslug: newSlug.value } })
+        }
     },
     cancel = () => {
         router.push({ name: 'Home' })

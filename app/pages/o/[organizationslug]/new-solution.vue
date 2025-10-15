@@ -5,18 +5,15 @@ import { Solution, Organization } from '#shared/domain'
 useHead({ title: 'New Solution' })
 definePageMeta({ name: 'New Solution', middleware: 'auth' })
 
-const { $eventBus } = useNuxtApp(),
-    { organizationslug: organizationSlug } = useRoute('New Solution').params,
+const { organizationslug: organizationSlug } = useRoute('New Solution').params,
     router = useRouter(),
-    { data: organization, error: getOrgError } = await useApiRequest({ url: `/api/organization/${organizationSlug}`, options: {
+    { data: organization } = await useApiRequest({ url: `/api/organization/${organizationSlug}`, options: {
         schema: Organization,
         errorMessage: 'Failed to load organization'
     } })
 
-if (!organization.value) {
-    $eventBus.$emit('page-error', getOrgError.value)
+if (!organization.value)
     throw new Error('Organization not found')
-}
 
 const formSchema = Solution.innerType().pick({
     name: true,

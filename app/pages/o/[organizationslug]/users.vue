@@ -25,23 +25,19 @@ const viewSchema = AppUserWithRoleDto.pick({
 
 type SchemaType = AppUserWithRoleAndSlackDtoType
 
-const { $eventBus } = useNuxtApp(),
-    overlay = useOverlay(),
+const overlay = useOverlay(),
     confirmDeleteModal = overlay.create(XConfirmModal, {}),
     confirmUnlinkSlackModal = overlay.create(XConfirmModal, {}),
     editModalOpenState = ref(false),
     editModalItem = ref<SchemaType | null>(null),
     toast = useToast(),
     { organizationslug: organizationSlug } = useRoute('Organization Users').params,
-    { data: users, status, refresh, error: getUserError } = await useApiRequest({ url: '/api/appusers', options: {
+    { data: users, status, refresh } = await useApiRequest({ url: '/api/appusers', options: {
         schema: z.array(AppUserWithRoleAndSlackDto),
         query: { organizationSlug, includeSlack: true },
         errorMessage: 'Failed to load users'
-    } })
-
-if (getUserError.value) $eventBus.$emit('page-error', getUserError.value)
-
-const viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
+    } }),
+    viewDataColumns = getSchemaFields(viewSchema).map(({ key, label }) => {
         const column: TableColumn<SchemaType> = {
             accessorKey: key,
             header: ({ column }) => {
