@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { z } from 'zod'
 import { ReqType } from '#shared/domain/requirements/ReqType'
 import { InterfaceSchema } from '#shared/domain/requirements/InterfaceSchema'
-import type { FormSchema } from '~/components/XForm.vue'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -13,16 +11,12 @@ const route = useRoute(),
         organizationslug: string
         solutionslug: string
         pegs: string
-    },
-    innerSchema = InterfaceSchema instanceof z.ZodEffects
-        ? InterfaceSchema.innerType()
-        : InterfaceSchema,
-    baseSchema = innerSchema as FormSchema
+    }
 </script>
 
 <template>
     <RequirementForm
-        :schema="baseSchema"
+        :schema="InterfaceSchema"
         :req-type="ReqType.INTERFACE_SCHEMA"
         :organization-slug="organizationslug"
         :solution-slug="solutionslug"

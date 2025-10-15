@@ -14,17 +14,25 @@ function getRequirementMetadata(reqType: ReqType) {
     if (!RequirementSchema)
         throw new Error(`Requirement schema not found for: ${reqType}`)
 
-    const innerSchema = RequirementSchema instanceof z.ZodEffects
-            ? RequirementSchema.innerType()
-            : RequirementSchema,
-        shape = (innerSchema as z.ZodObject<z.ZodRawShape>).shape
+    const shape = RequirementSchema.shape,
+        // Extract label from name field (either literal value or fallback to schema description)
+        nameField = shape.name,
+        label = nameField instanceof z.ZodLiteral
+            ? nameField._def.value
+            : snakeCaseToPascalCase(reqType),
+        // Extract reqIdPrefix default value
+        reqIdPrefixField = shape.reqIdPrefix,
+        reqIdPrefix = reqIdPrefixField instanceof z.ZodDefault
+            ? reqIdPrefixField._def.defaultValue()
+            : '',
+        code = reqIdPrefix.replace(/\./g, ''),
+        // Extract uiBasePathTemplate default value
+        uiPathField = shape.uiBasePathTemplate,
+        path = uiPathField instanceof z.ZodDefault
+            ? uiPathField._def.defaultValue()
+            : ''
 
-    return {
-        reqType,
-        label: shape?.name?._def?.value || snakeCaseToPascalCase(reqType),
-        code: shape?.reqIdPrefix?._def?.defaultValue()?.replace('.', '') || '',
-        path: shape?.uiBasePathTemplate?._def?.defaultValue() || ''
-    }
+    return { reqType, label, code, path }
 }
 
 /**

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ConstraintCategory, MoscowPriority, ReqType, ScenarioStepTypeEnum, StakeholderCategory, StakeholderSegmentation } from '#shared/domain'
+import { ConstraintCategory, MoscowPriority, ReqType, ScenarioStepTypeEnum, StakeholderSegmentation } from '#shared/domain'
 
 export const llmRequirementSchema = z.object({
     reqType: z.nativeEnum(ReqType),
@@ -16,7 +16,6 @@ export const llmRequirementSchema = z.object({
         'The name of the outcome (goal) associated with Scenarios: (User Story, Use Case, or Test Case)'
     ).or(z.null()),
     stakeholderSegmentation: z.nativeEnum(StakeholderSegmentation).describe('The segmentation of the stakeholder').or(z.null()),
-    stakeholderCategory: z.nativeEnum(StakeholderCategory).describe('The category of the stakeholder').or(z.null()),
     constraintCategory: z.nativeEnum(ConstraintCategory).describe('The category of the constraint').or(z.null()),
     useCaseScopeName: z.string().describe(
         'The name of the SystemComponent that defines the boundary of the Use Case'

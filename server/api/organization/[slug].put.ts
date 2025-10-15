@@ -2,8 +2,8 @@ import { OrganizationCollectionInteractor, PermissionInteractor } from '~~/serve
 import { OrganizationCollectionRepository } from '~~/server/data/repositories'
 import { Organization } from '#shared/domain'
 
-const paramSchema = Organization.innerType().pick({ slug: true }),
-    bodySchema = Organization.innerType().pick({ name: true, description: true }).partial()
+const paramSchema = Organization.pick({ slug: true }),
+    bodySchema = Organization.pick({ name: true, description: true }).partial()
 
 /**
  * Updates an organization by id.

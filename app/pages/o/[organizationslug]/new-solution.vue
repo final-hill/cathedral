@@ -15,7 +15,7 @@ const { organizationslug: organizationSlug } = useRoute('New Solution').params,
 if (!organization.value)
     throw new Error('Organization not found')
 
-const formSchema = Solution.innerType().pick({
+const formSchema = Solution.pick({
     name: true,
     slug: true,
     description: true

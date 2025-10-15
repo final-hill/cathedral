@@ -173,7 +173,7 @@ const pegsMap: Record<string, PegsCard[]> = {
         {
             label: 'Stakeholders',
             icon: 'i-lucide-users',
-            reqId: req.Stakeholder.innerType().shape.reqIdPrefix._def.defaultValue(),
+            reqId: req.Stakeholder.shape.reqIdPrefix._def.defaultValue(),
             path: uiBasePathTemplates[ReqType.STAKEHOLDER]
                 .replace('[org]', organizationslug)
                 .replace('[solutionslug]', solutionslug),

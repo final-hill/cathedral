@@ -5,7 +5,7 @@ import { SlackService } from '~~/server/data/services'
 import { AppUser, Organization } from '#shared/domain'
 
 const paramSchema = AppUser.pick({ id: true }),
-    { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
+    { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape,
     querySchema = z.object({
         organizationId,
         organizationSlug,

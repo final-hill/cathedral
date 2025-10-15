@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import { ReqType, WorkflowState } from '#shared/domain'
 import { UseCase } from '#shared/domain/requirements'
-import type { FormSchema } from '~/components/XForm.vue'
-import { z } from 'zod'
 
 const route = useRoute(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug, id } = route.params as {
@@ -34,18 +32,13 @@ if (requirement.value && requirement.value.workflowState !== WorkflowState.Revie
         statusMessage: `Cannot review requirement in ${requirement.value.workflowState} state. Only requirements in Review state can be reviewed.`
     })
 }
-
-const innerSchema = UseCase instanceof z.ZodEffects
-        ? UseCase.innerType()
-        : UseCase,
-    baseSchema = innerSchema as FormSchema
 </script>
 
 <template>
     <RequirementReview
         v-if="requirement"
         :requirement="requirement"
-        :schema="baseSchema"
+        :schema="UseCase"
         :req-type="ReqType.USE_CASE"
         :organization-slug="organizationSlug"
         :solution-slug="solutionSlug"

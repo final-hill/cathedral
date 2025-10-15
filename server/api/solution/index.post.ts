@@ -1,9 +1,9 @@
 import { z } from 'zod'
 import { Organization, Solution } from '#shared/domain'
 
-const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
+const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape,
     bodySchema = z.object({
-        ...Solution.innerType().pick({ name: true, description: true }).shape,
+        ...Solution.pick({ name: true, description: true }).shape,
         organizationId,
         organizationSlug
     }).refine((value) => {

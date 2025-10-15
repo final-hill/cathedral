@@ -1,9 +1,7 @@
 <script lang="ts" setup>
 import { ReqType } from '#shared/domain'
 import { UseCase } from '#shared/domain/requirements'
-import type { FormSchema } from '~/components/XForm.vue'
 import type { ScenarioStepReferenceType } from '#shared/domain/requirements/EntityReferences'
-import { z } from 'zod'
 
 const route = useRoute(),
     { solutionslug: solutionSlug, organizationslug: organizationSlug } = route.params as {
@@ -15,11 +13,8 @@ const route = useRoute(),
 useHead({ title })
 definePageMeta({ middleware: 'auth' })
 
-const innerSchema = UseCase instanceof z.ZodEffects
-        ? UseCase.innerType()
-        : UseCase,
-    // Apply omits specific to use case scenario handling
-    baseSchema = (innerSchema as FormSchema).omit({
+// Apply omits specific to use case scenario handling
+const baseSchema = UseCase.omit({
         mainSuccessScenario: true, // Remove from form - handled separately
         extensions: true // Remove from form - handled separately
     }),

@@ -41,6 +41,7 @@ export class OrganizationCollectionInteractor extends Interactor<OrganizationTyp
      * @returns The new organization id
      * @throws {DuplicateEntityException} If the organization already exists
      * @throws {DuplicateEntityException} If the app user organization role already exists
+     * @throws {MismatchException} If the computed slug doesn't match the slugified name
      */
     async createOrganization(props: Pick<OrganizationType, 'name' | 'description'>): Promise<OrganizationType['id']> {
         const repo = this.repository,

@@ -7,7 +7,7 @@ useHead({ title: 'New Organization' })
 
 const router = useRouter(),
     { fetch: refreshSession } = useUserSession(),
-    formSchema = Organization.innerType().pick({
+    formSchema = Organization.pick({
         name: true,
         slug: true,
         description: true

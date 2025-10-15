@@ -3,8 +3,8 @@ import { Organization, Solution } from '#shared/domain'
 
 // TODO: this feels backwards. Shouldn't the param be the organizationSlug and the body be the solutionSlug?
 
-const paramSchema = Solution.innerType().pick({ slug: true }),
-    { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
+const paramSchema = Solution.pick({ slug: true }),
+    { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape,
     bodySchema = z.object({
         organizationId,
         organizationSlug

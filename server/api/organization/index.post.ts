@@ -2,7 +2,7 @@ import { OrganizationCollectionInteractor, PermissionInteractor } from '~~/serve
 import { OrganizationCollectionRepository } from '~~/server/data/repositories'
 import { Organization } from '#shared/domain'
 
-const bodySchema = Organization.innerType().pick({ name: true, description: true })
+const bodySchema = Organization.pick({ name: true, description: true })
 
 /**
  * Creates a new organization and returns its slug

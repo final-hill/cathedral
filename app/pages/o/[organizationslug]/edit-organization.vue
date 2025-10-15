@@ -15,7 +15,7 @@ if (!organization.value)
     throw new Error('Organization not found')
 
 const oldSlug = organization.value.slug,
-    formSchema = Organization.innerType().pick({
+    formSchema = Organization.pick({
         name: true,
         slug: true,
         description: true

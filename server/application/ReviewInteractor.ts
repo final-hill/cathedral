@@ -365,11 +365,8 @@ export class ReviewInteractor {
             // Get the requirement's prefix first character dynamically from the domain
             ReqTypePascal = snakeCaseToPascalCase(requirement.reqType) as keyof typeof req,
             RequirementSchema = req[ReqTypePascal],
-            innerSchema = RequirementSchema instanceof z.ZodEffects
-                ? RequirementSchema.innerType()
-                : RequirementSchema,
-            shape = (innerSchema as z.ZodObject<z.ZodRawShape>).shape,
-            reqIdPrefix = shape?.reqIdPrefix?._def?.defaultValue(),
+            shape = RequirementSchema.shape,
+            reqIdPrefix = shape.reqIdPrefix instanceof z.ZodDefault ? shape.reqIdPrefix._def.defaultValue() : undefined,
             reqPrefixChar = reqIdPrefix?.charAt(0),
             // Find persons who can endorse this requirement type
             eligiblePersons = persons.filter((person) => {

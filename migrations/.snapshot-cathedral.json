@@ -196,7 +196,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -210,7 +209,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -224,7 +222,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -238,7 +235,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -252,7 +248,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -266,7 +261,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -280,7 +274,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         }
@@ -335,7 +328,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "deleteRule": "cascade",
           "updateRule": "cascade"
         },
@@ -349,7 +341,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "deleteRule": "cascade",
           "updateRule": "cascade"
         }
@@ -597,6 +588,29 @@
           "nullable": true,
           "mappedType": "uuid"
         },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "enumItems": [
+            "Business Rule",
+            "Physical Law",
+            "Engineering Decision"
+          ],
+          "mappedType": "enum"
+        },
+        "functionality_id": {
+          "name": "functionality_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "uuid"
+        },
         "primary_actor_id": {
           "name": "primary_actor_id",
           "type": "uuid",
@@ -608,15 +622,6 @@
         },
         "outcome_id": {
           "name": "outcome_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        },
-        "functionality_id": {
-          "name": "functionality_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
@@ -859,24 +864,6 @@
           ],
           "mappedType": "enum"
         },
-        "category": {
-          "name": "category",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "enumItems": [
-            "Business Rule",
-            "Physical Law",
-            "Engineering Decision",
-            "Key Stakeholder",
-            "Shadow Influencer",
-            "Fellow Traveler",
-            "Observer"
-          ],
-          "mappedType": "enum"
-        },
         "interest": {
           "name": "interest",
           "type": "int",
@@ -981,7 +968,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         },
         "requirement_versions_solution_id_foreign": {
@@ -994,7 +980,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -1008,35 +993,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "requirement_versions_primary_actor_id_foreign": {
-          "constraintName": "requirement_versions_primary_actor_id_foreign",
-          "columnNames": [
-            "primary_actor_id"
-          ],
-          "localTableName": "public.requirement_versions",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        },
-        "requirement_versions_outcome_id_foreign": {
-          "constraintName": "requirement_versions_outcome_id_foreign",
-          "columnNames": [
-            "outcome_id"
-          ],
-          "localTableName": "public.requirement_versions",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -1050,7 +1006,32 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_versions_primary_actor_id_foreign": {
+          "constraintName": "requirement_versions_primary_actor_id_foreign",
+          "columnNames": [
+            "primary_actor_id"
+          ],
+          "localTableName": "public.requirement_versions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "requirement_versions_outcome_id_foreign": {
+          "constraintName": "requirement_versions_outcome_id_foreign",
+          "columnNames": [
+            "outcome_id"
+          ],
+          "localTableName": "public.requirement_versions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.requirement",
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -1064,7 +1045,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -1078,7 +1058,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -1092,7 +1071,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         },
@@ -1106,7 +1084,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "deleteRule": "set null",
           "updateRule": "cascade"
         }
@@ -1263,7 +1240,6 @@
             "requirement_id"
           ],
           "referencedTableName": "public.requirement_versions",
-          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         },
         "endorsement_endorsed_by_id_foreign": {
@@ -1276,7 +1252,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         }
       },
@@ -1391,7 +1366,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         }
       },
@@ -1595,7 +1569,6 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
-          "createForeignKeyConstraint": true,
           "updateRule": "cascade"
         }
       },

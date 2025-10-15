@@ -2,7 +2,7 @@ import { OrganizationCollectionInteractor, PermissionInteractor } from '~~/serve
 import { OrganizationCollectionRepository } from '~~/server/data/repositories'
 import { Organization } from '#shared/domain'
 
-const querySchema = Organization.innerType().partial()
+const querySchema = Organization.partial()
 
 /**
  * Returns all organizations that match the query parameters

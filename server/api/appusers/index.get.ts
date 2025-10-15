@@ -4,7 +4,7 @@ import { SlackRepository } from '~~/server/data/repositories'
 import { Organization } from '#shared/domain'
 import { SlackService } from '~~/server/data/services'
 
-const { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
+const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape,
     querySchema = z.object({
         organizationId,
         organizationSlug,

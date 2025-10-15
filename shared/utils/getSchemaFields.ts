@@ -43,18 +43,15 @@ const enumToLabelValue = (enumObject: Record<string, string>) =>
                         !fieldType._def.checks.some(check => check.kind === 'min')
                     )
                 ),
-                isEffect = fieldType instanceof z.ZodEffects,
                 isReadOnly = fieldType instanceof z.ZodReadonly,
                 isDefault = fieldType instanceof z.ZodDefault,
                 innerType = isOptional
                     ? (fieldType instanceof z.ZodOptional ? fieldType._def.innerType : fieldType)
-                    : isEffect
-                        ? fieldType._def.schema
-                        : isReadOnly
+                    : isReadOnly
+                        ? fieldType._def.innerType
+                        : isDefault
                             ? fieldType._def.innerType
-                            : isDefault
-                                ? fieldType._def.innerType
-                                : fieldType,
+                            : fieldType,
                 isEnum = innerType instanceof z.ZodNativeEnum || innerType instanceof z.ZodEnum,
                 isArray = innerType instanceof z.ZodArray,
                 arrayElementType = isArray ? innerType._def.type : undefined,

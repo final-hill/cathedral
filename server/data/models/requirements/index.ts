@@ -1,6 +1,6 @@
 import { Collection, Entity, Enum, ManyToOne, OneToMany, ManyToMany, OptionalProps, PrimaryKey, Property, types } from '@mikro-orm/core'
 import type { FilterQuery, OrderDefinition, Ref, Rel } from '@mikro-orm/core'
-import { ConstraintCategory, ReqType, ScenarioStepTypeEnum, StakeholderCategory, StakeholderSegmentation, WorkflowState, InterfaceType } from '../../../../shared/domain/requirements/enums.js'
+import { ConstraintCategory, ReqType, ScenarioStepTypeEnum, StakeholderSegmentation, WorkflowState, InterfaceType } from '../../../../shared/domain/requirements/enums.js'
 import { SlackChannelMetaModel } from '../application/index.js'
 import type { ReqId } from '../../../../shared/domain/index.js'
 import { Prioritizable } from './mixins/index.js'
@@ -236,9 +236,6 @@ export class StakeholderModel extends ComponentModel {
 export class StakeholderVersionsModel extends ComponentVersionsModel {
     @Enum({ items: () => StakeholderSegmentation })
     readonly segmentation!: StakeholderSegmentation
-
-    @Enum({ items: () => StakeholderCategory })
-    readonly category!: StakeholderCategory
 
     @Property<StakeholderVersionsModel>({ type: types.integer })
     readonly interest!: number

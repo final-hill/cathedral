@@ -3,7 +3,7 @@ import { PermissionInteractor } from '~~/server/application'
 import { AppUser, AppUserOrganizationRole, Organization } from '#shared/domain'
 
 const paramSchema = AppUser.pick({ id: true }),
-    { id: organizationId, slug: organizationSlug } = Organization.innerType().pick({ id: true, slug: true }).partial().shape,
+    { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape,
     bodySchema = z.object({
         organizationId,
         organizationSlug,

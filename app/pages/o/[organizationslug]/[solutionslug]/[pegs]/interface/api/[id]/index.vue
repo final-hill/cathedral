@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { z } from 'zod'
-import type { ZodRawShape } from 'zod'
 import { ReqType, Interface } from '#shared/domain'
 
 definePageMeta({ middleware: 'auth' })
@@ -19,11 +17,8 @@ const route = useRoute(),
         },
         schema: Interface
     } }),
-    innerSchema = Interface instanceof z.ZodEffects
-        ? Interface.innerType()
-        : Interface,
     // For API interface pages, we don't want to show the interface type since we're already in the API section
-    displaySchema = (innerSchema as z.ZodObject<ZodRawShape>).omit({
+    displaySchema = Interface.omit({
         interfaceType: true
     })
 

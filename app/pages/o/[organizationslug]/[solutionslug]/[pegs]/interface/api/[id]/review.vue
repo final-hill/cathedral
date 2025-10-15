@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { z } from 'zod'
 import { InterfaceType, ReqType, Interface, WorkflowState } from '#shared/domain'
 import { workflowColorMap } from '#shared/utils/workflow-colors'
-import type { FormSchema } from '~/components/XForm.vue'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -40,25 +38,21 @@ if (requirement.value && requirement.value.workflowState !== WorkflowState.Revie
     })
 }
 
-const innerSchema = Interface instanceof z.ZodEffects
-        ? Interface.innerType()
-        : Interface,
-    baseSchema = innerSchema as FormSchema,
-    getTypeColor = (type: InterfaceType) => {
-        switch (type) {
-            case InterfaceType.API: return 'info'
-            case InterfaceType.CLI: return 'success'
-            case InterfaceType.UI: return 'warning'
-            default: return 'neutral'
-        }
+const getTypeColor = (type: InterfaceType) => {
+    switch (type) {
+        case InterfaceType.API: return 'info'
+        case InterfaceType.CLI: return 'success'
+        case InterfaceType.UI: return 'warning'
+        default: return 'neutral'
     }
+}
 </script>
 
 <template>
     <RequirementReview
         v-if="requirement"
         :requirement="requirement"
-        :schema="baseSchema"
+        :schema="Interface"
         :req-type="ReqType.INTERFACE"
         :organization-slug="organizationslug"
         :solution-slug="solutionslug"

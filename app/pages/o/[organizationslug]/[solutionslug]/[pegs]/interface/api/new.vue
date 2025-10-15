@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { z } from 'zod'
 import { ReqType } from '#shared/domain/requirements/ReqType'
 import { Interface, InterfaceType } from '#shared/domain'
 import type { FormSchema } from '~/components/XForm.vue'
@@ -14,11 +13,7 @@ const route = useRoute(),
         solutionslug: string
         _pegs: string
     },
-
-    innerSchema = Interface instanceof z.ZodEffects
-        ? Interface.innerType()
-        : Interface,
-    baseSchema = (innerSchema as FormSchema).omit({
+    baseSchema = Interface.omit({
         interfaceType: true, // Hide interface type since we're on the API path - it will be set automatically
         operations: true // Hide operations field - will be managed through RequirementList navigation
     }) as FormSchema,
