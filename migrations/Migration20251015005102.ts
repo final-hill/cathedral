@@ -4,10 +4,10 @@ export class Migration20251015005102 extends Migration {
     override async up(): Promise<void> {
     // Update check constraint to remove Stakeholder categories
     // Stakeholder category is now a derived field computed from interest and influence
-        
+
         // First, clear category values for stakeholders since they will be computed
         this.addSql(`update "requirement_versions" set "category" = null where "req_type" = 'stakeholder';`)
-        
+
         this.addSql(`alter table "requirement_versions" drop constraint if exists "requirement_versions_category_check";`)
 
         this.addSql(`alter table "requirement_versions" add constraint "requirement_versions_category_check" check("category" in ('Business Rule', 'Physical Law', 'Engineering Decision'));`)

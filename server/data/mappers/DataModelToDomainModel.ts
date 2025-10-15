@@ -84,20 +84,19 @@ export class DataModelToDomainModel<
             newProps = entries.reduce((acc, [key, value]) => {
                 if (value !== undefined) acc[key as string] = value
                 return acc
-            }, {} as Record<string, unknown>)
+            }, {} as Record<string, unknown>),
 
-        // Compute derived fields based on requirement type
-        // Check both reqType (camelCase from domain) and req_type (snake_case from database model)
-        const modelReqType = ('reqType' in model ? model.reqType : 'req_type' in model ? model.req_type : undefined)
-        
+            // Compute derived fields based on requirement type
+            // Check both reqType (camelCase from domain) and req_type (snake_case from database model)
+            modelReqType = ('reqType' in model ? model.reqType : 'req_type' in model ? model.req_type : undefined)
+
         if (modelReqType === ReqType.STAKEHOLDER) {
             // Interest and influence should be defined for stakeholders, but check original model if not in newProps
             const interest = ('interest' in newProps ? newProps.interest : ('interest' in model ? model.interest : undefined)) as number | null | undefined,
                 influence = ('influence' in newProps ? newProps.influence : ('influence' in model ? model.influence : undefined)) as number | null | undefined
 
-            if (interest != null && influence != null) {
+            if (interest != null && influence != null)
                 newProps.category = computeStakeholderCategory({ interest, influence })
-            }
         }
 
         return newProps as To
