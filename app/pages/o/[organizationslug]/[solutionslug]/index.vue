@@ -5,20 +5,17 @@ import { z } from 'zod'
 useHead({ title: 'Solution' })
 definePageMeta({ name: 'Solution', middleware: 'auth' })
 
-const { $eventBus } = useNuxtApp(),
-    { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Solution').params,
+const { solutionslug: slug, organizationslug: organizationSlug } = useRoute('Solution').params,
     router = useRouter(),
-    { data: solution, error: solutionError } = await useApiRequest({ url: `/api/solution/${slug}`, options: {
+    { data: solution } = await useApiRequest({ url: `/api/solution/${slug}`, options: {
         schema: Solution,
         query: { organizationSlug },
         errorMessage: 'Failed to load solution'
     } }),
-    deleteConfirmModalOpenState = ref(false)
+    deleteConfirmModalOpenState = ref(false),
 
-if (solutionError.value) $eventBus.$emit('page-error', solutionError.value)
-
-// Minimum requirements validation
-const { getMissingRequirementsBySection } = useMinimumRequirements(),
+    // Minimum requirements validation
+    { getMissingRequirementsBySection } = useMinimumRequirements(),
     missingRequirements = ref<{ reqType: ReqType, label: string, section: string, code: string, path: string }[]>([]),
     drawerOpen = ref(false)
 

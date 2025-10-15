@@ -1,23 +1,4 @@
 <script lang="ts" setup>
-const { $eventBus } = useNuxtApp(),
-    toast = useToast(),
-    showError = (e: unknown) => {
-        let error = ''
-
-        if (e instanceof Error) error = e.message
-        else if (typeof e === 'string') error = e
-        else error = 'An error occurred. Check the browser console for more details.'
-
-        console.error(error)
-        toast.add({
-            title: 'Error',
-            description: error,
-            color: 'error',
-            icon: 'i-lucide-octagon-alert'
-        })
-    }
-
-$eventBus.$on('page-error', showError)
 </script>
 
 <template>
@@ -29,7 +10,7 @@ $eventBus.$on('page-error', showError)
         as="main"
         class="flex flex-col p-8 overflow-auto leading-6 space-y-8"
     >
-        <slot @page-error="showError" />
+        <slot />
     </UContainer>
     <footer>
         &copy; {{ new Date().getFullYear() }} Final Hill. All rights reserved. |

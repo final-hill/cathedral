@@ -6,19 +6,16 @@ useHead({ title: 'Edit Solution' })
 definePageMeta({ name: 'Edit Solution', middleware: 'auth' })
 
 const route = useRoute('Edit Solution'),
-    { $eventBus } = useNuxtApp(),
     { organizationslug: organizationSlug, solutionslug: slug } = route.params,
     router = useRouter(),
-    { data: solution, error: getSolutionError } = await useApiRequest({ url: `/api/solution/${slug}`, options: {
+    { data: solution } = await useApiRequest({ url: `/api/solution/${slug}`, options: {
         schema: Solution,
         query: { organizationSlug },
         errorMessage: 'Failed to load solution'
     } })
 
-if (!solution.value) {
-    $eventBus.$emit('page-error', getSolutionError.value)
+if (!solution.value)
     throw new Error('Solution not found')
-}
 
 const oldSlug = solution.value.slug,
     formSchema = Solution.innerType().pick({

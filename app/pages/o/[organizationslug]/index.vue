@@ -6,25 +6,20 @@ import { z } from 'zod'
 useHead({ title: 'Organization' })
 definePageMeta({ name: 'Organization', middleware: 'auth' })
 
-const { $eventBus } = useNuxtApp(),
-    { organizationslug: organizationSlug } = useRoute('Organization').params,
+const { organizationslug: organizationSlug } = useRoute('Organization').params,
     router = useRouter(),
-    { data: organization, error: getOrgError, status: _orgStatus } = await useApiRequest({ url: `/api/organization/${organizationSlug}`, options: {
+    { data: organization, status: _orgStatus } = await useApiRequest({ url: `/api/organization/${organizationSlug}`, options: {
         schema: Organization
     } }),
-    { refresh: refreshSolutions, status: _solStatus, data: solutions, error: getSolutionError } = await useApiRequest({ url: '/api/solution', options: {
+    { refresh: refreshSolutions, status: _solStatus, data: solutions } = await useApiRequest({ url: '/api/solution', options: {
         schema: z.array(Solution),
         query: { organizationSlug }
     } }),
     solutionDeleteModalOpenState = ref(false),
     organizationDeleteModalOpenState = ref(false)
 
-if (!organization.value) {
-    $eventBus.$emit('page-error', getOrgError.value)
+if (!organization.value)
     throw new Error('Organization not found')
-}
-
-if (getSolutionError.value) $eventBus.$emit('page-error', getSolutionError.value)
 
 const handleOrganizationDelete = async (organization: OrganizationType) => {
         await useApiRequest({ url: `/api/organization/${organization.slug}`, options: {

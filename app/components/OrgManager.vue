@@ -4,15 +4,11 @@ import { Organization } from '#shared/domain'
 import { z } from 'zod'
 
 const router = useRouter(),
-    { status: _status, data: organizations, refresh, error: getOrgError } = await useApiRequest({ url: '/api/organization', options: {
+    { status: _status, data: organizations, refresh } = await useApiRequest({ url: '/api/organization', options: {
         schema: z.array(Organization)
     } }),
-    { $eventBus } = useNuxtApp(),
-    deleteModalOpenState = ref(false)
-
-if (getOrgError.value) $eventBus.$emit('page-error', getOrgError.value)
-
-const handleDelete = async (organization: OrganizationType) => {
+    deleteModalOpenState = ref(false),
+    handleDelete = async (organization: OrganizationType) => {
         await useApiRequest({ url: `/api/organization/${organization.slug}`, options: {
             method: 'DELETE',
             schema: z.unknown(),

@@ -6,16 +6,13 @@ definePageMeta({ name: 'Edit Organization', middleware: 'auth' })
 useHead({ title: 'Edit Organization' })
 
 const router = useRouter(),
-    { $eventBus } = useNuxtApp(),
     { organizationslug: organizationSlug } = useRoute('Edit Organization').params,
-    { data: organization, error: getOrgError } = await useApiRequest({ url: `/api/organization/${organizationSlug}`, options: {
+    { data: organization } = await useApiRequest({ url: `/api/organization/${organizationSlug}`, options: {
         schema: Organization
     } })
 
-if (!organization.value) {
-    $eventBus.$emit('page-error', getOrgError.value)
+if (!organization.value)
     throw new Error('Organization not found')
-}
 
 const oldSlug = organization.value.slug,
     formSchema = Organization.innerType().pick({
@@ -32,20 +29,16 @@ const formState = reactive<FormSchema>({
         description: organization.value.description
     }),
     updateOrganization = async (data: FormSchema) => {
-        try {
-            await useApiRequest({ url: `/api/organization/${oldSlug}`, options: {
-                method: 'PUT',
-                schema: Organization,
-                body: data,
-                showSuccessToast: true,
-                successMessage: 'Organization updated successfully',
-                errorMessage: 'Failed to update organization'
-            } })
+        await useApiRequest({ url: `/api/organization/${oldSlug}`, options: {
+            method: 'PUT',
+            schema: Organization,
+            body: data,
+            showSuccessToast: true,
+            successMessage: 'Organization updated successfully',
+            errorMessage: 'Failed to update organization'
+        } })
 
-            router.push({ name: 'Organization', params: { organizationslug: data.slug } })
-        } catch (error) {
-            $eventBus.$emit('page-error', error)
-        }
+        router.push({ name: 'Organization', params: { organizationslug: data.slug } })
     },
     cancel = () => {
         router.push({ name: 'Organization', params: { organizationslug: oldSlug } })
