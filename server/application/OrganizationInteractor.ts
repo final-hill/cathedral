@@ -319,11 +319,10 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
                 id: uuid7(),
                 name: currentUser.name,
                 description: `Solution Creator with Product Owner and Implementation Owner capabilities: ${currentUser.name}`,
-                appUser: {
+                appUser: AppUserReference.parse({
                     id: currentUser.id,
-                    name: currentUser.name,
-                    entityType: 'app_user' as const
-                },
+                    name: currentUser.name
+                }),
                 stakeholders: [], // Initialize as empty array - can be populated later
                 // Enable both Product Owner and Implementation Owner capabilities
                 isProductOwner: true,
@@ -335,8 +334,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
                 canEndorseSystemRequirements: true,
                 solution: {
                     id: solutionId,
-                    name: '',
-                    reqType: ReqType.SOLUTION
+                    name: ''
                 },
                 workflowState: WorkflowState.Active,
                 createdBy: AppUserReference.parse({
@@ -354,6 +352,40 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
 
         await this._requirementRepository!.add({
             reqProps: solutionCreatorPersonData,
+            createdById,
+            creationDate
+        })
+
+        // Create default Context and Objective requirement (singleton, minimum requirement)
+        // This provides a starting point for defining the solution's purpose and scope
+        const defaultContextAndObjective = req.ContextAndObjective.parse({
+            id: uuid7(),
+            name: 'Context And Objective',
+            description: dedent(`
+                Define the high-level organizational context and reason for building this system.
+
+                This should include the business problem or opportunity being addressed.
+            `),
+            solution: {
+                id: solutionId,
+                name: ''
+            },
+            workflowState: WorkflowState.Proposed,
+            createdBy: AppUserReference.parse({
+                id: currentUser.id,
+                name: currentUser.name
+            }),
+            creationDate,
+            isDeleted: false,
+            lastModified: creationDate,
+            modifiedBy: AppUserReference.parse({
+                id: currentUser.id,
+                name: currentUser.name
+            })
+        })
+
+        await this._requirementRepository!.add({
+            reqProps: defaultContextAndObjective,
             createdById,
             creationDate
         })

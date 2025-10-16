@@ -7,6 +7,7 @@ import { WorkflowState } from '#shared/domain/requirements/enums'
 import { uiBasePathTemplates } from '#shared/domain/requirements/uiBasePathTemplates'
 import { workflowColorMap } from '#shared/utils/workflow-colors'
 import { snakeCaseToTitleCase } from '#shared/utils'
+import { SINGLETON_REQUIREMENT_TYPES } from '#shared/domain/requirements/singletonRequirements'
 
 type WorkflowAction = 'review' | 'remove' | 'revise' | 'restore'
 
@@ -17,6 +18,7 @@ const props = defineProps<{
         solutionSlug: string
         loading?: boolean
         hideHeader?: boolean
+        hideNew?: boolean
         parentReferences?: Record<string, string> // field name -> parent ID for OneToMany relationships
         selectedWorkflowStates?: WorkflowState[]
     }>(),
@@ -24,7 +26,7 @@ const props = defineProps<{
         'refresh': []
         'update:selectedWorkflowStates': [states: WorkflowState[]]
     }>(),
-    { requirements, reqType, organizationSlug, solutionSlug, loading = false, hideHeader = false, parentReferences, selectedWorkflowStates } = toRefs(props),
+    { requirements, reqType, organizationSlug, solutionSlug, loading = false, hideHeader = false, hideNew = false, parentReferences, selectedWorkflowStates } = toRefs(props),
     router = useRouter(),
     toast = useToast(),
     overlay = useOverlay(),
@@ -173,20 +175,22 @@ const props = defineProps<{
                 })
                 break
             case WorkflowState.Active:
-                actions.push(
-                    {
-                        label: 'Revise',
-                        icon: 'i-lucide-pen',
-                        color: 'info',
-                        onSelect: () => { performWorkflowAction({ requirement, action: 'revise' }) }
-                    },
-                    {
+                actions.push({
+                    label: 'Revise',
+                    icon: 'i-lucide-pen',
+                    color: 'info',
+                    onSelect: () => { performWorkflowAction({ requirement, action: 'revise' }) }
+                })
+
+                // Singleton requirements cannot be removed when Active (they are essential)
+                if (!SINGLETON_REQUIREMENT_TYPES.includes(requirement.reqType)) {
+                    actions.push({
                         label: 'Remove',
                         icon: 'i-lucide-trash-2',
                         color: 'error',
                         onSelect: () => confirmAndPerformAction({ requirement, action: 'remove', confirmMessage: `Are you sure you want to remove requirement "${requirement.name}"?` })
-                    }
-                )
+                    })
+                }
                 break
             case WorkflowState.Rejected:
                 actions.push(
@@ -371,6 +375,7 @@ watch(internalSelectedStates, (newStates) => {
                     </USelectMenu>
                 </UFormField>
                 <UFormField
+                    v-if="!hideNew"
                     label="&nbsp;"
                     size="md"
                 >
