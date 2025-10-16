@@ -8,8 +8,6 @@
   - [WSL2 Installation Guide](https://docs.microsoft.com/en-us/windows/wsl/install)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
   - `choco install docker-desktop`
-- [pgAdmin](https://www.pgadmin.org/)
-  - `choco install pgadmin4`
 
 ## Project Setup
 
@@ -27,6 +25,12 @@
   1. Docker images
   2. Node modules
   3. VS Code extensions
+7. Once setup is complete, next you need to initialize the database. Run the following commands in the terminal:
+
+```bash
+npm run orm-create-db:local
+npm run orm-run-pending-migrations:local
+```
 
 ### Environment Variables
 
