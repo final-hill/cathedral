@@ -5,12 +5,14 @@ import { StakeholderSegmentation } from './StakeholderSegmentation.js'
 import { dedent } from '../../utils/dedent.js'
 import { ReqType } from './ReqType.js'
 import { uiBasePathTemplates } from './uiBasePathTemplates.js'
-import { PersonReference } from './EntityReferences.js'
+import { PersonReference, StakeholderReference } from './EntityReferences.js'
 
 export const Stakeholder = Component.extend({
     reqId: z.string().regex(/^G\.7\.\d+$/, 'Format must be G.7.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('G.7.').default('G.7.'),
+    parentComponent: StakeholderReference.optional()
+        .describe('The parent stakeholder of the stakeholder. This can be used to represent teams or departments.'),
     uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.STAKEHOLDER])
         .describe('The UI path template for navigating to this requirement in the web interface'),
     segmentation: z.nativeEnum(StakeholderSegmentation)
