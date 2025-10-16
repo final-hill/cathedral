@@ -12,10 +12,16 @@ export const Invariant = Requirement.extend({
     uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.INVARIANT])
         .describe('The UI path template for navigating to this requirement in the web interface')
 }).describe(dedent(`
-    An Invariant is an Environment property that must be maintained.
-    It constrains the possible states of a System.
-    It exists as both an assumption and an effect.
-    (precondition and postcondition)
+    An Invariant is an Environment property that must always be true and maintained.
+    It constrains the possible states of a System by defining rules that cannot be violated.
+    It exists as both an assumption and an effect (precondition and postcondition).
+    
+    Examples:
+    - A list cannot have a negative number of items
+    - The gravitational acceleration remains 9.8 m/s² on Earth
+    - A bank account balance cannot exceed the account limit
+    - A user must be logged in to access protected resources
+    - Temperature cannot go below absolute zero (-273.15°C)
 `))
 
 export type InvariantType = z.infer<typeof Invariant>
