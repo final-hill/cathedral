@@ -203,8 +203,9 @@ The Solution Creator Person is automatically configured with:
 - **All Endorsement Permissions** - Can endorse all requirement categories
 
 #### Initial Requirements Summary
-For each new Solution, the following requirement is automatically created in `Active` state:
-- **One Solution Creator Person** (linked to solution creator's AppUser with both Product Owner and Implementation Owner capabilities)
+For each new Solution, the following requirements are automatically created:
+- **One Solution Creator Person** (in `Active` state, linked to solution creator's AppUser with both Product Owner and Implementation Owner capabilities)
+- **One Context and Objective** (in `Proposed` state, providing a template for defining the solution's purpose and scope). This is a singleton requirement type and cannot be removed once it reaches `Active` state.
 
 ### Person-Based Endorsement Permissions
 
@@ -303,8 +304,20 @@ Requirements in Cathedral follow a five-state workflow:
 - **UI Behavior**: The workflow state is not displayed in the UI for ParsedRequirements, and workflow filtering is not available
 - **Source Tracking**: The `name` field is used to distinguish the source of parsed requirements:
   - **"Free-form requirements"** - Created via the web UI form
-  - **"Slack Requirements"** - Created via Slack bot interactions
   - This naming convention enables auditing, user experience tracking, and system analytics
+
+### Special Case: Singleton Requirements
+
+**Singleton Requirements** (such as Context and Objective) have unique constraints to ensure only one instance exists per solution:
+
+- **Single Static Model**: Only one requirement ID can exist at a time (across all workflow states except Removed)
+- **Creation Prevention**: Cannot create a new singleton requirement if one already exists in any state (Proposed, Review, Active, Rejected)
+- **Restoration Prevention**: Cannot restore a Removed singleton requirement if another instance exists
+- **Removal Protection**: Cannot remove a singleton requirement when it is in Active state (essential requirements must remain)
+- **Workflow Enforcement**: The singleton constraint is enforced at the static model level, not just the Active state
+- **User Guidance**: Error messages direct users to edit or revise the existing requirement instead of creating new ones
+- **UI Behavior**: The Remove action is hidden for Active singleton requirements in the requirements list
+- **Rationale**: Singleton requirements represent unique, singular aspects of a solution (e.g., there is only one high-level context and objective for a project), and once Active, they are essential and cannot be deleted
 
 ### Workflow Transitions
 

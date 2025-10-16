@@ -7,6 +7,7 @@ import { ReqType, WorkflowState, InvalidWorkflowStateException, MismatchExceptio
 import type { AuditMetadata, AuditMetadataType } from '#shared/domain'
 import type { RequirementReferenceType } from '#shared/domain/requirements/EntityReferences'
 import { MINIMUM_REQUIREMENT_TYPES } from '#shared/domain/requirements/minimumRequirements'
+import { SINGLETON_REQUIREMENT_TYPES } from '#shared/domain/requirements/singletonRequirements'
 import type { PermissionInteractor, AppUserInteractor } from '.'
 import type { RequirementRepository } from '~~/server/data/repositories/RequirementRepository'
 import type { NaturalLanguageToRequirementService } from '~~/server/data/services/NaturalLanguageToRequirementService'
@@ -403,6 +404,29 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         this._permissionInteractor.assertOrganizationContributor(this._organizationId)
         await this.assertReferencedRequirementsBelongToSolution(props)
 
+        // Check singleton constraint: only one static model (requirement ID) allowed for singleton requirement types
+        // This prevents creating multiple parallel versions that could both become Active
+        if (SINGLETON_REQUIREMENT_TYPES.includes(props.reqType)) {
+            // Check for ANY existing requirement (across all workflow states except Removed)
+            // We check all states because a requirement in Proposed or Review could eventually become Active
+            const existingRequirements = await this.repository.getAll({
+                    solutionId: this._solutionId,
+                    reqType: props.reqType
+                }),
+
+                // Filter out Removed requirements - they no longer count toward the singleton constraint
+                nonRemovedRequirements = existingRequirements.filter(req => req.workflowState !== WorkflowState.Removed)
+
+            if (nonRemovedRequirements.length > 0) {
+                const existingReq = nonRemovedRequirements[0]!
+                throw new InvalidWorkflowStateException(
+                    `Cannot create a new ${props.reqType} requirement because one already exists (current state: ${existingReq.workflowState}). `
+                    + `Singleton requirement types can only have one instance at a time. `
+                    + `Please edit or revise the existing requirement (ID: ${existingReq.id}) instead.`
+                )
+            }
+        }
+
         const currentUserId = this._permissionInteractor.userId
 
         let workflowState: WorkflowState
@@ -630,6 +654,28 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         if (currentRequirement.reqType === ReqType.SILENCE)
             throw new InvalidWorkflowStateException(`Silence requirements cannot be restored once removed.`)
 
+        // Check singleton constraint: prevent restoring if another instance exists
+        if (SINGLETON_REQUIREMENT_TYPES.includes(currentRequirement.reqType)) {
+            const existingRequirements = await this.repository.getAll({
+                    solutionId: this._solutionId,
+                    reqType: currentRequirement.reqType
+                }),
+
+                // Filter out the current requirement and other Removed requirements
+                nonRemovedRequirements = existingRequirements.filter(req =>
+                    req.id !== id && req.workflowState !== WorkflowState.Removed
+                )
+
+            if (nonRemovedRequirements.length > 0) {
+                const existingReq = nonRemovedRequirements[0]!
+                throw new InvalidWorkflowStateException(
+                    `Cannot restore ${currentRequirement.reqType} requirement because another instance already exists (current state: ${existingReq.workflowState}). `
+                    + `Singleton requirement types can only have one instance at a time. `
+                    + `Please remove or complete the existing requirement (ID: ${existingReq.id}) first.`
+                )
+            }
+        }
+
         return this.repository.update({
             reqProps: {
                 id,
@@ -700,6 +746,16 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
         if (currentRequirement.reqType === ReqType.PERSON)
             await this.validatePersonProtection(id)
+
+        // Protect singleton requirements from removal when Active
+        // These are essential requirements that cannot be removed once they reach Active state
+        if (SINGLETON_REQUIREMENT_TYPES.includes(currentRequirement.reqType)) {
+            throw new InvalidWorkflowStateException(
+                `Cannot remove Active ${currentRequirement.reqType} requirement. `
+                + `Singleton requirements are essential to the solution and cannot be deleted once Active. `
+                + `To make changes, use the Revise action instead.`
+            )
+        }
 
         if (currentRequirement.workflowState !== WorkflowState.Active)
             throw new InvalidWorkflowStateException(`Requirement with id ${id} is not in the Active state`)
