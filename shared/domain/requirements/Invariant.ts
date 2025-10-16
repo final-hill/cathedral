@@ -18,7 +18,7 @@ export const Invariant = Requirement.extend({
     
     Examples:
     - A list cannot have a negative number of items
-    - The gravitational constant remains 9.8 m/s² on Earth
+    - The gravitational acceleration remains 9.8 m/s² on Earth
     - A bank account balance cannot exceed the account limit
     - A user must be logged in to access protected resources
     - Temperature cannot go below absolute zero (-273.15°C)
