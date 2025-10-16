@@ -33,7 +33,10 @@ const config: Options = {
     forceUtcTimezone: true,
     metadataProvider: TsMorphMetadataProvider,
     debug: process.env.NODE_ENV !== 'production',
-    migrations: { transactional: true }
+    migrations: { 
+        path: './server/data/migrations',
+        transactional: true 
+    }
 }
 
 let connection: ReturnType<typeof MikroORM.init> | undefined
