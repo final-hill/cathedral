@@ -2,12 +2,14 @@ import * as req from '#shared/domain/requirements'
 import { ReqType, WorkflowState } from '#shared/domain/requirements/enums'
 import { AppRole } from '#shared/domain/application'
 import type { AppUserType } from '#shared/domain/application'
+import { AppUserReference } from '#shared/domain/application/EntityReferences'
 import { MismatchException, PermissionDeniedException } from '#shared/domain/exceptions'
 import type { OrganizationRepository, RequirementRepository } from '~~/server/data/repositories'
 import type { PermissionInteractor, AppUserInteractor } from '.'
 import { Interactor } from './Interactor'
 import { AppUserWithRoleDto } from '#shared/dto/AppUserWithRoleDto'
 import type { AppUserWithRoleDtoType } from '#shared/dto/AppUserWithRoleDto'
+import { v7 as uuid7 } from 'uuid'
 
 /**
  * The OrganizationInteractor class contains the business logic for interacting with an organization.
@@ -314,6 +316,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
         const currentUser = await this._appUserInteractor.getUserById({ id: createdById, organizationId }),
             // Create Person entity for the solution creator with both role capabilities
             solutionCreatorPersonData = req.Person.parse({
+                id: uuid7(),
                 name: currentUser.name,
                 description: `Solution Creator with Product Owner and Implementation Owner capabilities: ${currentUser.name}`,
                 appUser: {
@@ -321,6 +324,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
                     name: currentUser.name,
                     entityType: 'app_user' as const
                 },
+                stakeholders: [], // Initialize as empty array - can be populated later
                 // Enable both Product Owner and Implementation Owner capabilities
                 isProductOwner: true,
                 isImplementationOwner: true,
@@ -334,7 +338,18 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
                     name: '',
                     reqType: ReqType.SOLUTION
                 },
-                workflowState: WorkflowState.Active
+                workflowState: WorkflowState.Active,
+                createdBy: AppUserReference.parse({
+                    id: currentUser.id,
+                    name: currentUser.name
+                }),
+                creationDate,
+                isDeleted: false,
+                lastModified: creationDate,
+                modifiedBy: AppUserReference.parse({
+                    id: currentUser.id,
+                    name: currentUser.name
+                })
             })
 
         await this._requirementRepository!.add({

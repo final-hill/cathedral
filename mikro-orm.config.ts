@@ -33,9 +33,9 @@ const config: Options = {
     forceUtcTimezone: true,
     metadataProvider: TsMorphMetadataProvider,
     debug: process.env.NODE_ENV !== 'production',
-    migrations: { 
+    migrations: {
         path: './server/data/migrations',
-        transactional: true 
+        transactional: true
     }
 }
 

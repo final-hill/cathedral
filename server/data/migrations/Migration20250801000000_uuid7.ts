@@ -42,13 +42,13 @@ AS $BODY$
 
                 return (v_unix_t_hex || v_rand_a_hex || v_rand_b_hex)::uuid;
 
-            end $BODY$;`);
+            end $BODY$;`)
 
         this.addSql(`ALTER FUNCTION public.uuid7(p_timestamp timestamp with time zone)
-    OWNER TO postgres;`);
+    OWNER TO postgres;`)
     }
 
     override async down(): Promise<void> {
-        this.addSql(`DROP FUNCTION IF EXISTS public.uuid7(timestamp with time zone);`);
+        this.addSql(`DROP FUNCTION IF EXISTS public.uuid7(timestamp with time zone);`)
     }
 }
