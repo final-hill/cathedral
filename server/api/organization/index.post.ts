@@ -18,21 +18,7 @@ export default defineEventHandler(async (event) => {
             entraService
         })
 
-    try {
-        const newOrgId = await organizationCollectionInteractor.createOrganization({ name, description }),
-            organizations = await organizationCollectionInteractor.findOrganizations({ id: newOrgId! }),
-            newOrg = organizations[0]
-
-        if (!newOrg) {
-            console.error(`Failed to find newly created organization for id: ${newOrgId}`)
-            throw createError({
-                status: 500,
-                message: `Failed to find newly created organization for id: ${newOrgId}`
-            })
-        }
-
-        return newOrg.slug
-    } catch (error: unknown) {
-        return handleDomainException(error)
-    }
+    return organizationCollectionInteractor.createOrganization({ name, description })
+        .then(() => slugify(name))
+        .catch(handleDomainException)
 })
