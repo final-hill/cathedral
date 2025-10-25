@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
             entraService
         })
 
-        return organizationCollectionInteractor.createOrganization({ name, description })
-            .then(() => slugify(name))
-            .catch(handleDomainException)
+    return organizationCollectionInteractor.createOrganization({ name, description })
+        .then(() => slugify(name))
+        .catch(handleDomainException)
 })
