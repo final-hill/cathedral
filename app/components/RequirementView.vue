@@ -2,11 +2,17 @@
 import type * as req from '#shared/domain/requirements'
 import type { FormSchema } from '~/components/XForm.vue'
 import type { ReqType } from '#shared/domain/requirements/enums'
-import { WorkflowState } from '#shared/domain/requirements/enums'
 import type { RequirementType } from '#shared/domain'
+import type { WorkflowAction } from '~/types'
 import { z } from 'zod'
+import { uiBasePathTemplates } from '#shared/domain/requirements/uiBasePathTemplates'
+import { XConfirmModal } from '#components'
+import { getWorkflowActions } from '~/utils/workflow-actions'
 
 const route = useRoute(),
+    router = useRouter(),
+    overlay = useOverlay(),
+    confirmModal = overlay.create(XConfirmModal, {}),
     props = defineProps<{
         requirement?: req.RequirementType | null
         schema: FormSchema
@@ -113,6 +119,39 @@ const route = useRoute(),
     getReqTypeFromSlot = (slot: string) => {
         const [, reqTypeKey] = slot.split('-')
         return reqTypeKey
+    },
+    basePath = computed(() => {
+        if (!requirement.value) return ''
+        const template = uiBasePathTemplates[requirement.value.reqType as keyof typeof uiBasePathTemplates]
+        return template
+            .replace('[org]', organizationSlug.value)
+            .replace('[solutionslug]', solutionSlug.value)
+    }),
+    workflowActions = computed(() => {
+        if (!requirement.value) return []
+
+        return getWorkflowActions({
+            requirement: requirement.value,
+            basePath: basePath.value,
+            performWorkflowAction,
+            confirmAndPerformAction,
+            navigate: (path: string) => router.push(path),
+            callbackPropertyName: 'onClick',
+            includeViewAction: false
+        })
+    }),
+    { performWorkflowAction } = useWorkflowActions({
+        organizationSlug,
+        solutionSlug,
+        basePath
+    }),
+    confirmAndPerformAction = async ({ requirement: req, action, confirmMessage }: { requirement: req.RequirementType, action: WorkflowAction, confirmMessage: string }) => {
+        const result = await confirmModal.open({
+            title: confirmMessage
+        }).result
+
+        if (result)
+            await performWorkflowAction({ requirement: req, action })
     }
 </script>
 
@@ -157,11 +196,12 @@ const route = useRoute(),
                     </div>
                     <div class="flex gap-2">
                         <UButton
-                            v-if="requirement.workflowState === WorkflowState.Proposed || requirement.workflowState === WorkflowState.Active"
-                            :to="`${$route.path}/edit`"
-                            color="primary"
-                            icon="i-lucide-pen"
-                            label="Edit"
+                            v-for="action in workflowActions"
+                            :key="action.label"
+                            :color="action.color"
+                            :icon="action.icon"
+                            :label="action.label"
+                            @click="action.onClick as () => void"
                         />
                         <UButton
                             color="neutral"

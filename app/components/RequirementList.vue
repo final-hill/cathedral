@@ -2,14 +2,13 @@
 import type * as req from '#shared/domain/requirements'
 import type { ReqType } from '#shared/domain/requirements/ReqType'
 import type { TableColumn } from '@nuxt/ui'
+import type { WorkflowAction } from '~/types'
 import { UBadge, UButton, UTable, UDropdownMenu, XConfirmModal, USelectMenu, UFormField } from '#components'
 import { WorkflowState } from '#shared/domain/requirements/enums'
 import { uiBasePathTemplates } from '#shared/domain/requirements/uiBasePathTemplates'
 import { workflowColorMap } from '#shared/utils/workflow-colors'
 import { snakeCaseToTitleCase } from '#shared/utils'
-import { SINGLETON_REQUIREMENT_TYPES } from '#shared/domain/requirements/singletonRequirements'
-
-type WorkflowAction = 'review' | 'remove' | 'revise' | 'restore'
+import { getWorkflowActions } from '~/utils/workflow-actions'
 
 const props = defineProps<{
         requirements: req.RequirementType[]
@@ -28,7 +27,6 @@ const props = defineProps<{
     }>(),
     { requirements, reqType, organizationSlug, solutionSlug, loading = false, hideHeader = false, hideNew = false, parentReferences, selectedWorkflowStates } = toRefs(props),
     router = useRouter(),
-    toast = useToast(),
     overlay = useOverlay(),
     confirmModal = overlay.create(XConfirmModal, {}),
     basePath = computed(() => {
@@ -106,7 +104,7 @@ const props = defineProps<{
             cell: ({ row }) => {
                 return (
                     <div class="text-right">
-                        <UDropdownMenu items={getWorkflowActions(row.original)}>
+                        <UDropdownMenu items={getWorkflowActionsForRequirement(row.original)}>
                             <UButton
                                 icon="i-lucide-ellipsis-vertical"
                                 color="neutral"
@@ -119,148 +117,22 @@ const props = defineProps<{
             }
         }
     ],
-    getWorkflowActions = (requirement: req.RequirementType) => {
-        const actions: Array<{
-            label: string
-            icon: string
-            color?: 'success' | 'error' | 'info' | 'neutral' | 'warning' | 'primary' | 'secondary'
-            onSelect: () => void
-        }> = []
-
-        // View action - always available
-        actions.push({
-            label: 'View',
-            icon: 'i-lucide-eye',
-            color: 'info',
-            onSelect: () => { router.push(`${basePath.value}/${requirement.id}`) }
+    getWorkflowActionsForRequirement = (requirement: req.RequirementType) => {
+        return getWorkflowActions({
+            requirement,
+            basePath: basePath.value,
+            performWorkflowAction,
+            confirmAndPerformAction,
+            navigate: (path: string) => router.push(path),
+            callbackPropertyName: 'onSelect',
+            includeViewAction: true
         })
-
-        // Edit/Revise actions - based on workflow state
-        if (requirement.workflowState === WorkflowState.Proposed) {
-            actions.push({
-                label: 'Edit',
-                icon: 'i-lucide-pen',
-                color: 'primary',
-                onSelect: () => { router.push(`${basePath.value}/${requirement.id}/edit`) }
-            })
-        }
-
-        // Active requirements don't get direct edit - they get revise which creates new versions
-        // This is handled in the workflow state switch below
-
-        // State transition actions
-        switch (requirement.workflowState) {
-            case WorkflowState.Proposed:
-                actions.push(
-                    {
-                        label: 'Submit for Review',
-                        icon: 'i-lucide-check-circle',
-                        color: 'warning',
-                        onSelect: () => { performWorkflowAction({ requirement, action: 'review' }) }
-                    },
-                    {
-                        label: 'Remove',
-                        icon: 'i-lucide-trash-2',
-                        color: 'error',
-                        onSelect: () => confirmAndPerformAction({ requirement, action: 'remove', confirmMessage: `Are you sure you want to remove requirement "${requirement.name}"?` })
-                    }
-                )
-                break
-            case WorkflowState.Review:
-                actions.push({
-                    label: 'Review',
-                    icon: 'i-lucide-clipboard-check',
-                    color: 'warning',
-                    onSelect: () => { router.push(`${basePath.value}/${requirement.id}/review`) }
-                })
-                break
-            case WorkflowState.Active:
-                actions.push({
-                    label: 'Revise',
-                    icon: 'i-lucide-pen',
-                    color: 'info',
-                    onSelect: () => { performWorkflowAction({ requirement, action: 'revise' }) }
-                })
-
-                // Singleton requirements cannot be removed when Active (they are essential)
-                if (!SINGLETON_REQUIREMENT_TYPES.includes(requirement.reqType)) {
-                    actions.push({
-                        label: 'Remove',
-                        icon: 'i-lucide-trash-2',
-                        color: 'error',
-                        onSelect: () => confirmAndPerformAction({ requirement, action: 'remove', confirmMessage: `Are you sure you want to remove requirement "${requirement.name}"?` })
-                    })
-                }
-                break
-            case WorkflowState.Rejected:
-                actions.push(
-                    {
-                        label: 'Revise',
-                        icon: 'i-lucide-edit',
-                        color: 'info',
-                        onSelect: () => { performWorkflowAction({ requirement, action: 'revise' }) }
-                    },
-                    {
-                        label: 'Remove',
-                        icon: 'i-lucide-trash-2',
-                        color: 'error',
-                        onSelect: () => confirmAndPerformAction({ requirement, action: 'remove', confirmMessage: `Are you sure you want to remove requirement "${requirement.name}"?` })
-                    }
-                )
-                break
-            case WorkflowState.Removed:
-                actions.push({
-                    label: 'Restore',
-                    icon: 'i-lucide-refresh-cw',
-                    color: 'neutral',
-                    onSelect: () => { performWorkflowAction({ requirement, action: 'restore' }) }
-                })
-                break
-        }
-
-        return actions
     },
-    performWorkflowAction = async ({ requirement, action }: { requirement: req.RequirementType, action: WorkflowAction }) => {
-        try {
-            let endpoint: string
-
-            switch (action) {
-                case 'review':
-                    endpoint = `/api/requirements/${reqType.value}/proposed/${requirement.id}/review`
-                    break
-                case 'revise':
-                    if (requirement.workflowState === WorkflowState.Rejected)
-                        endpoint = `/api/requirements/${reqType.value}/rejected/${requirement.id}/revise`
-                    else if (requirement.workflowState === WorkflowState.Active)
-                        endpoint = `/api/requirements/${reqType.value}/active/${requirement.id}/edit`
-                    else
-                        throw new Error(`Invalid revise action for requirement in ${requirement.workflowState} state`)
-
-                    break
-                case 'remove':
-                    endpoint = `/api/requirements/${reqType.value}/${requirement.workflowState.toLowerCase()}/${requirement.id}/remove`
-                    break
-                case 'restore':
-                    endpoint = `/api/requirements/${reqType.value}/removed/${requirement.id}/restore`
-                    break
-                default:
-                    throw new Error(`Unknown workflow action: ${action}`)
-            }
-
-            await $fetch(endpoint, {
-                method: 'POST',
-                body: {
-                    solutionSlug: solutionSlug.value,
-                    organizationSlug: organizationSlug.value
-                }
-            })
-
-            toast.add({
-                icon: 'i-lucide-check',
-                title: 'Success',
-                description: `Requirement ${action}d successfully`
-            })
-
+    { performWorkflowAction } = useWorkflowActions({
+        organizationSlug,
+        solutionSlug,
+        basePath,
+        onSuccess: async ({ action, requirement }) => {
             // Navigate to appropriate detail page after successful state transition
             const detailBasePath = `${basePath.value}/${requirement.id}`
 
@@ -278,28 +150,8 @@ const props = defineProps<{
                 default:
                     emit('refresh')
             }
-        } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : String(error)
-
-            // Special handling for Active revision conflicts (documented behavior)
-            if (action === 'revise' && requirement.workflowState === WorkflowState.Active
-                && (message.includes('newer versions') || message.includes('Proposed or Review'))) {
-                toast.add({
-                    icon: 'i-lucide-alert-triangle',
-                    title: 'Revision Blocked',
-                    description: `Cannot revise "${requirement.name}" because there are already newer versions in Proposed or Review states. Only one revision process can be active at a time.`,
-                    color: 'warning'
-                })
-            } else {
-                toast.add({
-                    icon: 'i-lucide-alert-circle',
-                    title: 'Error',
-                    description: `Error ${action}ing requirement: ${message}`,
-                    color: 'error'
-                })
-            }
         }
-    },
+    }),
     confirmAndPerformAction = async ({ requirement, action, confirmMessage }: { requirement: req.RequirementType, action: WorkflowAction, confirmMessage: string }) => {
         const result = await confirmModal.open({
             title: confirmMessage
