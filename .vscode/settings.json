@@ -11,7 +11,8 @@
     "explorer.fileNesting.enabled": true,
     "explorer.fileNesting.patterns": {
         "*.ts": "${capture}.test.ts",
-        "*.vue": "${capture}.test.ts"
+        "*.vue": "${capture}.test.ts",
+        ".env": ".env.*"
     },
     "files.associations": {
         "*.css": "tailwindcss"

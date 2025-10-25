@@ -32,13 +32,16 @@ const handleSignOut = async () => {
     menuItems = ref<DropdownMenuItem[][]>([
         [{
             type: 'label',
+            class: 'profile-menu_user-name',
             label: user.value?.name ?? 'Anonymous',
             avatar: { src: avatarFallback }
         }], [{
             type: 'label',
+            class: 'profile-menu_user-email',
             label: user.value?.email ?? 'anonymous@example.com'
         }], [{
             label: 'Sign Out',
+            class: 'profile-menu_sign-out',
             icon: 'i-lucide-user-round-x',
             onSelect: async () => await handleSignOut()
         }]
@@ -48,13 +51,16 @@ const handleSignOut = async () => {
             menuItems.value = [
                 [{
                     type: 'label',
+                    class: 'profile-menu_user-name',
                     label: user.value?.name ?? 'Anonymous',
                     avatar: { src: avatarFallback }
                 }], [{
                     type: 'label',
+                    class: 'profile-menu_user-email',
                     label: user.value?.email ?? 'anonymous@example.com'
                 }], [{
                     label: 'Sign Out',
+                    class: 'profile-menu_sign-out',
                     icon: 'i-lucide-user-round-x',
                     onSelect: async () => await handleSignOut()
                 }]
@@ -63,13 +69,16 @@ const handleSignOut = async () => {
             menuItems.value = [
                 [{
                     type: 'label',
+                    class: 'profile-menu_user-name',
                     label: 'Anonymous',
                     avatar: { src: avatarFallback }
                 }], [{
                     type: 'label',
+                    class: 'profile-menu_user-email',
                     label: 'anonymous@example.com'
                 }], [{
                     label: 'Sign In',
+                    class: 'profile-menu_sign-in',
                     icon: 'i-lucide-user-check',
                     onSelect: async () => await navigateTo('/auth/entra-external-id', { external: true })
                 }]
@@ -82,10 +91,10 @@ watch(loggedIn, updateMenuItems)
 </script>
 
 <template>
-    <nav class="top-nav p-2 grid gap-4 items-center ring ring-default rounded-lg bg-elevated/50">
+    <nav class="top-navigation p-2 grid gap-4 items-center ring ring-default rounded-lg bg-elevated/50 grid-cols-[0.5in_1fr_0.5in] grid-rows-1 [grid-template-areas:'logo_crumbs_profile-menu']">
         <NuxtLink
             to="/"
-            class="site-logo w-8 h-8 justify-self-center"
+            class="site-logo w-8 h-8 justify-self-center [grid-area:logo]"
         >
             <img
                 src="/logo.png"
@@ -95,14 +104,15 @@ watch(loggedIn, updateMenuItems)
         </NuxtLink>
         <UBreadcrumb
             :items="crumbs"
-            class="breadcrumb"
+            class="breadcrumb [grid-area:crumbs]"
         />
 
         <AuthState v-slot="{ loggedIn: userLoggedIn }">
             <UDropdownMenu
                 v-if="userLoggedIn"
                 :items="menuItems"
-                class="profile-menu"
+                class="profile-menu cursor-pointer [grid-area:profile-menu]"
+                data-testid="profile-menu"
             >
                 <UButton
                     icon="i-lucide-user"
@@ -110,29 +120,9 @@ watch(loggedIn, updateMenuItems)
                     color="primary"
                     size="xl"
                     class="justify-self-center"
+                    data-testid="profile-button"
                 />
             </UDropdownMenu>
         </AuthState>
     </nav>
 </template>
-
-<style>
-.top-nav {
-    grid-template-columns: 0.5in 1fr 0.5in;
-    grid-template-rows: 1fr;
-    grid-template-areas: "logo crumbs profile-menu";
-
-    &>.site-logo {
-        grid-area: logo;
-    }
-
-    &>.breadcrumb {
-        grid-area: crumbs;
-    }
-
-    &>.profile-menu {
-        grid-area: profile-menu;
-        cursor: pointer;
-    }
-}
-</style>

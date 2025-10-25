@@ -41,12 +41,8 @@
         "orm-run-pending-migrations:production": "dotenvx run -f .env.production -- mikro-orm-esm migration:up",
         "orm-rollback-migration:local": "dotenvx run -f .env.local -- mikro-orm-esm migration:down",
         "orm-rollback-migration:production": "dotenvx run -f .env.production -- mikro-orm-esm migration:down",
-        "test": "dotenvx run -f .env.local -- vitest run",
-        "test:watch": "dotenvx run -f .env.local -- vitest",
-        "dotenvx:encrypt:local": "dotenvx encrypt -f .env.local",
-        "dotenvx:encrypt:production": "dotenvx encrypt -f .env.production",
-        "dotenvx:decrypt:local": "dotenvx decrypt -f .env.local",
-        "dotenvx:decrypt:production": "dotenvx decrypt -f .env.production"
+        "test": "dotenvx run -f .env.test -- vitest run",
+        "test:watch": "dotenvx run -f .env.test -- vitest"
     },
     "dependencies": {
         "@azure/monitor-opentelemetry": "^1.14.0",
