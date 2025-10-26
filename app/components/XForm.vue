@@ -5,6 +5,8 @@ import { getSchemaFields } from '#shared/utils'
 import * as refs from '#shared/domain/requirements/EntityReferences'
 import { AppUserReference } from '#shared/domain/application/EntityReferences'
 import { ReqType } from '#shared/domain/requirements/enums'
+import { computeStakeholderCategory } from '#shared/domain/requirements/stakeholderUtils'
+import type { StakeholderType } from '#shared/domain/requirements'
 
 export type FormSchema = z.ZodObject<{ [key: string]: z.ZodTypeAny }>
 
@@ -45,6 +47,28 @@ watch(localState, (newState) => {
 watch(() => props.state, (newState) => {
     Object.assign(localState, newState)
 }, { deep: true, immediate: true })
+
+// FIXME: <https://github.com/final-hill/cathedral/issues/720>
+//
+// Special handling for Stakeholder forms: auto-compute category from interest and influence
+// Detect if this is a Stakeholder form by checking if the schema has interest, influence, and category fields
+const isStakeholderForm = computed(() => {
+    const fields = schemaFields.map(f => f.key)
+    return fields.includes('interest') && fields.includes('influence') && fields.includes('category')
+})
+
+watch(localState, (state) => {
+    if (isStakeholderForm.value) {
+        const stakeholderState = state as Partial<StakeholderType>
+        if (typeof stakeholderState.interest === 'number' && typeof stakeholderState.influence === 'number') {
+            const newCategory = computeStakeholderCategory({
+                interest: stakeholderState.interest,
+                influence: stakeholderState.influence
+            })
+            stakeholderState.category = newCategory
+        }
+    }
+}, { deep: true })
 
 // Custom validation function to run child component validators
 const customValidate = async (_state: z.output<F>): Promise<FormError[]> => {
@@ -146,6 +170,7 @@ const onSubmit = async ({ data }: FormSubmitEvent<z.output<F>>) => {
         })
     },
     schemaFields = getSchemaFields(props.schema),
+
     // Helper function to add empty option for optional select fields
     getSelectOptions = (field: { isOptional: boolean, enumOptions?: unknown[] }): SelectItem[] => {
         if (field.isOptional && field.enumOptions) {
@@ -325,6 +350,13 @@ watch(
                     v-model="(localState as any)[field.key]"
                     class="w-full"
                     autoresize
+                />
+                <USelect
+                    v-else-if="field.isReadOnly && field.isEnum"
+                    v-model="(localState as any)[field.key]"
+                    :items="getSelectOptions(field)"
+                    disabled
+                    class="w-full"
                 />
                 <UInput
                     v-else-if="field.isReadOnly && !field.isObject && !field.isArrayOfObjects"
