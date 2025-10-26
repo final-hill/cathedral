@@ -92,7 +92,11 @@ const enumToLabelValue = (enumObject: Record<string, string>) =>
                 maxLength,
                 isEnum,
                 isEmail,
-                enumOptions: isEnum ? enumToLabelValue((innerType as z.ZodEnum<[string, ...string[]]>).enum) : []
+                enumOptions: isEnum
+                    ? innerType instanceof z.ZodNativeEnum
+                        ? enumToLabelValue(innerType._def.values)
+                        : enumToLabelValue((innerType as z.ZodEnum<[string, ...string[]]>).enum)
+                    : []
             } as const
         })
 
