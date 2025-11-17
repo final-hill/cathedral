@@ -12,8 +12,16 @@ export const Assumption = Requirement.extend({
     uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.ASSUMPTION])
         .describe('The UI path template for navigating to this requirement in the web interface')
 }).describe(dedent(`
-    An assumption is a property of the environment that is assumed to be true; a precondition.
-    An example of an assumption would be: "Screen resolution will not change during the execution of the program".
+    An Assumption is a property of the environment that is assumed to be true; a precondition.
+    
+    Content Guidelines:
+    - Name: Should indicate what is being assumed (e.g., "Network Availability", "User Has Internet Access")
+    - Description: Should state what is being assumed and why it's reasonable to assume it
+    - Should be external to the system (environment properties, user capabilities, infrastructure)
+    - Should NOT contain requirements or constraints about the system itself
+    - Should be verifiable conditions that can be checked
+    
+    Example: "Screen resolution will not change during the execution of the program"
 `))
 
 export type AssumptionType = z.infer<typeof Assumption>

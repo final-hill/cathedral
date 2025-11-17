@@ -19,10 +19,18 @@ export const UserStory = Example.extend({
 }).describe(dedent(`
     A User Story specifies the handling of a specific user need.
 
-    As a [role], I want [behavior], so that [goal].
-    [role] - primary_actor_id (Actor)
-    [behavior] - behaviorId (Functional Behavior)
-    [goal] - outcomeId
+    Pattern: As a [role], I want [behavior], so that [goal].
+    [role] - primaryActor (Actor)
+    [behavior] - functionality (Functional Behavior)
+    [goal] - outcome (Goal)
+    
+    Content Guidelines:
+    - Name: Should be concise and goal-oriented (e.g., "User Registration", "View Order History")
+    - Description: Should follow the "As a [user role], I want [capability], so that [benefit]" pattern
+    - Should focus on user perspective and value delivered
+    - Should be independent, negotiable, and testable
+    - Should fit within a single iteration/sprint
+    - Should NOT include implementation details or technical specifications
 `))
 
 export type UserStoryType = z.infer<typeof UserStory>

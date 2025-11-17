@@ -15,8 +15,14 @@ export const Constraint = Requirement.extend({
     uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.CONSTRAINT])
         .describe('The UI path template for navigating to this requirement in the web interface')
 }).describe(dedent(`
-    Constraints are the limitations and obligations that
-    the environment imposes on the project and system.
+    Constraints are the limitations and obligations that the environment imposes on the project and system.
+    
+    Content Guidelines:
+    - Name: Should clearly indicate a limitation or restriction (e.g., "Maximum Response Time", "Budget Limit")
+    - Description: Should use restrictive language (must not, shall not, cannot, limited to, maximum, minimum)
+    - Should clearly state what is prohibited, limited, or constrained
+    - Should NOT describe desired functionality or behaviors (use Functional/Non-Functional Behavior instead)
+    - Should be externally imposed by environment, regulations, or business rules
 `))
 
 export type ConstraintType = z.infer<typeof Constraint>

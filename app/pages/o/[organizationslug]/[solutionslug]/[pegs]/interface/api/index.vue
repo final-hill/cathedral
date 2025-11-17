@@ -10,10 +10,9 @@ definePageMeta({ middleware: 'auth' })
 useHead({ title: 'API Interfaces' })
 
 const route = useRoute(),
-    { organizationslug, solutionslug, pegs: _pegs } = route.params as {
+    { organizationslug, solutionslug } = route.params as {
         organizationslug: string
         solutionslug: string
-        pegs: string
     },
     { data: allInterfaces, refresh, status } = await useApiRequest({ url: `/api/requirements/${ReqType.INTERFACE}`, options: {
         query: {
@@ -23,8 +22,8 @@ const route = useRoute(),
         schema: z.array(Interface)
     } }),
     apiInterfaces = computed(() => {
-        return allInterfaces.value?.filter((interface_: RequirementType & { interfaceType?: InterfaceType }) =>
-            interface_.interfaceType === InterfaceType.API
+        return allInterfaces.value?.filter((iface: RequirementType & { interfaceType?: InterfaceType }) =>
+            iface.interfaceType === InterfaceType.API
         ) || []
     })
 </script>

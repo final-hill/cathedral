@@ -1,25 +1,28 @@
 <script setup lang="ts">
 import { ReqType, WorkflowState, InterfaceSchema } from '#shared/domain'
 
-definePageMeta({ middleware: 'auth' })
-
 const route = useRoute(),
-    { organizationslug, solutionslug, pegs: _pegs, id } = route.params as {
+    { organizationslug, solutionslug, id } = route.params as {
         organizationslug: string
         solutionslug: string
-        pegs: string
         id: string
     },
     title = 'Review Interface Schema'
 
 useHead({ title })
+definePageMeta({
+    middleware: 'auth',
+    key: route => route.fullPath
+})
 
 const { data: requirement, status, error } = await useApiRequest({ url: `/api/requirements/${ReqType.INTERFACE_SCHEMA}/${id}`, options: {
     query: {
         solutionSlug: solutionslug,
         organizationSlug: organizationslug
     },
-    schema: InterfaceSchema
+    schema: InterfaceSchema,
+    // Disable cache to ensure we get fresh data after workflow transitions
+    getCachedData: () => undefined
 } })
 
 if (error.value) {

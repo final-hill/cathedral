@@ -21,6 +21,14 @@ export const FunctionalBehavior = Functionality.extend({
     the results or effects of the system's operation.
     Generally expressed in the form "The system must do <requirement>."
 
+    Content Guidelines:
+    - Name: Should describe a system capability using clear action verbs (e.g., "Validate Credentials", "Send Email Notification")
+    - Description: Should explain WHAT the system does, not HOW it does it
+    - Should use active voice and present tense ("validates", "sends", "processes")
+    - Should be focused on a single, specific behavior
+    - Should be testable and verifiable
+    - Should NOT include quality attributes (use Non-Functional Behavior) or UI details (use Use Case)
+    
     Example: "The system must validate user credentials against the authentication database."
 `))
 

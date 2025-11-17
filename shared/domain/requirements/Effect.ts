@@ -12,7 +12,15 @@ export const Effect = Requirement.extend({
     uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.EFFECT])
         .describe('The UI path template for navigating to this requirement in the web interface')
 }).describe(dedent(`
-    An Effect is a property of the environment affected by the system.
+    An Effect is a property of the environment affected by the system; a postcondition or side effect.
+    
+    Content Guidelines:
+    - Name: Should describe the environmental change or impact (e.g., "Temperature Increase", "Database Updated")
+    - Description: Should state how the environment will be changed by the system's operation
+    - Should describe outcomes external to the system itself
+    - Should be observable and verifiable
+    - Should use future tense or "will cause" language
+    
     Example: "The running system will cause the temperature of the room to increase."
 `))
 

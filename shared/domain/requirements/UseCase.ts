@@ -5,6 +5,7 @@ import { AssumptionReference, EffectReference, ScenarioStepReference, Stakeholde
 import { uiBasePathTemplates } from './uiBasePathTemplates.js'
 import { Example } from './Example.js'
 import { Prioritizable } from './Prioritizable.js'
+import { dedent } from '../../utils/dedent.js'
 
 export const UseCase = Example.extend({
     ...Prioritizable.shape,
@@ -34,6 +35,15 @@ export const UseCase = Example.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.USE_CASE),
     uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.USE_CASE])
         .describe('The UI path template for navigating to this requirement in the web interface')
-}).describe('A Use Case describes a complete interaction between an actor and the system to achieve a goal.')
+}).describe(dedent(`
+    A Use Case describes a complete interaction between an actor and the system to achieve a goal.
+    
+    Content Guidelines:
+    - Name: Should describe the user's goal or action using verb-noun format (e.g., "Process Payment", "Submit Order")
+    - Description: Should explain the purpose, context, and value of the use case
+    - Should focus on WHAT the user wants to accomplish, not HOW the system implements it
+    - Should reference actors, preconditions, success guarantees, and scenario steps
+    - Should be written from the user's perspective
+`))
 
 export type UseCaseType = z.infer<typeof UseCase>

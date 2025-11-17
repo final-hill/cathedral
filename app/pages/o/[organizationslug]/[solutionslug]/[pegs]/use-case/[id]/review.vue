@@ -11,11 +11,16 @@ const route = useRoute(),
     title = 'Review Use Case'
 
 useHead({ title })
-definePageMeta({ middleware: 'auth' })
+definePageMeta({
+    middleware: 'auth',
+    key: route => route.fullPath
+})
 
 const { data: requirement, status, error } = await useApiRequest({ url: `/api/requirements/${ReqType.USE_CASE}/${id}`, options: {
     query: { solutionSlug, organizationSlug },
-    schema: UseCase
+    schema: UseCase,
+    // Disable cache to ensure we get fresh data after workflow transitions
+    getCachedData: () => undefined
 } })
 
 if (error.value) {

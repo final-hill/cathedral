@@ -3,6 +3,7 @@ import { ReqType } from './ReqType.js'
 import { z } from 'zod'
 import { uiBasePathTemplates } from './uiBasePathTemplates.js'
 import { PersonReference } from './EntityReferences.js'
+import { dedent } from '../../utils/dedent.js'
 
 export const Task = Requirement.extend({
     reqId: z.string().regex(/^P\.4\.\d+$/, 'Format must be P.4.#').optional()
@@ -17,6 +18,15 @@ export const Task = Requirement.extend({
         .describe('Person or team assigned to this task'),
     dueDate: z.date().optional()
         .describe('Expected completion date for this task')
-}).describe('Activity included in the project')
+}).describe(dedent(`
+    A Task is a specific activity or work item that needs to be completed as part of the project.
+    
+    Content Guidelines:
+    - Name: Should describe the work to be done using action verbs (e.g., "Implement Login API", "Review Documentation")
+    - Description: Should explain the task scope, deliverables, and any relevant context
+    - Should be specific, actionable, and estimable
+    - Should be completable by one person or team
+    - Should have clear completion criteria (definition of done)
+`))
 
 export type TaskType = z.infer<typeof Task>

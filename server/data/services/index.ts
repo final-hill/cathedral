@@ -1,3 +1,7 @@
 export * from './EntraService'
+export * from './GlossaryTermIdentificationService'
+export * from './LanguageToolService'
 export * from './NaturalLanguageToRequirementService'
+export * from './ReadabilityAnalysisService'
+export * from './RequirementTypeCorrespondenceService'
 export * from './SlackService'

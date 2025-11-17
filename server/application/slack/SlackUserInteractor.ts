@@ -16,9 +16,9 @@ import jwt from 'jsonwebtoken'
  * - User authentication and validation
  * - User permission checks and mappings
  */
-export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
-    protected readonly _permissionInteractor: PermissionInteractor
-    protected readonly _slackService: SlackService
+export class SlackUserInteractor extends Interactor<SlackUserMetaType, SlackRepository> {
+    protected readonly permissionInteractor: PermissionInteractor
+    protected readonly slackService: SlackService
 
     constructor(props: {
         repository: SlackRepository
@@ -26,12 +26,8 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
         slackService: SlackService
     }) {
         super({ repository: props.repository })
-        this._permissionInteractor = props.permissionInteractor
-        this._slackService = props.slackService
-    }
-
-    get repository(): SlackRepository {
-        return this._repository as SlackRepository
+        this.permissionInteractor = props.permissionInteractor
+        this.slackService = props.slackService
     }
 
     /**
@@ -43,9 +39,9 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
      * @throws {PermissionDeniedException} If the current user is not the user being linked or a system admin
      */
     async linkUser(props: SlackUserMetaType): Promise<void> {
-        const currentUserId = this._permissionInteractor.userId
+        const currentUserId = this.permissionInteractor.userId
 
-        if (props.cathedralUserId !== currentUserId && !this._permissionInteractor.isSystemAdmin()) {
+        if (props.cathedralUserId !== currentUserId && !this.permissionInteractor.isSystemAdmin()) {
             throw new PermissionDeniedException(
                 `User with id ${currentUserId} does not have permission to link Slack user to Cathedral user ${props.cathedralUserId}`
             )
@@ -69,7 +65,7 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
      */
     async unlinkUser(props: { slackUserId: string, teamId: string }): Promise<void> {
         // Only system admins can perform admin-level user unlinking operations
-        if (!this._permissionInteractor.isSystemAdmin())
+        if (!this.permissionInteractor.isSystemAdmin())
             throw new PermissionDeniedException('Only system administrators can unlink users through admin operations')
 
         await this.repository.unlinkSlackUser(props)
@@ -83,7 +79,7 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
      * @throws {PermissionDeniedException} If the current user is not a system admin
      */
     async isSlackUserLinked(props: { slackUserId: string, teamId: string }): Promise<boolean> {
-        if (!this._permissionInteractor.isSystemAdmin())
+        if (!this.permissionInteractor.isSystemAdmin())
             throw new PermissionDeniedException('Only system administrators can check user linking status')
 
         return this.repository.isSlackUserLinked(props)
@@ -145,7 +141,7 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
             .catch(() => void 0)
 
         if (!cathedralUserId) {
-            await this._slackService.sendUserNotLinkedError({ channel: channelId, thread_ts })
+            await this.slackService.sendUserNotLinkedError({ channel: channelId, thread_ts })
             return undefined
         }
 
@@ -183,7 +179,7 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
         authUrl.searchParams.set('redirect', slackLinkUrl.pathname + slackLinkUrl.search)
 
         const link = authUrl.toString()
-        return this._slackService.createUserLinkMessage({ userId: slackUserId, authUrl: link })
+        return this.slackService.createUserLinkMessage({ userId: slackUserId, authUrl: link })
     }
 
     /**
@@ -192,7 +188,7 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
      * @returns Slack message indicating successful unlink
      */
     createUserUnlinkSuccessMessage(): SlackResponseMessage {
-        return this._slackService.createUserUnlinkSuccessMessage()
+        return this.slackService.createUserUnlinkSuccessMessage()
     }
 
     /**
@@ -201,6 +197,6 @@ export class SlackUserInteractor extends Interactor<SlackUserMetaType> {
      * @returns Slack message indicating user must link their account first
      */
     createUserLinkRequiredMessage(): SlackResponseMessage {
-        return this._slackService.createUserLinkRequiredMessage()
+        return this.slackService.createUserLinkRequiredMessage()
     }
 }

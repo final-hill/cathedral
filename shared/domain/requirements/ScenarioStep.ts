@@ -18,6 +18,18 @@ export const ScenarioStep = Example.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.SCENARIO_STEP),
     functionality: FunctionalBehaviorReference
         .describe('The functional behavior that this scenario step addresses')
-}).describe('A single step within a scenario describing actor-system interaction or conditional branching')
+}).describe(dedent(`
+    A single step within a scenario describing actor-system interaction or conditional branching.
+    
+    Content Guidelines:
+    - Name: Should describe a single action or condition (e.g., "User enters credentials", "System validates input")
+    - Description: Should provide detail about the step execution, conditions, or expected behavior
+    - stepType: Should be 'action' for actor/system actions or 'condition' for branching logic
+    - Should be atomic (one action or decision per step)
+    - Should clearly indicate actor (user/system) performing the action
+    - Should be sequenced properly using the 'order' field
+    
+    Examples: "User clicks login button", "System checks if account is active", "Display error message"
+`))
 
 export type ScenarioStepType = z.infer<typeof ScenarioStep>

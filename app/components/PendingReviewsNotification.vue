@@ -66,154 +66,93 @@ const dismissedNotifications = ref<Set<string>>(new Set()),
         return pendingReviews.value.filter(review => !dismissedNotifications.value.has(review.endorsement.id))
     }),
     visibleReviewsCount = computed(() => visibleReviews.value.length),
-    isCollapsed = ref(true),
-    toggleCollapsed = () => {
-        isCollapsed.value = !isCollapsed.value
-    }
+    isOpen = ref(false)
 </script>
 
 <template>
-    <aside
+    <UDrawer
         v-if="hasPendingReviews && visibleReviewsCount > 0"
-        role="complementary"
-        aria-labelledby="pending-reviews-heading"
-        class="bg-gradient-to-r from-warning-50 to-warning-100 border border-warning-200 rounded-lg p-4 mb-6 shadow-sm"
+        v-model:open="isOpen"
+        title="Pending Reviews"
+        :description="`You have ${visibleReviewsCount} requirement${visibleReviewsCount === 1 ? '' : 's'} waiting for your review`"
     >
-        <!-- Header with toggle -->
-        <header class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <UIcon
-                    name="i-lucide-bell"
-                    class="size-5 text-warning-600"
-                />
-                <div>
-                    <h2
-                        id="pending-reviews-heading"
-                        class="font-semibold text-warning-800"
-                    >
-                        Pending Reviews
-                    </h2>
-                    <p class="text-sm text-warning-700">
-                        You have {{ visibleReviewsCount }} requirement{{ visibleReviewsCount === 1 ? '' : 's' }} waiting for your review
-                    </p>
-                </div>
-            </div>
+        <UButton
+            color="warning"
+            variant="outline"
+            leading-icon="i-lucide-bell"
+            trailing-icon="i-lucide-chevron-up"
+            :label="`${visibleReviewsCount} Pending Review${visibleReviewsCount === 1 ? '' : 's'}`"
+            @click="isOpen = true"
+        />
 
-            <nav
-                class="flex items-center gap-2"
-                aria-label="Review actions"
-            >
-                <!-- Refresh button -->
-                <UButton
-                    icon="i-lucide-refresh-cw"
+        <template #body>
+            <div class="space-y-4">
+                <!-- Error state -->
+                <UAlert
+                    v-if="error"
+                    color="error"
+                    variant="soft"
+                    icon="i-lucide-alert-triangle"
+                    title="Failed to load pending reviews"
+                    :description="`${error}. Click to try again.`"
+                    :actions="[{
+                        label: 'Try again',
+                        color: 'error',
+                        variant: 'ghost',
+                        onClick: () => refresh()
+                    }]"
+                />
+
+                <!-- Loading state -->
+                <UAlert
+                    v-else-if="pending"
                     color="warning"
-                    variant="ghost"
-                    size="sm"
-                    :loading="pending"
-                    :aria-label="pending ? 'Refreshing pending reviews' : 'Refresh pending reviews'"
-                    @click="refresh()"
+                    variant="soft"
+                    icon="i-lucide-loader-2"
+                    title="Loading pending reviews..."
+                    class="animate-pulse"
                 />
 
-                <!-- Toggle collapse button -->
-                <UButton
-                    :icon="isCollapsed ? 'i-lucide-chevron-down' : 'i-lucide-chevron-up'"
-                    color="warning"
-                    variant="ghost"
-                    size="sm"
-                    :aria-label="isCollapsed ? 'Show pending reviews' : 'Hide pending reviews'"
-                    :aria-expanded="!isCollapsed"
-                    aria-controls="pending-reviews-content"
-                    @click="toggleCollapsed"
-                />
-            </nav>
-        </header>
-
-        <!-- Collapsible content -->
-        <UCollapsible>
-            <template #content>
+                <!-- Reviews list -->
                 <div
-                    v-show="!isCollapsed"
-                    id="pending-reviews-content"
-                    class="mt-4 space-y-3"
+                    v-else
+                    class="space-y-2"
                 >
-                    <!-- Error state -->
-                    <UAlert
-                        v-if="error"
-                        color="error"
-                        variant="soft"
-                        icon="i-lucide-alert-triangle"
-                        title="Failed to load pending reviews"
-                        :description="`${error}. Click to try again.`"
-                        :actions="[{
-                            label: 'Try again',
-                            color: 'error',
-                            variant: 'ghost',
-                            onClick: () => refresh()
-                        }]"
-                    />
-
-                    <!-- Loading state -->
-                    <UAlert
-                        v-else-if="pending"
-                        color="warning"
-                        variant="soft"
-                        icon="i-lucide-loader-2"
-                        title="Loading pending reviews..."
-                        class="animate-pulse"
-                    />
-
-                    <!-- Reviews for the current solution -->
-                    <section
-                        class="space-y-2"
-                        aria-labelledby="pending-reviews-list-heading"
+                    <NuxtLink
+                        v-for="review in visibleReviews"
+                        :key="review.endorsement.id"
+                        :to="getReviewLink(review)"
+                        class="block"
+                        @click="isOpen = false"
                     >
-                        <h3
-                            id="pending-reviews-list-heading"
-                            class="sr-only"
+                        <UCard
+                            variant="subtle"
+                            class="hover:bg-muted/50 transition-colors cursor-pointer border-l-4 border-l-warning"
                         >
-                            Pending reviews for this solution
-                        </h3>
-                        <ul
-                            class="space-y-2"
-                            role="list"
-                        >
-                            <li
-                                v-for="review in pendingReviews"
-                                :key="review.endorsement.id"
-                                class="flex items-center justify-between p-3 bg-white rounded-lg border border-neutral-200 hover:bg-warning-50 transition-colors"
-                            >
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2 text-sm">
-                                        <span class="font-medium text-neutral-900 truncate">
+                            <div class="flex items-start justify-between">
+                                <div class="space-y-1 flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <UIcon
+                                            name="i-lucide-file-text"
+                                            class="size-4 text-warning flex-shrink-0"
+                                        />
+                                        <span class="font-medium text-highlighted truncate">
                                             {{ getRequirementDisplayName(review) }}
                                         </span>
                                     </div>
-                                    <div class="text-xs text-neutral-600 mt-1">
+                                    <p class="text-sm text-muted">
                                         {{ getEndorsementCategoryDisplay(review) }} endorsement needed
-                                    </div>
+                                    </p>
                                 </div>
-
-                                <div class="flex items-center gap-2 ml-3">
-                                    <NuxtLink
-                                        :to="getReviewLink(review)"
-                                        class="inline-flex"
-                                        :aria-label="`Review ${getRequirementDisplayName(review)}`"
-                                    >
-                                        <UButton
-                                            color="warning"
-                                            variant="solid"
-                                            size="sm"
-                                            label="Review"
-                                            icon="i-lucide-external-link"
-                                            trailing
-                                        />
-                                    </NuxtLink>
-                                </div>
-                            </li>
-                        </ul>
-                    </section>
+                                <UIcon
+                                    name="i-lucide-chevron-right"
+                                    class="size-4 text-muted flex-shrink-0"
+                                />
+                            </div>
+                        </UCard>
+                    </NuxtLink>
                 </div>
-            </template>
-        </UCollapsible>
-    </aside>
+            </div>
+        </template>
+    </UDrawer>
 </template>

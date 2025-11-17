@@ -15,7 +15,7 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
      * @returns Array of Slack workspace metadata (excluding sensitive data)
      */
     async getWorkspacesByOrganization({ organizationId, organizationName }: { organizationId: string, organizationName: string }): Promise<SlackWorkspaceMetaPublicType[]> {
-        const em = this._em,
+        const em = this.em,
             workspaceIntegrations = await em.find(SlackWorkspaceMetaModel, {
                 organization: organizationId
             }, {
@@ -43,7 +43,7 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
      * @returns Slack workspace metadata or null if not found (including access token for internal use)
      */
     async getWorkspaceByTeamId(teamId: string): Promise<SlackWorkspaceMetaModel | null> {
-        const em = this._em
+        const em = this.em
 
         return await em.findOne(SlackWorkspaceMetaModel, {
             teamId
@@ -68,7 +68,7 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
         scope: string
         appId: string
     }): Promise<SlackWorkspaceMetaModel> {
-        const em = this._em
+        const em = this.em
 
         let workspace = await em.findOne(SlackWorkspaceMetaModel, {
             teamId: props.teamId,
@@ -109,7 +109,7 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
      * @throws {NotFoundException} if workspace not found
      */
     async removeWorkspace({ organizationId, teamId }: { organizationId: string, teamId: string }): Promise<void> {
-        const em = this._em,
+        const em = this.em,
             workspace = await em.findOne(SlackWorkspaceMetaModel, {
                 teamId,
                 organization: organizationId
@@ -132,7 +132,7 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
         botUserId: string
         organizationId: string
     } | null> {
-        const em = this._em,
+        const em = this.em,
             workspace = await em.findOne(SlackWorkspaceMetaModel, {
                 teamId
             }, {
@@ -166,7 +166,7 @@ export class SlackWorkspaceRepository extends Repository<SlackWorkspaceMetaModel
             lastMetadataRefresh?: Date
         }
     }): Promise<boolean> {
-        const em = this._em,
+        const em = this.em,
             workspace = await em.findOne(SlackWorkspaceMetaModel, {
                 teamId
             })

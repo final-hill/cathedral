@@ -21,7 +21,7 @@ export class RequirementRepository extends Repository<RequirementType> {
     async add(props: CreationInfo & {
         reqProps: Omit<RequirementType, 'reqId' | 'reqIdPrefix' | 'id' | keyof AuditMetadataType>
     }): Promise<RequirementType['id']> {
-        const em = this._em,
+        const em = this.em,
             { reqType, ...reqProps } = props.reqProps,
             ReqTypePascal = snakeCaseToPascalCase(reqType) as keyof typeof req,
             ReqStaticModel = reqModels[`${ReqTypePascal}Model` as keyof typeof reqModels] as typeof reqModels.RequirementModel,
@@ -67,7 +67,7 @@ export class RequirementRepository extends Repository<RequirementType> {
         statement: string
         reqData: z.infer<typeof llmRequirementSchema>[]
     }): Promise<reqModels.ParsedRequirementsModel['id']> {
-        const em = this._em,
+        const em = this.em,
             parsedReqsId = uuid7(),
             // Create lookup maps for reusable entities to avoid duplicates
             // Map<name, id>
@@ -404,7 +404,7 @@ export class RequirementRepository extends Repository<RequirementType> {
         solutionId: string
         reqType: ReqType
     }): Promise<R[]> {
-        const em = this._em,
+        const em = this.em,
             reqTypePascal = snakeCaseToPascalCase(props.reqType) as keyof typeof req,
             ReqStaticModel = reqModels[`${reqTypePascal}Model` as keyof typeof reqModels] as typeof reqModels.RequirementModel,
             mapper = new DataModelToDomainModel(),
@@ -454,7 +454,7 @@ export class RequirementRepository extends Repository<RequirementType> {
         reqType: ReqType
         workflowState: WorkflowState
     }): Promise<R[]> {
-        const em = this._em,
+        const em = this.em,
             reqTypePascal = snakeCaseToPascalCase(props.reqType) as keyof typeof req,
             ReqStaticModel = reqModels[`${reqTypePascal}Model` as keyof typeof reqModels] as typeof reqModels.RequirementModel,
             mapper = new DataModelToDomainModel(),
@@ -496,7 +496,7 @@ export class RequirementRepository extends Repository<RequirementType> {
         reqType: ReqType
         query?: Record<string, unknown>
     }): Promise<R[]> {
-        const em = this._em,
+        const em = this.em,
             reqTypePascal = snakeCaseToPascalCase(props.reqType) as keyof typeof req,
             ReqStaticModel = reqModels[`${reqTypePascal}Model` as keyof typeof reqModels] as typeof reqModels.RequirementModel,
             ReqVersionsModel = reqModels[`${reqTypePascal}VersionsModel` as keyof typeof reqModels] as typeof reqModels.RequirementVersionsModel,
@@ -555,7 +555,7 @@ export class RequirementRepository extends Repository<RequirementType> {
      * @throws {NotFoundException} If the requirement does not exist
      */
     async getById<R extends RequirementType>(id: RequirementType['id']): Promise<R> {
-        const em = this._em,
+        const em = this.em,
             reqStatic = await em.findOne(reqModels.RequirementModel, id, {
                 populate: ['*']
             })
@@ -586,7 +586,7 @@ export class RequirementRepository extends Repository<RequirementType> {
         reqProps: Omit<Partial<RequirementType>, 'reqIdPrefix' | keyof AuditMetadataType>
             & { id: RequirementType['id'], reqType: ReqType }
     }): Promise<void> {
-        const em = this._em,
+        const em = this.em,
             { reqType, ...reqProps } = props.reqProps,
             ReqTypePascal = snakeCaseToPascalCase(reqType) as keyof typeof req,
             ReqStaticModel = reqModels[`${ReqTypePascal}Model` as keyof typeof reqModels] as typeof reqModels.RequirementModel,
@@ -618,7 +618,7 @@ export class RequirementRepository extends Repository<RequirementType> {
      * @returns true if there are newer versions in Proposed or Review states
      */
     async hasNewerProposedOrReviewVersions(requirementId: RequirementType['id']): Promise<boolean> {
-        const em = this._em,
+        const em = this.em,
             requirement = await em.findOne(reqModels.RequirementModel, { id: requirementId })
 
         if (!requirement)

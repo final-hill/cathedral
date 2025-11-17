@@ -6,9 +6,9 @@ import type { PostgreSqlDriver, SqlEntityManager } from '@mikro-orm/postgresql'
 // TODO: _E should be a type that extends Entity | ValueObject
 // Though more accurately, should be a type that implements Equatable
 export abstract class Repository<_E> {
-    protected _em
+    protected em
 
     constructor(options: { em: SqlEntityManager<PostgreSqlDriver> }) {
-        this._em = options.em
+        this.em = options.em
     }
 }

@@ -1,5 +1,6 @@
-import { Collection, Entity, Enum, ManyToOne, OneToMany, ManyToMany, OptionalProps, PrimaryKey, Property, types } from '@mikro-orm/core'
+import { Collection, Entity, Enum, Index, ManyToOne, OneToMany, ManyToMany, OptionalProps, PrimaryKey, Property, types } from '@mikro-orm/core'
 import type { FilterQuery, OrderDefinition, Ref, Rel } from '@mikro-orm/core'
+import { FullTextType } from '@mikro-orm/postgresql'
 import { ConstraintCategory, ReqType, ScenarioStepTypeEnum, StakeholderSegmentation, WorkflowState, InterfaceType } from '../../../../shared/domain/requirements/enums.js'
 import { SlackChannelMetaModel } from '../application/index.js'
 import type { ReqId } from '../../../../shared/domain/index.js'
@@ -281,7 +282,16 @@ export class FunctionalBehaviorVersionsModel extends Prioritizable(BehaviorVersi
 export class GlossaryTermModel extends ComponentModel { }
 
 @Entity({ discriminatorValue: ReqType.GLOSSARY_TERM })
-export class GlossaryTermVersionsModel extends ComponentVersionsModel { }
+export class GlossaryTermVersionsModel extends ComponentVersionsModel {
+    @Index({ type: 'fulltext' })
+    @Property({
+        type: FullTextType,
+        nullable: true,
+        onUpdate: (entity: GlossaryTermVersionsModel) => entity.name,
+        onCreate: (entity: GlossaryTermVersionsModel) => entity.name
+    })
+    searchableName?: string
+}
 
 @Entity({ discriminatorValue: ReqType.FUNCTIONALITY })
 export class FunctionalityModel extends BehaviorModel { }

@@ -7,8 +7,8 @@ import type { Repository } from '~~/server/data/repositories/Repository'
  */
 // TODO: E should be a type that extends Entity | ValueObject
 // Though more accurately, should be a type that implements Equatable
-export abstract class Interactor<E> {
-    protected readonly _repository
+export abstract class Interactor<E, R extends Repository<E> = Repository<E>> {
+    protected readonly repository
 
     /**
      * Create a new Interactor
@@ -17,8 +17,8 @@ export abstract class Interactor<E> {
      * @param props.userId - The id of the user to utilize
      */
     constructor(props: {
-        repository: Repository<E>
+        repository: R
     }) {
-        this._repository = props.repository
+        this.repository = props.repository
     }
 }

@@ -8,10 +8,9 @@ definePageMeta({ middleware: 'auth' })
 useHead({ title: 'Create API Interface' })
 
 const route = useRoute(),
-    { organizationslug, solutionslug, _pegs } = route.params as {
+    { organizationslug, solutionslug } = route.params as {
         organizationslug: string
         solutionslug: string
-        _pegs: string
     },
     baseSchema = Interface.omit({
         interfaceType: true, // Hide interface type since we're on the API path - it will be set automatically

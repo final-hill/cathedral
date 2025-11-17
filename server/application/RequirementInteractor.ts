@@ -15,12 +15,12 @@ import type { AppUserReferenceType } from '~~/shared/domain/application/EntityRe
 
 type ReqTypeName = keyof typeof req
 
-export class RequirementInteractor extends Interactor<req.RequirementType> {
-    private readonly _permissionInteractor: PermissionInteractor
-    private readonly _appUserInteractor: AppUserInteractor
-    private readonly _reviewInteractor: ReviewInteractor
-    private readonly _solutionId: string
-    private readonly _organizationId: string
+export class RequirementInteractor extends Interactor<req.RequirementType, RequirementRepository> {
+    private readonly permissionInteractor: PermissionInteractor
+    private readonly appUserInteractor: AppUserInteractor
+    private readonly reviewInteractor: ReviewInteractor
+    private readonly solutionId: string
+    private readonly organizationId: string
 
     /**
      * Create a new RequirementInteractor
@@ -31,7 +31,6 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
      * @param props.reviewInteractor - The ReviewInteractor instance
      */
     constructor(props: {
-        // FIXME: Repository<req.RequirementType>
         repository: RequirementRepository
         permissionInteractor: PermissionInteractor
         appUserInteractor: AppUserInteractor
@@ -40,11 +39,11 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         organizationId: string
     }) {
         super(props)
-        this._organizationId = props.organizationId
-        this._solutionId = props.solutionId
-        this._permissionInteractor = props.permissionInteractor
-        this._appUserInteractor = props.appUserInteractor
-        this._reviewInteractor = props.reviewInteractor
+        this.organizationId = props.organizationId
+        this.solutionId = props.solutionId
+        this.permissionInteractor = props.permissionInteractor
+        this.appUserInteractor = props.appUserInteractor
+        this.reviewInteractor = props.reviewInteractor
 
         // TODO: Implement, or update to only rely on the solutionId as a dependency
         // this._assertSolutionBelongsToOrganization();
@@ -55,15 +54,15 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
      * @param requirement - The requirement to enrich
      * @returns The requirement with enriched user data
      */
-    private async _enrichUserData<T extends req.RequirementType>(requirement: T): Promise<T> {
+    private async enrichUserData<T extends req.RequirementType>(requirement: T): Promise<T> {
         try {
             const enrichedRequirement = { ...requirement }
 
             if (requirement.createdBy?.id) {
                 try {
-                    const createdByUser = await this._appUserInteractor.getUserById({
+                    const createdByUser = await this.appUserInteractor.getUserById({
                         id: requirement.createdBy.id,
-                        organizationId: this._organizationId
+                        organizationId: this.organizationId
                     })
                     enrichedRequirement.createdBy = {
                         id: createdByUser.id,
@@ -77,9 +76,9 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
             if (requirement.modifiedBy?.id) {
                 try {
-                    const modifiedByUser = await this._appUserInteractor.getUserById({
+                    const modifiedByUser = await this.appUserInteractor.getUserById({
                         id: requirement.modifiedBy.id,
-                        organizationId: this._organizationId
+                        organizationId: this.organizationId
                     })
                     enrichedRequirement.modifiedBy = {
                         id: modifiedByUser.id,
@@ -96,9 +95,9 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
                 const req = requirement as T & { appUser?: AppUserReferenceType }
                 if (req.appUser?.id) {
                     try {
-                        const appUser = await this._appUserInteractor.getUserById({
+                        const appUser = await this.appUserInteractor.getUserById({
                                 id: req.appUser.id,
-                                organizationId: this._organizationId
+                                organizationId: this.organizationId
                             }),
                             enrichedPerson = enrichedRequirement as T & { appUser?: AppUserReferenceType }
                         enrichedPerson.appUser = {
@@ -116,11 +115,6 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         } catch {
             return requirement
         }
-    }
-
-    // FIXME: this shouldn't be necessary
-    get repository(): RequirementRepository {
-        return this._repository as RequirementRepository
     }
 
     /**
@@ -177,9 +171,9 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         if (key === 'appUser') {
             // For AppUser references, validate they belong to the organization
             try {
-                await this._permissionInteractor.getAppUserOrganizationRole({
+                await this.permissionInteractor.getAppUserOrganizationRole({
                     appUserId: id,
-                    organizationId: this._organizationId
+                    organizationId: this.organizationId
                 })
                 // If we get here, the user is a member of the organization
                 return
@@ -194,14 +188,14 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
 
             // For solution references, ensure it matches the current solution
             if (key === 'solution') {
-                if (result.id !== this._solutionId)
-                    throw new MismatchException(`Requirement with id ${reqProps['id']} references solution ${result.id} but should reference current solution ${this._solutionId}`)
+                if (result.id !== this.solutionId)
+                    throw new MismatchException(`Requirement with id ${reqProps['id']} references solution ${result.id} but should reference current solution ${this.solutionId}`)
             } else {
                 // For all other requirement references, ensure they belong to the current solution
                 // Skip if the referenced item doesn't have a solution property (e.g., organization-level entities)
                 if ('solution' in result && result.solution && typeof result.solution === 'object' && 'id' in result.solution) {
-                    if ((result.solution as { id: string }).id !== this._solutionId)
-                        throw new MismatchException(`Referenced requirement with id ${id} belongs to solution ${(result.solution as { id: string }).id} but should belong to current solution ${this._solutionId}`)
+                    if ((result.solution as { id: string }).id !== this.solutionId)
+                        throw new MismatchException(`Referenced requirement with id ${id} belongs to solution ${(result.solution as { id: string }).id} but should belong to current solution ${this.solutionId}`)
                 }
             }
         } catch (error) {
@@ -221,13 +215,13 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
      * @returns The requirement with the given id
      */
     async getRequirementTypeById<R extends req.RequirementType>({ id, reqType }: { id: R['id'], reqType: ReqType }): Promise<R> {
-        this._permissionInteractor.assertOrganizationReader(this._organizationId)
+        this.permissionInteractor.assertOrganizationReader(this.organizationId)
 
         const result = await this.repository.getById(id)
 
         if (result.reqType !== reqType) throw new MismatchException(`Requirement with id ${id} is not of type ${reqType}`)
 
-        const enrichedResult = await this._enrichUserData(result)
+        const enrichedResult = await this.enrichUserData(result)
 
         return enrichedResult as R
     }
@@ -239,10 +233,10 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
     async getCurrentActiveRequirementsByType<R extends ReqTypeName>(reqType: ReqType): Promise<z.infer<typeof req[R]>[]> {
-        this._permissionInteractor.assertOrganizationReader(this._organizationId)
+        this.permissionInteractor.assertOrganizationReader(this.organizationId)
 
         return this.repository.getAllActive({
-            solutionId: this._solutionId,
+            solutionId: this.solutionId,
             reqType: reqType as ReqType
         })
     }
@@ -259,10 +253,10 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         workflowState: WorkflowState
         reqType: ReqType
     }): Promise<z.infer<typeof req[R]>[]> {
-        this._permissionInteractor.assertOrganizationReader(this._organizationId)
+        this.permissionInteractor.assertOrganizationReader(this.organizationId)
 
         return this.repository.getAllLatest({
-            solutionId: this._solutionId,
+            solutionId: this.solutionId,
             reqType: props.reqType,
             workflowState: props.workflowState
         })
@@ -276,10 +270,10 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
     async getAllRequirementsByType<R extends ReqTypeName>(props: { reqType: ReqType, query?: Partial<z.infer<typeof req[R]>> }): Promise<z.infer<typeof req[R]>[]> {
-        this._permissionInteractor.assertOrganizationReader(this._organizationId)
+        this.permissionInteractor.assertOrganizationReader(this.organizationId)
 
         return this.repository.getAll({
-            solutionId: this._solutionId,
+            solutionId: this.solutionId,
             ...props
         })
     }
@@ -293,14 +287,14 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
      */
     // FIXME: This implementation is suspicious
     async getAllVisibleRequirementsByType<R extends ReqTypeName>(reqType: ReqType): Promise<z.infer<typeof req[R]>[]> {
-        this._permissionInteractor.assertOrganizationReader(this._organizationId)
+        this.permissionInteractor.assertOrganizationReader(this.organizationId)
 
         // Get requirements from all visible states
         const visibleStates = [WorkflowState.Active, WorkflowState.Proposed, WorkflowState.Review],
             allRequirements = await Promise.all(
                 visibleStates.map(workflowState =>
                     this.repository.getAllLatest({
-                        solutionId: this._solutionId,
+                        solutionId: this.solutionId,
                         reqType,
                         workflowState
                     })
@@ -372,9 +366,9 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         name: string
         statement: string
     }): Promise<req.ParsedRequirementsType['id']> {
-        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+        this.permissionInteractor.assertOrganizationContributor(this.organizationId)
 
-        const currentUserId = this._permissionInteractor.userId,
+        const currentUserId = this.permissionInteractor.userId,
             results = await props.service.parse(props.statement)
 
         if (!results || results.length === 0) throw new MismatchException('No requirements found in the statement')
@@ -382,7 +376,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         const newId = await this.repository.addParsedRequirements({
             createdById: currentUserId,
             creationDate: new Date(),
-            solutionId: this._solutionId,
+            solutionId: this.solutionId,
             name: props.name,
             statement: props.statement,
             reqData: results
@@ -401,7 +395,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
     async proposeRequirement<R extends ReqTypeName>(
         props: Omit<z.infer<typeof req[R]>, 'reqId' | 'reqIdPrefix' | 'id' | 'workflowState' | 'solution' | keyof AuditMetadataType>
     ): Promise<req.RequirementType['id']> {
-        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+        this.permissionInteractor.assertOrganizationContributor(this.organizationId)
         await this.assertReferencedRequirementsBelongToSolution(props)
 
         // Check singleton constraint: only one static model (requirement ID) allowed for singleton requirement types
@@ -410,7 +404,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
             // Check for ANY existing requirement (across all workflow states except Removed)
             // We check all states because a requirement in Proposed or Review could eventually become Active
             const existingRequirements = await this.repository.getAll({
-                    solutionId: this._solutionId,
+                    solutionId: this.solutionId,
                     reqType: props.reqType
                 }),
 
@@ -427,7 +421,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
             }
         }
 
-        const currentUserId = this._permissionInteractor.userId
+        const currentUserId = this.permissionInteractor.userId
 
         let workflowState: WorkflowState
         if (props.reqType === ReqType.SILENCE)
@@ -440,7 +434,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         return this.repository.add({
             reqProps: {
                 ...props,
-                solution: { id: this._solutionId, name: '', reqType: ReqType.SOLUTION },
+                solution: { id: this.solutionId, name: '', reqType: ReqType.SOLUTION },
                 workflowState
             },
             createdById: currentUserId,
@@ -460,11 +454,11 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
     async updateProposedRequirement<R extends ReqTypeName>(
         reqProps: Partial<Omit<z.infer<typeof req[R]>, 'reqIdPrefix' | 'workflowState' | 'solution' | keyof AuditMetadataType>> & { id: req.RequirementType['id'] }
     ) {
-        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+        this.permissionInteractor.assertOrganizationContributor(this.organizationId)
         await this.assertReferencedRequirementsBelongToSolution(reqProps)
 
         const currentRequirement = await this.repository.getById(reqProps.id),
-            currentUserId = this._permissionInteractor.userId
+            currentUserId = this.permissionInteractor.userId
 
         if (currentRequirement.reqType === ReqType.PARSED_REQUIREMENTS)
             throw new MismatchException('ReqType.PARSED_REQUIREMENTS is not allowed.')
@@ -496,7 +490,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
     async removeProposedRequirement(
         id: req.RequirementType['id']
     ): Promise<void> {
-        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+        this.permissionInteractor.assertOrganizationContributor(this.organizationId)
 
         const currentRequirement = await this.repository.getById(id)
 
@@ -515,7 +509,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
                 reqType: currentRequirement.reqType,
                 workflowState: WorkflowState.Removed
             },
-            modifiedById: this._permissionInteractor.userId,
+            modifiedById: this.permissionInteractor.userId,
             modifiedDate: new Date()
         })
     }
@@ -531,7 +525,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
     async reviewRequirement(
         id: req.RequirementType['id']
     ): Promise<void> {
-        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+        this.permissionInteractor.assertOrganizationContributor(this.organizationId)
 
         const currentRequirement = await this.repository.getById(id)
 
@@ -550,11 +544,11 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
                 reqType: currentRequirement.reqType,
                 workflowState: WorkflowState.Review
             },
-            modifiedById: this._permissionInteractor.userId,
+            modifiedById: this.permissionInteractor.userId,
             modifiedDate: new Date()
         })
 
-        await this._reviewInteractor.createMandatoryEndorsements(id)
+        await this.reviewInteractor.createMandatoryEndorsements(id)
     }
 
     /**
@@ -569,7 +563,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
     async reviseRejectedRequirement(
         id: req.RequirementType['id']
     ): Promise<void> {
-        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+        this.permissionInteractor.assertOrganizationContributor(this.organizationId)
 
         const currentRequirement = await this.repository.getById(id)
 
@@ -588,7 +582,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
                 reqType: currentRequirement.reqType,
                 workflowState: WorkflowState.Proposed
             },
-            modifiedById: this._permissionInteractor.userId,
+            modifiedById: this.permissionInteractor.userId,
             modifiedDate: new Date()
         })
     }
@@ -604,7 +598,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
     async removeRejectedRequirement(
         id: req.RequirementType['id']
     ): Promise<void> {
-        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+        this.permissionInteractor.assertOrganizationContributor(this.organizationId)
 
         const currentRequirement = await this.repository.getById(id)
 
@@ -623,7 +617,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
                 reqType: currentRequirement.reqType,
                 workflowState: WorkflowState.Removed
             },
-            modifiedById: this._permissionInteractor.userId,
+            modifiedById: this.permissionInteractor.userId,
             modifiedDate: new Date()
         })
     }
@@ -640,7 +634,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
     async restoreRemovedRequirement(
         id: req.RequirementType['id']
     ): Promise<void> {
-        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+        this.permissionInteractor.assertOrganizationContributor(this.organizationId)
 
         const currentRequirement = await this.repository.getById(id)
 
@@ -657,7 +651,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
         // Check singleton constraint: prevent restoring if another instance exists
         if (SINGLETON_REQUIREMENT_TYPES.includes(currentRequirement.reqType)) {
             const existingRequirements = await this.repository.getAll({
-                    solutionId: this._solutionId,
+                    solutionId: this.solutionId,
                     reqType: currentRequirement.reqType
                 }),
 
@@ -682,7 +676,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
                 reqType: currentRequirement.reqType,
                 workflowState: WorkflowState.Proposed
             },
-            modifiedById: this._permissionInteractor.userId,
+            modifiedById: this.permissionInteractor.userId,
             modifiedDate: new Date()
         })
     }
@@ -701,7 +695,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
     async editActiveRequirement(
         id: req.RequirementType['id']
     ): Promise<void> {
-        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+        this.permissionInteractor.assertOrganizationContributor(this.organizationId)
 
         const currentRequirement = await this.repository.getById(id)
 
@@ -720,7 +714,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
                 reqType: currentRequirement.reqType,
                 workflowState: WorkflowState.Proposed
             },
-            modifiedById: this._permissionInteractor.userId,
+            modifiedById: this.permissionInteractor.userId,
             modifiedDate: new Date()
         })
     }
@@ -737,7 +731,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
     async removeActiveRequirement(
         id: req.RequirementType['id']
     ): Promise<void> {
-        this._permissionInteractor.assertOrganizationContributor(this._organizationId)
+        this.permissionInteractor.assertOrganizationContributor(this.organizationId)
 
         const currentRequirement = await this.repository.getById(id)
 
@@ -766,7 +760,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
                 reqType: currentRequirement.reqType,
                 workflowState: WorkflowState.Removed
             },
-            modifiedById: this._permissionInteractor.userId,
+            modifiedById: this.permissionInteractor.userId,
             modifiedDate: new Date()
         })
     }
@@ -778,10 +772,10 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
     async hasActiveRequirements(reqType: ReqType): Promise<boolean> {
-        this._permissionInteractor.assertOrganizationReader(this._organizationId)
+        this.permissionInteractor.assertOrganizationReader(this.organizationId)
 
         const activeRequirements = await this.repository.getAllActive({
-            solutionId: this._solutionId,
+            solutionId: this.solutionId,
             reqType
         })
 
@@ -794,7 +788,7 @@ export class RequirementInteractor extends Interactor<req.RequirementType> {
      * @throws {PermissionDeniedException} If the user is not a reader of the organization or better
      */
     async getMissingMinimumRequirements(): Promise<ReqType[]> {
-        this._permissionInteractor.assertOrganizationReader(this._organizationId)
+        this.permissionInteractor.assertOrganizationReader(this.organizationId)
 
         const missing: ReqType[] = []
 

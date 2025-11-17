@@ -14,10 +14,10 @@ import { v7 as uuid7 } from 'uuid'
 /**
  * The OrganizationInteractor class contains the business logic for interacting with an organization.
  */
-export class OrganizationInteractor extends Interactor<req.OrganizationType> {
-    private readonly _permissionInteractor: PermissionInteractor
-    private readonly _appUserInteractor: AppUserInteractor
-    private readonly _requirementRepository?: RequirementRepository
+export class OrganizationInteractor extends Interactor<req.OrganizationType, OrganizationRepository> {
+    private readonly permissionInteractor: PermissionInteractor
+    private readonly appUserInteractor: AppUserInteractor
+    private readonly requirementRepository?: RequirementRepository
 
     /**
      * Create a new OrganizationInteractor
@@ -27,21 +27,15 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      * @param props.permissionInteractor - The PermissionInteractor instance
      */
     constructor(props: {
-        // TODO: This should be Repository<Organization>
         repository: OrganizationRepository
         requirementRepository?: RequirementRepository
         permissionInteractor: PermissionInteractor
         appUserInteractor: AppUserInteractor
     }) {
         super(props)
-        this._permissionInteractor = props.permissionInteractor
-        this._appUserInteractor = props.appUserInteractor
-        this._requirementRepository = props.requirementRepository
-    }
-
-    // FIXME: this shouldn't be necessary
-    get repository(): OrganizationRepository {
-        return this._repository as OrganizationRepository
+        this.permissionInteractor = props.permissionInteractor
+        this.appUserInteractor = props.appUserInteractor
+        this.requirementRepository = props.requirementRepository
     }
 
     /**
@@ -58,18 +52,18 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      */
     async addSolution({ name, description }: Pick<req.SolutionType, 'name' | 'description'>): Promise<req.SolutionType['id']> {
         const organization = await this.repository.getOrganization(),
-            currentUserId = this._permissionInteractor.userId,
+            currentUserId = this.permissionInteractor.userId,
             creationDate = new Date()
 
-        this._permissionInteractor.assertOrganizationAdmin(organization.id)
+        this.permissionInteractor.assertOrganizationAdmin(organization.id)
 
         assertSolutionNameNotReserved(name)
 
-        await this._assertSolutionSlugIsUnique(name)
+        await this.assertSolutionSlugIsUnique(name)
 
         const newSolutionId = await this.repository.addSolution({ name, description, creationDate, createdById: currentUserId })
 
-        await this._initializeSolutionRolesAndPersonnel({
+        await this.initializeSolutionRolesAndPersonnel({
             solutionId: newSolutionId,
             organizationId: organization.id,
             createdById: currentUserId,
@@ -89,7 +83,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      */
     async deleteAppUser(id: AppUserType['id']): Promise<void> {
         const organization = await this.repository.getOrganization(),
-            pi = this._permissionInteractor,
+            pi = this.permissionInteractor,
             currentUserId = pi.userId
 
         if (!(pi.isOrganizationAdmin(organization.id)) && id !== currentUserId) throw new PermissionDeniedException('Forbidden: You do not have permission to perform this action')
@@ -121,9 +115,9 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      */
     async deleteSolutionBySlug(slug: req.SolutionType['slug']): Promise<void> {
         const organization = await this.repository.getOrganization(),
-            currentUserId = this._permissionInteractor.userId
+            currentUserId = this.permissionInteractor.userId
 
-        this._permissionInteractor.assertOrganizationAdmin(organization.id)
+        this.permissionInteractor.assertOrganizationAdmin(organization.id)
 
         return this.repository.deleteSolutionBySlug({
             deletedById: currentUserId,
@@ -143,7 +137,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
     async findSolutions(query: Partial<req.SolutionType> = {}): Promise<req.SolutionType[]> {
         const organization = await this.repository.getOrganization()
 
-        this._permissionInteractor.assertOrganizationReader(organization.id)
+        this.permissionInteractor.assertOrganizationReader(organization.id)
         return this.repository.findSolutions(query)
     }
 
@@ -155,7 +149,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      */
     async getOrganization(): Promise<req.OrganizationType> {
         const org = await this.repository.getOrganization()
-        this._permissionInteractor.assertOrganizationReader(org.id)
+        this.permissionInteractor.assertOrganizationReader(org.id)
         return org
     }
 
@@ -170,8 +164,8 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      */
     async getAppUserById(id: AppUserType['id']): Promise<AppUserWithRoleDtoType> {
         const org = await this.repository.getOrganization(),
-            pi = this._permissionInteractor,
-            aui = this._appUserInteractor
+            pi = this.permissionInteractor,
+            aui = this.appUserInteractor
 
         pi.assertOrganizationReader(org.id)
         const auor = await pi.getAppUserOrganizationRole({
@@ -199,8 +193,8 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      */
     async getAppUsers(): Promise<AppUserWithRoleDtoType[]> {
         const org = await this.repository.getOrganization(),
-            pi = this._permissionInteractor,
-            aui = this._appUserInteractor
+            pi = this.permissionInteractor,
+            aui = this.appUserInteractor
 
         pi.assertOrganizationReader(org.id)
 
@@ -234,7 +228,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      */
     async getSolutionById(solutionId: req.SolutionType['id']): Promise<req.SolutionType> {
         const org = await this.repository.getOrganization()
-        this._permissionInteractor.assertOrganizationReader(org.id)
+        this.permissionInteractor.assertOrganizationReader(org.id)
         return this.repository.getSolutionById(solutionId)
     }
 
@@ -249,7 +243,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      */
     async getSolutionBySlug(slug: req.SolutionType['slug']): Promise<req.SolutionType> {
         const org = await this.repository.getOrganization()
-        this._permissionInteractor.assertOrganizationReader(org.id)
+        this.permissionInteractor.assertOrganizationReader(org.id)
         return this.repository.getSolutionBySlug(slug)
     }
 
@@ -258,7 +252,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      * @param name The name of the solution (will be slugified to check uniqueness)
      * @throws {MismatchException} If the solution slug is not unique within the organization
      */
-    private async _assertSolutionSlugIsUnique(name: string): Promise<void> {
+    private async assertSolutionSlugIsUnique(name: string): Promise<void> {
         const slug = slugify(name),
             solutions = (await this.findSolutions({ slug }))
 
@@ -278,13 +272,13 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      */
     async updateSolutionBySlug({ slug, ...props }: { slug: req.SolutionType['slug'] } & Pick<Partial<req.SolutionType>, 'name' | 'description'>): Promise<void> {
         const org = await this.repository.getOrganization(),
-            currentUserId = this._permissionInteractor.userId
+            currentUserId = this.permissionInteractor.userId
 
-        this._permissionInteractor.assertOrganizationContributor(org.id)
+        this.permissionInteractor.assertOrganizationContributor(org.id)
 
         if (props.name) {
             assertSolutionNameNotReserved(props.name)
-            await this._assertSolutionSlugIsUnique(props.name)
+            await this.assertSolutionSlugIsUnique(props.name)
         }
 
         await this.repository.updateSolutionBySlug({
@@ -306,14 +300,14 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
      * @param params.createdById - The ID of the user creating the solution (current user)
      * @param params.creationDate - The creation date
      */
-    private async _initializeSolutionRolesAndPersonnel({ solutionId, organizationId, createdById, creationDate }: {
+    private async initializeSolutionRolesAndPersonnel({ solutionId, organizationId, createdById, creationDate }: {
         solutionId: string
         organizationId: string
         createdById: string
         creationDate: Date
     }): Promise<void> {
         // Get the current user (solution creator) information
-        const currentUser = await this._appUserInteractor.getUserById({ id: createdById, organizationId }),
+        const currentUser = await this.appUserInteractor.getUserById({ id: createdById, organizationId }),
             // Create Person entity for the solution creator with both role capabilities
             solutionCreatorPersonData = req.Person.parse({
                 id: uuid7(),
@@ -350,7 +344,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
                 })
             })
 
-        await this._requirementRepository!.add({
+        await this.requirementRepository!.add({
             reqProps: solutionCreatorPersonData,
             createdById,
             creationDate
@@ -384,7 +378,7 @@ export class OrganizationInteractor extends Interactor<req.OrganizationType> {
             })
         })
 
-        await this._requirementRepository!.add({
+        await this.requirementRepository!.add({
             reqProps: defaultContextAndObjective,
             createdById,
             creationDate

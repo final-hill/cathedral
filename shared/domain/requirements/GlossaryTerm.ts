@@ -2,6 +2,7 @@ import { Component } from './Component.js'
 import { z } from 'zod'
 import { ReqType } from './ReqType.js'
 import { uiBasePathTemplates } from './uiBasePathTemplates.js'
+import { dedent } from '../../utils/dedent.js'
 
 export const GlossaryTerm = Component.extend({
     reqId: z.string().regex(/^E\.1\.\d+$/, 'Format must be E.1.#').optional()
@@ -10,6 +11,14 @@ export const GlossaryTerm = Component.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.GLOSSARY_TERM),
     uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.GLOSSARY_TERM])
         .describe('The UI path template for navigating to this requirement in the web interface')
-}).describe('A Glossary is a list of terms in a particular domain of knowledge with the definitions for those terms.')
+}).describe(dedent(`
+    A Glossary Term defines a word, phrase, acronym, or technical concept used in the project.
+    
+    Content Guidelines:
+    - Name: Should be the term, acronym, or concept being defined (e.g., "API", "User Session", "SLA")
+    - Description: Should be a clear, concise definition explaining the meaning of the term
+    - Should NOT contain requirements, constraints, or action items
+    - Should focus on clarifying terminology and establishing shared vocabulary
+`))
 
 export type GlossaryTermType = z.infer<typeof GlossaryTerm>

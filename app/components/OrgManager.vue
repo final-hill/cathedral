@@ -4,7 +4,7 @@ import { Organization } from '#shared/domain'
 import { z } from 'zod'
 
 const router = useRouter(),
-    { status: _status, data: organizations, refresh } = await useApiRequest({ url: '/api/organization', options: {
+    { data: organizations, refresh } = await useApiRequest({ url: '/api/organization', options: {
         schema: z.array(Organization)
     } }),
     deleteModalOpenState = ref(false),
