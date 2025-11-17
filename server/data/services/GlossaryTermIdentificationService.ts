@@ -11,8 +11,6 @@ const TermsOfArtResult = z.object({
         .describe('All terms that warrant glossary definitions: acronyms, domain-specific terms, technical jargon, and specialized vocabulary')
 })
 
-type TermsOfArtResultType = z.infer<typeof TermsOfArtResult>
-
 /**
  * Service for identifying terms that should be defined in a glossary
  * Uses Azure OpenAI to analyze requirement text and extract domain-specific terminology

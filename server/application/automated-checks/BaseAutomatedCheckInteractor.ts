@@ -108,10 +108,9 @@ export abstract class BaseAutomatedCheckInteractor {
     }): Promise<void> {
         const { requirementId, reqType, checks } = props,
             category = this.getCategory(),
-            checkTypes = checks.map(c => c.checkType as string)
-
-        // Find existing endorsements to preserve retry count
-        const existingEndorsements = await this.endorsementRepository.findByRequirementInReview(requirementId)
+            checkTypes = checks.map(c => c.checkType as string),
+            // Find existing endorsements to preserve retry count
+            existingEndorsements = await this.endorsementRepository.findByRequirementInReview(requirementId)
 
         // Delete placeholder endorsements
         await this.endorsementRepository.deleteAutomatedChecks({
@@ -125,8 +124,8 @@ export abstract class BaseAutomatedCheckInteractor {
         for (const check of checks) {
             // Find the matching placeholder to preserve retry count
             const existing = existingEndorsements.find(e =>
-                e.category === category &&
-                (e.checkDetails?.checkType as string) === check.checkType
+                e.category === category
+                && (e.checkDetails?.checkType as string) === check.checkType
             )
 
             await this.endorsementRepository.create({

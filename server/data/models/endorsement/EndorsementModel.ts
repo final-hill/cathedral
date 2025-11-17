@@ -1,4 +1,4 @@
-import { Entity, Enum, ManyToOne, Property, PrimaryKey, types, Unique } from '@mikro-orm/core'
+import { Entity, Enum, ManyToOne, Property, PrimaryKey, types } from '@mikro-orm/core'
 import { EndorsementStatus, EndorsementCategory } from '../../../../shared/domain/endorsement/index.js'
 import type { AutomatedCheckDetailsType } from '../../../../shared/domain/endorsement/index.js'
 import { RequirementVersionsModel, ActorModel } from '../requirements/index.js'

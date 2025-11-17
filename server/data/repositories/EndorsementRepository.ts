@@ -89,15 +89,14 @@ export class EndorsementRepository extends Repository<EndorsementType> {
 
         // Find all endorsements for this category with null endorsedBy (automated checks)
         const endorsements = await em.find(EndorsementModel, {
-            requirementVersion: reviewVersion,
-            endorsedBy: null,
-            category: props.category
-        })
-
-        // Filter to only those matching the checkTypes
-        const toDelete = endorsements.filter(e =>
-            e.checkDetails && props.checkTypes.includes((e.checkDetails as Record<string, unknown>).checkType as string)
-        )
+                requirementVersion: reviewVersion,
+                endorsedBy: null,
+                category: props.category
+            }),
+            // Filter to only those matching the checkTypes
+            toDelete = endorsements.filter(e =>
+                e.checkDetails && props.checkTypes.includes((e.checkDetails as Record<string, unknown>).checkType as string)
+            )
 
         // Remove them
         for (const endorsement of toDelete)

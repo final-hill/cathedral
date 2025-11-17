@@ -631,10 +631,10 @@ export class ReviewInteractor {
                 { checkType: 'readability_score', title: 'Readability Score' },
                 { checkType: 'glossary_compliance', title: 'Glossary Compliance' },
                 { checkType: 'type_correspondence', title: 'Type Correspondence' }
-            ]
+            ],
 
-        // Find existing to preserve retry count
-        const endorsements = await this.endorsementRepository.findByRequirementInReview(requirementId)
+            // Find existing to preserve retry count
+            endorsements = await this.endorsementRepository.findByRequirementInReview(requirementId)
 
         // Delete placeholders
         await this.endorsementRepository.deleteAutomatedChecks({
@@ -647,8 +647,8 @@ export class ReviewInteractor {
         // Create error endorsements
         for (const checkType of checkTypes) {
             const endorsement = endorsements.find(e =>
-                e.category === EndorsementCategory.READABILITY &&
-                (e.checkDetails?.checkType as string) === checkType.checkType
+                e.category === EndorsementCategory.READABILITY
+                && (e.checkDetails?.checkType as string) === checkType.checkType
             )
             await this.endorsementRepository.create({
                 requirementId,
