@@ -19,9 +19,10 @@ const paramSchema = Solution.pick({ slug: true }),
  * Refresh Slack channel and team names from Slack API
  */
 export default defineEventHandler(async (event) => {
-    // Note: slug parameter is extracted but not used - organization context comes from request body
-    const { slug: _solutionSlug } = await validateEventParams({ event, schema: paramSchema }),
-        { organizationId, organizationSlug, channelId, teamId } = await validateEventBody({ event, schema: bodySchema }),
+    // Note:parameters are validated but not used - organization context comes from request body
+    await validateEventParams({ event, schema: paramSchema })
+
+    const { organizationId, organizationSlug, channelId, teamId } = await validateEventBody({ event, schema: bodySchema }),
         session = await requireUserSession(event),
         config = useRuntimeConfig(),
         em = event.context.em,

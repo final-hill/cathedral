@@ -15,9 +15,15 @@ export const Epic = Example.extend({
     functionality: FunctionalityOverviewReference
         .describe('The functionality that this scenario implements')
 }).describe(dedent(`
-    An Epic is a High-level usage scenario.
-    It represents a main scenario (use case) that the system should cover.
-    It should only be a main usage pattern, without details such as special and erroneous cases.
+    An Epic is a high-level usage scenario representing a main pattern the system should cover.
+    
+    Content Guidelines:
+    - Name: Should describe a broad user goal or journey (e.g., "Online Shopping Experience", "User Onboarding")
+    - Description: Should explain the high-level scenario, actors involved, and overall outcome
+    - Should focus on the main, happy-path usage pattern
+    - Should NOT include detailed steps, special cases, or error handling (those belong in Use Cases)
+    - Should be decomposable into smaller User Stories or Use Cases
+    - Should provide context for understanding multiple related requirements
 `))
 
 export type EpicType = z.infer<typeof Epic>

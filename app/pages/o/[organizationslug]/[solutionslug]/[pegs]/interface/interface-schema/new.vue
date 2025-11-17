@@ -7,10 +7,9 @@ definePageMeta({ middleware: 'auth' })
 useHead({ title: 'Create Interface Data Type' })
 
 const route = useRoute(),
-    { organizationslug, solutionslug, pegs: _pegs } = route.params as {
+    { organizationslug, solutionslug } = route.params as {
         organizationslug: string
         solutionslug: string
-        pegs: string
     }
 </script>
 

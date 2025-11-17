@@ -2,25 +2,28 @@
 import { InterfaceType, ReqType, Interface, WorkflowState } from '#shared/domain'
 import { workflowColorMap } from '#shared/utils/workflow-colors'
 
-definePageMeta({ middleware: 'auth' })
-
 const route = useRoute(),
-    { organizationslug, solutionslug, pegs: _pegs, id } = route.params as {
+    { organizationslug, solutionslug, id } = route.params as {
         organizationslug: string
         solutionslug: string
-        pegs: string
         id: string
     },
     title = 'Review Interface'
 
 useHead({ title })
+definePageMeta({
+    middleware: 'auth',
+    key: route => route.fullPath
+})
 
 const { data: requirement, status, error } = await useApiRequest({ url: `/api/requirements/${ReqType.INTERFACE}/${id}`, options: {
     query: {
         solutionSlug: solutionslug,
         organizationSlug: organizationslug
     },
-    schema: Interface
+    schema: Interface,
+    // Disable cache to ensure we get fresh data after workflow transitions
+    getCachedData: () => undefined
 } })
 
 if (error.value) {

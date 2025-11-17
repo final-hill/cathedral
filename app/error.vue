@@ -2,14 +2,14 @@
 <script setup lang="ts">
 import type { NuxtError } from '#app'
 
-const _props = defineProps({
+const props = defineProps({
         error: {
             type: Object as () => NuxtError,
             default: () => ({}) as NuxtError
         }
     }),
     handleError = () => {
-        if (_props.error?.statusCode === 401) {
+        if (props.error?.statusCode === 401) {
         // Store current path in sessionStorage for post-auth redirect (client-side only)
             if (import.meta.client) {
                 const currentPath = useRoute().fullPath
@@ -24,8 +24,8 @@ const _props = defineProps({
 </script>
 
 <template>
-    <h2>{{ _props.error?.statusCode }}</h2>
-    <pre>{{ _props.error?.message }}</pre>
+    <h2>{{ props.error?.statusCode }}</h2>
+    <pre>{{ props.error?.message }}</pre>
     <UButton
         size="xl"
         label="Clear error"

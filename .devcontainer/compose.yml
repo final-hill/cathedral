@@ -23,6 +23,19 @@ services:
     networks:
       - app-network
 
+  languagetool:
+    image: erikvl87/languagetool:latest
+    container_name: cathedral-languagetool
+    restart: unless-stopped
+    ports:
+      - "8010:8010"
+    environment:
+      - Java_Xms=512m
+      - Java_Xmx=2g
+      - langtool_pipelinePrewarming=true
+    networks:
+      - app-network
+
   web:
     build:
       context: ..
@@ -32,6 +45,7 @@ services:
         NODE_ENV: development
     depends_on:
       - db
+      - languagetool
     restart: unless-stopped
     # mounts the workspace folder from the local source tree into the Dev Container.
     # .env.local and .env.keys are accessible in the workspace

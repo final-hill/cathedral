@@ -8,10 +8,9 @@ definePageMeta({ middleware: 'auth' })
 useHead({ title: 'Interface Data Types' })
 
 const route = useRoute(),
-    { organizationslug, solutionslug, pegs: _pegs } = route.params as {
+    { organizationslug, solutionslug } = route.params as {
         organizationslug: string
         solutionslug: string
-        pegs: string
     },
     { data: requirements, refresh, status } = await useApiRequest({ url: `/api/requirements/${ReqType.INTERFACE_SCHEMA}`, options: {
         query: {

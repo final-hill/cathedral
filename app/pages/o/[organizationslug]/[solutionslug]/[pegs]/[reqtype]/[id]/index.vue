@@ -34,7 +34,10 @@ if (!RequirementSchema) {
 const title = `${snakeCaseToPascalCase(reqType)} Details`
 
 useHead({ title })
-definePageMeta({ middleware: 'auth' })
+definePageMeta({
+    middleware: 'auth',
+    key: route => route.fullPath
+})
 
 const { data: requirement, status } = await useApiRequest({ url: `/api/requirements/${actualReqType}/${id}`, options: {
         query: { solutionSlug, organizationSlug },

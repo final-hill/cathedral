@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { ReqType } from './ReqType.js'
 import { uiBasePathTemplates } from './uiBasePathTemplates.js'
 
-export const _SystemComponent = Component.extend({
+export const BaseSystemComponent = Component.extend({
     reqId: z.string().regex(/^S\.1\.\d+$/, 'Format must be S.1.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
     reqIdPrefix: z.literal('S.1.').default('S.1.'),
@@ -13,8 +13,8 @@ export const _SystemComponent = Component.extend({
         .describe('The UI path template for navigating to this requirement in the web interface')
 })
 
-export const SystemComponent = _SystemComponent.extend({
-    parentComponent: _SystemComponent.pick({ reqType: true, id: true, name: true })
+export const SystemComponent = BaseSystemComponent.extend({
+    parentComponent: BaseSystemComponent.pick({ reqType: true, id: true, name: true })
         .describe('The parent component of the component').optional()
 }).describe(dedent(`
     A System Component is a self-contained part of a system.

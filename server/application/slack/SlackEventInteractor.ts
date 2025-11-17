@@ -1,7 +1,8 @@
 import type { NaturalLanguageToRequirementService, SlackService } from '~~/server/data/services'
+import { LanguageToolService, ReadabilityAnalysisService, RequirementTypeCorrespondenceService, GlossaryTermIdentificationService } from '~~/server/data/services'
 import { Interactor } from '../Interactor'
 import type { PermissionInteractor, SlackWorkspaceInteractor, SlackChannelInteractor, SlackUserInteractor } from '..'
-import { RequirementInteractor, ReviewInteractor, OrganizationCollectionInteractor, AppUserInteractor } from '..'
+import { RequirementInteractor, ReviewInteractor, ReadabilityCheckInteractor, OrganizationCollectionInteractor, AppUserInteractor } from '..'
 import type { SlackRepository } from '~~/server/data/repositories'
 import { RequirementRepository, OrganizationCollectionRepository, OrganizationRepository, EndorsementRepository } from '~~/server/data/repositories'
 import type { z } from 'zod'
@@ -21,13 +22,13 @@ import type { SqlEntityManager, PostgreSqlDriver } from '@mikro-orm/postgresql'
  *
  * This interactor coordinates between other Slack interactors for specific domain operations.
  */
-export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySchema>> {
-    protected readonly _nlrService: NaturalLanguageToRequirementService
-    protected readonly _permissionInteractor: PermissionInteractor
-    protected readonly _slackService: SlackService
-    protected readonly _workspaceInteractor: SlackWorkspaceInteractor
-    protected readonly _channelInteractor: SlackChannelInteractor
-    protected readonly _userInteractor: SlackUserInteractor
+export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySchema>, SlackRepository> {
+    protected readonly nlrService: NaturalLanguageToRequirementService
+    protected readonly permissionInteractor: PermissionInteractor
+    protected readonly slackService: SlackService
+    protected readonly workspaceInteractor: SlackWorkspaceInteractor
+    protected readonly channelInteractor: SlackChannelInteractor
+    protected readonly userInteractor: SlackUserInteractor
 
     /**
      * Constructor for SlackEventInteractor
@@ -50,17 +51,12 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         userInteractor: SlackUserInteractor
     }) {
         super({ repository: props.repository })
-        this._nlrService = props.nlrService
-        this._permissionInteractor = props.permissionInteractor
-        this._slackService = props.slackService
-        this._workspaceInteractor = props.workspaceInteractor
-        this._channelInteractor = props.channelInteractor
-        this._userInteractor = props.userInteractor
-    }
-
-    // TODO: This should not be necessary
-    get repository(): SlackRepository {
-        return this._repository as SlackRepository
+        this.nlrService = props.nlrService
+        this.permissionInteractor = props.permissionInteractor
+        this.slackService = props.slackService
+        this.workspaceInteractor = props.workspaceInteractor
+        this.channelInteractor = props.channelInteractor
+        this.userInteractor = props.userInteractor
     }
 
     /**
@@ -69,7 +65,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
      * @throws {MismatchException} When the user IDs don't match
      */
     private assertUserIdentity(cathedralUserId: string): void {
-        if (this._permissionInteractor.userId !== cathedralUserId)
+        if (this.permissionInteractor.userId !== cathedralUserId)
             throw new MismatchException('Cathedral user mismatch - authenticated user does not match expected user')
     }
 
@@ -126,16 +122,16 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         if (!this.shouldProcessMessage({ data, messageKey })) return
 
         // Establish transaction boundary
-        const em = this.repository['_em']
+        const em = this.repository['em']
 
         try {
             const parsedResultsId = await this.processRequirementsParsing({ data, teamId, statement, em })
             if (!parsedResultsId) return
 
-            const channelConfig = await this._channelInteractor.getChannelConfiguration({ channelId: data.channel, teamId })
-            if (!channelConfig) return await this._slackService.sendSimpleSuccessMessage({ channel: data.channel, thread_ts: data.ts })
+            const channelConfig = await this.channelInteractor.getChannelConfiguration({ channelId: data.channel, teamId })
+            if (!channelConfig) return await this.slackService.sendSimpleSuccessMessage({ channel: data.channel, thread_ts: data.ts })
 
-            const cathedralUserId = await this._userInteractor.validateUserAuthentication({ slackUserId: data.user, channelId: data.channel, teamId })
+            const cathedralUserId = await this.userInteractor.validateUserAuthentication({ slackUserId: data.user, channelId: data.channel, teamId })
             if (!cathedralUserId) return
 
             await this.sendSuccessResponse({
@@ -155,7 +151,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
                 statement
             })
 
-            await this._slackService.sendUnexpectedError({ channel: data.channel, thread_ts: data.ts })
+            await this.slackService.sendUnexpectedError({ channel: data.channel, thread_ts: data.ts })
         }
     }
 
@@ -182,9 +178,9 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         switch (parsed.command) {
             case '/cathedral':
             case '/cathedral-help':
-                return this._slackService.createHelpMessage()
+                return this.slackService.createHelpMessage()
             case '/cathedral-link-user':
-                return this._userInteractor.createUserLinkMessage({ slackUserId: parsed.user_id, teamId: parsed.team_id })
+                return this.userInteractor.createUserLinkMessage({ slackUserId: parsed.user_id, teamId: parsed.team_id })
             case '/cathedral-unlink-user':
                 return this.handleUnlinkUserCommand(parsed)
             case '/cathedral-link-solution':
@@ -192,7 +188,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
             case '/cathedral-unlink-solution':
                 return this.handleUnlinkSolutionCommand(parsed)
             default:
-                return this._slackService.createUnknownCommandMessage(parsed.command)
+                return this.slackService.createUnknownCommandMessage(parsed.command)
         }
     }
 
@@ -208,7 +204,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         const cathedralUserId = payload.actions?.[0]?.selected_option?.value
         if (!cathedralUserId) throw new MismatchException('No Cathedral user selected')
 
-        const existingCathedralUserId = await this._userInteractor.getCathedralUserIdForSlackUser({
+        const existingCathedralUserId = await this.userInteractor.getCathedralUserIdForSlackUser({
             slackUserId: payload.user.id,
             teamId: payload.team?.id || ''
         })
@@ -224,7 +220,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         this.assertUserIdentity(cathedralUserId)
 
         // Link the Slack user to the Cathedral user
-        await this._userInteractor.linkUser({
+        await this.userInteractor.linkUser({
             slackUserId: payload.user.id,
             teamId: payload.team?.id || '',
             cathedralUserId: cathedralUserId,
@@ -251,8 +247,8 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         const solutionId = payload.actions?.[0]?.selected_option?.value
         if (!solutionId) throw new MismatchException('No solution selected')
 
-        const cathedralUserId = this._permissionInteractor.userId,
-            em = this.repository['_em'],
+        const cathedralUserId = this.permissionInteractor.userId,
+            em = this.repository['em'],
             orgRepo = new OrganizationRepository({ em }),
             solution = await orgRepo.getSolutionById(solutionId).catch((err) => {
                 console.error('Failed to get solution by ID:', err)
@@ -261,9 +257,9 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
 
         if (!solution) throw new MismatchException('Invalid solution selected. Please try again.')
 
-        this._permissionInteractor.assertOrganizationContributor(solution.organization.id)
+        this.permissionInteractor.assertOrganizationContributor(solution.organization.id)
 
-        await this._channelInteractor.linkChannelToSolution({
+        await this.channelInteractor.linkChannelToSolution({
             channelId: payload.channel.id,
             teamId: payload.team?.id || '',
             solutionId,
@@ -327,19 +323,19 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         em: SqlEntityManager<PostgreSqlDriver>
     }): Promise<string | undefined> {
         if (!teamId) {
-            await this._slackService.sendTeamInfoError({ channel: data.channel, thread_ts: data.ts })
+            await this.slackService.sendTeamInfoError({ channel: data.channel, thread_ts: data.ts })
             return undefined
         }
 
-        const channelConfig = await this._channelInteractor.getChannelConfiguration({ channelId: data.channel, teamId })
+        const channelConfig = await this.channelInteractor.getChannelConfiguration({ channelId: data.channel, teamId })
         if (!channelConfig) {
-            await this._slackService.sendChannelNotLinkedError({ channel: data.channel, thread_ts: data.ts })
+            await this.slackService.sendChannelNotLinkedError({ channel: data.channel, thread_ts: data.ts })
             return undefined
         }
 
-        const cathedralUserId = this._permissionInteractor.userId
+        const cathedralUserId = this.permissionInteractor.userId
 
-        this._permissionInteractor.assertOrganizationContributor(channelConfig.organizationId)
+        this.permissionInteractor.assertOrganizationContributor(channelConfig.organizationId)
 
         return await this.parseRequirementsWithInteractor({
             channelConfig,
@@ -363,7 +359,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
      * @returns The ID of the parsed requirements or undefined if parsing failed
      */
     private async parseRequirementsWithInteractor(params: {
-        channelConfig: { organizationId: string, solutionId: string }
+        channelConfig: { organizationId: string, organizationSlug: string, solutionId: string }
         cathedralUserId: string
         statement: string
         channelId: string
@@ -375,21 +371,19 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
         this.assertUserIdentity(cathedralUserId)
 
         const appUserInteractor = new AppUserInteractor({
-                permissionInteractor: this._permissionInteractor,
+                permissionInteractor: this.permissionInteractor,
                 entraService: createEntraService()
             }),
             requirementRepository = new RequirementRepository({ em }),
-            endorsementRepository = new EndorsementRepository({ em }),
-            reviewInteractor = new ReviewInteractor({
-                permissionInteractor: this._permissionInteractor,
-                endorsementRepository,
-                requirementRepository,
+            reviewInteractor = this.createReviewInteractorInstance({
+                em,
                 organizationId: channelConfig.organizationId,
+                organizationSlug: channelConfig.organizationSlug,
                 solutionId: channelConfig.solutionId
             }),
             requirementInteractor = new RequirementInteractor({
                 repository: requirementRepository,
-                permissionInteractor: this._permissionInteractor,
+                permissionInteractor: this.permissionInteractor,
                 appUserInteractor,
                 reviewInteractor,
                 organizationId: channelConfig.organizationId,
@@ -398,7 +392,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
 
         try {
             return await requirementInteractor.parseRequirements({
-                service: this._nlrService,
+                service: this.nlrService,
                 name: `Slack Requirements`,
                 statement
             })
@@ -411,7 +405,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
                 solutionId: channelConfig.solutionId
             })
 
-            await this._slackService.sendParsingError({ channel: channelId, thread_ts })
+            await this.slackService.sendParsingError({ channel: channelId, thread_ts })
             return undefined
         }
     }
@@ -439,21 +433,19 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
             this.assertUserIdentity(cathedralUserId)
 
             const appUserInteractor = new AppUserInteractor({
-                    permissionInteractor: this._permissionInteractor,
+                    permissionInteractor: this.permissionInteractor,
                     entraService: createEntraService()
                 }),
                 requirementRepository = new RequirementRepository({ em }),
-                endorsementRepository = new EndorsementRepository({ em }),
-                reviewInteractor = new ReviewInteractor({
-                    permissionInteractor: this._permissionInteractor,
-                    endorsementRepository,
-                    requirementRepository,
+                reviewInteractor = this.createReviewInteractorInstance({
+                    em,
                     organizationId: channelConfig.organizationId,
+                    organizationSlug: channelConfig.organizationSlug,
                     solutionId: channelConfig.solutionId
                 }),
                 requirementInteractor = new RequirementInteractor({
                     repository: requirementRepository,
-                    permissionInteractor: this._permissionInteractor,
+                    permissionInteractor: this.permissionInteractor,
                     appUserInteractor,
                     reviewInteractor,
                     organizationId: channelConfig.organizationId,
@@ -470,7 +462,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
                     solutionSlug: channelConfig.solutionSlug
                 })
 
-            await this._slackService.sendDetailedSuccessMessage({
+            await this.slackService.sendDetailedSuccessMessage({
                 channel: channelId,
                 count,
                 requirementsUrl: requirementsUrl.toString(),
@@ -484,7 +476,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
                 cathedralUserId
             })
 
-            await this._slackService.sendSimpleSuccessMessage({ channel: channelId, thread_ts })
+            await this.slackService.sendSimpleSuccessMessage({ channel: channelId, thread_ts })
         }
     }
 
@@ -508,20 +500,77 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
     }
 
     /**
+     * Create a ReviewInteractor with all required dependencies
+     * Helper method to avoid duplication of service instantiation
+     * @param params - The parameters for creating the ReviewInteractor
+     * @param params.em - The entity manager for database operations
+     * @param params.organizationId - The organization ID
+     * @param params.organizationSlug - The organization slug
+     * @param params.solutionId - The solution ID
+     * @returns A configured ReviewInteractor instance
+     */
+    // FIXME: this is a hack. compare with the existing `createReviewInteractor` function
+    private createReviewInteractorInstance(params: {
+        em: SqlEntityManager<PostgreSqlDriver>
+        organizationId: string
+        organizationSlug: string
+        solutionId: string
+    }): ReviewInteractor {
+        const { em, organizationId, organizationSlug, solutionId } = params,
+            config = useRuntimeConfig(),
+            requirementRepository = new RequirementRepository({ em }),
+            endorsementRepository = new EndorsementRepository({ em }),
+            languageToolService = new LanguageToolService({
+                baseUrl: config.languagetoolBaseUrl as string || 'http://localhost:8010'
+            }),
+            readabilityAnalysisService = new ReadabilityAnalysisService(),
+            typeCorrespondenceService = new RequirementTypeCorrespondenceService({
+                apiKey: config.azureOpenaiApiKey,
+                apiVersion: config.azureOpenaiApiVersion,
+                endpoint: config.azureOpenaiEndpoint,
+                deployment: config.azureOpenaiDeploymentId
+            }),
+            glossaryTermService = new GlossaryTermIdentificationService({
+                apiKey: config.azureOpenaiApiKey,
+                apiVersion: config.azureOpenaiApiVersion,
+                endpoint: config.azureOpenaiEndpoint,
+                deployment: config.azureOpenaiDeploymentId
+            }),
+            readabilityCheckInteractor = new ReadabilityCheckInteractor({
+                languageToolService,
+                readabilityService: readabilityAnalysisService,
+                typeCorrespondenceService,
+                glossaryTermService,
+                endorsementRepository,
+                requirementRepository
+            })
+
+        return new ReviewInteractor({
+            permissionInteractor: this.permissionInteractor,
+            endorsementRepository,
+            requirementRepository,
+            readabilityCheckInteractor,
+            organizationId,
+            solutionId,
+            organizationSlug
+        })
+    }
+
+    /**
      * Handle the unlink user command
      * @param parsed - The parsed command data
      * @returns A promise that resolves to a Slack message
      */
     private async handleUnlinkUserCommand(parsed: z.infer<typeof slackSlashCommandSchema>) {
         try {
-            await this._userInteractor.unlinkUser({
+            await this.userInteractor.unlinkUser({
                 slackUserId: parsed.user_id,
                 teamId: parsed.team_id
             })
-            return this._slackService.createUserUnlinkSuccessMessage()
+            return this.slackService.createUserUnlinkSuccessMessage()
         } catch (error: unknown) {
             console.error('Failed to unlink user:', error)
-            return this._slackService.createErrorMessage('Failed to unlink user')
+            return this.slackService.createErrorMessage('Failed to unlink user')
         }
     }
 
@@ -547,8 +596,8 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
             }
         }
 
-        const cathedralUserId = this._permissionInteractor.userId,
-            em = this.repository['_em']
+        const cathedralUserId = this.permissionInteractor.userId,
+            em = this.repository['em']
 
         // 1. If no orgId, show org dropdown
         if (!orgId) {
@@ -556,21 +605,21 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
             const entraGroupService = createEntraService(),
                 orgCollectionInteractor = new OrganizationCollectionInteractor({
                     repository: new OrganizationCollectionRepository({ em }),
-                    permissionInteractor: this._permissionInteractor,
+                    permissionInteractor: this.permissionInteractor,
                     entraService: entraGroupService
                 }),
                 orgs = (await orgCollectionInteractor.findOrganizations()).filter(Boolean)
-            if (!orgs || orgs.length === 0) return this._slackService.createErrorMessage('No Cathedral organizations available to link.')
+            if (!orgs || orgs.length === 0) return this.slackService.createErrorMessage('No Cathedral organizations available to link.')
 
-            return this._slackService.createOrganizationDropdown({ organizations: orgs })
+            return this.slackService.createOrganizationDropdown({ organizations: orgs })
         }
 
         // 2. If orgId but no solutionId, show solution dropdown for org
         if (!solutionId) {
             const solutions = await new OrganizationRepository({ em, organizationId: orgId }).findSolutions({})
-            if (!solutions || solutions.length === 0) return this._slackService.createErrorMessage('No solutions available in this organization.')
+            if (!solutions || solutions.length === 0) return this.slackService.createErrorMessage('No solutions available in this organization.')
 
-            return this._slackService.createSolutionDropdown({
+            return this.slackService.createSolutionDropdown({
                 solutions,
                 organizationId: orgId,
                 actionId: 'cathedral_link_solution_select',
@@ -584,9 +633,9 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
                 console.error('Failed to get solution by ID:', err)
                 return null
             })
-        if (!solution) return this._slackService.createErrorMessage('Invalid solution selected. Please try again.')
+        if (!solution) return this.slackService.createErrorMessage('Invalid solution selected. Please try again.')
 
-        await this._channelInteractor.linkChannelToSolution({
+        await this.channelInteractor.linkChannelToSolution({
             channelId,
             teamId,
             solutionId,
@@ -595,7 +644,7 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
             organizationId: orgId
         })
 
-        return this._slackService.createChannelLinkSuccessMessage({ solutionName: solution.name, replaceOriginal: false })
+        return this.slackService.createChannelLinkSuccessMessage({ solutionName: solution.name, replaceOriginal: false })
     }
 
     /**
@@ -609,16 +658,16 @@ export class SlackEventInteractor extends Interactor<z.infer<typeof slackBodySch
             channelId = parsed.channel_id,
             channelMeta = await this.repository.getChannelMeta({ channelId, teamId })
         if (!channelMeta || !channelMeta.solutionId)
-            return this._slackService.createChannelNotLinkedMessage()
+            return this.slackService.createChannelNotLinkedMessage()
 
         // Get the full channel configuration to determine the organization
-        const channelConfig = await this._channelInteractor.getChannelConfiguration({ channelId, teamId })
+        const channelConfig = await this.channelInteractor.getChannelConfiguration({ channelId, teamId })
         if (!channelConfig)
-            return this._slackService.createChannelNotLinkedMessage()
+            return this.slackService.createChannelNotLinkedMessage()
 
-        this._permissionInteractor.assertOrganizationContributor(channelConfig.organizationId)
+        this.permissionInteractor.assertOrganizationContributor(channelConfig.organizationId)
 
         await this.repository.unlinkChannel({ channelId, teamId })
-        return this._slackService.createChannelUnlinkSuccessMessage()
+        return this.slackService.createChannelUnlinkSuccessMessage()
     }
 }

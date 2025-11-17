@@ -13,16 +13,16 @@ import type { AppUserWithRoleAndSlackDtoType } from '#shared/dto/AppUserWithRole
  * their associated Slack information.
  */
 export class AppUserSlackInteractor extends Interactor<AppUserType> {
-    private readonly _organizationInteractor: OrganizationInteractor
-    private readonly _slackUserInteractor: SlackUserInteractor
+    private readonly organizationInteractor: OrganizationInteractor
+    private readonly slackUserInteractor: SlackUserInteractor
 
     constructor(props: {
         organizationInteractor: OrganizationInteractor
         slackUserInteractor: SlackUserInteractor
     }) {
         super({ repository: null as never })
-        this._organizationInteractor = props.organizationInteractor
-        this._slackUserInteractor = props.slackUserInteractor
+        this.organizationInteractor = props.organizationInteractor
+        this.slackUserInteractor = props.slackUserInteractor
     }
 
     /**
@@ -34,10 +34,10 @@ export class AppUserSlackInteractor extends Interactor<AppUserType> {
      * @throws {PermissionDeniedException} If not authorized to view the user
      */
     async getAppUserByIdWithSlack(userId: string): Promise<AppUserWithRoleAndSlackDtoType> {
-        const user = await this._organizationInteractor.getAppUserById(userId)
+        const user = await this.organizationInteractor.getAppUserById(userId)
 
         try {
-            const slackAssociations = await this._slackUserInteractor.getSlackUsersForCathedralUser(userId)
+            const slackAssociations = await this.slackUserInteractor.getSlackUsersForCathedralUser(userId)
             return AppUserWithRoleAndSlackDto.parse({
                 ...user,
                 slackAssociations
@@ -58,7 +58,7 @@ export class AppUserSlackInteractor extends Interactor<AppUserType> {
      * @throws {PermissionDeniedException} If not authorized to view users
      */
     async getAppUsersWithSlack(): Promise<AppUserWithRoleAndSlackDtoType[]> {
-        const users = await this._organizationInteractor.getAppUsers()
+        const users = await this.organizationInteractor.getAppUsers()
 
         if (users.length === 0)
             return []
@@ -67,7 +67,7 @@ export class AppUserSlackInteractor extends Interactor<AppUserType> {
         const usersWithSlack = await Promise.all(
             users.map(async (user) => {
                 try {
-                    const slackAssociations = await this._slackUserInteractor.getSlackUsersForCathedralUser(user.id)
+                    const slackAssociations = await this.slackUserInteractor.getSlackUsersForCathedralUser(user.id)
                     return AppUserWithRoleAndSlackDto.parse({
                         ...user,
                         slackAssociations

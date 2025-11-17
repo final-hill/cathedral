@@ -11,18 +11,19 @@ export class EndorsementMapper implements Mapper<EndorsementModel, EndorsementTy
     async map(endorsementModel: EndorsementModel): Promise<EndorsementType> {
         const [requirementVersionRef, endorsedByRef] = await Promise.all([
             createDomainVersionReferenceFromModel(endorsementModel.requirementVersion),
-            createDomainReferenceFromModel(endorsementModel.endorsedBy)
+            endorsementModel.endorsedBy ? createDomainReferenceFromModel(endorsementModel.endorsedBy) : Promise.resolve(null)
         ])
 
         return Endorsement.parse({
             id: endorsementModel.id,
             requirementVersion: requirementVersionRef,
-            endorsedBy: endorsedByRef,
+            endorsedBy: endorsedByRef ?? undefined,
             category: endorsementModel.category,
             status: endorsementModel.status,
-            endorsedAt: endorsementModel.endorsedAt || undefined,
-            rejectedAt: endorsementModel.rejectedAt || undefined,
-            comments: endorsementModel.comments
+            endorsedAt: endorsementModel.endorsedAt,
+            rejectedAt: endorsementModel.rejectedAt,
+            comments: endorsementModel.comments,
+            checkDetails: endorsementModel.checkDetails
         })
     }
 }

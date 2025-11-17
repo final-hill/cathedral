@@ -6,9 +6,9 @@ import type { EntraService } from '../data/services'
 import { Interactor } from './Interactor'
 import type { PermissionInteractor } from './PermissionInteractor'
 
-export class OrganizationCollectionInteractor extends Interactor<OrganizationType> {
-    private readonly _permissionInteractor: PermissionInteractor
-    private readonly _entraGroupService: EntraService
+export class OrganizationCollectionInteractor extends Interactor<OrganizationType, OrganizationCollectionRepository> {
+    private readonly permissionInteractor: PermissionInteractor
+    private readonly entraGroupService: EntraService
 
     /**
      * Create a new OrganizationCollectionInteractor
@@ -24,13 +24,8 @@ export class OrganizationCollectionInteractor extends Interactor<OrganizationTyp
         entraService: EntraService
     }) {
         super(props)
-        this._permissionInteractor = props.permissionInteractor
-        this._entraGroupService = props.entraService
-    }
-
-    // FIXME: this shouldn't be necessary
-    get repository(): OrganizationCollectionRepository {
-        return this._repository as OrganizationCollectionRepository
+        this.permissionInteractor = props.permissionInteractor
+        this.entraGroupService = props.entraService
     }
 
     /**
@@ -45,11 +40,11 @@ export class OrganizationCollectionInteractor extends Interactor<OrganizationTyp
      */
     async createOrganization(props: Pick<OrganizationType, 'name' | 'description'>): Promise<OrganizationType['id']> {
         const repo = this.repository,
-            currentUserId = this._permissionInteractor.userId,
+            currentUserId = this.permissionInteractor.userId,
             newOrgId = await repo.createOrganization({ ...props, createdById: currentUserId, creationDate: new Date() })
 
         // Add the creator as organization admin and update session immediately
-        await this._permissionInteractor.addOrganizationCreatorRole({
+        await this.permissionInteractor.addOrganizationCreatorRole({
             appUserId: currentUserId,
             organizationId: newOrgId,
             role: AppRole.ORGANIZATION_ADMIN
@@ -65,8 +60,8 @@ export class OrganizationCollectionInteractor extends Interactor<OrganizationTyp
      * @throws {NotFoundException} If the organization does not exist
      */
     async deleteOrganizationById(id: OrganizationType['id']): Promise<void> {
-        const currentUserId = this._permissionInteractor.userId
-        this._permissionInteractor.assertOrganizationAdmin(id)
+        const currentUserId = this.permissionInteractor.userId
+        this.permissionInteractor.assertOrganizationAdmin(id)
 
         // Note: For soft deletion, we don't delete Entra groups immediately
         // This preserves user permissions and allows for potential organization restoration
@@ -90,7 +85,7 @@ export class OrganizationCollectionInteractor extends Interactor<OrganizationTyp
 
         if (!org) throw new NotFoundException('Organization not found')
 
-        this._permissionInteractor.assertOrganizationAdmin(org.id)
+        this.permissionInteractor.assertOrganizationAdmin(org.id)
         return this.deleteOrganizationById(org.id)
     }
 
@@ -106,7 +101,7 @@ export class OrganizationCollectionInteractor extends Interactor<OrganizationTyp
             permissionChecks = await Promise.all(
                 orgs.map(async org => ({
                     org,
-                    canRead: this._permissionInteractor.isOrganizationReader(org.id)
+                    canRead: this.permissionInteractor.isOrganizationReader(org.id)
                 }))
             ),
             authorizedOrgs = permissionChecks
@@ -130,7 +125,7 @@ export class OrganizationCollectionInteractor extends Interactor<OrganizationTyp
                 // Get creator name
                 try {
                     if (org.createdBy?.id) {
-                        const creator = await this._entraGroupService.getUser(org.createdBy.id)
+                        const creator = await this.entraGroupService.getUser(org.createdBy.id)
                         createdByName = creator.name || 'Unknown User'
                     }
                 } catch (error) {
@@ -140,7 +135,7 @@ export class OrganizationCollectionInteractor extends Interactor<OrganizationTyp
                 // Get modifier name
                 try {
                     if (org.modifiedBy?.id) {
-                        const modifier = await this._entraGroupService.getUser(org.modifiedBy.id)
+                        const modifier = await this.entraGroupService.getUser(org.modifiedBy.id)
                         modifiedByName = modifier.name || 'Unknown User'
                     }
                 } catch (error) {
@@ -175,14 +170,14 @@ export class OrganizationCollectionInteractor extends Interactor<OrganizationTyp
      * @throws {DuplicateEntityException} If an organization already exists with the new name
      */
     async updateOrganizationBySlug({ slug, ...props }: { slug: OrganizationType['slug'] } & Pick<Partial<OrganizationType>, 'name' | 'description'>): Promise<void> {
-        const currentUserId = this._permissionInteractor.userId,
+        const currentUserId = this.permissionInteractor.userId,
             existingOrg = (await this.repository.findOrganizations({ slug }))[0]
 
         if (!existingOrg) throw new NotFoundException(`Organization not found with slug: ${slug}`)
 
         const newSlug = props.name ? slugify(props.name) : existingOrg.slug
 
-        this._permissionInteractor.assertOrganizationContributor(existingOrg.id)
+        this.permissionInteractor.assertOrganizationContributor(existingOrg.id)
 
         const existingSlugOrg = (await this.repository.findOrganizations({ slug: newSlug }))[0]
 

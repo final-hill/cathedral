@@ -8,8 +8,8 @@ import type { PermissionInteractor } from './PermissionInteractor'
  * Interactor for the AppUser
  */
 export class AppUserInteractor extends Interactor<AppUserType> {
-    private readonly _permissionInteractor: PermissionInteractor
-    private readonly _entraService: EntraService
+    private readonly permissionInteractor: PermissionInteractor
+    private readonly entraService: EntraService
 
     /**
      * Create a new AppUserInteractor
@@ -22,8 +22,8 @@ export class AppUserInteractor extends Interactor<AppUserType> {
         entraService: EntraService
     }) {
         super({ repository: null as never })
-        this._permissionInteractor = props.permissionInteractor
-        this._entraService = props.entraService
+        this.permissionInteractor = props.permissionInteractor
+        this.entraService = props.entraService
     }
 
     /**
@@ -43,15 +43,15 @@ export class AppUserInteractor extends Interactor<AppUserType> {
         organizationId: string
         role: AppRole
     }): Promise<string> {
-        this._permissionInteractor.assertOrganizationAdmin(organizationId)
+        this.permissionInteractor.assertOrganizationAdmin(organizationId)
 
         try {
-            const entraUser = await this._entraService.getUserByEmail(email)
+            const entraUser = await this.entraService.getUserByEmail(email)
 
             if (!entraUser)
                 throw new NotFoundException(`User with email ${email} not found in Entra External ID tenant. User must be invited through the Entra admin portal first.`)
 
-            await this._permissionInteractor.addAppUserOrganizationRole({
+            await this.permissionInteractor.addAppUserOrganizationRole({
                 appUserId: entraUser.id,
                 organizationId,
                 role
@@ -86,18 +86,18 @@ export class AppUserInteractor extends Interactor<AppUserType> {
         role: AppRole
         redirectUrl: string
     }): Promise<{ userId: string, invited: boolean }> {
-        this._permissionInteractor.assertOrganizationAdmin(organizationId)
+        this.permissionInteractor.assertOrganizationAdmin(organizationId)
 
         try {
-            let entraUser = await this._entraService.getUserByEmail(email),
+            let entraUser = await this.entraService.getUserByEmail(email),
                 invited = false
 
             if (!entraUser) {
-                entraUser = await this._entraService.createExternalUserInvitation({ email, redirectUrl })
+                entraUser = await this.entraService.createExternalUserInvitation({ email, redirectUrl })
                 invited = true
             }
 
-            await this._permissionInteractor.addAppUserOrganizationRole({
+            await this.permissionInteractor.addAppUserOrganizationRole({
                 appUserId: entraUser.id,
                 organizationId,
                 role
@@ -123,10 +123,10 @@ export class AppUserInteractor extends Interactor<AppUserType> {
      * @throws {PermissionDeniedException} If the current user doesn't have permission to access this user's information
      */
     async getUserById({ id, organizationId }: { id: string, organizationId: string }): Promise<AppUserType> {
-        this._permissionInteractor.assertOrganizationReader(organizationId)
+        this.permissionInteractor.assertOrganizationReader(organizationId)
 
         try {
-            const entraUser = await this._entraService.getUser(id)
+            const entraUser = await this.entraService.getUser(id)
             if (!entraUser)
                 throw new NotFoundException(`User with id ${id} does not exist in Entra External ID`)
 
@@ -151,10 +151,10 @@ export class AppUserInteractor extends Interactor<AppUserType> {
      * @throws {PermissionDeniedException} If the current user doesn't have permission to access this user's information
      */
     async getUserByEmail({ email, organizationId }: { email: string, organizationId: string }): Promise<AppUserType> {
-        this._permissionInteractor.assertOrganizationReader(organizationId)
+        this.permissionInteractor.assertOrganizationReader(organizationId)
 
         try {
-            const entraUser = await this._entraService.getUserByEmail(email)
+            const entraUser = await this.entraService.getUserByEmail(email)
             if (!entraUser)
                 throw new NotFoundException(`User with email ${email} does not exist in Entra External ID`)
 
@@ -178,10 +178,10 @@ export class AppUserInteractor extends Interactor<AppUserType> {
      * @throws {PermissionDeniedException} If the current user doesn't have permission to check this user's existence
      */
     async hasUser({ email, organizationId }: { email: string, organizationId: string }): Promise<boolean> {
-        this._permissionInteractor.assertOrganizationReader(organizationId)
+        this.permissionInteractor.assertOrganizationReader(organizationId)
 
         try {
-            const entraUser = await this._entraService.getUserByEmail(email)
+            const entraUser = await this.entraService.getUserByEmail(email)
             return entraUser !== null
         } catch {
             return false

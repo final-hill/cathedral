@@ -8,21 +8,21 @@ import { ReqType } from '#shared/domain/index.js'
 import * as reqs from '#shared/domain/requirements/index.js'
 
 export class NaturalLanguageToRequirementService {
-    private _aiClient: AzureOpenAI
-    private _modelId: string
+    private aiClient: AzureOpenAI
+    private modelId: string
 
     constructor(props: { apiKey: string, apiVersion: string, endpoint: string, deployment: string }) {
-        this._aiClient = new AzureOpenAI(props)
-        this._modelId = props.deployment
+        this.aiClient = new AzureOpenAI(props)
+        this.modelId = props.deployment
     }
 
     async parse(statement: string): Promise<z.infer<typeof llmRequirementSchema>[]> {
         // https://techcommunity.microsoft.com/t5/ai-azure-ai-services-blog/introducing-gpt-4o-2024-08-06-api-with-structured-outputs-on/ba-p/4232684
         // https://hooshmand.net/zod-zodresponseformat-structured-outputs-openai/
         // https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/structured-outputs?tabs=python-secure
-        const completion = await this._aiClient.chat.completions.create({
+        const completion = await this.aiClient.chat.completions.create({
             // temperature: 0,
-                model: this._modelId,
+                model: this.modelId,
                 messages: [{
                     role: 'system', content: dedent(`
                 Your role is to distill requirements from user input.

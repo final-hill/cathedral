@@ -20,7 +20,7 @@ export class OrganizationCollectionRepository extends Repository<OrganizationTyp
      * @throws {DuplicateEntityException} If the organization already exists that is not in a deleted state
      */
     async createOrganization(props: Pick<OrganizationType, 'name' | 'description'> & CreationInfo): Promise<OrganizationType['id']> {
-        const em = this._em,
+        const em = this.em,
             orgRepo = new OrganizationRepository({ em, organizationSlug: slugify(props.name) }),
             existingOrg = await orgRepo.getOrganization().catch(() => undefined)
 
@@ -54,7 +54,7 @@ export class OrganizationCollectionRepository extends Repository<OrganizationTyp
      * @throws {NotFoundException} If the organization does not exist
      */
     async deleteOrganization(props: Pick<OrganizationType, 'id'> & DeletionInfo): Promise<void> {
-        const em = this._em,
+        const em = this.em,
             orgRepo = new OrganizationRepository({ em, organizationId: props.id }),
             organization = await orgRepo.getOrganization()
 
@@ -99,7 +99,7 @@ export class OrganizationCollectionRepository extends Repository<OrganizationTyp
         const { id, createdBy, creationDate } = query,
             effectiveDate = new Date(),
             volatileQuery = await new ReqQueryToModelQuery().map(query),
-            orgModels = await this._em.find(OrganizationModel, {
+            orgModels = await this.em.find(OrganizationModel, {
                 id,
                 createdById: createdBy?.id,
                 creationDate
@@ -129,7 +129,7 @@ export class OrganizationCollectionRepository extends Repository<OrganizationTyp
      * @throws {MismatchException} If the provided name is already taken
      */
     async updateOrganizationById({ id, ...props }: Pick<OrganizationType, 'id'> & Pick<Partial<OrganizationType>, 'name' | 'description'> & UpdationInfo): Promise<void> {
-        const em = this._em,
+        const em = this.em,
             organization = await em.findOne(OrganizationModel, { id }),
             // Check if organization is deleted by getting the truly latest version
             latestVersionAny = await organization?.getLatestVersionIncludingDeleted({ effectiveDate: props.modifiedDate }),

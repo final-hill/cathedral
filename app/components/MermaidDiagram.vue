@@ -6,14 +6,14 @@ const props = defineProps<{
     }>(),
     colorMode = useColorMode()
 
-enum themeMap {
-    light = 'default',
-    dark = 'dark'
+enum ThemeMap {
+    Light = 'default',
+    Dark = 'dark'
 };
 
 mermaid.initialize({
     startOnLoad: false,
-    theme: themeMap[colorMode.value as keyof typeof themeMap]
+    theme: ThemeMap[colorMode.value as keyof typeof ThemeMap]
 })
 
 const diagram = useTemplateRef('diagram')

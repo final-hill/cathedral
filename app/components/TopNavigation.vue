@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { DropdownMenuItem } from '@nuxt/ui'
 
-const { loggedIn, user, session: _session, fetch: _fetch, clear } = useUserSession(),
+const { loggedIn, user, clear } = useUserSession(),
     router = useRouter(),
     getCrumbs = () => {
         const route = router.currentRoute.value,

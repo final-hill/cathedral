@@ -34,11 +34,16 @@ if (!RequirementSchema) {
 const title = `Review ${snakeCaseToPascalCase(reqType)}`
 
 useHead({ title })
-definePageMeta({ middleware: 'auth' })
+definePageMeta({
+    middleware: 'auth',
+    key: route => route.fullPath
+})
 
 const { data: requirement, status, error } = await useApiRequest({ url: `/api/requirements/${actualReqType}/${id}`, options: {
     query: { solutionSlug, organizationSlug },
-    schema: RequirementSchema
+    schema: RequirementSchema,
+    // Disable cache to ensure we get fresh data after workflow transitions
+    getCachedData: () => undefined
 } })
 
 if (error.value) {

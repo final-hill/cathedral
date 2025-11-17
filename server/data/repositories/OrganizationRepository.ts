@@ -14,10 +14,10 @@ import type { DeletionInfo } from './DeletionInfo'
 
 // TODO: parameterize the repository type
 export class OrganizationRepository extends Repository<OrganizationType> {
-    private _organizationId?: OrganizationType['id']
-    private _organizationSlug?: OrganizationType['slug']
+    private organizationId?: OrganizationType['id']
+    private organizationSlug?: OrganizationType['slug']
     /** This is not readonly because it can be reassigned in {@link #deleteOrganization} */
-    private _organization: Promise<OrganizationType>
+    private organization: Promise<OrganizationType>
 
     /**
      * Constructs a new OrganizationRepository instance
@@ -35,9 +35,9 @@ export class OrganizationRepository extends Repository<OrganizationType> {
 
         const { organizationId, organizationSlug } = options
 
-        this._organizationId = organizationId
-        this._organizationSlug = organizationSlug
-        this._organization = this._getOrganization()
+        this.organizationId = organizationId
+        this.organizationSlug = organizationSlug
+        this.organization = this.getOrganizationAsync()
     }
 
     /**
@@ -48,7 +48,7 @@ export class OrganizationRepository extends Repository<OrganizationType> {
      * @param props.effectiveDate - The effective date of the solution
      */
     async addSolution({ name, description, createdById, creationDate: effectiveDate }: Pick<SolutionType, 'name' | 'description'> & CreationInfo): Promise<SolutionType['id']> {
-        const em = this._em,
+        const em = this.em,
             organization = await this.getOrganization(),
             newId = uuid7()
 
@@ -80,7 +80,7 @@ export class OrganizationRepository extends Repository<OrganizationType> {
      * @throws {NotFoundException} If the solution does not exist in the organization
      */
     async deleteSolutionBySlug(props: DeletionInfo & Pick<SolutionType, 'slug'>): Promise<void> {
-        const em = this._em,
+        const em = this.em,
             maybeSolLatestVersion = await em.findOne(reqModels.SolutionVersionsModel, {
                 organization: (await this.getOrganization()).id,
                 slug: props.slug,
@@ -107,7 +107,7 @@ export class OrganizationRepository extends Repository<OrganizationType> {
         })
 
         /** delete all requirements associated with the solution **/
-        const requirements = await this._getRequirementsInSolution({ solutionId: solution.id, effectiveDate: props.deletedDate })
+        const requirements = await this.getRequirementsInSolution({ solutionId: solution.id, effectiveDate: props.deletedDate })
 
         for (const req of requirements) {
             em.create<reqModels.RequirementVersionsModel>(req.constructor as new () => reqModels.RequirementVersionsModel, {
@@ -128,7 +128,7 @@ export class OrganizationRepository extends Repository<OrganizationType> {
      * @returns The solutions that match the query parameters
      */
     async findSolutions(query: Partial<SolutionType>): Promise<SolutionType[]> {
-        const em = this._em,
+        const em = this.em,
             { id, createdBy, creationDate, ...volatileQuery } = query,
             modelQuery = await new ReqQueryToModelQuery().map(volatileQuery),
             organizationId = (await this.getOrganization()).id,
@@ -160,7 +160,7 @@ export class OrganizationRepository extends Repository<OrganizationType> {
      * @returns The organization
      */
     async getOrganization(): Promise<OrganizationType> {
-        return this._organization
+        return this.organization
     }
 
     /**
@@ -168,10 +168,10 @@ export class OrganizationRepository extends Repository<OrganizationType> {
      * @returns The organization
      * @throws {NotFoundException} If the organization does not exist
      */
-    private async _getOrganization(): Promise<OrganizationType> {
-        const em = this._em,
-            organizationId = this._organizationId,
-            organizationSlug = this._organizationSlug
+    private async getOrganizationAsync(): Promise<OrganizationType> {
+        const em = this.em,
+            organizationId = this.organizationId,
+            organizationSlug = this.organizationSlug
 
         if (!organizationId && !organizationSlug) throw new NotFoundException('Organization id or slug must be provided')
 
@@ -205,8 +205,8 @@ export class OrganizationRepository extends Repository<OrganizationType> {
      * @param params.prefix - The prefix of the requirement id (optional)
      * @returns An array of the latest versions of requirements associated with the solution
      */
-    private async _getRequirementsInSolution({ solutionId, effectiveDate, filter = {} }: { solutionId: string, effectiveDate: Date, filter?: FilterQuery<Exclude<reqModels.RequirementVersionsModel, 'solution' | 'effectiveFrom'>> }): Promise<reqModels.RequirementVersionsModel[]> {
-        const em = this._em,
+    private async getRequirementsInSolution({ solutionId, effectiveDate, filter = {} }: { solutionId: string, effectiveDate: Date, filter?: FilterQuery<Exclude<reqModels.RequirementVersionsModel, 'solution' | 'effectiveFrom'>> }): Promise<reqModels.RequirementVersionsModel[]> {
+        const em = this.em,
             reqs = await em.find<reqModels.RequirementModel>(reqModels.RequirementModel, {
                 req_type: { $nin: [ReqType.ORGANIZATION, ReqType.SOLUTION] },
                 versions: {
@@ -284,7 +284,7 @@ export class OrganizationRepository extends Repository<OrganizationType> {
      * @throws {NotFoundException} If the solution does not belong to the organization
      */
     async updateSolutionBySlug({ slug, ...props }: { slug: SolutionType['slug'] } & Pick<Partial<SolutionType>, 'name' | 'description'> & UpdationInfo): Promise<void> {
-        const em = this._em,
+        const em = this.em,
             organizationId = (await this.getOrganization()).id,
             solution = await this.getSolutionBySlug(slug),
             existingSolution = await em.findOne(reqModels.SolutionModel, {

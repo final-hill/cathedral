@@ -19,7 +19,15 @@ export const Person = Actor.extend({
     reqType: z.nativeEnum(ReqType).default(ReqType.PERSON),
     uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.PERSON])
 }).describe(dedent(`
-    A member of the Project staff with associated contact information, roles, and responsibilities.
+    A Person represents a member of the project staff with associated contact information, roles, and responsibilities.
+    
+    Content should:
+    - Name: Be a person's name or role title
+    - Description: Describe the person's role, responsibilities, or project relevance
+    - Focus: On human actors, their expertise, and their contribution to the project
+    - Avoid: System components, technical requirements, or non-human entities
+    
+    Examples: "John Smith, Lead Developer", "Sarah Johnson, Product Owner responsible for feature prioritization"
 `))
 
 export type PersonType = z.infer<typeof Person>

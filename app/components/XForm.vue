@@ -112,11 +112,11 @@ const customValidate = async (_state: z.output<F>): Promise<FormError[]> => {
     // Function to register a child validator
     registerChildValidator = ({ fieldName, validator }: { fieldName: string, validator: () => Promise<{ isValid: boolean, message?: string }> }) => {
         childValidators.value.set(fieldName, validator)
-    },
-    // Function to unregister a child validator (for future use)
-    _unregisterChildValidator = (fieldName: string) => {
-        childValidators.value.delete(fieldName)
     }
+    // Function to unregister a child validator (for future use)
+    // unregisterChildValidator = (fieldName: string) => {
+    //     childValidators.value.delete(fieldName)
+    // }
 
 // Clean up validators when component unmounts
 onBeforeUnmount(() => {

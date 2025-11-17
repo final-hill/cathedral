@@ -629,6 +629,14 @@
           "nullable": true,
           "mappedType": "uuid"
         },
+        "searchable_name": {
+          "name": "searchable_name",
+          "type": "tsvector",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true
+        },
         "flow_name": {
           "name": "flow_name",
           "type": "varchar(255)",
@@ -945,6 +953,17 @@
           "unique": false
         },
         {
+          "keyName": "requirement_versions_searchable_name_index",
+          "columnNames": [
+            "searchable_name"
+          ],
+          "composite": false,
+          "constraint": false,
+          "primary": false,
+          "unique": false,
+          "type": "fulltext"
+        },
+        {
           "keyName": "requirement_versions_pkey",
           "columnNames": [
             "effective_from",
@@ -1127,7 +1146,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "mappedType": "uuid"
         },
         "category": {
@@ -1197,24 +1216,20 @@
           "primary": false,
           "nullable": true,
           "mappedType": "text"
+        },
+        "check_details": {
+          "name": "check_details",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "json"
         }
       },
       "name": "endorsement",
       "schema": "public",
       "indexes": [
-        {
-          "keyName": "endorsement_requirement_version_effective_from_re_246e0_unique",
-          "columnNames": [
-            "requirement_version_effective_from",
-            "requirement_version_requirement_id",
-            "endorsed_by_id",
-            "category"
-          ],
-          "composite": true,
-          "constraint": true,
-          "primary": false,
-          "unique": true
-        },
         {
           "keyName": "endorsement_pkey",
           "columnNames": [
@@ -1252,6 +1267,7 @@
             "id"
           ],
           "referencedTableName": "public.requirement",
+          "deleteRule": "set null",
           "updateRule": "cascade"
         }
       },

@@ -15,9 +15,13 @@ export class ReqQueryToModelQuery implements Mapper<Partial<RequirementType>, Re
             // Skip category for Stakeholders only (it's derived), but allow it for Constraints
             else if (key === 'category' && query.reqType === ReqType.STAKEHOLDER) return acc
 
+            // Extract ID from reference objects before any key transformations
+            if (typeof value === 'object' && value !== null && 'id' in value) value = value.id
+
+            // Transform keys after value extraction
             if (key === 'lastModified') key = 'effectiveFrom'
             else if (key === 'appUser') key = 'appUserId'
-            else if (typeof value === 'object' && value !== null && 'id' in value) value = value.id
+
             return { ...acc, [key]: value }
         }, {})
     }

@@ -8,10 +8,10 @@ definePageMeta({ name: 'Organization', middleware: 'auth' })
 
 const { organizationslug: organizationSlug } = useRoute('Organization').params,
     router = useRouter(),
-    { data: organization, status: _orgStatus } = await useApiRequest({ url: `/api/organization/${organizationSlug}`, options: {
+    { data: organization } = await useApiRequest({ url: `/api/organization/${organizationSlug}`, options: {
         schema: Organization
     } }),
-    { refresh: refreshSolutions, status: _solStatus, data: solutions } = await useApiRequest({ url: '/api/solution', options: {
+    { refresh: refreshSolutions, data: solutions } = await useApiRequest({ url: '/api/solution', options: {
         schema: z.array(Solution),
         query: { organizationSlug }
     } }),

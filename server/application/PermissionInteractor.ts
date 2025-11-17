@@ -9,29 +9,25 @@ import type { H3Event } from 'h3'
  * for the current user in the context of an organization.
  */
 export class PermissionInteractor {
-    private readonly _session: UserSession
-    private readonly _event?: H3Event
-    private readonly _entraService: EntraService
+    private readonly session: UserSession
+    private readonly event?: H3Event
+    readonly entraService: EntraService
 
     constructor(props: {
         session: UserSession
         event?: H3Event
         entraService: EntraService
     }) {
-        this._session = props.session
-        this._event = props.event
-        this._entraService = props.entraService
+        this.session = props.session
+        this.event = props.event
+        this.entraService = props.entraService
 
-        if (!this._session.user)
+        if (!this.session.user)
             throw new PermissionDeniedException('Invalid user session: user not found')
     }
 
     get userId(): AppUserType['id'] {
-        return this._session.user!.id
-    }
-
-    get entraService(): EntraService {
-        return this._entraService
+        return this.session.user!.id
     }
 
     /**
@@ -70,7 +66,7 @@ export class PermissionInteractor {
     async addAppUserOrganizationRole(props: { appUserId: string, organizationId: string, role: AppRole }): Promise<void> {
         this.assertOrganizationAdmin(props.organizationId)
 
-        await this._entraService.addUserToOrganizationGroup({
+        await this.entraService.addUserToOrganizationGroup({
             userId: props.appUserId,
             organizationId: props.organizationId,
             role: props.role
@@ -86,7 +82,7 @@ export class PermissionInteractor {
      */
     async addOrganizationCreatorRole(props: { appUserId: string, organizationId: string, role: AppRole }): Promise<void> {
         // No permission check needed - this is for the creator during organization creation
-        await this._entraService.addUserToOrganizationGroup({
+        await this.entraService.addUserToOrganizationGroup({
             userId: props.appUserId,
             organizationId: props.organizationId,
             role: props.role
@@ -105,7 +101,7 @@ export class PermissionInteractor {
     async deleteAppUserOrganizationRole(props: { appUserId: string, organizationId: string }): Promise<void> {
         this.assertOrganizationAdmin(props.organizationId)
 
-        await this._entraService.removeUserFromOrganizationGroup({
+        await this.entraService.removeUserFromOrganizationGroup({
             userId: props.appUserId,
             organizationId: props.organizationId
         })
@@ -121,7 +117,7 @@ export class PermissionInteractor {
     async findAppUserOrganizationRoles(props: { appUserId?: AppUserType['id'], organizationId: OrganizationType['id'], role?: AppRole }): Promise<AppUserOrganizationRoleType[]> {
         this.assertOrganizationReader(props.organizationId)
 
-        const organizationUsers = await this._entraService.getOrganizationUsers(props.organizationId),
+        const organizationUsers = await this.entraService.getOrganizationUsers(props.organizationId),
             filteredUsers = props.appUserId
                 ? organizationUsers.filter(orgUser => orgUser.user.id === props.appUserId)
                 : organizationUsers,
@@ -164,7 +160,7 @@ export class PermissionInteractor {
      * @returns The current user's name
      */
     getCurrentUserName(): string {
-        return this._session.user!.name
+        return this.session.user!.name
     }
 
     /**
@@ -172,7 +168,7 @@ export class PermissionInteractor {
      * @returns True if the user is a system admin
      */
     isSystemAdmin(): boolean {
-        return this._session.user!.isSystemAdmin
+        return this.session.user!.isSystemAdmin
     }
 
     /**
@@ -181,10 +177,10 @@ export class PermissionInteractor {
      * @returns True if the user is an organization admin
      */
     isOrganizationAdmin(organizationId: OrganizationType['id']): boolean {
-        if (this._session.user!.isSystemAdmin)
+        if (this.session.user!.isSystemAdmin)
             return true
 
-        const orgRole = this._session.user!.organizationRoles.find(role => role.orgId === organizationId)
+        const orgRole = this.session.user!.organizationRoles.find(role => role.orgId === organizationId)
         return orgRole?.role === AppRole.ORGANIZATION_ADMIN
     }
 
@@ -194,10 +190,10 @@ export class PermissionInteractor {
      * @returns True if the user is an organization contributor
      */
     isOrganizationContributor(organizationId: OrganizationType['id']): boolean {
-        if (this._session.user!.isSystemAdmin)
+        if (this.session.user!.isSystemAdmin)
             return true
 
-        const orgRole = this._session.user!.organizationRoles.find(role => role.orgId === organizationId)
+        const orgRole = this.session.user!.organizationRoles.find(role => role.orgId === organizationId)
         return orgRole?.role ? [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR].includes(orgRole.role) : false
     }
 
@@ -207,10 +203,10 @@ export class PermissionInteractor {
      * @returns True if the user is an organization reader
      */
     isOrganizationReader(organizationId: OrganizationType['id']): boolean {
-        if (this._session.user!.isSystemAdmin)
+        if (this.session.user!.isSystemAdmin)
             return true
 
-        const orgRole = this._session.user!.organizationRoles.find(role => role.orgId === organizationId)
+        const orgRole = this.session.user!.organizationRoles.find(role => role.orgId === organizationId)
         return orgRole?.role ? [AppRole.ORGANIZATION_ADMIN, AppRole.ORGANIZATION_CONTRIBUTOR, AppRole.ORGANIZATION_READER].includes(orgRole.role) : false
     }
 
@@ -223,7 +219,7 @@ export class PermissionInteractor {
     async updateAppUserRole(props: { appUserId: AppUserType['id'], organizationId: OrganizationType['id'], role: AppRole }): Promise<void> {
         this.assertOrganizationAdmin(props.organizationId)
 
-        await this._entraService.updateUserOrganizationRole({
+        await this.entraService.updateUserOrganizationRole({
             userId: props.appUserId,
             organizationId: props.organizationId,
             newRole: props.role
@@ -238,26 +234,26 @@ export class PermissionInteractor {
      * @param params.role - The role assigned to the current user
      */
     private async refreshSessionGroups({ organizationId, role }: { organizationId: string, role: AppRole }): Promise<void> {
-        const existingOrgRole = this._session.user!.organizationRoles.find(
+        const existingOrgRole = this.session.user!.organizationRoles.find(
             orgRole => orgRole.orgId === organizationId
         )
 
         if (!existingOrgRole) {
             // Update the session with the new organization role if we have an event context
-            if (this._event) {
-                await setUserSession(this._event, {
+            if (this.event) {
+                await setUserSession(this.event, {
                     user: {
-                        ...this._session.user!,
+                        ...this.session.user!,
                         organizationRoles: [
-                            ...this._session.user!.organizationRoles,
+                            ...this.session.user!.organizationRoles,
                             { orgId: organizationId, role }
                         ]
                     }
                 })
             } else {
                 // For non-HTTP contexts (like Slack operations), just update the in-memory session
-                this._session.user!.organizationRoles = [
-                    ...this._session.user!.organizationRoles,
+                this.session.user!.organizationRoles = [
+                    ...this.session.user!.organizationRoles,
                     { orgId: organizationId, role }
                 ]
             }

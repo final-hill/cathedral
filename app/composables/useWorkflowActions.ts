@@ -89,18 +89,18 @@ export function useWorkflowActions(options: UseWorkflowActionsOptions) {
 
                     switch (action) {
                         case 'review':
-                            await navigateTo(`${detailBasePath}/review`)
+                            await navigateTo(`${detailBasePath}/review`, { replace: true })
                             break
                         case 'revise':
-                            await navigateTo(`${detailBasePath}/edit`)
+                            await navigateTo(`${detailBasePath}/edit`, { replace: true })
                             break
                         case 'remove':
                         case 'restore':
                         // Navigate back to the list after remove/restore
-                            await navigateTo(basePath.value)
+                            await navigateTo(basePath.value, { replace: true })
                             break
                         default:
-                            await navigateTo(basePath.value)
+                            await navigateTo(basePath.value, { replace: true })
                     }
                 }
             } catch (error: unknown) {

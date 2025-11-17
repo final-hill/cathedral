@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { EndorsementType } from '#shared/domain/endorsement'
 import { EndorsementStatus, ReviewStatus, Endorsement } from '#shared/domain/endorsement'
-import { Person } from '#shared/domain/requirements'
+import { Person, ReqType } from '#shared/domain'
 import { z } from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { ReviewComponentInterface } from '~/types'
@@ -51,7 +51,9 @@ const props = defineProps<{
                 workflowState: z.string(),
                 name: z.string(),
                 reqType: z.string()
-            })
+            }),
+            // Disable caching to ensure we get the latest workflow state after endorsement
+            getCachedData: () => undefined
         } })
 
         if (requirement.value && requirement.value.workflowState !== 'Review') {
@@ -173,15 +175,22 @@ const endorsementStatus = computed(() => {
         [ReviewStatus.APPROVED]: 'text-success',
         [ReviewStatus.REJECTED]: 'text-error'
     },
-    // Fetch person matching current user's appUserId for authorization
-    { data: userPerson } = await useApiRequest({ url: '/api/requirements/person', options: {
+    // Fetch person matching current user's appUserId for authorization checks only
+    { data: userPersonList } = await useApiRequest({ url: `/api/requirements/${ReqType.PERSON}`, options: {
         schema: z.array(Person),
         query: {
             solutionSlug: props.solutionSlug,
             organizationSlug: props.organizationSlug,
-            appUserId: user.value?.id
+            appUser: user.value?.id
         }
     } }),
+    userPerson = computed(() => userPersonList.value?.[0]),
+    // Filter endorsements to show only role-based ones (not automated checks)
+    roleBasedEndorsements = computed(() => {
+        if (!endorsements.value) return []
+        // Role-based endorsements have an endorsedBy person
+        return endorsements.value.filter(e => e.endorsedBy !== null && e.endorsedBy !== undefined)
+    }),
     endorsementProcessing = ref<string | null>(null),
     showEndorsementDialog = ref(false),
     currentEndorsement = ref<EndorsementType | null>(null),
@@ -201,11 +210,14 @@ const endorsementStatus = computed(() => {
         endorsementBadgeMap.get(status) ?? { color: 'neutral' as const, label: status },
     canEndorseSpecific = (endorsement: EndorsementType) => {
         if (endorsement.status !== EndorsementStatus.PENDING) return false
-        if (!user.value?.id || !userPerson.value?.length) return false
+        if (!user.value?.id || !userPerson.value) return false
 
         // Get current user's person entity
-        const currentUserPerson = userPerson.value[0]
+        const currentUserPerson = userPerson.value
         if (!currentUserPerson) return false
+
+        // Automated checks have no endorsedBy, so they can't be manually endorsed
+        if (!endorsement.endorsedBy) return false
 
         // Check if this endorsement is assigned to the current user's person
         if (endorsement.endorsedBy.id !== currentUserPerson.id) return false
@@ -293,7 +305,7 @@ const endorsementStatus = computed(() => {
 
                     <!-- No Person Entity Warning -->
                     <section
-                        v-if="!userPerson || userPerson.length === 0"
+                        v-if="!userPerson"
                         class="p-4 border border-warning/50 bg-warning/5 rounded-lg"
                         role="alert"
                         aria-labelledby="no-person-title"
@@ -322,12 +334,12 @@ const endorsementStatus = computed(() => {
 
                     <!-- Endorsements Content -->
                     <section
-                        v-else-if="endorsements && endorsements.length > 0"
+                        v-if="roleBasedEndorsements.length > 0"
                         aria-label="List of endorsements"
                         class="space-y-3"
                     >
                         <article
-                            v-for="endorsement in endorsements"
+                            v-for="endorsement in roleBasedEndorsements"
                             :key="endorsement.id"
                             :aria-labelledby="`endorsement-${endorsement.id}-title`"
                             class="flex items-center justify-between p-3 border border-default rounded-lg"
@@ -338,7 +350,7 @@ const endorsementStatus = computed(() => {
                                         :id="`endorsement-${endorsement.id}-title`"
                                         class="font-medium text-highlighted"
                                     >
-                                        {{ endorsement.endorsedBy.name }}
+                                        {{ endorsement.endorsedBy?.name ?? 'System' }}
                                     </h3>
                                     <UBadge
                                         :color="getEndorsementBadge(endorsement.status).color"
@@ -357,7 +369,7 @@ const endorsementStatus = computed(() => {
                                 >
                                     <time :datetime="(endorsement.endorsedAt || endorsement.rejectedAt)?.toISOString()">
                                         {{ camelCaseToTitleCase(endorsement.status) }} by
-                                        {{ endorsement.endorsedBy.name }}
+                                        {{ endorsement.endorsedBy?.name ?? 'System' }}
                                         on {{ new Date(endorsement.endorsedAt || endorsement.rejectedAt!).toLocaleDateString() }}
                                     </time>
                                 </p>
@@ -375,7 +387,7 @@ const endorsementStatus = computed(() => {
                             <nav
                                 v-if="endorsement.status === EndorsementStatus.PENDING && canEndorseSpecific(endorsement)"
                                 class="flex gap-2"
-                                :aria-label="`Actions for ${endorsement.endorsedBy.name} endorsement`"
+                                :aria-label="`Actions for ${endorsement.endorsedBy?.name ?? 'System'} endorsement`"
                             >
                                 <UButton
                                     size="xs"
@@ -383,7 +395,7 @@ const endorsementStatus = computed(() => {
                                     variant="outline"
                                     icon="i-lucide-thumbs-up"
                                     :loading="isEndorsing && endorsementProcessing === endorsement.id"
-                                    :aria-label="`Endorse requirement for ${endorsement.endorsedBy.name}`"
+                                    :aria-label="`Endorse requirement for ${endorsement.endorsedBy?.name ?? 'System'}`"
                                     @click="openEndorseDialog(endorsement)"
                                 >
                                     Endorse
@@ -394,7 +406,7 @@ const endorsementStatus = computed(() => {
                                     variant="outline"
                                     icon="i-lucide-thumbs-down"
                                     :loading="isRejecting && endorsementProcessing === endorsement.id"
-                                    :aria-label="`Reject requirement for ${endorsement.endorsedBy.name}`"
+                                    :aria-label="`Reject requirement for ${endorsement.endorsedBy?.name ?? 'System'}`"
                                     @click="openRejectDialog(endorsement)"
                                 >
                                     Reject
@@ -437,7 +449,7 @@ const endorsementStatus = computed(() => {
                     class="text-sm text-muted"
                 >
                     You are endorsing the requirement for:
-                    <strong>{{ currentEndorsement?.endorsedBy.name }}</strong>
+                    <strong>{{ currentEndorsement?.endorsedBy?.name ?? 'System' }}</strong>
                 </p>
 
                 <UFormField
@@ -481,7 +493,7 @@ const endorsementStatus = computed(() => {
                     class="text-sm text-muted"
                 >
                     You are rejecting the endorsement for:
-                    <strong>{{ currentEndorsement?.endorsedBy.name }}</strong>
+                    <strong>{{ currentEndorsement?.endorsedBy?.name ?? 'System' }}</strong>
                 </p>
 
                 <UFormField

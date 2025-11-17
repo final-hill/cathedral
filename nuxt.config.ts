@@ -39,6 +39,8 @@ export default defineNuxtConfig({
         azureOpenaiEndpoint: '',
         azureOpenaiDeploymentId: '',
 
+        languagetoolBaseUrl: '',
+
         // System user configuration (Entra External ID Object IDs)
         systemUserId: '',
         systemUserName: '',

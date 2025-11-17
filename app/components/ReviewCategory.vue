@@ -137,59 +137,179 @@ defineExpose<ReviewComponentInterface>({
                     <div
                         v-for="item in items"
                         :key="item.id"
-                        class="flex items-center justify-between p-3 border rounded-lg"
+                        class="border rounded-lg"
                         :class="{
                             'border-success bg-success/10': item.status === ReviewStatus.APPROVED,
                             'border-error bg-error/10': item.status === ReviewStatus.REJECTED,
                             'border-default bg-muted': item.status === ReviewStatus.PENDING || item.status === ReviewStatus.PARTIAL
                         }"
                     >
-                        <div class="flex-1">
-                            <h4 class="font-semibold text-sm text-highlighted">
-                                {{ item.title }}
-                            </h4>
-                            <p
-                                v-if="item.description"
-                                class="text-xs text-toned"
+                        <div class="flex items-center justify-between p-3">
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-sm text-highlighted">
+                                    {{ item.title }}
+                                </h4>
+                                <p
+                                    v-if="item.description"
+                                    class="text-xs text-toned"
+                                >
+                                    {{ item.description }}
+                                </p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <UBadge
+                                        v-if="item.isRequired"
+                                        color="error"
+                                        variant="soft"
+                                        size="xs"
+                                    >
+                                        Required
+                                    </UBadge>
+                                    <UBadge
+                                        v-if="item.canUserReview"
+                                        color="primary"
+                                        variant="soft"
+                                        size="xs"
+                                    >
+                                        Manual Review
+                                    </UBadge>
+                                    <UBadge
+                                        v-else
+                                        color="neutral"
+                                        variant="soft"
+                                        size="xs"
+                                    >
+                                        Automated
+                                    </UBadge>
+                                </div>
+                            </div>
+                            <UBadge
+                                :color="item.status === ReviewStatus.APPROVED ? 'success'
+                                    : item.status === ReviewStatus.REJECTED ? 'error'
+                                        : item.status === ReviewStatus.PARTIAL ? 'info' : 'warning'"
+                                variant="soft"
+                                size="sm"
                             >
-                                {{ item.description }}
-                            </p>
-                            <div class="flex items-center gap-2 mt-1">
-                                <UBadge
-                                    v-if="item.isRequired"
-                                    color="error"
-                                    variant="soft"
-                                    size="xs"
-                                >
-                                    Required
-                                </UBadge>
-                                <UBadge
-                                    v-if="item.canUserReview"
-                                    color="primary"
-                                    variant="soft"
-                                    size="xs"
-                                >
-                                    Manual Review
-                                </UBadge>
-                                <UBadge
-                                    v-else
-                                    color="neutral"
-                                    variant="soft"
-                                    size="xs"
-                                >
-                                    Automated
-                                </UBadge>
+                                {{ item.status }}
+                            </UBadge>
+                        </div>
+
+                        <!-- Show check details if available -->
+                        <div
+                            v-if="item.checkDetails && item.status === ReviewStatus.REJECTED"
+                            class="px-3 pb-3 pt-0"
+                        >
+                            <div class="mt-2 p-3 bg-background border border-error/30 rounded-md space-y-2">
+                                <!-- Spelling & Grammar Issues -->
+                                <div v-if="(item.checkDetails as any).languageToolMatches && (item.checkDetails as any).languageToolMatches.length > 0">
+                                    <p class="text-xs font-semibold text-error mb-2">
+                                        Spelling & Grammar Issues ({{ (item.checkDetails as any).languageToolMatches.length }}):
+                                    </p>
+                                    <ul class="space-y-1.5">
+                                        <li
+                                            v-for="(match, idx) in (item.checkDetails as any).languageToolMatches.slice(0, 5)"
+                                            :key="idx"
+                                            class="text-xs"
+                                        >
+                                            <span
+                                                v-if="match.context?.text"
+                                                class="font-mono text-error"
+                                            >
+                                                "{{ match.context.text }}"
+                                            </span>
+                                            <span class="text-toned"> - {{ match.message }}</span>
+                                            <span
+                                                v-if="match.replacements && match.replacements.length > 0"
+                                                class="text-success"
+                                            >
+                                                → {{ match.replacements.map((r: any) => r.value).join(', ') }}
+                                            </span>
+                                        </li>
+                                    </ul>
+                                    <p
+                                        v-if="(item.checkDetails as any).languageToolMatches.length > 5"
+                                        class="text-xs text-toned italic mt-1"
+                                    >
+                                        ... and {{ (item.checkDetails as any).languageToolMatches.length - 5 }} more issue(s)
+                                    </p>
+                                </div>
+
+                                <!-- Readability Score Details -->
+                                <div v-if="(item.checkDetails as any).gradeLevel !== undefined">
+                                    <p class="text-xs font-semibold text-error mb-1">
+                                        Readability Issue:
+                                    </p>
+                                    <p class="text-xs text-toned">
+                                        Grade level {{ (item.checkDetails as any).gradeLevel.toFixed(1) }} exceeds threshold of {{ (item.checkDetails as any).threshold }}
+                                    </p>
+                                    <p
+                                        v-if="(item.checkDetails as any).fleschKincaidScore"
+                                        class="text-xs text-toned"
+                                    >
+                                        Flesch Reading Ease: {{ (item.checkDetails as any).fleschKincaidScore.toFixed(1) }}
+                                    </p>
+                                </div>
+
+                                <!-- Glossary Compliance Issues -->
+                                <div v-if="(item.checkDetails as any).undefinedTerms && (item.checkDetails as any).undefinedTerms.length > 0">
+                                    <p class="text-xs font-semibold text-error mb-2">
+                                        Undefined Terms ({{ (item.checkDetails as any).undefinedTerms.length }}):
+                                    </p>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        <UBadge
+                                            v-for="term in (item.checkDetails as any).undefinedTerms"
+                                            :key="term"
+                                            color="error"
+                                            variant="subtle"
+                                            size="xs"
+                                            class="font-mono"
+                                        >
+                                            {{ term }}
+                                        </UBadge>
+                                    </div>
+                                    <p class="text-xs text-toned mt-2">
+                                        Add these terms to your glossary or update the requirement to remove/define them.
+                                    </p>
+                                </div>
+
+                                <!-- Informal Language Issues -->
+                                <div v-if="(item.checkDetails as any).informalPhrases && (item.checkDetails as any).informalPhrases.length > 0">
+                                    <p class="text-xs font-semibold text-error mb-2">
+                                        Informal Language ({{ (item.checkDetails as any).informalPhrases.length }}):
+                                    </p>
+                                    <ul class="space-y-1.5">
+                                        <li
+                                            v-for="(phrase, idx) in (item.checkDetails as any).informalPhrases"
+                                            :key="idx"
+                                            class="text-xs"
+                                        >
+                                            <span class="font-mono text-error">"{{ phrase.text }}"</span>
+                                            <span
+                                                v-if="phrase.suggestion"
+                                                class="text-success"
+                                            >
+                                                → {{ phrase.suggestion }}
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <!-- Type Correspondence Issues -->
+                                <div v-if="(item.checkDetails as any).typeCorrespondenceIssues && (item.checkDetails as any).typeCorrespondenceIssues.length > 0">
+                                    <p class="text-xs font-semibold text-error mb-2">
+                                        Type Correspondence Issues:
+                                    </p>
+                                    <ul class="space-y-1 list-disc list-inside">
+                                        <li
+                                            v-for="(issue, idx) in (item.checkDetails as any).typeCorrespondenceIssues"
+                                            :key="idx"
+                                            class="text-xs text-toned"
+                                        >
+                                            {{ issue }}
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
-                        <UBadge
-                            :color="item.status === ReviewStatus.APPROVED ? 'success'
-                                : item.status === ReviewStatus.REJECTED ? 'error'
-                                    : item.status === ReviewStatus.PARTIAL ? 'info' : 'warning'"
-                            variant="soft"
-                            size="sm"
-                        >
-                            {{ item.status }}
-                        </UBadge>
                     </div>
 
                     <!-- Show pending items that need user attention -->

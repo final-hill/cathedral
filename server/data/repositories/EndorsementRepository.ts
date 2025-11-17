@@ -1,5 +1,5 @@
 import { Repository } from './Repository.js'
-import type { EndorsementType, EndorsementCategory } from '#shared/domain/endorsement/index.js'
+import type { EndorsementType, EndorsementCategory, AutomatedCheckDetailsType } from '#shared/domain/endorsement/index.js'
 import { EndorsementStatus } from '#shared/domain/endorsement/index.js'
 import type { UpdationInfo } from './UpdationInfo.js'
 import type { ReqType } from '#shared/domain/index.js'
@@ -20,22 +20,26 @@ export class EndorsementRepository extends Repository<EndorsementType> {
      * @param props - The endorsement creation parameters
      * @param props.requirementId - The ID of the requirement being endorsed
      * @param props.reqType - The type of the requirement
-     * @param props.endorsedBy - The ID of the actor providing the endorsement
+     * @param props.endorsedBy - The ID of the actor providing the endorsement (null for automated checks)
      * @param props.category - The category of endorsement (role-based or quality dimension)
      * @param props.status - The status of the endorsement
      * @param props.comments - Optional comments from the endorser
+     * @param props.automatedCheck - Whether this is an automated check
+     * @param props.checkDetails - Details of the automated check (if applicable)
      * @returns The created endorsement ID
      * @throws {NotFoundException} if the requirement Review version or actor is not found
      */
     async create(props: {
         requirementId: string
         reqType: ReqType
-        endorsedBy: string
+        endorsedBy: string | null
         category: EndorsementCategory
         status: EndorsementStatus
         comments?: string
+        automatedCheck?: boolean
+        checkDetails?: AutomatedCheckDetailsType
     }): Promise<string> {
-        const em = this._em,
+        const em = this.em,
             ReqTypePascal = snakeCaseToPascalCase(props.reqType) as keyof typeof req,
             ReqVersionsModel = reqModels[`${ReqTypePascal}VersionsModel` as keyof typeof reqModels] as typeof reqModels.RequirementVersionsModel,
             reviewVersion = await em.findOne(ReqVersionsModel, {
@@ -46,18 +50,59 @@ export class EndorsementRepository extends Repository<EndorsementType> {
         if (!reviewVersion)
             throw new NotFoundException(`No Review version found for requirement ${props.requirementId}`)
 
-        const endorsedBy = em.getReference(ActorModel, props.endorsedBy),
+        const endorsedBy = props.endorsedBy ? em.getReference(ActorModel, props.endorsedBy) : null,
             endorsementModel = em.create(EndorsementModel, {
                 id: uuid7(),
                 requirementVersion: reviewVersion,
                 endorsedBy,
                 category: props.category,
                 status: props.status,
-                comments: props.comments
+                comments: props.comments,
+                checkDetails: props.checkDetails
             })
 
         await em.flush()
         return endorsementModel.id
+    }
+
+    /**
+     * Delete automated check endorsements by category and checkType
+     * Used to remove placeholder endorsements before creating actual results
+     * @param props - The deletion parameters
+     */
+    async deleteAutomatedChecks(props: {
+        requirementId: string
+        reqType: ReqType
+        category: EndorsementCategory
+        checkTypes: string[]
+    }): Promise<void> {
+        const em = this.em,
+            ReqTypePascal = snakeCaseToPascalCase(props.reqType) as keyof typeof req,
+            ReqVersionsModel = reqModels[`${ReqTypePascal}VersionsModel` as keyof typeof reqModels] as typeof reqModels.RequirementVersionsModel,
+            reviewVersion = await em.findOne(ReqVersionsModel, {
+                requirement: props.requirementId,
+                workflowState: WorkflowState.Review
+            })
+
+        if (!reviewVersion)
+            return // Nothing to delete if no review version exists
+
+        // Find all endorsements for this category with null endorsedBy (automated checks)
+        const endorsements = await em.find(EndorsementModel, {
+                requirementVersion: reviewVersion,
+                endorsedBy: null,
+                category: props.category
+            }),
+            // Filter to only those matching the checkTypes
+            toDelete = endorsements.filter(e =>
+                e.checkDetails && props.checkTypes.includes((e.checkDetails as Record<string, unknown>).checkType as string)
+            )
+
+        // Remove them
+        for (const endorsement of toDelete)
+            em.remove(endorsement)
+
+        await em.flush()
     }
 
     /**
@@ -83,7 +128,7 @@ export class EndorsementRepository extends Repository<EndorsementType> {
         endorsedByActorId: string
         comments?: string
     }): Promise<void> {
-        const em = this._em,
+        const em = this.em,
             // Find the endorsement directly using the requirement version in Review state
             endorsementModel = await em.findOne(EndorsementModel, {
                 requirementVersion: {
@@ -116,7 +161,7 @@ export class EndorsementRepository extends Repository<EndorsementType> {
      * @returns Array of endorsements for the requirement's Review version
      */
     async findByRequirementInReview(requirementId: string): Promise<EndorsementType[]> {
-        const em = this._em,
+        const em = this.em,
 
             // First, find the Review version of the requirement
             reviewVersion = await em.findOne(reqModels.RequirementVersionsModel, {
@@ -139,11 +184,13 @@ export class EndorsementRepository extends Repository<EndorsementType> {
 
         const endorsements = await qb.getResult()
 
-        // Manually populate the endorsedBy for each endorsement
+        // Manually populate the endorsedBy for each endorsement if it exists
         for (const endorsement of endorsements) {
-            const endorsedByRequirement = await em.findOne(reqModels.RequirementModel, endorsement.endorsedBy.id)
-            if (endorsedByRequirement)
-                endorsement.endorsedBy = endorsedByRequirement
+            if (endorsement.endorsedBy) {
+                const endorsedByRequirement = await em.findOne(reqModels.RequirementModel, endorsement.endorsedBy.id)
+                if (endorsedByRequirement)
+                    endorsement.endorsedBy = endorsedByRequirement
+            }
         }
 
         return Promise.all(endorsements.map(e => this.mapper.map(e)))
@@ -162,7 +209,7 @@ export class EndorsementRepository extends Repository<EndorsementType> {
         actorId: string
         category: EndorsementCategory
     }): Promise<EndorsementType | null> {
-        const em = this._em,
+        const em = this.em,
             reviewVersion = await em.findOne(reqModels.RequirementVersionsModel, {
                 requirement: requirementId,
                 workflowState: WorkflowState.Review,
@@ -186,9 +233,11 @@ export class EndorsementRepository extends Repository<EndorsementType> {
         if (!endorsementModel)
             return null
 
-        const endorsedByRequirement = await em.findOne(reqModels.RequirementModel, endorsementModel.endorsedBy.id)
-        if (endorsedByRequirement)
-            endorsementModel.endorsedBy = endorsedByRequirement
+        if (endorsementModel.endorsedBy) {
+            const endorsedByRequirement = await em.findOne(reqModels.RequirementModel, endorsementModel.endorsedBy.id)
+            if (endorsedByRequirement)
+                endorsementModel.endorsedBy = endorsedByRequirement
+        }
 
         return this.mapper.map(endorsementModel)
     }
@@ -200,7 +249,7 @@ export class EndorsementRepository extends Repository<EndorsementType> {
      * @throws {NotFoundException} if not found
      */
     async getById(id: string): Promise<EndorsementType> {
-        const em = this._em,
+        const em = this.em,
             endorsement = await em.findOne(EndorsementModel, {
                 id
             }, {
@@ -219,7 +268,7 @@ export class EndorsementRepository extends Repository<EndorsementType> {
      * @returns Array of pending endorsements
      */
     async getPendingEndorsements(solutionId: string): Promise<EndorsementType[]> {
-        const em = this._em,
+        const em = this.em,
             endorsements = await em.find(EndorsementModel, {
                 status: EndorsementStatus.PENDING,
                 requirementVersion: {

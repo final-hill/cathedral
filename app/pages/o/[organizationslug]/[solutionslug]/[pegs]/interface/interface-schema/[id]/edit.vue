@@ -5,10 +5,9 @@ import { ReqType } from '#shared/domain'
 definePageMeta({ middleware: 'auth' })
 
 const route = useRoute(),
-    { organizationslug, solutionslug, _pegs, id } = route.params as {
+    { organizationslug, solutionslug, id } = route.params as {
         organizationslug: string
         solutionslug: string
-        _pegs: string
         id: string
     },
     { data: requirement } = await useApiRequest({ url: `/api/requirements/${ReqType.INTERFACE_SCHEMA}/${id}`, options: {

@@ -14,9 +14,9 @@ import { NotFoundException } from '#shared/domain'
  * - Channel metadata and name refresh
  * - Channel discovery and listing
  */
-export class SlackChannelInteractor extends Interactor<SlackChannelMetaType> {
-    protected readonly _permissionInteractor: PermissionInteractor
-    protected readonly _slackService: SlackService
+export class SlackChannelInteractor extends Interactor<SlackChannelMetaType, SlackRepository> {
+    protected readonly permissionInteractor: PermissionInteractor
+    protected readonly slackService: SlackService
 
     /**
      * Number of days after which channel/team names are considered stale
@@ -29,12 +29,8 @@ export class SlackChannelInteractor extends Interactor<SlackChannelMetaType> {
         slackService: SlackService
     }) {
         super({ repository: props.repository })
-        this._permissionInteractor = props.permissionInteractor
-        this._slackService = props.slackService
-    }
-
-    get repository(): SlackRepository {
-        return this._repository as SlackRepository
+        this.permissionInteractor = props.permissionInteractor
+        this.slackService = props.slackService
     }
 
     /**
@@ -63,7 +59,7 @@ export class SlackChannelInteractor extends Interactor<SlackChannelMetaType> {
                 let createdByName: string | undefined
 
                 try {
-                    const user = await this._permissionInteractor.entraService.getUser(channel.createdById)
+                    const user = await this.permissionInteractor.entraService.getUser(channel.createdById)
                     createdByName = user.name
                 } catch (error) {
                     console.warn(`Failed to get user name for ${channel.createdById}:`, error)
@@ -100,13 +96,13 @@ export class SlackChannelInteractor extends Interactor<SlackChannelMetaType> {
         createdById: string
         creationDate: Date
     }): Promise<void> {
-        this._permissionInteractor.assertOrganizationContributor(props.organizationId)
+        this.permissionInteractor.assertOrganizationContributor(props.organizationId)
 
-        const createdByName = this._permissionInteractor.getCurrentUserName(),
+        const createdByName = this.permissionInteractor.getCurrentUserName(),
 
             [channelInfo, teamInfo] = await Promise.all([
-                this._slackService.getChannelInfo(props.channelId).catch(() => null),
-                this._slackService.getTeamInfo(props.teamId).catch(() => null)
+                this.slackService.getChannelInfo(props.channelId).catch(() => null),
+                this.slackService.getTeamInfo(props.teamId).catch(() => null)
             ])
 
         await this.repository.linkChannel({
@@ -137,7 +133,7 @@ export class SlackChannelInteractor extends Interactor<SlackChannelMetaType> {
         channelId: string
         teamId: string
     }): Promise<void> {
-        this._permissionInteractor.assertOrganizationContributor(organizationId)
+        this.permissionInteractor.assertOrganizationContributor(organizationId)
 
         // Verify the channel is linked before unlinking
         const channelMeta = await this.repository.getChannelMeta({ channelId, teamId })
@@ -160,7 +156,7 @@ export class SlackChannelInteractor extends Interactor<SlackChannelMetaType> {
      * @returns Array of channel metadata with staleness information
      */
     async getChannelsForSolution({ organizationId, solutionId }: { organizationId: string, solutionId: string }): Promise<SlackChannelMetaType[]> {
-        this._permissionInteractor.assertOrganizationReader(organizationId)
+        this.permissionInteractor.assertOrganizationReader(organizationId)
 
         const channels = await this.repository.getChannelsForSolution(solutionId)
         return await this.enrichChannels(channels)
@@ -177,12 +173,12 @@ export class SlackChannelInteractor extends Interactor<SlackChannelMetaType> {
      * @returns Updated channel metadata with staleness information
      */
     async refreshChannelNames({ organizationId, channelId, teamId }: { organizationId: string, channelId: string, teamId: string }): Promise<SlackChannelMetaType | null> {
-        this._permissionInteractor.assertOrganizationContributor(organizationId)
+        this.permissionInteractor.assertOrganizationContributor(organizationId)
 
         // Fetch fresh names from Slack API
         const [channelInfo, teamInfo] = await Promise.all([
-                this._slackService.getChannelInfo(channelId).catch(() => null),
-                this._slackService.getTeamInfo(teamId).catch(() => null)
+                this.slackService.getChannelInfo(channelId).catch(() => null),
+                this.slackService.getTeamInfo(teamId).catch(() => null)
             ]),
             result = await this.repository.refreshChannelNames({
                 channelId,
