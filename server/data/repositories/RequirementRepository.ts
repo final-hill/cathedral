@@ -98,14 +98,7 @@ export class RequirementRepository extends Repository<RequirementType> {
                     name,
                     segmentation: StakeholderSegmentation.Client,
                     interest: 75,
-                    influence: 75,
-                    // Actor properties
-                    isProductOwner: false,
-                    isImplementationOwner: false,
-                    canEndorseProjectRequirements: false,
-                    canEndorseEnvironmentRequirements: false,
-                    canEndorseGoalsRequirements: false,
-                    canEndorseSystemRequirements: false
+                    influence: 75
                 })
                 actorMap.set(name, id)
                 return id
@@ -172,14 +165,7 @@ export class RequirementRepository extends Repository<RequirementType> {
                     workflowState: WorkflowState.Proposed,
                     solution: props.solutionId,
                     name,
-                    description: name,
-                    // Actor properties
-                    isProductOwner: false,
-                    isImplementationOwner: false,
-                    canEndorseProjectRequirements: false,
-                    canEndorseEnvironmentRequirements: false,
-                    canEndorseGoalsRequirements: false,
-                    canEndorseSystemRequirements: false
+                    description: name
                 })
                 systemComponentMap.set(name, id)
                 return id
@@ -251,14 +237,7 @@ export class RequirementRepository extends Repository<RequirementType> {
                     description: name,
                     segmentation: StakeholderSegmentation.Client,
                     interest: 75,
-                    influence: 75,
-                    // Actor properties
-                    isProductOwner: false,
-                    isImplementationOwner: false,
-                    canEndorseProjectRequirements: false,
-                    canEndorseEnvironmentRequirements: false,
-                    canEndorseGoalsRequirements: false,
-                    canEndorseSystemRequirements: false
+                    influence: 75
                 })
                 stakeholderMap.set(name, id)
                 return id

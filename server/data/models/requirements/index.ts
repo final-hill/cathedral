@@ -146,23 +146,6 @@ export class ActorModel extends RequirementModel { }
 
 @Entity({ discriminatorValue: ReqType.ACTOR })
 export class ActorVersionsModel extends RequirementVersionsModel {
-    @Property({ type: types.boolean, default: false })
-    readonly isProductOwner!: boolean
-
-    @Property({ type: types.boolean, default: false })
-    readonly isImplementationOwner!: boolean
-
-    @Property({ type: types.boolean, default: false })
-    readonly canEndorseProjectRequirements!: boolean
-
-    @Property({ type: types.boolean, default: false })
-    readonly canEndorseEnvironmentRequirements!: boolean
-
-    @Property({ type: types.boolean, default: false })
-    readonly canEndorseGoalsRequirements!: boolean
-
-    @Property({ type: types.boolean, default: false })
-    readonly canEndorseSystemRequirements!: boolean
 }
 
 @Entity({ discriminatorValue: ReqType.ASSUMPTION })
@@ -499,6 +482,24 @@ export class PersonModel extends ActorModel {
 export class PersonVersionsModel extends ActorVersionsModel {
     @Property({ length: 766, type: types.string, nullable: true })
     readonly appUserId?: string
+
+    @Property({ type: types.boolean, default: false })
+    readonly isProductOwner!: boolean
+
+    @Property({ type: types.boolean, default: false })
+    readonly isImplementationOwner!: boolean
+
+    @Property({ type: types.boolean, default: false })
+    readonly canEndorseProjectRequirements!: boolean
+
+    @Property({ type: types.boolean, default: false })
+    readonly canEndorseEnvironmentRequirements!: boolean
+
+    @Property({ type: types.boolean, default: false })
+    readonly canEndorseGoalsRequirements!: boolean
+
+    @Property({ type: types.boolean, default: false })
+    readonly canEndorseSystemRequirements!: boolean
 }
 
 @Entity({ discriminatorValue: ReqType.PRODUCT })

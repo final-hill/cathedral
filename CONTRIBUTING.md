@@ -209,7 +209,7 @@ For each new Solution, the following requirements are automatically created:
 
 ### Person-Based Endorsement Permissions
 
-Cathedral implements granular endorsement permissions to control which persons can endorse different requirement categories:
+Cathedral implements granular endorsement permissions to control which persons can endorse different requirement categories. These role and endorsement permission fields are defined on the **Person** entity.
 
 #### Endorsement Permission Flags
 - **canEndorseProjectRequirements**: Can endorse requirements under the Project category
@@ -221,6 +221,8 @@ Cathedral implements granular endorsement permissions to control which persons c
 - **Product Owner** (`isProductOwner: true`): Automatically has all endorsement permissions
 - **Implementation Owner** (`isImplementationOwner: true`): Automatically has all endorsement permissions
 - **UI Behavior**: The `isProductOwner` and `isImplementationOwner` flags are not directly editable in the UI
+
+**Note**: Only Person entities can have role capabilities. Other Actor subtypes (Component, SystemComponent, EnvironmentComponent, GlossaryTerm, Stakeholder) represent non-human entities and do not have role or endorsement permission fields.
 
 ### Person Protection Rules
 
