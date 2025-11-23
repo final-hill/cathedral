@@ -145,6 +145,11 @@ export default defineNuxtConfig({
     },
     primevue: {},
     pwa: {},
+    ui: {
+        experimental: {
+            componentDetection: true
+        }
+    },
     // https://nuxt.com/modules/security
     security: {
         headers: {
