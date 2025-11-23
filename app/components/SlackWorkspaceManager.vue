@@ -241,24 +241,15 @@ const { data: slackWorkspaces, refresh: refreshSlackWorkspaces } = await useApiR
             />
         </div>
 
-        <div
+        <UEmpty
             v-else
-            class="text-center py-8"
+            icon="i-lucide-slack"
+            title="No Slack workspaces connected"
+            description="Add Cathedral to your Slack workspace to enable slash commands and channel linking."
         >
-            <div class="flex flex-col items-center space-y-4">
-                <UIcon
-                    name="i-lucide-slack"
-                    class="text-4xl text-muted"
-                />
-                <p class="text-muted">
-                    No Slack workspaces are currently connected to this
-                    organization.
-                </p>
-                <p class="text-sm text-muted">
-                    Add Cathedral to your Slack workspace to enable slash commands and channel linking.
-                </p>
+            <template #footer>
                 <SlackAddButton :organization-slug="organizationSlug" />
-            </div>
-        </div>
+            </template>
+        </UEmpty>
     </div>
 </template>

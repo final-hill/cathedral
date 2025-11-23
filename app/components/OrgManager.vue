@@ -29,7 +29,21 @@ const router = useRouter(),
 </script>
 
 <template>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <UEmpty
+        v-if="!organizations || organizations.length === 0"
+        icon="i-lucide-building"
+        title="No Organizations Yet"
+        description="Get started by creating your first organization to manage solutions and requirements."
+        :actions="[{
+            label: 'Create Organization',
+            icon: 'i-lucide-plus',
+            to: { name: 'New Organization' }
+        }]"
+    />
+    <div
+        v-else
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+    >
         <UCard variant="outline">
             <template #header>
                 <NuxtLink

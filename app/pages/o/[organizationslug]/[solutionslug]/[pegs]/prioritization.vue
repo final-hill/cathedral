@@ -612,20 +612,10 @@ const priorityOptions = [
         </div>
 
         <!-- Empty State -->
-        <UCard v-else>
-            <div class="text-center py-12">
-                <UIcon
-                    name="i-lucide-arrow-up-down"
-                    class="w-12 h-12 text-muted mx-auto mb-4"
-                />
-                <h3 class="text-lg font-medium mb-2">
-                    No Requirements Found
-                </h3>
-                <p class="text-muted">
-                    No behaviors or scenarios are available to prioritize at this time.
-                    Requirements must be created in other sections before they can be categorized here.
-                </p>
-            </div>
-        </UCard>
+        <UEmpty
+            icon="i-lucide-arrow-up-down"
+            title="No Requirements Found"
+            description="No behaviors or scenarios are available to prioritize at this time. Requirements must be created in other sections before they can be categorized here."
+        />
     </div>
 </template>
