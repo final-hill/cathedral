@@ -613,6 +613,7 @@ const priorityOptions = [
 
         <!-- Empty State -->
         <UEmpty
+            v-else
             icon="i-lucide-arrow-up-down"
             title="No Requirements Found"
             description="No behaviors or scenarios are available to prioritize at this time. Requirements must be created in other sections before they can be categorized here."
