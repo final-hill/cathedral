@@ -19,6 +19,11 @@ export default defineNuxtConfig({
     css: [
         '~/assets/css/main.css'
     ],
+    ui: {
+        experimental: {
+            componentDetection: true
+        }
+    },
     runtimeConfig: {
         // The private keys which are only available within server-side
 
