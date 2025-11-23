@@ -399,17 +399,14 @@ onMounted(() => {
         </div>
 
         <!-- Empty state for extensions -->
-        <div
+        <UEmpty
             v-if="extensionGroups.length === 0"
-            class="text-center py-4"
-        >
-            <p class="text-sm text-muted mb-2">
-                No extensions defined
-            </p>
-            <p class="text-xs text-muted">
-                Extensions provide alternative flows for the use case
-            </p>
-        </div>
+            icon="i-lucide-git-branch"
+            title="No extensions defined"
+            description="Extensions provide alternative flows for the use case"
+            size="sm"
+            variant="naked"
+        />
 
         <!-- Debug info -->
         <div class="text-xs text-muted">

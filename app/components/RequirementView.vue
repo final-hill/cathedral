@@ -346,15 +346,11 @@ const route = useRoute(),
             v-else
             class="flex items-center justify-center min-h-96"
         >
-            <div class="text-center">
-                <UIcon
-                    name="i-lucide-alert-circle"
-                    class="w-8 h-8 text-error mx-auto mb-2"
-                />
-                <p class="text-muted">
-                    Requirement not found
-                </p>
-            </div>
+            <UEmpty
+                icon="i-lucide-alert-circle"
+                title="Requirement not found"
+                description="The requested requirement could not be found or you may not have permission to view it."
+            />
         </div>
     </div>
 </template>

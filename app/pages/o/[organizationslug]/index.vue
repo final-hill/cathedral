@@ -105,7 +105,21 @@ const handleOrganizationDelete = async (organization: OrganizationType) => {
         <SlackWorkspaceManager :organization-slug="organizationSlug" />
     </section>
 
-    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <UEmpty
+        v-if="!solutions || solutions.length === 0"
+        icon="i-lucide-layers"
+        title="No Solutions Yet"
+        description="Create your first solution to start managing requirements, use cases, and interfaces for this organization."
+        :actions="[{
+            label: 'Create Solution',
+            icon: 'i-lucide-plus',
+            to: { name: 'New Solution', params: { organizationslug: organizationSlug } }
+        }]"
+    />
+    <section
+        v-else
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+    >
         <UCard variant="outline">
             <template #header>
                 <NuxtLink

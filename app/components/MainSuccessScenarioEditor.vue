@@ -16,7 +16,10 @@
             </UButton>
         </div>
 
-        <ol class="main-scenario-list">
+        <ol
+            v-if="nestedMainSteps.length > 0"
+            class="main-scenario-list"
+        >
             <StepItem
                 v-for="step in nestedMainSteps"
                 :key="step.id"
@@ -30,6 +33,16 @@
                 @update-step-description="(stepId, description) => handleStepDescriptionUpdate({ stepId, description })"
             />
         </ol>
+
+        <!-- Empty state for main scenario -->
+        <UEmpty
+            v-if="nestedMainSteps.length === 0"
+            icon="i-lucide-list-ordered"
+            title="No steps defined"
+            description="Add steps to describe the main success scenario for this use case"
+            size="sm"
+            variant="naked"
+        />
 
         <!-- Debug info -->
         <div class="text-xs text-muted">

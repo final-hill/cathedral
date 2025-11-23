@@ -42,21 +42,12 @@ const props = defineProps<{
         />
 
         <template #body>
-            <div
+            <UEmpty
                 v-if="totalMissing === 0"
-                class="text-center py-8"
-            >
-                <UIcon
-                    name="i-lucide-check-circle"
-                    class="size-12 mx-auto text-success mb-4"
-                />
-                <h3 class="text-lg font-semibold text-highlighted mb-2">
-                    All Minimum Requirements Met
-                </h3>
-                <p class="text-muted">
-                    Your solution has all the required minimum requirement types with active items.
-                </p>
-            </div>
+                icon="i-lucide-check-circle"
+                title="All Minimum Requirements Met"
+                description="Your solution has all the required minimum requirement types with active items."
+            />
 
             <div
                 v-else

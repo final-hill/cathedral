@@ -399,26 +399,24 @@ defineExpose<ReviewComponentInterface>({
                 </div>
 
                 <!-- No items state -->
-                <div
+                <UEmpty
                     v-else
-                    class="flex items-center justify-between p-3 border border-default rounded-lg"
+                    icon="i-lucide-check-square"
+                    :title="`${categoryTitle} Review`"
+                    :description="`No specific ${categoryTitle.toLowerCase()} checks configured`"
+                    size="sm"
+                    variant="naked"
                 >
-                    <div class="flex-1">
-                        <h4 class="font-semibold text-sm text-highlighted">
-                            {{ categoryTitle }} Review
-                        </h4>
-                        <p class="text-xs text-toned">
-                            No specific {{ categoryTitle.toLowerCase() }} checks configured
-                        </p>
-                    </div>
-                    <UBadge
-                        color="neutral"
-                        variant="soft"
-                        size="sm"
-                    >
-                        {{ status }}
-                    </UBadge>
-                </div>
+                    <template #footer>
+                        <UBadge
+                            :color="status === ReviewStatus.PENDING ? 'warning' : status === ReviewStatus.APPROVED ? 'success' : status === ReviewStatus.REJECTED ? 'error' : status === ReviewStatus.PARTIAL ? 'info' : 'neutral'"
+                            variant="soft"
+                            size="sm"
+                        >
+                            {{ status }}
+                        </UBadge>
+                    </template>
+                </UEmpty>
             </div>
         </template>
     </UCollapsible>
