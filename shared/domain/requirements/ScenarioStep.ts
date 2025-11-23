@@ -5,17 +5,17 @@ import { UseCaseReference, AssumptionReference, FunctionalBehaviorReference } fr
 import { Example } from './Example.js'
 
 export const ScenarioStep = Example.extend({
-    stepType: z.nativeEnum(ScenarioStepTypeEnum)
+    stepType: z.enum(ScenarioStepTypeEnum)
         .describe('Whether this step represents an action or a conditional branch'),
     parentScenario: UseCaseReference
         .describe('The Use Case this step belongs to'),
-    parentStep: z.string().uuid().optional()
+    parentStep: z.uuid().optional()
         .describe('Reference to parent step for hierarchical structure (null for top-level steps)'),
-    order: z.number().int().min(0)
+    order: z.int().min(0)
         .describe('Position among sibling steps (0-based, determines display order)'),
-    preconditions: z.array(AssumptionReference).default([])
+    preconditions: z.array(AssumptionReference).prefault([])
         .optional().describe('Conditions that must be true for this step/branch to execute'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.SCENARIO_STEP),
+    reqType: z.enum(ReqType).prefault(ReqType.SCENARIO_STEP),
     functionality: FunctionalBehaviorReference
         .describe('The functional behavior that this scenario step addresses')
 }).describe(dedent(`

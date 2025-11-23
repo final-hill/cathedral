@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const AppUser = z.object({
     id: z.string().min(1).max(766).readonly().describe('The user identifier'),
     name: z.string().min(1).max(254).describe('The name of the app user'),
-    email: z.string().min(1).max(254).email().describe('The email address of the app user'),
+    email: z.email().min(1).max(254).describe('The email address of the app user'),
     slackAssociations: z.array(z.object({
         slackUserId: z.string().describe('The Slack user ID'),
         teamId: z.string().describe('The Slack team/workspace ID'),

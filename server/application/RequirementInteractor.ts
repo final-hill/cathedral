@@ -308,27 +308,28 @@ export class RequirementInteractor extends Interactor<req.RequirementType, Requi
                 [WorkflowState.Review, 2],
                 [WorkflowState.Active, 3]
             ]),
+
             // eslint-disable-next-line max-params
             uniqueRequirements = flatRequirements.reduce((acc, req) => {
                 const existingIndex = acc.findIndex(existing => existing.id === req.id)
                 if (existingIndex === -1) {
-                    // New requirement, add it
+                // New requirement, add it
                     acc.push(req)
                 } else {
-                    // Duplicate ID found, keep the one with higher workflow priority
+                // Duplicate ID found, keep the one with higher workflow priority
                     const existing = acc[existingIndex]!, // Safe because findIndex returned a valid index
                         reqPriority = workflowPriority.get(req.workflowState as WorkflowState) || 0,
                         existingPriority = workflowPriority.get(existing.workflowState as WorkflowState) || 0
 
                     if (reqPriority > existingPriority) {
-                        // Replace with higher priority workflow state
+                    // Replace with higher priority workflow state
                         acc[existingIndex] = req
                     }
                 }
                 return acc
-            }, [] as z.infer<typeof req[R]>[])
+            }, [] as typeof flatRequirements)
 
-        return uniqueRequirements
+        return uniqueRequirements as z.infer<typeof req[R]>[]
     }
 
     /**

@@ -8,7 +8,7 @@ export default async function validateEventBody<Z extends ZodType>({ event, sche
         const error = createError({
             statusCode: 400,
             statusMessage: 'Bad Request: Invalid body',
-            message: JSON.stringify(body.error.errors)
+            message: JSON.stringify(body.error.issues)
         })
         console.error(error)
         throw error

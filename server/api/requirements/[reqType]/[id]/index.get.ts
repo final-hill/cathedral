@@ -2,8 +2,8 @@ import { Organization, ReqType, Solution } from '#shared/domain'
 import { z } from 'zod'
 
 const paramSchema = z.object({
-        reqType: z.nativeEnum(ReqType),
-        id: z.string().uuid()
+        reqType: z.enum(ReqType),
+        id: z.uuid()
     }),
     querySchema = z.object({
         solutionSlug: Solution.pick({ slug: true }).shape.slug,

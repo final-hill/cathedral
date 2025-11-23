@@ -9,9 +9,9 @@ export const ContextAndObjective = Goal.extend({
         .describe('The name'),
     reqId: z.string().regex(/^G\.1\.\d+$/, 'Format must be G.1.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
-    reqIdPrefix: z.literal('G.1.').default('G.1.'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.CONTEXT_AND_OBJECTIVE),
-    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.CONTEXT_AND_OBJECTIVE])
+    reqIdPrefix: z.literal('G.1.').prefault('G.1.'),
+    reqType: z.enum(ReqType).prefault(ReqType.CONTEXT_AND_OBJECTIVE),
+    uiBasePathTemplate: z.string().prefault(uiBasePathTemplates[ReqType.CONTEXT_AND_OBJECTIVE])
         .describe('The UI path template for navigating to this requirement in the web interface')
 }).describe(dedent(`
     High-level view of the project: organizational context and reason for building the system

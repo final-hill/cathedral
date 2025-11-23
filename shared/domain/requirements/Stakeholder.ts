@@ -10,22 +10,22 @@ import { PersonReference, StakeholderReference } from './EntityReferences.js'
 export const Stakeholder = Component.extend({
     reqId: z.string().regex(/^G\.7\.\d+$/, 'Format must be G.7.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
-    reqIdPrefix: z.literal('G.7.').default('G.7.'),
+    reqIdPrefix: z.literal('G.7.').prefault('G.7.'),
     parentComponent: StakeholderReference.optional()
         .describe('The parent stakeholder of the stakeholder. This can be used to represent teams or departments.'),
-    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.STAKEHOLDER])
+    uiBasePathTemplate: z.string().prefault(uiBasePathTemplates[ReqType.STAKEHOLDER])
         .describe('The UI path template for navigating to this requirement in the web interface'),
-    segmentation: z.nativeEnum(StakeholderSegmentation)
+    segmentation: z.enum(StakeholderSegmentation)
         .describe('The segmentation of the stakeholder'),
-    category: z.nativeEnum(StakeholderCategory).readonly()
+    category: z.enum(StakeholderCategory).readonly()
         .describe('The category of the stakeholder (derived from interest and influence)'),
-    interest: z.number().int().min(0).max(100)
+    interest: z.int().min(0).max(100)
         .describe('The interest that the stakeholder has in the project; AKA "availability". (0 = not interested, 100 = very interested)'),
-    influence: z.number().int().min(0).max(100)
+    influence: z.int().min(0).max(100)
         .describe('The influence of the stakeholder on the project; AKA "power". (0 = no influence, 100 = very influential)'),
     persons: z.array(PersonReference).optional()
         .describe('The persons who represent this stakeholder group within the project'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.STAKEHOLDER)
+    reqType: z.enum(ReqType).prefault(ReqType.STAKEHOLDER)
 }).describe(dedent(`
     A Stakeholder is a human actor who may affect or be affected by a Project or its associated System.
     These are not individuals, but rather groups or roles.

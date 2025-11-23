@@ -6,7 +6,7 @@ import { z } from 'zod'
 const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape
 
 export default function getLatestByType(workflowState: WorkflowState) {
-    const paramSchema = z.object({ reqType: z.nativeEnum(ReqType) }),
+    const paramSchema = z.object({ reqType: z.enum(ReqType) }),
         validatedQuerySchema = z.object({
             solutionSlug: Solution.pick({ slug: true }).shape.slug,
             organizationId,

@@ -26,8 +26,8 @@ export const InterfaceOperation = InterfaceArtifact.extend({
     responseSchema: InterfaceSchemaReference
         .optional()
         .describe('Schema defining the response payload structure'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.INTERFACE_OPERATION),
-    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.INTERFACE_OPERATION])
+    reqType: z.enum(ReqType).prefault(ReqType.INTERFACE_OPERATION),
+    uiBasePathTemplate: z.string().prefault(uiBasePathTemplates[ReqType.INTERFACE_OPERATION])
         .describe('The UI path template for navigating to this requirement in the web interface')
 }).describe('An InterfaceOperation represents a specific endpoint, command, or screen within an interface that exposes a system behavior.')
 

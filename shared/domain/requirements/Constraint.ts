@@ -6,13 +6,13 @@ import { ReqType } from './ReqType.js'
 import { uiBasePathTemplates } from './uiBasePathTemplates.js'
 
 export const Constraint = Requirement.extend({
-    category: z.nativeEnum(ConstraintCategory)
+    category: z.enum(ConstraintCategory)
         .describe('Category of the constraint'),
     reqId: z.string().regex(/^E\.3\.\d+$/, 'Format must be E.3.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
-    reqIdPrefix: z.literal('E.3.').default('E.3.'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.CONSTRAINT),
-    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.CONSTRAINT])
+    reqIdPrefix: z.literal('E.3.').prefault('E.3.'),
+    reqType: z.enum(ReqType).prefault(ReqType.CONSTRAINT),
+    uiBasePathTemplate: z.string().prefault(uiBasePathTemplates[ReqType.CONSTRAINT])
         .describe('The UI path template for navigating to this requirement in the web interface')
 }).describe(dedent(`
     Constraints are the limitations and obligations that the environment imposes on the project and system.

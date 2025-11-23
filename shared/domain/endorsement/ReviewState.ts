@@ -3,7 +3,7 @@ import { ReviewStatus } from './ReviewStatus.js'
 import { ReviewItem } from './ReviewItem.js'
 
 export const ReviewState = z.object({
-    overall: z.nativeEnum(ReviewStatus)
+    overall: z.enum(ReviewStatus)
         .describe('Overall status computed from all review items'),
     items: z.array(ReviewItem)
         .describe('Individual review items that make up this review')

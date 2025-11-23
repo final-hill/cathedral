@@ -1,8 +1,12 @@
 import { z } from 'zod'
 import { camelCaseToTitleCase } from './camelCaseToTitleCase'
 
-const enumToLabelValue = (enumObject: Record<string, string>) =>
-        Object.entries(enumObject).map(([_key, value]) => ({ value, label: value })),
+const enumToLabelValue = (enumObject: Record<string, string | number> | readonly [string, ...string[]]) => {
+        if (Array.isArray(enumObject))
+            return enumObject.map(value => ({ value, label: value }))
+
+        return Object.entries(enumObject).map(([_key, value]) => ({ value: String(value), label: String(value) }))
+    },
     /**
      * Get the fields of a Zod schema as an array of objects with metadata
      * @param schema The Zod schema to get the fields of
@@ -11,9 +15,9 @@ const enumToLabelValue = (enumObject: Record<string, string>) =>
     getSchemaFields = (schema: z.ZodObject<z.ZodRawShape>) => Object.entries(schema.shape)
         .filter(([, fieldType]) => fieldType != null) // Filter out undefined field types
         .map(([key, fieldType]) => {
-            // Safety check for fieldType._def
-            if (!fieldType || !fieldType._def) {
-                console.warn(`Field type for key "${key}" is missing _def property:`, fieldType)
+            // Safety check for fieldType
+            if (!fieldType) {
+                console.warn(`Field type for key "${key}" is missing:`, fieldType)
                 return {
                     key,
                     label: camelCaseToTitleCase(key),
@@ -35,45 +39,58 @@ const enumToLabelValue = (enumObject: Record<string, string>) =>
                 } as const
             }
 
-            const isOptional = fieldType instanceof z.ZodOptional
-                || (fieldType instanceof z.ZodString
-                    && fieldType._def.checks.reduce(
-                        // eslint-disable-next-line max-params
-                        (acc, check) => check.kind === 'min' ? acc || check.value === 0 : acc,
-                        !fieldType._def.checks.some(check => check.kind === 'min')
-                    )
-                ),
+            const isOptional = fieldType instanceof z.ZodOptional,
                 isReadOnly = fieldType instanceof z.ZodReadonly,
                 isDefault = fieldType instanceof z.ZodDefault,
                 innerType = isOptional
-                    ? (fieldType instanceof z.ZodOptional ? fieldType._def.innerType : fieldType)
+                    ? fieldType._def.innerType
                     : isReadOnly
                         ? fieldType._def.innerType
                         : isDefault
                             ? fieldType._def.innerType
                             : fieldType,
-                isEnum = innerType instanceof z.ZodNativeEnum || innerType instanceof z.ZodEnum,
+                isEnum = innerType instanceof z.ZodEnum,
                 isArray = innerType instanceof z.ZodArray,
-                arrayElementType = isArray ? innerType._def.type : undefined,
-                isArrayOfObjects = isArray && arrayElementType instanceof z.ZodObject,
+                arrayElementType = isArray ? innerType._def.element : undefined,
+                isArrayOfObjects = isArray && arrayElementType != null && arrayElementType instanceof z.ZodObject,
                 isObject = innerType instanceof z.ZodObject,
+                // Use ._def.defaultValue getter to get default values in Zod v4
                 reqType = isObject
-                    ? innerType._def?.shape()?.reqType?._def?.defaultValue?.()
+                    ? innerType.shape?.reqType?._def?.defaultValue
                     : isArrayOfObjects
-                        ? arrayElementType._def?.shape()?.reqType?._def?.defaultValue?.()
+                        ? arrayElementType.shape?.reqType?._def?.defaultValue
                         : undefined,
                 entityType = isObject
-                    ? (innerType._def?.shape()?.entityType?._def?.defaultValue?.()
-                        || innerType._def?.shape()?.entityType?._def?.value)
+                    ? (innerType.shape?.entityType?._def?.defaultValue
+                        || innerType.shape?.entityType?._def?.value)
                     : isArrayOfObjects
-                        ? (arrayElementType._def?.shape()?.entityType?._def?.defaultValue?.()
-                            || arrayElementType._def?.shape()?.entityType?._def?.value)
+                        ? (arrayElementType.shape?.entityType?._def?.defaultValue
+                            || arrayElementType.shape?.entityType?._def?.value)
                         : undefined,
-                maxLength = innerType instanceof z.ZodString ? innerType._def.checks.find(check => check.kind === 'max')?.value : undefined,
-                min = innerType instanceof z.ZodNumber ? innerType._def.checks.find(check => check.kind === 'min')?.value : undefined,
-                max = innerType instanceof z.ZodNumber ? innerType._def.checks.find(check => check.kind === 'max')?.value : undefined,
-                isEmail = innerType instanceof z.ZodString && innerType._def.checks.some(check => check.kind === 'email')
-
+                // In Zod v4, email can be either:
+                // 1. A standalone $ZodEmail schema (z.email())
+                // 2. A string schema with a string_format check for "email" (z.string().check(z.email()))
+                isEmailType = innerType.constructor?.name === 'ZodEmail',
+                // Check if there's a string_format check with format "email" in the checks array
+                hasEmailFormatCheck = innerType._zod?.def?.checks?.some?.((check) => {
+                    const def = (check as z.core.$ZodCheckStringFormat)._zod.def
+                    return def.check === 'string_format' && def.format === 'email'
+                }),
+                isEmail = isEmailType || hasEmailFormatCheck,
+                // Get constraints from checks for number types (less_than, greater_than checks)
+                minCheck = innerType._zod?.def?.checks?.find?.(check =>
+                    check._zod.def.check === 'greater_than'
+                ),
+                maxCheck = innerType._zod?.def?.checks?.find?.(check =>
+                    check._zod.def.check === 'less_than'
+                ),
+                min = minCheck ? (minCheck as z.core.$ZodCheckGreaterThan)._zod.def.value as number : undefined,
+                max = maxCheck ? (maxCheck as z.core.$ZodCheckLessThan)._zod.def.value as number : undefined,
+                // Get max_length check for strings
+                maxLengthCheck = innerType._zod?.def?.checks?.find?.(check =>
+                    check._zod.def.check === 'max_length'
+                ),
+                maxLength = maxLengthCheck ? (maxLengthCheck as z.core.$ZodCheckMaxLength)._zod.def.maximum : undefined
             return {
                 key,
                 label: camelCaseToTitleCase(key),
@@ -93,9 +110,7 @@ const enumToLabelValue = (enumObject: Record<string, string>) =>
                 isEnum,
                 isEmail,
                 enumOptions: isEnum
-                    ? innerType instanceof z.ZodNativeEnum
-                        ? enumToLabelValue(innerType._def.values)
-                        : enumToLabelValue((innerType as z.ZodEnum<[string, ...string[]]>).enum)
+                    ? enumToLabelValue(innerType.enum)
                     : []
             } as const
         })

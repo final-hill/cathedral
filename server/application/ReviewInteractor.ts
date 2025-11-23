@@ -6,7 +6,7 @@ import type { PendingReviewDtoType } from '#shared/dto/PendingReviewDto'
 import type { PermissionInteractor, ReadabilityCheckInteractor } from './index'
 import type { EndorsementRepository, RequirementRepository } from '../data/repositories'
 import { snakeCaseToPascalCase, snakeCaseToTitleCase } from '#shared/utils/index.js'
-import { z } from 'zod'
+import type { z } from 'zod'
 
 /**
  * ReviewInteractor handles all review and endorsement-related business logic
@@ -383,7 +383,8 @@ export class ReviewInteractor {
             ReqTypePascal = snakeCaseToPascalCase(requirement.reqType) as keyof typeof req,
             RequirementSchema = req[ReqTypePascal],
             shape = RequirementSchema.shape,
-            reqIdPrefix = shape.reqIdPrefix instanceof z.ZodDefault ? shape.reqIdPrefix._def.defaultValue() : undefined,
+            // In Zod v4, prefault schemas wrap the inner type and store default in ._def.defaultValue
+            reqIdPrefix = (shape.reqIdPrefix as z.ZodPrefault<z.ZodLiteral<string>>)._def.defaultValue,
             reqPrefixChar = reqIdPrefix?.charAt(0),
             // Find persons who can endorse this requirement type
             eligiblePersons = persons.filter((person) => {

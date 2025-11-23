@@ -5,7 +5,7 @@ import { Organization, Solution } from '#shared/domain'
 const querySchema = z.object({
     solutionSlug: Solution.pick({ slug: true }).shape.slug,
     organizationSlug: Organization.pick({ slug: true }).shape.slug,
-    reqType: z.nativeEnum(ReqType).optional(),
+    reqType: z.enum(ReqType).optional(),
     entityType: z.literal('app_user').optional()
 }).refine((data) => {
     return data.reqType !== undefined || data.entityType !== undefined

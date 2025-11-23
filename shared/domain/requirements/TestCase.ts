@@ -5,7 +5,7 @@ import { Example } from './Example.js'
 import { FunctionalBehaviorReference } from './EntityReferences.js'
 
 export const TestCase = Example.extend({
-    reqType: z.nativeEnum(ReqType).default(ReqType.TEST_CASE),
+    reqType: z.enum(ReqType).prefault(ReqType.TEST_CASE),
     functionality: FunctionalBehaviorReference
         .describe('The functional behavior that this user story addresses')
 }).describe(dedent(`

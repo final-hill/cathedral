@@ -6,6 +6,6 @@ export const AppUserReference = z.object({
         .describe('The unique identifier of the user (Entra user ID)'),
     name: z.string()
         .describe('The name of the user'),
-    entityType: z.literal('app_user').default('app_user')
+    entityType: z.literal('app_user').prefault('app_user')
         .describe('Type identifier for autocomplete system')
 })

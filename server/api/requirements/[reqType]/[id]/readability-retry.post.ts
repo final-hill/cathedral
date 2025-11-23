@@ -5,8 +5,8 @@ import { LanguageToolService, ReadabilityAnalysisService, RequirementTypeCorresp
 import { EndorsementRepository, RequirementRepository } from '../../../../data/repositories/index.js'
 
 const paramSchema = z.object({
-    id: z.string().uuid(),
-    reqType: z.nativeEnum(ReqType)
+    id: z.uuid(),
+    reqType: z.enum(ReqType)
 })
 
 /**

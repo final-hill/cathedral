@@ -11,12 +11,12 @@ export const UseCase = Example.extend({
     ...Prioritizable.shape,
     reqId: z.string().regex(/^S\.4\.2\.\d+$/, 'Format must be S.4.2.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
-    reqIdPrefix: z.literal('S.4.2.').default('S.4.2.'),
+    reqIdPrefix: z.literal('S.4.2.').prefault('S.4.2.'),
     // 'Context of use' is the inherited 'outcome' field
     scope: SystemComponent.pick({ reqType: true, id: true, name: true })
         .describe('The SystemComponent that defines the boundary of this use case'),
     // 'level' is subsumed by the inherited 'outcome' field
-    preconditions: z.array(AssumptionReference).default([])
+    preconditions: z.array(AssumptionReference).prefault([])
         .describe('State the system must be in before the use case starts'),
     trigger: InterfaceOperationReference
         .describe('The interface operation that starts this use case.'),
@@ -24,16 +24,16 @@ export const UseCase = Example.extend({
         .describe('The functional behavior that this use case addresses.'),
     mainSuccessScenario: z.array(
         ScenarioStepReference
-    ).default([]).describe('Structured sequence of action steps in the main success scenario'),
-    successGuarantees: z.array(EffectReference).default([])
+    ).prefault([]).describe('Structured sequence of action steps in the main success scenario'),
+    successGuarantees: z.array(EffectReference).prefault([])
         .describe('Effects that are guaranteed to be true after the use case is completed successfully.'),
     extensions: z.array(
         ScenarioStepReference
-    ).default([]).describe('Alternative and exception flows with both conditions and actions'),
-    stakeholders: z.array(StakeholderReference).default([])
+    ).prefault([]).describe('Alternative and exception flows with both conditions and actions'),
+    stakeholders: z.array(StakeholderReference).prefault([])
         .describe('The stakeholders in the use case'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.USE_CASE),
-    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.USE_CASE])
+    reqType: z.enum(ReqType).prefault(ReqType.USE_CASE),
+    uiBasePathTemplate: z.string().prefault(uiBasePathTemplates[ReqType.USE_CASE])
         .describe('The UI path template for navigating to this requirement in the web interface')
 }).describe(dedent(`
     A Use Case describes a complete interaction between an actor and the system to achieve a goal.

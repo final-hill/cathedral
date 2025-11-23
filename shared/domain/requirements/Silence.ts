@@ -5,8 +5,8 @@ import { WorkflowState } from './WorkflowState.js'
 import { dedent } from '../../utils/dedent.js'
 
 export const Silence = Requirement.extend({
-    reqType: z.nativeEnum(ReqType).default(ReqType.SILENCE),
-    workflowState: z.nativeEnum(WorkflowState).default(WorkflowState.Rejected)
+    reqType: z.enum(ReqType).prefault(ReqType.SILENCE),
+    workflowState: z.enum(WorkflowState).prefault(WorkflowState.Rejected)
 }).describe(dedent(`
     A Silence requirement represents content that could not be parsed into a proper requirement.
     These are automatically created in the Rejected state and have limited workflow transitions:

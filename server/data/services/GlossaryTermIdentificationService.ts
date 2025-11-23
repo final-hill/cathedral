@@ -1,6 +1,5 @@
 import { AzureOpenAI } from 'openai'
 import { z } from 'zod'
-import { zodResponseFormat } from 'openai/helpers/zod'
 import { dedent } from '../../../shared/utils/dedent.js'
 
 /**
@@ -59,7 +58,14 @@ export class GlossaryTermIdentificationService {
                         { role: 'system', content: systemPrompt },
                         { role: 'user', content: userPrompt }
                     ],
-                    response_format: zodResponseFormat(TermsOfArtResult, 'terms_of_art')
+                    response_format: {
+                        type: 'json_schema',
+                        json_schema: {
+                            name: 'terms_of_art',
+                            strict: true,
+                            schema: z.toJSONSchema(TermsOfArtResult, { target: 'openapi-3.0' })
+                        }
+                    }
                 }),
                 choice = completion.choices[0]
 

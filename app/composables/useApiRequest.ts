@@ -1,7 +1,7 @@
 import type { UseFetchOptions } from 'nuxt/app'
 import { z } from 'zod'
 
-interface ApiRequestOptions<TSchema extends z.ZodTypeAny> extends Omit<UseFetchOptions<z.infer<TSchema>>, 'transform'> {
+interface ApiRequestOptions<TSchema extends z.ZodType> extends Omit<UseFetchOptions<z.infer<TSchema>>, 'transform'> {
     /**
      * Zod schema to parse and validate the response data
      */
@@ -65,7 +65,7 @@ interface ApiRequestOptions<TSchema extends z.ZodTypeAny> extends Omit<UseFetchO
  *   errorMessage: 'Failed to load personnel data'
  * })
  */
-export function useApiRequest<TSchema extends z.ZodTypeAny>({ url, options }: {
+export function useApiRequest<TSchema extends z.ZodType>({ url, options }: {
     url: string | Request | Ref<string | Request> | (() => string | Request)
     options: ApiRequestOptions<TSchema>
 }) {

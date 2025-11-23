@@ -8,7 +8,7 @@ export const AppUserOrganizationRole = z.object({
         .describe('The user associated with the OrganizationRole'),
     organization: OrganizationReference
         .describe('The Organization associated with the OrganizationRole'),
-    role: z.nativeEnum(AppRole).describe('The Role associated with the OrganizationRole')
+    role: z.enum(AppRole).describe('The Role associated with the OrganizationRole')
 }).describe('An AppUserOrganizationRole is a mapping between an AppUser, an Organization, and a Role managed by Microsoft Entra External ID')
 
 export type AppUserOrganizationRoleType = z.infer<typeof AppUserOrganizationRole>

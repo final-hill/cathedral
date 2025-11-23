@@ -3,7 +3,7 @@ import { Organization, ReqType, Solution } from '#shared/domain'
 import { z } from 'zod'
 
 const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape,
-    paramSchema = z.object({ reqType: z.nativeEnum(ReqType) }),
+    paramSchema = z.object({ reqType: z.enum(ReqType) }),
     querySchema = z.object({
         solutionSlug: Solution.pick({ slug: true }).shape.slug,
         organizationId,

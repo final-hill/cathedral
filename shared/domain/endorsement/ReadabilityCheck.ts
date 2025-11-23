@@ -21,7 +21,7 @@ export enum ReadabilityCheckType {
  * Extends AutomatedCheckDetails base schema with READABILITY-specific fields
  */
 export const ReadabilityCheckDetails = AutomatedCheckDetails.extend({
-    checkType: z.nativeEnum(ReadabilityCheckType)
+    checkType: z.enum(ReadabilityCheckType)
         .describe('Type of readability check performed'),
     // Spelling & Grammar
     languageToolMatches: z.array(LanguageToolMatchDto).optional()

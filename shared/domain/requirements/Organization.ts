@@ -5,8 +5,8 @@ import { uiBasePathTemplates } from './uiBasePathTemplates.js'
 
 export const Organization = MetaRequirement.extend({
     slug: z.string().nonempty().readonly().describe('A slugified version of the name'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.ORGANIZATION),
-    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.ORGANIZATION])
+    reqType: z.enum(ReqType).prefault(ReqType.ORGANIZATION),
+    uiBasePathTemplate: z.string().prefault(uiBasePathTemplates[ReqType.ORGANIZATION])
         .describe('The UI path template for navigating to this requirement in the web interface')
 }).describe('An Organization is a collection of users and solutions')
 

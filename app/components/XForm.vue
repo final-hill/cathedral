@@ -1,5 +1,5 @@
 <script lang="ts" generic="F extends FormSchema" setup>
-import type { FormSubmitEvent, FormError, FormErrorEvent, SelectItem } from '@nuxt/ui'
+import type { FormSubmitEvent, FormError, FormErrorEvent, SelectItem, InferInput, InferOutput } from '@nuxt/ui'
 import { z } from 'zod'
 import { getSchemaFields } from '#shared/utils'
 import * as refs from '#shared/domain/requirements/EntityReferences'
@@ -8,7 +8,7 @@ import { ReqType } from '#shared/domain/requirements/enums'
 import { computeStakeholderCategory } from '#shared/domain/requirements/stakeholderUtils'
 import type { StakeholderType } from '#shared/domain/requirements'
 
-export type FormSchema = z.ZodObject<{ [key: string]: z.ZodTypeAny }>
+export type FormSchema = z.ZodObject<{ [key: string]: z.ZodType }>
 
 type AutocompleteItem = {
     label: string
@@ -71,7 +71,7 @@ watch(localState, (state) => {
 }, { deep: true })
 
 // Custom validation function to run child component validators
-const customValidate = async (_state: z.output<F>): Promise<FormError[]> => {
+const customValidate = async (_state: Partial<InferInput<F>>): Promise<FormError[]> => {
         const errors: FormError[] = []
 
         // Set validation loading state if there are child validators to run
@@ -123,18 +123,22 @@ onBeforeUnmount(() => {
     childValidators.value.clear()
 })
 
-const onSubmit = async ({ data }: FormSubmitEvent<z.output<F>>) => {
+const onSubmit = async ({ data }: FormSubmitEvent<InferOutput<F>>) => {
         isSubmitting.value = true
         try {
             // Trim all string values before submission
             // eslint-disable-next-line max-params
             const trimmedData = Object.keys(data).reduce((acc, key) => {
                 const value = data[key as keyof typeof data]
-                acc[key as keyof typeof acc] = typeof value === 'string' ? value.trim() : value
-                return acc
-            }, {} as z.output<F>)
+                if (typeof value === 'string')
+                    acc[key as keyof InferOutput<F>] = value.trim() as InferOutput<F>[keyof InferOutput<F>]
+                else
+                    acc[key as keyof InferOutput<F>] = value as InferOutput<F>[keyof InferOutput<F>]
 
-            emit('submit', trimmedData)
+                return acc
+            }, {} as InferOutput<F>)
+
+            emit('submit', trimmedData as z.output<F>)
 
             toast.add({
                 icon: 'i-lucide-check',
