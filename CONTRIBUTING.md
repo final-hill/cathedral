@@ -14,7 +14,7 @@
 1. Update your local machine hosts file to include the following entry:
 
 ```
-127.0.0.1 cathedral.local
+127.0.0.1 cathedral.localhost
 ```
 
 2. Start Docker Desktop.
@@ -43,6 +43,7 @@ This project uses [dotenvx](https://dotenvx.com) for encrypted environment varia
 To update environment variables:
 - Use `npm run dotenvx:set KEY "value" -f .env.local` to encrypt a value.
 - To edit manually, run `npm run dotenvx:decrypt:local`, make your changes, then run `npm run dotenvx:encrypt:local` to re-encrypt.
+
 ## Production Deployment
 
 For first-time production deployment, set `DOTENV_PRIVATE_KEY_PRODUCTION` in Azure Portal (app-cathedral → Configuration → Application Settings) using the value from your local `.env.keys` file. This is needed once to decrypt the encrypted `.env.production` file in the Docker container. Deploy by creating a release tag in GitHub (e.g., `v0.1.0`).
@@ -57,9 +58,9 @@ There are a number of commands defined in `package.json` that can be run to popu
 
 ## Running the project
 
-The project can be run in debug mode via: `npm run dev`. You can then access the application at `https://cathedral.local`.
+The project can be run in debug mode via: `npm run dev`. You can then access the application at `https://cathedral.localhost`.
 
-A production build can be run via: `npm run build` followed by `npm run preview`. You can then access the application at `https://cathedral.local`.
+A production build can be run via: `npm run build` followed by `npm run preview`. You can then access the application at `https://cathedral.localhost`.
 
 ## Data model
 
