@@ -107,7 +107,7 @@
                                     :model-value="field.minLength"
                                     :min="0"
                                     placeholder="No minimum"
-                                    @update:model-value="updateNumberField('minLength', $event)"
+                                    @update:model-value="updateNumberField({ key: 'minLength', value: $event })"
                                 />
                                 <strong
                                     v-else
@@ -122,7 +122,7 @@
                                     :model-value="field.maxLength"
                                     :min="0"
                                     placeholder="No maximum"
-                                    @update:model-value="updateNumberField('maxLength', $event)"
+                                    @update:model-value="updateNumberField({ key: 'maxLength', value: $event })"
                                 />
                                 <strong
                                     v-else
@@ -172,7 +172,7 @@
                                     v-if="!disabled"
                                     :model-value="field.minimum"
                                     placeholder="No minimum"
-                                    @update:model-value="updateNumberField('minimum', $event)"
+                                    @update:model-value="updateNumberField({ key: 'minimum', value: $event })"
                                 />
                                 <strong
                                     v-else
@@ -186,7 +186,7 @@
                                     v-if="!disabled"
                                     :model-value="field.maximum"
                                     placeholder="No maximum"
-                                    @update:model-value="updateNumberField('maximum', $event)"
+                                    @update:model-value="updateNumberField({ key: 'maximum', value: $event })"
                                 />
                                 <strong
                                     v-else
@@ -202,7 +202,7 @@
                                     v-if="!disabled"
                                     :model-value="field.exclusiveMinimum"
                                     placeholder="No exclusive min"
-                                    @update:model-value="updateNumberField('exclusiveMinimum', $event)"
+                                    @update:model-value="updateNumberField({ key: 'exclusiveMinimum', value: $event })"
                                 />
                                 <strong
                                     v-else
@@ -216,7 +216,7 @@
                                     v-if="!disabled"
                                     :model-value="field.exclusiveMaximum"
                                     placeholder="No exclusive max"
-                                    @update:model-value="updateNumberField('exclusiveMaximum', $event)"
+                                    @update:model-value="updateNumberField({ key: 'exclusiveMaximum', value: $event })"
                                 />
                                 <strong
                                     v-else
@@ -233,7 +233,7 @@
                                 :min="0"
                                 :step="0.001"
                                 placeholder="No multiple constraint"
-                                @update:model-value="updateNumberField('multipleOf', $event)"
+                                @update:model-value="updateNumberField({ key: 'multipleOf', value: $event })"
                             />
                             <strong
                                 v-else
@@ -292,7 +292,7 @@
                                     :model-value="field.minItems"
                                     :min="0"
                                     placeholder="No minimum"
-                                    @update:model-value="updateNumberField('minItems', $event)"
+                                    @update:model-value="updateNumberField({ key: 'minItems', value: $event })"
                                 />
                                 <strong
                                     v-else
@@ -307,7 +307,7 @@
                                     :model-value="field.maxItems"
                                     :min="0"
                                     placeholder="No maximum"
-                                    @update:model-value="updateNumberField('maxItems', $event)"
+                                    @update:model-value="updateNumberField({ key: 'maxItems', value: $event })"
                                 />
                                 <strong
                                     v-else
@@ -421,7 +421,7 @@ const props = defineProps<{
         const updatedField = { ...props.field, [key]: value }
         emit('update', updatedField)
     },
-    updateNumberField = (key: keyof JsonSchemaField, value: number | null) => {
+    updateNumberField = ({ key, value }: { key: keyof JsonSchemaField, value: number | null }) => {
         updateField({ key, value: value ?? undefined })
     },
     handleTypeChange = (newType: JsonSchemaField['type']) => {
