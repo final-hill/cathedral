@@ -19,6 +19,11 @@ export default defineNuxtConfig({
     css: [
         '~/assets/css/main.css'
     ],
+    ui: {
+        experimental: {
+            componentDetection: true
+        }
+    },
     runtimeConfig: {
         // The private keys which are only available within server-side
 
@@ -145,11 +150,6 @@ export default defineNuxtConfig({
     },
     primevue: {},
     pwa: {},
-    ui: {
-        experimental: {
-            componentDetection: true
-        }
-    },
     // https://nuxt.com/modules/security
     security: {
         headers: {
