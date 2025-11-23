@@ -9,7 +9,7 @@ const paramSchema = AppUser.pick({ id: true }),
     querySchema = z.object({
         organizationId,
         organizationSlug,
-        includeSlack: z.string().optional().transform(val => val === 'true').default('false').describe('Whether to include Slack associations')
+        includeSlack: z.string().optional().transform(val => val === 'true').prefault('false').describe('Whether to include Slack associations')
     }).refine((value) => {
         return value.organizationId !== undefined || value.organizationSlug !== undefined
     }, 'At least one of organizationId or organizationSlug should be provided')

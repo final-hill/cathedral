@@ -2,7 +2,7 @@ import { Organization, Solution } from '#shared/domain'
 import { z } from 'zod'
 
 const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape,
-    paramSchema = z.object({ id: z.string().uuid() })
+    paramSchema = z.object({ id: z.uuid() })
 
 export default defineEventHandler(async (event) => {
     const { id } = await validateEventParams({ event, schema: paramSchema }),

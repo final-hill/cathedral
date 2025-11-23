@@ -10,9 +10,9 @@ import { Collection } from '@mikro-orm/core'
 import { resolveReqTypeFromModel, snakeCaseToPascalCase } from '#shared/utils'
 
 const objectSchema = z.object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     name: z.string(),
-    reqType: z.nativeEnum(ReqType),
+    reqType: z.enum(ReqType),
     workflowState: z.string(),
     lastModified: z.date()
 })

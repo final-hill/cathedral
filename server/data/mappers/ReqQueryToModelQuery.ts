@@ -12,6 +12,8 @@ export class ReqQueryToModelQuery implements Mapper<Partial<RequirementType>, Re
             // Skip audit fields and undefined values
             if (['createdBy', 'creationDate', 'id'].includes(key)) return acc
             else if (value === undefined) return acc
+            // Skip reqType and uiBasePathTemplate - these are metadata fields that don't exist on version models
+            else if (['reqType', 'uiBasePathTemplate'].includes(key)) return acc
             // Skip category for Stakeholders only (it's derived), but allow it for Constraints
             else if (key === 'category' && query.reqType === ReqType.STAKEHOLDER) return acc
 

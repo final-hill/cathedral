@@ -5,12 +5,12 @@ import { Organization, ReqType, Solution } from '#shared/domain'
 const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape
 
 export default function getAllByType() {
-    const paramSchema = z.object({ reqType: z.nativeEnum(ReqType) }),
-        validatedQuerySchema = z.object({
+    const paramSchema = z.object({ reqType: z.enum(ReqType) }),
+        validatedQuerySchema = z.looseObject({
             solutionSlug: Solution.pick({ slug: true }).shape.slug,
             organizationId,
             organizationSlug
-        }).passthrough().refine((value) => {
+        }).refine((value) => {
             return value.organizationId !== undefined || value.organizationSlug !== undefined
         }, 'At least one of organizationId or organizationSlug should be provided')
 

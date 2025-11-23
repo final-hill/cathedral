@@ -13,8 +13,8 @@ export const Example = Behavior.extend({
     functionality: FunctionalityReference
         // G.4 | S.2
         .describe('The functionality that this scenario implements'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.EXAMPLE),
-    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.EXAMPLE])
+    reqType: z.enum(ReqType).prefault(ReqType.EXAMPLE),
+    uiBasePathTemplate: z.string().prefault(uiBasePathTemplates[ReqType.EXAMPLE])
 }).describe('Illustration of behavior through a usage scenario; describing paths of interaction between actors and the system.')
 
 export type ExampleType = z.infer<typeof Example>

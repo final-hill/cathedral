@@ -17,20 +17,20 @@ function getRequirementMetadata(reqType: ReqType) {
     const shape = RequirementSchema.shape,
         // Extract label from name field (either literal value or fallback to schema description)
         nameField = shape.name,
-        label = nameField instanceof z.ZodLiteral
-            ? nameField._def.value
+        // In Zod v4, ZodLiteral._def.values is a Set, get the first value
+        labelValue = nameField instanceof z.ZodLiteral
+            ? Array.from(nameField._def.values)[0]
             : snakeCaseToPascalCase(reqType),
-        // Extract reqIdPrefix default value
-        reqIdPrefixField = shape.reqIdPrefix,
-        reqIdPrefix = reqIdPrefixField instanceof z.ZodDefault
-            ? reqIdPrefixField._def.defaultValue()
-            : '',
+        label = String(labelValue),
+        // Extract reqIdPrefix default value using ._def.defaultValue getter in Zod v4
+        reqIdPrefix = ('defaultValue' in (shape.reqIdPrefix?._def ?? {})
+            ? (shape.reqIdPrefix as z.ZodPrefault<z.ZodLiteral<string>>)._def.defaultValue
+            : '') || '',
         code = reqIdPrefix.replace(/\./g, ''),
-        // Extract uiBasePathTemplate default value
-        uiPathField = shape.uiBasePathTemplate,
-        path = uiPathField instanceof z.ZodDefault
-            ? uiPathField._def.defaultValue()
-            : ''
+        // Extract uiBasePathTemplate default value using ._def.defaultValue getter in Zod v4
+        path = ('defaultValue' in (shape.uiBasePathTemplate?._def ?? {})
+            ? (shape.uiBasePathTemplate as z.ZodPrefault<z.ZodString>)._def.defaultValue
+            : '') || ''
 
     return { reqType, label, code, path }
 }

@@ -8,19 +8,19 @@ import { ReviewCategory } from './ReviewCategory.js'
 export const ReviewItem = z.object({
     id: z.string()
         .describe('Unique identifier for the review item'),
-    category: z.nativeEnum(ReviewCategory)
+    category: z.enum(ReviewCategory)
         .describe('Category that this review item belongs to'),
     title: z.string()
         .describe('Human-readable title for the review item'),
     description: z.string().optional()
         .describe('Optional detailed description of what is being reviewed'),
-    status: z.nativeEnum(ReviewStatus)
+    status: z.enum(ReviewStatus)
         .describe('Current status of this review item'),
     isRequired: z.boolean()
         .describe('Whether this review item must be completed before approval'),
     canUserReview: z.boolean()
         .describe('Whether the current user can perform this review'),
-    checkDetails: z.record(z.unknown()).nullable().optional()
+    checkDetails: z.record(z.string(), z.unknown()).nullable().optional()
         .describe('Additional details specific to the check type (for automated checks)')
 }).describe('Represents a single review item within a requirement review process')
 

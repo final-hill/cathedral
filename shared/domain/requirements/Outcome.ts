@@ -7,9 +7,9 @@ import { uiBasePathTemplates } from './uiBasePathTemplates.js'
 export const Outcome = Goal.extend({
     reqId: z.string().regex(/^G\.3\.\d+$/, 'Format must be G.3.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
-    reqIdPrefix: z.literal('G.3.').default('G.3.'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.OUTCOME),
-    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.OUTCOME])
+    reqIdPrefix: z.literal('G.3.').prefault('G.3.'),
+    reqType: z.enum(ReqType).prefault(ReqType.OUTCOME),
+    uiBasePathTemplate: z.string().prefault(uiBasePathTemplates[ReqType.OUTCOME])
         .describe('The UI path template for navigating to this requirement in the web interface')
 }).describe(dedent(`
     An Outcome is the expected benefit, capability, or process

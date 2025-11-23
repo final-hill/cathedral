@@ -3,9 +3,9 @@ import { ReadabilityCheckType, ReadabilityCheckDetails } from '../domain/endorse
 import { EndorsementStatus } from '../domain/endorsement/EndorsementStatus.js'
 
 export const ReadabilityCheckResultDto = z.object({
-    checkType: z.nativeEnum(ReadabilityCheckType)
+    checkType: z.enum(ReadabilityCheckType)
         .describe('Type of readability check performed'),
-    status: z.nativeEnum(EndorsementStatus)
+    status: z.enum(EndorsementStatus)
         .describe('Result status of the check (APPROVED, REJECTED, PENDING)'),
     title: z.string()
         .describe('Human-readable title for the check'),

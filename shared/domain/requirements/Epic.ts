@@ -8,9 +8,9 @@ import { FunctionalityOverviewReference } from './EntityReferences.js'
 export const Epic = Example.extend({
     reqId: z.string().regex(/^G\.5\.\d+$/, 'Format must be G.5.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
-    reqIdPrefix: z.literal('G.5.').default('G.5.'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.EPIC),
-    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.EPIC])
+    reqIdPrefix: z.literal('G.5.').prefault('G.5.'),
+    reqType: z.enum(ReqType).prefault(ReqType.EPIC),
+    uiBasePathTemplate: z.string().prefault(uiBasePathTemplates[ReqType.EPIC])
         .describe('The UI path template for navigating to this requirement in the web interface'),
     functionality: FunctionalityOverviewReference
         .describe('The functionality that this scenario implements')

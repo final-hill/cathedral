@@ -5,8 +5,8 @@ import { z } from 'zod'
 
 const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape,
     paramSchema = z.object({
-        reqType: z.nativeEnum(ReqType),
-        id: z.string().uuid()
+        reqType: z.enum(ReqType),
+        id: z.uuid()
     })
 
 export default defineEventHandler(async (event) => {

@@ -18,7 +18,7 @@ export const InterfaceOutput = InterfaceArtifact.extend({
     format: z.string()
         .optional()
         .describe('Format Specification'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.INTERFACE_OUTPUT)
+    reqType: z.enum(ReqType).prefault(ReqType.INTERFACE_OUTPUT)
 }).describe('An InterfaceOutput represents a response field, return value, or output artifact produced by an interface operation.')
 
 export type InterfaceOutputType = z.infer<typeof InterfaceOutput>

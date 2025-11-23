@@ -4,8 +4,8 @@ import { ReqType } from './ReqType'
 import { uiBasePathTemplates } from './uiBasePathTemplates'
 
 export const Environment = MetaRequirement.extend({
-    reqType: z.nativeEnum(ReqType).default(ReqType.ENVIRONMENT),
-    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.ENVIRONMENT])
+    reqType: z.enum(ReqType).prefault(ReqType.ENVIRONMENT),
+    uiBasePathTemplate: z.string().prefault(uiBasePathTemplates[ReqType.ENVIRONMENT])
         .describe('The UI path template for navigating to this requirement in the web interface')
 }).describe(dedent(`
     An environment is the set of entities (people, organizations, regulations, devices and other material

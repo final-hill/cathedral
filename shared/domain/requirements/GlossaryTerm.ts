@@ -7,9 +7,9 @@ import { dedent } from '../../utils/dedent.js'
 export const GlossaryTerm = Component.extend({
     reqId: z.string().regex(/^E\.1\.\d+$/, 'Format must be E.1.#').optional()
         .describe('The user-friendly identifier of the requirement that is unique within its parent'),
-    reqIdPrefix: z.literal('E.1.').default('E.1.'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.GLOSSARY_TERM),
-    uiBasePathTemplate: z.string().default(uiBasePathTemplates[ReqType.GLOSSARY_TERM])
+    reqIdPrefix: z.literal('E.1.').prefault('E.1.'),
+    reqType: z.enum(ReqType).prefault(ReqType.GLOSSARY_TERM),
+    uiBasePathTemplate: z.string().prefault(uiBasePathTemplates[ReqType.GLOSSARY_TERM])
         .describe('The UI path template for navigating to this requirement in the web interface')
 }).describe(dedent(`
     A Glossary Term defines a word, phrase, acronym, or technical concept used in the project.

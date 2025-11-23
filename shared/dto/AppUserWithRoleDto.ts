@@ -17,10 +17,10 @@ const SlackAssociation = z.object({
  * Used for transferring user data with role context between application layers
  */
 export const AppUserWithRoleDto = AppUser.extend({
-    role: z.nativeEnum(AppRole).describe('The role of the user in the organization'),
+    role: z.enum(AppRole).describe('The role of the user in the organization'),
     organizations: z.array(z.object({
-        reqType: z.nativeEnum(ReqType).default(ReqType.ORGANIZATION),
-        id: z.string().uuid().describe('The id of the Organization'),
+        reqType: z.enum(ReqType).prefault(ReqType.ORGANIZATION),
+        id: z.uuid().describe('The id of the Organization'),
         name: z.string().describe('The name of the Organization')
     })).describe('The organizations the user belongs to')
 }).describe('An AppUser with their role and organization information')

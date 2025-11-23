@@ -8,7 +8,7 @@ const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: t
     querySchema = z.object({
         organizationId,
         organizationSlug,
-        includeSlack: z.string().optional().transform(val => val === 'true').default('false').describe('Whether to include Slack associations for all users')
+        includeSlack: z.string().optional().transform(val => val === 'true').prefault('false').describe('Whether to include Slack associations for all users')
     }).refine((value) => {
         return value.organizationId !== undefined || value.organizationSlug !== undefined
     }, 'At least one of organizationId or organizationSlug should be provided')

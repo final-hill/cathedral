@@ -4,7 +4,7 @@ import { dedent } from '../../utils/dedent.js'
 import { Behavior } from './Behavior.js'
 
 export const Functionality = Behavior.extend({
-    reqType: z.nativeEnum(ReqType).default(ReqType.FUNCTIONALITY)
+    reqType: z.enum(ReqType).prefault(ReqType.FUNCTIONALITY)
 }).describe(dedent(`
     Functionality describes Functional (what) and Non-Functional (how) Behaviors of a system.
 `))

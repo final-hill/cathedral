@@ -5,7 +5,7 @@ import { Organization, ReqType, Solution } from '#shared/domain'
 import * as req from '#shared/domain/requirements'
 
 const { id: organizationId, slug: organizationSlug } = Organization.pick({ id: true, slug: true }).partial().shape,
-    paramSchema = z.object({ reqType: z.nativeEnum(ReqType) }),
+    paramSchema = z.object({ reqType: z.enum(ReqType) }),
     appConfig = useRuntimeConfig()
 
 export default defineEventHandler(async (event) => {

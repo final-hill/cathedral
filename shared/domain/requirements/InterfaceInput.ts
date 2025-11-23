@@ -10,7 +10,7 @@ export const InterfaceInput = InterfaceArtifact.extend({
         .regex(/^[a-zA-Z][a-zA-Z0-9_]*$/, 'Parameter name must start with a letter and contain only letters, numbers, and underscores')
         .describe('Parameter Name'),
     required: z.boolean()
-        .default(false)
+        .prefault(false)
         .describe('Required'),
     dataType: InterfaceSchemaReference
         .optional()
@@ -21,7 +21,7 @@ export const InterfaceInput = InterfaceArtifact.extend({
     constraints: z.string()
         .optional()
         .describe('Validation Constraints'),
-    reqType: z.nativeEnum(ReqType).default(ReqType.INTERFACE_INPUT)
+    reqType: z.enum(ReqType).prefault(ReqType.INTERFACE_INPUT)
 }).describe('An InterfaceInput represents a parameter, option, or field that can be provided to an interface operation.')
 
 export type InterfaceInputType = z.infer<typeof InterfaceInput>

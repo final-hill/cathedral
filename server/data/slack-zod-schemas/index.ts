@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 // https://api.slack.com/interactivity/slash-commands#app_command_handling
-export const slackSlashCommandSchema = z.object({
+export const slackSlashCommandSchema = z.looseObject({
     token: z.string(),
     team_id: z.string(),
     team_domain: z.string(),
@@ -11,14 +11,14 @@ export const slackSlashCommandSchema = z.object({
     user_name: z.string(),
     command: z.string(),
     text: z.string(),
-    response_url: z.string().url(),
+    response_url: z.url(),
     trigger_id: z.string(),
     api_app_id: z.string().optional(),
     enterprise_id: z.string().optional(),
     enterprise_name: z.string().optional(),
     is_enterprise_install: z.union([z.string(), z.boolean()]).optional()
     // Slack may send additional fields, so allow unknowns
-}).passthrough()
+})
 
 export const slackUrlVerificationSchema = z.object({
     token: z.string(),
@@ -76,19 +76,19 @@ export const slackBodySchema = z.union([
     slackEventCallbackSchema
 ])
 
-export const slackInteractivePayloadSchema = z.object({
+export const slackInteractivePayloadSchema = z.looseObject({
     type: z.string(),
-    user: z.object({ id: z.string() }),
-    team: z.object({ id: z.string() }),
-    channel: z.object({ id: z.string() }),
-    actions: z.array(z.object({
+    user: z.looseObject({ id: z.string() }),
+    team: z.looseObject({ id: z.string() }),
+    channel: z.looseObject({ id: z.string() }),
+    actions: z.array(z.looseObject({
         action_id: z.string(),
-        selected_option: z.object({ value: z.string() }).optional()
+        selected_option: z.looseObject({ value: z.string() }).optional()
     })).optional(),
-    response_url: z.string().url().optional(),
+    response_url: z.url().optional(),
     trigger_id: z.string().optional()
     // ...other fields as needed
-}).passthrough()
+})
 
 export type SlackInteractivePayload = z.infer<typeof slackInteractivePayloadSchema>
 
