@@ -4,7 +4,9 @@
     "name": "Cathedral",
     "dockerComposeFile": "compose.yml",
     "forwardPorts": [
-        5432
+        443,
+        5432,
+        24678
     ],
     "service": "web",
     "workspaceFolder": "/workspace/cathedral",
@@ -34,7 +36,8 @@
                 "kingwl.vscode-vitest-runner",
                 "bradlc.vscode-tailwindcss",
                 "xadamxk.prune-stale-git-branches",
-                "ms-ossdata.vscode-pgsql"
+                "ms-ossdata.vscode-pgsql",
+                "GitHub.vscode-pull-request-github"
             ]
         }
     }

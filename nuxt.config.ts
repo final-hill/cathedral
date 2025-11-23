@@ -84,7 +84,7 @@ export default defineNuxtConfig({
         cors: {
             origin: ['https://cathedral.localhost']
         },
-        host: 'cathedral.localhost',
+        host: '0.0.0.0',
         url: 'https://cathedral.localhost'
     },
     experimental: {

@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
                     user: {
                         id: 'url-verification',
                         name: 'URL Verification',
-                        email: 'verification@cathedral.local',
+                        email: 'verification@cathedral.localhost',
                         isSystemAdmin: false,
                         organizationRoles: []
                     },
