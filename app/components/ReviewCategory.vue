@@ -406,7 +406,17 @@ defineExpose<ReviewComponentInterface>({
                     :description="`No specific ${categoryTitle.toLowerCase()} checks configured`"
                     size="sm"
                     variant="naked"
-                />
+                >
+                    <template #footer>
+                        <UBadge
+                            :color="status === ReviewStatus.PENDING ? 'warning' : status === ReviewStatus.APPROVED ? 'success' : status === ReviewStatus.REJECTED ? 'error' : status === ReviewStatus.PARTIAL ? 'info' : 'default'"
+                            variant="soft"
+                            size="sm"
+                        >
+                            {{ status }}
+                        </UBadge>
+                    </template>
+                </UEmpty>
             </div>
         </template>
     </UCollapsible>
