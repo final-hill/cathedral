@@ -409,7 +409,7 @@ defineExpose<ReviewComponentInterface>({
                 >
                     <template #footer>
                         <UBadge
-                            :color="status === ReviewStatus.PENDING ? 'warning' : status === ReviewStatus.APPROVED ? 'success' : status === ReviewStatus.REJECTED ? 'error' : status === ReviewStatus.PARTIAL ? 'info' : 'default'"
+                            :color="status === ReviewStatus.PENDING ? 'warning' : status === ReviewStatus.APPROVED ? 'success' : status === ReviewStatus.REJECTED ? 'error' : status === ReviewStatus.PARTIAL ? 'info' : 'neutral'"
                             variant="soft"
                             size="sm"
                         >
